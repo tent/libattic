@@ -55,7 +55,7 @@ A post is created for each file. Changes to the file, it's name, and location ar
 The primary file storage post type:
 
 Property | Required | Type | Description
------------- | ------------- | ------------
+------------ | ------------- | ------------ | ----------
 name | Required  | String | Name of the file
 file_path | Required  | String | Relative location of the file within the *Attic* folder
 
