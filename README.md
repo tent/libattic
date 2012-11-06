@@ -70,6 +70,8 @@ We may need additional post types for:
 
 Some changes need to be made to the Tent to support Attic. They include:
 
+- Sort posts/post versions by `updated_at` while using `before_time`/`since_time` (e.g. fetch all posts/post versions created/updated after my last fetch time.)
+
 (Jesse and Jonathan, please fill in some info here.)
 
 ## Clients
