@@ -82,8 +82,7 @@ Property | Required | Type | Description
 name | Required | String | Name of the file
 path | Required | String | Relative location of the file within the *Attic* folder
 size | Required | Integer | The filesize in bytes of the uncompressed file.
-type | Optional | String | The MIME type of the file, if known (using [libmagic](https://en.wikipedia.org/wiki/Libmagic) and
-file extension heuristics).
+type | Optional | String | The MIME type of the file, if known (using [libmagic](https://en.wikipedia.org/wiki/Libmagic) and file extension heuristics).
 
 We may need additional post types for:
 
