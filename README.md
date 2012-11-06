@@ -1,6 +1,11 @@
-#Attic
+# Attic
 
 This Tent app syncs the contents of a folder across multiple devices and operating systems. All files are encrypted individually with unique keys and can be shared publicly or with specific users. 
+
+Each user has a master encryption key that is used to encrypt encryption keys
+for each of the files. The master key is derived from the user's passphrase with
+[scrypt](http://www.tarsnap.com/scrypt.html), with the salt stored in a private
+Tent profile info section.
 
 ## Process
 
@@ -9,20 +14,39 @@ This Tent app syncs the contents of a folder across multiple devices and operati
 3. File is encrypted.
 4. File is broken into chunks.
 5. Tent post is created with chunks as attachments.
+6. Details about the file are added to the metastore post.
 
 ### Compression
 
-Files will be compressed with [zlib](http://zlib.net/).
-
-### Encryption
-
-Each file is encrypted with a unique symmetric key pair by default. This allows a single file (and its key) to be shared with another user without compromising other files. The symmetric keys for files will be stored in the "keystore" post, encrypted with another key derived from the users passphrase.
+Files are compressed with [zlib](http://zlib.net/).
 
 ### Chunking
 
-Files will be broken into 4MB chunks (subject to change).
+Files will be broken into 4MB chunks (subject to change). Each chunk is
+encrypted individually using an incrementing counter nonce.
+
+### Encryption
+
+Each file is encrypted with a randomly generated symmetric key. This allows a single file (and its key) to be shared with another user without compromising other files.
+
+[NaCl](http://nacl.cr.yp.to/) is used for all crypto.  The
+[`crypto_secretbox_xsalsa20poly1305`](http://nacl.cr.yp.to/secretbox.html) primitive is used for authenticated
+symmetric encryption.
+
+There is [a project](https://github.com/cjdelisle/cnacl) that adds CMake build
+scripts to NaCl, making it easier to compile for Windows, but it is untested.
+
+The key for each file is encrypted using the master key and stored in the
+metastore.
+
+### Metastore
+
+The metastore is a [sqlite](http://sqlite.org/index.html) database containing
+a database of the file metadata and encrypted symmetric keys, stored in
+a separate post.
 
 ## Update/Sync
+
 ### New files
 
 New Tent posts and versions/updates of type (attic?) since last sync should be queried, compared to current file versions, and downloaded to the device if they are more recent.
@@ -42,9 +66,8 @@ Shared | Yes (key shared) | Yes | No
 Public | No | Yes | Yes
 
 ## Local Directories
-In the MVP only a single folder will be selected for use with Attic.
 
-This folder will also include a SQLite database containing a list of posts to be included in the folder and their current versions.
+In the MVP only a single folder will be selected for use with Attic.
 
 ## Posts
 
@@ -56,9 +79,11 @@ The primary file storage post type:
 
 Property | Required | Type | Description
 ------------ | ------------- | ------------ | ----------
-name | Required  | String | Name of the file
-file_path | Required  | String | Relative location of the file within the *Attic* folder
-sha256 | Required | String | The hexadecimal SHA-256 hash of the file before compression/encryption
+name | Required | String | Name of the file
+path | Required | String | Relative location of the file within the *Attic* folder
+size | Required | Integer | The filesize in bytes of the uncompressed file.
+type | Optional | String | The MIME type of the file, if known (using [libmagic](https://en.wikipedia.org/wiki/Libmagic) and
+file extension heuristics).
 
 We may need additional post types for:
 
