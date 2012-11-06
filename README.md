@@ -45,6 +45,25 @@ The metastore is a [sqlite](http://sqlite.org/index.html) database containing
 a database of the file metadata and encrypted symmetric keys, stored in
 a separate post.
 
+#### Tables (WIP)
+
+**nodes**
+
+Column | Type | Required | Description
+------ | ---- | -------- | -----------
+id | Integer | Required | id of node
+parent_id | Integer | Optional | id of parent node
+file_id | Integer | Optional | id of file
+
+
+**files**
+
+Column | Type | Required | Description
+------ | ---- | -------- | -----------
+id | Integer | Required | id of file
+node_id | Integer | Required | id of representation node
+post_id | Text | Required | id of Tent post
+
 ## Update/Sync
 
 ### New files
