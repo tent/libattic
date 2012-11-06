@@ -12,11 +12,11 @@ This Tent app syncs the contents of a folder across multiple devices and operati
 
 ### Compression
 
-Files will be compressed with [Snappy](https://code.google.com/p/snappy/).
+Files will be compressed with [zlib](http://zlib.net/).
 
 ### Encryption
 
-Each file is encyrpted with a unique symmetric key pair by default. This allows a single file (and its key) to be shared with another user without compromising other files. The  
+Each file is encrypted with a unique symmetric key pair by default. This allows a single file (and its key) to be shared with another user without compromising other files. The symmetric keys for files will be stored in the "keystore" post, encrypted with another key derived from the users passphrase.
 
 ### Chunking
 
@@ -58,11 +58,13 @@ Property | Required | Type | Description
 ------------ | ------------- | ------------ | ----------
 name | Required  | String | Name of the file
 file_path | Required  | String | Relative location of the file within the *Attic* folder
+sha256 | Required | String | The hexadecimal SHA-256 hash of the file before compression/encryption
 
 We may need additional post types for:
 
 1. Sharing/sync with other users
 2. Files sharded across multiple posts
+3. The file index/keystore
 
 ## API changes
 
@@ -73,6 +75,8 @@ Some changes need to be made to the Tent to support Attic. They include:
 ## Clients
 
 ### Native
+
+Most of the business logic will be implemented in a portable C++ library that is cross-platform.
 
 Native clients will be created for:
 
@@ -94,5 +98,3 @@ and one on right click:
  - stop/start syncing file
  
 A **web client** will also be built. The web client will provide an administrative interface allowing users to choose between conflicted file versions and share files with other users.
-
-
