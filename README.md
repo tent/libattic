@@ -98,3 +98,11 @@ and one on right click:
  - stop/start syncing file
  
 A **web client** will also be built. The web client will provide an administrative interface allowing users to choose between conflicted file versions and share files with other users.
+
+
+## Division of Labor
+
+ - Core library - **Manny**
+ - Crypto strategy - **Jonathan**
+ - OS X app - **Vince**
+ - Web app - **Jesse**
