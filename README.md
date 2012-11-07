@@ -55,7 +55,7 @@ Column | Type | Required | Description
 ------ | ---- | -------- | -----------
 id | Integer | Required | id of node
 parent_id | Integer | Optional | id of parent node
-file_id | Integer | Optional | id of file
+file_id | Integer | Optional | id of file (when NULL, it's a directory)
 name | Text | Required | name of node (file or directory)
 
 
@@ -69,7 +69,7 @@ post_id | Text | Required | id of Tent post
 post_version | Integer | Required | version of Tent post
 size | Integer | Required | Size of file in bytes
 type | Text | Optional | MIME type of file if known
-key | Blob | Required | encryption key
+key | Blob | Required | encryption key (32 bytes)
 updated_at | Date | Required | epoch timestamp
 
 ## Update/Sync
