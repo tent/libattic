@@ -47,6 +47,8 @@ a separate post.
 
 #### Tables (WIP)
 
+The hierarchy is represented relationally using the *nodes* table. Each file and directory maps to a row in that table. File nodes also connect with the *files* table via `file_id`.
+
 **nodes**
 
 Column | Type | Required | Description
@@ -54,6 +56,7 @@ Column | Type | Required | Description
 id | Integer | Required | id of node
 parent_id | Integer | Optional | id of parent node
 file_id | Integer | Optional | id of file
+name | Text | Required | name of node (file or directory)
 
 
 **files**
@@ -63,6 +66,11 @@ Column | Type | Required | Description
 id | Integer | Required | id of file
 node_id | Integer | Required | id of representation node
 post_id | Text | Required | id of Tent post
+post_version | Integer | Required | version of Tent post
+size | Integer | Required | Size of file in bytes
+type | Text | Optional | MIME type of file if known
+key | Text | Required | encryption key
+updated_at | Integer | Required | epoch timestamp
 
 ## Update/Sync
 
