@@ -18,26 +18,26 @@ Tent profile info section.
 
 ### Compression
 
-Files are compressed with [zlib](http://zlib.net/).
-
-### Chunking
-
-Files will be broken into 4MB chunks (subject to change). Each chunk is
-encrypted individually using an incrementing counter nonce.
+Files are compressed with [zlib](http://zlib.net/). Crypto++ provides a zlib
+implementation that is easy to work with as a filter.
 
 ### Encryption
 
 Each file is encrypted with a randomly generated symmetric key. This allows a single file (and its key) to be shared with another user without compromising other files.
 
-[NaCl](http://nacl.cr.yp.to/) is used for all crypto.  The
-[`crypto_secretbox_xsalsa20poly1305`](http://nacl.cr.yp.to/secretbox.html) primitive is used for authenticated
-symmetric encryption.
+The [Crypto++](http://cryptopp.com/) library is used for encryption and
+compression. Files are encrypted with
+[AES-256](http://en.wikipedia.org/wiki/Advanced_Encryption_Standard) using the
+[GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) block cipher mode,
+providing data authenticity and confidentiality. The nonce and key are randomly
+generated for each file.
 
-There is [a project](https://github.com/cjdelisle/cnacl) that adds CMake build
-scripts to NaCl, making it easier to compile for Windows, but it is untested.
+The key for each file is encrypted using the master key with a random nonce and
+stored in the metastore.
 
-The key for each file is encrypted using the master key and stored in the
-metastore.
+### Chunking
+
+The encrypted file is broken into 4MB chunks and attached to a Tent post.
 
 ### Metastore
 
