@@ -64,7 +64,6 @@ name | Text | Required | name of node (file or directory)
 Column | Type | Required | Description
 ------ | ---- | -------- | -----------
 id | Integer | Required | id of file
-node_id | Integer | Required | id of representation node
 post_id | Text | Required | id of Tent post
 post_version | Integer | Required | version of Tent post
 size | Integer | Required | Size of file in bytes
