@@ -43,9 +43,9 @@ The encrypted file is broken into 4MB chunks and attached to a Tent post.
 
 The metastore is a [sqlite](http://sqlite.org/index.html) database containing
 a database of the file metadata and encrypted symmetric keys, stored in
-a separate post.
+a separate post (see [Post Types](#post-types)).
 
-#### Tables (WIP)
+#### Tables
 
 The hierarchy is represented relationally using the *nodes* table. Each file and directory maps to a row in that table. File nodes also connect with the *files* table via `file_id`.
 
@@ -101,7 +101,7 @@ A post is created for each file. Changes to the file, it's name, and location ar
 
 ### Post Types
 
-The primary file storage post type:
+The primary file storage post type: `https://tent.io/types/post/attic/v0.1.0`
 
 Property | Required | Type | Description
 ------------ | ------------- | ------------ | ----------
@@ -110,11 +110,18 @@ path | Required | String | Relative location of the file within the *Attic* fold
 size | Required | Integer | The filesize in bytes of the uncompressed file.
 type | Optional | String | The MIME type of the file, if known (using [libmagic](https://en.wikipedia.org/wiki/Libmagic) and file extension heuristics).
 
+Metastore (file index/keystore) post type (see [Metastore](#metastore)): `https://tent.io/types/post/attic-metastore/v0.1.0` (**WIP**)
+
+Property | Required | Type | Description
+-------- | -------- | ---- | ----------
+attic_root | Required | String | Filesystem path to Attic directory (e.g. `/Users/example/Attic`)
+
+[sqlite](http://sqlite.org/index.html) DB file should be an attachment with *metastore* as the category.
+
 We may need additional post types for:
 
 1. Sharing/sync with other users
 2. Files sharded across multiple posts
-3. The file index/keystore
 
 ## API changes
 
