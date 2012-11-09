@@ -116,7 +116,7 @@ Property | Required | Type | Description
 -------- | -------- | ---- | ----------
 attic_root | Required | String | Filesystem path to Attic directory (e.g. `/Users/example/Attic`)
 
-[sqlite](http://sqlite.org/index.html) DB file should be an attachment with *metastore* as the category.
+[sqlite](http://sqlite.org/index.html) DB file should be an attachment with *metastore* as the name.
 
 We may need additional post types for:
 
