@@ -1,0 +1,13 @@
+# directories
+/bin
+/CMakeFiles
+
+# cmake files
+CMakeCache.txt
+cmake_install.cmake
+
+# Generated Makefile
+Makefile
+
+# output files
+*.o
