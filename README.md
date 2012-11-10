@@ -69,6 +69,7 @@ post_version | Integer | Required | version of Tent post
 size | Integer | Required | Size of file in bytes
 type | Text | Optional | MIME type of file if known
 key | Blob | Required | encryption key (32 bytes)
+nonce | Blob | Required | encryption Initialization Vector
 updated_at | Date | Required | epoch timestamp
 
 ## Update/Sync
