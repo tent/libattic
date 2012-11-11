@@ -211,4 +211,10 @@ A **web client** will also be built. The web client will provide an administrati
  - **Authenticate(entityuri)**
     - begins the process to retrieve authentication credentials
     - returns url the user needs to go to to complete app authentication
-
+ - **TradeInCode(code)**
+    - finish the O-auth process, trade in code for auth keys
+ - **SetPassphrase(phrase)**
+    - set's the user's passphrase that all encryption keys are based on
+ - **ChangePassphrase(newphrase)**
+    - changes encryption keys
+    - updates all metadata accordingly
