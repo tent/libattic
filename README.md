@@ -165,3 +165,49 @@ A **web client** will also be built. The web client will provide an administrati
  - Crypto strategy - **Jonathan**
  - OS X app - **Vince**
  - Web app - **Jesse**
+
+## Library Interaction Abstract
+
+### Core API
+ - **StartupAttic()**
+    - This method will essentially take care of all necessary start up functionality of the attic.
+    - This includes:
+        -  Initially requesting the latest metadata and sqlite files.
+        -  Continuing any previously interrupted uploads.
+    - This returns a pointer to manager
+ - **ShutdownAttic(terminate=false)**
+    - This will shutdown the lib
+        - it will attempt to finish whatever it was doing before cleanup
+        - if terminate is true it will break out of the process and end it all.
+ - **SyncFile(wstring& filepath)**
+    - Pass in a filepath to a file (preferably absolute)
+    - wide string (utf-16)
+    - The lib will queue it for processing
+        - processing includes
+            - syncing metadata
+            - compressing the file
+            - chunking
+            - encrypting
+        - and then send it off to the tent server
+    - This will return a handle to the file's particular processing information
+        - Which can be used to check the status of a particular file.
+ - **CancelSync(filehandle)**
+    - This will terminate the process and a cleanup function will be called
+ - **PauseSyncing()**
+    - This will pause the entire syncing process
+    - No files will be processed.
+    - Files can still be inserted into the queue
+ - **UnpauseSyncing()**
+    - Syncing resumes
+ - **GetFileStatus(filehandle)**
+    - returns a struct filled with information pertaining to an actual file.
+ - **GetAtticStatus()**
+    - returns a structed filled with infomration pertaining to attic itself
+    - number in queue
+    - current operation
+ - **ForceSync()**
+    - Forces the sync process, retrieving necessary metadata
+ - **Authenticate(entityuri)**
+    - begins the process to retrieve authentication credentials
+    - returns url the user needs to go to to complete app authentication
+
