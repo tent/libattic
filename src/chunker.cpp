@@ -15,16 +15,18 @@ Chunker::~Chunker()
 
 }
 
-bool Chunker::WriteManifest(std::string &szFilename, unsigned int unChunkCount)
+
+
+bool Chunker::ChunkFile(std::string &szFilePath)
 {
+    // TODO ::
+    // - check if there are currently chunks with a given filename already in the 
+    //   directory.
+    // - create obfuscated chunk names
+    // - find some way to extract the filename from the filepath
+    //
 
-
-    return false;
-}
-
-bool Chunker::ChunkFile(const char* szFilePath)
-{
-    m_ifStream.open(szFilePath, std::ifstream::in | std::ifstream::binary);
+    m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if (m_ifStream.is_open())
     {
@@ -63,6 +65,39 @@ bool Chunker::ChunkFile(const char* szFilePath)
             szBuffer = 0;
         }
 
+        return WriteManifest(szFilePath, count);
+    }
+
+    return false;
+}
+
+bool Chunker::DeChunkFile(std::string &szManifestFilePath)
+{
+
+    return false;
+}
+
+bool Chunker::WriteManifest(std::string &szFilename, unsigned int unChunkCount)
+{
+    // create manifest filename convention
+    // manifest:
+    //  - filename
+    //  - number of chunks
+    //  - chunk naming convention
+
+    std::string manifestName;
+    manifestName.append("manifest");
+
+    m_ofStream.open(manifestName.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+
+    if(m_ofStream.is_open())
+    {
+        m_ofStream.write(szFilename.c_str(), strlen(szFilename.c_str()));
+        //m_ofStream.write(unChunkCount, sizeof(unsigned int)*unChunkCount);
+        m_ofStream << '\n';
+        m_ofStream << unChunkCount;
+
+        m_ofStream.close();
         return true;
     }
 
@@ -87,7 +122,6 @@ bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
         m_ofStream.write(szBuffer, readcount);
         m_ofStream.close();
     }
- 
 
     return true;
 }
@@ -103,3 +137,4 @@ void Chunker::SetName(std::string &nameOut, int nCount)
     snprintf(countBuf, sizeof(countBuf), "%d", nCount);
     nameOut.append(countBuf); 
 }
+

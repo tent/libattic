@@ -15,7 +15,8 @@ public:
     Chunker(const char* szChunkName = "chunk", unsigned int nChunkSize = 20);
     ~Chunker();
 
-    bool ChunkFile(const char* szFilePath);
+    bool ChunkFile(std::string &szFilePath);
+    bool DeChunkFile(std::string &szManifestFilePath);
 
 private:
     std::ifstream   m_ifStream;

@@ -1,11 +1,18 @@
 
-#include "chunker.h"
 #include <gtest/gtest.h>
+#include "chunker.h"
 
+
+// Chunk a file
 TEST(ChunkTest,ChunkFile) {
     Chunker c;
-    ASSERT_EQ(c.ChunkFile("test.txt"),true);
+    std::string test;
+    test.append("test.txt");
+    ASSERT_EQ(c.ChunkFile(test),true);
+
 }
+
+// TODO :: De-Chunk a file
 
 int main (int argc, char* argv[])
 {
