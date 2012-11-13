@@ -15,8 +15,6 @@ Chunker::~Chunker()
 
 }
 
-
-
 bool Chunker::ChunkFile(std::string &szFilePath)
 {
     // TODO ::
