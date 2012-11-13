@@ -1,3 +1,10 @@
+#DEPENDENCIES
+# - libcurl
+# - pthreads
+# - gtest (not for the final release, but for debugging)
+# TODO :: throw build errors if packages aren't found
+# TODO :: search for each package
+
 cmake_minimum_required (VERSION 2.6)
 
 # Set compilers to use
@@ -9,22 +16,26 @@ set (CMAKE_C_COMPILER clang)
 # This is where binary files will go
 set (EXECUTABLE_OUTPUT_PATH ./bin)
 
-project(test)
+project(libattic)
 
+file(GLOB_RECURSE libattic_SOURCE "src/*.cpp")
+file(GLOB_RECURSE libattic_HEADERS "src/*.h")
 
-file(GLOB_RECURSE test_SOURCE "src/*.cpp")
-file(GLOB_RECURSE test_HEADERS "src/*.h")
-
-set(test_INCLUDE_DIRS "")
-foreach (_headerFile ${test_HEADERS})
+set(libattic_INCLUDE_DIRS "")
+foreach (_headerFile ${libattic_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
-    list (APPEND test_INCLUDE_DIRS ${_dir})
+    list (APPEND libattic_INCLUDE_DIRS ${_dir})
 endforeach()
-list(REMOVE_DUPLICATES test_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
+# Include our files
+include_directories(${libattic_INCLUDE_DIRS})
 
-include_directories(${test_INCLUDE_DIRS})
+# Locate GTest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
 # build executable
-add_executable(test ${test_SOURCE})
+add_executable(libattic ${libattic_SOURCE})
 
 #link libs
-target_link_libraries(test curl)
+target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
