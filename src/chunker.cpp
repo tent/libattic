@@ -15,6 +15,13 @@ Chunker::~Chunker()
 
 }
 
+bool Chunker::WriteManifest(std::string &szFilename, unsigned int unChunkCount)
+{
+
+
+    return false;
+}
+
 bool Chunker::ChunkFile(const char* szFilePath)
 {
     m_ifStream.open(szFilePath, std::ifstream::in | std::ifstream::binary);
@@ -61,7 +68,6 @@ bool Chunker::ChunkFile(const char* szFilePath)
 
     return false;
 }
-
 
 bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
 {
