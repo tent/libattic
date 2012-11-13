@@ -11,3 +11,7 @@ Makefile
 
 # output files
 *.o
+
+# swapfiles
+*.swp
+*.swo
