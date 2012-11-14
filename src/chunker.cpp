@@ -15,7 +15,7 @@ Chunker::~Chunker()
 
 }
 
-bool Chunker::ChunkFile(std::string &szFilePath)
+unsigned int Chunker::ChunkFile(std::string &szFilePath)
 {
     // TODO ::
     // - check if there are currently chunks with a given filename already in the 
@@ -24,12 +24,13 @@ bool Chunker::ChunkFile(std::string &szFilePath)
     // - find some way to extract the filename from the filepath
     //
 
+    unsigned int count = 0;
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if (m_ifStream.is_open())
     {
         std::string name;
-        int count = 0;
+
 
         char* szBuffer = new char[m_chunkSize];
 
@@ -50,7 +51,7 @@ bool Chunker::ChunkFile(std::string &szFilePath)
                     szBuffer = 0;
                 }
 
-                return false;
+                return 0;
             }
             
             count++;
@@ -63,41 +64,13 @@ bool Chunker::ChunkFile(std::string &szFilePath)
             szBuffer = 0;
         }
 
-        return WriteManifest(szFilePath, count);
     }
 
-    return false;
+    return count;
 }
 
 bool Chunker::DeChunkFile(std::string &szManifestFilePath)
 {
-
-    return false;
-}
-
-bool Chunker::WriteManifest(std::string &szFilename, unsigned int unChunkCount)
-{
-    // create manifest filename convention
-    // manifest:
-    //  - filename
-    //  - number of chunks
-    //  - chunk naming convention
-
-    std::string manifestName;
-    manifestName.append("manifest");
-
-    m_ofStream.open(manifestName.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-
-    if(m_ofStream.is_open())
-    {
-        m_ofStream.write(szFilename.c_str(), strlen(szFilename.c_str()));
-        //m_ofStream.write(unChunkCount, sizeof(unsigned int)*unChunkCount);
-        m_ofStream << '\n';
-        m_ofStream << unChunkCount;
-
-        m_ofStream.close();
-        return true;
-    }
 
     return false;
 }

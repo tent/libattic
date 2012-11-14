@@ -46,3 +46,32 @@ bool FileInfo::CheckFileSize()
     return false;
 }
 
+
+
+FileInfoFactory::FileInfoFactory()
+{
+
+}
+
+FileInfoFactory::~FileInfoFactory()
+{
+    std::deque<FileInfo*>::iterator itr;
+    for(itr=m_FileList.begin(); itr != m_FileList.end(); itr++)
+    {
+        if(*itr)
+        {
+            delete *itr;
+            *itr = 0;
+        }
+    }
+}
+
+FileInfo* FileInfoFactory::CreateFileInfoObject() 
+{
+
+    FileInfo* fp = new FileInfo();
+
+    m_FileList.push_back(fp);
+
+    return fp;
+}

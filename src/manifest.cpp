@@ -17,11 +17,9 @@ Manifest::~Manifest()
 {
 
 }
-    
 
-bool Manifest::LoadManifestFile(std::string &szFilePath)
+bool Manifest::LoadManifest(std::string &szFilePath)
 {
-
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(m_ifStream.is_open())
@@ -47,16 +45,12 @@ bool Manifest::LoadManifestFile(std::string &szFilePath)
     return false;
 }
 
-bool Manifest::WriteOutManifest()
+bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
 {
-    // TODO :: use a filepath
-    m_ofStream.open(m_fileName.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-
-    if(m_ofStream.is_open())
+    if(ofs)
     {
-        // Write out manifest specific data first.
         char countBuf[256];
-        snprintf(countBuf, sizeof(countBuf), "%d", m_entryCount);
+        snprintf(countBuf, (sizeof(char)*256), "%lu", m_entries.size());
 
         std::string manifestData;
         manifestData.append(countBuf);
@@ -64,10 +58,23 @@ bool Manifest::WriteOutManifest()
 
         m_ofStream.write(manifestData.c_str(), manifestData.size());
 
-        // Write out each entry
+        return true;
+    }
+
+    return false;
+}
+
+bool Manifest::WriteOutManifest()
+{
+    // TODO :: use a filepath
+    m_ofStream.open(m_filePath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+
+    if(m_ofStream.is_open())
+    {
+        // Write out manifest specific data first.
+        WriteOutManifestHeader(m_ofStream);
         
         std::string line;
-
 
         std::map<std::string, FileInfo*>::iterator itr; 
         for(itr = m_entries.begin(); itr != m_entries.end(); itr++)
@@ -85,20 +92,20 @@ bool Manifest::WriteOutManifest()
 
             char szBuffer[256];
             memset(szBuffer, 0, sizeof(char)*256);
-            snprintf(countBuf, sizeof(countBuf), "%d", (*itr).second->GetChunkCount());
+            snprintf(szBuffer, (sizeof(char)*256),  "%d", (*itr).second->GetChunkCount());
 
             line.append(szBuffer);
             line.append("\t");
 
             memset(szBuffer, 0, sizeof(char)*256);
-            snprintf(countBuf, sizeof(countBuf), "%d", (*itr).second->GetFileSize());
+            snprintf(szBuffer, (sizeof(char)*256), "%d", (*itr).second->GetFileSize());
 
             line.append(szBuffer);
             line.append("\t");
 
             line.append("\n");
 
-            m_ofStream.write(manifestData.c_str(), manifestData.size());
+            m_ofStream.write(line.c_str(), line.size());
         } 
 
         m_ofStream.close();
@@ -107,3 +114,29 @@ bool Manifest::WriteOutManifest()
 
    return false; 
 }
+
+
+bool Manifest::InsertFileInfo(FileInfo* fi)
+{
+    if(!fi)
+        return false;
+    
+    //TODO :: expand checks for valid file etc
+    //        for now just insert and be done.
+
+    m_entries[fi->GetFileName()] = fi;
+    m_entryCount++;
+
+    return true;
+}
+
+bool Manifest::CreateEmptyManifest()
+{
+
+    m_ofStream.open(m_filePath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+
+    WriteOutManifestHeader(m_ofStream);
+    m_ofStream.close();
+    return true;
+}
+

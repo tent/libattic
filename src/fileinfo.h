@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <deque>
 
 class FileInfo
 {
@@ -34,6 +35,20 @@ private:
 
     unsigned int    m_chunkCount;
     unsigned int    m_fileSize;   // Filesize, not compressed
+};
+
+
+class FileInfoFactory
+{
+public:
+    FileInfoFactory();
+    ~FileInfoFactory();
+
+    FileInfo* CreateFileInfoObject();
+
+private:
+    std::deque<FileInfo*> m_FileList; // List of FileInfo objects created.
+
 };
 
 #endif

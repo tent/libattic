@@ -4,9 +4,28 @@
 
 #include "chunker.h"
 #include "manifest.h"
-#include "fileinfo.h"
+#include "filemanager.h"
 
 
+// Test FileManager
+TEST(FileManager, IndexFile)
+{
+    std::string manifestpath;
+    manifestpath.append("./manifest._mn");
+    std::string path;
+    path.append("test.txt");
+ 
+    FileManager fm(manifestpath);
+    //ASSERT_EQ(fm.FileExists(path), true);
+    //ASSERT_EQ(mf.CreateEmptyManifest(), true);
+    ASSERT_EQ(fm.StartupFileManager(), true);
+    ASSERT_EQ(fm.IndexFile(path), true);
+    ASSERT_EQ(fm.ShutdownFileManager(), true);
+
+ 
+
+}
+/*
 // Test FileInfo
 TEST(FileInfo, LoadFile)
 {
@@ -18,28 +37,7 @@ TEST(FileInfo, LoadFile)
     std::cout<<"Get file size: "<< fi.GetFileSize() << std::endl;
  
 }
-
-// Test Manifest
-TEST(ManifestTest, WriteOut)
-{
-    std::string file;
-    file.append("manifest._mn");
-
-    Manifest m;
-
-    ASSERT_EQ(m.LoadManifestFile(file), true);
-    ASSERT_EQ(m.WriteOutManifest(), true);
-}
-
-// Chunk a file
-TEST(ChunkTest,ChunkFile)
-{
-    Chunker c;
-    std::string test;
-    test.append("test.txt");
-    ASSERT_EQ(c.ChunkFile(test), true);
-
-}
+*/
 
 // TODO :: De-Chunk a file
 

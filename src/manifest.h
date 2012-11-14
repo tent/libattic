@@ -17,16 +17,20 @@ class FileInfo;
 
 class Manifest
 {
-
+    bool WriteOutManifestHeader(std::ofstream &ofs);
 public:
     Manifest();
     ~Manifest();
 
-    bool LoadManifestFile(std::string &szFilePath);
+    bool CreateEmptyManifest();
+    bool LoadManifest(std::string &szFilePath);
     bool WriteOutManifest();    
-
+    bool InsertFileInfo(FileInfo* fi);
+    
+    void SetFilePath(std::string &filePath) { m_filePath = filePath; }
 private:
-    std::map<std::string, FileInfo*>    m_entries;  
+    std::map<std::string, FileInfo*>    m_entries;  // Do not delete entries, just clear the map.
+                                                    // FileInfoFactory will take care of deletion.
 
     std::ifstream       m_ifStream;
     std::ofstream       m_ofStream;

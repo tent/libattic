@@ -8,26 +8,32 @@
 
 #include "manifest.h"
 #include "chunker.h"
+#include "fileinfo.h"
 
 
-
-
-
-class Filemanager
+class FileManager
 {
-
+    FileInfo* CreateFileInfo();
 public:
-    Filemanager();
-    ~Filemanager();
+    FileManager(std::string &szManifestFilepath);
+    ~FileManager();
 
-    void StartupFileManager();
-    void ShutdownFileManager();
+    bool StartupFileManager();
+    bool ShutdownFileManager();
 
-    void IndexFile(std::string &szFilePath);
+    bool IndexFile(std::string &szFilePath);
+    bool FileExists(std::string& szFilepath);
+
+    std::string GetManifestFilePath() { return m_ManifestFilePath; }
+
+    void SetManifestFilePath(std::string &szFilepath) { m_ManifestFilePath = szFilepath; }
 
 private:
-    Manifest    m_Manifest;
-    Chunker     m_Chunker;
+    FileInfoFactory     m_FileInfoFactory;
+    Manifest            m_Manifest;
+    Chunker             m_Chunker;
+
+    std::string         m_ManifestFilePath; // Location of manifest
 };
 
 
