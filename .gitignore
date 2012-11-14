@@ -1,6 +1,7 @@
 # directories
 /bin
 /CMakeFiles
+.svn
 
 # cmake files
 CMakeCache.txt
@@ -15,3 +16,6 @@ Makefile
 # swapfiles
 *.swp
 *.swo
+
+# libs
+*.a

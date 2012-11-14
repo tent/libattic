@@ -11,9 +11,22 @@ cmake_minimum_required (VERSION 2.6)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
-# TODO :: Set compiler flags
+# Build dependencies
+# Build gtest libs
+execute_process(WORKING_DIRECTORY ./third_party/googletest
+                COMMAND cmake .
+                RESULT_VARIABLE ret_var)
+
+execute_process(WORKING_DIRECTORY ./third_party/googletest
+                COMMAND make
+                RESULT_VARIABLE ret_var)
+
+
+# Set additional include directories
+INCLUDE_DIRECTORIES(./third_party/googletest/include)
 
 # This is where binary files will go
+file(MAKE_DIRECTORY ./bin)
 set (EXECUTABLE_OUTPUT_PATH ./bin)
 
 project(libattic)
@@ -30,12 +43,19 @@ list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
 # Include our files
 include_directories(${libattic_INCLUDE_DIRS})
 
-# Locate GTest
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+# Locate GTest this is used if we install the lib 
+# on the system iteslf, not necessary for multiplatform
+# at the moment.
+#find_package(GTest REQUIRED)
+#include_directories(${GTEST_INCLUDE_DIRS})
+
+# Add gtest lib to statically link
+add_library(imp_gtest STATIC IMPORTED)
+set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ./third_party/googletest/libgtest.a)
 
 # build executable
 add_executable(libattic ${libattic_SOURCE})
 
 #link libs
-target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
+#target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
+target_link_libraries(libattic curl imp_gtest pthread)
