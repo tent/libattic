@@ -2,6 +2,7 @@
 /bin
 /CMakeFiles
 .svn
+third_party/googletest/CMakeFiles
 
 # cmake files
 CMakeCache.txt
