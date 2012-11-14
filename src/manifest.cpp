@@ -2,9 +2,13 @@
 #include "manifest.h"
 
 #include <string.h>
+#include <stdlib.h>
+
 #include <iostream>
+#include <vector>
 
 #include "fileinfo.h"
+#include "utils.h"
 
 Manifest::Manifest()
 {
@@ -17,33 +21,19 @@ Manifest::~Manifest()
 {
 
 }
+/*
+ * Order to write out (and read in)
+ * Manifest Header
+ * - number of entries (unsigned long) 
+ *
+ * Entry
+ * - Filename (str)
+ * - Filepath (str)
+ * - ChunkName (str)
+ * - ChunkCount (unsigned int)
+ * - FileSize (unsigned int)
+ */
 
-bool Manifest::LoadManifest(std::string &szFilePath)
-{
-    m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
-
-    if(m_ifStream.is_open())
-    {
-        unsigned int line_count = 0;
-        std::string line;
-        // Read Line by line
-        while(!m_ifStream.eof())
-        {
-            std::getline(m_ifStream, line);
-            if(line_count == 0)
-            {
-                // header info
-                std::cout<<line<<std::endl;
-                continue;
-            }
-        }
-
-        m_ifStream.close();
-        return true;
-    }
-
-    return false;
-}
 
 bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
 {
@@ -101,9 +91,7 @@ bool Manifest::WriteOutManifest()
             snprintf(szBuffer, (sizeof(char)*256), "%d", (*itr).second->GetFileSize());
 
             line.append(szBuffer);
-            line.append("\t");
-
-            line.append("\n");
+            line.append("\n"); // End the line
 
             m_ofStream.write(line.c_str(), line.size());
         } 

@@ -1,5 +1,7 @@
 
 #include <iostream>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "utils.h"
@@ -8,13 +10,25 @@
 #include "filemanager.h"
 
 
+
+
+TEST(UTILS, StringSplitter)
+{
+    std::vector<std::string> out;
+    std::string s;
+    s.append("This\tis\tthe\tstring\tI'm\tsplitting\n");
+
+    utils::SplitString(s, '\t', out);
+    ASSERT_EQ(out.size(), 6);
+}
+
 // Test FileManager
 TEST(FileManager, IndexFile)
 {
     std::string manifestpath;
     manifestpath.append("./manifest._mn");
     std::string path;
-    path.append("test.txt");
+    path.append("test.pdf");
  
     FileManager fm(manifestpath);
     //ASSERT_EQ(fm.FileExists(path), true);

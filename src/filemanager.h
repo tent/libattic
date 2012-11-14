@@ -4,6 +4,7 @@
 #define FILEMANAGER_H_
 #pragma once
 
+#include <fstream>
 #include <string>
 
 #include "manifest.h"
@@ -14,12 +15,17 @@
 class FileManager
 {
     FileInfo* CreateFileInfo();
+    bool ReadInHeader(std::string &h);
+    bool ReadInEntry(std::string &e);
+
 public:
     FileManager(std::string &szManifestFilepath);
     ~FileManager();
 
     bool StartupFileManager();
     bool ShutdownFileManager();
+
+    bool LoadManifest(std::string &szFilePath);
 
     bool IndexFile(std::string &szFilePath);
     bool FileExists(std::string& szFilepath);
@@ -32,6 +38,10 @@ private:
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;
     Chunker             m_Chunker;
+
+    std::ifstream       m_ifStream;
+    std::ofstream       m_ofStream;
+
 
     std::string         m_ManifestFilePath; // Location of manifest
 };

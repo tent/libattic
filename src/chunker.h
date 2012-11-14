@@ -11,7 +11,7 @@ class Chunker
     bool WriteChunk(char* szBuffer, std::string &szName);
     void SetName(std::string &nameOut, int nCount);
 public:
-    Chunker(const char* szChunkName = "chunk", unsigned int nChunkSize = 20);
+    Chunker(const char* szChunkName = "chunk", unsigned int nChunkSize = 400000);
     ~Chunker();
 
     unsigned int ChunkFile(std::string &szFilePath);
