@@ -2,7 +2,11 @@
 #include "fileinfo.h"
 
 #include <fstream>
+#include <vector>
 
+#include "utils.h"
+
+#include <iostream>
 FileInfo::FileInfo()
 {
 
@@ -20,7 +24,8 @@ bool FileInfo::InitializeFile(std::string &szFilePath)
     // Set filepath
     m_filePath = szFilePath;
     // Extract Filename
-    //
+    m_fileName = ExtractFileName(szFilePath); 
+    std::cout<<"FILENAME : "<<m_fileName << std::endl;
     // Check file size
     if(!CheckFileSize())
         return false;
@@ -46,7 +51,26 @@ bool FileInfo::CheckFileSize()
     return false;
 }
 
+std::string FileInfo::ExtractFileName(std::string &szFilePath)
+{
+    std::string name;
+    unsigned int size = szFilePath.size();
+    if(size)
+    {
+        // Check if passed a directory
+        if(szFilePath[size-1] == '/')
+            return name;
 
+        std::vector<std::string> out;
+        utils::SplitString(szFilePath, '/', out);
+        if(out.size())
+        {
+            name = out[out.size()-1];
+        }
+    }
+
+    return name;
+}
 
 FileInfoFactory::FileInfoFactory()
 {
