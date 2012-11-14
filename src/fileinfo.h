@@ -8,7 +8,7 @@
 
 class FileInfo
 {
-    bool CheckFileSize();
+    std::string ExtractFileName(std::string &szFilePath);
 public:
     FileInfo();
     ~FileInfo();

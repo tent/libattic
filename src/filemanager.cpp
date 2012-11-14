@@ -140,7 +140,7 @@ bool FileManager::IndexFile(std::string &szFilePath)
     // 
     // ChunkFile
     //
-    unsigned int count = m_Chunker.ChunkFile(szFilePath);
+    unsigned int count = m_Chunker.ChunkFile(fi);
     if(!count)
         return false;
 

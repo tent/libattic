@@ -26,12 +26,12 @@ TEST(UTILS, StringSplitter)
 TEST(FileManager, IndexFile)
 {
     std::string manifestpath;
-    manifestpath.append("./manifest._mn");
+    manifestpath.append("./data/manifest._mn");
     std::string path;
-    path.append("test.pdf");
+    path.append("./data/test.pdf");
  
     FileManager fm(manifestpath);
-    //ASSERT_EQ(fm.FileExists(path), true);
+    ASSERT_EQ(fm.FileExists(path), true);
     //ASSERT_EQ(mf.CreateEmptyManifest(), true);
     ASSERT_EQ(fm.StartupFileManager(), true);
     ASSERT_EQ(fm.IndexFile(path), true);

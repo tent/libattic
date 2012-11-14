@@ -6,7 +6,6 @@
 
 #include "utils.h"
 
-#include <iostream>
 FileInfo::FileInfo()
 {
 
@@ -25,30 +24,14 @@ bool FileInfo::InitializeFile(std::string &szFilePath)
     m_filePath = szFilePath;
     // Extract Filename
     m_fileName = ExtractFileName(szFilePath); 
-    std::cout<<"FILENAME : "<<m_fileName << std::endl;
     // Check file size
-    if(!CheckFileSize())
+    //if(!CheckFileSize())
+    m_fileSize = utils::CheckFileSize(szFilePath);
+
+    if(!m_fileSize)
         return false;
 
     return true;
-}
-
-bool FileInfo::CheckFileSize()
-{
-    std::ifstream ifs;
-    ifs.open (m_filePath.c_str(), std::ifstream::binary);
-
-    if(ifs.is_open())
-    {
-       ifs.seekg (0, std::ifstream::end);
-       m_fileSize = ifs.tellg();
-       ifs.seekg (0, std::ifstream::beg);
-
-       ifs.close();
-       return true;
-    }
-
-    return false;
 }
 
 std::string FileInfo::ExtractFileName(std::string &szFilePath)
