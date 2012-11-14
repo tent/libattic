@@ -119,9 +119,10 @@ bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
 
         m_ofStream.write(szBuffer, readcount);
         m_ofStream.close();
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 void Chunker::SetName(std::string &nameOut, int nCount)
