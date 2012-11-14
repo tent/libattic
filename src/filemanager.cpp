@@ -26,10 +26,12 @@ void Filemanager::ShutdownFileManager()
 
 void Filemanager::IndexFile(std::string &szFilePath)
 {
-    // Get File info
+    // Create an entry
+    //  Get File info
     //
     // Compress
     //
+    // 
     // ChunkFile
     //
     // Write manifest entry

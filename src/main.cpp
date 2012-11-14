@@ -1,9 +1,25 @@
 
+#include <iostream>
 #include <gtest/gtest.h>
+
 #include "chunker.h"
 #include "manifest.h"
+#include "fileinfo.h"
 
-// Test 
+
+// Test FileInfo
+TEST(FileInfo, LoadFile)
+{
+    std::string path;
+    path.append("test.txt");
+    FileInfo fi;
+
+    ASSERT_EQ(fi.InitializeFile(path), true);
+    std::cout<<"Get file size: "<< fi.GetFileSize() << std::endl;
+ 
+}
+
+// Test Manifest
 TEST(ManifestTest, WriteOut)
 {
     std::string file;

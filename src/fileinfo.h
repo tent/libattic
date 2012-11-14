@@ -7,15 +7,18 @@
 
 class FileInfo
 {
+    bool CheckFileSize();
 public:
     FileInfo();
     ~FileInfo();
 
+    // Init a file
+    bool InitializeFile(std::string &szFilePath);
+    
     void SetFileName(std::string &szFileName) { m_fileName = szFileName; }
     void SetFilePath(std::string &szFilePath) { m_filePath = szFilePath; }
     void SetChunkName(std::string &szChunkName) { m_chunkName = szChunkName; }
     void SetChunkCount(unsigned int unChunkCount) { m_chunkCount = unChunkCount; }
-    void SetFileSize(unsigned int unFileSize) { m_fileSize = unFileSize; }
     
     std::string GetFileName() { return m_fileName; }
     std::string GetFilePath() { return m_filePath; }
