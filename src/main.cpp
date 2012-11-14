@@ -2,6 +2,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 
+#include "utils.h"
 #include "chunker.h"
 #include "manifest.h"
 #include "filemanager.h"
