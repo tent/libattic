@@ -83,15 +83,10 @@ bool Chunker::DeChunkFile(FileInfo *fi)
         return false;
     // Create output path
     std::string outputPath;
-    outputPath = m_chunkDir + fi->GetFileName();
+    outputPath = m_chunkDir + "/" + fi->GetFileName();
 
     if(!VerifyAllChunkExistence(fi->GetChunkName(), m_chunkDir, fi->GetChunkCount()))
         return false;
-
-    // Cycle through chunks
-    //
-    // Dump into output stream
-    //
 
     // Open stream for output file
     if(m_ofStream.is_open())
@@ -104,6 +99,7 @@ bool Chunker::DeChunkFile(FileInfo *fi)
 
     std::string chunkName;
     std::string inputPath;
+    // Cycle through chunks
     for(unsigned int i=0; i<fi->GetChunkCount(); i++)
     {
         chunkName.clear();
@@ -118,15 +114,33 @@ bool Chunker::DeChunkFile(FileInfo *fi)
         inputPath = m_chunkDir + "/" + chunkName; 
 
         // Open input stream
+        m_ifStream.open(inputPath.c_str(), std::ifstream::in | std::ifstream::binary);
 
-        // Find all chunks
-        // 
+        if(!m_ifStream.is_open())
+            return false;
+
+        // Get Size of Chunk
+        m_ifStream.seekg(0, std::ifstream::end);
+        unsigned int size = m_ifStream.tellg();
+        m_ifStream.seekg(0, std::ifstream::beg);
+        
+        // Create a temp buffer
+        char* pBuf = new char[size];
+
         // Read the chunk
+        m_ifStream.read(pBuf, size);
+
         // shove it into the output stream
-
+        int readcount = m_ifStream.gcount();
+        m_ofStream.write(pBuf, readcount);
+        m_ifStream.close();
+        delete pBuf;
+        pBuf = 0;
+ 
     }
+    m_ofStream.close();
 
-    return false;
+    return true;
 }
 
 bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, std::string &szChunkDir, unsigned int uCount)

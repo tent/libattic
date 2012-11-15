@@ -103,7 +103,6 @@ bool Manifest::WriteOutManifest()
    return false; 
 }
 
-
 bool Manifest::InsertFileInfo(FileInfo* fi)
 {
     if(!fi)
@@ -116,6 +115,16 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     m_entryCount++;
 
     return true;
+}
+
+FileInfo* Manifest::RetrieveFileInfo(std::string &s)
+{
+    EntriesMap::iterator itr;
+    itr = m_entries.find(s);
+
+    if(itr == m_entries.end())
+        return 0;
+    return itr->second;
 }
 
 bool Manifest::CreateEmptyManifest()

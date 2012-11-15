@@ -42,6 +42,7 @@ bool FileManager::ShutdownFileManager()
     // Write out manifest
     return m_Manifest.WriteOutManifest();
 }
+
 bool FileManager::LoadManifest(std::string &szFilePath)
 {
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
@@ -128,6 +129,7 @@ bool FileManager::ReadInEntry(std::string &e)
 
     return true;
 }
+
 bool FileManager::IndexFile(std::string &szFilePath)
 {
     // Create an entry
@@ -137,13 +139,11 @@ bool FileManager::IndexFile(std::string &szFilePath)
     //
     // Compress
     //
-    // 
+     
     // ChunkFile
-    //
     unsigned int count = m_Chunker.ChunkFile(fi);
     if(!count)
         return false;
-
     fi->SetChunkCount(count);
 
     // Encrypt
@@ -156,6 +156,24 @@ bool FileManager::IndexFile(std::string &szFilePath)
     return m_Manifest.WriteOutManifest();
 }
 
+bool FileManager::ConstructFile(std::string &szFileName)
+{
+    // Retrieve File Info from manifest
+    FileInfo *pFi = m_Manifest.RetrieveFileInfo(szFileName);
+    if(!pFi)
+        return false;
+
+    // Decrypt chunks
+    //
+    // De-chunk
+    if(! m_Chunker.DeChunkFile(pFi))
+        return false;
+    // Decompress
+    //
+
+    return true;
+}
+
 FileInfo* FileManager::CreateFileInfo()
 {
     return m_FileInfoFactory.CreateFileInfoObject();
@@ -164,6 +182,8 @@ FileInfo* FileManager::CreateFileInfo()
 bool FileManager::FileExists(std::string& szFilepath)          
 {                                                           
         std::ifstream infile(szFilepath.c_str());               
-                return infile.good();                               
+        bool bVal = infile.good();
+        infile.close();
+        return bVal;                               
 }                                                           
 

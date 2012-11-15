@@ -37,6 +37,10 @@ TEST(FileManager, IndexFile)
     ASSERT_EQ(fm.IndexFile(path), true);
     ASSERT_EQ(fm.ShutdownFileManager(), true);
 
+    std::string filename;
+    filename.append("test.pdf");
+    ASSERT_EQ(fm.ConstructFile(filename), true);
+
  
 
 }

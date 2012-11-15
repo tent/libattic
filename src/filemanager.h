@@ -28,6 +28,8 @@ public:
     bool LoadManifest(std::string &szFilePath);
 
     bool IndexFile(std::string &szFilePath);
+    bool ConstructFile(std::string &szFileName);
+
     bool FileExists(std::string& szFilepath);
 
     std::string GetManifestFilePath() { return m_ManifestFilePath; }
