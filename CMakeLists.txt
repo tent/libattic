@@ -1,6 +1,7 @@
 #DEPENDENCIES
 # - libcurl
 # - pthreads
+# - crypto++
 # - gtest (not for the final release, but for debugging)
 # TODO :: throw build errors if packages aren't found
 # TODO :: search for each package
@@ -21,6 +22,23 @@ execute_process(WORKING_DIRECTORY ./third_party/googletest
                 COMMAND make
                 RESULT_VARIABLE ret_var)
 
+execute_process(WORKING_DIRECTORY ./third_party/c5
+               COMMAND make clean
+               RESULT_VARIABLE ret_var)
+
+execute_process(WORKING_DIRECTORY ./third_party/c5
+               COMMAND make static)
+
+execute_process(WORKING_DIRECTORY ./third_party/c5
+                COMMAND mkdir lib
+                RESULT_VARIABLE ret_var)
+
+execute_process(WORKING_DIRECTORY ./third_party/c5
+                COMMAND cp libcryptopp.a ./lib)
+           
+execute_process(WORKING_DIRECTORY ./third_party/c5
+               COMMAND make clean
+               RESULT_VARIABLE ret_var)
 
 # Set additional include directories
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
