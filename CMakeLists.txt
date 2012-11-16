@@ -42,6 +42,7 @@ execute_process(WORKING_DIRECTORY ./third_party/c5
 
 # Set additional include directories
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
+INCLUDE_DIRECTORIES(./third_party/c5)
 
 # This is where binary files will go
 file(MAKE_DIRECTORY ./bin)
@@ -71,9 +72,13 @@ include_directories(${libattic_INCLUDE_DIRS})
 add_library(imp_gtest STATIC IMPORTED)
 set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ./third_party/googletest/libgtest.a)
 
+# Add crpytopp lib to statically link
+add_library(imp_cryptpp STATIC IMPORTED)
+set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ./third_party/c5/lib/libcryptopp.a)
+
 # build executable
 add_executable(libattic ${libattic_SOURCE})
 
 #link libs
 #target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
-target_link_libraries(libattic curl imp_gtest pthread)
+target_link_libraries(libattic curl imp_gtest imp_cryptpp pthread)

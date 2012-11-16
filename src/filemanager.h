@@ -29,6 +29,9 @@ public:
 
     bool IndexFile(std::string &szFilePath);
     bool ConstructFile(std::string &szFileName);
+    
+    bool CompressFile(std::string &szFilePath, std::string &szOutputPath, int nDeflatedLevel);
+    bool DecompressFile(std::string &szFilePath, std::string &szOutputPath);
 
     bool FileExists(std::string& szFilepath);
 

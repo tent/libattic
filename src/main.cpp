@@ -41,7 +41,21 @@ TEST(FileManager, IndexFile)
     filename.append("test.pdf");
     ASSERT_EQ(fm.ConstructFile(filename), true);
 
- 
+
+    try
+    {
+        std::string output;
+        output.append("testcomp");
+        fm.CompressFile(path, output, 1); 
+        std::string uncomp;
+        uncomp.append("uncompressed");
+        fm.DecompressFile(output, uncomp);
+
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "EXCEPTION : " << e.what() << std::endl;
+    } 
 
 }
 /*
