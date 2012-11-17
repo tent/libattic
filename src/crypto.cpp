@@ -61,12 +61,14 @@ ret::eCode Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPat
 
     char* pBuffer = new char[m_Stride];
     // begin reading
+    
+    unsigned int totalread = 0;
     while(!ifs.eof())
     {
         memset(pBuffer, 0, (sizeof(char)*m_Stride));
         // read into buffer
         ifs.read(pBuffer, m_Stride);
-        int readCount = ifs.gcount();
+        unsigned int readCount = ifs.gcount();
 
         if(!EncryptData(pBuffer, readCount, cred, ofs))
         {
@@ -80,7 +82,9 @@ ret::eCode Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPat
             }
             return ret::A_FAIL_ENCRYPT;
         }
+        totalread += readCount;
     }
+    std::cout<<"TOTAL READ : " << totalread << std::endl;
 
     if(pBuffer)
     {
@@ -107,11 +111,13 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
     try
     {
         std::string cipher;
+        std::string data;
+        data.append(pData, size);
 
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(cred.key, cred.GetKeySize(), cred.iv, cred.GetIvSize());
 
-        CryptoPP::StringSource( pData,
+        CryptoPP::StringSource( data,
                                 true,
                                 new CryptoPP::AuthenticatedEncryptionFilter( e,
                                 new CryptoPP::StringSink(cipher),
@@ -121,6 +127,7 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
 
        // Write out cipher to ofstream
        ofs.write(cipher.c_str(), cipher.size());
+       std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
     }
     catch (CryptoPP::Exception &e)
     {

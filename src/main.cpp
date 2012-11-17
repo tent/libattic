@@ -13,6 +13,36 @@
 #include "errorcodes.h"
 
 
+/*
+TEST(COMPRESS, ENCRYPT)
+{
+    Compressor cmp;
+    std::string path;
+    path.append("./data/test.pdf");
+
+    std::string compressedout;
+    compressedout.append("./output/testcomp");
+    ASSERT_EQ(cmp.CompressFile(path, compressedout, 1), ret::A_OK);
+
+    unsigned int size = utils::CheckFileSize(compressedout);
+
+    std::cout<<"FILE SIZE : "<< size << std::endl;
+
+    Crypto crp;
+    Credentials cred = crp.GenerateCredentials();
+
+    std::string out;
+    out.append("./output/cryp");
+    // encrypt file
+    ASSERT_EQ(crp.EncryptFile(compressedout, out, cred), ret::A_OK);
+
+    std::string uncryp;
+    uncryp.append("./output/uncryp");
+    // decrypt file
+    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
+}
+
+
 TEST(CHUNKER, Chunking)
 {
 
@@ -84,8 +114,8 @@ TEST(UTILS, StringSplitter)
     utils::SplitString(s, '\t', out);
     ASSERT_EQ(out.size(), 6);
 }
+*/
 
-/* TODO FIX THIS TEST
 // Test FileManager
 TEST(FileManager, IndexFile)
 {
@@ -102,15 +132,19 @@ TEST(FileManager, IndexFile)
     ASSERT_EQ(fm.FileExists(path), true);
     //ASSERT_EQ(mf.CreateEmptyManifest(), true);
     ASSERT_EQ(fm.StartupFileManager(), true);
-    ASSERT_EQ(fm.IndexFile(path), true);
+
+    ret::eCode status = fm.IndexFile(path);
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<< "STATUS : " << status << std::endl;
     ASSERT_EQ(fm.ShutdownFileManager(), true);
 
-    std::string filename;
-    filename.append("test.pdf");
-    ASSERT_EQ(fm.ConstructFile(filename), true);
+
+ //   std::string filename;
+//    filename.append("test.pdf");
+//    ASSERT_EQ(fm.ConstructFile(filename), true);
 }
 
-*/
 
 /*
 // Test FileInfo
