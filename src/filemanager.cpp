@@ -1,4 +1,3 @@
-
 #include "filemanager.h"
 
 #include <string.h>
@@ -7,22 +6,30 @@
 #include <vector>
 #include <iostream>
 
-#include <zlib.h>
-#include <gzip.h>
-#include <files.h>
-#include <mqueue.h>
-#include <channels.h>
-
 #include "utils.h"
 
 // TODO :: considering removing all file reading/writing out of 
 //         manifest to filemanager. (centralize all file writing)
 //
 
-FileManager::FileManager(std::string &szManifestFilepath)
+FileManager::FileManager()
 {
+
+}
+
+FileManager::FileManager(std::string &szManifestFilepath, std::string &szWorkingDirectory, unsigned int uFileStride)
+{
+    // Set manifest path
     m_ManifestFilePath = szManifestFilepath;
     m_Manifest.SetFilePath(m_ManifestFilePath);
+
+    // Set working directory
+    m_WorkingDirectory = szWorkingDirectory;
+
+    // Set File Stride
+    m_FileStride = uFileStride;
+    m_Chunker.SetChunkSize(m_FileStride);
+    m_Crypto.SetStride(m_FileStride);
 }
 
 FileManager::~FileManager()
@@ -135,48 +142,95 @@ bool FileManager::ReadInEntry(std::string &e)
     return true;
 }
 
-bool FileManager::IndexFile(std::string &szFilePath)
+ret::eCode FileManager::IndexFile(std::string &szFilePath)
 {
+    ret::eCode status = ret::A_OK;
     // Create an entry
     //  Get File info
     FileInfo* fi = CreateFileInfo();
     fi->InitializeFile(szFilePath);
     //
     // Compress
-    //
-     
-    // ChunkFile
-    unsigned int count = m_Chunker.ChunkFile(fi);
-    if(!count)
-        return false;
-    fi->SetChunkCount(count);
-
+    // Generate Compression filepath
+    std::string comppath;
+    GenerateCompressionPath(fi, comppath);
+    status = m_Compressor.CompressFile(szFilePath, comppath, 1);
+    if(status != ret::A_OK)
+        return status;
     // Encrypt
-    //
+    // Generate Crypto filepath
+    std::string cryptpath;
+    GenerateCryptoPath(fi, cryptpath);
+    // Generate Credentials
+    Credentials cred = m_Crypto.GenerateCredentials();
+    status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
+    if(status != ret::A_OK)
+        return status;
+
+    // Shove keys into a sqlite entry (and FileInfo?)
+
+    // ChunkFile
+    // Generate Chunk Directory 
+    status = m_Chunker.ChunkFile(fi, cryptpath, m_WorkingDirectory);
+    if(status != ret::A_OK)
+        return status;
 
     // Check if manifest is loaded
     // Write manifest entry
     m_Manifest.InsertFileInfo(fi);
 
-    return m_Manifest.WriteOutManifest();
+    bool success = m_Manifest.WriteOutManifest();
+    return status;
 }
 
-bool FileManager::ConstructFile(std::string &szFileName)
+void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
 {
+    if(!fi)
+        return;
+
+    // strip any file type
+    std::vector<std::string> split;
+    utils::SplitString(fi->GetFileName(), '.', split);
+    
+    if(split.size() > 0)
+    { 
+        szOutPath = m_WorkingDirectory + "/" + split[0] + "_cmp";
+    }
+}
+
+void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
+{
+    if(!fi)
+        return;
+    // strip any file type
+    std::vector<std::string> split;
+    utils::SplitString(fi->GetFileName(), '.', split);
+    
+    if(split.size() > 0)
+    { 
+        szOutPath = m_WorkingDirectory + "/" + split[0] + "_enc";
+    }
+}
+
+ret::eCode FileManager::ConstructFile(std::string &szFileName)
+{
+
+    ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
     FileInfo *pFi = m_Manifest.RetrieveFileInfo(szFileName);
-    if(!pFi)
-        return false;
+    //if(!pFi){}
+       // return false;
 
+
+    // De-chunk
+    //if(! m_Chunker.DeChunkFile(pFi)){}
+        //return false;
     // Decrypt chunks
     //
-    // De-chunk
-    if(! m_Chunker.DeChunkFile(pFi))
-        return false;
     // Decompress
     //
 
-    return true;
+    return status;
 }
 
 FileInfo* FileManager::CreateFileInfo()
@@ -191,62 +245,5 @@ bool FileManager::FileExists(std::string& szFilepath)
         infile.close();
         return bVal;                               
 }                                                           
-
-bool FileManager::CompressFile(std::string &szFilePath, std::string &szOutputPath, int nDeflatedLevel)
-{
-    // Pass in path to file needing compressing, output path is the compressed file's destination
-    // deflate level (1-9) level of compression
-
-    // TODO :: it'd be nice for some sort of filepath validation.
-    //
-
-    try // Cryptopp can throw exceptions
-    {
-        // Use filter to check integrity after compression    
-        CryptoPP::EqualityComparisonFilter comparison;
-        CryptoPP::ChannelSwitch *compSwitch = new CryptoPP::ChannelSwitch(comparison, "0");
-        // gunzip takes ownership of the data, and will free it later.
-        CryptoPP::Gunzip gz(compSwitch);
-        gz.SetAutoSignalPropagation(0);
-        
-        CryptoPP::FileSink sink(szOutputPath.c_str());
-        
-        CryptoPP::ChannelSwitch *cs = new CryptoPP::ChannelSwitch(sink);
-        // gzip takes ownership of the data, and will free it later.
-        CryptoPP::Gzip gzip(cs, nDeflatedLevel);
-        cs->AddDefaultRoute(gz);
-        
-        cs = new CryptoPP::ChannelSwitch(gzip);
-        cs->AddDefaultRoute(comparison, "1");
-
-        CryptoPP::FileSource source(szFilePath.c_str(), true, cs);
-       
-        comparison.ChannelMessageSeriesEnd("0");
-        comparison.ChannelMessageSeriesEnd("1");
-    }
-    catch(std::exception &e)
-    {
-        // Some sort of logging
-        return false;
-    }
-    
-    return true;
-}
-
-
-bool FileManager::DecompressFile(std::string &szFilePath, std::string &szOutputPath)
-{
-    try
-    {
-        CryptoPP::FileSource(szFilePath.c_str(), true, new CryptoPP::Gunzip(new CryptoPP::FileSink(szOutputPath.c_str())));
-    }
-    catch(std::exception &e)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 
 

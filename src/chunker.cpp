@@ -7,10 +7,8 @@
 #include "fileinfo.h"
 #include "utils.h"
 
-Chunker::Chunker(const char* szChunkName, const char* szChunkDir, unsigned int nChunkSize)
+Chunker::Chunker(unsigned int nChunkSize)
 {
-    m_chunkName.append(szChunkName);
-    m_chunkDir.append(szChunkDir);
     m_chunkSize = nChunkSize;
 }
 
@@ -19,7 +17,7 @@ Chunker::~Chunker()
 
 }
 
-unsigned int Chunker::ChunkFile(FileInfo *fi)
+ret::eCode Chunker::ChunkFile(FileInfo *fi, std::string &szFilePath, std::string &szChunkDir)
 {
     // TODO ::
     // - check if there are currently chunks with a given filename already in the 
@@ -28,65 +26,72 @@ unsigned int Chunker::ChunkFile(FileInfo *fi)
     // - find some way to extract the filename from the filepath
     
     if(!fi)
-        return 0;
+        return ret::A_FAIL_INVALID_PTR;
 
-    // Get FilePath
-    std::string szFilePath = fi->GetFilePath();
-    // Resolve Chunk Name TODO :: HASH 
-    fi->SetChunkName(m_chunkName);
+    // Resolve Chunk Name   
+    // TODO :: Generate Chunk names 
+    std::string chunkName;
+    chunkName.append("chunk");
+
+    fi->SetChunkName(chunkName);
 
     unsigned int count = 0;
+    std::cout<< "Filepath " << szFilePath <<std::endl;
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
-    if (m_ifStream.is_open())
+    if (!m_ifStream.is_open())
     {
-        std::string name;
-        char* szBuffer = new char[m_chunkSize];
-
-        // Build the Chunk
-        while(!m_ifStream.eof())
-        {
-            // Zero out memory
-            memset(szBuffer, 0, sizeof(char)*m_chunkSize);
-
-            SetName(name, count);
-
-            if(!WriteChunk(szBuffer, name))
-            {
-                m_ifStream.close();
-                if(szBuffer)
-                {   
-                    delete szBuffer;
-                    szBuffer = 0;
-                }
-
-                return 0;
-            }
-            
-            count++;
-        }
-
-        m_ifStream.close();
-        if(szBuffer)
-        {   
-            delete szBuffer;
-            szBuffer = 0;
-        }
+        return ret::A_FAIL_OPEN;
     }
 
-    return count;
+    std::string name;
+    char* szBuffer = new char[m_chunkSize];
+
+    // Build the Chunk
+    while(!m_ifStream.eof())
+    {
+        // Zero out memory
+        memset(szBuffer, 0, sizeof(char)*m_chunkSize);
+
+        SetName(chunkName, name, count);
+
+        if(!WriteChunk(szBuffer, szChunkDir, name))
+        {
+            m_ifStream.close();
+            if(szBuffer)
+            {   
+                delete szBuffer;
+                szBuffer = 0;
+            }
+
+            return ret::A_FAIL_WRITE_CHUNK;
+        }
+        
+        count++;
+    }
+
+    m_ifStream.close();
+    if(szBuffer)
+    {   
+        delete szBuffer;
+        szBuffer = 0;
+    }
+
+    fi->SetChunkCount(count);
+
+    return ret::A_OK;
 }
 
-bool Chunker::DeChunkFile(FileInfo *fi)
+ret::eCode Chunker::DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::string &szChunkDir)
 {
     if(!fi)
-        return false;
+        return ret::A_FAIL_INVALID_PTR;
     // Create output path
     std::string outputPath;
-    outputPath = m_chunkDir + "/" + fi->GetFileName();
+    outputPath = szChunkDir + "/" + fi->GetFileName();
 
-    if(!VerifyAllChunkExistence(fi->GetChunkName(), m_chunkDir, fi->GetChunkCount()))
-        return false;
+    if(!VerifyAllChunkExistence(fi->GetChunkName(), szChunkDir, fi->GetChunkCount()))
+        return ret::A_FAIL_VERIFY_CHUNKS;
 
     // Open stream for output file
     if(m_ofStream.is_open())
@@ -95,7 +100,7 @@ bool Chunker::DeChunkFile(FileInfo *fi)
     m_ofStream.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!m_ofStream.is_open())
-        return false;
+        return ret::A_FAIL_OPEN;
 
     std::string chunkName;
     std::string inputPath;
@@ -111,13 +116,13 @@ bool Chunker::DeChunkFile(FileInfo *fi)
         chunkName = fi->GetChunkName() + "_" + szBuffer;
         // assemble path
         inputPath.clear();
-        inputPath = m_chunkDir + "/" + chunkName; 
+        inputPath = szChunkDir + "/" + chunkName; 
 
         // Open input stream
         m_ifStream.open(inputPath.c_str(), std::ifstream::in | std::ifstream::binary);
 
         if(!m_ifStream.is_open())
-            return false;
+            return ret::A_FAIL_OPEN;
 
         // Get Size of Chunk
         m_ifStream.seekg(0, std::ifstream::end);
@@ -140,7 +145,7 @@ bool Chunker::DeChunkFile(FileInfo *fi)
     }
     m_ofStream.close();
 
-    return true;
+    return ret::A_OK;
 }
 
 bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, std::string &szChunkDir, unsigned int uCount)
@@ -162,7 +167,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, std::strin
     return true;
 }
 
-bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
+bool Chunker::WriteChunk(char* szBuffer, std::string &szChunkDir, std::string &szName)
 {
     if(!szBuffer)
     {
@@ -170,7 +175,7 @@ bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
     }
     // resolve path
     std::string path;
-    path = m_chunkDir + "/" + szName;
+    path = szChunkDir + "/" + szName;
 
     m_ofStream.open(path.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 
@@ -188,15 +193,15 @@ bool Chunker::WriteChunk(char* szBuffer, std::string &szName)
     return false;
 }
 
-void Chunker::SetName(std::string &nameOut, int nCount)
+void Chunker::SetName(std::string &szBaseName, std::string &szNameOut, int nCount)
 {
     // Set the name
-    nameOut.clear();
-    nameOut.append(m_chunkName.c_str());
-    nameOut.append("_");
+    szNameOut.clear();
+    szNameOut.append(szBaseName.c_str());
+    szNameOut.append("_");
 
     char countBuf[256];
     snprintf(countBuf, sizeof(countBuf), "%d", nCount);
-    nameOut.append(countBuf); 
+    szNameOut.append(countBuf); 
 }
 

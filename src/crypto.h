@@ -34,10 +34,14 @@ public:
 
     ret::eCode EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
     ret::eCode DecryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
+
+    unsigned int GetStride() { return m_Stride; }
+
+    void SetStride(unsigned int uStride) { m_Stride = uStride; }
     
 private: 
-    CryptoPP::AutoSeededRandomPool m_Rnd; // Random pool used for key generation
-    unsigned int m_Stride; // Size of stride used when encrypting
+    CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation
+    unsigned int                    m_Stride; // Size of stride used when encrypting
 
 };
 
