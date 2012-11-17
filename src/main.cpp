@@ -9,7 +9,7 @@
 #include "manifest.h"
 #include "filemanager.h"
 #include "crypto.h"
-
+#include "errorcodes.h"
 
 
 TEST(CRYPTO, Keys)
@@ -27,12 +27,12 @@ TEST(CRYPTO, Keys)
     std::string out;
     out.append("./output/cryp");
     // encrypt file
-    ASSERT_EQ(crp.EncryptFile(path, out, cred), true);
+    ASSERT_EQ(crp.EncryptFile(path, out, cred), ret::A_OK);
 
     std::string uncryp;
     uncryp.append("./output/uncryp");
     // decrypt file
-    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), true);
+    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
            
 
 }

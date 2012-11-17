@@ -10,6 +10,8 @@
 #include <aes.h>
 #include <osrng.h>
 
+#include "errorcodes.h"
+
 struct Credentials
 {
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
@@ -30,8 +32,8 @@ public:
 
     Credentials GenerateCredentials(); 
 
-    bool EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
-    bool DecryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
+    ret::eCode EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
+    ret::eCode DecryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
     
 private: 
     CryptoPP::AutoSeededRandomPool m_Rnd; // Random pool used for key generation

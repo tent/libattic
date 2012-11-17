@@ -20,7 +20,6 @@ Crypto::Crypto(unsigned int uStride)
 Crypto::~Crypto()
 {
 
-
 }
 
 Credentials Crypto::GenerateCredentials()
@@ -43,7 +42,7 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
-bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred)
+ret::eCode Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred)
 {
     // create ifstream (read in)
     std::ifstream ifs;
@@ -51,14 +50,14 @@ bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Cre
     ifs.open(szFilepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return false;
+        return ret::A_FAIL_OPEN;
 
     // create ofstream (write out)
     std::ofstream ofs;
     ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
-        return false;
+        return ret::A_FAIL_OPEN;
 
     char* pBuffer = new char[m_Stride];
     // begin reading
@@ -71,10 +70,15 @@ bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Cre
 
         if(!EncryptData(pBuffer, readCount, cred, ofs))
         {
-            std::cout<<"FAILED TO ENCRYPT DATA\n";
+            std::cerr<<"FAILED TO ENCRYPT DATA\n";
             ifs.close();
             ofs.close();
-            return false;
+            if(pBuffer)
+            {
+                delete pBuffer;
+                pBuffer = 0;
+            }
+            return ret::A_FAIL_ENCRYPT;
         }
     }
 
@@ -89,7 +93,7 @@ bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Cre
     // USE STRIDE for the size you read in per iteration
     // call encrypt data to write out to file (pass output stream)
     // close file
-    return true;
+    return ret::A_OK;
 }
 
 bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
@@ -127,7 +131,7 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
     return true;
 }
 
-bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Credentials &cred)
+ret::eCode Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Credentials &cred)
 {
     // szFilePath, is the path to the encrypted data.
 
@@ -136,14 +140,14 @@ bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Cre
     ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return false;
+        return ret::A_FAIL_OPEN;
 
     // create ofstream (write out)
     std::ofstream ofs;
     ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
-        return false;
+        return ret::A_FAIL_OPEN;
 
     char* pBuffer = new char[m_Stride + TAG_SIZE];
 
@@ -157,10 +161,15 @@ bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Cre
         // call decrypt data to write out to file (pass output stream)
         if(!DecryptData(pBuffer, readCount, cred, ofs))
         {
-            std::cout<<"FAILED TO DECRYPT DATA\n";
+            std::cerr<<"FAILED TO DECRYPT DATA\n";
             ifs.close();
             ofs.close();
-            return false;
+            if(pBuffer)
+            {
+                delete pBuffer;
+                pBuffer = 0;
+            }
+            return ret::A_FAIL_DECRYPT;
         }
     }
 
@@ -172,7 +181,7 @@ bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Cre
     // close file
     ifs.close();
     ofs.close();
-    return true;
+    return ret::A_OK;
 }
 
 bool Crypto::DecryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
