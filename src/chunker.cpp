@@ -87,8 +87,6 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
     // Create output path
-    std::string outputPath;
-    outputPath = szChunkDir + "/" + fi->GetFileName();
 
     if(!VerifyAllChunkExistence(fi->GetChunkName(), szChunkDir, fi->GetChunkCount()))
         return ret::A_FAIL_VERIFY_CHUNKS;
@@ -97,7 +95,7 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::
     if(m_ofStream.is_open())
         m_ofStream.close();
 
-    m_ofStream.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
+    m_ofStream.open(szOutboundPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!m_ofStream.is_open())
         return ret::A_FAIL_OPEN;

@@ -27,6 +27,10 @@ TEST(CHUNKER, Chunking)
  
 
     ASSERT_EQ(chnk.ChunkFile(fi, path, chunkDir), ret::A_OK);
+
+    std::string outBound;
+    outBound.append("./output/dechunked");
+    ASSERT_EQ(chnk.DeChunkFile(fi, outBound, chunkDir), ret::A_OK); 
 }
 
 TEST(CRYPTO, Keys)
