@@ -13,9 +13,10 @@
 #include "errorcodes.h"
 
 
-/*
+
 TEST(COMPRESS, ENCRYPT)
 {
+    // Compress
     Compressor cmp;
     std::string path;
     path.append("./data/test.pdf");
@@ -28,21 +29,50 @@ TEST(COMPRESS, ENCRYPT)
 
     std::cout<<"FILE SIZE : "<< size << std::endl;
 
+    // Encrypt
     Crypto crp;
     Credentials cred = crp.GenerateCredentials();
 
-    std::string out;
-    out.append("./output/cryp");
+    std::string encrypt;
+    encrypt.append("./output/cryp");
     // encrypt file
-    ASSERT_EQ(crp.EncryptFile(compressedout, out, cred), ret::A_OK);
+    ASSERT_EQ(crp.EncryptFile(compressedout, encrypt, cred), ret::A_OK);
+/*
+    j
+*/
+    Chunker chnk;
+    FileInfo* fi = new FileInfo();
 
+    // chunk file
+    std::string chunkDir;
+    chunkDir.append("./output");
+
+    ASSERT_EQ(chnk.ChunkFile(fi, encrypt, chunkDir), ret::A_OK);
+
+
+    // Now undo the process
+
+    // Unchunk
+    std::string unchunk;
+    unchunk.append("./output/unchunked");
+    chnk.DeChunkFile(fi, unchunk, chunkDir);
+
+    // Decrypt
     std::string uncryp;
     uncryp.append("./output/uncryp");
     // decrypt file
-    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
+    ASSERT_EQ(crp.DecryptFile(unchunk, uncryp, cred), ret::A_OK);
+
+    // Decompress
+    std::string uncomp;
+    uncomp.append("./output/uncompressed");
+    ASSERT_EQ(cmp.DecompressFile(uncryp, uncomp), ret::A_OK);
+
 }
 
 
+
+/*
 TEST(CHUNKER, Chunking)
 {
 
@@ -114,7 +144,7 @@ TEST(UTILS, StringSplitter)
     utils::SplitString(s, '\t', out);
     ASSERT_EQ(out.size(), 6);
 }
-*/
+
 
 // Test FileManager
 TEST(FileManager, IndexFile)
@@ -145,6 +175,7 @@ TEST(FileManager, IndexFile)
 //    ASSERT_EQ(fm.ConstructFile(filename), true);
 }
 
+*/
 
 /*
 // Test FileInfo

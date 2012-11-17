@@ -218,10 +218,8 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
     FileInfo *pFi = m_Manifest.RetrieveFileInfo(szFileName);
-    //if(!pFi){}
-       // return false;
-
-
+    if(!pFi)
+        return ret::A_FAIL_INVALID_PTR;
     // De-chunk
     //if(! m_Chunker.DeChunkFile(pFi)){}
         //return false;
