@@ -50,6 +50,7 @@ bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Cre
    // create ifstream (read in)
    // create ofstream (write out)
    // begin reading
+   // USE STRIDE for the size you read in per iteration
    // call encrypt data to write out to file (pass output stream)
    // close file
    return true;
@@ -101,6 +102,7 @@ bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Cre
     // create ifstream (read in)
     // create ofstream (write out)
     // begin reading
+    // USE STRIDE for the size you read in per iteration
     // call decrypt data to write out to file (pass output stream)
     // close file
 }
