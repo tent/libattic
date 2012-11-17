@@ -43,6 +43,7 @@ execute_process(WORKING_DIRECTORY ./third_party/c5
 # Set additional include directories
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
 INCLUDE_DIRECTORIES(./third_party/c5)
+INCLUDE_DIRECTORIES(./third_party/sqlite)
 
 # This is where binary files will go
 file(MAKE_DIRECTORY ./bin)
