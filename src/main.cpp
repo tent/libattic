@@ -9,6 +9,7 @@
 #include "manifest.h"
 #include "filemanager.h"
 #include "crypto.h"
+#include "compressor.h"
 #include "errorcodes.h"
 
 
@@ -16,14 +17,10 @@ TEST(CRYPTO, Keys)
 {
     Crypto crp;
     Credentials cred = crp.GenerateCredentials();
-    std::cout << "KEY : " <<std::endl;
-    std::cout << cred.key << "\n";
-    std::cout << "IV : " << cred.iv << "\n";
 
     std::string path;
     path.append("./data/test.pdf");
  
-
     std::string out;
     out.append("./output/cryp");
     // encrypt file
@@ -33,10 +30,30 @@ TEST(CRYPTO, Keys)
     uncryp.append("./output/uncryp");
     // decrypt file
     ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
-           
+}
+
+TEST(COMPRESSOR, Compress)
+{
+    Compressor cmp;
+    std::string path;
+    path.append("./data/test.pdf");
+
+    std::string output;
+    output.append("./output/testcomp");
+    ASSERT_EQ(cmp.CompressFile(path, output, 1), ret::A_OK);
 
 }
 
+TEST(COMPRESSOR, Decompress)
+{
+    Compressor cmp;
+    std::string compfile;
+    compfile.append("./output/testcomp");
+
+    std::string uncomp;
+    uncomp.append("./output/uncompressed");
+    ASSERT_EQ(cmp.DecompressFile(compfile, uncomp), ret::A_OK);
+}
 
 TEST(UTILS, StringSplitter)
 {
@@ -66,24 +83,8 @@ TEST(FileManager, IndexFile)
     std::string filename;
     filename.append("test.pdf");
     ASSERT_EQ(fm.ConstructFile(filename), true);
-
-    try
-    {
-        std::string output;
-        output.append("testcomp");
-        fm.CompressFile(path, output, 1); 
-        std::string uncomp;
-        uncomp.append("uncompressed");
-        fm.DecompressFile(output, uncomp);
-
-    }
-    catch (std::exception& e)
-    {
-        std::cout << "EXCEPTION : " << e.what() << std::endl;
-    } 
-
-
 }
+
 /*
 // Test FileInfo
 TEST(FileInfo, LoadFile)

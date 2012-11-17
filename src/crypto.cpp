@@ -229,7 +229,6 @@ bool Crypto::DecryptData(const char* pData, unsigned int size, Credentials &cred
         }                                                                
 
     }
-
     catch (CryptoPP::Exception &e)                               
     {                                                            
         std::cerr << e.what() << "\n";                           

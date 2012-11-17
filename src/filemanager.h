@@ -10,7 +10,8 @@
 #include "manifest.h"
 #include "chunker.h"
 #include "fileinfo.h"
-
+#include "compressor.h"
+#include "crypto.h"
 
 class FileManager
 {
@@ -29,9 +30,6 @@ public:
 
     bool IndexFile(std::string &szFilePath);
     bool ConstructFile(std::string &szFileName);
-    
-    bool CompressFile(std::string &szFilePath, std::string &szOutputPath, int nDeflatedLevel);
-    bool DecompressFile(std::string &szFilePath, std::string &szOutputPath);
 
     bool FileExists(std::string& szFilepath);
 
@@ -43,6 +41,8 @@ private:
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;
     Chunker             m_Chunker;
+    Crypto              m_Crypto;
+    Compressor          m_Compressor;
 
     std::ifstream       m_ifStream;
     std::ofstream       m_ofStream;
