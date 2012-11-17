@@ -8,8 +8,20 @@
 #include "chunker.h"
 #include "manifest.h"
 #include "filemanager.h"
+#include "crypto.h"
 
 
+
+TEST(CRYPTO, Keys)
+{
+    Crypto crp;
+    Credentials cred = crp.GenerateCredentials();
+    std::cout << "KEY : " <<std::endl;
+    std::cout << cred.key << "\n";
+    std::cout << "IV : " << cred.iv << "\n";
+
+
+}
 
 
 TEST(UTILS, StringSplitter)
@@ -41,7 +53,6 @@ TEST(FileManager, IndexFile)
     filename.append("test.pdf");
     ASSERT_EQ(fm.ConstructFile(filename), true);
 
-
     try
     {
         std::string output;
@@ -56,6 +67,7 @@ TEST(FileManager, IndexFile)
     {
         std::cout << "EXCEPTION : " << e.what() << std::endl;
     } 
+
 
 }
 /*
