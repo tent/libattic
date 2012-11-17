@@ -20,6 +20,20 @@ TEST(CRYPTO, Keys)
     std::cout << cred.key << "\n";
     std::cout << "IV : " << cred.iv << "\n";
 
+    std::string path;
+    path.append("./data/test.pdf");
+ 
+
+    std::string out;
+    out.append("./output/cryp");
+    // encrypt file
+    ASSERT_EQ(crp.EncryptFile(path, out, cred), true);
+
+    std::string uncryp;
+    uncryp.append("./output/uncryp");
+    // decrypt file
+    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), true);
+           
 
 }
 

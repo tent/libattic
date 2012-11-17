@@ -22,7 +22,7 @@ struct Credentials
 class Crypto
 {
     bool EncryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs);
-    bool DecryptData(const char* pData, std::string &cipher, Credentials &cred, std::ofstream &ofs);
+    bool DecryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs);
 
 public:
     Crypto(unsigned int uStride = 400000);

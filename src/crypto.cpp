@@ -43,17 +43,53 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
-
 bool Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred)
 {
-   // open file
-   // create ifstream (read in)
-   // create ofstream (write out)
-   // begin reading
-   // USE STRIDE for the size you read in per iteration
-   // call encrypt data to write out to file (pass output stream)
-   // close file
-   return true;
+    // create ifstream (read in)
+    std::ifstream ifs;
+    // open file
+    ifs.open(szFilepath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!ifs.is_open())
+        return false;
+
+    // create ofstream (write out)
+    std::ofstream ofs;
+    ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    if(!ofs.is_open())
+        return false;
+
+    char* pBuffer = new char[m_Stride];
+    // begin reading
+    while(!ifs.eof())
+    {
+        memset(pBuffer, 0, (sizeof(char)*m_Stride));
+        // read into buffer
+        ifs.read(pBuffer, m_Stride);
+        int readCount = ifs.gcount();
+
+        if(!EncryptData(pBuffer, readCount, cred, ofs))
+        {
+            std::cout<<"FAILED TO ENCRYPT DATA\n";
+            ifs.close();
+            ofs.close();
+            return false;
+        }
+    }
+
+    if(pBuffer)
+    {
+        delete pBuffer;
+        pBuffer = 0;
+    }
+
+    ifs.close();
+    ofs.close();
+    // USE STRIDE for the size you read in per iteration
+    // call encrypt data to write out to file (pass output stream)
+    // close file
+    return true;
 }
 
 bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
@@ -79,10 +115,8 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
                                 TAG_SIZE)
                                                                                                                           );
 
-       std::cout<<" SOME DATA : " << pData << "\n";
-       std::cout<<" cipher : " << cipher << "\n";
-
        // Write out cipher to ofstream
+       ofs.write(cipher.c_str(), cipher.size());
     }
     catch (CryptoPP::Exception &e)
     {
@@ -91,39 +125,76 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
     }
 
     return true;
-
-    
-    return true;
 }
 
 bool Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Credentials &cred)
 {
-    // open file
+    // szFilePath, is the path to the encrypted data.
+
     // create ifstream (read in)
+    std::ifstream ifs;
+    ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!ifs.is_open())
+        return false;
+
     // create ofstream (write out)
+    std::ofstream ofs;
+    ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+    if(!ofs.is_open())
+        return false;
+
+    char* pBuffer = new char[m_Stride + TAG_SIZE];
+
     // begin reading
-    // USE STRIDE for the size you read in per iteration
-    // call decrypt data to write out to file (pass output stream)
+    while(!ifs.eof())
+    {
+        memset(pBuffer, 0, (sizeof(char)*m_Stride) + TAG_SIZE);
+        ifs.read(pBuffer, m_Stride + TAG_SIZE);
+        unsigned int readCount = ifs.gcount();
+
+        // call decrypt data to write out to file (pass output stream)
+        if(!DecryptData(pBuffer, readCount, cred, ofs))
+        {
+            std::cout<<"FAILED TO DECRYPT DATA\n";
+            ifs.close();
+            ofs.close();
+            return false;
+        }
+    }
+
+    if(pBuffer)
+    {
+        delete pBuffer;
+        pBuffer = 0;
+    }
     // close file
+    ifs.close();
+    ofs.close();
+    return true;
 }
 
-bool Crypto::DecryptData(const char* pData, std::string &cipher, Credentials &cred, std::ofstream &ofs)
+bool Crypto::DecryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
 {
+    // pData is the cypher
     // Read in cypher
     // Decrypt
     // write out to ostream
 
-    try                                                                                                           
-    {                                                                                                             
-        CryptoPP::GCM<CryptoPP::AES>::Decryption d;                                                               
+    try                                                                                 
+    {                                                                                       
+        std::string cipher;
+        cipher.append(pData, size);
+        CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
         d.SetKeyWithIV(cred.key, cred.GetKeySize(), cred.iv, cred.GetIvSize());
 
-        // Recovered Plain Data                                                                                   
-        std::string rpdata;                                                                                       
-        CryptoPP::AuthenticatedDecryptionFilter df ( d,                                                           
-                                                     new CryptoPP::StringSink(rpdata),                            
-                                                     CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS,      
-                                                     TAG_SIZE                                                     
+        // Recovered Plain Data                                                             
+        std::string rpdata;                                                                 
+        CryptoPP::AuthenticatedDecryptionFilter df ( d,                                              
+                                                     new CryptoPP::StringSink(rpdata),
+                                                     CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS, 
+                                                     TAG_SIZE          
                                                    );                                                             
         // The StringSource dtor will be called immediately                 
         // after construction below. This will cause the    
@@ -132,7 +203,7 @@ bool Crypto::DecryptData(const char* pData, std::string &cipher, Credentials &cr
         // the DecryptionFilter, we must use a redirector 
         // or manually Put(...) into the filter without                              
         // using a StringSource.   
-        CryptoPP::StringSource( cipher,                                                                           
+        CryptoPP::StringSource( cipher,                                                      
                                 true,                                                 
                                 new CryptoPP::Redirector( df /*  , PASS_EVERYTHING */ )
                               ); // StringSource
@@ -143,11 +214,13 @@ bool Crypto::DecryptData(const char* pData, std::string &cipher, Credentials &cr
         //  opportunity to check the data's integrity                    
         if (df.GetLastResult() == true )                                 
         {                                                                
-            std::cout<< "recovered text : " << rpdata << "\n";           
+            //std::cout<< "recovered text : " << rpdata << "\n";           
             // Write out data to ofstream
+            ofs.write(rpdata.c_str(), rpdata.size());
         }                                                                
 
     }
+
     catch (CryptoPP::Exception &e)                               
     {                                                            
         std::cerr << e.what() << "\n";                           
