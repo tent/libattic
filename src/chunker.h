@@ -12,15 +12,15 @@ class FileInfo;
 
 class Chunker
 {
-    bool VerifyAllChunkExistence(const std::string &szChunkName, std::string &szChunkDir, unsigned int uCount);
-    bool WriteChunk(char* szBuffer, std::string &szChunkDir, std::string &szName);
+    bool VerifyAllChunkExistence(const std::string &szChunkName, const std::string &szChunkDir, unsigned int uCount);
+    bool WriteChunk(char* szBuffer, const std::string &szChunkDir, const std::string &szName);
     void SetName(std::string &szBaseName, std::string &szNameOut, int nCount);
 public:
     Chunker(unsigned int nChunkSize = 400000);
     ~Chunker();
 
-    ret::eCode ChunkFile(FileInfo *fi, std::string &szFilePath, std::string &szChunkDir);
-    ret::eCode DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::string &szChunkDir);
+    ret::eCode ChunkFile(FileInfo *fi, const std::string &szFilePath, const std::string &szChunkDir);
+    ret::eCode DeChunkFile(FileInfo *fi, const std::string &szOutboundPath, const std::string &szChunkDir);
 
     unsigned int GetChunkSize() { return m_chunkSize; }
 

@@ -17,7 +17,7 @@ Chunker::~Chunker()
 
 }
 
-ret::eCode Chunker::ChunkFile(FileInfo *fi, std::string &szFilePath, std::string &szChunkDir)
+ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const std::string &szChunkDir)
 {
     // TODO ::
     // - check if there are currently chunks with a given filename already in the 
@@ -82,7 +82,7 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, std::string &szFilePath, std::string
     return ret::A_OK;
 }
 
-ret::eCode Chunker::DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::string &szChunkDir)
+ret::eCode Chunker::DeChunkFile(FileInfo *fi, const std::string &szOutboundPath, const std::string &szChunkDir)
 {
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
@@ -146,7 +146,7 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, std::string &szOutboundPath, std::
     return ret::A_OK;
 }
 
-bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, std::string &szChunkDir, unsigned int uCount)
+bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std::string &szChunkDir, unsigned int uCount)
 {
     std::string path;
     for(unsigned int i=0; i<uCount; i++)
@@ -165,7 +165,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, std::strin
     return true;
 }
 
-bool Chunker::WriteChunk(char* szBuffer, std::string &szChunkDir, std::string &szName)
+bool Chunker::WriteChunk(char* szBuffer, const std::string &szChunkDir, const std::string &szName)
 {
     if(!szBuffer)
     {

@@ -25,12 +25,12 @@ public:
     void SetFileSize(unsigned int unFileSize) { m_FileSize = unFileSize; }
     void SetCredentials(Credentials &tCred) { m_Credentials = tCred; }
     
-    std::string GetFileName() { return m_FileName; }
-    std::string GetFilePath() { return m_FilePath; }
-    std::string GetChunkName() { return m_ChunkName; }
-    unsigned int GetChunkCount() { return m_ChunkCount; }
-    unsigned int GetFileSize() { return m_FileSize; }
-    Credentials GetCredentials() { return m_Credentials; }
+    std::string GetFileName() const { return m_FileName; }
+    std::string GetFilePath() const { return m_FilePath; }
+    std::string GetChunkName() const { return m_ChunkName; }
+    unsigned int GetChunkCount() const { return m_ChunkCount; }
+    unsigned int GetFileSize() const { return m_FileSize; }
+    Credentials GetCredentials() const { return m_Credentials; }
 
 private:    
     Credentials     m_Credentials;
