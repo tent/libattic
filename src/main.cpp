@@ -14,6 +14,7 @@
 
 
 
+/*
 TEST(COMPRESS, ENCRYPT)
 {
     // Compress
@@ -37,9 +38,8 @@ TEST(COMPRESS, ENCRYPT)
     encrypt.append("./output/cryp");
     // encrypt file
     ASSERT_EQ(crp.EncryptFile(compressedout, encrypt, cred), ret::A_OK);
-/*
-    j
-*/
+   
+
     Chunker chnk;
     FileInfo* fi = new FileInfo();
 
@@ -71,6 +71,7 @@ TEST(COMPRESS, ENCRYPT)
 }
 
 
+*/
 
 /*
 TEST(CHUNKER, Chunking)
@@ -146,6 +147,7 @@ TEST(UTILS, StringSplitter)
 }
 
 
+*/
 // Test FileManager
 TEST(FileManager, IndexFile)
 {
@@ -175,7 +177,7 @@ TEST(FileManager, IndexFile)
 //    ASSERT_EQ(fm.ConstructFile(filename), true);
 }
 
-*/
+
 
 /*
 // Test FileInfo

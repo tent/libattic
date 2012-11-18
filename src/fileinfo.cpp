@@ -21,14 +21,14 @@ bool FileInfo::InitializeFile(std::string &szFilePath)
     // Check if Valid File
     //
     // Set filepath
-    m_filePath = szFilePath;
+    m_FilePath = szFilePath;
     // Extract Filename
-    m_fileName = ExtractFileName(szFilePath); 
+    m_FileName = ExtractFileName(szFilePath); 
     // Check file size
     //if(!CheckFileSize())
-    m_fileSize = utils::CheckFileSize(szFilePath);
+    m_FileSize = utils::CheckFileSize(szFilePath);
 
-    if(!m_fileSize)
+    if(!m_FileSize)
         return false;
 
     return true;

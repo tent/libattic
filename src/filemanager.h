@@ -18,6 +18,8 @@ class FileManager
     bool ReadInHeader(std::string &h);
     bool ReadInEntry(std::string &e);
 
+    std::string ConstructOutboundPath(std::string &szWorkingDir, bool bStripFileType, std::string &szFileName, std::string &szPostfix);
+    
     void GenerateCompressionPath(FileInfo* fi, std::string &szOutPath);
     void GenerateCryptoPath(FileInfo* fi, std::string &szOutPath);
 

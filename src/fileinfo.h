@@ -6,6 +6,8 @@
 #include <string>
 #include <deque>
 
+#include "crypto.h"
+
 class FileInfo
 {
     std::string ExtractFileName(std::string &szFilePath);
@@ -16,27 +18,28 @@ public:
     // Init a file
     bool InitializeFile(std::string &szFilePath);
     
-    void SetFileName(std::string &szFileName) { m_fileName = szFileName; }
-    void SetFilePath(std::string &szFilePath) { m_filePath = szFilePath; }
-    void SetChunkName(std::string &szChunkName) { m_chunkName = szChunkName; }
-
-    void SetChunkCount(unsigned int unChunkCount) { m_chunkCount = unChunkCount; }
-    void SetFileSize(unsigned int unFileSize) { m_fileSize = unFileSize; }
+    void SetFileName(std::string &szFileName) { m_FileName = szFileName; }
+    void SetFilePath(std::string &szFilePath) { m_FilePath = szFilePath; }
+    void SetChunkName(std::string &szChunkName) { m_ChunkName = szChunkName; }
+    void SetChunkCount(unsigned int unChunkCount) { m_ChunkCount = unChunkCount; }
+    void SetFileSize(unsigned int unFileSize) { m_FileSize = unFileSize; }
+    void SetCredentials(Credentials &tCred) { m_Credentials = tCred; }
     
-    std::string GetFileName() { return m_fileName; }
-    std::string GetFilePath() { return m_filePath; }
-    std::string GetChunkName() { return m_chunkName; }
-
-    unsigned int GetChunkCount() { return m_chunkCount; }
-    unsigned int GetFileSize() { return m_fileSize; }
+    std::string GetFileName() { return m_FileName; }
+    std::string GetFilePath() { return m_FilePath; }
+    std::string GetChunkName() { return m_ChunkName; }
+    unsigned int GetChunkCount() { return m_ChunkCount; }
+    unsigned int GetFileSize() { return m_FileSize; }
+    Credentials GetCredentials() { return m_Credentials; }
 
 private:    
-    std::string     m_fileName;   // File within directory
-    std::string     m_filePath;   // Directory
-    std::string     m_chunkName;
+    Credentials     m_Credentials;
+    std::string     m_FileName;   // File within directory
+    std::string     m_FilePath;   // Directory
+    std::string     m_ChunkName;
 
-    unsigned int    m_chunkCount;
-    unsigned int    m_fileSize;   // Filesize, not compressed
+    unsigned int    m_ChunkCount;
+    unsigned int    m_FileSize;   // Filesize, not compressed
 };
 
 

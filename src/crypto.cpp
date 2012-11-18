@@ -42,7 +42,7 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
-ret::eCode Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred)
+ret::eCode Crypto::EncryptFile(const std::string &szFilepath, const std::string &szOutputPath, const Credentials &cred)
 {
     // create ifstream (read in)
     std::ifstream ifs;
@@ -100,7 +100,7 @@ ret::eCode Crypto::EncryptFile(std::string &szFilepath, std::string &szOutputPat
     return ret::A_OK;
 }
 
-bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
+bool Crypto::EncryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs)
 {
     // Take data,
     // Encrypt
@@ -138,7 +138,7 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, Credentials &cred
     return true;
 }
 
-ret::eCode Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPath, Credentials &cred)
+ret::eCode Crypto::DecryptFile(const std::string &szFilePath, const std::string &szOutputPath, const Credentials &cred)
 {
     // szFilePath, is the path to the encrypted data.
 
@@ -191,7 +191,7 @@ ret::eCode Crypto::DecryptFile(std::string &szFilePath, std::string &szOutputPat
     return ret::A_OK;
 }
 
-bool Crypto::DecryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs)
+bool Crypto::DecryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs)
 {
     // pData is the cypher
     // Read in cypher

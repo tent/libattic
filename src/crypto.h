@@ -17,14 +17,14 @@ struct Credentials
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
     byte iv[CryptoPP::AES::BLOCKSIZE];
     
-    size_t GetKeySize() { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
-    size_t GetIvSize() { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
+    size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
+    size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
 };
 
 class Crypto
 {
-    bool EncryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs);
-    bool DecryptData(const char* pData, unsigned int size, Credentials &cred, std::ofstream &ofs);
+    bool EncryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs);
+    bool DecryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs);
 
 public:
     Crypto(unsigned int uStride = 400000);
@@ -32,8 +32,8 @@ public:
 
     Credentials GenerateCredentials(); 
 
-    ret::eCode EncryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
-    ret::eCode DecryptFile(std::string &szFilepath, std::string &szOutputPath, Credentials &cred);
+    ret::eCode EncryptFile(const std::string &szFilepath, const std::string &szOutputPath, const Credentials &cred);
+    ret::eCode DecryptFile(const std::string &szFilepath, const std::string &szOutputPath, const Credentials &cred);
 
     unsigned int GetStride() { return m_Stride; }
 

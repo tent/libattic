@@ -163,6 +163,7 @@ ret::eCode FileManager::IndexFile(std::string &szFilePath)
     GenerateCryptoPath(fi, cryptpath);
     // Generate Credentials
     Credentials cred = m_Crypto.GenerateCredentials();
+    fi->SetCredentials(cred);
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
     if(status != ret::A_OK)
         return status;
@@ -217,18 +218,68 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
 
     ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
-    FileInfo *pFi = m_Manifest.RetrieveFileInfo(szFileName);
-    if(!pFi)
+    FileInfo *fi = m_Manifest.RetrieveFileInfo(szFileName);
+
+    if(!fi)
         return ret::A_FAIL_INVALID_PTR;
+
+    // Construct outbound path
+    std::string pstfx = "dchnk";
+    std::string chunkPath = ConstructOutboundPath(m_WorkingDirectory, true, szFileName, pstfx);
     // De-chunk
-    //if(! m_Chunker.DeChunkFile(pFi)){}
-        //return false;
+    status = m_Chunker.DeChunkFile(fi, chunkPath, m_WorkingDirectory);
+
+    if(status != ret::A_OK)
+        return status;
+
     // Decrypt chunks
-    //
+    pstfx.clear();
+    pstfx.append("dcry");
+    std::string decrypPath = ConstructOutboundPath(m_WorkingDirectory, true, szFileName, pstfx);
+    status = m_Crypto.DecryptFile(chunkPath, decrypPath, fi->GetCredentials());
+    
+    if(status != ret::A_OK)
+        return status;
+
+
     // Decompress
-    //
+    pstfx.clear();
+    std::string decompPath = ConstructOutboundPath(m_WorkingDirectory, false, szFileName, pstfx);
+    status = m_Compressor.DecompressFile(decrypPath, decompPath);
+
+    //if(status != ret::A_OK) // Currently useless check, here for consistency's sake.
+    //    return status;
 
     return status;
+}
+
+std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool bStripFileType, std::string &szFileName, std::string &szPostfix)
+{
+    std::string path = szWorkingDir;
+
+    std::string filename = szFileName;
+
+    if(bStripFileType)
+    {
+        std::vector<std::string> out;
+        utils::SplitString(szFileName, '.', out);
+        if(out.size() > 0)
+        {
+            filename = out[0];
+        }
+    }
+
+    // Check for trailing /
+
+    if(path[path.size()-1] != '/')
+        path.append("/");
+
+    // Attach postfix to filename
+    filename += szPostfix;
+
+    path += filename;
+    
+    return path;
 }
 
 FileInfo* FileManager::CreateFileInfo()
