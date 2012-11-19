@@ -23,6 +23,18 @@
 
 #include "tentapp.h"
 
+TEST(CURL, POST)
+{
+
+    std::string postpath("www.example.com");
+    std::string body;
+
+    ConnectionManager* pCm = ConnectionManager::GetInstance();
+
+    pCm->HttpPost(postpath, body);
+    pCm->Shutdown();
+}
+
 TEST(JSON, SERIALIZEAPP)
 {
     TentApp app;

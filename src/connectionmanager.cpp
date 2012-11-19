@@ -100,7 +100,6 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
         long sockextr;
         size_t iolen;
 
-
         curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
 
         // Connect to host, for socket extraction
@@ -109,6 +108,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 
         if(res != CURLE_OK)
         {
+            std::cout<<"0"<<std::endl;
             std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
             return;
         }
@@ -121,6 +121,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 
         if(res != CURLE_OK)
         {
+            std::cout<<"1"<<std::endl;
             std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
             return;
         }
@@ -130,16 +131,17 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
         /* wait for the socket to become available for sending*/
         if(!wait_on_socket(sockfd, 0, 60000L))
         {
+            std::cout<<"2"<<std::endl;
             std::cout<<"ERROR : timeout\n";
             return;
         }
 
         /* send the request */
-
         res = curl_easy_send(m_pCurl, body.c_str(), body.size(), &iolen);
         
         if(res != CURLE_OK)
         {
+            std::cout<<"3"<<std::endl;
             std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
             return;
         }
@@ -154,6 +156,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 
             if(res != CURLE_OK)
             {
+                std::cout<<"4"<<std::endl;
                 std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
                 break;
             }
@@ -162,6 +165,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
             printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n", nread);
         }
     }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
