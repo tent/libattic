@@ -92,4 +92,3 @@ std::auto_ptr<AccessToken> TentApp::RequestUserAuthorizationDetails(std::string 
 
 }
 
-

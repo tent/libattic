@@ -28,14 +28,13 @@ public:
     static ConnectionManager* GetInstance();
 
     std::string HttpGet(std::string &url);  
+    void HttpPost(std::string &url, std::string &body);
 
 
 private:
     static ConnectionManager *m_pInstance;
 
     CURL* m_pCurl;  // Curl instance
-    
-
 
 };
 
