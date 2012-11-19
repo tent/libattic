@@ -2,8 +2,12 @@
 /bin
 /CMakeFiles
 .svn
+
 third_party/googletest/CMakeFiles
 third_party/jsoncpp/test
+third_party/jsoncpp/scons-tools
+third_party/jsoncpp/bin
+third_party/jsoncpp/buildscons
 
 # Build files
 CMakeCache.txt

@@ -16,8 +16,15 @@ set (CMAKE_C_COMPILER clang)
 # Build gtest libs
 execute_process(WORKING_DIRECTORY ./third_party/jsoncpp
                COMMAND python scons.py platform=linux-gcc)
-           #RESULT_VARIABLE ret_var)
+               #RESULT_VARIABLE ret_var)
 
+# TODO :: get this working, the json lib created the lib and folder 
+# based on the version of gcc, could change per system
+# for now change it by hand, later get it working dynamically
+#set (${curdir} ./third_party/jsoncpp/libs)
+#FILE(GLOB child RELATIVE ${curdir}/*)
+#message(STATUS ${curdir})
+#message(STATUS child)
 
 execute_process(WORKING_DIRECTORY ./third_party/googletest
                 COMMAND cmake .
@@ -112,7 +119,8 @@ set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ./third_party/c5/lib/
 
 # Add jsoncpp
 add_library(imp_jsoncpp STATIC IMPORTED)
-set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.7/libjson_linux-gcc-4.7_libmt.a)
+#set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.7/libjson_linux-gcc-4.7_libmt.a)
+set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a)
 
 #ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
 # build executable
