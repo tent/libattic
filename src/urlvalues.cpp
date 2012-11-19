@@ -26,6 +26,7 @@ std::string UrlValues::SerializeToString()
     httpValues.append("?");
 
     UrlValueMap::iterator itr = m_Values.begin();
+
     for(;itr != m_Values.end(); itr++)
     {
         if(itr != m_Values.begin())
@@ -35,6 +36,7 @@ std::string UrlValues::SerializeToString()
 
         httpValues.append(itr->first);
         httpValues.append("=");
+
 
         UrlValue::iterator valItr = itr->second.begin();
         for(; valItr != itr->second.end(); valItr++)
@@ -46,5 +48,6 @@ std::string UrlValues::SerializeToString()
         }
     }
 
+    return httpValues;
 }
 

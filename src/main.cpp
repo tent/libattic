@@ -12,7 +12,7 @@
 #include "compressor.h"
 #include "errorcodes.h"
 #include "connectionmanager.h"
-
+#include "urlvalues.h"
 
 #include <curl/curl.h>
 
@@ -21,6 +21,35 @@
 
 #include <json/json.h>
 
+
+TEST(URLVALUES, ADDSERIALIZE)
+{
+    UrlValues val;
+    std::string key = "client_id";
+    std::string value = "t1jrsh";
+
+    val.AddValue(key, value);
+
+
+    key.clear();
+    key.append("redirect_uri");
+    value.clear();
+    value.append("http://app.example.com/tent/callback");
+    
+    val.AddValue(key, value);
+
+    key.clear();
+    key.append("scope");
+    value.clear();
+    value.append("read_posts");
+    val.AddValue(key, value);
+    value.clear();
+    value.append("read_profile");
+
+    val.AddValue(key, value);
+
+    std::cout<<" SERIALIZE : " << val.SerializeToString() << std::endl;
+}
 
 TEST(CONNECTIONMANAGER, CONNECT)
 {
