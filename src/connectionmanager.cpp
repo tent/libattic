@@ -88,6 +88,10 @@ std::string ConnectionManager::HttpGet(std::string &url)
     return response;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Curl Utility functions
+////////////////////////////////////////////////////////////////////////////////
+//
 static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s)
 {
     size_t new_len = s->len + size*nmemb;
