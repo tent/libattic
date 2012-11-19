@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 
+#include "jsonserializable.h"
+
 struct RedirectCode
 {
     std::string Code;
@@ -21,11 +23,15 @@ struct AccessToken
     std::string TokenType;
 };
 
-class TentApp
+class TentApp : public JsonSerializable
 {
+    void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
 public:
     TentApp();
     ~TentApp();
+
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
 
     void RegisterApp();
     void RequestAuthorization(std::string& szAppID, RedirectCode& tRedirectCode);
@@ -44,7 +50,7 @@ private:
     std::string m_AppIcon;
     std::string m_MacAlgorithm;
     std::string m_MacKeyID;
-    std::string MacKey;
+    std::string m_MacKey;
 
 };
 
