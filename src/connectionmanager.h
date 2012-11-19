@@ -9,8 +9,6 @@
 
 class ConnectionManager
 {
-    
-
     ConnectionManager();
     ConnectionManager(const ConnectionManager &rhs) {}
     ~ConnectionManager();
@@ -28,7 +26,7 @@ public:
     static ConnectionManager* GetInstance();
 
     std::string HttpGet(std::string &url);  
-    void HttpPost(std::string &url, std::string &body);
+    void HttpPost(const std::string &url, const std::string &body);
 
 
 private:
