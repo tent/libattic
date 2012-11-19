@@ -21,6 +21,14 @@
 
 #include <json/json.h>
 
+#include "tentapp.h"
+
+TEST(JSON, SERIALIZEAPP)
+{
+    TentApp app;
+    std::cout<< ((*app.GetScopes())[0]);
+
+}
 
 TEST(URLVALUES, ADDSERIALIZE)
 {
