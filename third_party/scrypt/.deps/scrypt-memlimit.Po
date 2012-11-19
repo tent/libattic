@@ -7,7 +7,7 @@ scrypt-memlimit.o: lib/util/memlimit.c scrypt_platform.h config.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/time.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include/stddef.h /usr/include/endian.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h /usr/include/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endian.h \
  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
  /usr/include/x86_64-linux-gnu/sys/select.h \
@@ -20,8 +20,8 @@ scrypt-memlimit.o: lib/util/memlimit.c scrypt_platform.h config.h \
  /usr/include/x86_64-linux-gnu/sys/resource.h \
  /usr/include/x86_64-linux-gnu/bits/resource.h \
  /usr/include/x86_64-linux-gnu/sys/param.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include-fixed/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include-fixed/syslimits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed/limits.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
@@ -29,19 +29,10 @@ scrypt-memlimit.o: lib/util/memlimit.c scrypt_platform.h config.h \
  /usr/include/linux/param.h /usr/include/x86_64-linux-gnu/asm/param.h \
  /usr/include/asm-generic/param.h \
  /usr/include/x86_64-linux-gnu/sys/sysinfo.h /usr/include/linux/kernel.h \
- /usr/include/linux/sysinfo.h /usr/include/linux/types.h \
- /usr/include/x86_64-linux-gnu/asm/types.h \
- /usr/include/asm-generic/types.h /usr/include/asm-generic/int-ll64.h \
- /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
- /usr/include/asm-generic/posix_types.h /usr/include/errno.h \
- /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
- /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
+ /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdint.h /usr/include/stdint.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -72,7 +63,7 @@ config.h:
 
 /usr/include/time.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include/stddef.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h:
 
 /usr/include/endian.h:
 
@@ -100,9 +91,9 @@ config.h:
 
 /usr/include/x86_64-linux-gnu/sys/param.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include-fixed/limits.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed/limits.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include-fixed/syslimits.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include-fixed/syslimits.h:
 
 /usr/include/limits.h:
 
@@ -124,30 +115,6 @@ config.h:
 
 /usr/include/linux/kernel.h:
 
-/usr/include/linux/sysinfo.h:
-
-/usr/include/linux/types.h:
-
-/usr/include/x86_64-linux-gnu/asm/types.h:
-
-/usr/include/asm-generic/types.h:
-
-/usr/include/asm-generic/int-ll64.h:
-
-/usr/include/x86_64-linux-gnu/asm/bitsperlong.h:
-
-/usr/include/asm-generic/bitsperlong.h:
-
-/usr/include/linux/posix_types.h:
-
-/usr/include/linux/stddef.h:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types.h:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
-
-/usr/include/asm-generic/posix_types.h:
-
 /usr/include/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/errno.h:
@@ -160,7 +127,7 @@ config.h:
 
 /usr/include/asm-generic/errno-base.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdint.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h:
 
 /usr/include/stdint.h:
 

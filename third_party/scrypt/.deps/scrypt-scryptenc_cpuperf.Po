@@ -12,11 +12,11 @@ scrypt-scryptenc_cpuperf.o: lib/scryptenc/scryptenc_cpuperf.c \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/sigset.h \
  /usr/include/x86_64-linux-gnu/bits/select2.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdint.h /usr/include/stdint.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/stdio.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include/stddef.h /usr/include/libio.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h /usr/include/libio.h \
  /usr/include/_G_config.h /usr/include/wchar.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdarg.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
  /usr/include/x86_64-linux-gnu/bits/stdio.h \
@@ -57,7 +57,7 @@ config.h:
 
 /usr/include/x86_64-linux-gnu/bits/select2.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdint.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h:
 
 /usr/include/stdint.h:
 
@@ -65,7 +65,7 @@ config.h:
 
 /usr/include/stdio.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include/stddef.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h:
 
 /usr/include/libio.h:
 
@@ -73,7 +73,7 @@ config.h:
 
 /usr/include/wchar.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/4.7/include/stdarg.h:
+/usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdarg.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 

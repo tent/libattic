@@ -4,9 +4,11 @@
 .svn
 third_party/googletest/CMakeFiles
 
-# cmake files
+# Build files
 CMakeCache.txt
 cmake_install.cmake
+
+*.Po
 
 # Generated Makefile
 Makefile
@@ -20,3 +22,5 @@ Makefile
 
 # libs
 *.a
+
+

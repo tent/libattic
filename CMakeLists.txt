@@ -45,21 +45,52 @@ INCLUDE_DIRECTORIES(./third_party/googletest/include)
 INCLUDE_DIRECTORIES(./third_party/c5)
 INCLUDE_DIRECTORIES(./third_party/sqlite)
 
+INCLUDE_DIRECTORIES(./src/scrypt/lib/crypto)
+INCLUDE_DIRECTORIES(./src/scrypt/lib/util)
+INCLUDE_DIRECTORIES(./src/scrypt/lib/scryptenc)
+INCLUDE_DIRECTORIES(./src/scrypt/lib)
+
 # This is where binary files will go
 file(MAKE_DIRECTORY ./bin)
 set (EXECUTABLE_OUTPUT_PATH ./bin)
 
 project(libattic)
 
-file(GLOB_RECURSE libattic_SOURCE "src/*.cpp")
-file(GLOB_RECURSE libattic_HEADERS "src/*.h")
+file(GLOB_RECURSE libattic_SOURCE 
+    "src/*.cpp"
+    "src/*.c")
+
+file(GLOB_RECURSE libattic_HEADERS 
+    "src/*.h")
+
+#file(GLOB_RECURSE libattic_HEADERS "src/*.h")
 
 set(libattic_INCLUDE_DIRS "")
+
 foreach (_headerFile ${libattic_HEADERS})
     get_filename_component(_dir ${_headerFile} PATH)
     list (APPEND libattic_INCLUDE_DIRS ${_dir})
 endforeach()
+
 list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
+
+#Scrypt
+
+#file(GLOB_RECURSE scrypt_SOURCE "third_party/scrypt/lib/*/*.c")
+#file(GLOB_RECURSE scrypt_HEADERS "third_party/scrypt/lib/*/*.h")
+
+#foreach (_headerFile ${scrypt_HEADERS})
+#    get_filename_component(_dir ${_headerFile} PATH)
+#    list (APPEND libattic_INCLUDE_DIRS ${_dir})
+#endforeach()
+
+#list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
+
+
+
+
+
+
 # Include our files
 include_directories(${libattic_INCLUDE_DIRS})
 
@@ -77,6 +108,7 @@ set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ./third_party/googletes
 add_library(imp_cryptpp STATIC IMPORTED)
 set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ./third_party/c5/lib/libcryptopp.a)
 
+#ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
 # build executable
 add_executable(libattic ${libattic_SOURCE})
 

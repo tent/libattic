@@ -14,6 +14,114 @@
 
 
 
+#include <curl/curl.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void function_pt(void *ptr, size_t size, size_t nmemb, void *stream){
+
+    
+ //       printf("%d", atoi(ptr));
+}
+struct tstring {
+    char *ptr;
+    size_t len;
+};
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct tstring *s)
+{
+    size_t new_len = s->len + size*nmemb;
+
+    // DELETE THIS right now im leaking
+    //s->ptr = realloc(s->ptr, new_len+1);
+
+    s->ptr = new char[new_len+1];
+
+    if (s->ptr == NULL) {
+        fprintf(stderr, "realloc() failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memcpy(s->ptr+s->len, ptr, size*nmemb);
+    s->ptr[new_len] = '\0';
+    s->len = new_len;
+
+    return size*nmemb;
+}
+
+void init_string(struct tstring *s) {
+    s->len = 0;
+    s->ptr = new char[(s->len+1)];
+    if (s->ptr == NULL) {
+        fprintf(stderr, "malloc() failed\n");
+        exit(EXIT_FAILURE);
+    }
+    s->ptr[0] = '\0';
+}
+
+TEST(CURL, get)
+{
+    CURL *curl;
+    CURLcode res;
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    
+    curl = curl_easy_init();
+
+    tstring s;
+    init_string(&s);
+    if(curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://manuel.tent.is/");
+        //curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+        res = curl_easy_perform(curl);
+
+        if(res != CURLE_OK)
+            std::cout<<"ERRR"<<std::endl;
+
+        std::string a;
+        a.append(s.ptr, s.len);
+        std::cout<< " REQUEST : " <<a << std::endl;
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+
+}
+
+extern "C"
+{
+    #include "crypto_scrypt.h"
+    int crypto_scrypt(const uint8_t *, size_t, const uint8_t *, size_t, uint64_t,
+            uint32_t, uint32_t, uint8_t *, size_t);
+}
+
+TEST(SCRYPT, ENCRYPT)
+{
+    uint8_t salt[32]; // 16 <- do 16, 64 or 128
+
+    uint8_t* password;
+    size_t plen;
+
+    uint64_t N = 16384;
+    uint32_t r = 8;
+    uint32_t p = 1;
+
+    uint8_t dk[64];
+
+    //password = new uint8_t[256];
+    //memcpy(password, "thisismypassword", 16);
+    //plen = 16;
+
+    // Recommended numbers
+    // N=16384, r=8, p=1
+    std::cout<< " PASS : " << password << std::endl;
+    std::cout << crypto_scrypt((uint8_t*)"pw", 2, (uint8_t*)"salt", 4, N, r, p, dk, 64) << std::endl;
+    std::cout << "DK " << dk << std::endl;
+    // This produces they key to be used to encrypt the other keys.
+}
+
 /*
 TEST(COMPRESS, ENCRYPT)
 {
@@ -147,7 +255,7 @@ TEST(UTILS, StringSplitter)
 }
 
 
-*/
+
 // Test FileManager
 TEST(FileManager, IndexFile)
 {
@@ -178,6 +286,7 @@ TEST(FileManager, IndexFile)
 }
 
 
+*/
 
 /*
 // Test FileInfo

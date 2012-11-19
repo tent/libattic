@@ -12,6 +12,8 @@
 
 #include "errorcodes.h"
 
+
+
 struct Credentials
 {
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
