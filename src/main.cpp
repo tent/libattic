@@ -11,13 +11,32 @@
 #include "crypto.h"
 #include "compressor.h"
 #include "errorcodes.h"
-
+#include "connectionmanager.h"
 
 
 #include <curl/curl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <json/json.h>
+
+
+TEST(CONNECTIONMANAGER, CONNECT)
+{
+
+    ConnectionManager* pCm = ConnectionManager::GetInstance();
+
+    std::string url;
+    url.append("https://manuel.tent.is/tent/followings");
+    std::string result =  pCm->HttpGet(url);
+    std::cout<<" RESULTS : " << result << std::endl;
+
+    pCm->Shutdown();
+
+}
+/*
+
 
 void function_pt(void *ptr, size_t size, size_t nmemb, void *stream){
 
@@ -35,6 +54,8 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct tstring *s)
     // DELETE THIS right now im leaking
     //s->ptr = realloc(s->ptr, new_len+1);
 
+    delete s->ptr;
+    s->ptr = 0;
     s->ptr = new char[new_len+1];
 
     if (s->ptr == NULL) {
@@ -72,7 +93,7 @@ TEST(CURL, get)
     init_string(&s);
     if(curl)
     {
-        curl_easy_setopt(curl, CURLOPT_URL, "https://manuel.tent.is/");
+        curl_easy_setopt(curl, CURLOPT_URL, "https://manuel.tent.is/tent/followings");
         //curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
@@ -121,7 +142,9 @@ TEST(SCRYPT, ENCRYPT)
     std::cout << "DK " << dk << std::endl;
     // This produces they key to be used to encrypt the other keys.
 }
-
+*/
+/*
+ */
 /*
 TEST(COMPRESS, ENCRYPT)
 {

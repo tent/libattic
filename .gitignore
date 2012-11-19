@@ -3,6 +3,7 @@
 /CMakeFiles
 .svn
 third_party/googletest/CMakeFiles
+third_party/jsoncpp/test
 
 # Build files
 CMakeCache.txt
@@ -22,5 +23,6 @@ Makefile
 
 # libs
 *.a
+*.so
 
 

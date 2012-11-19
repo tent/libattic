@@ -14,6 +14,11 @@ set (CMAKE_C_COMPILER clang)
 
 # Build dependencies
 # Build gtest libs
+execute_process(WORKING_DIRECTORY ./third_party/jsoncpp
+               COMMAND python scons.py platform=linux-gcc)
+           #RESULT_VARIABLE ret_var)
+
+
 execute_process(WORKING_DIRECTORY ./third_party/googletest
                 COMMAND cmake .
                 RESULT_VARIABLE ret_var)
@@ -27,7 +32,8 @@ execute_process(WORKING_DIRECTORY ./third_party/c5
                RESULT_VARIABLE ret_var)
 
 execute_process(WORKING_DIRECTORY ./third_party/c5
-               COMMAND make static)
+               COMMAND make static
+               RESULT_VARIABLE ret_var)
 
 execute_process(WORKING_DIRECTORY ./third_party/c5
                 COMMAND mkdir lib
@@ -44,6 +50,7 @@ execute_process(WORKING_DIRECTORY ./third_party/c5
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
 INCLUDE_DIRECTORIES(./third_party/c5)
 INCLUDE_DIRECTORIES(./third_party/sqlite)
+INCLUDE_DIRECTORIES(./third_party/jsoncpp/include)
 
 INCLUDE_DIRECTORIES(./src/scrypt/lib/crypto)
 INCLUDE_DIRECTORIES(./src/scrypt/lib/util)
@@ -86,11 +93,6 @@ list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
 
 #list(REMOVE_DUPLICATES libattic_INCLUDE_DIRS)
 
-
-
-
-
-
 # Include our files
 include_directories(${libattic_INCLUDE_DIRS})
 
@@ -108,10 +110,14 @@ set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ./third_party/googletes
 add_library(imp_cryptpp STATIC IMPORTED)
 set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ./third_party/c5/lib/libcryptopp.a)
 
+# Add jsoncpp
+add_library(imp_jsoncpp STATIC IMPORTED)
+set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.7/libjson_linux-gcc-4.7_libmt.a)
+
 #ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
 # build executable
 add_executable(libattic ${libattic_SOURCE})
 
 #link libs
 #target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
-target_link_libraries(libattic curl imp_gtest imp_cryptpp pthread)
+target_link_libraries(libattic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
