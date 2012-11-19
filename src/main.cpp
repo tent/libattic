@@ -26,7 +26,20 @@
 TEST(JSON, SERIALIZEAPP)
 {
     TentApp app;
-    std::cout<< ((*app.GetScopes())[0]);
+    app.SetAppName(std::string("COOL APP"));
+    app.SetAppDescription(std::string("this is a cool app"));
+    app.SetScope(std::string("everywhere duh"));
+
+    std::string serialized;
+    JsonSerializer::SerializeObject(&app, serialized);
+
+    std::cout<<"SERIALIZED : " << serialized << std::endl;
+    
+    TentApp app2;
+
+    JsonSerializer::DeserializeObject(&app2, serialized);
+
+    std::cout<<" APP2 NAME : " << app2.GetAppName() << std::endl;
 
 }
 
