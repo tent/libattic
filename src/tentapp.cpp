@@ -70,13 +70,6 @@ void TentApp::Deserialize(Json::Value& root)
     m_MacKeyID = root.get("mac_key_id", "").asString();
     m_MacKey = root.get("mac_key", "").asString();
 
-    /*
-    Json::Value scopes(Json::objectValue);
-    scopes = root["scopes"];
-    DeserializeObjectValueIntoVector(scopes, m_Scopes);
-    */
-
-    //DeserializeIntoVector(root["scopes"], m_Scopes);
     DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
     DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
     DeserializeIntoVector(root["authorizations"], m_Authorizations);
