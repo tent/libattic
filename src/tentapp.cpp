@@ -11,11 +11,6 @@ TentApp::~TentApp()
 
 }
 
-void TentApp::RegisterApp()
-{
-
-}
-
 void TentApp::Serialize(Json::Value& root)
 {
     if(!m_AppID.empty())
@@ -60,6 +55,7 @@ void TentApp::Serialize(Json::Value& root)
 
 void TentApp::Deserialize(Json::Value& root)
 {
+    // TODO :: armor this
     m_AppID = root.get("id", "").asString();
     m_AppName = root.get("name", "").asString();
     m_AppDescription = root.get("description", "").asString();
@@ -114,11 +110,22 @@ void TentApp::DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std
         for(; itr != val.end(); itr++)
         {
             vec.push_back(itr.key().asString());
-
         }
     }
 }
-    
+
+void TentApp::RegisterApp()
+{
+    // Serialize self
+    std::string serialized;
+    JsonSerializer::SerializeObject(this, serialized);
+
+    // TODO THIS;
+
+
+}
+
+   
 void TentApp::RequestAuthorization(std::string& szAppID, RedirectCode& tRedirectCode)
 {
 
