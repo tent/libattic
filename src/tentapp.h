@@ -25,8 +25,10 @@ struct AccessToken
 
 class TentApp : public JsonSerializable
 {
+    void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec);
     void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
     void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec);
+    void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec);
 public:
     TentApp();
     ~TentApp();
@@ -42,7 +44,7 @@ public:
     std::string GetAppID() const            { return m_AppID; }
     std::string GetAppName() const          { return m_AppName; }
     std::string GetAppDescription() const   { return m_AppDescription; }
-    std::string GetAppHomepageURL() const   { return m_AppHomepageURL; }
+    std::string GetAppURL() const   { return m_AppURL; }
     std::string GetAppIcon() const          { return m_AppIcon; }
     std::string GetMacAlgorithm() const     { return m_MacAlgorithm; }
     std::string GetMacKeyID() const         { return m_MacKeyID; }
@@ -55,7 +57,7 @@ public:
     void SetAppID(const std::string &szID)                      { m_AppID = szID; }
     void SetAppName(const std::string &szName)                  { m_AppName = szName; }
     void SetAppDescription(const std::string &szDescription)    { m_AppDescription = szDescription; }
-    void SetAppHomepageURL(const std::string &szURL)            { m_AppHomepageURL = szURL; }
+    void SetAppURL(const std::string &szURL)            { m_AppURL = szURL; }
     void SetAppIcon(const std::string &szIcon)                  { m_AppIcon = szIcon; }
     void SetMacAlgorithm(const std::string &szAlg)              { m_MacAlgorithm = szAlg; }
     void SetMacKeyID(const std::string &szID)                   { m_MacKeyID = szID; }
@@ -73,7 +75,7 @@ private:
     std::string m_AppID;
     std::string m_AppName;
     std::string m_AppDescription;
-    std::string m_AppHomepageURL;
+    std::string m_AppURL;
     std::string m_AppIcon;
     std::string m_MacAlgorithm;
     std::string m_MacKeyID;

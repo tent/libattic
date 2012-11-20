@@ -26,7 +26,7 @@ public:
     static ConnectionManager* GetInstance();
 
     std::string HttpGet(std::string &url);  
-    void HttpPost(const std::string &url, const std::string &body);
+    void HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool versbose = false);
 
 
 private:

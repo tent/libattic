@@ -23,20 +23,47 @@
 
 #include "tentapp.h"
 
+TEST(CONNECTIONMANAGER, POST)
+{
+    std::string postpath("https://manuel.tent.is/tent/apps");
+
+    TentApp app;
+    app.SetAppName(std::string("COOL APP"));
+    app.SetAppDescription(std::string("this is a cool app"));
+    app.SetAppURL(std::string("http://manuel.tent.is"));
+    app.SetScope(std::string("read_posts"));
+    app.SetScope(std::string("write_posts"));
+    app.SetRedirectURI(std::string("https://manuel.tent.is"));
+
+    std::string serialized;
+
+    JsonSerializer::SerializeObject(&app, serialized);
+
+    ConnectionManager* pCm = ConnectionManager::GetInstance();
+
+    std::string responseOut;
+    pCm->HttpPost(postpath, serialized, responseOut, true);
+
+    std::cout<< " RESPONSE : " << responseOut << std::endl;
+    pCm->Shutdown();
+
+    TentApp app2;
+    JsonSerializer::DeserializeObject(&app2, responseOut);
+
+    std::string s2;
+    JsonSerializer::SerializeObject(&app2, s2);
+    std::cout<< " S2 : \n" << s2 << std::endl;
+}
+
+/*
 TEST(CURL, POST)
 {
 
-    std::string postpath("www.example.com");
+    std::string postpath("https://manuel.tent.is/tent/apps");
     std::string body;
 
     ConnectionManager* pCm = ConnectionManager::GetInstance();
 
-    pCm->HttpPost(postpath, body);
-    pCm->Shutdown();
-}
-
-TEST(JSON, SERIALIZEAPP)
-{
     TentApp app;
     app.SetAppName(std::string("COOL APP"));
     app.SetAppDescription(std::string("this is a cool app"));
@@ -46,17 +73,34 @@ TEST(JSON, SERIALIZEAPP)
     JsonSerializer::SerializeObject(&app, serialized);
 
     std::cout<<"SERIALIZED : " << serialized << std::endl;
-    
+
+    pCm->HttpPost(postpath, serialized);
+    pCm->Shutdown();
+}
+*/
+    /*
+    TEST(JSON, SERIALIZEAPP)
+    {
+    TentApp app;
+    app.SetAppName(std::string("COOL APP"));
+    app.SetAppDescription(std::string("this is a cool app"));
+    app.SetScope(std::string("everywhere duh"));
+
+    std::string serialized;
+    JsonSerializer::SerializeObject(&app, serialized);
+
+    std::cout<<"SERIALIZED : " << serialized << std::endl;
+
     TentApp app2;
 
     JsonSerializer::DeserializeObject(&app2, serialized);
 
     std::cout<<" APP2 NAME : " << app2.GetAppName() << std::endl;
 
-}
+    }
 
-TEST(URLVALUES, ADDSERIALIZE)
-{
+    TEST(URLVALUES, ADDSERIALIZE)
+    {
     UrlValues val;
     std::string key = "client_id";
     std::string value = "t1jrsh";
@@ -68,7 +112,7 @@ TEST(URLVALUES, ADDSERIALIZE)
     key.append("redirect_uri");
     value.clear();
     value.append("http://app.example.com/tent/callback");
-    
+
     val.AddValue(key, value);
 
     key.clear();
@@ -82,10 +126,10 @@ TEST(URLVALUES, ADDSERIALIZE)
     val.AddValue(key, value);
 
     std::cout<<" SERIALIZE : " << val.SerializeToString() << std::endl;
-}
+    }
 
-TEST(CONNECTIONMANAGER, CONNECT)
-{
+    TEST(CONNECTIONMANAGER, CONNECT)
+    {
 
     ConnectionManager* pCm = ConnectionManager::GetInstance();
 
@@ -96,21 +140,22 @@ TEST(CONNECTIONMANAGER, CONNECT)
 
     pCm->Shutdown();
 
-}
-/*
+    }
+    */
+    /*
 
 
-void function_pt(void *ptr, size_t size, size_t nmemb, void *stream){
+    void function_pt(void *ptr, size_t size, size_t nmemb, void *stream){
 
-    
- //       printf("%d", atoi(ptr));
-}
-struct tstring {
+
+    //       printf("%d", atoi(ptr));
+    }
+    struct tstring {
     char *ptr;
     size_t len;
-};
-size_t writefunc(void *ptr, size_t size, size_t nmemb, struct tstring *s)
-{
+    };
+    size_t writefunc(void *ptr, size_t size, size_t nmemb, struct tstring *s)
+    {
     size_t new_len = s->len + size*nmemb;
 
     // DELETE THIS right now im leaking
@@ -130,9 +175,9 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct tstring *s)
     s->len = new_len;
 
     return size*nmemb;
-}
+    }
 
-void init_string(struct tstring *s) {
+    void init_string(struct tstring *s) {
     s->len = 0;
     s->ptr = new char[(s->len+1)];
     if (s->ptr == NULL) {
@@ -140,15 +185,15 @@ void init_string(struct tstring *s) {
         exit(EXIT_FAILURE);
     }
     s->ptr[0] = '\0';
-}
+    }
 
-TEST(CURL, get)
-{
+    TEST(CURL, get)
+    {
     CURL *curl;
     CURLcode res;
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    
+
     curl = curl_easy_init();
 
     tstring s;
@@ -171,17 +216,17 @@ TEST(CURL, get)
     }
     curl_global_cleanup();
 
-}
+    }
 
-extern "C"
-{
-    #include "crypto_scrypt.h"
+    extern "C"
+    {
+#include "crypto_scrypt.h"
     int crypto_scrypt(const uint8_t *, size_t, const uint8_t *, size_t, uint64_t,
             uint32_t, uint32_t, uint8_t *, size_t);
-}
+    }
 
-TEST(SCRYPT, ENCRYPT)
-{
+    TEST(SCRYPT, ENCRYPT)
+    {
     uint8_t salt[32]; // 16 <- do 16, 64 or 128
 
     uint8_t* password;
@@ -203,198 +248,198 @@ TEST(SCRYPT, ENCRYPT)
     std::cout << crypto_scrypt((uint8_t*)"pw", 2, (uint8_t*)"salt", 4, N, r, p, dk, 64) << std::endl;
     std::cout << "DK " << dk << std::endl;
     // This produces they key to be used to encrypt the other keys.
-}
-*/
-/*
- */
-/*
-TEST(COMPRESS, ENCRYPT)
-{
-    // Compress
-    Compressor cmp;
-    std::string path;
-    path.append("./data/test.pdf");
+    }
+    */
+    /*
+     */
+    /*
+    TEST(COMPRESS, ENCRYPT)
+    {
+        // Compress
+        Compressor cmp;
+        std::string path;
+        path.append("./data/test.pdf");
 
-    std::string compressedout;
-    compressedout.append("./output/testcomp");
-    ASSERT_EQ(cmp.CompressFile(path, compressedout, 1), ret::A_OK);
+        std::string compressedout;
+        compressedout.append("./output/testcomp");
+        ASSERT_EQ(cmp.CompressFile(path, compressedout, 1), ret::A_OK);
 
-    unsigned int size = utils::CheckFileSize(compressedout);
+        unsigned int size = utils::CheckFileSize(compressedout);
 
-    std::cout<<"FILE SIZE : "<< size << std::endl;
+        std::cout<<"FILE SIZE : "<< size << std::endl;
 
-    // Encrypt
-    Crypto crp;
-    Credentials cred = crp.GenerateCredentials();
+        // Encrypt
+        Crypto crp;
+        Credentials cred = crp.GenerateCredentials();
 
-    std::string encrypt;
-    encrypt.append("./output/cryp");
-    // encrypt file
-    ASSERT_EQ(crp.EncryptFile(compressedout, encrypt, cred), ret::A_OK);
-   
+        std::string encrypt;
+        encrypt.append("./output/cryp");
+        // encrypt file
+        ASSERT_EQ(crp.EncryptFile(compressedout, encrypt, cred), ret::A_OK);
+       
 
-    Chunker chnk;
-    FileInfo* fi = new FileInfo();
+        Chunker chnk;
+        FileInfo* fi = new FileInfo();
 
-    // chunk file
-    std::string chunkDir;
-    chunkDir.append("./output");
+        // chunk file
+        std::string chunkDir;
+        chunkDir.append("./output");
 
-    ASSERT_EQ(chnk.ChunkFile(fi, encrypt, chunkDir), ret::A_OK);
-
-
-    // Now undo the process
-
-    // Unchunk
-    std::string unchunk;
-    unchunk.append("./output/unchunked");
-    chnk.DeChunkFile(fi, unchunk, chunkDir);
-
-    // Decrypt
-    std::string uncryp;
-    uncryp.append("./output/uncryp");
-    // decrypt file
-    ASSERT_EQ(crp.DecryptFile(unchunk, uncryp, cred), ret::A_OK);
-
-    // Decompress
-    std::string uncomp;
-    uncomp.append("./output/uncompressed");
-    ASSERT_EQ(cmp.DecompressFile(uncryp, uncomp), ret::A_OK);
-
-}
+        ASSERT_EQ(chnk.ChunkFile(fi, encrypt, chunkDir), ret::A_OK);
 
 
-*/
+        // Now undo the process
 
-/*
-TEST(CHUNKER, Chunking)
-{
+        // Unchunk
+        std::string unchunk;
+        unchunk.append("./output/unchunked");
+        chnk.DeChunkFile(fi, unchunk, chunkDir);
 
-    Chunker chnk;
-    FileInfo* fi = new FileInfo();
+        // Decrypt
+        std::string uncryp;
+        uncryp.append("./output/uncryp");
+        // decrypt file
+        ASSERT_EQ(crp.DecryptFile(unchunk, uncryp, cred), ret::A_OK);
 
-    std::string path;
-    path.append("./data/test.pdf");
+        // Decompress
+        std::string uncomp;
+        uncomp.append("./output/uncompressed");
+        ASSERT_EQ(cmp.DecompressFile(uncryp, uncomp), ret::A_OK);
 
-    std::string chunkDir;
-    chunkDir.append("./output");
- 
-
-    ASSERT_EQ(chnk.ChunkFile(fi, path, chunkDir), ret::A_OK);
-
-    std::string outBound;
-    outBound.append("./output/dechunked");
-    ASSERT_EQ(chnk.DeChunkFile(fi, outBound, chunkDir), ret::A_OK); 
-}
-
-TEST(CRYPTO, Keys)
-{
-    Crypto crp;
-    Credentials cred = crp.GenerateCredentials();
-
-    std::string path;
-    path.append("./data/test.pdf");
- 
-    std::string out;
-    out.append("./output/cryp");
-    // encrypt file
-    ASSERT_EQ(crp.EncryptFile(path, out, cred), ret::A_OK);
-
-    std::string uncryp;
-    uncryp.append("./output/uncryp");
-    // decrypt file
-    ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
-}
-
-TEST(COMPRESSOR, Compress)
-{
-    Compressor cmp;
-    std::string path;
-    path.append("./data/test.pdf");
-
-    std::string output;
-    output.append("./output/testcomp");
-    ASSERT_EQ(cmp.CompressFile(path, output, 1), ret::A_OK);
-
-}
-
-TEST(COMPRESSOR, Decompress)
-{
-    Compressor cmp;
-    std::string compfile;
-    compfile.append("./output/testcomp");
-
-    std::string uncomp;
-    uncomp.append("./output/uncompressed");
-    ASSERT_EQ(cmp.DecompressFile(compfile, uncomp), ret::A_OK);
-}
-
-TEST(UTILS, StringSplitter)
-{
-    std::vector<std::string> out;
-    std::string s;
-    s.append("This\tis\tthe\tstring\tI'm\tsplitting\n");
-
-    utils::SplitString(s, '\t', out);
-    ASSERT_EQ(out.size(), 6);
-}
+    }
 
 
+    */
 
-// Test FileManager
-TEST(FileManager, IndexFile)
-{
-    std::string manifestpath;
-    manifestpath.append("./data/manifest._mn");
-    std::string path;
-    path.append("./data/test.pdf");
+    /*
+    TEST(CHUNKER, Chunking)
+    {
 
-    std::string workingdir;
-    workingdir.append("./output");
- 
-    FileManager fm(manifestpath, workingdir);
+        Chunker chnk;
+        FileInfo* fi = new FileInfo();
 
-    ASSERT_EQ(fm.FileExists(path), true);
-    //ASSERT_EQ(mf.CreateEmptyManifest(), true);
-    ASSERT_EQ(fm.StartupFileManager(), true);
+        std::string path;
+        path.append("./data/test.pdf");
 
-    ret::eCode status = fm.IndexFile(path);
-    ASSERT_EQ(status, ret::A_OK);
+        std::string chunkDir;
+        chunkDir.append("./output");
+     
 
-    std::cout<< "STATUS : " << status << std::endl;
-    ASSERT_EQ(fm.ShutdownFileManager(), true);
+        ASSERT_EQ(chnk.ChunkFile(fi, path, chunkDir), ret::A_OK);
+
+        std::string outBound;
+        outBound.append("./output/dechunked");
+        ASSERT_EQ(chnk.DeChunkFile(fi, outBound, chunkDir), ret::A_OK); 
+    }
+
+    TEST(CRYPTO, Keys)
+    {
+        Crypto crp;
+        Credentials cred = crp.GenerateCredentials();
+
+        std::string path;
+        path.append("./data/test.pdf");
+     
+        std::string out;
+        out.append("./output/cryp");
+        // encrypt file
+        ASSERT_EQ(crp.EncryptFile(path, out, cred), ret::A_OK);
+
+        std::string uncryp;
+        uncryp.append("./output/uncryp");
+        // decrypt file
+        ASSERT_EQ(crp.DecryptFile(out, uncryp, cred), ret::A_OK);
+    }
+
+    TEST(COMPRESSOR, Compress)
+    {
+        Compressor cmp;
+        std::string path;
+        path.append("./data/test.pdf");
+
+        std::string output;
+        output.append("./output/testcomp");
+        ASSERT_EQ(cmp.CompressFile(path, output, 1), ret::A_OK);
+
+    }
+
+    TEST(COMPRESSOR, Decompress)
+    {
+        Compressor cmp;
+        std::string compfile;
+        compfile.append("./output/testcomp");
+
+        std::string uncomp;
+        uncomp.append("./output/uncompressed");
+        ASSERT_EQ(cmp.DecompressFile(compfile, uncomp), ret::A_OK);
+    }
+
+    TEST(UTILS, StringSplitter)
+    {
+        std::vector<std::string> out;
+        std::string s;
+        s.append("This\tis\tthe\tstring\tI'm\tsplitting\n");
+
+        utils::SplitString(s, '\t', out);
+        ASSERT_EQ(out.size(), 6);
+    }
 
 
- //   std::string filename;
-//    filename.append("test.pdf");
-//    ASSERT_EQ(fm.ConstructFile(filename), true);
-}
+
+    // Test FileManager
+    TEST(FileManager, IndexFile)
+    {
+        std::string manifestpath;
+        manifestpath.append("./data/manifest._mn");
+        std::string path;
+        path.append("./data/test.pdf");
+
+        std::string workingdir;
+        workingdir.append("./output");
+     
+        FileManager fm(manifestpath, workingdir);
+
+        ASSERT_EQ(fm.FileExists(path), true);
+        //ASSERT_EQ(mf.CreateEmptyManifest(), true);
+        ASSERT_EQ(fm.StartupFileManager(), true);
+
+        ret::eCode status = fm.IndexFile(path);
+        ASSERT_EQ(status, ret::A_OK);
+
+        std::cout<< "STATUS : " << status << std::endl;
+        ASSERT_EQ(fm.ShutdownFileManager(), true);
 
 
-*/
+     //   std::string filename;
+    //    filename.append("test.pdf");
+    //    ASSERT_EQ(fm.ConstructFile(filename), true);
+    }
 
-/*
-// Test FileInfo
-TEST(FileInfo, LoadFile)
-{
-    std::string path;
-    path.append("test.txt");
-    FileInfo fi;
 
-    ASSERT_EQ(fi.InitializeFile(path), true);
-    std::cout<<"Get file size: "<< fi.GetFileSize() << std::endl;
- 
-}
-*/
+    */
 
-// TODO :: De-Chunk a file
+    /*
+    // Test FileInfo
+    TEST(FileInfo, LoadFile)
+    {
+        std::string path;
+        path.append("test.txt");
+        FileInfo fi;
 
-int main (int argc, char* argv[])
-{
-    // Init gtestframework
-    testing::InitGoogleTest(&argc, argv);
+        ASSERT_EQ(fi.InitializeFile(path), true);
+        std::cout<<"Get file size: "<< fi.GetFileSize() << std::endl;
+     
+    }
+    */
 
-    // run all tests
-    return RUN_ALL_TESTS();
-}
+    // TODO :: De-Chunk a file
+
+    int main (int argc, char* argv[])
+    {
+        // Init gtestframework
+        testing::InitGoogleTest(&argc, argv);
+
+        // run all tests
+        return RUN_ALL_TESTS();
+    }
 

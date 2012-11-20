@@ -12,6 +12,8 @@ cmake_minimum_required (VERSION 2.6)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
+set(CMAKE_CXX_FLAGS "-g")
+
 # Build dependencies
 # Build gtest libs
 execute_process(WORKING_DIRECTORY ./third_party/jsoncpp

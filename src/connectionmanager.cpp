@@ -12,12 +12,19 @@ struct tdata
     size_t len;
 };
 
+struct WriteOut
+{
+    const char *readptr;
+    int sizeleft;
+};
+
 static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s);
 static void InitDataObject(struct tdata *s);
 static tdata* CreateDataObject();
 static void DestroyDataObject(tdata* pData);
 static std::string ExtractDataToString(tdata* pData);
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms);
+static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
 
 ConnectionManager* ConnectionManager::m_pInstance = 0;
 
@@ -91,82 +98,55 @@ std::string ConnectionManager::HttpGet(std::string &url)
     return response;
 }
 
-void ConnectionManager::HttpPost(const std::string &url, const std::string &body)
+void ConnectionManager::HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool verbose)
 {
     if(m_pCurl)
     {
+        WriteOut postd; // Post content to be read
+        postd.readptr = body.c_str(); // serialized json (should be)
+        postd.sizeleft = body.size();
+
         CURLcode res; 
-        curl_socket_t sockfd;
-        long sockextr;
-        size_t iolen;
+        tdata* s = CreateDataObject();
 
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+        
+        curl_slist *headers = 0; // Init to null, always
+        headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+        headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+
+        // Set url
         curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
+        // Set that we want to Post
+        curl_easy_setopt(m_pCurl, CURLOPT_POST, 1L);
+        // Set the read function
+        curl_easy_setopt(m_pCurl, CURLOPT_READFUNCTION, read_callback);
 
-        // Connect to host, for socket extraction
-        curl_easy_setopt(m_pCurl, CURLOPT_CONNECT_ONLY, 1L);
+        // Set Post data 
+        curl_easy_setopt(m_pCurl, CURLOPT_READDATA, &postd);
+        curl_easy_setopt(m_pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
+
+        // Write out headers 
+        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+
+        // Set read response func and data
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
+        
         res = curl_easy_perform(m_pCurl);
 
         if(res != CURLE_OK)
         {
-            std::cout<<"0"<<std::endl;
-            std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
-            return;
+            std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
         }
 
-       /* Extract the socket from the curl handle - we'll need it for waiting.
-        * Note that this API takes a pointer to a 'long' while we use
-        * curl_socket_t for sockets otherwise.
-        */  
-        res = curl_easy_getinfo(m_pCurl, CURLINFO_LASTSOCKET, &sockextr);
-
-        if(res != CURLE_OK)
-        {
-            std::cout<<"1"<<std::endl;
-            std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
-            return;
-        }
-
-        sockfd = sockextr;
-
-        /* wait for the socket to become available for sending*/
-        if(!wait_on_socket(sockfd, 0, 60000L))
-        {
-            std::cout<<"2"<<std::endl;
-            std::cout<<"ERROR : timeout\n";
-            return;
-        }
-
-        /* send the request */
-        res = curl_easy_send(m_pCurl, body.c_str(), body.size(), &iolen);
-        
-        if(res != CURLE_OK)
-        {
-            std::cout<<"3"<<std::endl;
-            std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
-            return;
-        }
-
-        /* read response */
-        curl_off_t nread;
-        for(;;)
-        {
-            char buf[1024];
-            wait_on_socket(sockfd, 1, 60000L);
-            res = curl_easy_recv(m_pCurl, buf, 1024, &iolen);
-
-            if(res != CURLE_OK)
-            {
-                std::cout<<"4"<<std::endl;
-                std::cout<<"ERROR : " << curl_easy_strerror(res) << std::endl;
-                break;
-            }
-
-            nread = (curl_off_t)iolen;
-            printf("Received %" CURL_FORMAT_CURL_OFF_T " bytes.\n", nread);
-        }
+        responseOut.clear();
+        responseOut.append(ExtractDataToString(s));
+        DestroyDataObject(s);
     }
-
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Curl Utility functions
@@ -272,4 +252,21 @@ static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
     /* select() returns the number of signalled sockets or -1 */ 
     res = select(sockfd + 1, &infd, &outfd, &errfd, &tv);
     return res;
+}
+
+static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
+{
+    struct tdata *pooh = (struct tdata *)userp;
+
+    if(size*nmemb < 1)
+        return 0;
+    if(pooh->len)
+    {
+        *(char *)ptr = pooh->ptr[0]; /* copy one single byte */ 
+        pooh->ptr++;                 /* advance pointer */ 
+        pooh->len--;                /* less data left */ 
+        return 1;                        /* we return 1 byte at a time! */ 
+    }
+
+    return 0;                          /* no more data left to deliver */ 
 }
