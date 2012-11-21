@@ -9,18 +9,30 @@
 
 #include "jsonserializable.h"
 
-struct RedirectCode
-{
-    std::string Code;
-    std::string TokenType;
-};
-
 struct AccessToken
 {
     std::string AccessToken;
     std::string MacKey;
     std::string MacAlgorithm;
     std::string TokenType;
+};
+
+class RedirectCode : public JsonSerializable
+{
+public:
+    RedirectCode();
+    ~RedirectCode();
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
+
+    std::string GetCode() { return m_code; }
+    std::string GetTokenType() { return m_TokenType; }
+
+    void SetCode(const std::string& code) { m_Code = code; }
+    void SetTokenType (const std::string& type) { m_TokenType = type; }
+private:
+    std::string m_Code;
+    std::string m_TokenType;
 };
 
 class TentApp : public JsonSerializable

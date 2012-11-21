@@ -1,6 +1,30 @@
 
 #include "tentapp.h"
 
+
+RedirectCode::RedirectCode()
+{
+
+}
+
+RedirectCode::~RedirectCode()
+{
+
+}
+
+void RedirectCode::Serialize(Json::Value& root)
+{
+    root["code"] = m_Code;
+    root["token_type"] = m_TokenType;
+}
+
+void RedirectCode::Deserialize(Json::Value& root)
+{
+    m_Code = root.get("code", "").asString();
+    m_TokenType = root.get("token_type", "").asString();
+}
+
+
 TentApp::TentApp()
 {
 

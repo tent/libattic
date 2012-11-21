@@ -136,8 +136,10 @@ const char* GetAuthorizationURL()
     return g_szAuthorizationURL.c_str();
 }
 
-
 int RequestUserAuthorizationDetails(const char* szCode)
 {
+    if(!szCode)
+        return ret::A_FAIL_INVALID_CSTR;
+
     return ret::A_OK;
 }
