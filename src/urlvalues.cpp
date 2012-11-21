@@ -1,13 +1,13 @@
 
 #include "urlvalues.h"
 
-void UrlValues::AddValue(std::string& key, std::string &value)
+void UrlValues::AddValue(const std::string& key, const std::string &value)
 {
     // Note* adding multiple values to the same key pill push back the value
     m_Values[key].push_back(value);
 }
 
-std::vector<std::string> UrlValues::GetValue(std::string& key)
+std::vector<std::string> UrlValues::GetValue(const std::string& key)
 {
     UrlValue value;
     UrlValueMap::iterator itr = m_Values.find(key);

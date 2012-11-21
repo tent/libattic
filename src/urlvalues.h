@@ -13,8 +13,8 @@ class UrlValues
     typedef std::vector<std::string> UrlValue;
     typedef std::map<std::string, UrlValue> UrlValueMap;
 public:
-    void AddValue(std::string& key, std::string &value);
-    UrlValue GetValue(std::string& key);
+    void AddValue(const std::string& key, const std::string &value);
+    UrlValue GetValue(const std::string& key);
 
     std::string SerializeToString();
 

@@ -50,9 +50,13 @@ public:
     std::string GetMacKeyID() const         { return m_MacKeyID; }
     std::string GetMacKey() const           { return m_MacKey; }
     
-    std::vector<std::string>* GetScopes()           { return &m_Scopes; }
-    std::vector<std::string>* GetRedirectURIs()     { return &m_RedirectURIs;}
-    std::vector<std::string>* GetAuthorizations()   { return &m_Authorizations;}
+    typedef std::vector<std::string> ScopeVec;
+    typedef std::vector<std::string> RedirectVec;
+    typedef std::vector<std::string> AuthVec;
+
+    ScopeVec* GetScopes()           { return &m_Scopes; }
+    RedirectVec* GetRedirectURIs()  { return &m_RedirectURIs;}
+    AuthVec* GetAuthorizations()    { return &m_Authorizations;}
     
     void SetAppID(const std::string &szID)                      { m_AppID = szID; }
     void SetAppName(const std::string &szName)                  { m_AppName = szName; }

@@ -23,6 +23,48 @@
 
 #include "tentapp.h"
 
+#include "libattic.h"
+
+TEST(LIBATTIC, STARTAPPINST)
+{
+
+    char* p[] = { "https://test2.tent.is" };
+    char* s[] = { "read_posts", "write_posts" };
+
+    int status = StartupAppInstance("MyApp", "This is an app", "www.app.com", "", p,1, s, 2);
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RegisterApp("https://test2.tent.is/tent/apps");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RequestAppAuthorizationURL("https://test2.tent.is/tent/");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
+
+
+    status = ShutdownAppInstance();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    
+}
+/*
 TEST(CONNECTIONMANAGER, POST)
 {
     std::string postpath("https://manuel.tent.is/tent/apps");
@@ -54,7 +96,7 @@ TEST(CONNECTIONMANAGER, POST)
     JsonSerializer::SerializeObject(&app2, s2);
     std::cout<< " S2 : \n" << s2 << std::endl;
 }
-
+*/
 /*
 TEST(CURL, POST)
 {
