@@ -11,6 +11,11 @@
 static TentApp* g_pApp = 0;
 std::string g_szAuthorizationURL;
 
+// Local utility functions
+void CheckUrlAndAppendTrailingSlash(std::string &szString);
+
+//////// API start
+//
 int StartupAppInstance(const char* szAppName, const char* szAppDescription, const char* szUrl, const char* szIcon, char* redirectUris[], unsigned int uriCount, char* scopes[], unsigned int scopeCount)
 {
     g_pApp = new TentApp();                                                
@@ -122,11 +127,11 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
 
     g_szAuthorizationURL.clear();
     g_szAuthorizationURL.append(szApiRoot);
+    CheckUrlAndAppendTrailingSlash(g_szAuthorizationURL);
     g_szAuthorizationURL.append("oauth/authorize");
     std::string params = val.SerializeToString();
     std::cout<<"PARAMS : " << params << std::endl;
     g_szAuthorizationURL.append(params);
-
 
     return ret::A_OK;
 }
@@ -136,10 +141,74 @@ const char* GetAuthorizationURL()
     return g_szAuthorizationURL.c_str();
 }
 
-int RequestUserAuthorizationDetails(const char* szCode)
+void CheckUrlAndAppendTrailingSlash(std::string &szString)
+{
+    if(szString.empty())
+        return;
+
+    if(szString[szString.size()-1] != '/')
+        szString.append("/");
+}
+
+
+int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 {
     if(!szCode)
         return ret::A_FAIL_INVALID_CSTR;
 
+    // Build redirect code
+    RedirectCode rcode;
+    rcode.SetCode(std::string(szCode));
+    rcode.SetTokenType(std::string("mac"));
+
+    std::string path(szApiRoot);
+    CheckUrlAndAppendTrailingSlash(path);
+    path.append("apps/");
+    path.append(g_pApp->GetAppID());
+    path.append("/authorizations");
+
+    std::cout<< " PATH : " << path << std::endl;
+    // serialize RedirectCode
+    std::string serialized;
+    if(!JsonSerializer::SerializeObject(&rcode, serialized))
+        return ret::A_FAIL_TO_SERIALIZE_OBJECT;
+
+    std::cout<< " SERIALIZED RCODE : " << serialized << std::endl;
+        
+    std::string response;
+    ConnectionManager* pCm = ConnectionManager::GetInstance();
+    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey());                                                                                          
+
+    std::cout<< " RESPONSE : " << response << std::endl;
+
     return ret::A_OK;
 }
+
+int SaveAppToFile(const char* szFilePath)
+{
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    std::string szSavePath(szFilePath);
+    g_pApp->SaveToFile(szSavePath);
+
+    return ret::A_OK;
+}
+
+
+int LoadAppFromFile(const char* szFilePath)
+{
+    if(!g_pApp)
+        g_pApp = new TentApp();                                                
+
+    std::string szSavePath(szFilePath);
+    g_pApp->LoadFromFile(szSavePath);
+
+   
+    std::string buffer;
+    JsonSerializer::SerializeObject(g_pApp, buffer);
+    std::cout<<" BUFFER : " << buffer << std::endl;
+
+    return ret::A_OK;
+}
+

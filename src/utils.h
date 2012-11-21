@@ -8,40 +8,83 @@
 #include <string>
 #include <vector>
 
+#include <time.h>
+#include <stdlib.h>
+
 namespace utils
 {
 
-static std::vector<std::string> &SplitString(const std::string &s, char delim, std::vector<std::string> &out)
-{
-    std::stringstream ss(s);
-    std::string item;
-
-    while(std::getline(ss, item, delim))
+    static std::vector<std::string> &SplitString(const std::string &s, char delim, std::vector<std::string> &out)
     {
-        out.push_back(item);
+        std::stringstream ss(s);
+        std::string item;
+
+        while(std::getline(ss, item, delim))
+        {
+            out.push_back(item);
+        }
+
+        return out;
     }
 
-    return out;
-}
-
-static unsigned int CheckFileSize(std::string &szFilePath)
-{
-    unsigned int fileSize = 0;
-
-    std::ifstream ifs;
-    ifs.open (szFilePath.c_str(), std::ifstream::binary);
-
-    if(ifs.is_open())
+    static unsigned int CheckFileSize(std::string &szFilePath)
     {
-       ifs.seekg (0, std::ifstream::end);
-       fileSize = ifs.tellg();
-       ifs.seekg (0, std::ifstream::beg);
-       ifs.close();
+        unsigned int fileSize = 0;
+
+        std::ifstream ifs;
+        ifs.open (szFilePath.c_str(), std::ifstream::binary);
+
+        if(ifs.is_open())
+        {
+           ifs.seekg (0, std::ifstream::end);
+           fileSize = ifs.tellg();
+           ifs.seekg (0, std::ifstream::beg);
+           ifs.close();
+        }
+
+        return fileSize;
     }
 
-    return fileSize;
+    static unsigned int CheckIStreamSize(std::ifstream &ifs)
+    {
+        unsigned int size = 0;
+        ifs.seekg(0, std::ifstream::end);
+        size = ifs.tellg();
+        ifs.seekg(0, std::ifstream::beg);
+        
+        return size;
+    };
+
+    static void StringToHex(const std::string& input, std::string& output)
+    {
+        static const char* const lut = "0123456789ABCDEF";
+        size_t len = input.length();
+
+        output.clear();
+        output.reserve(2 * len);
+        for (size_t i = 0; i < len; ++i)
+        {
+            const char c = input[i];
+            output.push_back(lut[c >> 4]);
+            output.push_back(lut[c & 15]);
+        }
+    }
+
+    static char GenerateChar()
+    {
+        char c;
+        if(rand()%2)
+            c = rand()%25 + 97; // a-z
+        else
+            c = rand()%9 + 48; // 0-9
+
+        return c;
+    }
+
+    static void SeedRand()
+    {
+        srand(time(0));
+    }
+
 }
-
-};
-
 #endif

@@ -13,11 +13,19 @@ int ShutdownAppInstance();
 int RegisterApp(const char* szPostPath);
 
 // Pass the api root of the entity (ex "https://test.tent.is/tent/")
+// * Must Register app successfully before proceeding to this step
 int RequestAppAuthorizationURL(const char* szApiRoot);
 
 const char* GetAuthorizationURL();
 
-int RequestUserAuthorizationDetails(const char* szCode);
+int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode);
 
+// Save the app in json to a file (Just a utility you probably don't
+// want to use this in production)
+int SaveAppToFile(const char* szFilePath);
+
+// Load the app in json from a file (Just a utility you probably don't
+// want to use this in production)
+int LoadAppFromFile(const char* szFilePath);
 #endif
 

@@ -1,6 +1,9 @@
 
 #include "tentapp.h"
 
+#include <fstream>
+
+#include "utils.h"
 
 RedirectCode::RedirectCode()
 {
@@ -138,30 +141,52 @@ void TentApp::DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std
     }
 }
 
-void TentApp::RegisterApp()
+ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
 {
-    // Serialize self
+    std::ofstream ofs;
+
+    ofs.open(szFilePath.c_str(), std::ofstream::out | std::ofstream::binary); 
+
+    if(!ofs.is_open())
+        return ret::A_FAIL_OPEN;
+
     std::string serialized;
     JsonSerializer::SerializeObject(this, serialized);
 
-    // TODO THIS;
-
-
-}
-
+    ofs.write(serialized.c_str(), serialized.size());
+    ofs.close();
    
-void TentApp::RequestAuthorization(std::string& szAppID, RedirectCode& tRedirectCode)
-{
-
+    return ret::A_OK;
 }
 
-std::string TentApp::RequestAuthorizationURL()
+ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
 {
+    std::ifstream ifs;
+    ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
+    if(!ifs.is_open())
+        return ret::A_FAIL_OPEN;
+
+    unsigned int size = utils::CheckIStreamSize(ifs);
+    char* pBuf = new char[size];
+
+    ifs.read(pBuf, size);
+
+    // sanity check size and readcount should be the same
+    int readcount = ifs.gcount();
+    if(readcount != size)
+        std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";
+    
+    std::string loaded(pBuf);
+
+    if(pBuf)
+    {
+        delete pBuf;
+        pBuf = 0;
+    }
+    
+    // Deserialize into self.
+    JsonSerializer::DeserializeObject(this, loaded);
+
+    return ret::A_OK;
 }
-
-std::auto_ptr<AccessToken> TentApp::RequestUserAuthorizationDetails(std::string szCode)
-{
-
-}
-

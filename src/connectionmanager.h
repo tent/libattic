@@ -7,6 +7,8 @@
 #include <string>
 #include <curl/curl.h>
 
+#include <osrng.h>
+
 class ConnectionManager
 {
     ConnectionManager();
@@ -14,7 +16,12 @@ class ConnectionManager
     ~ConnectionManager();
     ConnectionManager operator=(const ConnectionManager &rhs) { return *this; }
 
+    void GenerateNonce(std::string &out);
+
+    void BuildAuthHeader(const std::string &szMacID, const std::string &szMacKey, std::string &out);
+
 public:
+
     void Initialize();
     void Shutdown();
 
@@ -28,8 +35,10 @@ public:
     std::string HttpGet(std::string &url);  
     void HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool versbose = false);
 
+    void HttpPostWithAuth(const std::string &url, const std::string &body, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool versbose = false);
 
 private:
+    CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;
 
     CURL* m_pCurl;  // Curl instance

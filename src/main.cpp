@@ -25,6 +25,28 @@
 
 #include "libattic.h"
 
+TEST(LIBATTIC, CODEUSAGE)
+{
+
+    std::string szAppPath("./app");
+    int status = LoadAppFromFile(szAppPath.c_str());
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "11f89b6030804d79cbd68b85769f06d8");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+}
+/*
 TEST(LIBATTIC, STARTAPPINST)
 {
 
@@ -54,6 +76,14 @@ TEST(LIBATTIC, STARTAPPINST)
 
     std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
 
+    std::string szAppPath("./app");
+    status = SaveAppToFile(szAppPath.c_str());
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
 
     status = ShutdownAppInstance();
     if(status != ret::A_OK)
@@ -62,8 +92,10 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    
+
 }
+/*
+*/
 /*
 TEST(CONNECTIONMANAGER, POST)
 {

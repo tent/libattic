@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 
+#include "errorcodes.h"
 #include "jsonserializable.h"
 
 struct AccessToken
@@ -25,7 +26,7 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    std::string GetCode() { return m_code; }
+    std::string GetCode() { return m_Code; }
     std::string GetTokenType() { return m_TokenType; }
 
     void SetCode(const std::string& code) { m_Code = code; }
@@ -48,15 +49,15 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void RegisterApp();
-    void RequestAuthorization(std::string& szAppID, RedirectCode& tRedirectCode);
-    std::string RequestAuthorizationURL();
-    std::auto_ptr<AccessToken> RequestUserAuthorizationDetails(std::string szCode);
+    // TODO :: move this to some other place, the file manager could 
+    //         be in charge of saving state to disk
+    ret::eCode SaveToFile(const std::string& szFilePath);
+    ret::eCode LoadFromFile(const std::string& szFilePath);
 
     std::string GetAppID() const            { return m_AppID; }
     std::string GetAppName() const          { return m_AppName; }
     std::string GetAppDescription() const   { return m_AppDescription; }
-    std::string GetAppURL() const   { return m_AppURL; }
+    std::string GetAppURL() const           { return m_AppURL; }
     std::string GetAppIcon() const          { return m_AppIcon; }
     std::string GetMacAlgorithm() const     { return m_MacAlgorithm; }
     std::string GetMacKeyID() const         { return m_MacKeyID; }
@@ -73,7 +74,7 @@ public:
     void SetAppID(const std::string &szID)                      { m_AppID = szID; }
     void SetAppName(const std::string &szName)                  { m_AppName = szName; }
     void SetAppDescription(const std::string &szDescription)    { m_AppDescription = szDescription; }
-    void SetAppURL(const std::string &szURL)            { m_AppURL = szURL; }
+    void SetAppURL(const std::string &szURL)                    { m_AppURL = szURL; }
     void SetAppIcon(const std::string &szIcon)                  { m_AppIcon = szIcon; }
     void SetMacAlgorithm(const std::string &szAlg)              { m_MacAlgorithm = szAlg; }
     void SetMacKeyID(const std::string &szID)                   { m_MacKeyID = szID; }
