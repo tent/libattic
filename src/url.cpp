@@ -27,10 +27,19 @@ void Url::ExtractInfo()
 
     // copy url locally so we can slice this up
     std::string complete = m_Url;
-    // Extract Scheme
-    size_t found =0;
 
+    size_t found =0;
+    // Extract Query
+    found = complete.find(std::string("?"));
+    if (found != std::string::npos)
+    {
+        m_Query  = complete.substr (found); 
+        // remove scheme from complete
+        complete = complete.substr(0, found);
+    }
+    // Extrac Scheme
     m_Scheme.clear();
+    found = 0;
     found = complete.find(std::string("://"));
     if (found != std::string::npos)
     {
@@ -66,3 +75,8 @@ void Url::ExtractInfo()
 }
     
 
+void Url::GetRequestURI(std::string &out) // Similar to that of GO's standard lib
+{
+    out.clear();
+    out += m_Path + m_Query;
+}

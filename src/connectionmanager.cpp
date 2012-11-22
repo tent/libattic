@@ -1,11 +1,15 @@
 #include "connectionmanager.h"
 
+#include <iostream>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <iostream>
+#include <hex.h>
+#include <hmac.h>
 
+#include "url.h"
 #include "utils.h"
 
 struct tdata
@@ -170,7 +174,7 @@ void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::stri
         headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
         headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
         std::string authheader;
-        BuildAuthHeader(szMacID, szMacKey, authheader);
+        BuildAuthHeader(url, std::string("POST"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
         // Set url
@@ -205,8 +209,10 @@ void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::stri
 
 }
 
-void ConnectionManager::BuildAuthHeader(const std::string &szMacID, const std::string &szMacKey, std::string& out)
+void ConnectionManager::BuildAuthHeader(const std::string &url, const std::string &requestMethod, const std::string &szMacID, const std::string &szMacKey, std::string& out)
 {
+
+
     std::string n;
     GenerateNonce(n);
 
@@ -229,11 +235,45 @@ void ConnectionManager::BuildAuthHeader(const std::string &szMacID, const std::s
     out.append(n);
     out.append("\", ");
 
+    
+    Url u(url);
+
+    std::string port;
+    if(u.HasPort())
+        port = u.GetPort();
+    else
+    {
+        if(u.GetScheme().compare(std::string("https")))
+            port.append("443");
+        else
+            port.append("80");
+    }
+
+    std::string requestString;
+    requestString.append(tb); // time 
+    requestString.append("\n");
+    requestString.append(n); // nonce 
+    requestString.append("\n");
+    requestString.append(requestMethod); // method
+    requestString.append("\n");
+    std::string uri;
+    u.GetRequestURI(uri);
+    requestString.append(uri); // request uri
+    requestString.append("\n");
+    requestString.append(u.GetHost()); // host
+    requestString.append("\n");
+    requestString.append(port); // port
+    requestString.append("\n\n");
+
+    std::string signedreq;
+    SignRequest(requestString,szMacKey, signedreq);
+    std::cout<< " SIGNED REQ : " << signedreq;
+
     out.append("mac=\"");
-    out.append(szMacKey.c_str());
+    out.append(signedreq.c_str());
     out.append("\"");
 
-    std::cout << " AUTH HEADER : " << out << std::endl;
+
 }
 
 void ConnectionManager::GenerateNonce(std::string &out)
@@ -246,7 +286,119 @@ void ConnectionManager::GenerateNonce(std::string &out)
     utils::StringToHex(seed, out);
 }
 
+#include <string.h>
+#include <stdio.h>
+void ConnectionManager::SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out)
+{
+    std::string mac, encoded;
 
+    //CryptoPP::AutoSeededRandomPool prng;
+
+    //CryptoPP::SecByteBlock key(16);
+    //prng.GenerateBlock(key, key.size());
+
+
+    try
+    {
+        std::cout<< "Key : " << szKey << std::endl;
+        unsigned char szReqBuffer[szRequest.size()];
+        memcpy(szReqBuffer, szKey.c_str(), strlen(szKey.c_str())+1);
+
+        std::cout<< " BUFFER : " << szReqBuffer << std::endl;
+        //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szRequest.size());
+
+        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szKey.size());
+        CryptoPP::StringSource( szRequest,
+                                true, 
+                                new CryptoPP::HashFilter(hmac,
+                                new CryptoPP::StringSink(mac)
+                               ) // HashFilter      
+                    ); // StringSource
+
+    std::cout << "mac : " << mac << std::endl;
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
+
+    // Pretty print
+    encoded.clear();
+
+    CryptoPP::StringSource( mac, 
+                  true,
+                  new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
+                ); // StringSource
+
+    std::cout << "hmac: " << encoded << std::endl; 
+    std::cout << "mac : " << mac << std::endl;
+
+    out.clear();
+    out = encoded;
+}
+
+void ConnectionManager::GenerateHmacSha256(std::string &out)
+{
+    CryptoPP::AutoSeededRandomPool prng;
+
+    CryptoPP::SecByteBlock key(16);
+    prng.GenerateBlock(key, key.size());
+
+    std::string plain = "HMAC Test";
+    std::string mac, encoded;
+
+    /*********************************\
+    \*********************************/
+
+    encoded.clear();
+
+    CryptoPP::StringSource( key, 
+                  key.size(), 
+                  true,
+                  new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
+                ); // StringSource
+
+    std::cout << "key: " << encoded << std::endl;
+    std::cout << "plain text: " << plain << std::endl;
+
+    /*********************************\
+    \*********************************/
+
+    try
+    {
+        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(key, key.size());
+
+        CryptoPP::StringSource( plain, 
+                      true, 
+                      new CryptoPP::HashFilter( hmac,
+                                      new CryptoPP::StringSink(mac)
+                                    ) // HashFilter      
+                    ); // StringSource
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
+
+    /*********************************\
+    \*********************************/
+
+    // Pretty print
+    encoded.clear();
+
+    CryptoPP::StringSource( mac, 
+                  true,
+                  new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
+                ); // StringSource
+
+    std::cout << "hmac: " << encoded << std::endl; 
+
+    out.clear();
+    out = encoded;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,119 +407,119 @@ void ConnectionManager::GenerateNonce(std::string &out)
 //
 static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s)
 {
-size_t new_len = s->len + size*nmemb;
+    size_t new_len = s->len + size*nmemb;
 
-if(s->ptr)
-{
-    delete s->ptr;
-    s->ptr = 0;
-}
+    if(s->ptr)
+    {
+        delete s->ptr;
+        s->ptr = 0;
+    }
 
-s->ptr = new char[new_len+1];
+    s->ptr = new char[new_len+1];
 
-if (s->ptr == NULL) {
-    fprintf(stderr, "realloc() failed\n");
-    exit(EXIT_FAILURE);
-}
-memcpy(s->ptr+s->len, ptr, size*nmemb);
+    if (s->ptr == NULL) {
+        fprintf(stderr, "realloc() failed\n");
+        exit(EXIT_FAILURE);
+    }
+    memcpy(s->ptr+s->len, ptr, size*nmemb);
 
-s->ptr[new_len] = '\0';
-s->len = new_len;
+    s->ptr[new_len] = '\0';
+    s->len = new_len;
 
-return size*nmemb;
+    return size*nmemb;
 }
 
 static void InitDataObject(struct tdata *s)
 {
-s->len = 0;
-s->ptr = new char[(s->len+1)];
-if (s->ptr == NULL)
-{
-    fprintf(stderr, "malloc() failed\n");
-    exit(EXIT_FAILURE);
-}
+    s->len = 0;
+    s->ptr = new char[(s->len+1)];
+    if (s->ptr == NULL)
+    {
+        fprintf(stderr, "malloc() failed\n");
+        exit(EXIT_FAILURE);
+    }
 
-s->ptr[0] = '\0';
+    s->ptr[0] = '\0';
 }
 
 static tdata* CreateDataObject() 
 {
-tdata* pData = new tdata;
-InitDataObject(pData);
+    tdata* pData = new tdata;
+    InitDataObject(pData);
 
-return pData;
+    return pData;
 }
 
 static void DestroyDataObject(tdata* pData)
 {
-if(pData)
-{
-    if(pData->ptr)
+    if(pData)
     {
-        delete pData->ptr;
-        pData->ptr = 0;
-    }
+        if(pData->ptr)
+        {
+            delete pData->ptr;
+            pData->ptr = 0;
+        }
 
-    delete pData;
-    pData = 0;
-}
+        delete pData;
+        pData = 0;
+    }
 }
 
 static std::string ExtractDataToString(tdata* pData)
 {
-std::string str;
+    std::string str;
 
-if(pData && pData->ptr)
-{
-    str.append(pData->ptr, pData->len);
-}
+    if(pData && pData->ptr)
+    {
+        str.append(pData->ptr, pData->len);
+    }
 
-return str;
+    return str;
 }
 
 /* Auxiliary function that waits on the socket. */ 
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
 {
-struct timeval tv;
-fd_set infd, outfd, errfd;
-int res;
+    struct timeval tv;
+    fd_set infd, outfd, errfd;
+    int res;
 
-tv.tv_sec = timeout_ms / 1000;
-tv.tv_usec= (timeout_ms % 1000) * 1000;
+    tv.tv_sec = timeout_ms / 1000;
+    tv.tv_usec= (timeout_ms % 1000) * 1000;
 
-FD_ZERO(&infd);
-FD_ZERO(&outfd);
-FD_ZERO(&errfd);
- 
-FD_SET(sockfd, &errfd); /* always check for error */ 
+    FD_ZERO(&infd);
+    FD_ZERO(&outfd);
+    FD_ZERO(&errfd);
+     
+    FD_SET(sockfd, &errfd); /* always check for error */ 
 
-if(for_recv)
-{
-    FD_SET(sockfd, &infd);
-}
-else
-{
-    FD_SET(sockfd, &outfd);
-}
+    if(for_recv)
+    {
+        FD_SET(sockfd, &infd);
+    }
+    else
+    {
+        FD_SET(sockfd, &outfd);
+    }
 
-/* select() returns the number of signalled sockets or -1 */ 
-res = select(sockfd + 1, &infd, &outfd, &errfd, &tv);
-return res;
+    /* select() returns the number of signalled sockets or -1 */ 
+    res = select(sockfd + 1, &infd, &outfd, &errfd, &tv);
+    return res;
 }
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
 {
-struct tdata *pooh = (struct tdata *)userp;
+    struct tdata *pooh = (struct tdata *)userp;
 
-if(size*nmemb < 1)
-    return 0;
-if(pooh->len)
-{
-    *(char *)ptr = pooh->ptr[0]; /* copy one single byte */ 
-    pooh->ptr++;                 /* advance pointer */ 
-    pooh->len--;                /* less data left */ 
-    return 1;                        /* we return 1 byte at a time! */ 
-}
+    if(size*nmemb < 1)
+        return 0;
+    if(pooh->len)
+    {
+        *(char *)ptr = pooh->ptr[0]; /* copy one single byte */ 
+        pooh->ptr++;                 /* advance pointer */ 
+        pooh->len--;                /* less data left */ 
+        return 1;                        /* we return 1 byte at a time! */ 
+    }
 
-return 0;                          /* no more data left to deliver */ 
+    return 0;                          /* no more data left to deliver */ 
 }

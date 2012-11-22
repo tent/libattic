@@ -17,11 +17,13 @@ class ConnectionManager
     ConnectionManager operator=(const ConnectionManager &rhs) { return *this; }
 
     void GenerateNonce(std::string &out);
+    void GenerateHmacSha256(std::string &out);
 
-    void BuildAuthHeader(const std::string &szMacID, const std::string &szMacKey, std::string &out);
 
 public:
 
+    void BuildAuthHeader(const std::string &url, const std::string &requestMethod, const std::string &szMacID, const std::string &szMacKey, std::string &out);
+    void SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out);
     void Initialize();
     void Shutdown();
 

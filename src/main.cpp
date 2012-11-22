@@ -25,6 +25,37 @@
 
 #include "libattic.h"
 
+#include "url.h"
+
+
+TEST(MAC, SIGNING)
+{
+    //"http://example.com/resource/1?b=1&a=2", "POST", "hmac-sha-256", "Xt51rtHY5F+jxKXMCoiKgXa3geofWW/7RANCXB1yu08="
+    
+    Url test("http://example.com/resource/1?b=1&a=2");
+    std::string out;
+    ConnectionManager::GetInstance()->BuildAuthHeader(std::string("http://example.com/resource/1?b=1&a=2"), std::string("POST"), std::string(""), std::string("489dks293j39"), out);
+
+
+    std::cout<< " AUTH HEADER : " << out << std::endl;
+    
+
+}
+
+TEST(URL, CUSTOM)
+{
+    Url test("http://www.something.com:8080/this/is/a/path.swf?something=whatever");
+    
+    std::cout << test.GetUrl() << std::endl;
+    std::cout << test.GetScheme() << std::endl;
+    std::cout << test.GetHost() << std::endl;
+    std::cout << test.GetPath() << std::endl;
+    std::cout << test.GetPort() << std::endl;
+    std::cout << test.GetQuery() << std::endl;
+
+}
+
+/* 
 TEST(LIBATTIC, CODEUSAGE)
 {
 
@@ -37,7 +68,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "11f89b6030804d79cbd68b85769f06d8");
+    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "0fe4c78e226fdc2387a102a5c551c2d4");
 
     if(status != ret::A_OK)
     {
@@ -46,7 +77,8 @@ TEST(LIBATTIC, CODEUSAGE)
     ASSERT_EQ(status, ret::A_OK);
 
 }
-/*
+
+/* 
 TEST(LIBATTIC, STARTAPPINST)
 {
 

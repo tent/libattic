@@ -177,7 +177,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
         
     std::string response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
-    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey());                                                                                          
+    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey(), true);
 
     std::cout<< " RESPONSE : " << response << std::endl;
 

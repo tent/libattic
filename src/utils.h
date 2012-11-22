@@ -14,7 +14,8 @@
 namespace utils
 {
 
-    static std::vector<std::string> &SplitString(const std::string &s, char delim, std::vector<std::string> &out)
+    typedef std::vector<std::string> split;
+    static std::vector<std::string> &SplitString(const std::string &s, char delim, split &out)
     {
         std::stringstream ss(s);
         std::string item;
