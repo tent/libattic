@@ -29,4 +29,5 @@ Makefile
 *.a
 *.so
 
-
+# other
+*.pyc # generated during the build process
