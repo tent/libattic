@@ -5,6 +5,31 @@
 
 #include "utils.h"
 
+AccessToken::AccessToken()
+{
+
+}
+AccessToken::~AccessToken()
+{
+
+}
+
+void AccessToken::Serialize(Json::Value& root)
+{
+    root["access_token"] = m_AccessToken;
+    root["mac_key"] = m_MackKey;
+    root["mac_algorithm"] = m_MacAlgorithm;
+    root["token_type"] = m_TokenType;
+}
+
+void AccessToken::Deserialize(Json::Value& root)
+{
+    m_AccessToken = root.get("access_token", "");
+    m_MacKey = root.get("mac_key", "");
+    m_MacAlgorithm = root.get("mac_algorithm", "");
+    m_TokenType = root.get("token_type");
+}
+
 RedirectCode::RedirectCode()
 {
 

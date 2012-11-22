@@ -10,12 +10,26 @@
 #include "errorcodes.h"
 #include "jsonserializable.h"
 
-struct AccessToken
+class AccessToken : public JsonSerializable
 {
-    std::string AccessToken;
-    std::string MacKey;
-    std::string MacAlgorithm;
-    std::string TokenType;
+public:
+    AccessToken();
+    ~AccessToken();
+
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
+
+
+    std::string GetAccessToken() { return m_AccessToken; }
+    std::string GetMacKey() { return m_MacKey; }
+    std::string GetMacAlgorithm() { return m_MacAlgorithm; }
+    std::string GetTokenType() { return m_TokenType; }
+
+private:
+    std::string m_AccessToken;
+    std::string m_MacKey;
+    std::string m_MacAlgorithm;
+    std::string m_TokenType;
 };
 
 class RedirectCode : public JsonSerializable
