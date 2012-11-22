@@ -5,6 +5,7 @@
 
 #include "utils.h"
 
+
 AccessToken::AccessToken()
 {
 
@@ -17,17 +18,17 @@ AccessToken::~AccessToken()
 void AccessToken::Serialize(Json::Value& root)
 {
     root["access_token"] = m_AccessToken;
-    root["mac_key"] = m_MackKey;
+    root["mac_key"] = m_MacKey;
     root["mac_algorithm"] = m_MacAlgorithm;
     root["token_type"] = m_TokenType;
 }
 
 void AccessToken::Deserialize(Json::Value& root)
 {
-    m_AccessToken = root.get("access_token", "");
-    m_MacKey = root.get("mac_key", "");
-    m_MacAlgorithm = root.get("mac_algorithm", "");
-    m_TokenType = root.get("token_type");
+    m_AccessToken = root.get("access_token", "").asString();
+    m_MacKey = root.get("mac_key", "").asString();
+    m_MacAlgorithm = root.get("mac_algorithm", "").asString();
+    m_TokenType = root.get("token_type", "").asString();
 }
 
 RedirectCode::RedirectCode()
@@ -79,14 +80,14 @@ void TentApp::Serialize(Json::Value& root)
     if(m_Scopes.size() > 0)
     {
         Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
-        SerializeVectorIntoObjectValue(scopes, m_Scopes);
+        JsonSerializer::SerializeVectorIntoObjectValue(scopes, m_Scopes);
         root["scopes"] = scopes;
     }
 
     if((m_RedirectURIs.size() > 0))
     {
         Json::Value redirecturis;
-        SerializeVector(redirecturis, m_RedirectURIs);
+        JsonSerializer::SerializeVector(redirecturis, m_RedirectURIs);
         root["redirect_uris"] = redirecturis;
     }
 
@@ -100,7 +101,7 @@ void TentApp::Serialize(Json::Value& root)
     if(m_Authorizations.size() > 0)
     {
         Json::Value authorizations;
-        SerializeVector(authorizations, m_Authorizations);
+        JsonSerializer::SerializeVector(authorizations, m_Authorizations);
         root["authorizations"] = authorizations;
     }
 }
@@ -118,52 +119,9 @@ void TentApp::Deserialize(Json::Value& root)
     m_MacKeyID = root.get("mac_key_id", "").asString();
     m_MacKey = root.get("mac_key", "").asString();
 
-    DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
-    DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
-    DeserializeIntoVector(root["authorizations"], m_Authorizations);
-}
-
-void TentApp::SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec)
-{
-    if(val.isObject())
-    {
-        std::vector<std::string>::iterator itr = vec.begin();
-        for(; itr != vec.end(); itr++)
-            val[*itr];
-    }
-}
-
-void TentApp::SerializeVector(Json::Value &val, std::vector<std::string> &vec)
-{
-    std::vector<std::string>::iterator itr = vec.begin();
-    for(; itr != vec.end(); itr++)
-        val.append(*itr);
-}
-
-
-void TentApp::DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec)
-{
-    vec.clear();
-
-    Json::ValueIterator itr = val.begin();
-    for(; itr != val.end(); itr++)
-    {
-        vec.push_back((*itr).asString());
-    }
-}
-
-void TentApp::DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
-{
-    if(val.isObject())
-    {
-        vec.clear();
-        Json::ValueIterator itr = val.begin();
-
-        for(; itr != val.end(); itr++)
-        {
-            vec.push_back(itr.key().asString());
-        }
-    }
+    JsonSerializer::DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
+    JsonSerializer::DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
+    JsonSerializer::DeserializeIntoVector(root["authorizations"], m_Authorizations);
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& szFilePath)

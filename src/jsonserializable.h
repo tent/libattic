@@ -53,7 +53,51 @@ public:
 
         return true;
     }
+
+    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec)        
+    {                                                                                           
+        if(val.isObject())                                                                      
+        {                                                                                       
+            std::vector<std::string>::iterator itr = vec.begin();                               
+            for(; itr != vec.end(); itr++)                                                      
+                val[*itr];                                                                      
+        }                                                                                       
+    }                                                                                           
+                                                                                                
+    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec)                       
+    {                                                                                           
+        std::vector<std::string>::iterator itr = vec.begin();                                   
+        for(; itr != vec.end(); itr++)                                                          
+            val.append(*itr);                                                                   
+    }                                                                                           
+
+    static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec)
+    {                                                                                                           
+        vec.clear();                                                                                            
+                                            
+        Json::ValueIterator itr = val.begin();                                                                  
+        for(; itr != val.end(); itr++)                                                                          
+        {                                                                                                       
+            vec.push_back((*itr).asString());                                                                   
+        }                                                                                                       
+    }                                                                                                           
+                                                                                                            
+    static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
+    {                                                                                                           
+        if(val.isObject())                                                                                      
+        {                                                                                                       
+            vec.clear();                                                                                        
+            Json::ValueIterator itr = val.begin();                                                              
+                                                                                    
+            for(; itr != val.end(); itr++)                                                                      
+            {                                                                                                   
+                vec.push_back(itr.key().asString());                                                            
+            }                                                                                                   
+        }                                                                                                       
+    }
 };
+
+                                                                                                           
 
 #endif
 
