@@ -173,6 +173,7 @@ void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::stri
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
         headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+
         std::string authheader;
         BuildAuthHeader(url, std::string("POST"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
@@ -288,15 +289,10 @@ void ConnectionManager::GenerateNonce(std::string &out)
 
 #include <string.h>
 #include <stdio.h>
+#include <base64.h>
 void ConnectionManager::SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out)
 {
-    std::string mac, encoded;
-
-    //CryptoPP::AutoSeededRandomPool prng;
-
-    //CryptoPP::SecByteBlock key(16);
-    //prng.GenerateBlock(key, key.size());
-
+    std::string mac, encoded, som;
 
     try
     {
@@ -307,15 +303,21 @@ void ConnectionManager::SignRequest(const std::string &szRequest, const std::str
         std::cout<< " BUFFER : " << szReqBuffer << std::endl;
         //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szRequest.size());
 
-        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szKey.size());
+        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(szKey.c_str())+1);
+
         CryptoPP::StringSource( szRequest,
                                 true, 
+                                new CryptoPP::Base64Encoder(
                                 new CryptoPP::HashFilter(hmac,
-                                new CryptoPP::StringSink(mac)
+                                new CryptoPP::StringSink(mac))
                                ) // HashFilter      
                     ); // StringSource
 
-    std::cout << "mac : " << mac << std::endl;
+        CryptoPP::StringSource( mac,
+                                //szRequest.size(),
+                                true,
+                                new CryptoPP::Base64Encoder(
+                                new CryptoPP::StringSink(som)));
     }
     catch(const CryptoPP::Exception& e)
     {
@@ -323,19 +325,28 @@ void ConnectionManager::SignRequest(const std::string &szRequest, const std::str
         exit(1);
     }
 
-    // Pretty print
+    // Hex encoding, ignore this for now
     encoded.clear();
 
-    CryptoPP::StringSource( mac, 
+    CryptoPP::StringSource( som, 
                   true,
                   new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
                 ); // StringSource
 
+
     std::cout << "hmac: " << encoded << std::endl; 
     std::cout << "mac : " << mac << std::endl;
 
+    // trim
+    size_t found = som.find(std::string("="));
+    if (found != std::string::npos)
+    {
+        som = som.substr(0, found+1);
+    }
+
     out.clear();
-    out = encoded;
+    //out = encoded;
+    out = som;
 }
 
 void ConnectionManager::GenerateHmacSha256(std::string &out)
