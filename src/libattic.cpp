@@ -218,3 +218,10 @@ int LoadAppFromFile(const char* szFilePath)
     return ret::A_OK;
 }
 
+void PostFile(const char* szFilePath)
+{
+    // file path preferably to a chunked file.
+
+
+}
+
