@@ -60,7 +60,7 @@ public:
         {                                                                                       
             std::vector<std::string>::iterator itr = vec.begin();                               
             for(; itr != vec.end(); itr++)                                                      
-                val[*itr];                                                                      
+                val[*itr];
         }                                                                                       
     }                                                                                           
                                                                                                 
@@ -81,7 +81,6 @@ public:
             vec.push_back((*itr).asString());                                                                   
         }                                                                                                       
     }                                                                                                           
-                                                                                                            
     static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
     {                                                                                                           
         if(val.isObject())                                                                                      
@@ -106,6 +105,7 @@ public:
             {
                 val[(*itr).first] = (*itr).second;
             }
+
         }
     }
 
