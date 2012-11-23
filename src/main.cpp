@@ -27,6 +27,73 @@
 
 #include "url.h"
 
+
+TEST(MULT, GET)
+{
+    std::string szAppPath("./app");
+    int status = LoadAppFromFile(szAppPath.c_str());
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    // Load Access Token
+    status = LoadAccessToken("./at");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = GetFile("https://manuel.tent.is/tent/posts/mpb17n/attachments/thisthing.lst", "");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+}
+/*
+ */
+/*
+TEST(MULTI, PART)
+{
+    std::string szAppPath("./app");
+    int status = LoadAppFromFile(szAppPath.c_str());
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    // Load Access Token
+    status = LoadAccessToken("./at");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+
+
+    status = PostFile("https://manuel.tent.is/tent/posts", "./testfile");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+}
+/*
+*/
+
+
 /*  
 TEST(MAC, SIGNING)
 {
@@ -56,13 +123,7 @@ TEST(URL, CUSTOM)
 }
 /*
 */
-
-TEST(LIBATTIC, POSTAPOST)
-{
-
-
-}
-/*   
+/*
 TEST(LIBATTIC, CODEUSAGE)
 {
 
@@ -75,7 +136,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "7477f3609d0667269f76a15f0b21f962");
+    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "6c61a78bf2de1b25c356b0b0fddebf19");
 
     if(status != ret::A_OK)
     {
@@ -86,28 +147,46 @@ TEST(LIBATTIC, CODEUSAGE)
 }
 /*  
 */
-/* 
+/*
 TEST(LIBATTIC, STARTAPPINST)
 {
 
-    char* p[] = { "https://test2.tent.is" };
-    char* s[] = { "read_posts", "write_posts" };
+    char* p[] = { "https://manuel.tent.is" };
+    char* s[] = { "read_posts", 
+                  "write_posts",
+                  "import_posts",
+                  "read_profile",
+                  "write_profile",
+                  "read_followers",
+                  "write_followers",
+                  "read_followings",
+                  "write_followings",
+                  "read_groups",
+                  "write_groups",
+                  "read_permissions",
+                  "write_permissions",
+                  "read_apps",
+                  "write_apps",
+                  "follow_ui",
+                  "read_secrets",
+                  "write_secrets"};
 
-    int status = StartupAppInstance("MyApp", "This is an app", "www.app.com", "", p,1, s, 2);
+
+    int status = StartupAppInstance("libattic", "This is an app", "www.tent.is", "", p,1, s, 18);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RegisterApp("https://test2.tent.is/tent/apps");
+    status = RegisterApp("https://manuel.tent.is/tent/apps");
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestAppAuthorizationURL("https://test2.tent.is/tent/");
+    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;

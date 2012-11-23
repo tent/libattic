@@ -106,27 +106,48 @@ std::string ConnectionManager::HttpGet(std::string &url)
     return response;
 }
 
-void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool versbose = false)
+void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
 {
     if(m_pCurl)
     {
         CURLcode res; 
         tdata* s = CreateDataObject();
 
+
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+
+        curl_slist *headers = 0; // Init to null, always
+        //headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+        headers = curl_slist_append(headers, "Accept: binary" );
+        //headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+        headers = curl_slist_append(headers, "Content-Type: binary");
+
+        std::string authheader;
+        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        headers = curl_slist_append(headers, authheader.c_str());
+
+        std::cout << " GETTING URL " << szUrl << std::endl;
         curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+
+        // Write out headers 
+        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+
 
         res = curl_easy_perform(m_pCurl);
 
         if(res != CURLE_OK)
         {
             std::cout<<"ERRR"<<std::endl;
-            response.append("ERR");
-            return response;
+            return;
         }
 
+        std::cout<< " S LEN : " << s->len << std::endl;
+        std::cout<< " S PTR : " << s->ptr << std::endl;
+        curl_slist_free_all (headers);
         out.clear();
         out.append(ExtractDataToString(s));
         DestroyDataObject(s);
@@ -184,7 +205,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 
 
 #include <sstream>
-void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool versbose)
+void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
 {
     if(m_pCurl)
     {
@@ -220,18 +241,19 @@ void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::s
         std::string testBuf("this is my testbuffer");
 
         attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
-        attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"something\"");
+        attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
         std::string cl("Content-Length: ");
         std::stringstream oss;
         oss << cl << testBuf.size();
         attachlist = curl_slist_append(attachlist,  cl.c_str());
-        attachlist = curl_slist_append(attachlist, "Content-Type: text");
+        attachlist = curl_slist_append(attachlist, "Content-Type: binary");
 
         curl_formadd( &formpost,
                       &lastptr,
                       CURLFORM_COPYNAME, "attatchment",
-                      CURLFORM_BUFFER, "attachment",
-                      CURLFORM_BUFFERPTR, testBuf.c_str(), 
+                      CURLFORM_BUFFER, "thisthing",
+                      CURLFORM_PTRCONTENTS, testBuf.c_str(),
+                      //CURLFORM_BUFFERPTR, testBuf.c_str(), 
                       CURLFORM_BUFFERLENGTH, testBuf.size(),
                       CURLFORM_CONTENTHEADER, attachlist,
                       CURLFORM_END);
