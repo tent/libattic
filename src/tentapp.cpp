@@ -14,6 +14,55 @@ AccessToken::~AccessToken()
 {
 
 }
+ret::eCode AccessToken::SaveToFile(const std::string& szFilePath)
+{
+    std::ofstream ofs;
+
+    ofs.open(szFilePath.c_str(), std::ofstream::out | std::ofstream::binary); 
+
+    if(!ofs.is_open())
+        return ret::A_FAIL_OPEN;
+
+    std::string serialized;
+    JsonSerializer::SerializeObject(this, serialized);
+
+    ofs.write(serialized.c_str(), serialized.size());
+    ofs.close();
+   
+    return ret::A_OK;
+}
+
+ret::eCode AccessToken::LoadFromFile(const std::string& szFilePath)
+{
+    std::ifstream ifs;
+    ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!ifs.is_open())
+        return ret::A_FAIL_OPEN;
+
+    unsigned int size = utils::CheckIStreamSize(ifs);
+    char* pBuf = new char[size];
+
+    ifs.read(pBuf, size);
+
+    // sanity check size and readcount should be the same
+    int readcount = ifs.gcount();
+    if(readcount != size)
+        std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";
+    
+    std::string loaded(pBuf);
+
+    if(pBuf)
+    {
+        delete pBuf;
+        pBuf = 0;
+    }
+    
+    // Deserialize into self.
+    JsonSerializer::DeserializeObject(this, loaded);
+
+    return ret::A_OK;
+}
 
 void AccessToken::Serialize(Json::Value& root)
 {
@@ -80,7 +129,9 @@ void TentApp::Serialize(Json::Value& root)
     if(m_Scopes.size() > 0)
     {
         Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
+        //Json::Value scopes(Json::nullValue);
         JsonSerializer::SerializeVectorIntoObjectValue(scopes, m_Scopes);
+       // JsonSerializer::SerializeVector(scopes, m_Scopes);
         root["scopes"] = scopes;
     }
 
