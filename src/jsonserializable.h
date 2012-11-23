@@ -109,6 +109,19 @@ public:
         }
     }
 
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m)
+    {
+        if(val.isObject())
+        {
+            std::map<std::string, bool>::iterator itr = m.begin();
+
+            for(;itr != m.end(); itr++)
+            {
+                val[(*itr).first] = (*itr).second;
+            }
+        }
+    }
+
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m)
     {
         if(val.isObject())
@@ -118,8 +131,22 @@ public:
 
             for(; itr != val.end(); itr++)                                                                      
             {
-
                 m[itr.key().asString()] = (*itr).asString();
+            }
+
+        }
+    }
+
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m)
+    {
+        if(val.isObject())
+        {
+            m.clear();
+            Json::ValueIterator itr = val.begin();
+
+            for(; itr != val.end(); itr++)                                                                      
+            {
+                m[itr.key().asString()] = (*itr).asBool();
             }
 
         }

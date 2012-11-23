@@ -247,7 +247,7 @@ void ConnectionManager::BuildAuthHeader(const std::string &url, const std::strin
         if(u.GetScheme().compare(std::string("https")))
             port.append("443");
         else
-            port.append("80");
+            port.append("443");
     }
 
     std::string requestString;
@@ -266,15 +266,14 @@ void ConnectionManager::BuildAuthHeader(const std::string &url, const std::strin
     requestString.append(port); // port
     requestString.append("\n\n");
 
+    std::cout<< " REQUEST STRING : " << requestString << std::endl;
     std::string signedreq;
     SignRequest(requestString,szMacKey, signedreq);
-    std::cout<< " SIGNED REQ : " << signedreq;
+    std::cout<< " SIGNED REQ : " << signedreq << std::endl;
 
     out.append("mac=\"");
     out.append(signedreq.c_str());
     out.append("\"");
-
-
 }
 
 void ConnectionManager::GenerateNonce(std::string &out)
@@ -307,17 +306,16 @@ void ConnectionManager::SignRequest(const std::string &szRequest, const std::str
 
         CryptoPP::StringSource( szRequest,
                                 true, 
-                                new CryptoPP::Base64Encoder(
                                 new CryptoPP::HashFilter(hmac,
-                                new CryptoPP::StringSink(mac))
+                                new CryptoPP::StringSink(mac)
                                ) // HashFilter      
                     ); // StringSource
 
         CryptoPP::StringSource( mac,
-                                //szRequest.size(),
                                 true,
                                 new CryptoPP::Base64Encoder(
-                                new CryptoPP::StringSink(som)));
+                                new CryptoPP::StringSink(som),
+                                false));
     }
     catch(const CryptoPP::Exception& e)
     {

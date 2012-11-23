@@ -27,7 +27,7 @@
 
 #include "url.h"
 
-
+/*  
 TEST(MAC, SIGNING)
 {
     //"http://example.com/resource/1?b=1&a=2", "POST", "hmac-sha-256", "Xt51rtHY5F+jxKXMCoiKgXa3geofWW/7RANCXB1yu08="
@@ -54,8 +54,15 @@ TEST(URL, CUSTOM)
     std::cout << test.GetQuery() << std::endl;
 
 }
+/*
+*/
 
-/* 
+TEST(LIBATTIC, POSTAPOST)
+{
+
+
+}
+/*   
 TEST(LIBATTIC, CODEUSAGE)
 {
 
@@ -68,7 +75,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "0fe4c78e226fdc2387a102a5c551c2d4");
+    status = RequestUserAuthorizationDetails("https://test2.tent.is/tent/", "7477f3609d0667269f76a15f0b21f962");
 
     if(status != ret::A_OK)
     {
@@ -77,7 +84,8 @@ TEST(LIBATTIC, CODEUSAGE)
     ASSERT_EQ(status, ret::A_OK);
 
 }
-
+/*  
+*/
 /* 
 TEST(LIBATTIC, STARTAPPINST)
 {

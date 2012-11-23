@@ -173,13 +173,19 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     if(!JsonSerializer::SerializeObject(&rcode, serialized))
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
-    std::cout<< " SERIALIZED RCODE : " << serialized << std::endl;
-        
     std::string response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
-    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey(), true);
+    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey(), false);
 
     std::cout<< " RESPONSE : " << response << std::endl;
+
+    // Should have an auth token
+    // deserialize auth token
+    //
+    AccessToken at;
+    if(!JsonSerializer::DeserializeObject(&at, response))
+        return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
+    // perhaps save it out
 
     return ret::A_OK;
 }

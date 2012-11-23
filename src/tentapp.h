@@ -49,14 +49,9 @@ private:
     std::string m_Code;
     std::string m_TokenType;
 };
-
 class TentApp : public JsonSerializable
 {
-    void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec);
-    void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
-    void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec);
-    void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec);
-public:
+    public:
     TentApp();
     ~TentApp();
 
