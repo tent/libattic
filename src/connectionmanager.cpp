@@ -106,6 +106,33 @@ std::string ConnectionManager::HttpGet(std::string &url)
     return response;
 }
 
+void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool versbose = false)
+{
+    if(m_pCurl)
+    {
+        CURLcode res; 
+        tdata* s = CreateDataObject();
+
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+
+        res = curl_easy_perform(m_pCurl);
+
+        if(res != CURLE_OK)
+        {
+            std::cout<<"ERRR"<<std::endl;
+            response.append("ERR");
+            return response;
+        }
+
+        out.clear();
+        out.append(ExtractDataToString(s));
+        DestroyDataObject(s);
+    }
+}
+
 void ConnectionManager::HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool verbose)
 {
     if(m_pCurl)
