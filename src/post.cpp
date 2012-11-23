@@ -4,6 +4,7 @@
 
 Post::Post()
 {
+    m_TentApp = 0;
     m_PublishedAt = 0;
     m_ReceivedAt = 0;
 }
@@ -19,6 +20,7 @@ void Post::Serialize(Json::Value& root)
         root["id"] = m_ID;
     if(!m_Entity.empty())
         root["entity"] = m_Entity;
+
     root["published_at"] = m_PublishedAt;
     root["received_at"] = m_ReceivedAt;
 
@@ -39,15 +41,15 @@ void Post::Serialize(Json::Value& root)
     if(!m_Type.empty())
         root["type"] = m_Type;
    
-    if(!m_Content.size() > 0)
+    if(m_Content.size() > 0)
     {
         // TODO::this
-        Json::Value views(Json::objectValue); // We want scopes to be an object {}// vs []
-        JsonSerializer::SerializeMapIntoObject(views, m_Content);
-        root["content"] = views;
+        Json::Value content(Json::objectValue); // We want scopes to be an object {}// vs []
+        JsonSerializer::SerializeMapIntoObject(content, m_Content);
+        root["content"] = content;
     }
 
-    if(!m_Attachments.size() > 0)
+    if(m_Attachments.size() > 0)
     {
         Json::Value attachments;
         JsonSerializer::SerializeVector(attachments, m_Attachments);
@@ -59,7 +61,6 @@ void Post::Serialize(Json::Value& root)
         Json::Value app;
         m_TentApp->Serialize(app); 
         root["app"] = app;
-
     }
 
     if(m_Views.size() > 0)
