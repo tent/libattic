@@ -118,6 +118,7 @@ void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &o
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
         curl_slist *headers = 0; // Init to null, always
+        // TODO :: ABSTRACT HEADERS OUT
         //headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
         headers = curl_slist_append(headers, "Accept: binary" );
         //headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
