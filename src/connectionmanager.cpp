@@ -156,6 +156,199 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 }
 
 
+#include <sstream>
+void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool versbose)
+{
+    if(m_pCurl)
+    {
+        CURLM *multi_handle;
+        int still_running;
+
+        curl_slist *headerlist=NULL;
+        static const char buf[] = "Expect:";
+        
+        curl_httppost *formpost=NULL;
+        curl_httppost *lastptr=NULL;
+
+        // Add json
+        WriteOut postd; // Post content to be read
+        postd.readptr = szBody.c_str(); // serialized json (should be)
+        postd.sizeleft = szBody.size();
+
+        curl_slist *partlist = 0;
+        partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
+        partlist = curl_slist_append(partlist, "Content-Length: 206");
+        partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
+        partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
+
+        curl_formadd( &formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "jsonbody",
+                      CURLFORM_COPYCONTENTS, szBody.c_str(),
+                      CURLFORM_CONTENTHEADER, partlist,
+                      CURLFORM_END);
+
+        // Read in file 
+        curl_slist *attachlist = 0;
+        std::string testBuf("this is my testbuffer");
+
+        attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
+        attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"something\"");
+        std::string cl("Content-Length: ");
+        std::stringstream oss;
+        oss << cl << testBuf.size();
+        attachlist = curl_slist_append(attachlist,  cl.c_str());
+        attachlist = curl_slist_append(attachlist, "Content-Type: text");
+
+        curl_formadd( &formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "attatchment",
+                      CURLFORM_BUFFER, "attachment",
+                      CURLFORM_BUFFERPTR, testBuf.c_str(), 
+                      CURLFORM_BUFFERLENGTH, testBuf.size(),
+                      CURLFORM_CONTENTHEADER, attachlist,
+                      CURLFORM_END);
+
+        tdata* s = CreateDataObject();
+        /* Fill in the file upload field. This makes libcurl load data from
+        *      the given file name when curl_easy_perform() is called. */ 
+        /*
+        curl_formadd( &formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "sendfile",
+                      CURLFORM_FILE, szFilePath.c_str(),
+                      CURLFORM_END);
+
+        // Fill in the filename field 
+        curl_formadd( &formpost,
+                      &lastptr,
+                      CURLFORM_COPYNAME, "filename",
+                      CURLFORM_COPYCONTENTS, szFilePath.c_str(),
+                      CURLFORM_END);
+
+        // Fill in the submit field too, even if this is rarely needed 
+        curl_formadd(&formpost,
+                    &lastptr,
+                    CURLFORM_COPYNAME, "submit",
+                    CURLFORM_COPYCONTENTS, "send",
+                    CURLFORM_END);
+
+        curl_slist *formheaders=NULL;
+        formheaders = curl_slist_append(formheaders, "Content-Type: text");
+        formheaders = curl_slist_append(formheaders, "Content-Transfer-Encoding: binary");
+   
+        // Add content header
+        curl_formadd( &formpost,
+                      &lastptr,
+                      CURLFORM_CONTENTHEADER, formheaders,
+                      CURLFORM_END);
+
+*/
+
+        multi_handle = curl_multi_init();
+       
+        /* initalize custom header list (stating that Expect: 100-continue is not
+        *      wanted */ 
+        headerlist = curl_slist_append(headerlist, buf);
+
+        if(m_pCurl && multi_handle)
+        {
+            struct curl_slist *headers=NULL;
+             
+            headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
+            headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
+            //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
+
+            std::string authheader;
+            BuildAuthHeader(szUrl, std::string("POST"), szMacID, szMacKey, authheader);
+            headerlist = curl_slist_append(headerlist, authheader.c_str());
+
+            /* what URL that receives this POST */ 
+            curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+
+            curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headerlist);
+            curl_easy_setopt(m_pCurl, CURLOPT_HTTPPOST, formpost);
+
+            curl_multi_add_handle(multi_handle, m_pCurl);
+
+            // Set read response func and data
+            curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+            curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
+        
+            curl_multi_perform(multi_handle, &still_running);
+
+            do 
+            {
+                struct timeval timeout;
+                int rc; /* select() return code */ 
+                   
+                fd_set fdread;
+                fd_set fdwrite;
+                fd_set fdexcep;
+                int maxfd = -1;
+                              
+                long curl_timeo = -1;
+                                                 
+                FD_ZERO(&fdread);
+                FD_ZERO(&fdwrite);
+                FD_ZERO(&fdexcep);
+                                          
+                /* set a suitable timeout to play around with */ 
+                timeout.tv_sec = 1;
+                timeout.tv_usec = 0;
+               
+                curl_multi_timeout(multi_handle, &curl_timeo);
+                if(curl_timeo >= 0)
+                {
+                    timeout.tv_sec = curl_timeo / 1000;
+                    if(timeout.tv_sec > 1)
+                        timeout.tv_sec = 1;
+                    else
+                        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+                }
+                                                                               
+                /* get file descriptors from the transfers */ 
+                curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+                 
+                /* In a real-world program you OF COURSE check the return code of the
+                          function calls.  On success, the value of maxfd is guaranteed to be
+                          greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                        case of (maxfd == -1), we call select(0, ...), which is basically equal
+                  to sleep. */ 
+                 
+                rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+                                                                                                      
+                switch(rc)
+                {
+                    case -1:
+                        /* select error */ 
+                        break;
+                    case 0:
+                    default:
+                        /* timeout or readable/writable sockets */ 
+                        printf("perform!\n");
+                        curl_multi_perform(multi_handle, &still_running);
+                    printf("running: %d!\n", still_running);
+                    break;
+                }
+            } while(still_running);
+
+            responseOut.clear();
+            responseOut.append(ExtractDataToString(s));
+            DestroyDataObject(s);
+            curl_multi_cleanup(multi_handle);
+
+            /* then cleanup the formpost chain */ 
+            curl_formfree(formpost);
+                                                               
+            /* free slist */ 
+            curl_slist_free_all (headerlist);
+        }
+    }
+
+}
+
 void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::string &body, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
 {
     if(m_pCurl)
@@ -212,8 +405,6 @@ void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::stri
 
 void ConnectionManager::BuildAuthHeader(const std::string &url, const std::string &requestMethod, const std::string &szMacID, const std::string &szMacKey, std::string& out)
 {
-
-
     std::string n;
     GenerateNonce(n);
 
@@ -266,14 +457,16 @@ void ConnectionManager::BuildAuthHeader(const std::string &url, const std::strin
     requestString.append(port); // port
     requestString.append("\n\n");
 
-    std::cout<< " REQUEST STRING : " << requestString << std::endl;
     std::string signedreq;
     SignRequest(requestString,szMacKey, signedreq);
-    std::cout<< " SIGNED REQ : " << signedreq << std::endl;
 
     out.append("mac=\"");
     out.append(signedreq.c_str());
     out.append("\"");
+    
+
+   // std::cout << "REQUEST_STRING : " << requestString << std::endl;
+   // std::cout << "AUTH_HEADER : " << out << std::endl;
 }
 
 void ConnectionManager::GenerateNonce(std::string &out)
@@ -295,11 +488,11 @@ void ConnectionManager::SignRequest(const std::string &szRequest, const std::str
 
     try
     {
-        std::cout<< "Key : " << szKey << std::endl;
+  //      std::cout<< "Key : " << szKey << std::endl;
         unsigned char szReqBuffer[szRequest.size()];
         memcpy(szReqBuffer, szKey.c_str(), strlen(szKey.c_str())+1);
 
-        std::cout<< " BUFFER : " << szReqBuffer << std::endl;
+ //       std::cout<< " BUFFER : " << szReqBuffer << std::endl;
         //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szRequest.size());
 
         CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(szKey.c_str())+1);
@@ -332,8 +525,8 @@ void ConnectionManager::SignRequest(const std::string &szRequest, const std::str
                 ); // StringSource
 
 
-    std::cout << "hmac: " << encoded << std::endl; 
-    std::cout << "mac : " << mac << std::endl;
+//    std::cout << "hmac: " << encoded << std::endl; 
+//    std::cout << "mac : " << mac << std::endl;
 
     // trim
     size_t found = som.find(std::string("="));
