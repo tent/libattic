@@ -27,5 +27,12 @@ int SaveAppToFile(const char* szFilePath);
 // Load the app in json from a file (Just a utility you probably don't
 // want to use this in production)
 int LoadAppFromFile(const char* szFilePath);
+
+int LoadAccessToken(const char* szFilePath);
+
+int PostFile(const char* szUrl, const char* szFilePath);
+
+int GetFile(const char* szUrl, const char* szPostID);
+
 #endif
 

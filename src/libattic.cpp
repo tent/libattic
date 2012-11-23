@@ -7,8 +7,11 @@
 #include "tentapp.h"
 #include "jsonserializable.h"
 #include "urlvalues.h"
+#include "post.h"
 
 static TentApp* g_pApp = 0;
+static AccessToken g_at;
+
 std::string g_szAuthorizationURL;
 
 // Local utility functions
@@ -82,8 +85,10 @@ int RegisterApp(const char* szPostPath)
     if(!JsonSerializer::SerializeObject(g_pApp, serialized))
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
+    std::cout << " JSON : " << serialized << std::endl;
     std::string response;
     pCm->HttpPost(path, serialized, response);
+    std::cout<< " RESPONSE " << response << std::endl;
 
     // Deserialize new data into app
     if(!JsonSerializer::DeserializeObject(g_pApp, response))
@@ -118,12 +123,13 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
 
         for(;itr!=pScopes->end();itr++)
         {
-            val.AddValue(std::string("scopes"), *itr);
+            val.AddValue(std::string("scope"), *itr);
         }
     }
 
     val.AddValue("tent_profile_info_types", "all");
     val.AddValue("tent_post_types", "all");
+    //val.AddValue("tent_post_types", "https://tent.io/types/posts/status/v0.1.0");
 
     g_szAuthorizationURL.clear();
     g_szAuthorizationURL.append(szApiRoot);
@@ -181,13 +187,18 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     // Should have an auth token
     // deserialize auth token
-    //
-    AccessToken at;
-    if(!JsonSerializer::DeserializeObject(&at, response))
+    if(!JsonSerializer::DeserializeObject(&g_at, response))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
     // perhaps save it out
+    g_at.SaveToFile(std::string("at"));
 
     return ret::A_OK;
+}
+
+int LoadAccessToken(const char* szFilePath)
+{
+    std::string szSavePath(szFilePath);
+    return g_at.LoadFromFile(szFilePath);
 }
 
 int SaveAppToFile(const char* szFilePath)
@@ -196,9 +207,7 @@ int SaveAppToFile(const char* szFilePath)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     std::string szSavePath(szFilePath);
-    g_pApp->SaveToFile(szSavePath);
-
-    return ret::A_OK;
+    return g_pApp->SaveToFile(szSavePath);
 }
 
 
@@ -213,15 +222,60 @@ int LoadAppFromFile(const char* szFilePath)
    
     std::string buffer;
     JsonSerializer::SerializeObject(g_pApp, buffer);
-    std::cout<<" BUFFER : " << buffer << std::endl;
+    //std::cout<<" BUFFER : " << buffer << std::endl;
+
 
     return ret::A_OK;
 }
 
-void PostFile(const char* szFilePath)
+int PostFile(const char* szUrl, const char* szFilePath)
 {
     // file path preferably to a chunked file.
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    std::string postType("https://tent.io/types/post/attic/v0.1.0");
+    //std::string postType("https://tent.io/types/post/status/v0.1.0");
+
+    // Create a post 
+    Post p;
+    p.SetType(postType);
+    p.SetContent("text", "testing");
+    p.SetPermission(std::string("public"), false);
+
+    // Serialize Post
+    std::string postBuffer;
+    JsonSerializer::SerializeObject(&p, postBuffer);
+    std::cout << " POST BUFFER : " << postBuffer << std::endl;
+    
+    // Multipart post
+    std::string url(szUrl);
+    std::string filepath(szFilePath);
+    std::string response;
+    ConnectionManager::GetInstance()->HttpMultipartPost(url, postBuffer, filepath, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
 
 
+    //ConnectionManager::GetInstance()->HttpPostWithAuth(url, postBuffer,response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+    
+    std::cout<<"RESPONSE : " << response << std::endl;
+
+
+    return ret::A_OK;
+}
+
+int GetFile(const char* szUrl, const char* szPostID)
+{
+    // file path preferably to a chunked file.
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    std::string url(szUrl);
+    std::string response;
+    ConnectionManager::GetInstance()->HttpGetWithAuth(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+
+    std::cout << " RESPONSE : " << response.size() << std::endl;
+
+ 
+    return ret::A_OK;
 }
 
