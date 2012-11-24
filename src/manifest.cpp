@@ -32,6 +32,8 @@ Manifest::~Manifest()
  * - ChunkName (str)
  * - ChunkCount (unsigned int)
  * - FileSize (unsigned int)
+ * - PostID
+ * - PostVersion
  */
 
 
@@ -89,6 +91,15 @@ bool Manifest::WriteOutManifest()
 
             memset(szBuffer, 0, sizeof(char)*256);
             snprintf(szBuffer, (sizeof(char)*256), "%d", (*itr).second->GetFileSize());
+
+            line.append(szBuffer);
+            line.append("\t");
+
+            line.append((*itr).second->GetPostID().c_str());
+            line.append("\t");
+
+            memset(szBuffer, 0, sizeof(char)*256);
+            snprintf(szBuffer, (sizeof(char)*256),  "%d", (*itr).second->GetPostVersion());
 
             line.append(szBuffer);
             line.append("\n"); // End the line
