@@ -123,7 +123,7 @@ bool FileManager::ReadInEntry(std::string &e)
     utils::SplitString(e, '\t', split);
     
     // Check for correct number of params
-    if(split.size() < 5)
+    if(split.size() < 7)
         return false;
 
     FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
@@ -138,6 +138,10 @@ bool FileManager::ReadInEntry(std::string &e)
     fi->SetChunkCount((unsigned)atoi(split[3].c_str()));
     // FileSize (unsigned int)
     fi->SetFileSize((unsigned)atoi(split[4].c_str()));
+    // Post ID
+    fi->SetPostID(split[5].c_str());
+    // Post Version
+    fi->SetPostVersion((unsigned)atoi(split[6].c_str()));
 
     return true;
 }
