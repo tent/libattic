@@ -153,6 +153,8 @@ ret::eCode FileManager::IndexFile(std::string &szFilePath)
     //  Get File info
     FileInfo* fi = CreateFileInfo();
     fi->InitializeFile(szFilePath);
+
+    /*
     //
     // Compress
     // Generate Compression filepath
@@ -161,6 +163,8 @@ ret::eCode FileManager::IndexFile(std::string &szFilePath)
     status = m_Compressor.CompressFile(szFilePath, comppath, 1);
     if(status != ret::A_OK)
         return status;
+    */
+    /*
     // Encrypt
     // Generate Crypto filepath
     std::string cryptpath;
@@ -171,15 +175,18 @@ ret::eCode FileManager::IndexFile(std::string &szFilePath)
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
     if(status != ret::A_OK)
         return status;
+    */
 
     // Shove keys into a sqlite entry (and FileInfo?)
 
+    /*
     // ChunkFile
     // Generate Chunk Directory 
     status = m_Chunker.ChunkFile(fi, cryptpath, m_WorkingDirectory);
     if(status != ret::A_OK)
         return status;
 
+    */
     // Check if manifest is loaded
     // Write manifest entry
     m_Manifest.InsertFileInfo(fi);
@@ -227,6 +234,7 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
 
+    /*
     // Construct outbound path
     std::string pstfx = "dchnk";
     std::string chunkPath = ConstructOutboundPath(m_WorkingDirectory, true, szFileName, pstfx);
@@ -235,7 +243,9 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
 
     if(status != ret::A_OK)
         return status;
+    */
 
+    /*
     // Decrypt chunks
     pstfx.clear();
     pstfx.append("dcry");
@@ -244,13 +254,17 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     
     if(status != ret::A_OK)
         return status;
-
+    */
 
     // Decompress
-    pstfx.clear();
+    //pstfx.clear();
+
+    /*
+    std::string pstfx; // temporary remove when adding back encryption and chunking
     std::string decompPath = ConstructOutboundPath(m_WorkingDirectory, false, szFileName, pstfx);
     status = m_Compressor.DecompressFile(decrypPath, decompPath);
 
+    */
     //if(status != ret::A_OK) // Currently useless check, here for consistency's sake.
     //    return status;
 
@@ -299,4 +313,7 @@ bool FileManager::FileExists(std::string& szFilepath)
         return bVal;                               
 }                                                           
 
-
+FileInfo* FileManager::GetFileInfo(const std::string &szFileName)
+{
+    return m_Manifest.RetrieveFileInfo(szFileName);
+}

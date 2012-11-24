@@ -256,7 +256,16 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 
 
 
-void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
+void ConnectionManager::HttpMultipartPost( const std::string &szUrl, 
+                                           const std::string &szBody, 
+                                           std::string &szFilePath, 
+                                           std::string &responseOut, 
+                                           const std::string &szMacAlgorithm, 
+                                           const std::string &szMacID, 
+                                           const std::string &szMacKey, 
+                                           const char* pData,
+                                           unsigned int uSize,
+                                           bool verbose)
 {
     if(m_pCurl)
     {
@@ -296,7 +305,8 @@ void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::s
 
         std::string cl("Content-Length: ");
         std::stringstream oss;
-        oss << cl << testBuf.size();
+        //oss << cl << testBuf.size();
+        oss << cl << uSize;
 
         attachlist = curl_slist_append(attachlist,  cl.c_str());
         attachlist = curl_slist_append(attachlist, "Content-Type: binary");
@@ -305,9 +315,11 @@ void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::s
                       &lastptr,
                       CURLFORM_COPYNAME, "attatchment",
                       CURLFORM_BUFFER, "thisthing",
-                      CURLFORM_PTRCONTENTS, testBuf.c_str(),
+                      CURLFORM_PTRCONTENTS, pData,
+                      CURLFORM_BUFFERLENGTH, uSize,
+                      //CURLFORM_PTRCONTENTS, testBuf.c_str(),
                       //CURLFORM_BUFFERPTR, testBuf.c_str(), 
-                      CURLFORM_BUFFERLENGTH, testBuf.size(),
+                      //CURLFORM_BUFFERLENGTH, testBuf.size(),
                       CURLFORM_CONTENTHEADER, attachlist,
                       CURLFORM_END);
 

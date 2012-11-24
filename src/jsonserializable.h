@@ -38,7 +38,7 @@ public:
         return true;
     }
 
-    static bool DeserializeObject(JsonSerializable* pObj, std::string& input)
+    static bool DeserializeObject(JsonSerializable* pObj, const std::string& input)
     {
         if(!pObj)
             return false;
@@ -78,7 +78,8 @@ public:
         Json::ValueIterator itr = val.begin();                                                                  
         for(; itr != val.end(); itr++)                                                                          
         {                                                                                                       
-            vec.push_back((*itr).asString());                                                                   
+            if((*itr).isConvertibleTo(Json::stringValue))
+                vec.push_back((*itr).asString());                                                                   
         }                                                                                                       
     }                                                                                                           
     static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)

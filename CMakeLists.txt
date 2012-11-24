@@ -79,6 +79,7 @@ file(GLOB_RECURSE libattic_SOURCE
 file(GLOB_RECURSE libattic_HEADERS 
     "src/*.h")
 
+
 #file(GLOB_RECURSE libattic_HEADERS "src/*.h")
 
 set(libattic_INCLUDE_DIRS "")
@@ -131,3 +132,7 @@ add_executable(libattic ${libattic_SOURCE})
 #link libs
 #target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
 target_link_libraries(libattic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+
+
+
+

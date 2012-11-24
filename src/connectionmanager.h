@@ -37,14 +37,37 @@ public:
 
     void HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose = false);
 
-    void HttpGetAttachment(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose = false);
+    void HttpGetAttachment( const std::string &szUrl, 
+                            std::string &out, 
+                            const std::string &szMacAlgorithm, 
+                            const std::string &szMacID, 
+                            const std::string &szMacKey, 
+                            bool verbose = false);
 
-    void HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool verbose = false);
+    void HttpPost( const std::string &url, 
+                   const std::string &body, 
+                   std::string &responseOut, 
+                   bool verbose = false);
 
+    void HttpPostWithAuth( const std::string &url, 
+                           const std::string &body, 
+                           std::string &responseOut, 
+                           const std::string &szMacAlgorithm, 
+                           const std::string &szMacID, 
+                           const std::string &szMacKey, 
+                           bool verbose = false);
 
-    void HttpPostWithAuth(const std::string &url, const std::string &body, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose = false);
+    void HttpMultipartPost( const std::string &szUrl, 
+                            const std::string &szBody, 
+                            std::string &szFilePath, 
+                            std::string &responseOut, 
+                            const std::string &szMacAlgorithm, 
+                            const std::string &szMacID, 
+                            const std::string &szMacKey, 
+                            const char* pData,
+                            unsigned int uSize,
+                            bool verbose = false);
 
-    void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose = false);
 
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation

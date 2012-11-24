@@ -40,6 +40,8 @@ public:
 
     bool FileExists(std::string& szFilepath);
 
+    FileInfo* GetFileInfo(const std::string &szFileName);
+
     std::string GetManifestFilePath() { return m_ManifestFilePath; }
     std::string GetWorkingDirectory() { return m_WorkingDirectory; }
     unsigned int GetFileStride()      { return m_FileStride; }

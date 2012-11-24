@@ -28,10 +28,94 @@
 #include "url.h"
 
 
+TEST(PUSH, AFILE)
+{
+    SetWorkingDirectory("./data");
+
+    int status = LoadAppFromFile();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    status = InitializeFileManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+
+    status = PushFile("testcomp");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+
+
+    ShutdownFileManager();
+    ShutdownAppInstance();
+
+}
+
+/*
+TEST(GET, COUNT)
+{
+    // Set Working Dir first
+    SetWorkingDirectory("./data");
+
+    int status = LoadAppFromFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    status = GetAtticPostCount();
+
+
+}
+
+/*
+ */
+/*
 TEST(MULT, GET)
 {
-    std::string szAppPath("./app");
-    int status = LoadAppFromFile(szAppPath.c_str());
+    // Set Working Dir first
+    SetWorkingDirectory("./data");
+
+    int status = LoadAppFromFile();
 
     if(status != ret::A_OK)
     {
@@ -40,7 +124,7 @@ TEST(MULT, GET)
     ASSERT_EQ(status, ret::A_OK);
 
     // Load Access Token
-    status = LoadAccessToken("./at");
+    status = LoadAccessToken();
 
     if(status != ret::A_OK)
     {

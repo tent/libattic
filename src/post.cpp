@@ -11,6 +11,23 @@ Post::Post()
 
 Post::~Post()
 {
+    if(m_Attachments.size() > 0)
+    {
+
+        AttachmentVec::iterator itr = m_Attachments.begin();
+
+        Attachment* pAtch=0;
+        for(;itr != m_Attachments.end();)
+        {
+            pAtch = *itr;
+            itr++;
+            delete pAtch;
+            pAtch = 0;
+        }
+
+        m_Attachments.clear();
+
+    }
 
 }
 
@@ -51,9 +68,7 @@ void Post::Serialize(Json::Value& root)
 
     if(m_Attachments.size() > 0)
     {
-        Json::Value attachments;
-        JsonSerializer::SerializeVector(attachments, m_Attachments);
-        root["attachments"] = attachments;
+        // TODO::this
     }
 
     if(m_TentApp)
@@ -91,7 +106,45 @@ void Post::Deserialize(Json::Value& root)
     m_Type = root.get("type", "").asString();
 
     JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
-    JsonSerializer::DeserializeIntoVector(root["attachments"], m_Attachments);
+
+    // Deserialize this into an array of objects
+
+    Json::Value atch(Json::arrayValue);
+    atch = root["attachments"];
+
+    if(atch.size() > 0)
+    {
+        std::cout<< " ARRAY INDEX : " << atch.size() << std::endl;
+
+        Json::ValueIterator itr = atch.begin();           
+
+        for(; itr != atch.end(); itr++)                   
+        {                                                
+            Attachment* pAtch = new Attachment;
+            Json::Value aobj(Json::objectValue);
+            aobj = (*itr);
+
+            if(aobj.isObject())
+            {
+
+                if(aobj.size() == 4)
+                {
+                    Json::ValueIterator ii = aobj.begin();
+
+                    for(; ii != aobj.end(); ii++)
+                    {
+                        std::cout<<ii.key().asString()<<std::endl;
+                        std::cout<<*ii << std::endl;
+                        pAtch->AssignKeyValue(ii.key().asString(), (*ii));
+                    }
+                    //pAtch->AssignKeyValue(itr.key(), *itr);
+                }
+            }
+
+            //JsonSerializer::DeserializeObject(pAtch, aobj.asString());
+            m_Attachments.push_back(pAtch);
+        }
+    }
 
 
     if(!root["app"].isNull())

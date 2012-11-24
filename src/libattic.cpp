@@ -1,5 +1,6 @@
 #include "libattic.h"
 
+#include <fstream>
 #include <string>
 
 #include "errorcodes.h"
@@ -8,14 +9,19 @@
 #include "jsonserializable.h"
 #include "urlvalues.h"
 #include "post.h"
+#include "filemanager.h"
+#include "utils.h"
 
 
 // Constants, (later to be abstracted elsewhere)
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
 static const char* g_szAppData = "app";
 static const char* g_szAuthToken = "at";
+static const char* g_szManifest = "manifest._mn";
 
 static TentApp* g_pApp = 0;
+static FileManager* g_pFileManager = 0;
+
 static AccessToken g_at;
 
 std::string g_szWorkingDirectory;
@@ -25,9 +31,37 @@ std::string g_szAuthorizationURL;
 
 // Local utility functions
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
+static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 
 //////// API start
 //
+
+int InitializeFileManager()
+{
+    // Construct path
+    std::string szFilePath(g_szWorkingDirectory);
+    CheckUrlAndAppendTrailingSlash(szFilePath);
+    szFilePath.append(g_szManifest);
+
+    g_pFileManager = new FileManager(szFilePath, g_szWorkingDirectory);
+
+    if(!g_pFileManager->StartupFileManager())
+        return ret::A_FAIL_TO_LOAD_FILE;
+    return ret::A_OK;
+}
+
+int ShutdownFileManager()
+{
+    if(g_pFileManager)
+    {
+        g_pFileManager->ShutdownFileManager();
+        delete g_pFileManager;
+        g_pFileManager = 0;
+    }
+
+    return ret::A_OK;
+}
+
 int StartupAppInstance(const char* szAppName, const char* szAppDescription, const char* szUrl, const char* szIcon, char* redirectUris[], unsigned int uriCount, char* scopes[], unsigned int scopeCount)
 {
     g_pApp = new TentApp();                                                
@@ -251,7 +285,8 @@ int LoadAppFromFile()
     return ret::A_OK;
 }
 
-int PostFile(const char* szUrl, const char* szFilePath)
+// utility
+static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 {
     // file path preferably to a chunked file.
     if(!g_pApp)
@@ -271,18 +306,103 @@ int PostFile(const char* szUrl, const char* szFilePath)
     JsonSerializer::SerializeObject(&p, postBuffer);
     std::cout << " POST BUFFER : " << postBuffer << std::endl;
     
+
+    // Read in file
+    std::string filepath(szFilePath);
+    unsigned int size = utils::CheckFileSize(filepath);
+    if(!size)
+        return ret::A_FAIL_OPEN;
+    
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!ifs.is_open())
+        return ret::A_FAIL_OPEN;
+
+    char* pData = new char[size];
+    memset(pData, 0, (size));
+
+    ifs.read(pData, size);
+    ifs.close();
+
     // Multipart post
     std::string url(szUrl);
-    std::string filepath(szFilePath);
     std::string response;
-    ConnectionManager::GetInstance()->HttpMultipartPost(url, postBuffer, filepath, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+
+    ConnectionManager::GetInstance()->HttpMultipartPost( url, 
+                                                         postBuffer, 
+                                                         filepath, 
+                                                         response, 
+                                                         g_at.GetMacAlgorithm(), 
+                                                         g_at.GetAccessToken(), 
+                                                         g_at.GetMacKey(), 
+                                                         pData,
+                                                         size,
+                                                         true);
     
     std::cout<<"RESPONSE : " << response << std::endl;
 
+    JsonSerializer::DeserializeObject(&p, response);
+
+    std::string postid = p.GetID();
+    if(!postid.empty())
+    {
+       fi->SetPostID(postid); 
+       fi->SetPostVersion(0); // temporary for now, change later
+       std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+       std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+    }
+
+    delete pData;
 
     return ret::A_OK;
 }
 
+int PushFile(const char* szFilePath)
+{
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+    std::string filepath(szFilePath);
+    std::string fn;
+    utils::ExtractFileName(filepath, fn);
+
+    FileInfo* fi = g_pFileManager->GetFileInfo(fn);
+
+    if(!fi)
+    {
+        int status = 0;
+        status = g_pFileManager->IndexFile(filepath);
+
+        if(status != ret::A_OK)
+            return status;
+
+        fi = g_pFileManager->GetFileInfo(fn);
+    }
+
+    // Check for existing post
+    if(fi->GetPostID().empty())
+    {
+        // New Post
+        // Construct post url
+        std::string posturl = g_szEntity;
+        posturl += "/tent/posts";
+
+        std::cout<< " POST URL : " << posturl << std::endl;
+
+        PostFile(posturl.c_str(), szFilePath, fi);
+    }
+    else
+    {
+        // Modify Post
+
+    }
+
+    return ret::A_OK;
+}
 
 int GetFile(const char* szUrl, const char* szPostID)
 {
@@ -297,7 +417,6 @@ int GetFile(const char* szUrl, const char* szPostID)
 
     std::cout << " RESPONSE : " << response << std::endl;
 
- 
     Post p;
     JsonSerializer::DeserializeObject(&p, response);
 

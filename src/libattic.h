@@ -9,6 +9,12 @@ int StartupAppInstance(const char* szAppName, const char* szAppDescription, cons
 
 int ShutdownAppInstance();
 
+int InitializeFileManager();
+
+int ShutdownFileManager();
+
+
+
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);
 
@@ -31,13 +37,17 @@ int LoadAppFromFile();
 int LoadAccessToken();
 
 int PostFile(const char* szUrl, const char* szFilePath);
-
 int GetFile(const char* szUrl, const char* szPostID);
+
+// Pushfile to tent
+int PushFile(const char* szFilePath);
+
 
 
 int GetAtticPostCount();
 int SetWorkingDirectory(const char* szDir);
 int SetEntityUrl(const char* szUrl);
+
 const char* GetWorkingDirectory();
 const char* GetEntityUrl();
 
