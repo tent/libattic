@@ -36,7 +36,6 @@ int LoadAppFromFile();
 
 int LoadAccessToken();
 
-int PostFile(const char* szUrl, const char* szFilePath);
 int GetFile(const char* szUrl, const char* szPostID);
 
 // Pushfile to tent
