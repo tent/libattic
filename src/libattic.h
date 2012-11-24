@@ -22,17 +22,24 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode);
 
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)
-int SaveAppToFile(const char* szFilePath);
+int SaveAppToFile();
 
 // Load the app in json from a file (Just a utility you probably don't
 // want to use this in production)
-int LoadAppFromFile(const char* szFilePath);
+int LoadAppFromFile();
 
-int LoadAccessToken(const char* szFilePath);
+int LoadAccessToken();
 
 int PostFile(const char* szUrl, const char* szFilePath);
 
 int GetFile(const char* szUrl, const char* szPostID);
+
+
+int GetAtticPostCount();
+int SetWorkingDirectory(const char* szDir);
+int SetEntityUrl(const char* szUrl);
+const char* GetWorkingDirectory();
+const char* GetEntityUrl();
 
 #endif
 

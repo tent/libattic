@@ -9,10 +9,19 @@
 #include "urlvalues.h"
 #include "post.h"
 
+
+// Constants, (later to be abstracted elsewhere)
+static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
+static const char* g_szAppData = "app";
+static const char* g_szAuthToken = "at";
+
 static TentApp* g_pApp = 0;
 static AccessToken g_at;
 
+std::string g_szWorkingDirectory;
+std::string g_szEntity;
 std::string g_szAuthorizationURL;
+
 
 // Local utility functions
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
@@ -190,40 +199,54 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     if(!JsonSerializer::DeserializeObject(&g_at, response))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
     // perhaps save it out
-    g_at.SaveToFile(std::string("at"));
+
+    // Construct path
+    std::string szSavePath(g_szWorkingDirectory);
+    CheckUrlAndAppendTrailingSlash(szSavePath);
+    szSavePath.append(g_szAuthToken);
+    
+    g_at.SaveToFile(std::string(szSavePath));
 
     return ret::A_OK;
 }
 
-int LoadAccessToken(const char* szFilePath)
+int LoadAccessToken()
 {
-    std::string szSavePath(szFilePath);
+    // Construct path
+    std::string szFilePath(g_szWorkingDirectory);
+    CheckUrlAndAppendTrailingSlash(szFilePath);
+    szFilePath.append(g_szAuthToken);
+
     return g_at.LoadFromFile(szFilePath);
 }
 
-int SaveAppToFile(const char* szFilePath)
+int SaveAppToFile()
 {
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string szSavePath(szFilePath);
+    std::string szSavePath(g_szWorkingDirectory);
+    CheckUrlAndAppendTrailingSlash(szSavePath);
+    szSavePath.append(g_szAppData);
+
     return g_pApp->SaveToFile(szSavePath);
 }
 
-
-int LoadAppFromFile(const char* szFilePath)
+int LoadAppFromFile()
 {
     if(!g_pApp)
         g_pApp = new TentApp();                                                
 
-    std::string szSavePath(szFilePath);
+    // Construct path
+    std::string szSavePath(g_szWorkingDirectory);
+    CheckUrlAndAppendTrailingSlash(szSavePath);
+    szSavePath.append(g_szAppData);
+
     g_pApp->LoadFromFile(szSavePath);
 
-   
     std::string buffer;
     JsonSerializer::SerializeObject(g_pApp, buffer);
     //std::cout<<" BUFFER : " << buffer << std::endl;
-
 
     return ret::A_OK;
 }
@@ -253,15 +276,13 @@ int PostFile(const char* szUrl, const char* szFilePath)
     std::string filepath(szFilePath);
     std::string response;
     ConnectionManager::GetInstance()->HttpMultipartPost(url, postBuffer, filepath, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
-
-
-    //ConnectionManager::GetInstance()->HttpPostWithAuth(url, postBuffer,response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
     
     std::cout<<"RESPONSE : " << response << std::endl;
 
 
     return ret::A_OK;
 }
+
 
 int GetFile(const char* szUrl, const char* szPostID)
 {
@@ -271,11 +292,68 @@ int GetFile(const char* szUrl, const char* szPostID)
 
     std::string url(szUrl);
     std::string response;
-    ConnectionManager::GetInstance()->HttpGetWithAuth(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
 
-    std::cout << " RESPONSE : " << response.size() << std::endl;
+    ConnectionManager::GetInstance()->HttpGetAttachment(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+
+    std::cout << " RESPONSE : " << response << std::endl;
+
+ 
+    Post p;
+    JsonSerializer::DeserializeObject(&p, response);
+
+    std::cout<< " Attachment size : " << p.GetAttachments()->size() << std::endl;
+
+    std::string a;
+    JsonSerializer::SerializeObject(&p, a);
+    std::cout << " SERIALIZED : " << a << std::endl;
 
  
     return ret::A_OK;
 }
+
+int GetAtticPostCount() 
+{
+    if(!g_pApp)
+        return -1;
+
+    std::string url = g_szEntity;
+    // TODO :: make this provider agnostic
+    url += "/tent/posts/count";
+
+    UrlValues val;
+    val.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
+
+    url += val.SerializeToString();
+
+    std::string response;
+    ConnectionManager::GetInstance()->HttpGetWithAuth(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+
+    std::cout<< "RESPONSE : " << response << std::endl;
+
+    return 0;
+}
+
+
+int SetWorkingDirectory(const char* szDir)
+{
+    if(!szDir)
+        return ret::A_FAIL_INVALID_CSTR;
+
+    g_szWorkingDirectory.append(szDir);
+
+    return ret::A_OK;
+}
+
+int SetEntityUrl(const char* szUrl)
+{
+    if(!szUrl)
+        return ret::A_FAIL_INVALID_CSTR;
+
+    g_szEntity.append(szUrl);
+
+    return ret::A_OK;
+}
+
+const char* GetWorkingDirectory() { return g_szWorkingDirectory.c_str(); }
+const char* GetEntityUrl() { return g_szEntity.c_str(); }
 
