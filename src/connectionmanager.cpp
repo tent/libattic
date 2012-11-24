@@ -1,6 +1,7 @@
 #include "connectionmanager.h"
 
 #include <iostream>
+#include <sstream>
 
 #include <string.h>
 #include <stdlib.h>
@@ -113,6 +114,54 @@ void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &o
         CURLcode res; 
         tdata* s = CreateDataObject();
 
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+
+        curl_slist *headers = 0; // Init to null, always
+        // TODO :: ABSTRACT HEADERS OUT
+        headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+        //headers = curl_slist_append(headers, "Accept: binary" );
+        headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+        //headers = curl_slist_append(headers, "Content-Type: binary");
+
+        std::string authheader;
+        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        headers = curl_slist_append(headers, authheader.c_str());
+
+        std::cout << " GETTING URL " << szUrl << std::endl;
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+
+        // Write out headers 
+        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+
+
+        res = curl_easy_perform(m_pCurl);
+
+        if(res != CURLE_OK)
+        {
+            std::cout<<"ERRR"<<std::endl;
+            return;
+        }
+
+        std::cout<< " S LEN : " << s->len << std::endl;
+        std::cout<< " S PTR : " << s->ptr << std::endl;
+        curl_slist_free_all (headers);
+        out.clear();
+        out.append(ExtractDataToString(s));
+        DestroyDataObject(s);
+    }
+}
+
+void ConnectionManager::HttpGetAttachment(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
+{
+    if(m_pCurl)
+    {
+        CURLcode res; 
+        tdata* s = CreateDataObject();
+
 
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
@@ -153,6 +202,7 @@ void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &o
         out.append(ExtractDataToString(s));
         DestroyDataObject(s);
     }
+
 }
 
 void ConnectionManager::HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool verbose)
@@ -205,7 +255,7 @@ void ConnectionManager::HttpPost(const std::string &url, const std::string &body
 }
 
 
-#include <sstream>
+
 void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::string &szBody, std::string &szFilePath, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
 {
     if(m_pCurl)
@@ -243,9 +293,11 @@ void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::s
 
         attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
         attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
+
         std::string cl("Content-Length: ");
         std::stringstream oss;
         oss << cl << testBuf.size();
+
         attachlist = curl_slist_append(attachlist,  cl.c_str());
         attachlist = curl_slist_append(attachlist, "Content-Type: binary");
 
@@ -260,41 +312,7 @@ void ConnectionManager::HttpMultipartPost(const std::string &szUrl, const std::s
                       CURLFORM_END);
 
         tdata* s = CreateDataObject();
-        /* Fill in the file upload field. This makes libcurl load data from
-        *      the given file name when curl_easy_perform() is called. */ 
-        /*
-        curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_COPYNAME, "sendfile",
-                      CURLFORM_FILE, szFilePath.c_str(),
-                      CURLFORM_END);
-
-        // Fill in the filename field 
-        curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_COPYNAME, "filename",
-                      CURLFORM_COPYCONTENTS, szFilePath.c_str(),
-                      CURLFORM_END);
-
-        // Fill in the submit field too, even if this is rarely needed 
-        curl_formadd(&formpost,
-                    &lastptr,
-                    CURLFORM_COPYNAME, "submit",
-                    CURLFORM_COPYCONTENTS, "send",
-                    CURLFORM_END);
-
-        curl_slist *formheaders=NULL;
-        formheaders = curl_slist_append(formheaders, "Content-Type: text");
-        formheaders = curl_slist_append(formheaders, "Content-Transfer-Encoding: binary");
-   
-        // Add content header
-        curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_CONTENTHEADER, formheaders,
-                      CURLFORM_END);
-
-*/
-
+        
         multi_handle = curl_multi_init();
        
         /* initalize custom header list (stating that Expect: 100-continue is not
