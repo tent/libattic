@@ -87,5 +87,23 @@ namespace utils
         srand(time(0));
     }
 
+    static void ExtractFileName(const std::string& szFilePath, std::string& out)
+    {
+        unsigned int size = szFilePath.size();                     
+        if(size)                                                   
+        {                                                          
+            // Check if passed a directory                         
+            if(szFilePath[size-1] == '/')                          
+                return;                                       
+
+            std::vector<std::string> split;                          
+            utils::SplitString(szFilePath, '/', split);              
+            if(split.size())                                         
+            {                                                      
+                out = split[split.size()-1];                          
+            }                                                      
+         }                                                          
+    }
+
 }
 #endif

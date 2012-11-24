@@ -128,7 +128,7 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     return true;
 }
 
-FileInfo* Manifest::RetrieveFileInfo(std::string &s)
+FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
 {
     EntriesMap::iterator itr;
     itr = m_entries.find(s);

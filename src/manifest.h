@@ -26,7 +26,7 @@ public:
     bool WriteOutManifest();    
 
     bool InsertFileInfo(FileInfo* fi);
-    FileInfo* RetrieveFileInfo(std::string &s);
+    FileInfo* RetrieveFileInfo(const std::string &s);
 
     void SetFilePath(std::string &filePath) { m_filePath = filePath; }
     
