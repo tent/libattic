@@ -273,7 +273,6 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl,
     if(m_pCurl)
     {
         CURLcode res; 
-        tdata* s = CreateDataObject();
 
         // Write out to file
         FILE *fp;
@@ -305,15 +304,10 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl,
             return;
         }
 
-        std::cout<< " S LEN : " << s->len << std::endl;
-        std::cout<< " S PTR : " << s->ptr << std::endl;
 
         fclose(fp);
 
         curl_slist_free_all (headers);
-        out.clear();
-        out.append(ExtractDataToString(s));
-        DestroyDataObject(s);
     }
 
 }
