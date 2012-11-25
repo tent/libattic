@@ -530,8 +530,13 @@ int PullAllFiles()
     return ret::A_OK;
 }
 
-int PullFile(const char* szFileName)
+int PullFile(const char* szFilePath)
 {
+    std::string filepath(szFilePath);
+    std::string filename;
+
+    utils::ExtractFileName(filepath, filename);
+
 
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
@@ -540,7 +545,6 @@ int PullFile(const char* szFileName)
         return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     // Search for file in manifest
-    std::string filename(szFileName);
     
     std::cout<<"FILE NAME : " << filename << std::endl;
     FileInfo* fi = g_pFileManager->GetFileInfo(filename);
@@ -571,10 +575,13 @@ int PullFile(const char* szFileName)
 
     if(buf.size() > 0)
     {
-        std::string outpath = g_szWorkingDirectory;
-        CheckUrlAndAppendTrailingSlash(outpath);
-        outpath += filename;
+        std::cout<< " HERE\n";
+        //std::string outpath = g_szWorkingDirectory;
+        std::string outpath = filepath; 
+        //CheckUrlAndAppendTrailingSlash(outpath);
+        //outpath += filename;
         std::ofstream ofs;
+        std::cout<<outpath<<std::endl;
 
         ofs.open(outpath.c_str(), std::ofstream::out | std::ofstream::binary);
 
@@ -585,6 +592,8 @@ int PullFile(const char* szFileName)
         }
         else
         {
+            
+        std::cout<< " HERE\n";
             return ret::A_FAIL_OPEN;
         }
     }

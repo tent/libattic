@@ -38,7 +38,7 @@ int LoadAccessToken();
 int PushFile(const char* szFilePath);
 
 // Pullfile from tent
-int PullFile(const char* szFileName);
+int PullFile(const char* szFilePath);
 
 // Pull All files in manifest
 int PullAllFiles();
