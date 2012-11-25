@@ -129,10 +129,11 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 # build executable
 #add_executable(libattic ${libattic_SOURCE})
 add_library(attic STATIC ${libattic_SOURCE})
-
+#SET_TARGET_PROPERTIES(attic PROPERTIES
+#                      STATIC_LIBRARY_FLAGS "./third_party/c5/lib/libcryptopp.a ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a")
 #link libs
 #target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
-target_link_libraries(libattic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 
