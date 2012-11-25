@@ -80,7 +80,6 @@ TEST(PULL, ALL)
 /*
 */
 
- 
 TEST(PULL, AFILE)
 {
     // Set Working dir
@@ -118,7 +117,7 @@ TEST(PULL, AFILE)
     ///////////////////////////////////////////////////////////////////////
 
 
-    status = PullFile("ah.jpg");
+    status = PullFile("pp.jpg");
 
     if(status != ret::A_OK)
     {
@@ -135,8 +134,9 @@ TEST(PULL, AFILE)
 
 /*
  */
+
   
-/* 
+/*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -171,7 +171,7 @@ TEST(PUSH, AFILE)
     ASSERT_EQ(status, ret::A_OK);
    
 
-    status = PushFile("./data/ah.jpg");
+    status = PushFile("./data/pp.jpg");
 
     if(status != ret::A_OK)
     {

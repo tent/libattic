@@ -263,6 +263,62 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
 
 }
 
+void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+                                                      const std::string &szFilePath, 
+                                                      const std::string &szMacAlgorithm, 
+                                                      const std::string &szMacID, 
+                                                      const std::string &szMacKey, 
+                                                      bool verbose)
+{
+    if(m_pCurl)
+    {
+        CURLcode res; 
+        tdata* s = CreateDataObject();
+
+        // Write out to file
+        FILE *fp;
+        fp = fopen(szFilePath.c_str(), "wb");
+
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+
+        curl_slist *headers = 0; // Init to null, always
+        headers = curl_slist_append(headers, "Accept: application/octet-stream" );
+
+        // Build Auth header
+        std::string authheader;
+        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        headers = curl_slist_append(headers, authheader.c_str());
+
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, fp);
+
+        // Write out headers 
+        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+
+        res = curl_easy_perform(m_pCurl);
+
+        if(res != CURLE_OK)
+        {
+            std::cout<<"ERRR"<<std::endl;
+            return;
+        }
+
+        std::cout<< " S LEN : " << s->len << std::endl;
+        std::cout<< " S PTR : " << s->ptr << std::endl;
+
+        fclose(fp);
+
+        curl_slist_free_all (headers);
+        out.clear();
+        out.append(ExtractDataToString(s));
+        DestroyDataObject(s);
+    }
+
+}
+
+
 void ConnectionManager::HttpPost( const std::string &url, 
                                   const std::string &body, 
                                   std::string &responseOut, 

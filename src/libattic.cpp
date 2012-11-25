@@ -373,7 +373,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     return ret::A_OK;
 }
 // utility
-//
+//////
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 {
     // file path preferably to a chunked file.
@@ -614,6 +614,20 @@ static int GetFile(const std::string& url, std::string &out)
                                                          g_at.GetAccessToken(), 
                                                          g_at.GetMacKey(), 
                                                          true);
+    /*
+
+    ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile(url, 
+                                                         response, 
+                                                         g_at.GetMacAlgorithm(), 
+                                                         g_at.GetAccessToken(), 
+                                                         g_at.GetMacKey(), 
+                                                         true);
+
+*/
+
+
+
+
 
     std::cout << " RESPONSE : " << response << std::endl;
 

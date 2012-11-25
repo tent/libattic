@@ -53,6 +53,14 @@ public:
                             const std::string &szMacID, 
                             const std::string &szMacKey, 
                             bool verbose = false);
+    
+    void HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+                                       const std::string &szFilePath, 
+                                       const std::string &szMacAlgorithm, 
+                                       const std::string &szMacID, 
+                                       const std::string &szMacKey, 
+                                       bool verbose = false);
+
 
     void HttpPost( const std::string &url, 
                    const std::string &body, 
