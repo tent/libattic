@@ -17,7 +17,7 @@ set(CMAKE_CXX_FLAGS "-g")
 # Build dependencies
 # Build gtest libs
 execute_process(WORKING_DIRECTORY ./third_party/jsoncpp
-               COMMAND python scons.py platform=linux-gcc)
+               COMMAND scons platform=linux-gcc)
                #RESULT_VARIABLE ret_var)
 
 # TODO :: get this working, the json lib created the lib and folder 
@@ -126,13 +126,22 @@ add_library(imp_jsoncpp STATIC IMPORTED)
 set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a)
 
 #ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
-# build executable
-#add_executable(libattic ${libattic_SOURCE})
+
+
+###############################################################################
+# To compile a static lib
 add_library(attic STATIC ${libattic_SOURCE})
+
+## this doesn't need to be set
 #SET_TARGET_PROPERTIES(attic PROPERTIES
 #                      STATIC_LIBRARY_FLAGS "./third_party/c5/lib/libcryptopp.a ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a")
+
+
+###############################################################################
+# To compile the test executable
+#add_executable(attic ${libattic_SOURCE})
+
 #link libs
-#target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
 #target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
