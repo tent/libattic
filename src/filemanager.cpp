@@ -83,9 +83,9 @@ bool FileManager::LoadManifest(std::string &szFilePath)
             
             if(!ok)
             {
-                m_ifStream.close();
-
-                return false;
+                std::cout<< " FAILED TO READ IN HEADER " << std::endl;
+                //m_ifStream.close();
+                //return false;
             }
             if(m_Manifest.GetEntryCount() == line_count)
                 break;
@@ -142,6 +142,8 @@ bool FileManager::ReadInEntry(std::string &e)
     fi->SetPostID(split[5].c_str());
     // Post Version
     fi->SetPostVersion((unsigned)atoi(split[6].c_str()));
+    
+    m_Manifest.InsertFileInfo(fi);
 
     return true;
 }
