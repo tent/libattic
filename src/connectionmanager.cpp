@@ -33,6 +33,8 @@ static std::string ExtractDataToString(tdata* pData);
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms);
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
 
+static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
+
 ConnectionManager* ConnectionManager::m_pInstance = 0;
 
 ConnectionManager::ConnectionManager()
@@ -204,6 +206,9 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
         CURLcode res; 
         tdata* s = CreateDataObject();
 
+        FILE *fp;
+
+        fp = fopen("ctest", "wb");
 
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
@@ -211,9 +216,9 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
         curl_slist *headers = 0; // Init to null, always
         // TODO :: ABSTRACT HEADERS OUT
         //headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
-        headers = curl_slist_append(headers, "Accept: binary" );
+        headers = curl_slist_append(headers, "Accept: application/octet-stream" );
         //headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
-        headers = curl_slist_append(headers, "Content-Type: binary");
+        //headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
 
         std::string authheader;
         BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
@@ -222,8 +227,12 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
         std::cout << " GETTING URL " << szUrl << std::endl;
         curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+
+        //curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+        //curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, fp);
 
         // Write out headers 
         curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
@@ -239,6 +248,13 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
 
         std::cout<< " S LEN : " << s->len << std::endl;
         std::cout<< " S PTR : " << s->ptr << std::endl;
+
+
+        //file = fopen("ctest", "wb");
+        //fwrite(s->ptr, s->len, 1, file);
+        //fprintf(file, "%s", s->ptr);
+        fclose(fp);
+
         curl_slist_free_all (headers);
         out.clear();
         out.append(ExtractDataToString(s));
@@ -523,7 +539,18 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 
         
         partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
-        partlist = curl_slist_append(partlist, "Content-Length: 206");
+
+        char szLen[256];
+        memset(szLen, 0, sizeof(char)*256);                                              
+        snprintf(szLen, (sizeof(char)*256),  "%d", szBody.size());     
+
+        std::string jcl("Content-Length: ");
+        jcl.append(szLen);
+
+        std::cout<< " JCL : " << jcl << std::endl;
+
+
+        partlist = curl_slist_append(partlist, jcl.c_str());
         partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
         partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
 
@@ -534,9 +561,9 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
                       CURLFORM_CONTENTHEADER, partlist,
                       CURLFORM_END);
 
+        
         // Read in file 
         curl_slist *attachlist = 0;
-        //std::string testBuf("this is my testbuffer");
 
         std::string cd;
         cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
@@ -546,23 +573,28 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
         attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
         //attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
         attachlist = curl_slist_append(attachlist, cd.c_str());
+
+        //
         char szBuffer[256];
         memset(szBuffer, 0, sizeof(char)*256);                                              
         snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
+        //
 
         std::string cl("Content-Length: ");
         cl.append(szBuffer);
 
         std::cout<< "STRLEN : " << strlen(pData) << std::endl;
+        std::cout<< "CL : " << cl <<std::endl;
+        std::cout<< "USIZE : " << uSize << std::endl;
             
         attachlist = curl_slist_append(attachlist,  cl.c_str());
-        attachlist = curl_slist_append(attachlist, "Content-Type: binary");
+        attachlist = curl_slist_append(attachlist, "Content-Type: application/octet-stream");
+
         curl_formadd( &formpost,
                           &lastptr,
                           CURLFORM_COPYNAME, "attatchment",
                           CURLFORM_PTRCONTENTS, pData,
                           CURLFORM_CONTENTSLENGTH, uSize,
-                          //CURLFORM_BUFFERLENGTH, uSize,
                           CURLFORM_CONTENTHEADER, attachlist,
                           CURLFORM_END);
 
@@ -941,6 +973,11 @@ void ConnectionManager::GenerateHmacSha256(std::string &out)
 // Curl Utility functions
 ////////////////////////////////////////////////////////////////////////////////
 //
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
 static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s)
 {
     size_t new_len = s->len + size*nmemb;
