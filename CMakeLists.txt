@@ -127,7 +127,8 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 
 #ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
 # build executable
-add_executable(libattic ${libattic_SOURCE})
+#add_executable(libattic ${libattic_SOURCE})
+add_library(attic STATIC ${libattic_SOURCE})
 
 #link libs
 #target_link_libraries(libattic curl ${GTEST_LIBRARIES} pthread)
