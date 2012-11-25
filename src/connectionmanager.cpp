@@ -552,6 +552,8 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 
         std::string cl("Content-Length: ");
         cl.append(szBuffer);
+
+        std::cout<< "STRLEN : " << strlen(pData) << std::endl;
             
         attachlist = curl_slist_append(attachlist,  cl.c_str());
         attachlist = curl_slist_append(attachlist, "Content-Type: binary");
@@ -560,6 +562,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
                           CURLFORM_COPYNAME, "attatchment",
                           CURLFORM_PTRCONTENTS, pData,
                           CURLFORM_CONTENTSLENGTH, uSize,
+                          //CURLFORM_BUFFERLENGTH, uSize,
                           CURLFORM_CONTENTHEADER, attachlist,
                           CURLFORM_END);
 

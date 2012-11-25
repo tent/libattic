@@ -56,6 +56,8 @@ public:
     void SetWorkingDirectory(std::string &szWorkingDir) { m_WorkingDirectory = szWorkingDir; }
     void SetFileStride(unsigned int uFileStride )       { m_FileStride = uFileStride; }
 
+    Manifest::EntriesMap* GetManifestEntries() { return m_Manifest.GetEntries(); }
+
 private:
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;

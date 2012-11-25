@@ -27,7 +27,116 @@
 
 #include "url.h"
 
+/*  
+TEST(PULL, ALL)
+{
+    SetWorkingDirectory("./data");
 
+    int status = LoadAppFromFile();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    status = InitializeFileManager();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+
+    status = PullAllFiles();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    // Shutdown
+    ShutdownFileManager();
+    ShutdownAppInstance();
+
+
+
+}
+/*
+*/
+
+ 
+TEST(PULL, AFILE)
+{
+    // Set Working dir
+    SetWorkingDirectory("./data");
+
+    // Load App
+    int status = LoadAppFromFile();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Set Entity 
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    // Init File Manager
+    status = InitializeFileManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED FILEMANGER: " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+    ///////////////////////////////////////////////////////////////////////
+
+
+    status = PullFile("ah.jpg");
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+
+    ///////////////////////////////////////////////////////////////////////
+    // Shutdown
+    ShutdownFileManager();
+    ShutdownAppInstance();
+}
+
+/*
+ */
+  
+/* 
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -46,6 +155,7 @@ TEST(PUSH, AFILE)
 
     // Load Access Token
     status = LoadAccessToken();
+
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -53,6 +163,7 @@ TEST(PUSH, AFILE)
     ASSERT_EQ(status, ret::A_OK);
    
     status = InitializeFileManager();
+
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -60,20 +171,20 @@ TEST(PUSH, AFILE)
     ASSERT_EQ(status, ret::A_OK);
    
 
-    status = PushFile("testcomp");
+    status = PushFile("./data/ah.jpg");
+
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
    
-
-
+    // Shutdown
     ShutdownFileManager();
     ShutdownAppInstance();
-
 }
-
+/*
+ */
 /*
 TEST(GET, COUNT)
 {
@@ -210,9 +321,8 @@ TEST(URL, CUSTOM)
 /*
 TEST(LIBATTIC, CODEUSAGE)
 {
-
-    std::string szAppPath("./app");
-    int status = LoadAppFromFile(szAppPath.c_str());
+    SetWorkingDirectory("./data");
+    int status = LoadAppFromFile();
 
     if(status != ret::A_OK)
     {
@@ -220,7 +330,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "6c61a78bf2de1b25c356b0b0fddebf19");
+    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "a37653204c7d1851e29b942b77eea8f6");
 
     if(status != ret::A_OK)
     {
@@ -231,7 +341,7 @@ TEST(LIBATTIC, CODEUSAGE)
 }
 /*  
 */
-/*
+/* 
 TEST(LIBATTIC, STARTAPPINST)
 {
 
@@ -279,8 +389,7 @@ TEST(LIBATTIC, STARTAPPINST)
 
     std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
 
-    std::string szAppPath("./app");
-    status = SaveAppToFile(szAppPath.c_str());
+    status = SaveAppToFile();
 
     if(status != ret::A_OK)
     {

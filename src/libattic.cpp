@@ -25,6 +25,7 @@ static FileManager* g_pFileManager = 0;
 static AccessToken g_at;
 
 std::string g_szWorkingDirectory;
+std::string g_szConfigDirectory; // TODO implement this
 std::string g_szEntity;
 std::string g_szAuthorizationURL;
 
@@ -32,7 +33,8 @@ std::string g_szAuthorizationURL;
 // Local utility functions
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
-
+static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
+static int GetFile(const std::string& url, std::string &out);
 //////// API start
 //
 
@@ -47,6 +49,7 @@ int InitializeFileManager()
 
     if(!g_pFileManager->StartupFileManager())
         return ret::A_FAIL_TO_LOAD_FILE;
+
     return ret::A_OK;
 }
 
@@ -224,7 +227,13 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     std::string response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
-    pCm->HttpPostWithAuth(path, serialized, response, g_pApp->GetMacAlgorithm(), g_pApp->GetMacKeyID(), g_pApp->GetMacKey(), false);
+    pCm->HttpPostWithAuth( path, 
+                           serialized, 
+                           response, 
+                           g_pApp->GetMacAlgorithm(), 
+                           g_pApp->GetMacKeyID(), 
+                           g_pApp->GetMacKey(), 
+                           false);
 
     std::cout<< " RESPONSE : " << response << std::endl;
 
@@ -309,6 +318,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
     // Read in file
     std::string filepath(szFilePath);
+    std::cout<< "FILEPATH : " << filepath << std::endl;
     unsigned int size = utils::CheckFileSize(filepath);
     if(!size)
         return ret::A_FAIL_OPEN;
@@ -328,10 +338,15 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     // Multipart post
     std::string url(szUrl);
     std::string response;
+    
+    std::string filename;
+    utils::ExtractFileName(filepath, filename);
+
 
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          postBuffer, 
                                                          filepath, 
+                                                         filename,
                                                          response, 
                                                          g_at.GetMacAlgorithm(), 
                                                          g_at.GetAccessToken(), 
@@ -349,6 +364,86 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     {
        fi->SetPostID(postid); 
        fi->SetPostVersion(0); // temporary for now, change later
+       std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+       std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+    }
+
+    delete pData;
+
+    return ret::A_OK;
+}
+// utility
+//
+static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
+{
+    // file path preferably to a chunked file.
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    std::string postType("https://tent.io/types/post/attic/v0.1.0");
+    //std::string postType("https://tent.io/types/post/status/v0.1.0");
+
+    // Create a post 
+    Post p;
+    p.SetType(postType);
+    p.SetContent("text", "testing");
+    p.SetPermission(std::string("public"), false);
+
+    // Serialize Post
+    std::string postBuffer;
+    JsonSerializer::SerializeObject(&p, postBuffer);
+    std::cout << " POST BUFFER : " << postBuffer << std::endl;
+    
+
+    // Read in file
+    std::string filepath(szFilePath);
+    std::cout<< "FILEPATH : " << filepath << std::endl;
+    unsigned int size = utils::CheckFileSize(filepath);
+    if(!size)
+        return ret::A_FAIL_OPEN;
+    
+    std::cout<< " FILE SIZE : " << size << std::endl;
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(!ifs.is_open())
+        return ret::A_FAIL_OPEN;
+
+    char* pData = new char[size];
+    memset(pData, 0, (size));
+
+    ifs.read(pData, size);
+    ifs.close();
+
+    // Multipart post
+    std::string url(szUrl);
+    std::string response;
+    
+    std::string filename;
+    utils::ExtractFileName(filepath, filename);
+
+
+    ConnectionManager::GetInstance()->HttpMultipartPut( url, 
+                                                         postBuffer, 
+                                                         filepath, 
+                                                         filename,
+                                                         response, 
+                                                         g_at.GetMacAlgorithm(), 
+                                                         g_at.GetAccessToken(), 
+                                                         g_at.GetMacKey(), 
+                                                         pData,
+                                                         size,
+                                                         true);
+    
+    std::cout<<"RESPONSE : " << response << std::endl;
+
+    JsonSerializer::DeserializeObject(&p, response);
+
+    std::string postid = p.GetID();
+    if(!postid.empty())
+    {
+       fi->SetPostID(postid); 
+       fi->SetPostVersion(p.GetVersion()); // temporary for now, change later
        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
     }
@@ -393,27 +488,123 @@ int PushFile(const char* szFilePath)
 
         std::cout<< " POST URL : " << posturl << std::endl;
 
-        PostFile(posturl.c_str(), szFilePath, fi);
+        return PostFile(posturl.c_str(), szFilePath, fi);
     }
     else
     {
         // Modify Post
+        std::string posturl = g_szEntity;
+        posturl += "/tent/posts/";
+        posturl += fi->GetPostID();
 
+        std::cout<< " POST URL : " << posturl << std::endl;
+
+        return PutFile(posturl.c_str(), szFilePath, fi);
     }
 
     return ret::A_OK;
 }
 
-int GetFile(const char* szUrl, const char* szPostID)
+int DeletePost(const char* szPostID)
+{
+
+}
+
+int PullAllFiles()
+{
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+    Manifest::EntriesMap* pEntryMap = g_pFileManager->GetManifestEntries();
+    Manifest::EntriesMap::iterator itr = pEntryMap->begin();
+
+    for(;itr != pEntryMap->end(); itr++)
+    {
+        std::string fn = itr->first;
+        PullFile(fn.c_str());
+    }
+    
+    return ret::A_OK;
+}
+
+int PullFile(const char* szFileName)
+{
+
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+    // Search for file in manifest
+    std::string filename(szFileName);
+    
+    std::cout<<"FILE NAME : " << filename << std::endl;
+    FileInfo* fi = g_pFileManager->GetFileInfo(filename);
+
+    if(!fi)
+    {
+        std::cout<<"NULL FILE INFO"<<std::endl;
+        
+        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+    }
+
+    // If found get the post id and pull it
+
+    // Construct URL
+    std::string attachmentpath = g_szEntity;
+    attachmentpath.append("/tent/posts/");
+    attachmentpath += fi->GetPostID();
+    attachmentpath.append("/attachments/");
+    attachmentpath += filename;
+
+    std::cout<<" ATTACHMENT PATH : " << attachmentpath << std::endl;
+
+    std::string buf;
+    GetFile(attachmentpath, buf);
+
+    // write out to directory
+    std::cout<<"FILE SIZE : " << buf.size() << std::endl;
+
+    if(buf.size() > 0)
+    {
+        std::string outpath = g_szWorkingDirectory;
+        CheckUrlAndAppendTrailingSlash(outpath);
+        outpath += filename;
+        std::ofstream ofs;
+
+        ofs.open(outpath.c_str(), std::ofstream::out | std::ofstream::binary);
+
+        if(ofs.is_open())
+        {
+            ofs.write(buf.c_str(), buf.size());
+            ofs.close();
+        }
+        else
+        {
+            return ret::A_FAIL_OPEN;
+        }
+    }
+    return ret::A_OK;
+}
+
+static int GetFile(const std::string& url, std::string &out)
 {
     // file path preferably to a chunked file.
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string url(szUrl);
     std::string response;
 
-    ConnectionManager::GetInstance()->HttpGetAttachment(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+    ConnectionManager::GetInstance()->HttpGetAttachment( url, 
+                                                         response, 
+                                                         g_at.GetMacAlgorithm(), 
+                                                         g_at.GetAccessToken(), 
+                                                         g_at.GetMacKey(), 
+                                                         true);
 
     std::cout << " RESPONSE : " << response << std::endl;
 
@@ -426,6 +617,7 @@ int GetFile(const char* szUrl, const char* szPostID)
     JsonSerializer::SerializeObject(&p, a);
     std::cout << " SERIALIZED : " << a << std::endl;
 
+    out = response;
  
     return ret::A_OK;
 }

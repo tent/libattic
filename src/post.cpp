@@ -91,6 +91,8 @@ void Post::Serialize(Json::Value& root)
         JsonSerializer::SerializeMapIntoObject(permissions, m_Permissions);
         root["permissions"] = permissions;
     }
+
+    root["version"] = m_Version;
 }
 
 void Post::Deserialize(Json::Value& root)
@@ -99,6 +101,8 @@ void Post::Deserialize(Json::Value& root)
     m_Entity = root.get("entity", "").asString();
     m_PublishedAt = root.get("published_at", "").asInt(); 
     m_ReceivedAt = root.get("received_at", "").asInt();
+
+    m_Version = root.get("version", "").asUInt();
 
     JsonSerializer::DeserializeIntoVector(root["mentions"], m_Mentions);
     JsonSerializer::DeserializeIntoVector(root["licenses"], m_Licenses);

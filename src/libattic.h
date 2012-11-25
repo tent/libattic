@@ -13,8 +13,6 @@ int InitializeFileManager();
 
 int ShutdownFileManager();
 
-
-
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);
 
@@ -36,19 +34,31 @@ int LoadAppFromFile();
 
 int LoadAccessToken();
 
-int GetFile(const char* szUrl, const char* szPostID);
-
 // Pushfile to tent
 int PushFile(const char* szFilePath);
 
+// Pullfile from tent
+int PullFile(const char* szFileName);
 
+// Pull All files in manifest
+int PullAllFiles();
+
+// TODO :: filter attic posts, and construct manifest from that if none is present
+//         compare data and make sure both are up to data
+
+int DeletePost(const char* szPostID);
 
 int GetAtticPostCount();
+
 int SetWorkingDirectory(const char* szDir);
+
 int SetEntityUrl(const char* szUrl);
 
 const char* GetWorkingDirectory();
+
 const char* GetEntityUrl();
+
+
 
 #endif
 

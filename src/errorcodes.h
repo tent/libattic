@@ -26,7 +26,6 @@ namespace ret
         A_FAIL_FILE_NOT_IN_MANIFEST,
         A_LIB_FAIL_INVALID_APP_INSTANCE,
         A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE
-
     };
 
 };
