@@ -59,6 +59,10 @@ public:
                    std::string &responseOut, 
                    bool verbose = false);
 
+    void HttpDelete( const std::string &url,
+                     std::string &responseOut,
+                     bool verbose = false);
+
     void HttpPostWithAuth( const std::string &url, 
                            const std::string &body, 
                            std::string &responseOut, 
@@ -69,7 +73,8 @@ public:
 
     void HttpMultipartPost( const std::string &szUrl, 
                             const std::string &szBody, 
-                            std::string &szFilePath, 
+                            const std::string &szFilePath, 
+                            const std::string &szFileName,
                             std::string &responseOut, 
                             const std::string &szMacAlgorithm, 
                             const std::string &szMacID, 
@@ -78,7 +83,17 @@ public:
                             unsigned int uSize,
                             bool verbose = false);
 
-
+    void HttpMultipartPut(  const std::string &szUrl, 
+                            const std::string &szBody, 
+                            const std::string &szFilePath, 
+                            const std::string &szFileName,
+                            std::string &responseOut, 
+                            const std::string &szMacAlgorithm, 
+                            const std::string &szMacID, 
+                            const std::string &szMacKey, 
+                            const char* pData,
+                            unsigned int uSize,
+                            bool verbose = false);
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;
