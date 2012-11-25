@@ -311,8 +311,10 @@ void ConnectionManager::HttpMultipartPut(  const std::string &szUrl,
                                             unsigned int uSize,
                                             bool verbose )
 {
-    if(m_pCurl)
+        if(m_pCurl)
         {
+
+            std::cout<< " USIZE : " << uSize << std::endl;
             CURLM *multi_handle;
             int still_running;
 
@@ -347,7 +349,7 @@ void ConnectionManager::HttpMultipartPut(  const std::string &szUrl,
             //std::string testBuf("this is my testbuffer");
 
             std::string cd;
-            cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
+            cd.append("Content-Disposition: form-data; name=\"attach[0]\"; filename=\"");
             cd += szFileName;
             cd.append("\"");
 
@@ -355,10 +357,15 @@ void ConnectionManager::HttpMultipartPut(  const std::string &szUrl,
             //attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
             attachlist = curl_slist_append(attachlist, cd.c_str());
 
+            char szBuffer[256];
+            memset(szBuffer, 0, sizeof(char)*256);                                              
+            snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
+
             std::string cl("Content-Length: ");
-            std::stringstream oss;
-            //oss << cl << testBuf.size();
-            oss << cl << uSize;
+            cl.append(szBuffer);
+            
+
+            std::cout<< cl << std::endl;
 
             attachlist = curl_slist_append(attachlist,  cl.c_str());
             attachlist = curl_slist_append(attachlist, "Content-Type: binary");
@@ -366,12 +373,11 @@ void ConnectionManager::HttpMultipartPut(  const std::string &szUrl,
             curl_formadd( &formpost,
                           &lastptr,
                           CURLFORM_COPYNAME, "attatchment",
-                          CURLFORM_BUFFER, "thisthing",
+                          //CURLFORM_BUFFER, "thisthing",
                           CURLFORM_PTRCONTENTS, pData,
-                          CURLFORM_BUFFERLENGTH, uSize,
-                          //CURLFORM_PTRCONTENTS, testBuf.c_str(),
-                          //CURLFORM_BUFFERPTR, testBuf.c_str(), 
-                          //CURLFORM_BUFFERLENGTH, testBuf.size(),
+                          CURLFORM_CONTENTSLENGTH, uSize,
+                          //CURLFORM_BUFFERLENGTH, uSize,
+                          //CURLFORM_BUFFERPTR, pData, 
                           CURLFORM_CONTENTHEADER, attachlist,
                           CURLFORM_END);
 
@@ -540,26 +546,23 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
         attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
         //attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
         attachlist = curl_slist_append(attachlist, cd.c_str());
+        char szBuffer[256];
+        memset(szBuffer, 0, sizeof(char)*256);                                              
+        snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
 
         std::string cl("Content-Length: ");
-        std::stringstream oss;
-        //oss << cl << testBuf.size();
-        oss << cl << uSize;
-
+        cl.append(szBuffer);
+            
         attachlist = curl_slist_append(attachlist,  cl.c_str());
         attachlist = curl_slist_append(attachlist, "Content-Type: binary");
-
         curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_COPYNAME, "attatchment",
-                      CURLFORM_BUFFER, "thisthing",
-                      CURLFORM_PTRCONTENTS, pData,
-                      CURLFORM_BUFFERLENGTH, uSize,
-                      //CURLFORM_PTRCONTENTS, testBuf.c_str(),
-                      //CURLFORM_BUFFERPTR, testBuf.c_str(), 
-                      //CURLFORM_BUFFERLENGTH, testBuf.size(),
-                      CURLFORM_CONTENTHEADER, attachlist,
-                      CURLFORM_END);
+                          &lastptr,
+                          CURLFORM_COPYNAME, "attatchment",
+                          CURLFORM_PTRCONTENTS, pData,
+                          CURLFORM_CONTENTSLENGTH, uSize,
+                          CURLFORM_CONTENTHEADER, attachlist,
+                          CURLFORM_END);
+
 
         tdata* s = CreateDataObject();
         
