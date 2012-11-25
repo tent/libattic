@@ -21,7 +21,12 @@ class ConnectionManager
     void GenerateHmacSha256(std::string &out);
 public:
 
-    void BuildAuthHeader(const std::string &url, const std::string &requestMethod, const std::string &szMacID, const std::string &szMacKey, std::string &out);
+    void BuildAuthHeader( const std::string &url, 
+                          const std::string &requestMethod, 
+                          const std::string &szMacID, 
+                          const std::string &szMacKey, 
+                          std::string &out);
+
     void SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out);
     void Initialize();
     void Shutdown();
@@ -35,7 +40,12 @@ public:
 
     std::string HttpGet(std::string &url);  
 
-    void HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose = false);
+    void HttpGetWithAuth( const std::string &szUrl, 
+                          std::string &out, 
+                          const std::string &szMacAlgorithm, 
+                          const std::string &szMacID, 
+                          const std::string &szMacKey, 
+                          bool verbose = false);
 
     void HttpGetAttachment( const std::string &szUrl, 
                             std::string &out, 

@@ -107,7 +107,12 @@ std::string ConnectionManager::HttpGet(std::string &url)
     return response;
 }
 
-void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
+void ConnectionManager::HttpGetWithAuth( const std::string &szUrl, 
+                                         std::string &out, 
+                                         const std::string &szMacAlgorithm, 
+                                         const std::string &szMacID, 
+                                         const std::string &szMacKey, 
+                                         bool verbose)
 {
     if(m_pCurl)
     {
@@ -155,7 +160,12 @@ void ConnectionManager::HttpGetWithAuth(const std::string &szUrl, std::string &o
     }
 }
 
-void ConnectionManager::HttpGetAttachment(const std::string &szUrl, std::string &out, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
+void ConnectionManager::HttpGetAttachment( const std::string &szUrl, 
+                                           std::string &out, 
+                                           const std::string &szMacAlgorithm, 
+                                           const std::string &szMacID, 
+                                           const std::string &szMacKey, 
+                                           bool verbose)
 {
     if(m_pCurl)
     {
@@ -205,7 +215,10 @@ void ConnectionManager::HttpGetAttachment(const std::string &szUrl, std::string 
 
 }
 
-void ConnectionManager::HttpPost(const std::string &url, const std::string &body, std::string &responseOut, bool verbose)
+void ConnectionManager::HttpPost( const std::string &url, 
+                                  const std::string &body, 
+                                  std::string &responseOut, 
+                                  bool verbose)
 {
     if(m_pCurl)
     {
@@ -429,7 +442,13 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 
 }
 
-void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::string &body, std::string &responseOut, const std::string &szMacAlgorithm, const std::string &szMacID, const std::string &szMacKey, bool verbose)
+void ConnectionManager::HttpPostWithAuth( const std::string &url, 
+                                          const std::string &body, 
+                                          std::string &responseOut, 
+                                          const std::string &szMacAlgorithm, 
+                                          const std::string &szMacID, 
+                                          const std::string &szMacKey, 
+                                          bool verbose)
 {
     if(m_pCurl)
     {
@@ -483,7 +502,11 @@ void ConnectionManager::HttpPostWithAuth(const std::string &url, const std::stri
 
 }
 
-void ConnectionManager::BuildAuthHeader(const std::string &url, const std::string &requestMethod, const std::string &szMacID, const std::string &szMacKey, std::string& out)
+void ConnectionManager::BuildAuthHeader( const std::string &url, 
+                                         const std::string &requestMethod, 
+                                         const std::string &szMacID, 
+                                         const std::string &szMacKey, 
+                                         std::string& out)
 {
     std::string n;
     GenerateNonce(n);
