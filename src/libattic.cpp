@@ -7,7 +7,7 @@
 #include "connectionmanager.h"
 #include "tentapp.h"
 #include "jsonserializable.h"
-#include "urlvalues.h"
+#include "urlparams.h"
 #include "post.h"
 #include "filemanager.h"
 #include "utils.h"
@@ -133,7 +133,12 @@ int RegisterApp(const char* szPostPath)
 
     std::cout << " JSON : " << serialized << std::endl;
     std::string response;
-    pCm->HttpPost(path, serialized, response);
+
+    pCm->HttpPost( path, 
+                   NULL,
+                   serialized,
+                   response);
+
     std::cout<< " RESPONSE " << response << std::endl;
 
     // Deserialize new data into app
@@ -148,7 +153,7 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    UrlValues val;
+    UrlParams val;
     val.AddValue(std::string("client_id"), g_pApp->GetAppID());
 
     if(g_pApp->GetRedirectURIs())
@@ -179,10 +184,18 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
 
     g_szAuthorizationURL.clear();
     g_szAuthorizationURL.append(szApiRoot);
+
     CheckUrlAndAppendTrailingSlash(g_szAuthorizationURL);
+
     g_szAuthorizationURL.append("oauth/authorize");
-    std::string params = val.SerializeToString();
+
+    std::string params;
+    val.SerializeToString(params);
     std::cout<<"PARAMS : " << params << std::endl;
+
+    // TODO:: encode these parameters
+    //
+
     g_szAuthorizationURL.append(params);
 
     return ret::A_OK;
@@ -228,6 +241,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     std::string response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
     pCm->HttpPostWithAuth( path, 
+                           NULL,
                            serialized, 
                            response, 
                            g_pApp->GetMacAlgorithm(), 
@@ -344,6 +358,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
 
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
+                                                         NULL,
                                                          postBuffer, 
                                                          filepath, 
                                                          filename,
@@ -424,16 +439,17 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
 
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 
-                                                         postBuffer, 
-                                                         filepath, 
-                                                         filename,
-                                                         response, 
-                                                         g_at.GetMacAlgorithm(), 
-                                                         g_at.GetAccessToken(), 
-                                                         g_at.GetMacKey(), 
-                                                         pData,
-                                                         size,
-                                                         true);
+                                                        NULL,
+                                                        postBuffer, 
+                                                        filepath, 
+                                                        filename,
+                                                        response, 
+                                                        g_at.GetMacAlgorithm(), 
+                                                        g_at.GetAccessToken(), 
+                                                        g_at.GetMacKey(), 
+                                                        pData,
+                                                        size,
+                                                        true);
     
     std::cout<<"RESPONSE : " << response << std::endl;
 
@@ -609,6 +625,7 @@ static int GetFileAndWriteOut(const std::string& url, const std::string &filepat
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url, 
+                                                                    NULL,
                                                                     filepath, 
                                                                     g_at.GetMacAlgorithm(), 
                                                                     g_at.GetAccessToken(), 
@@ -627,6 +644,7 @@ static int GetFile(const std::string& url, std::string &out)
     std::string response;
 
     ConnectionManager::GetInstance()->HttpGetAttachment( url, 
+                                                         NULL,
                                                          response, 
                                                          g_at.GetMacAlgorithm(), 
                                                          g_at.GetAccessToken(), 
@@ -658,13 +676,12 @@ int GetAtticPostCount()
     // TODO :: make this provider agnostic
     url += "/tent/posts/count";
 
-    UrlValues val;
-    val.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
-
-    url += val.SerializeToString();
+    UrlParams params;
+    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
 
     std::string response;
-    ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
+    ConnectionManager::GetInstance()->HttpGetWithAuth( url,
+                                                       &params,
                                                        response, 
                                                        g_at.GetMacAlgorithm(), 
                                                        g_at.GetAccessToken(), 
@@ -692,12 +709,13 @@ int SyncAtticPosts()
     std::string url = g_szEntity;
     url += "/tent/posts";
 
-    UrlValues val;
-    val.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
-    val.AddValue(std::string("limit"), std::string("200"));
+    UrlParams params;
+    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
+    params.AddValue(std::string("limit"), std::string("200"));
 
     std::string response;
     ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
+                                                       &params,
                                                        response, 
                                                        g_at.GetMacAlgorithm(), 
                                                        g_at.GetAccessToken(), 
@@ -713,6 +731,21 @@ int SyncAtticPosts()
 
     if(!reader.parse(response, root))
         return -1;
+
+
+    Json::ValueIterator itr = root.begin();
+
+    int count = 0;
+    for(;itr != root.end(); itr++)
+    {
+        Post p;
+        
+        //JsonSerializer::DeserializeObject(&p, (*itr).asString());
+        p.Deserialize(*itr);
+        count++;
+
+    }
+    std::cout<< " COUNT : " << count << std::endl;
 
 
 

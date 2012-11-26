@@ -16,7 +16,7 @@ public:
     void AddValue(const std::string& key, const std::string &value);
     UrlParam GetValue(const std::string& key);
 
-    std::string SerializeToString();
+    void SerializeToString(std::string &out) const;
 
     static void UrlEncode(const std::string &url);
     static void UrlDecode(const std::string &url, std::string &out);

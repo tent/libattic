@@ -12,7 +12,7 @@
 #include "compressor.h"
 #include "errorcodes.h"
 #include "connectionmanager.h"
-#include "urlvalues.h"
+#include "urlparams.h"
 
 #include <curl/curl.h>
 
@@ -26,7 +26,6 @@
 #include "libattic.h"
 
 #include "url.h"
-
 
 TEST(SYNC, ALL)
 {
@@ -358,7 +357,8 @@ TEST(URL, CUSTOM)
 }
 /*
 */
-/*  
+/*
+  
 TEST(LIBATTIC, CODEUSAGE)
 {
     SetWorkingDirectory("./data");
@@ -370,7 +370,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "cc6ec1fade4ef5f2d70cb281188f5150");
+    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "1f1f793eb70af122ce22713d77da20df");
 
     if(status != ret::A_OK)
     {
@@ -444,8 +444,6 @@ TEST(LIBATTIC, STARTAPPINST)
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
-
-
 }
 /*
 */

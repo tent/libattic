@@ -11,6 +11,7 @@
 #include <hmac.h>
 
 #include "url.h"
+#include "urlparams.h"
 #include "utils.h"
 
 struct tdata
@@ -79,6 +80,22 @@ void ConnectionManager::Shutdown()
     if(m_pInstance)
         delete m_pInstance;
 }
+
+void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl, 
+                                                  const UrlParams* pParams, 
+                                                  std::string &url)
+{
+    if(pCurl && pParams)
+    {
+        std::string params;  
+        pParams->SerializeToString(params);
+
+        char *pPm = curl_easy_escape(pCurl, params.c_str() , params.size());
+        url.append(pPm);
+    }
+}
+
+
 void ConnectionManager::HttpDelete( const std::string &url,
                                     const UrlParams* pParams,
                                     std::string &responseOut,
@@ -89,7 +106,13 @@ void ConnectionManager::HttpDelete( const std::string &url,
         CURLcode res; 
         tdata* s = CreateDataObject();
 
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
         curl_easy_setopt(m_pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 
@@ -126,7 +149,10 @@ void ConnectionManager::HttpGet( const std::string &url,
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
@@ -144,7 +170,7 @@ void ConnectionManager::HttpGet( const std::string &url,
     }
 }
 
-void ConnectionManager::HttpGetWithAuth( const std::string &szUrl, 
+void ConnectionManager::HttpGetWithAuth( const std::string &url, 
                                          const UrlParams* pParams,
                                          std::string &out, 
                                          const std::string &szMacAlgorithm, 
@@ -158,6 +184,9 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
+        std::string urlPath;
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
         curl_slist *headers = 0; // Init to null, always
         // TODO :: ABSTRACT HEADERS OUT
         headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
@@ -166,11 +195,11 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
         //headers = curl_slist_append(headers, "Content-Type: binary");
 
         std::string authheader;
-        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
-        std::cout << " GETTING URL " << szUrl << std::endl;
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        std::cout << " GETTING URL " << url << std::endl;
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
         
         /*
@@ -202,7 +231,7 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
     }
 }
 
-void ConnectionManager::HttpGetAttachment( const std::string &szUrl, 
+void ConnectionManager::HttpGetAttachment( const std::string &url, 
                                            const UrlParams* pParams, 
                                            std::string &out, 
                                            const std::string &szMacAlgorithm, 
@@ -222,6 +251,9 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
         curl_slist *headers = 0; // Init to null, always
         // TODO :: ABSTRACT HEADERS OUT
         //headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
@@ -230,11 +262,11 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
         //headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
 
         std::string authheader;
-        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
-        std::cout << " GETTING URL " << szUrl << std::endl;
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        std::cout << " GETTING URL " << url << std::endl;
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
 
         //curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
@@ -272,7 +304,7 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
 
 }
 
-void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
                                                       const UrlParams* pParams,
                                                       const std::string &szFilePath, 
                                                       const std::string &szMacAlgorithm, 
@@ -291,15 +323,18 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl,
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append(headers, "Accept: application/octet-stream" );
 
         // Build Auth header
         std::string authheader;
-        BuildAuthHeader(szUrl, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, fp);
 
@@ -340,13 +375,17 @@ void ConnectionManager::HttpPost( const std::string &url,
 
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+
+        std::string urlPath = url;
         
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
         headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
 
         // Set url
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         // Set that we want to Post
         curl_easy_setopt(m_pCurl, CURLOPT_POST, 1L);
         // Set the read function
@@ -376,7 +415,7 @@ void ConnectionManager::HttpPost( const std::string &url,
     }
 }
 
-void ConnectionManager::HttpMultipartPut( const std::string &szUrl, 
+void ConnectionManager::HttpMultipartPut( const std::string &url, 
                                           const UrlParams* pParams,
                                           const std::string &szBody, 
                                           const std::string &szFilePath, 
@@ -469,6 +508,14 @@ void ConnectionManager::HttpMultipartPut( const std::string &szUrl,
 
             if(m_pCurl && multi_handle)
             {
+                if(verbose)
+                    curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+
+                std::string urlPath = url;
+                        
+                EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
+
                 struct curl_slist *headers=NULL;
                  
                 headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
@@ -476,12 +523,11 @@ void ConnectionManager::HttpMultipartPut( const std::string &szUrl,
                 //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
                 std::string authheader;
-                BuildAuthHeader(szUrl, std::string("PUT"), szMacID, szMacKey, authheader);
+                BuildAuthHeader(urlPath, std::string("PUT"), szMacID, szMacKey, authheader);
                 headerlist = curl_slist_append(headerlist, authheader.c_str());
 
                 /* what URL that receives this POST */ 
-                curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
-                curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+                curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
 
                 curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headerlist);
                 curl_easy_setopt(m_pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
@@ -569,7 +615,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &szUrl,
 }
 
 
-void ConnectionManager::HttpMultipartPost( const std::string &szUrl, 
+void ConnectionManager::HttpMultipartPost( const std::string &url, 
                                            const UrlParams* pParams,
                                            const std::string &szBody, 
                                            const std::string &szFilePath, 
@@ -672,19 +718,24 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 
         if(m_pCurl && multi_handle)
         {
-            struct curl_slist *headers=NULL;
+            if(verbose)
+                curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+                
+            std::string urlPath = url;
+            EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
+            curl_slist *headers=NULL;
              
             headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
             headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
             //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
             std::string authheader;
-            BuildAuthHeader(szUrl, std::string("POST"), szMacID, szMacKey, authheader);
+            BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
             headerlist = curl_slist_append(headerlist, authheader.c_str());
 
             /* what URL that receives this POST */ 
-            curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+            curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
 
             curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headerlist);
             curl_easy_setopt(m_pCurl, CURLOPT_HTTPPOST, formpost);
@@ -788,17 +839,21 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
 
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
-        
+
+        std::string urlPath = url;
+
+        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
         headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
 
         std::string authheader;
-        BuildAuthHeader(url, std::string("POST"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
         // Set url
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         // Set that we want to Post
         curl_easy_setopt(m_pCurl, CURLOPT_POST, 1L);
         // Set the read function

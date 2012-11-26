@@ -3,9 +3,17 @@
 #ifndef LIBATTIC_H_
 #define LIBATTIC_H_
 
-typedef unsigned int TENTAPP;
 
-int StartupAppInstance(const char* szAppName, const char* szAppDescription, const char* szUrl, const char* szIcon, char* redirectUris[], unsigned int uriCount, char* scopes[], unsigned int scopeCount);
+extern "C"
+{
+int StartupAppInstance( const char* szAppName, 
+                        const char* szAppDescription, 
+                        const char* szUrl, 
+                        const char* szIcon, 
+                        char* redirectUris[], 
+                        unsigned int uriCount, 
+                        char* scopes[], 
+                        unsigned int scopeCount);
 
 int ShutdownAppInstance();
 
@@ -46,8 +54,6 @@ int PullAllFiles();
 // TODO :: filter attic posts, and construct manifest from that if none is present
 //         compare data and make sure both are up to data
 
-
-
 int SetWorkingDirectory(const char* szDir);
 
 int SetEntityUrl(const char* szUrl);
@@ -62,7 +68,6 @@ int GetAtticPostCount();
 int SyncAtticPosts();
 
 int DeletePost(const char* szPostID);
-
-
+}
 #endif
 

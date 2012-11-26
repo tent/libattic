@@ -32,10 +32,10 @@ public:
     void SetUrl(const std::string &url) { m_Url = url; ExtractInfo(); }
 private:
     std::string m_Url;
-    std::string m_Scheme; // ex: http https
-    std::string m_Host; // www.example.com sans scheme
+    std::string m_Scheme;   // ex: http https
+    std::string m_Host;     // www.example.com sans scheme
     std::string m_Path;
-    std::string m_Port; // may or may not have a port, if not leave empty
+    std::string m_Port;     // may or may not have a port, if not leave empty
     std::string m_Query;
 };
 

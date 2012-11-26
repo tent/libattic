@@ -18,36 +18,33 @@ std::vector<std::string> UrlParams::GetValue(const std::string& key)
     return value;
 }
 
-std::string UrlParams::SerializeToString()
+void UrlParams::SerializeToString(std::string &out) const
 {
     // Note * will serialize values to http format,
     // appendable to a url
-    std::string httpValues;
-    httpValues.append("?");
+    out.append("?");
 
-    UrlParamMap::iterator itr = m_Values.begin();
+    UrlParamMap::const_iterator itr = m_Values.begin();
 
     for(;itr != m_Values.end(); itr++)
     {
         if(itr != m_Values.begin())
         {
-            httpValues.append("&");
+            out.append("&");
         }
 
-        httpValues.append(itr->first);
-        httpValues.append("=");
+        out.append(itr->first);
+        out.append("=");
 
 
-        UrlParam::iterator valItr = itr->second.begin();
+        UrlParam::const_iterator valItr = itr->second.begin();
         for(; valItr != itr->second.end(); valItr++)
         {
-            httpValues.append(*valItr);
+            out.append(*valItr);
             
             if(*valItr != itr->second.back())
-                httpValues.append(",");
+                out.append(",");
         }
     }
-
-    return httpValues;
 }
 

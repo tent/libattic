@@ -19,6 +19,8 @@ class ConnectionManager
     ~ConnectionManager();
     ConnectionManager operator=(const ConnectionManager &rhs) { return *this; }
 
+    void EncodeAndAppendUrlParams(CURL* pCurl, const UrlParams* pParams, std::string &url);
+
     void GenerateNonce(std::string &out);
     void GenerateHmacSha256(std::string &out);
 public:
@@ -45,7 +47,7 @@ public:
                   std::string& out,
                   bool verbose = false);
 
-    void HttpGetWithAuth( const std::string &szUrl, 
+    void HttpGetWithAuth( const std::string &url, 
                           const UrlParams* pParams,
                           std::string &out, 
                           const std::string &szMacAlgorithm, 
@@ -53,7 +55,7 @@ public:
                           const std::string &szMacKey, 
                           bool verbose = false);
 
-    void HttpGetAttachment( const std::string &szUrl, 
+    void HttpGetAttachment( const std::string &url, 
                             const UrlParams* pParams,
                             std::string &out, 
                             const std::string &szMacAlgorithm, 
@@ -61,7 +63,7 @@ public:
                             const std::string &szMacKey, 
                             bool verbose = false);
     
-    void HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+    void HttpGetAttachmentWriteToFile( const std::string &url, 
                                        const UrlParams* pParams,
                                        const std::string &szFilePath, 
                                        const std::string &szMacAlgorithm, 
@@ -89,7 +91,7 @@ public:
                            const std::string &szMacKey, 
                            bool verbose = false);
 
-    void HttpMultipartPost( const std::string &szUrl, 
+    void HttpMultipartPost( const std::string &url, 
                             const UrlParams* pParams,
                             const std::string &szBody, 
                             const std::string &szFilePath, 
@@ -102,18 +104,18 @@ public:
                             unsigned int uSize,
                             bool verbose = false);
 
-    void HttpMultipartPut(  const std::string &szUrl, 
-                            const UrlParams* pParams,
-                            const std::string &szBody, 
-                            const std::string &szFilePath, 
-                            const std::string &szFileName,
-                            std::string &responseOut, 
-                            const std::string &szMacAlgorithm, 
-                            const std::string &szMacID, 
-                            const std::string &szMacKey, 
-                            const char* pData,
-                            unsigned int uSize,
-                            bool verbose = false);
+    void HttpMultipartPut( const std::string &url, 
+                           const UrlParams* pParams,
+                           const std::string &szBody, 
+                           const std::string &szFilePath, 
+                           const std::string &szFileName,
+                           std::string &responseOut, 
+                           const std::string &szMacAlgorithm, 
+                           const std::string &szMacID, 
+                           const std::string &szMacKey, 
+                           const char* pData,
+                           unsigned int uSize,
+                           bool verbose = false);
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;
