@@ -27,6 +27,48 @@
 
 #include "url.h"
 
+
+TEST(SYNC, ALL)
+{
+    // Set Working Dir first
+    SetWorkingDirectory("./data");
+
+    int status = LoadAppFromFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    // Load Access Token
+    status = SyncAtticPosts();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    ShutdownAppInstance();
+}
+/* 
+*/
+
 /*  
 TEST(PULL, ALL)
 {
@@ -74,11 +116,10 @@ TEST(PULL, ALL)
     ShutdownFileManager();
     ShutdownAppInstance();
 
-
-
 }
 /*
 */
+/*  
 
 TEST(PULL, AFILE)
 {
@@ -116,8 +157,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-
-    status = PullFile("pp.jpg");
+    status = PullFile("ah.jpg");
 
     if(status != ret::A_OK)
     {
@@ -185,7 +225,7 @@ TEST(PUSH, AFILE)
 }
 /*
  */
-/*
+/*  
 TEST(GET, COUNT)
 {
     // Set Working Dir first
@@ -318,7 +358,7 @@ TEST(URL, CUSTOM)
 }
 /*
 */
-/*
+/*  
 TEST(LIBATTIC, CODEUSAGE)
 {
     SetWorkingDirectory("./data");
@@ -330,7 +370,7 @@ TEST(LIBATTIC, CODEUSAGE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "a37653204c7d1851e29b942b77eea8f6");
+    status = RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "cc6ec1fade4ef5f2d70cb281188f5150");
 
     if(status != ret::A_OK)
     {
@@ -341,10 +381,11 @@ TEST(LIBATTIC, CODEUSAGE)
 }
 /*  
 */
-/* 
+/*
 TEST(LIBATTIC, STARTAPPINST)
 {
 
+    SetWorkingDirectory("./data");
     char* p[] = { "https://manuel.tent.is" };
     char* s[] = { "read_posts", 
                   "write_posts",

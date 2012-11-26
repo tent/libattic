@@ -12,7 +12,6 @@
 #include "filemanager.h"
 #include "utils.h"
 
-
 // Constants, (later to be abstracted elsewhere)
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
 static const char* g_szAppData = "app";
@@ -34,6 +33,7 @@ std::string g_szAuthorizationURL;
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
+static int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
 static int GetFile(const std::string& url, std::string &out);
 //////// API start
 //
@@ -568,14 +568,15 @@ int PullFile(const char* szFilePath)
     std::cout<<" ATTACHMENT PATH : " << attachmentpath << std::endl;
 
     std::string buf;
-    GetFile(attachmentpath, buf);
+    //GetFile(attachmentpath, buf);
+    GetFileAndWriteOut(attachmentpath, filepath);
 
+    /* 
     // write out to directory
     std::cout<<"FILE SIZE : " << buf.size() << std::endl;
 
     if(buf.size() > 0)
     {
-        std::cout<< " HERE\n";
         //std::string outpath = g_szWorkingDirectory;
         std::string outpath = filepath; 
         //CheckUrlAndAppendTrailingSlash(outpath);
@@ -597,6 +598,23 @@ int PullFile(const char* szFilePath)
             return ret::A_FAIL_OPEN;
         }
     }
+    */
+    return ret::A_OK;
+}
+
+static int GetFileAndWriteOut(const std::string& url, const std::string &filepath)
+{
+    // file path preferably to a chunked file.
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url, 
+                                                                    filepath, 
+                                                                    g_at.GetMacAlgorithm(), 
+                                                                    g_at.GetAccessToken(), 
+                                                                    g_at.GetMacKey(), 
+                                                                    true);
+
     return ret::A_OK;
 }
 
@@ -614,20 +632,6 @@ static int GetFile(const std::string& url, std::string &out)
                                                          g_at.GetAccessToken(), 
                                                          g_at.GetMacKey(), 
                                                          true);
-    /*
-
-    ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile(url, 
-                                                         response, 
-                                                         g_at.GetMacAlgorithm(), 
-                                                         g_at.GetAccessToken(), 
-                                                         g_at.GetMacKey(), 
-                                                         true);
-
-*/
-
-
-
-
 
     std::cout << " RESPONSE : " << response << std::endl;
 
@@ -660,13 +664,66 @@ int GetAtticPostCount()
     url += val.SerializeToString();
 
     std::string response;
-    ConnectionManager::GetInstance()->HttpGetWithAuth(url, response, g_at.GetMacAlgorithm(), g_at.GetAccessToken(), g_at.GetMacKey(), true);
+    ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
+                                                       response, 
+                                                       g_at.GetMacAlgorithm(), 
+                                                       g_at.GetAccessToken(), 
+                                                       g_at.GetMacKey(), 
+                                                       true);
 
     std::cout<< "RESPONSE : " << response << std::endl;
 
-    return 0;
+    int count = -1;
+    count = atoi(response.c_str());
+
+    return count;
 }
 
+int SyncAtticPosts()
+{
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    int postcount = GetAtticPostCount();
+
+    if(postcount <= 0)
+        return ret::A_FAIL_COULD_NOT_FIND_POSTS;
+
+    std::string url = g_szEntity;
+    url += "/tent/posts";
+
+    UrlValues val;
+    val.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
+    val.AddValue(std::string("limit"), std::string("200"));
+
+    std::string response;
+    ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
+                                                       response, 
+                                                       g_at.GetMacAlgorithm(), 
+                                                       g_at.GetAccessToken(), 
+                                                       g_at.GetMacKey(), 
+                                                       true);
+
+    std::cout<< " RESPONSE : " << response << std::endl;
+
+
+    std::cout << " got a response " << std::endl;
+    Json::Value root;
+    Json::Reader reader;
+
+    if(!reader.parse(response, root))
+        return -1;
+
+
+
+    if(postcount > 200)
+    {
+               // Loop through and gather posts
+
+    }
+
+    return ret::A_OK;
+}
 
 int SetWorkingDirectory(const char* szDir)
 {

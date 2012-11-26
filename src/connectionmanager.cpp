@@ -33,6 +33,8 @@ static std::string ExtractDataToString(tdata* pData);
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms);
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
 
+static size_t WriteOutToString(void *ptr, size_t size, size_t nmemb, std::string *s);
+
 static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 ConnectionManager* ConnectionManager::m_pInstance = 0;
@@ -151,8 +153,6 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
     if(m_pCurl)
     {
         CURLcode res; 
-        tdata* s = CreateDataObject();
-
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
@@ -170,8 +170,14 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
         std::cout << " GETTING URL " << szUrl << std::endl;
         curl_easy_setopt(m_pCurl, CURLOPT_URL, szUrl.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        
+        /*
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
         curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+*/
+
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, &out);
 
         // Write out headers 
         curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
@@ -179,18 +185,18 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
 
         res = curl_easy_perform(m_pCurl);
 
+
+        std::cout<< "OUT SIZE : " << out.size() << std::endl;
+
         if(res != CURLE_OK)
         {
             std::cout<<"ERRR"<<std::endl;
             return;
         }
 
-        std::cout<< " S LEN : " << s->len << std::endl;
-        std::cout<< " S PTR : " << s->ptr << std::endl;
+
+
         curl_slist_free_all (headers);
-        out.clear();
-        out.append(ExtractDataToString(s));
-        DestroyDataObject(s);
     }
 }
 
@@ -1028,8 +1034,28 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
+
+
+static size_t WriteOutToString(void *ptr, size_t size, size_t nmemb, std::string *s)
+{
+    unsigned int start_size = s->size();
+
+    std::cout<<"SIZE : " << size << std::endl;
+    std::cout<<"NMEMB : " << nmemb << std::endl;
+    s->append((char*)ptr, size*nmemb);
+    std::cout<<"CURRENT SIZE : " << s->size() << std::endl;
+
+    // Must return the value it wrote out this time;
+    return (s->size() - start_size);
+}
+
 static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s)
 {
+    std::string test;
+    test.append((char*)ptr, size*nmemb);
+
+    std::cout<< "TESTING : " << test << std::endl;
+
     size_t new_len = s->len + size*nmemb;
 
     if(s->ptr)

@@ -61,7 +61,6 @@ public:
                                        const std::string &szMacKey, 
                                        bool verbose = false);
 
-
     void HttpPost( const std::string &url, 
                    const std::string &body, 
                    std::string &responseOut, 

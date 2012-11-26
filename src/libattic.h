@@ -46,9 +46,7 @@ int PullAllFiles();
 // TODO :: filter attic posts, and construct manifest from that if none is present
 //         compare data and make sure both are up to data
 
-int DeletePost(const char* szPostID);
 
-int GetAtticPostCount();
 
 int SetWorkingDirectory(const char* szDir);
 
@@ -58,6 +56,12 @@ const char* GetWorkingDirectory();
 
 const char* GetEntityUrl();
 
+
+int GetAtticPostCount();
+
+int SyncAtticPosts();
+
+int DeletePost(const char* szPostID);
 
 
 #endif
