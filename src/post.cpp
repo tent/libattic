@@ -109,11 +109,17 @@ void Post::Deserialize(Json::Value& root)
 
     m_Type = root.get("type", "").asString();
 
+    // TODO :: content is dynamic, and can be a variety of things
+    //         serialization and deserialization is more complex than
+    //         just a map of strings
+    /*
     JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
+    */
 
     // Deserialize this into an array of objects
 
     Json::Value atch(Json::arrayValue);
+
     atch = root["attachments"];
 
     if(atch.size() > 0)

@@ -106,6 +106,7 @@ private:
     std::vector<std::string>            m_Mentions;
     std::vector<std::string>            m_Licenses;
     std::string                         m_Type;
+
     std::map<std::string, std::string>  m_Content;
 
     AttachmentVec                       m_Attachments;
