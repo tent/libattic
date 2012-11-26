@@ -10,6 +10,8 @@
 
 #include "post.h"
 
+class UrlParams;
+
 class ConnectionManager
 {
     ConnectionManager();
@@ -38,9 +40,13 @@ public:
     // 
     static ConnectionManager* GetInstance();
 
-    std::string HttpGet(std::string &url);  
+    void HttpGet( const std::string &url, 
+                  const UrlParams* pParams, 
+                  std::string& out,
+                  bool verbose = false);
 
     void HttpGetWithAuth( const std::string &szUrl, 
+                          const UrlParams* pParams,
                           std::string &out, 
                           const std::string &szMacAlgorithm, 
                           const std::string &szMacID, 
@@ -48,6 +54,7 @@ public:
                           bool verbose = false);
 
     void HttpGetAttachment( const std::string &szUrl, 
+                            const UrlParams* pParams,
                             std::string &out, 
                             const std::string &szMacAlgorithm, 
                             const std::string &szMacID, 
@@ -55,6 +62,7 @@ public:
                             bool verbose = false);
     
     void HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+                                       const UrlParams* pParams,
                                        const std::string &szFilePath, 
                                        const std::string &szMacAlgorithm, 
                                        const std::string &szMacID, 
@@ -62,15 +70,18 @@ public:
                                        bool verbose = false);
 
     void HttpPost( const std::string &url, 
+                   const UrlParams* pParams,
                    const std::string &body, 
                    std::string &responseOut, 
                    bool verbose = false);
 
     void HttpDelete( const std::string &url,
+                     const UrlParams* pParams,
                      std::string &responseOut,
                      bool verbose = false);
 
     void HttpPostWithAuth( const std::string &url, 
+                           const UrlParams* pParams,
                            const std::string &body, 
                            std::string &responseOut, 
                            const std::string &szMacAlgorithm, 
@@ -79,6 +90,7 @@ public:
                            bool verbose = false);
 
     void HttpMultipartPost( const std::string &szUrl, 
+                            const UrlParams* pParams,
                             const std::string &szBody, 
                             const std::string &szFilePath, 
                             const std::string &szFileName,
@@ -91,6 +103,7 @@ public:
                             bool verbose = false);
 
     void HttpMultipartPut(  const std::string &szUrl, 
+                            const UrlParams* pParams,
                             const std::string &szBody, 
                             const std::string &szFilePath, 
                             const std::string &szFileName,

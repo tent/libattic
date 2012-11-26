@@ -80,6 +80,7 @@ void ConnectionManager::Shutdown()
         delete m_pInstance;
 }
 void ConnectionManager::HttpDelete( const std::string &url,
+                                    const UrlParams* pParams,
                                     std::string &responseOut,
                                     bool verbose)
 {
@@ -112,14 +113,18 @@ void ConnectionManager::HttpDelete( const std::string &url,
 }
 
 
-std::string ConnectionManager::HttpGet(std::string &url)
+void ConnectionManager::HttpGet( const std::string &url, 
+                                 const UrlParams* pParams,
+                                 std::string &out, 
+                                 bool verbose)
 {
-    std::string response;
-
     if(m_pCurl)
     {
         CURLcode res; 
         tdata* s = CreateDataObject();
+
+        if(verbose)
+            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
         curl_easy_setopt(m_pCurl, CURLOPT_URL, url.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
@@ -131,19 +136,16 @@ std::string ConnectionManager::HttpGet(std::string &url)
         if(res != CURLE_OK)
         {
             std::cout<<"ERRR"<<std::endl;
-            response.append("ERR");
-            return response;
+            return;
         }
 
-        response.clear();
-        response.append(ExtractDataToString(s));
+        out.append(ExtractDataToString(s));
         DestroyDataObject(s);
     }
-
-    return response;
 }
 
 void ConnectionManager::HttpGetWithAuth( const std::string &szUrl, 
+                                         const UrlParams* pParams,
                                          std::string &out, 
                                          const std::string &szMacAlgorithm, 
                                          const std::string &szMacID, 
@@ -201,6 +203,7 @@ void ConnectionManager::HttpGetWithAuth( const std::string &szUrl,
 }
 
 void ConnectionManager::HttpGetAttachment( const std::string &szUrl, 
+                                           const UrlParams* pParams, 
                                            std::string &out, 
                                            const std::string &szMacAlgorithm, 
                                            const std::string &szMacID, 
@@ -270,6 +273,7 @@ void ConnectionManager::HttpGetAttachment( const std::string &szUrl,
 }
 
 void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl, 
+                                                      const UrlParams* pParams,
                                                       const std::string &szFilePath, 
                                                       const std::string &szMacAlgorithm, 
                                                       const std::string &szMacID, 
@@ -320,6 +324,7 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &szUrl,
 
 
 void ConnectionManager::HttpPost( const std::string &url, 
+                                  const UrlParams* pParams,
                                   const std::string &body, 
                                   std::string &responseOut, 
                                   bool verbose)
@@ -371,17 +376,18 @@ void ConnectionManager::HttpPost( const std::string &url,
     }
 }
 
-void ConnectionManager::HttpMultipartPut(  const std::string &szUrl, 
-                                            const std::string &szBody, 
-                                            const std::string &szFilePath, 
-                                            const std::string &szFileName,
-                                            std::string &responseOut, 
-                                            const std::string &szMacAlgorithm, 
-                                            const std::string &szMacID, 
-                                            const std::string &szMacKey, 
-                                            const char* pData,
-                                            unsigned int uSize,
-                                            bool verbose )
+void ConnectionManager::HttpMultipartPut( const std::string &szUrl, 
+                                          const UrlParams* pParams,
+                                          const std::string &szBody, 
+                                          const std::string &szFilePath, 
+                                          const std::string &szFileName,
+                                          std::string &responseOut, 
+                                          const std::string &szMacAlgorithm, 
+                                          const std::string &szMacID, 
+                                          const std::string &szMacKey, 
+                                          const char* pData,
+                                          unsigned int uSize,
+                                          bool verbose )
 {
         if(m_pCurl)
         {
@@ -564,6 +570,7 @@ void ConnectionManager::HttpMultipartPut(  const std::string &szUrl,
 
 
 void ConnectionManager::HttpMultipartPost( const std::string &szUrl, 
+                                           const UrlParams* pParams,
                                            const std::string &szBody, 
                                            const std::string &szFilePath, 
                                            const std::string &szFileName,
@@ -598,7 +605,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 
         char szLen[256];
         memset(szLen, 0, sizeof(char)*256);                                              
-        snprintf(szLen, (sizeof(char)*256),  "%d", szBody.size());     
+        snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
 
         std::string jcl("Content-Length: ");
         jcl.append(szLen);
@@ -762,6 +769,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &szUrl,
 }
 
 void ConnectionManager::HttpPostWithAuth( const std::string &url, 
+                                          const UrlParams* pParams,
                                           const std::string &body, 
                                           std::string &responseOut, 
                                           const std::string &szMacAlgorithm, 
