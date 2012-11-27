@@ -85,6 +85,9 @@ public:
     void HttpDelete( const std::string &url,
                      const UrlParams* pParams,
                      std::string &responseOut,
+                     const std::string &szMacAlgorithm, 
+                     const std::string &szMacID, 
+                     const std::string &szMacKey, 
                      bool verbose = false);
 
     void HttpPostWithAuth( const std::string &url, 

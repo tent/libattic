@@ -117,27 +117,44 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
 void ConnectionManager::HttpDelete( const std::string &url,
                                     const UrlParams* pParams,
                                     std::string &responseOut,
+                                    const std::string &szMacAlgorithm, 
+                                    const std::string &szMacID, 
+                                    const std::string &szMacKey, 
                                     bool verbose)
 {
-    if(m_pCurl)
+    //if(m_pCurl)
     {
+
+        CURL* pCurl = curl_easy_init();
         CURLcode res; 
-        tdata* s = CreateDataObject();
+
+        curl_slist *headers = 0; // Init to null, always
 
         if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
         std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
+        std::string authheader;
+        BuildAuthHeader( urlPath, 
+                         std::string("DELETE"), 
+                         szMacID, 
+                         szMacKey, 
+                         authheader);
+  
+        headers = curl_slist_append(headers, authheader.c_str());
+
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
-        curl_easy_setopt(m_pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+        curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut);
 
-        res = curl_easy_perform(m_pCurl);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+
+        res = curl_easy_perform(pCurl);
 
         if(res != CURLE_OK)
         {
@@ -146,9 +163,7 @@ void ConnectionManager::HttpDelete( const std::string &url,
             return;
         }
 
-        responseOut.clear();
-        responseOut.append(ExtractDataToString(s));
-        DestroyDataObject(s);
+        curl_easy_cleanup(pCurl);
     }
 
 }
@@ -214,7 +229,12 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
         //headers = curl_slist_append(headers, "Content-Type: binary");
 
         std::string authheader;
-        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader( urlPath, 
+                         std::string("GET"), 
+                         szMacID, 
+                         szMacKey,
+                         authheader);
+
         headers = curl_slist_append(headers, authheader.c_str());
 
         std::cout << " GETTING URL " << url << std::endl;

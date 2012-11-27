@@ -523,7 +523,31 @@ int PushFile(const char* szFilePath)
 
 int DeletePost(const char* szPostID)
 {
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+
+    // Modify Post
+    std::string posturl = g_szEntity;
+    posturl += "/tent/posts/";
+    posturl += szPostID;
+
+    std::cout<< " DELETE URL : " << posturl << std::endl;
+
+    std::string response;
+    ConnectionManager::GetInstance()->HttpDelete( posturl,    
+                                                  NULL,
+                                                  response,  
+                                                  g_at.GetMacAlgorithm(), 
+                                                  g_at.GetAccessToken(), 
+                                                  g_at.GetMacKey(), 
+                                                  true);     
+    std::cout<<"RESPONSE : " << response << std::endl;
+            
+    return ret::A_OK;
 }
 
 int PullAllFiles()
@@ -775,11 +799,14 @@ int SyncAtticPosts()
                         CheckUrlAndAppendTrailingSlash(path);
                         path += pAtt->Name;
 
+                        
                         char szLen[256];
                         memset(szLen, 0, sizeof(char)*256);                        
                         snprintf(szLen, (sizeof(char)*256),  "%lu", pAtt->Size);
 
 
+
+                        
                         FileInfo* fi = g_pFileManager->CreateFileInfo( pAtt->Name,
                                                                        path,
                                                                        "",
@@ -787,6 +814,7 @@ int SyncAtticPosts()
                                                                        szLen,
                                                                        p.GetID(),
                                                                        "0");
+
                         g_pFileManager->InsertToManifest(fi);
 
                     }
