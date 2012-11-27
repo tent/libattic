@@ -90,8 +90,10 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
         std::string params;  
         pParams->SerializeToString(params);
 
-        char *pPm = curl_easy_escape(pCurl, params.c_str() , params.size());
-        url.append(pPm);
+        //char *pPm = curl_easy_escape(pCurl, params.c_str() , params.size());
+        //url.append(pPm);
+        url.append(params);
+        std::cout << " URL APPEND : " << url << std::endl;
     }
 }
 
@@ -181,10 +183,11 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
     if(m_pCurl)
     {
         CURLcode res; 
+
         if(verbose)
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
 
-        std::string urlPath;
+        std::string urlPath = url;
         EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
@@ -199,6 +202,7 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
         headers = curl_slist_append(headers, authheader.c_str());
 
         std::cout << " GETTING URL " << url << std::endl;
+        std::cout << " URLPATH : " <<urlPath << std::endl;
         curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
         
@@ -377,7 +381,6 @@ void ConnectionManager::HttpPost( const std::string &url,
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
 
         std::string urlPath = url;
-        
         EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
@@ -512,7 +515,6 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                     curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
 
                 std::string urlPath = url;
-                        
                 EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
 
 
@@ -841,7 +843,6 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
             curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
 
         std::string urlPath = url;
-
         EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always

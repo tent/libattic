@@ -26,7 +26,7 @@
 #include "libattic.h"
 
 #include "url.h"
-
+/*  
 TEST(SYNC, ALL)
 {
     // Set Working Dir first
@@ -118,7 +118,6 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*  
 
 TEST(PULL, AFILE)
 {
@@ -156,7 +155,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("ah.jpg");
+    status = PullFile("oa.pdf");
 
     if(status != ret::A_OK)
     {
@@ -174,8 +173,7 @@ TEST(PULL, AFILE)
 /*
  */
 
-  
-/*
+ /* 
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -209,8 +207,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-
-    status = PushFile("./data/pp.jpg");
+    status = PushFile("./data/oa.pdf");
 
     if(status != ret::A_OK)
     {
@@ -858,13 +855,11 @@ TEST(CURL, POST)
     */
 
     // TODO :: De-Chunk a file
+int main (int argc, char* argv[])
+{
+    // Init gtestframework
+    testing::InitGoogleTest(&argc, argv);
 
-    int main (int argc, char* argv[])
-    {
-        // Init gtestframework
-        testing::InitGoogleTest(&argc, argv);
-
-        // run all tests
-        return RUN_ALL_TESTS();
-    }
-
+    // run all tests
+    return RUN_ALL_TESTS();
+}
