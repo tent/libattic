@@ -36,7 +36,6 @@ void UrlParams::SerializeToString(std::string &out) const
         out.append(itr->first);
         out.append("=");
 
-
         UrlParam::const_iterator valItr = itr->second.begin();
         for(; valItr != itr->second.end(); valItr++)
         {
@@ -47,4 +46,40 @@ void UrlParams::SerializeToString(std::string &out) const
         }
     }
 }
+
+void UrlParams::SerializeAndEncodeToString(CURL* pCurl, std::string &out) const
+{
+    if(!pCurl)
+        return;
+
+    out.append("?");
+
+    UrlParamMap::const_iterator itr = m_Values.begin();
+
+    for(;itr != m_Values.end(); itr++)
+    {
+        if(itr != m_Values.begin())
+        {
+            out.append("&");
+        }
+
+        out.append(itr->first);
+        out.append("=");
+
+        std::string hold;
+        UrlParam::const_iterator valItr = itr->second.begin();
+        for(; valItr != itr->second.end(); valItr++)
+        {
+            hold.clear();
+            hold.append(*valItr);
+            char *pPm = curl_easy_escape(pCurl, hold.c_str() , hold.size()); 
+            out.append(pPm);
+            
+            if(*valItr != itr->second.back())
+                out.append(",");
+        }
+    }
+
+}
+
 

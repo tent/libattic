@@ -26,17 +26,32 @@ struct WriteOut
     int sizeleft;
 };
 
-static size_t WriteOutFunc(void *ptr, size_t size, size_t nmemb, struct tdata *s);
+static size_t WriteOutFunc( void *ptr, 
+                            size_t size, 
+                            size_t nmemb, 
+                            struct tdata *s);
+
 static void InitDataObject(struct tdata *s);
 static tdata* CreateDataObject();
 static void DestroyDataObject(tdata* pData);
 static std::string ExtractDataToString(tdata* pData);
+
 static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms);
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp);
 
-static size_t WriteOutToString(void *ptr, size_t size, size_t nmemb, std::string *s);
+static size_t read_callback( void *ptr, 
+                             size_t size, 
+                             size_t nmemb, 
+                             void *userp);
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
+static size_t WriteOutToString( void *ptr, 
+                                size_t size, 
+                                size_t nmemb, 
+                                std::string *s);
+
+static size_t write_data( void *ptr, 
+                          size_t size, 
+                          size_t nmemb, 
+                          FILE *stream);
 
 ConnectionManager* ConnectionManager::m_pInstance = 0;
 
@@ -88,7 +103,8 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
     if(pCurl && pParams)
     {
         std::string params;  
-        pParams->SerializeToString(params);
+        //pParams->SerializeToString(params);
+        pParams->SerializeAndEncodeToString(pCurl, params);
 
         //char *pPm = curl_easy_escape(pCurl, params.c_str() , params.size());
         //url.append(pPm);
@@ -384,8 +400,11 @@ void ConnectionManager::HttpPost( const std::string &url,
         EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
-        headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
-        headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+        headers = curl_slist_append( headers, 
+                                     "Accept: application/vnd.tent.v0+json" );
+
+        headers = curl_slist_append( headers, 
+                                     "Content-Type: application/vnd.tent.v0+json");
 
         // Set url
         curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());

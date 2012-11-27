@@ -19,7 +19,9 @@ class ConnectionManager
     ~ConnectionManager();
     ConnectionManager operator=(const ConnectionManager &rhs) { return *this; }
 
-    void EncodeAndAppendUrlParams(CURL* pCurl, const UrlParams* pParams, std::string &url);
+    void EncodeAndAppendUrlParams( CURL* pCurl, 
+                                   const UrlParams* pParams, 
+                                   std::string &url);
 
     void GenerateNonce(std::string &out);
     void GenerateHmacSha256(std::string &out);
@@ -31,7 +33,10 @@ public:
                           const std::string &szMacKey, 
                           std::string &out);
 
-    void SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out);
+    void SignRequest( const std::string &szRequest, 
+                      const std::string &szKey, 
+                      std::string &out);
+
     void Initialize();
     void Shutdown();
 

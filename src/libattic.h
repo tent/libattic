@@ -64,7 +64,6 @@ const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
-
 int GetAtticPostCount();
 
 int SyncAtticPosts();
