@@ -757,8 +757,6 @@ int SyncAtticPosts()
 
     std::cout<< " RESPONSE : " << response << std::endl;
 
-
-    std::cout << " got a response " << std::endl;
     Json::Value root;
     Json::Reader reader;
 
