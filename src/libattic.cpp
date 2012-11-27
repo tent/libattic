@@ -536,10 +536,13 @@ int PullAllFiles()
     Manifest::EntriesMap* pEntryMap = g_pFileManager->GetManifestEntries();
     Manifest::EntriesMap::iterator itr = pEntryMap->begin();
 
+    std::string filepath = g_szWorkingDirectory;
+    CheckUrlAndAppendTrailingSlash(filepath);
+
     for(;itr != pEntryMap->end(); itr++)
     {
         std::string fn = itr->first;
-        PullFile(fn.c_str());
+        PullFile((filepath + fn).c_str());
     }
     
     return ret::A_OK;
@@ -800,6 +803,8 @@ int SyncAtticPosts()
                // Loop through and gather posts
 
     }
+
+    PullAllFiles();
 
     return ret::A_OK;
 }
