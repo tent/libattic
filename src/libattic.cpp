@@ -25,6 +25,7 @@ static AccessToken g_at;
 
 std::string g_szWorkingDirectory;
 std::string g_szConfigDirectory; // TODO implement this
+
 std::string g_szEntity;
 std::string g_szAuthorizationURL;
 
@@ -40,11 +41,11 @@ static int GetFile(const std::string& url, std::string &out);
 int InitializeFileManager()
 {
     // Construct path
-    std::string szFilePath(g_szWorkingDirectory);
+    std::string szFilePath(g_szConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szManifest);
 
-    g_pFileManager = new FileManager(szFilePath, g_szWorkingDirectory);
+    g_pFileManager = new FileManager(szFilePath, g_szConfigDirectory);
 
     if(!g_pFileManager->StartupFileManager())
         return ret::A_FAIL_TO_LOAD_FILE;
@@ -257,7 +258,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     // perhaps save it out
 
     // Construct path
-    std::string szSavePath(g_szWorkingDirectory);
+    std::string szSavePath(g_szConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAuthToken);
     
@@ -269,7 +270,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 int LoadAccessToken()
 {
     // Construct path
-    std::string szFilePath(g_szWorkingDirectory);
+    std::string szFilePath(g_szConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szAuthToken);
 
@@ -281,7 +282,7 @@ int SaveAppToFile()
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string szSavePath(g_szWorkingDirectory);
+    std::string szSavePath(g_szConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
@@ -294,7 +295,7 @@ int LoadAppFromFile()
         g_pApp = new TentApp();                                                
 
     // Construct path
-    std::string szSavePath(g_szWorkingDirectory);
+    std::string szSavePath(g_szConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
@@ -819,6 +820,16 @@ int SetWorkingDirectory(const char* szDir)
     return ret::A_OK;
 }
 
+int SetConfigDirectory(const char* szDir)
+{
+    if(!szDir)
+        return ret::A_FAIL_INVALID_CSTR;
+
+    g_szConfigDirectory.append(szDir);
+
+    return ret::A_OK;
+}
+
 int SetEntityUrl(const char* szUrl)
 {
     if(!szUrl)
@@ -830,5 +841,6 @@ int SetEntityUrl(const char* szUrl)
 }
 
 const char* GetWorkingDirectory() { return g_szWorkingDirectory.c_str(); }
+const char* GetConfigDirectory() { return g_szConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_szEntity.c_str(); }
 

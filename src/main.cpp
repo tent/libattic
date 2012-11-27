@@ -29,6 +29,7 @@
 
 TEST(SYNC, ALL)
 {
+    SetConfigDirectory("./config");
     // Set Working Dir first
     SetWorkingDirectory("./data");
 
@@ -79,6 +80,8 @@ TEST(SYNC, ALL)
 /*  
 TEST(PULL, ALL)
 {
+
+    SetConfigDirectory("./config");
     SetWorkingDirectory("./data");
 
     int status = LoadAppFromFile();
@@ -129,6 +132,7 @@ TEST(PULL, ALL)
 /*
 TEST(PULL, AFILE)
 {
+    SetConfigDirectory("./config");
     // Set Working dir
     SetWorkingDirectory("./data");
 
@@ -185,6 +189,7 @@ TEST(PULL, AFILE)
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
+    SetConfigDirectory("./config");
 
     int status = LoadAppFromFile();
     if(status != ret::A_OK)
@@ -232,6 +237,7 @@ TEST(PUSH, AFILE)
 /*  
 TEST(GET, COUNT)
 {
+    SetConfigDirectory("./config");
     // Set Working Dir first
     SetWorkingDirectory("./data");
 
@@ -267,6 +273,7 @@ TEST(GET, COUNT)
 /*
 TEST(MULT, GET)
 {
+    SetConfigDirectory("./config");
     // Set Working Dir first
     SetWorkingDirectory("./data");
 
@@ -300,6 +307,7 @@ TEST(MULT, GET)
 /*
 TEST(MULTI, PART)
 {
+    SetConfigDirectory("./config");
     std::string szAppPath("./app");
     int status = LoadAppFromFile(szAppPath.c_str());
 
@@ -366,6 +374,7 @@ TEST(URL, CUSTOM)
   
 TEST(LIBATTIC, CODEUSAGE)
 {
+    SetConfigDirectory("./config");
     SetWorkingDirectory("./data");
     int status = LoadAppFromFile();
 
@@ -389,6 +398,7 @@ TEST(LIBATTIC, CODEUSAGE)
 /*
 TEST(LIBATTIC, STARTAPPINST)
 {
+    SetConfigDirectory("./config");
 
     SetWorkingDirectory("./data");
     char* p[] = { "https://manuel.tent.is" };

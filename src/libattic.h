@@ -56,10 +56,12 @@ int PullAllFiles();
 
 int SetWorkingDirectory(const char* szDir);
 
+int SetConfigDirectory(const char* szDir);
+
 int SetEntityUrl(const char* szUrl);
 
 const char* GetWorkingDirectory();
-
+const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
 
