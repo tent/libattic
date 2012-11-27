@@ -126,27 +126,47 @@ bool FileManager::ReadInEntry(std::string &e)
     if(split.size() < 7)
         return false;
 
-    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
-
-    // Filename (str)
-    fi->SetFileName(split[0]);
-    // Filepath (str)
-    fi->SetFilePath(split[1]);
-    // ChunkName (str)
-    fi->SetChunkName(split[2]);
-    // ChunkCount (unsigned int)
-    fi->SetChunkCount((unsigned)atoi(split[3].c_str()));
-    // FileSize (unsigned int)
-    fi->SetFileSize((unsigned)atoi(split[4].c_str()));
-    // Post ID
-    fi->SetPostID(split[5].c_str());
-    // Post Version
-    fi->SetPostVersion((unsigned)atoi(split[6].c_str()));
+    FileInfo* fi = CreateFileInfo ( split[0],
+                                    split[1],
+                                    split[2],
+                                    split[3],
+                                    split[4],
+                                    split[5],
+                                    split[6] );
     
     m_Manifest.InsertFileInfo(fi);
 
     return true;
 }
+FileInfo* FileManager::CreateFileInfo( const std::string &filename,
+                                       const std::string &filepath,
+                                       const std::string &chunkName,
+                                       const std::string &chunkCount,
+                                       const std::string &fileSize,
+                                       const std::string &postId,
+                                       const std::string &postVersion)
+{
+    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
+
+    // Filename (str)
+    fi->SetFileName(filename);
+    // Filepath (str)
+    fi->SetFilePath(filepath);
+    // ChunkName (str)
+    fi->SetChunkName(chunkName);
+    // ChunkCount (unsigned int)
+    fi->SetChunkCount((unsigned)atoi(chunkCount.c_str()));
+    // FileSize (unsigned int)
+    fi->SetFileSize((unsigned)atoi(fileSize.c_str()));
+    // Post ID
+    fi->SetPostID(postId);
+    // Post Version
+    fi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
+
+    return fi;
+}
+
+
 
 ret::eCode FileManager::IndexFile(std::string &szFilePath)
 {
@@ -226,12 +246,12 @@ void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
     }
 }
 
-ret::eCode FileManager::ConstructFile(std::string &szFileName)
+ret::eCode FileManager::ConstructFile(std::string &filename)
 {
 
     ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
-    FileInfo *fi = m_Manifest.RetrieveFileInfo(szFileName);
+    FileInfo *fi = m_Manifest.RetrieveFileInfo(filename);
 
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
@@ -239,7 +259,7 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     /*
     // Construct outbound path
     std::string pstfx = "dchnk";
-    std::string chunkPath = ConstructOutboundPath(m_WorkingDirectory, true, szFileName, pstfx);
+    std::string chunkPath = ConstructOutboundPath(m_WorkingDirectory, true, filename, pstfx);
     // De-chunk
     status = m_Chunker.DeChunkFile(fi, chunkPath, m_WorkingDirectory);
 
@@ -251,7 +271,7 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     // Decrypt chunks
     pstfx.clear();
     pstfx.append("dcry");
-    std::string decrypPath = ConstructOutboundPath(m_WorkingDirectory, true, szFileName, pstfx);
+    std::string decrypPath = ConstructOutboundPath(m_WorkingDirectory, true, filename, pstfx);
     status = m_Crypto.DecryptFile(chunkPath, decrypPath, fi->GetCredentials());
     
     if(status != ret::A_OK)
@@ -263,7 +283,7 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
 
     /*
     std::string pstfx; // temporary remove when adding back encryption and chunking
-    std::string decompPath = ConstructOutboundPath(m_WorkingDirectory, false, szFileName, pstfx);
+    std::string decompPath = ConstructOutboundPath(m_WorkingDirectory, false, filename, pstfx);
     status = m_Compressor.DecompressFile(decrypPath, decompPath);
 
     */
@@ -273,16 +293,16 @@ ret::eCode FileManager::ConstructFile(std::string &szFileName)
     return status;
 }
 
-std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool bStripFileType, std::string &szFileName, std::string &szPostfix)
+std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool bStripFileType, std::string &filename, std::string &szPostfix)
 {
     std::string path = szWorkingDir;
 
-    std::string filename = szFileName;
+    std::string fn = filename;
 
     if(bStripFileType)
     {
         std::vector<std::string> out;
-        utils::SplitString(szFileName, '.', out);
+        utils::SplitString(fn, '.', out);
         if(out.size() > 0)
         {
             filename = out[0];
@@ -295,9 +315,9 @@ std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool b
         path.append("/");
 
     // Attach postfix to filename
-    filename += szPostfix;
+    fn += szPostfix;
 
-    path += filename;
+    path += fn;
     
     return path;
 }
@@ -305,6 +325,11 @@ std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool b
 FileInfo* FileManager::CreateFileInfo()
 {
     return m_FileInfoFactory.CreateFileInfoObject();
+}
+
+bool FileManager::FindFileInManifest(const std::string &filename)
+{
+    return m_Manifest.IsFileInManifest(filename);
 }
 
 bool FileManager::FileExists(std::string& szFilepath)          
@@ -315,7 +340,7 @@ bool FileManager::FileExists(std::string& szFilepath)
         return bVal;                               
 }                                                           
 
-FileInfo* FileManager::GetFileInfo(const std::string &szFileName)
+FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
-    return m_Manifest.RetrieveFileInfo(szFileName);
+    return m_Manifest.RetrieveFileInfo(filename);
 }

@@ -72,9 +72,11 @@ struct Attachment : public JsonSerializable
 
 class Post : public JsonSerializable
 {
-    typedef std::vector<Attachment*> AttachmentVec;
+
 
 public:
+    typedef std::vector<Attachment*> AttachmentVec;
+
     Post();
     ~Post();
 
@@ -82,6 +84,7 @@ public:
     virtual void Deserialize(Json::Value& root);
 
     std::string GetID() { return m_ID; }
+    std::string GetPostType() { return m_Type; }
 
     void SetID(const std::string &szId) { m_ID = szId; }
     void setEntity(const std::string &szEntity) { m_Entity = szEntity; }
@@ -95,8 +98,10 @@ public:
     
     void SetPermission(const std::string &szPermission, bool bVal) { m_Permissions[szPermission] = bVal; }
 
+    unsigned int GetAttachmentCount() { return m_Attachments.size(); }
     AttachmentVec* GetAttachments() { return &m_Attachments; }
     unsigned int GetVersion() { return m_Version; }
+
 
 private:
     std::string                         m_ID;

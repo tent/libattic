@@ -124,8 +124,6 @@ void Post::Deserialize(Json::Value& root)
 
     if(atch.size() > 0)
     {
-        std::cout<< " ARRAY INDEX : " << atch.size() << std::endl;
-
         Json::ValueIterator itr = atch.begin();           
 
         for(; itr != atch.end(); itr++)                   
@@ -143,8 +141,8 @@ void Post::Deserialize(Json::Value& root)
 
                     for(; ii != aobj.end(); ii++)
                     {
-                        std::cout<<ii.key().asString()<<std::endl;
-                        std::cout<<*ii << std::endl;
+                        //std::cout<<ii.key().asString()<<std::endl;
+                        //std::cout<<*ii << std::endl;
                         pAtch->AssignKeyValue(ii.key().asString(), (*ii));
                     }
                     //pAtch->AssignKeyValue(itr.key(), *itr);

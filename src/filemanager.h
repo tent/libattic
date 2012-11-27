@@ -20,7 +20,7 @@ class FileManager
 
     std::string ConstructOutboundPath( std::string &szWorkingDir, 
                                        bool bStripFileType, 
-                                       std::string &szFileName, 
+                                       std::string &filename, 
                                        std::string &szPostfix);
     
     void GenerateCompressionPath(FileInfo* fi, std::string &szOutPath);
@@ -41,12 +41,24 @@ public:
 
     bool LoadManifest(std::string &szFilePath);
 
+    
     ret::eCode IndexFile(std::string &szFilePath);
-    ret::eCode ConstructFile(std::string &szFileName);
+    ret::eCode ConstructFile(std::string &filename);
 
-    bool FileExists(std::string& szFilepath);
+    bool FindFileInManifest(const std::string &filename);   // File exists in manifest
+    bool FileExists(std::string& szFilepath);           // File exists on disc
 
-    FileInfo* GetFileInfo(const std::string &szFileName);
+    FileInfo* GetFileInfo(const std::string &filename);
+
+    FileInfo* CreateFileInfo( const std::string &filename,
+                              const std::string &filepath,
+                              const std::string &chunkName,
+                              const std::string &chunkCount,
+                              const std::string &fileSize,
+                              const std::string &postId,
+                              const std::string &postVersion);
+
+    void InsertToManifest(FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
 
     std::string GetManifestFilePath() { return m_ManifestFilePath; }
     std::string GetWorkingDirectory() { return m_WorkingDirectory; }

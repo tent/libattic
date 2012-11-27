@@ -26,7 +26,7 @@
 #include "libattic.h"
 
 #include "url.h"
-/*  
+
 TEST(SYNC, ALL)
 {
     // Set Working Dir first
@@ -47,14 +47,21 @@ TEST(SYNC, ALL)
 
     // Load Access Token
     status = LoadAccessToken();
-
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    // Load Access Token
+    // Initialize Filemanager
+    status = InitializeFileManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    // Sync some posts
     status = SyncAtticPosts();
 
     if(status != ret::A_OK)
@@ -63,6 +70,7 @@ TEST(SYNC, ALL)
     }
     ASSERT_EQ(status, ret::A_OK);
    
+    ShutdownFileManager();
     ShutdownAppInstance();
 }
 /* 
@@ -118,7 +126,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-
+/*
 TEST(PULL, AFILE)
 {
     // Set Working dir

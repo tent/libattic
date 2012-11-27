@@ -36,7 +36,6 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
 static int GetFile(const std::string& url, std::string &out);
 //////// API start
-//
 
 int InitializeFileManager()
 {
@@ -696,10 +695,16 @@ int GetAtticPostCount()
     return count;
 }
 
+
 int SyncAtticPosts()
 {
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+    
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+
 
     int postcount = GetAtticPostCount();
 
@@ -739,12 +744,53 @@ int SyncAtticPosts()
     for(;itr != root.end(); itr++)
     {
         Post p;
-        
         //JsonSerializer::DeserializeObject(&p, (*itr).asString());
+        
+        // Deserialize directly into posts
         p.Deserialize(*itr);
         count++;
+        std::cout<<p.GetPostType()<<std::endl;
 
+        // if proper post type
+        if(p.GetPostType().compare(g_szAtticPostType) == 0 && p.GetAttachmentCount() > 0)
+        {
+            // Check Attachment
+            Post::AttachmentVec *pVec = p.GetAttachments();
+            Post::AttachmentVec::iterator itr = pVec->begin();
+
+            for(;itr != pVec->end(); itr++)
+            {
+                Attachment* pAtt = (*itr);
+                if(pAtt)
+                {
+                    // Populate Manifest
+                    if(!g_pFileManager->FindFileInManifest(pAtt->Name))
+                    {
+
+                        std::string path = g_szWorkingDirectory;
+                        CheckUrlAndAppendTrailingSlash(path);
+                        path += pAtt->Name;
+
+                        char szLen[256];
+                        memset(szLen, 0, sizeof(char)*256);                        
+                        snprintf(szLen, (sizeof(char)*256),  "%lu", pAtt->Size);
+
+
+                        FileInfo* fi = g_pFileManager->CreateFileInfo( pAtt->Name,
+                                                                       path,
+                                                                       "",
+                                                                       "0",
+                                                                       szLen,
+                                                                       p.GetID(),
+                                                                       "0");
+                        g_pFileManager->InsertToManifest(fi);
+
+                    }
+                }
+            }
+        }
     }
+
     std::cout<< " COUNT : " << count << std::endl;
 
 

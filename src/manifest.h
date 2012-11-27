@@ -26,8 +26,11 @@ public:
 
     bool CreateEmptyManifest();
     bool WriteOutManifest();    
-
     bool InsertFileInfo(FileInfo* fi);
+
+    bool IsFileInManifest(const std::string &filename);
+
+
     FileInfo* RetrieveFileInfo(const std::string &s);
 
     void SetFilePath(std::string &filePath) { m_filePath = filePath; }

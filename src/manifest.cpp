@@ -148,3 +148,11 @@ bool Manifest::CreateEmptyManifest()
     return true;
 }
 
+bool Manifest::IsFileInManifest(const std::string &filename)
+{
+    if(m_entries.find(filename) != m_entries.end())
+        return true;
+
+    return false;
+}
+
