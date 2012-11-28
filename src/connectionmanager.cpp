@@ -539,7 +539,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                           CURLFORM_CONTENTHEADER, attachlist,
                           CURLFORM_END);
 
-            tdata* s = CreateDataObject();
+            //tdata* s = CreateDataObject();
             
             multi_handle = curl_multi_init();
            
@@ -578,21 +578,24 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 curl_multi_add_handle(multi_handle, pCurl);
 
                 // Set read response func and data
-                curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-                curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
+                //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+                //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
             
+                std::cout<<"here"<<std::endl;
                 curl_multi_perform(multi_handle, &still_running);
 
-int still_running=0;
-/* lets start the fetch */
-do {
-        while(::curl_multi_perform(multi_handle, &still_running) ==
-                        CURLM_CALL_MULTI_PERFORM);
-} while (still_running);
+                std::cout<<"here"<<std::endl;
+                int still_running=0;
+                /* lets start the fetch */
+                do {
+                        while(::curl_multi_perform(multi_handle, &still_running) ==
+                                        CURLM_CALL_MULTI_PERFORM);
+                } while (still_running);
+                std::cout<<"here"<<std::endl;
 
-                responseOut.clear();
-                responseOut.append(ExtractDataToString(s));
-                DestroyDataObject(s);
+                //responseOut.clear();
+                //responseOut.append(ExtractDataToString(s));
+                //DestroyDataObject(s);
                 curl_multi_cleanup(multi_handle);
 
                 /* then cleanup the formpost chain */ 
@@ -692,7 +695,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         attachlist = curl_slist_append(attachlist, "Content-Type: application/octet-stream");
 
         curl_formadd( &formpost,
-                          &lastptr,
+                        &lastptr,
                           CURLFORM_COPYNAME, "attatchment",
                           CURLFORM_PTRCONTENTS, pData,
                           CURLFORM_CONTENTSLENGTH, uSize,
@@ -700,7 +703,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                           CURLFORM_END);
 
 
-        tdata* s = CreateDataObject();
+        //tdata* s = CreateDataObject();
         
         multi_handle = curl_multi_init();
        
@@ -735,21 +738,25 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             curl_multi_add_handle(multi_handle, pCurl);
 
             // Set read response func and data
-            curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-            curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
+            //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+            //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
         
+                std::cout<<"here"<<std::endl;
             curl_multi_perform(multi_handle, &still_running);
-int still_running=0;
-/* lets start the fetch */
-do {
-        while(::curl_multi_perform(multi_handle, &still_running) ==
-                        CURLM_CALL_MULTI_PERFORM);
-} while (still_running);
 
+                std::cout<<"here"<<std::endl;
+            int still_running=0;
+            /* lets start the fetch */
+            do {
+                    while(::curl_multi_perform(multi_handle, &still_running) ==
+                                    CURLM_CALL_MULTI_PERFORM);
+            } while (still_running);
+
+                std::cout<<"here"<<std::endl;
             std::cout<<"finished..."<<std::endl;
-            responseOut.clear();
-            responseOut.append(ExtractDataToString(s));
-            DestroyDataObject(s);
+            //responseOut.clear();
+            //responseOut.append(ExtractDataToString(s));
+            //DestroyDataObject(s);
             curl_multi_cleanup(multi_handle);
 
             /* then cleanup the formpost chain */ 
