@@ -48,6 +48,9 @@ int PushFile(const char* szFilePath);
 // Pullfile from tent
 int PullFile(const char* szFilePath);
 
+// Delete a file
+int DeleteFile(const char* szFileName);
+
 // Pull All files in manifest
 int PullAllFiles();
 
@@ -65,10 +68,9 @@ const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
 int GetAtticPostCount();
-
 int SyncAtticPosts();
 
-int DeletePost(const char* szPostID);
+int SaveChanges();
 }
 #endif
 

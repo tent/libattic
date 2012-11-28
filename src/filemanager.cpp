@@ -100,6 +100,11 @@ bool FileManager::LoadManifest(std::string &szFilePath)
     return false;
 }
 
+bool FileManager::WriteOutChanges()
+{
+    return m_Manifest.WriteOutManifest(); 
+}
+
 bool FileManager::ReadInHeader(std::string &h)
 { 
     // Split string
@@ -168,7 +173,7 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
 
 
 
-ret::eCode FileManager::IndexFile(std::string &szFilePath)
+ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 {
     ret::eCode status = ret::A_OK;
     // Create an entry
@@ -214,6 +219,16 @@ ret::eCode FileManager::IndexFile(std::string &szFilePath)
     m_Manifest.InsertFileInfo(fi);
 
     bool success = m_Manifest.WriteOutManifest();
+    return status;
+}
+
+ret::eCode FileManager::RemoveFile(const std::string &szFileName)
+{
+    ret::eCode status = ret::A_OK;
+
+    if(!m_Manifest.RemoveFileInfo(szFileName))
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+
     return status;
 }
 

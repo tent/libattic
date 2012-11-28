@@ -27,6 +27,58 @@
 
 #include "url.h"
 
+ 
+TEST(DELETE, AFILE)
+{
+    SetConfigDirectory("./config");
+    // Set Working Dir first
+    SetWorkingDirectory("./data");
+
+    int status = LoadAppFromFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = SetEntityUrl("https://manuel.tent.is");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    // Load Access Token
+    status = LoadAccessToken();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+   
+    // Initialize Filemanager
+    status = InitializeFileManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+    ///////////////////////
+    //do stuff here
+
+    status = DeleteFile("oa.pdf");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+
+    ShutdownFileManager();
+    ShutdownAppInstance();
+}
+/*
+ */
+/*
 TEST(SYNC, ALL)
 {
     SetConfigDirectory("./config");
@@ -167,7 +219,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("oa.pdf");
+    status = PullFile("./data/oa.pdf");
 
     if(status != ret::A_OK)
     {
@@ -185,7 +237,7 @@ TEST(PULL, AFILE)
 /*
  */
 
- /* 
+ /*   
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");

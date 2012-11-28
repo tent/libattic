@@ -128,6 +128,20 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     return true;
 }
 
+bool Manifest::RemoveFileInfo(const std::string &filename)
+{
+    EntriesMap::iterator itr;
+    itr = m_entries.find(filename);
+
+    if(itr == m_entries.end())
+        return false;
+
+    m_entries.erase(itr);
+
+    return true;
+}
+
+
 FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
 {
     EntriesMap::iterator itr;

@@ -28,7 +28,7 @@ namespace utils
         return out;
     }
 
-    static unsigned int CheckFileSize(std::string &szFilePath)
+    static unsigned int CheckFileSize(const std::string &szFilePath)
     {
         unsigned int fileSize = 0;
 

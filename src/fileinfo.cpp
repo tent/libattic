@@ -16,7 +16,7 @@ FileInfo::~FileInfo()
 
 }
 
-bool FileInfo::InitializeFile(std::string &szFilePath)
+bool FileInfo::InitializeFile(const std::string &szFilePath)
 {
     // Check if Valid File
     //
@@ -34,7 +34,7 @@ bool FileInfo::InitializeFile(std::string &szFilePath)
     return true;
 }
 
-std::string FileInfo::ExtractFileName(std::string &szFilePath)
+std::string FileInfo::ExtractFileName(const std::string &szFilePath)
 {
     std::string name;
     unsigned int size = szFilePath.size();

@@ -10,13 +10,13 @@
 
 class FileInfo
 {
-    std::string ExtractFileName(std::string &szFilePath);
+    std::string ExtractFileName(const std::string &szFilePath);
 public:
     FileInfo();
     ~FileInfo();
 
     // Init a file
-    bool InitializeFile(std::string &szFilePath);
+    bool InitializeFile(const std::string &szFilePath);
     
     void SetFileName(const std::string &szFileName) { m_FileName = szFileName; }
     void SetFilePath(const std::string &szFilePath) { m_FilePath = szFilePath; }

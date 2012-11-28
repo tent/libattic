@@ -36,6 +36,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
 static int GetFile(const std::string& url, std::string &out);
+static ret::eCode DeletePost(const std::string& szPostID);
 //////// API start
 
 int InitializeFileManager()
@@ -521,7 +522,33 @@ int PushFile(const char* szFilePath)
     return ret::A_OK;
 }
 
-int DeletePost(const char* szPostID)
+
+int DeleteFile(const char* szFileName)
+{
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+    FileInfo* fi = g_pFileManager->GetFileInfo(szFileName);
+
+    if(!fi)
+        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+    
+    std::string postid = fi->GetPostID();
+
+    ret::eCode status = ret::A_OK;
+    // Delete post
+    status = DeletePost(postid);
+    
+    // Remove from Manifest
+    status = g_pFileManager->RemoveFile(szFileName);
+
+    return status; 
+}
+
+static ret::eCode DeletePost(const std::string& szPostID)
 {
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
@@ -545,6 +572,7 @@ int DeletePost(const char* szPostID)
                                                   g_at.GetAccessToken(), 
                                                   g_at.GetMacKey(), 
                                                   true);     
+
     std::cout<<"RESPONSE : " << response << std::endl;
             
     return ret::A_OK;
@@ -800,7 +828,7 @@ int SyncAtticPosts()
                         
                         char szLen[256];
                         memset(szLen, 0, sizeof(char)*256);                        
-                        snprintf(szLen, (sizeof(char)*256),  "%lu", pAtt->Size);
+                        snprintf(szLen, (sizeof(char)*256),  "%u", pAtt->Size);
 
 
 
@@ -834,6 +862,24 @@ int SyncAtticPosts()
     PullAllFiles();
 
     return ret::A_OK;
+}
+
+int SaveChanges()
+{
+    // Use this method to force a system wide save
+    
+    if(!g_pApp)
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+    
+    if(!g_pFileManager)
+        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+
+    ret::eCode status = ret::A_OK;
+
+    if(!g_pFileManager->WriteOutChanges())
+        status = ret::A_FAIL_TO_WRITE_OUT_MANIFEST;
+
+    return status;
 }
 
 int SetWorkingDirectory(const char* szDir)

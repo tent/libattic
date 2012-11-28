@@ -26,10 +26,11 @@ public:
 
     bool CreateEmptyManifest();
     bool WriteOutManifest();    
+
     bool InsertFileInfo(FileInfo* fi);
+    bool RemoveFileInfo(const std::string &filename);
 
     bool IsFileInManifest(const std::string &filename);
-
 
     FileInfo* RetrieveFileInfo(const std::string &s);
 
@@ -43,7 +44,7 @@ public:
 private:
 
     EntriesMap            m_entries;  // Do not delete entries, just clear the map.
-                                                    // FileInfoFactory will take care of deletion.
+                                      // FileInfoFactory will take care of deletion.
 
     std::ifstream       m_ifStream;
     std::ofstream       m_ofStream;

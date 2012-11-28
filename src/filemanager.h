@@ -40,9 +40,12 @@ public:
     bool ShutdownFileManager();
 
     bool LoadManifest(std::string &szFilePath);
+    bool WriteOutChanges();
 
     
-    ret::eCode IndexFile(std::string &szFilePath);
+    ret::eCode IndexFile(const std::string &szFilePath);
+    ret::eCode RemoveFile(const std::string &szFileName);
+
     ret::eCode ConstructFile(std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
