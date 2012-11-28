@@ -27,7 +27,7 @@
 
 #include "url.h"
 
- 
+/*   
 TEST(DELETE, AFILE)
 {
     SetConfigDirectory("./config");
@@ -237,7 +237,7 @@ TEST(PULL, AFILE)
 /*
  */
 
- /*   
+   
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");

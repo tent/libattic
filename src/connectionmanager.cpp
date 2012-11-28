@@ -470,9 +470,8 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                                           unsigned int uSize,
                                           bool verbose )
 {
-        if(m_pCurl)
-        {
-
+    
+            CURL* pCurl = curl_easy_init();
             std::cout<< " USIZE : " << uSize << std::endl;
             CURLM *multi_handle;
             int still_running;
@@ -548,13 +547,13 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
             *      wanted */ 
             headerlist = curl_slist_append(headerlist, buf);
 
-            if(m_pCurl && multi_handle)
+            if(pCurl && multi_handle)
             {
                 if(verbose)
                     curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
 
                 std::string urlPath = url;
-                EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+                EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
 
                 struct curl_slist *headers=NULL;
@@ -568,19 +567,19 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 headerlist = curl_slist_append(headerlist, authheader.c_str());
 
                 /* what URL that receives this POST */ 
-                curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
+                curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
 
-                curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headerlist);
-                curl_easy_setopt(m_pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+                curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
+                curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
                 //curl_easy_setopt(m_pCurl, CURLOPT_PUT, 1L);
 
-                curl_easy_setopt(m_pCurl, CURLOPT_HTTPPOST, formpost);
+                curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
 
-                curl_multi_add_handle(multi_handle, m_pCurl);
+                curl_multi_add_handle(multi_handle, pCurl);
 
                 // Set read response func and data
-                curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-                curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
+                curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+                curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
             
                 curl_multi_perform(multi_handle, &still_running);
 
@@ -651,8 +650,8 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 /* free slist */ 
                 curl_slist_free_all (headerlist);
             }
-    }
 
+    curl_easy_cleanup(pCurl);
 }
 
 
@@ -669,8 +668,9 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                                            unsigned int uSize,
                                            bool verbose)
 {
-    if(m_pCurl)
-    {
+    
+
+        CURL* pCurl = curl_easy_init();
         CURLM *multi_handle;
         int still_running;
 
@@ -757,7 +757,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         *      wanted */ 
         headerlist = curl_slist_append(headerlist, buf);
 
-        if(m_pCurl && multi_handle)
+        if(pCurl && multi_handle)
         {
             if(verbose)
                 curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
@@ -776,16 +776,16 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             headerlist = curl_slist_append(headerlist, authheader.c_str());
 
             /* what URL that receives this POST */ 
-            curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
+            curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
 
-            curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headerlist);
-            curl_easy_setopt(m_pCurl, CURLOPT_HTTPPOST, formpost);
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
+            curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
 
-            curl_multi_add_handle(multi_handle, m_pCurl);
+            curl_multi_add_handle(multi_handle, pCurl);
 
             // Set read response func and data
-            curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-            curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
+            curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+            curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
         
             curl_multi_perform(multi_handle, &still_running);
 
@@ -856,9 +856,11 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             /* free slist */ 
             curl_slist_free_all (headerlist);
         }
-    }
 
+    curl_easy_cleanup(pCurl);
 }
+
+
 
 void ConnectionManager::HttpPostWithAuth( const std::string &url, 
                                           const UrlParams* pParams,
