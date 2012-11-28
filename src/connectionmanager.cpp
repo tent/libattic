@@ -791,6 +791,8 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
             do 
             {
+                
+                std::cout<< " here " << std::endl;
                 struct timeval timeout;
                 int rc; /* select() return code */ 
                    
@@ -820,8 +822,14 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                 }
                                                                                
                 /* get file descriptors from the transfers */ 
-                curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+                CURLMcode mcode;
+                mcode = curl_multi_fdset( multi_handle, 
+                                         &fdread, 
+                                         &fdwrite, 
+                                         &fdexcep, 
+                                         &maxfd);
                  
+                std::cout<< "mcode : " << mcode << std::endl;
                 /* In a real-world program you OF COURSE check the return code of the
                           function calls.  On success, the value of maxfd is guaranteed to be
                           greater or equal than -1.  We call select(maxfd + 1, ...), specially in
@@ -834,17 +842,22 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                 {
                     case -1:
                         /* select error */ 
+                        std::cout<< "SELECT ERROR" << std::endl;
                         break;
                     case 0:
                     default:
                         /* timeout or readable/writable sockets */ 
                         printf("perform!\n");
-                        curl_multi_perform(multi_handle, &still_running);
+                        CURLMcode mperf;
+                        mperf = curl_multi_perform(multi_handle, &still_running);
+
+                        std::cout<<"MPERF : " << mperf << std::endl;
                     printf("running: %d!\n", still_running);
                     break;
                 }
             } while(still_running);
 
+            std::cout<<"finished..."<<std::endl;
             responseOut.clear();
             responseOut.append(ExtractDataToString(s));
             DestroyDataObject(s);
