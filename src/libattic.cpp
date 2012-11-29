@@ -344,8 +344,9 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     if(!ifs.is_open())
         return ret::A_FAIL_OPEN;
 
-    char* pData = new char[size];
+    char* pData = new char[size+1];
     memset(pData, 0, (size));
+    pData[size]='\0';
 
     ifs.read(pData, size);
     ifs.close();
@@ -384,7 +385,11 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
     }
 
-    delete pData;
+    if(pData)
+    {
+        delete[] pData;
+        pData = 0;
+    }
 
     return ret::A_OK;
 }
@@ -406,7 +411,7 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     p.SetPermission(std::string("public"), false);
 
     // Serialize Post
-    std::string postBuffer;
+    std::string postBuffer = "";
     JsonSerializer::SerializeObject(&p, postBuffer);
     std::cout << " POST BUFFER : " << postBuffer << std::endl;
     

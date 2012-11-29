@@ -29,7 +29,7 @@ public:
         if(!pObj)
             return false;
 
-        Json::Value root;
+        Json::Value root(Json::nullValue);
         pObj->Serialize(root);
 
         Json::StyledWriter writer;

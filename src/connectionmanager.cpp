@@ -81,7 +81,7 @@ void ConnectionManager::Initialize()
 {
     utils::SeedRand();
 
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+//    curl_global_init(CURL_GLOBAL_DEFAULT);
     m_pCurl = curl_easy_init();
 }
 
@@ -90,7 +90,7 @@ void ConnectionManager::Shutdown()
     if(m_pCurl)
         curl_easy_cleanup(m_pCurl);
 
-    curl_global_cleanup();
+ //   curl_global_cleanup();
 
     if(m_pInstance)
         delete m_pInstance;
@@ -471,17 +471,18 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                                           bool verbose )
 {
     
-            CURL* pCurl = curl_easy_init();
-            std::cout<< " USIZE : " << uSize << std::endl;
-            CURLM *multi_handle;
-            int still_running;
+            CURL* pCurl;
 
+            std::cout<< " USIZE : " << uSize << std::endl;
+
+            CURLM *multi_handle;
+            int still_running = 0;
+
+            curl_httppost *formpost=NULL;
+            curl_httppost *lastptr=NULL;
             curl_slist *headerlist=NULL;
             static const char buf[] = "Expect:";
             
-            curl_httppost *formpost=NULL;
-            curl_httppost *lastptr=NULL;
-
             // Add json
             WriteOut postd; // Post content to be read
             postd.readptr = szBody.c_str(); // serialized json (should be)
@@ -540,7 +541,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                           CURLFORM_END);
 
             //tdata* s = CreateDataObject();
-            
+            pCurl = curl_easy_init(); 
             multi_handle = curl_multi_init();
            
             /* initalize custom header list (stating that Expect: 100-continue is not
@@ -550,11 +551,10 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
             if(pCurl && multi_handle)
             {
                 if(verbose)
-                    curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+                    curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
 
                 std::string urlPath = url;
                 EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
-
 
                 struct curl_slist *headers=NULL;
                  
@@ -585,7 +585,6 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 curl_multi_perform(multi_handle, &still_running);
 
                 std::cout<<"here"<<std::endl;
-                int still_running=0;
                 /* lets start the fetch */
                 do {
                         while(::curl_multi_perform(multi_handle, &still_running) ==
@@ -603,9 +602,10 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                                                                    
                 /* free slist */ 
                 curl_slist_free_all (headerlist);
+                curl_slist_free_all (attachlist);
             }
 
-    curl_easy_cleanup(pCurl);
+        curl_easy_cleanup(pCurl);
 }
 
 
@@ -624,9 +624,9 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 {
     
 
-        CURL* pCurl = curl_easy_init();
-        CURLM *multi_handle;
-        int still_running;
+        CURL* pCurl = 0;
+        CURLM *multi_handle = 0;
+        int still_running = 0;
 
         curl_slist *headerlist=NULL;
         static const char buf[] = "Expect:";
@@ -705,6 +705,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
         //tdata* s = CreateDataObject();
         
+        pCurl = curl_easy_init();
         multi_handle = curl_multi_init();
        
         /* initalize custom header list (stating that Expect: 100-continue is not
@@ -714,10 +715,10 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         if(pCurl && multi_handle)
         {
             if(verbose)
-                curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+                curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
                 
             std::string urlPath = url;
-            EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+            EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
             curl_slist *headers=NULL;
              
@@ -740,19 +741,21 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             // Set read response func and data
             //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
             //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
+
+            curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+            curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
         
-                std::cout<<"here"<<std::endl;
+            std::cout<<"here"<<std::endl;
             curl_multi_perform(multi_handle, &still_running);
 
-                std::cout<<"here"<<std::endl;
-            int still_running=0;
+            std::cout<<"here"<<std::endl;
             /* lets start the fetch */
             do {
                     while(::curl_multi_perform(multi_handle, &still_running) ==
                                     CURLM_CALL_MULTI_PERFORM);
             } while (still_running);
 
-                std::cout<<"here"<<std::endl;
+            std::cout<<"here"<<std::endl;
             std::cout<<"finished..."<<std::endl;
             //responseOut.clear();
             //responseOut.append(ExtractDataToString(s));
@@ -764,6 +767,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                                                                
             /* free slist */ 
             curl_slist_free_all (headerlist);
+            curl_slist_free_all (attachlist);
         }
 
     curl_easy_cleanup(pCurl);

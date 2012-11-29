@@ -41,7 +41,8 @@ ret::eCode AccessToken::LoadFromFile(const std::string& szFilePath)
         return ret::A_FAIL_OPEN;
 
     unsigned int size = utils::CheckIStreamSize(ifs);
-    char* pBuf = new char[size];
+    char* pBuf = new char[size+1];
+    pBuf[size] = '\0';
 
     ifs.read(pBuf, size);
 
@@ -54,7 +55,7 @@ ret::eCode AccessToken::LoadFromFile(const std::string& szFilePath)
 
     if(pBuf)
     {
-        delete pBuf;
+        delete[] pBuf;
         pBuf = 0;
     }
     
@@ -202,7 +203,8 @@ ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
         return ret::A_FAIL_OPEN;
 
     unsigned int size = utils::CheckIStreamSize(ifs);
-    char* pBuf = new char[size];
+    char* pBuf = new char[size+1];
+    pBuf[size] = '\0';
 
     ifs.read(pBuf, size);
 
@@ -215,7 +217,7 @@ ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
 
     if(pBuf)
     {
-        delete pBuf;
+        delete[] pBuf;
         pBuf = 0;
     }
     

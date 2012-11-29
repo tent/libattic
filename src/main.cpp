@@ -272,7 +272,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFile("./data/oa.pdf");
+    status = PushFile("./data/test");
 
     if(status != ret::A_OK)
     {
@@ -293,7 +293,7 @@ TEST(GET, COUNT)
     // Set Working Dir first
     SetWorkingDirectory("./data");
 
-    int status = LoadAppFromFile();
+   int status = LoadAppFromFile();
 
     if(status != ret::A_OK)
     {
