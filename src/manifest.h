@@ -13,16 +13,25 @@
 #include <string>
 #include <map>
 
+#include <sqlite3.h>
+
 class FileInfo;
 
 class Manifest
 {
+    void OpenSqliteDb();
+    void CheckIfTableExists(const std::string &tableName);
+
+
     bool WriteOutManifestHeader(std::ofstream &ofs);
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
     Manifest();
     ~Manifest();
+
+    void Initialize();
+    void Shutdown();
 
     bool CreateEmptyManifest();
     bool WriteOutManifest();    
@@ -46,6 +55,7 @@ private:
     EntriesMap            m_entries;  // Do not delete entries, just clear the map.
                                       // FileInfoFactory will take care of deletion.
 
+    sqlite3*            m_pDb;
     std::ifstream       m_ifStream;
     std::ofstream       m_ofStream;
 

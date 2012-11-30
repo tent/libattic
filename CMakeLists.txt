@@ -74,7 +74,8 @@ project(libattic)
 
 file(GLOB_RECURSE libattic_SOURCE 
     "src/*.cpp"
-    "src/*.c")
+    "src/*.c"
+    "third_party/sqlite/*.c")
 
 file(GLOB_RECURSE libattic_HEADERS 
     "src/*.h")

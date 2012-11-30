@@ -10,6 +10,8 @@
 #include "fileinfo.h"
 #include "utils.h"
 
+
+
 Manifest::Manifest()
 {
     // Set the default filename
@@ -36,7 +38,39 @@ Manifest::~Manifest()
  * - PostVersion
  */
 
+ void Manifest::Initialize()
+ {
 
+ }
+ 
+ void Manifest::Shutdown()
+ {
+
+ }
+
+void Manifest::OpenSqliteDb()
+{
+    int rc = sqlite3_open("test.db", &m_pDb);
+    if( rc )
+    {
+        // failed
+        std::cout<< "Can't open database: " << sqlite3_errmsg(m_pDb);
+    }
+    else
+    {
+        // success
+        std::cout << "Open database successfully" << std::endl;
+    }
+}
+
+void CheckIfTableExists(const std::string &tableName)
+{
+    if(!m_pDb)
+        return;
+
+
+
+}
 bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
 {
     if(ofs)
