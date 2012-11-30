@@ -124,11 +124,13 @@ public:
                            const char* pData,
                            unsigned int uSize,
                            bool verbose = false);
+
+    
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;
 
-    CURL* m_pCurl;  // Curl instance
+    //CURL* m_pCurl;  // Curl instance
 };
 
 #endif

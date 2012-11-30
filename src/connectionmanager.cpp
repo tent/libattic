@@ -82,13 +82,13 @@ void ConnectionManager::Initialize()
     utils::SeedRand();
 
 //    curl_global_init(CURL_GLOBAL_DEFAULT);
-    m_pCurl = curl_easy_init();
+//    pCurl = curl_easy_init();
 }
 
 void ConnectionManager::Shutdown()
 {
-    if(m_pCurl)
-        curl_easy_cleanup(m_pCurl);
+//    if(pCurl)
+ //       curl_easy_cleanup(pCurl);
 
  //   curl_global_cleanup();
 
@@ -122,8 +122,6 @@ void ConnectionManager::HttpDelete( const std::string &url,
                                     const std::string &szMacKey, 
                                     bool verbose)
 {
-    //if(m_pCurl)
-    {
 
         CURL* pCurl = curl_easy_init();
         CURLcode res; 
@@ -146,7 +144,7 @@ void ConnectionManager::HttpDelete( const std::string &url,
         headers = curl_slist_append(headers, authheader.c_str());
 
         curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
         curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
@@ -164,7 +162,6 @@ void ConnectionManager::HttpDelete( const std::string &url,
         }
 
         curl_easy_cleanup(pCurl);
-    }
 
 }
 
@@ -174,33 +171,33 @@ void ConnectionManager::HttpGet( const std::string &url,
                                  std::string &out, 
                                  bool verbose)
 {
-    if(m_pCurl)
+
+    CURL* pCurl = curl_easy_init();
+    CURLcode res; 
+    tdata* s = CreateDataObject();
+
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
+
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s);
+
+    res = curl_easy_perform(pCurl);
+
+    if(res != CURLE_OK)
     {
-        CURLcode res; 
-        tdata* s = CreateDataObject();
-
-        if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
-
-        std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
-
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
-
-        res = curl_easy_perform(m_pCurl);
-
-        if(res != CURLE_OK)
-        {
-            std::cout<<"ERRR"<<std::endl;
-            return;
-        }
-
-        out.append(ExtractDataToString(s));
-        DestroyDataObject(s);
+        std::cout<<"ERRR"<<std::endl;
+        return;
     }
+
+    out.append(ExtractDataToString(s));
+    DestroyDataObject(s);
+
+    curl_easy_cleanup(pCurl);
 }
 
 void ConnectionManager::HttpGetWithAuth( const std::string &url, 
@@ -211,15 +208,15 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
                                          const std::string &szMacKey, 
                                          bool verbose)
 {
-    if(m_pCurl)
-    {
+
+        CURL* pCurl = curl_easy_init();
         CURLcode res; 
 
         if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
         std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
         // TODO :: ABSTRACT HEADERS OUT
@@ -239,22 +236,22 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
 
         std::cout << " GETTING URL " << url << std::endl;
         std::cout << " URLPATH : " <<urlPath << std::endl;
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
         
         /*
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s);
 */
 
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, &out);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &out);
 
         // Write out headers 
-        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
 
-        res = curl_easy_perform(m_pCurl);
+        res = curl_easy_perform(pCurl);
 
 
         std::cout<< "OUT SIZE : " << out.size() << std::endl;
@@ -268,7 +265,8 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
 
 
         curl_slist_free_all (headers);
-    }
+
+    curl_easy_cleanup(pCurl);
 }
 
 void ConnectionManager::HttpGetAttachment( const std::string &url, 
@@ -279,8 +277,8 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
                                            const std::string &szMacKey, 
                                            bool verbose)
 {
-    if(m_pCurl)
-    {
+
+        CURL* pCurl = curl_easy_init();
         CURLcode res; 
         tdata* s = CreateDataObject();
 
@@ -289,10 +287,10 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
         fp = fopen("ctest", "wb");
 
         if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
         std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
         // TODO :: ABSTRACT HEADERS OUT
@@ -306,20 +304,20 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
         headers = curl_slist_append(headers, authheader.c_str());
 
         std::cout << " GETTING URL " << url << std::endl;
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(m_pCurl, CURLOPT_NOBODY, 1);
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
 
-        //curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        //curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s);
+        //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
+        //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s);
 
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, fp);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, fp);
 
         // Write out headers 
-        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
 
-        res = curl_easy_perform(m_pCurl);
+        res = curl_easy_perform(pCurl);
 
         if(res != CURLE_OK)
         {
@@ -340,7 +338,8 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
         out.clear();
         out.append(ExtractDataToString(s));
         DestroyDataObject(s);
-    }
+
+    curl_easy_cleanup(pCurl);
 
 }
 
@@ -352,8 +351,7 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
                                                       const std::string &szMacKey, 
                                                       bool verbose)
 {
-    if(m_pCurl)
-    {
+        CURL* pCurl = curl_easy_init();
         CURLcode res; 
 
         // Write out to file
@@ -361,10 +359,10 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
         fp = fopen(szFilePath.c_str(), "wb");
 
         if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
         std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append(headers, "Accept: application/octet-stream" );
@@ -374,14 +372,14 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
         BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, write_data);
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, fp);
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, fp);
 
         // Write out headers 
-        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
-        res = curl_easy_perform(m_pCurl);
+        res = curl_easy_perform(pCurl);
 
         if(res != CURLE_OK)
         {
@@ -393,7 +391,8 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
         fclose(fp);
 
         curl_slist_free_all (headers);
-    }
+
+    curl_easy_cleanup(pCurl);
 
 }
 
@@ -404,8 +403,8 @@ void ConnectionManager::HttpPost( const std::string &url,
                                   std::string &responseOut, 
                                   bool verbose)
 {
-    if(m_pCurl)
-    {
+
+    CURL* pCurl = curl_easy_init();
         WriteOut postd; // Post content to be read
         postd.readptr = body.c_str(); // serialized json (should be)
         postd.sizeleft = body.size();
@@ -414,10 +413,10 @@ void ConnectionManager::HttpPost( const std::string &url,
         tdata* s = CreateDataObject();
 
         if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
 
         std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
         curl_slist *headers = 0; // Init to null, always
         headers = curl_slist_append( headers, 
@@ -427,24 +426,24 @@ void ConnectionManager::HttpPost( const std::string &url,
                                      "Content-Type: application/vnd.tent.v0+json");
 
         // Set url
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
         // Set that we want to Post
-        curl_easy_setopt(m_pCurl, CURLOPT_POST, 1L);
+        curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
         // Set the read function
-        curl_easy_setopt(m_pCurl, CURLOPT_READFUNCTION, read_callback);
+        curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, read_callback);
 
         // Set Post data 
-        curl_easy_setopt(m_pCurl, CURLOPT_READDATA, &postd);
-        curl_easy_setopt(m_pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
+        curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
+        curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
 
         // Write out headers 
-        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
         // Set read response func and data
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
         
-        res = curl_easy_perform(m_pCurl);
+        res = curl_easy_perform(pCurl);
 
         if(res != CURLE_OK)
         {
@@ -454,7 +453,8 @@ void ConnectionManager::HttpPost( const std::string &url,
         responseOut.clear();
         responseOut.append(ExtractDataToString(s));
         DestroyDataObject(s);
-    }
+
+    curl_easy_cleanup(pCurl);
 }
 
 void ConnectionManager::HttpMultipartPut( const std::string &url, 
@@ -569,7 +569,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
                 curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
 
-                //curl_easy_setopt(m_pCurl, CURLOPT_PUT, 1L);
+                //curl_easy_setopt(pCurl, CURLOPT_PUT, 1L);
 
                 curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
 
@@ -894,58 +894,59 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
                                           const std::string &szMacKey, 
                                           bool verbose)
 {
-    if(m_pCurl)
+
+    CURL* pCurl = curl_easy_init();
+    WriteOut postd; // Post content to be read
+    postd.readptr = body.c_str(); // serialized json (should be)
+    postd.sizeleft = body.size();
+
+    CURLcode res; 
+    tdata* s = CreateDataObject();
+
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
+
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+    curl_slist *headers = 0; // Init to null, always
+    headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+    headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+
+    std::string authheader;
+    BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
+    headers = curl_slist_append(headers, authheader.c_str());
+
+    // Set url
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    // Set that we want to Post
+    curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
+    // Set the read function
+    curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, read_callback);
+
+    // Set Post data 
+    curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
+    curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
+
+    // Write out headers 
+    curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+
+    // Set read response func and data
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
+    
+    res = curl_easy_perform(pCurl);
+
+    if(res != CURLE_OK)
     {
-        WriteOut postd; // Post content to be read
-        postd.readptr = body.c_str(); // serialized json (should be)
-        postd.sizeleft = body.size();
-
-        CURLcode res; 
-        tdata* s = CreateDataObject();
-
-        if(verbose)
-            curl_easy_setopt(m_pCurl, CURLOPT_VERBOSE, 1L);   
-
-        std::string urlPath = url;
-        EncodeAndAppendUrlParams(m_pCurl, pParams, urlPath);
-
-        curl_slist *headers = 0; // Init to null, always
-        headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
-        headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
-
-        std::string authheader;
-        BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
-        headers = curl_slist_append(headers, authheader.c_str());
-
-        // Set url
-        curl_easy_setopt(m_pCurl, CURLOPT_URL, urlPath.c_str());
-        // Set that we want to Post
-        curl_easy_setopt(m_pCurl, CURLOPT_POST, 1L);
-        // Set the read function
-        curl_easy_setopt(m_pCurl, CURLOPT_READFUNCTION, read_callback);
-
-        // Set Post data 
-        curl_easy_setopt(m_pCurl, CURLOPT_READDATA, &postd);
-        curl_easy_setopt(m_pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
-
-        // Write out headers 
-        curl_easy_setopt(m_pCurl, CURLOPT_HTTPHEADER, headers);
-
-        // Set read response func and data
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-        curl_easy_setopt(m_pCurl, CURLOPT_WRITEDATA, s); 
-        
-        res = curl_easy_perform(m_pCurl);
-
-        if(res != CURLE_OK)
-        {
-            std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
-        }
-
-        responseOut.clear();
-        responseOut.append(ExtractDataToString(s));
-        DestroyDataObject(s);
+        std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
     }
+
+    responseOut.clear();
+    responseOut.append(ExtractDataToString(s));
+    DestroyDataObject(s);
+
+    curl_easy_cleanup(pCurl);
 
 }
 
@@ -1300,3 +1301,5 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
 
     return 0;                          /* no more data left to deliver */ 
 }
+
+
