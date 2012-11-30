@@ -402,7 +402,6 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     std::string postType("https://tent.io/types/post/attic/v0.1.0");
-    //std::string postType("https://tent.io/types/post/status/v0.1.0");
 
     // Create a post 
     Post p;
@@ -411,10 +410,9 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     p.SetPermission(std::string("public"), false);
 
     // Serialize Post
-    std::string postBuffer = "";
+    std::string postBuffer;
     JsonSerializer::SerializeObject(&p, postBuffer);
     std::cout << " POST BUFFER : " << postBuffer << std::endl;
-    
 
     // Read in file
     std::string filepath(szFilePath);
@@ -470,7 +468,11 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
     }
 
-    delete pData;
+    if(pData)
+    {
+        delete[] pData;
+        pData = 0;
+    }
 
     return ret::A_OK;
 }

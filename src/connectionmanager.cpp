@@ -472,10 +472,8 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 {
     
             CURL* pCurl;
-
-            std::cout<< " USIZE : " << uSize << std::endl;
-
             CURLM *multi_handle;
+            
             int still_running = 0;
 
             curl_httppost *formpost=NULL;
@@ -490,7 +488,6 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
             curl_slist *partlist = 0;
 
-            
             partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
             partlist = curl_slist_append(partlist, "Content-Length: 206");
             partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
@@ -513,19 +510,21 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
             cd.append("\"");
 
             attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
-            //attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
             attachlist = curl_slist_append(attachlist, cd.c_str());
 
             char szBuffer[256];
-            memset(szBuffer, 0, sizeof(char)*256);                                              
+            memset(szBuffer, '\0', sizeof(char)*256);                                              
             snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
 
             std::string cl("Content-Length: ");
             cl.append(szBuffer);
+
+            if(!pData)
+            {
+                std::cout<<"INVALID DATA PTR "<< std::endl;
+                return;
+            }
             
-
-            std::cout<< cl << std::endl;
-
             attachlist = curl_slist_append(attachlist,  cl.c_str());
             attachlist = curl_slist_append(attachlist, "Content-Type: binary");
 
@@ -540,7 +539,6 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                           CURLFORM_CONTENTHEADER, attachlist,
                           CURLFORM_END);
 
-            //tdata* s = CreateDataObject();
             pCurl = curl_easy_init(); 
             multi_handle = curl_multi_init();
            
@@ -568,9 +566,9 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
                 /* what URL that receives this POST */ 
                 curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-
                 curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
                 curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+
                 //curl_easy_setopt(m_pCurl, CURLOPT_PUT, 1L);
 
                 curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
@@ -585,11 +583,67 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 curl_multi_perform(multi_handle, &still_running);
 
                 std::cout<<"here"<<std::endl;
+
+                do {
+                    struct timeval timeout;
+                    int rc; /* select() return code */ 
+                 
+                    fd_set fdread;
+                    fd_set fdwrite;
+                    fd_set fdexcep;
+                    int maxfd = -1;
+                                          
+                    long curl_timeo = -1;
+                                                 
+                    FD_ZERO(&fdread);
+                    FD_ZERO(&fdwrite);
+                    FD_ZERO(&fdexcep);
+                                                               
+                    /* set a suitable timeout to play around with */ 
+                    timeout.tv_sec = 1;
+                    timeout.tv_usec = 0;
+                           
+                    curl_multi_timeout(multi_handle, &curl_timeo);
+                    if(curl_timeo >= 0) {
+                       timeout.tv_sec = curl_timeo / 1000;
+                       if(timeout.tv_sec > 1)
+                            timeout.tv_sec = 1;
+                       else
+                            timeout.tv_usec = (curl_timeo % 1000) * 1000;
+                     }
+                                                                                                                                      
+                    /* get file descriptors from the transfers */ 
+                    curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+                    /* In a real-world program you OF COURSE check the return code of the
+                    function calls.  On success, the value of maxfd is guaranteed to be
+                    greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                    case of (maxfd == -1), we call select(0, ...), which is basically equal
+                    to sleep. */ 
+
+                    rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+
+                    switch(rc) {
+                    case -1:
+                    /* select error */ 
+                    break;
+                    case 0:
+                    default:
+                    /* timeout or readable/writable sockets */ 
+                    printf("perform!\n");
+                    curl_multi_perform(multi_handle, &still_running);
+                    printf("running: %d!\n", still_running);
+                    break;
+                    }
+                } while(still_running);
+
                 /* lets start the fetch */
+                /*
                 do {
                         while(::curl_multi_perform(multi_handle, &still_running) ==
                                         CURLM_CALL_MULTI_PERFORM);
                 } while (still_running);
+                */
                 std::cout<<"here"<<std::endl;
 
                 //responseOut.clear();
@@ -602,6 +656,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                                                                    
                 /* free slist */ 
                 curl_slist_free_all (headerlist);
+                curl_slist_free_all (partlist);
                 curl_slist_free_all (attachlist);
             }
 
@@ -629,10 +684,9 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         int still_running = 0;
 
         curl_slist *headerlist=NULL;
-        static const char buf[] = "Expect:";
-        
         curl_httppost *formpost=NULL;
         curl_httppost *lastptr=NULL;
+        static const char buf[] = "Expect:";
 
         // Add json
         WriteOut postd; // Post content to be read
@@ -640,19 +694,15 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         postd.sizeleft = szBody.size();
 
         curl_slist *partlist = 0;
-
         
         partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
 
         char szLen[256];
-        memset(szLen, 0, sizeof(char)*256);                                              
+        memset(szLen, '\0', sizeof(char)*256);                                              
         snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
 
         std::string jcl("Content-Length: ");
         jcl.append(szLen);
-
-        std::cout<< " JCL : " << jcl << std::endl;
-
 
         partlist = curl_slist_append(partlist, jcl.c_str());
         partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
@@ -680,9 +730,8 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
         //
         char szBuffer[256];
-        memset(szBuffer, 0, sizeof(char)*256);                                              
+        memset(szBuffer, '\0', sizeof(char)*256);                                              
         snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
-        //
 
         std::string cl("Content-Length: ");
         cl.append(szBuffer);
@@ -694,13 +743,19 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         attachlist = curl_slist_append(attachlist,  cl.c_str());
         attachlist = curl_slist_append(attachlist, "Content-Type: application/octet-stream");
 
+        if(!pData)
+        {
+            std::cout<<"INVALID DATA PTR"<<std::endl;
+            return;
+        }
+
         curl_formadd( &formpost,
-                        &lastptr,
-                          CURLFORM_COPYNAME, "attatchment",
-                          CURLFORM_PTRCONTENTS, pData,
-                          CURLFORM_CONTENTSLENGTH, uSize,
-                          CURLFORM_CONTENTHEADER, attachlist,
-                          CURLFORM_END);
+                      &lastptr,
+                      CURLFORM_COPYNAME, "attatchment",
+                      CURLFORM_PTRCONTENTS, pData,
+                      CURLFORM_CONTENTSLENGTH, uSize,
+                      CURLFORM_CONTENTHEADER, attachlist,
+                      CURLFORM_END);
 
 
         //tdata* s = CreateDataObject();
@@ -751,10 +806,64 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             std::cout<<"here"<<std::endl;
             /* lets start the fetch */
             do {
+                    struct timeval timeout;
+                    int rc; /* select() return code */ 
+                 
+                    fd_set fdread;
+                    fd_set fdwrite;
+                    fd_set fdexcep;
+                    int maxfd = -1;
+                                          
+                    long curl_timeo = -1;
+                                                 
+                    FD_ZERO(&fdread);
+                    FD_ZERO(&fdwrite);
+                    FD_ZERO(&fdexcep);
+                                                               
+                    /* set a suitable timeout to play around with */ 
+                    timeout.tv_sec = 1;
+                    timeout.tv_usec = 0;
+                           
+                    curl_multi_timeout(multi_handle, &curl_timeo);
+                    if(curl_timeo >= 0) {
+                       timeout.tv_sec = curl_timeo / 1000;
+                       if(timeout.tv_sec > 1)
+                            timeout.tv_sec = 1;
+                       else
+                            timeout.tv_usec = (curl_timeo % 1000) * 1000;
+                     }
+                                                                                                                                      
+                    /* get file descriptors from the transfers */ 
+                    curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+                    /* In a real-world program you OF COURSE check the return code of the
+                    function calls.  On success, the value of maxfd is guaranteed to be
+                    greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                    case of (maxfd == -1), we call select(0, ...), which is basically equal
+                    to sleep. */ 
+
+                    rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+
+                    switch(rc) {
+                    case -1:
+                    /* select error */ 
+                    break;
+                    case 0:
+                    default:
+                    /* timeout or readable/writable sockets */ 
+                    printf("perform!\n");
+                    curl_multi_perform(multi_handle, &still_running);
+                    printf("running: %d!\n", still_running);
+                    break;
+                    }
+                } while(still_running);
+
+/*
+            do {
                     while(::curl_multi_perform(multi_handle, &still_running) ==
                                     CURLM_CALL_MULTI_PERFORM);
             } while (still_running);
-
+*/
             std::cout<<"here"<<std::endl;
             std::cout<<"finished..."<<std::endl;
             //responseOut.clear();
@@ -767,6 +876,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                                                                
             /* free slist */ 
             curl_slist_free_all (headerlist);
+            curl_slist_free_all (partlist);
             curl_slist_free_all (attachlist);
         }
 
