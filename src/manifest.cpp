@@ -63,7 +63,7 @@ void Manifest::OpenSqliteDb()
     }
 }
 
-void CheckIfTableExists(const std::string &tableName)
+void Manifest::CheckIfTableExists(const std::string &tableName)
 {
     if(!m_pDb)
         return;
