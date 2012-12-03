@@ -3,6 +3,7 @@
 #define CONNECTIONMANAGER_H_
 #pragma once
 
+#include <list>
 #include <string>
 #include <curl/curl.h>
 
@@ -25,6 +26,16 @@ class ConnectionManager
 
     void GenerateNonce(std::string &out);
     void GenerateHmacSha256(std::string &out);
+
+    curl_slist* AddBodyToForm( const std::string &body,
+                               curl_httppost *post, 
+                               curl_httppost *last, 
+                               curl_slist *list);
+
+    curl_slist* AddAttachmentToForm( const std::string &path, 
+                              curl_httppost *post, 
+                              curl_httppost *last, 
+                              curl_slist *list);
 public:
 
     void BuildAuthHeader( const std::string &url, 
@@ -112,6 +123,18 @@ public:
                             unsigned int uSize,
                             bool verbose = false);
 
+    // This is the replacement for all other mutlipart posts pending testing
+    void HttpMultipartPost( const std::string &url, 
+                            const UrlParams* pParams,
+                            const std::string &szBody, 
+                            std::list<std::string>* filepaths, 
+                            std::string &responseOut, 
+                            const std::string &szMacAlgorithm, 
+                            const std::string &szMacID, 
+                            const std::string &szMacKey, 
+                            bool verbose = false);
+
+
     void HttpMultipartPut( const std::string &url, 
                            const UrlParams* pParams,
                            const std::string &szBody, 
@@ -125,6 +148,16 @@ public:
                            unsigned int uSize,
                            bool verbose = false);
 
+    // This is the replacement for all other multipart puts, pending testing
+    void HttpMultipartPut( const std::string &url, 
+                            const UrlParams* pParams,
+                            const std::string &szBody, 
+                            std::list<std::string>* filepaths, 
+                            std::string &responseOut, 
+                            const std::string &szMacAlgorithm, 
+                            const std::string &szMacID, 
+                            const std::string &szMacKey, 
+                            bool verbose = false);
     
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation

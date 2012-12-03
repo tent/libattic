@@ -308,7 +308,7 @@ int LoadAppFromFile()
 
     return ret::A_OK;
 }
-
+#include <list>
 // utility
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 {
@@ -358,18 +358,18 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
+    std::list<std::string> paths;
+    paths.push_back(filepath);
+
 
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          NULL,
                                                          postBuffer, 
-                                                         filepath, 
-                                                         filename,
+                                                         &paths, 
                                                          response, 
                                                          g_at.GetMacAlgorithm(), 
                                                          g_at.GetAccessToken(), 
                                                          g_at.GetMacKey(), 
-                                                         pData,
-                                                         size,
                                                          true);
     
     std::cout<<"RESPONSE : " << response << std::endl;
@@ -441,20 +441,20 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
+    std::list<std::string> paths;
+    paths.push_back(filepath);
+
 
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                         NULL,
                                                         postBuffer, 
-                                                        filepath, 
-                                                        filename,
+                                                        &paths, 
                                                         response, 
                                                         g_at.GetMacAlgorithm(), 
                                                         g_at.GetAccessToken(), 
                                                         g_at.GetMacKey(), 
-                                                        pData,
-                                                        size,
                                                         true);
-    
+ 
     std::cout<<"RESPONSE : " << response << std::endl;
 
     JsonSerializer::DeserializeObject(&p, response);
@@ -524,6 +524,7 @@ int PushFile(const char* szFilePath)
         std::cout<< " POST URL : " << posturl << std::endl;
 
         return PutFile(posturl.c_str(), szFilePath, fi);
+
     }
 
     return ret::A_OK;

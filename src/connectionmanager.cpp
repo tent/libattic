@@ -460,6 +460,188 @@ void ConnectionManager::HttpPost( const std::string &url,
 void ConnectionManager::HttpMultipartPut( const std::string &url, 
                                           const UrlParams* pParams,
                                           const std::string &szBody, 
+                                          std::list<std::string>* filepaths, 
+                                          std::string &responseOut, 
+                                          const std::string &szMacAlgorithm, 
+                                          const std::string &szMacID, 
+                                          const std::string &szMacKey, 
+                                          bool verbose)
+{
+    // Send Multiple files as attachments
+    CURL* pCurl = 0;
+    CURLM *multi_handle = 0;
+    int still_running = 0;
+
+    curl_slist      *headerlist=NULL;
+    curl_httppost   *formpost=NULL;
+    curl_httppost   *lastptr=NULL;
+
+    static const char szExpectBuf[] = "Expect:";
+
+    curl_slist *partlist = 0;
+
+/*
+    partlist = AddBodyToForm( szBody,
+                              formpost,
+                              lastptr,
+                              partlist );
+   */ 
+
+    // Fill out json header
+    partlist = curl_slist_append( partlist, 
+                                  "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
+
+    char szLen[256];
+    memset(szLen, '\0', sizeof(char)*256);                                              
+    snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
+
+    std::string jcl("Content-Length: ");
+    jcl.append(szLen);
+
+    partlist = curl_slist_append(partlist, jcl.c_str());
+    partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
+    partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
+
+    curl_formadd( &formpost,
+                  &lastptr,
+                  CURLFORM_COPYNAME, "jsonbody",
+                  CURLFORM_COPYCONTENTS, szBody.c_str(),
+                  CURLFORM_CONTENTHEADER, partlist,
+                  CURLFORM_END);
+    
+    // Add Attachment(s)
+    curl_slist *attachlist = 0;
+
+    std::list<std::string>::iterator itr = filepaths->begin();
+    // Go through file 
+    for(; itr != filepaths->end(); itr++) 
+    {
+        std::cout<<"Adding attachment ... " << std::endl;
+        attachlist = AddAttachmentToForm( *itr, 
+                             formpost,
+                             lastptr,
+                             attachlist);
+    }
+    
+    pCurl = curl_easy_init();
+    multi_handle = curl_multi_init();
+   
+    /* initalize custom header list (stating that Expect: 100-continue is not
+    *      wanted */ 
+
+    headerlist = curl_slist_append(headerlist, szExpectBuf);
+
+    if(pCurl && multi_handle)
+    {
+        if(verbose)
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
+            
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+        curl_slist *headers=NULL;
+         
+        headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
+        headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
+        //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
+
+        std::string authheader;
+        BuildAuthHeader(urlPath, std::string("PUT"), szMacID, szMacKey, authheader);
+        headerlist = curl_slist_append(headerlist, authheader.c_str());
+
+        /* what URL that receives this POST */ 
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
+        curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+
+        curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
+
+        curl_multi_add_handle(multi_handle, pCurl);
+
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+    
+        curl_multi_perform(multi_handle, &still_running);
+
+        /* lets start the fetch */
+        do {
+                struct timeval timeout;
+                int rc; /* select() return code */ 
+             
+                fd_set fdread;
+                fd_set fdwrite;
+                fd_set fdexcep;
+                int maxfd = -1;
+                                      
+                long curl_timeo = -1;
+                                             
+                FD_ZERO(&fdread);
+                FD_ZERO(&fdwrite);
+                FD_ZERO(&fdexcep);
+                                                           
+                /* set a suitable timeout to play around with */ 
+                timeout.tv_sec = 1;
+                timeout.tv_usec = 0;
+                       
+                curl_multi_timeout(multi_handle, &curl_timeo);
+                if(curl_timeo >= 0) {
+                   timeout.tv_sec = curl_timeo / 1000;
+                   if(timeout.tv_sec > 1)
+                        timeout.tv_sec = 1;
+                   else
+                        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+                 }
+                                                                                                                                  
+                /* get file descriptors from the transfers */ 
+                curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+                /* In a real-world program you OF COURSE check the return code of the
+                function calls.  On success, the value of maxfd is guaranteed to be
+                greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                case of (maxfd == -1), we call select(0, ...), which is basically equal
+                to sleep. */ 
+
+                rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+
+                switch(rc) {
+                case -1:
+                /* select error */ 
+                break;
+                case 0:
+                default:
+                /* timeout or readable/writable sockets */ 
+                printf("perform!\n");
+                curl_multi_perform(multi_handle, &still_running);
+                printf("running: %d!\n", still_running);
+                break;
+                }
+            } while(still_running);
+
+/*
+        do {
+                while(::curl_multi_perform(multi_handle, &still_running) ==
+                                CURLM_CALL_MULTI_PERFORM);
+        } while (still_running);
+*/
+
+        curl_multi_cleanup(multi_handle);
+
+        /* then cleanup the formpost chain */ 
+        curl_formfree(formpost);
+                                                           
+        /* free slist */ 
+        curl_slist_free_all (headerlist);
+        curl_slist_free_all (partlist);
+        curl_slist_free_all (attachlist);
+    }
+
+    curl_easy_cleanup(pCurl);
+
+}
+
+void ConnectionManager::HttpMultipartPut( const std::string &url, 
+                                          const UrlParams* pParams,
+                                          const std::string &szBody, 
                                           const std::string &szFilePath, 
                                           const std::string &szFileName,
                                           std::string &responseOut, 
@@ -677,7 +859,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
                                            unsigned int uSize,
                                            bool verbose)
 {
-    
+        // Standard multipart 
 
         CURL* pCurl = 0;
         CURLM *multi_handle = 0;
@@ -752,7 +934,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         curl_formadd( &formpost,
                       &lastptr,
                       CURLFORM_COPYNAME, "attatchment",
-                      CURLFORM_PTRCONTENTS, pData,
+                      CURLFORM_COPYCONTENTS, pData,
                       CURLFORM_CONTENTSLENGTH, uSize,
                       CURLFORM_CONTENTHEADER, attachlist,
                       CURLFORM_END);
@@ -879,6 +1061,269 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             curl_slist_free_all (partlist);
             curl_slist_free_all (attachlist);
         }
+
+    curl_easy_cleanup(pCurl);
+}
+
+curl_slist* ConnectionManager::AddBodyToForm( const std::string &body,
+                                              curl_httppost *post, 
+                                              curl_httppost *last, 
+                                              curl_slist *list)
+{
+    // Fill out json header
+    list = curl_slist_append( list, 
+                              "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
+
+    std::cout<< "BODY : " << body << std::endl;
+    char szLen[256];
+    memset(szLen, '\0', sizeof(char)*256);                                              
+    snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
+
+    std::string jcl("Content-Length: ");
+    jcl.append(szLen);
+
+    list = curl_slist_append(list, jcl.c_str());
+    list = curl_slist_append(list, "Content-Type: application/vnd.tent.v0+json");
+    list = curl_slist_append(list, "Content-Transfer-Encoding: binary");
+
+    curl_formadd( &post,
+                  &last,
+                  CURLFORM_COPYNAME, "jsonbody",
+                  CURLFORM_COPYCONTENTS, body.c_str(),
+                  CURLFORM_CONTENTHEADER, list,
+                  CURLFORM_END);
+
+    return list;
+}
+
+
+
+curl_slist* ConnectionManager::AddAttachmentToForm( const std::string &path, 
+                                             curl_httppost *post, 
+                                             curl_httppost *last, 
+                                             curl_slist *list)
+{
+    // Addes an attachment as a part to the form
+
+    // Extract Filename
+    std::string name;
+    utils::ExtractFileName(path, name);
+
+    // Get Filesize
+    unsigned int uSize = utils::CheckFileSize(path);
+
+    // Gather some information about the content
+    std::string cd;
+    cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
+    cd += name;
+    cd.append("\"");
+
+    list = curl_slist_append(list, "Content-Transfer-Encoding: binary");
+    list = curl_slist_append(list, cd.c_str());
+    
+    // Append size to a string
+    char szBuffer[256];
+    memset(szBuffer, '\0', sizeof(char)*256);                                              
+    snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
+
+    std::string cl("Content-Length: ");
+    cl.append(szBuffer);
+
+    std::cout<< "CL : " << cl <<std::endl;
+    std::cout<< "USIZE : " << uSize << std::endl;
+        
+    list = curl_slist_append(list,  cl.c_str());
+    list = curl_slist_append(list, "Content-Type: application/octet-stream");
+
+    std::cout << " name : " << name << std::endl;
+    std::cout << " path : " << path << std::endl;
+
+    curl_formadd( &post, 
+                  &last, 
+                  CURLFORM_COPYNAME, name.c_str(),
+                  CURLFORM_FILE, path.c_str(), 
+                  CURLFORM_CONTENTHEADER, list,
+                  CURLFORM_END);     
+
+    return list;
+
+}
+
+void ConnectionManager::HttpMultipartPost( const std::string &url, 
+                                           const UrlParams* pParams,
+                                           const std::string &szBody, 
+                                           std::list<std::string>* filepaths, 
+                                           std::string &responseOut, 
+                                           const std::string &szMacAlgorithm, 
+                                           const std::string &szMacID, 
+                                           const std::string &szMacKey, 
+                                           bool verbose)
+{
+    // Send Multiple files as attachments
+    CURL* pCurl = 0;
+    CURLM *multi_handle = 0;
+    int still_running = 0;
+
+    curl_slist      *headerlist=NULL;
+    curl_httppost   *formpost=NULL;
+    curl_httppost   *lastptr=NULL;
+
+    static const char szExpectBuf[] = "Expect:";
+
+    curl_slist *partlist = 0;
+
+/*
+    partlist = AddBodyToForm( szBody,
+                              formpost,
+                              lastptr,
+                              partlist );
+   */ 
+
+    // Fill out json header
+    partlist = curl_slist_append( partlist, 
+                                  "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
+
+    char szLen[256];
+    memset(szLen, '\0', sizeof(char)*256);                                              
+    snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
+
+    std::string jcl("Content-Length: ");
+    jcl.append(szLen);
+
+    partlist = curl_slist_append(partlist, jcl.c_str());
+    partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
+    partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
+
+    curl_formadd( &formpost,
+                  &lastptr,
+                  CURLFORM_COPYNAME, "jsonbody",
+                  CURLFORM_COPYCONTENTS, szBody.c_str(),
+                  CURLFORM_CONTENTHEADER, partlist,
+                  CURLFORM_END);
+    
+    // Add Attachment(s)
+    curl_slist *attachlist = 0;
+
+    std::list<std::string>::iterator itr = filepaths->begin();
+    // Go through file 
+    for(; itr != filepaths->end(); itr++) 
+    {
+        std::cout<<"Adding attachment ... " << std::endl;
+        attachlist = AddAttachmentToForm( *itr, 
+                             formpost,
+                             lastptr,
+                             attachlist);
+    }
+    
+    pCurl = curl_easy_init();
+    multi_handle = curl_multi_init();
+   
+    /* initalize custom header list (stating that Expect: 100-continue is not
+    *      wanted */ 
+
+    headerlist = curl_slist_append(headerlist, szExpectBuf);
+
+    if(pCurl && multi_handle)
+    {
+        if(verbose)
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
+            
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+        curl_slist *headers=NULL;
+         
+        headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
+        headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
+        //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
+
+        std::string authheader;
+        BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
+        headerlist = curl_slist_append(headerlist, authheader.c_str());
+
+        /* what URL that receives this POST */ 
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
+        curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
+
+        curl_multi_add_handle(multi_handle, pCurl);
+
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+    
+        curl_multi_perform(multi_handle, &still_running);
+
+        /* lets start the fetch */
+        do {
+                struct timeval timeout;
+                int rc; /* select() return code */ 
+             
+                fd_set fdread;
+                fd_set fdwrite;
+                fd_set fdexcep;
+                int maxfd = -1;
+                                      
+                long curl_timeo = -1;
+                                             
+                FD_ZERO(&fdread);
+                FD_ZERO(&fdwrite);
+                FD_ZERO(&fdexcep);
+                                                           
+                /* set a suitable timeout to play around with */ 
+                timeout.tv_sec = 1;
+                timeout.tv_usec = 0;
+                       
+                curl_multi_timeout(multi_handle, &curl_timeo);
+                if(curl_timeo >= 0) {
+                   timeout.tv_sec = curl_timeo / 1000;
+                   if(timeout.tv_sec > 1)
+                        timeout.tv_sec = 1;
+                   else
+                        timeout.tv_usec = (curl_timeo % 1000) * 1000;
+                 }
+                                                                                                                                  
+                /* get file descriptors from the transfers */ 
+                curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
+
+                /* In a real-world program you OF COURSE check the return code of the
+                function calls.  On success, the value of maxfd is guaranteed to be
+                greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                case of (maxfd == -1), we call select(0, ...), which is basically equal
+                to sleep. */ 
+
+                rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+
+                switch(rc) {
+                case -1:
+                /* select error */ 
+                break;
+                case 0:
+                default:
+                /* timeout or readable/writable sockets */ 
+                printf("perform!\n");
+                curl_multi_perform(multi_handle, &still_running);
+                printf("running: %d!\n", still_running);
+                break;
+                }
+            } while(still_running);
+
+/*
+        do {
+                while(::curl_multi_perform(multi_handle, &still_running) ==
+                                CURLM_CALL_MULTI_PERFORM);
+        } while (still_running);
+*/
+
+        curl_multi_cleanup(multi_handle);
+
+        /* then cleanup the formpost chain */ 
+        curl_formfree(formpost);
+                                                           
+        /* free slist */ 
+        curl_slist_free_all (headerlist);
+        curl_slist_free_all (partlist);
+        curl_slist_free_all (attachlist);
+    }
 
     curl_easy_cleanup(pCurl);
 }

@@ -12,7 +12,7 @@ cmake_minimum_required (VERSION 2.6)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
-set(CMAKE_CXX_FLAGS "-g")
+#set(CMAKE_CXX_FLAGS "-g")
 
 # Build dependencies
 # Build gtest libs
@@ -131,7 +131,7 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 
 ###############################################################################
 # To compile a static lib
-add_library(attic STATIC ${libattic_SOURCE})
+#add_library(attic STATIC ${libattic_SOURCE})
 
 ## this doesn't need to be set
 #SET_TARGET_PROPERTIES(attic PROPERTIES
@@ -140,10 +140,10 @@ add_library(attic STATIC ${libattic_SOURCE})
 
 ###############################################################################
 # To compile the test executable
-#add_executable(attic ${libattic_SOURCE})
+add_executable(attic ${libattic_SOURCE})
 
 #link libs
-#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 

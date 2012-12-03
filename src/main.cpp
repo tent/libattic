@@ -272,7 +272,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFile("./data/test");
+    status = PushFile("./data/test3");
 
     if(status != ret::A_OK)
     {
