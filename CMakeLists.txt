@@ -123,15 +123,15 @@ set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ./third_party/c5/lib/
 
 # Add jsoncpp
 add_library(imp_jsoncpp STATIC IMPORTED)
-set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.7/libjson_linux-gcc-4.7_libmt.a)
-#set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a)
+#set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.7/libjson_linux-gcc-4.7_libmt.a)
+set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp/libs/linux-gcc-4.6/libjson_linux-gcc-4.6_libmt.a)
 
 #ADD_LIBRARY(scrypt STATIC ./src/sha256.c ./src/crypto_scrypt-nosse.c)
 
 
 ###############################################################################
 # To compile a static lib
-#add_library(attic STATIC ${libattic_SOURCE})
+add_library(attic STATIC ${libattic_SOURCE})
 
 ## this doesn't need to be set
 #SET_TARGET_PROPERTIES(attic PROPERTIES
@@ -140,10 +140,10 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 
 ###############################################################################
 # To compile the test executable
-add_executable(attic ${libattic_SOURCE})
+#add_executable(attic ${libattic_SOURCE})
 
 #link libs
-target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 
