@@ -16,17 +16,17 @@ FileInfo::~FileInfo()
 
 }
 
-bool FileInfo::InitializeFile(const std::string &szFilePath)
+bool FileInfo::InitializeFile(const std::string &filepath)
 {
     // Check if Valid File
     //
     // Set filepath
-    m_FilePath = szFilePath;
+    m_FilePath = filepath;
     // Extract Filename
-    m_FileName = ExtractFileName(szFilePath); 
+    m_FileName = ExtractFileName(filepath); 
     // Check file size
     //if(!CheckFileSize())
-    m_FileSize = utils::CheckFileSize(szFilePath);
+    m_FileSize = utils::CheckFileSize(filepath);
 
     if(!m_FileSize)
         return false;
@@ -34,18 +34,18 @@ bool FileInfo::InitializeFile(const std::string &szFilePath)
     return true;
 }
 
-std::string FileInfo::ExtractFileName(const std::string &szFilePath)
+std::string FileInfo::ExtractFileName(const std::string &filepath)
 {
     std::string name;
-    unsigned int size = szFilePath.size();
+    unsigned int size = filepath.size();
     if(size)
     {
         // Check if passed a directory
-        if(szFilePath[size-1] == '/')
+        if(filepath[size-1] == '/')
             return name;
 
         std::vector<std::string> out;
-        utils::SplitString(szFilePath, '/', out);
+        utils::SplitString(filepath, '/', out);
         if(out.size())
         {
             name = out[out.size()-1];

@@ -10,32 +10,32 @@
 
 class FileInfo
 {
-    std::string ExtractFileName(const std::string &szFilePath);
+    std::string ExtractFileName(const std::string &filepath);
 public:
     FileInfo();
     ~FileInfo();
 
     // Init a file
-    bool InitializeFile(const std::string &szFilePath);
+    bool InitializeFile(const std::string &filepath);
     
-    void SetFileName(const std::string &szFileName) { m_FileName = szFileName; }
-    void SetFilePath(const std::string &szFilePath) { m_FilePath = szFilePath; }
-    void SetChunkName(const std::string &szChunkName) { m_ChunkName = szChunkName; }
+    void SetFileName(const std::string &filename)     { m_FileName = filename; }
+    void SetFilePath(const std::string &filepath)     { m_FilePath = filepath; }
+    void SetChunkName(const std::string &chunkname)   { m_ChunkName = chunkname; }
     void SetChunkCount(const unsigned int unChunkCount) { m_ChunkCount = unChunkCount; }
-    void SetFileSize(const unsigned int unFileSize) { m_FileSize = unFileSize; }
-    void SetCredentials(const Credentials &tCred) { m_Credentials = tCred; }
+    void SetFileSize(const unsigned int unFileSize)     { m_FileSize = unFileSize; }
+    void SetCredentials(const Credentials &tCred)       { m_Credentials = tCred; }
 
-    void SetPostID(const std::string &szID) { m_PostID = szID; }
-    void SetPostVersion(const unsigned int unVer) { m_PostVersion = unVer; }
+    void SetPostID(const std::string &szID)         { m_PostID = szID; }
+    void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
     
-    std::string GetFileName() const { return m_FileName; }
-    std::string GetFilePath() const { return m_FilePath; }
-    std::string GetChunkName() const { return m_ChunkName; }
-    unsigned int GetChunkCount() const { return m_ChunkCount; }
-    unsigned int GetFileSize() const { return m_FileSize; }
-    Credentials GetCredentials() const { return m_Credentials; }
+    std::string GetFileName() const         { return m_FileName; }
+    std::string GetFilePath() const         { return m_FilePath; }
+    std::string GetChunkName() const        { return m_ChunkName; }
+    unsigned int GetChunkCount() const      { return m_ChunkCount; }
+    unsigned int GetFileSize() const        { return m_FileSize; }
+    Credentials GetCredentials() const      { return m_Credentials; }
 
-    std::string GetPostID() const { return m_PostID; }
+    std::string GetPostID() const       { return m_PostID; }
     unsigned int GetPostVersion() const { return m_PostVersion ; }
 
 private:    

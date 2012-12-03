@@ -58,8 +58,8 @@ int PullAllFiles();
 //         compare data and make sure both are up to data
 
 int SetWorkingDirectory(const char* szDir);
-
 int SetConfigDirectory(const char* szDir);
+int SetTempDirectory(const char* szDir);
 
 int SetEntityUrl(const char* szUrl);
 

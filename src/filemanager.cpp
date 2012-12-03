@@ -181,7 +181,6 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     FileInfo* fi = CreateFileInfo();
     fi->InitializeFile(szFilePath);
 
-    /*
     //
     // Compress
     // Generate Compression filepath
@@ -190,8 +189,7 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     status = m_Compressor.CompressFile(szFilePath, comppath, 1);
     if(status != ret::A_OK)
         return status;
-    */
-    /*
+
     // Encrypt
     // Generate Crypto filepath
     std::string cryptpath;
@@ -202,18 +200,15 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
     if(status != ret::A_OK)
         return status;
-    */
 
     // Shove keys into a sqlite entry (and FileInfo?)
 
-    /*
     // ChunkFile
     // Generate Chunk Directory 
     status = m_Chunker.ChunkFile(fi, cryptpath, m_WorkingDirectory);
     if(status != ret::A_OK)
         return status;
 
-    */
     // Check if manifest is loaded
     // Write manifest entry
     m_Manifest.InsertFileInfo(fi);

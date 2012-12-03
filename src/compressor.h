@@ -13,8 +13,12 @@ public:
     Compressor();
     ~Compressor();
 
-    ret::eCode CompressFile(std::string &szFilePath, std::string &szOutputPath, int nDeflatedLevel);
-    ret::eCode DecompressFile(std::string &szFilePath, std::string &szOutputPath);
+    ret::eCode CompressFile( const std::string &szFilePath, 
+                             std::string &szOutputPath, 
+                             int nDeflatedLevel);
+
+    ret::eCode DecompressFile( const std::string &szFilePath, 
+                               std::string &szOutputPath);
 
 
 private:

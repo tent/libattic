@@ -18,6 +18,8 @@
 //         probably map string enum::state
 //         on each operation lock file set state
 //         return new error codes if file is in the process of being processed.
+//
+// TODO :: Set up methods to set the chunk size and whatnot
 
 // Constants, (later to be abstracted elsewhere)
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
@@ -30,12 +32,12 @@ static FileManager* g_pFileManager = 0;
 
 static AccessToken g_at;
 
-std::string g_szWorkingDirectory;
-std::string g_szConfigDirectory; // TODO implement this
+static std::string g_WorkingDirectory;
+static std::string g_ConfigDirectory;
+static std::string g_szTempDirectory;
 
-std::string g_szEntity;
+std::string g_Entity;
 std::string g_szAuthorizationURL;
-
 
 // Local utility functions
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
@@ -49,11 +51,11 @@ static ret::eCode DeletePost(const std::string& szPostID);
 int InitializeFileManager()
 {
     // Construct path
-    std::string szFilePath(g_szConfigDirectory);
+    std::string szFilePath(g_ConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szManifest);
 
-    g_pFileManager = new FileManager(szFilePath, g_szConfigDirectory);
+    g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
 
     if(!g_pFileManager->StartupFileManager())
         return ret::A_FAIL_TO_LOAD_FILE;
@@ -266,7 +268,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     // perhaps save it out
 
     // Construct path
-    std::string szSavePath(g_szConfigDirectory);
+    std::string szSavePath(g_ConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAuthToken);
     
@@ -278,7 +280,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 int LoadAccessToken()
 {
     // Construct path
-    std::string szFilePath(g_szConfigDirectory);
+    std::string szFilePath(g_ConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szAuthToken);
 
@@ -290,7 +292,7 @@ int SaveAppToFile()
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string szSavePath(g_szConfigDirectory);
+    std::string szSavePath(g_ConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
@@ -303,7 +305,7 @@ int LoadAppFromFile()
         g_pApp = new TentApp();                                                
 
     // Construct path
-    std::string szSavePath(g_szConfigDirectory);
+    std::string szSavePath(g_ConfigDirectory);
     CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
@@ -365,6 +367,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
+    // construct chunk filepaths
     std::list<std::string> paths;
     paths.push_back(filepath);
 
@@ -448,6 +451,8 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
+    // Set chunkfilepaths and pass that in
+
     std::list<std::string> paths;
     paths.push_back(filepath);
 
@@ -514,7 +519,7 @@ int PushFile(const char* szFilePath)
     {
         // New Post
         // Construct post url
-        std::string posturl = g_szEntity;
+        std::string posturl = g_Entity;
         posturl += "/tent/posts";
 
         std::cout<< " POST URL : " << posturl << std::endl;
@@ -524,7 +529,7 @@ int PushFile(const char* szFilePath)
     else
     {
         // Modify Post
-        std::string posturl = g_szEntity;
+        std::string posturl = g_Entity;
         posturl += "/tent/posts/";
         posturl += fi->GetPostID();
 
@@ -573,7 +578,7 @@ static ret::eCode DeletePost(const std::string& szPostID)
 
 
     // Modify Post
-    std::string posturl = g_szEntity;
+    std::string posturl = g_Entity;
     posturl += "/tent/posts/";
     posturl += szPostID;
 
@@ -604,7 +609,7 @@ int PullAllFiles()
     Manifest::EntriesMap* pEntryMap = g_pFileManager->GetManifestEntries();
     Manifest::EntriesMap::iterator itr = pEntryMap->begin();
 
-    std::string filepath = g_szWorkingDirectory;
+    std::string filepath = g_WorkingDirectory;
     CheckUrlAndAppendTrailingSlash(filepath);
 
     for(;itr != pEntryMap->end(); itr++)
@@ -645,7 +650,7 @@ int PullFile(const char* szFilePath)
     // If found get the post id and pull it
 
     // Construct URL
-    std::string attachmentpath = g_szEntity;
+    std::string attachmentpath = g_Entity;
     attachmentpath.append("/tent/posts/");
     attachmentpath += fi->GetPostID();
     attachmentpath.append("/attachments/");
@@ -663,7 +668,7 @@ int PullFile(const char* szFilePath)
 
     if(buf.size() > 0)
     {
-        //std::string outpath = g_szWorkingDirectory;
+        //std::string outpath = g_WorkingDirectory;
         std::string outpath = filepath; 
         //CheckUrlAndAppendTrailingSlash(outpath);
         //outpath += filename;
@@ -742,7 +747,7 @@ int GetAtticPostCount()
     if(!g_pApp)
         return -1;
 
-    std::string url = g_szEntity;
+    std::string url = g_Entity;
     // TODO :: make this provider agnostic
     url += "/tent/posts/count";
 
@@ -782,7 +787,7 @@ int SyncAtticPosts()
     if(postcount <= 0)
         return ret::A_FAIL_COULD_NOT_FIND_POSTS;
 
-    std::string url = g_szEntity;
+    std::string url = g_Entity;
     url += "/tent/posts";
 
     UrlParams params;
@@ -836,7 +841,7 @@ int SyncAtticPosts()
                     if(!g_pFileManager->FindFileInManifest(pAtt->Name))
                     {
 
-                        std::string path = g_szWorkingDirectory;
+                        std::string path = g_WorkingDirectory;
                         CheckUrlAndAppendTrailingSlash(path);
                         path += pAtt->Name;
 
@@ -902,7 +907,7 @@ int SetWorkingDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
-    g_szWorkingDirectory.append(szDir);
+    g_WorkingDirectory.append(szDir);
 
     return ret::A_OK;
 }
@@ -912,7 +917,17 @@ int SetConfigDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
-    g_szConfigDirectory.append(szDir);
+    g_ConfigDirectory.append(szDir);
+
+    return ret::A_OK;
+}
+
+int SetTempDirectory(const char* szDir)
+{
+    if(!szDir)
+        return ret::A_FAIL_INVALID_CSTR;
+
+    g_szTempDirectory.append(szDir);
 
     return ret::A_OK;
 }
@@ -922,12 +937,12 @@ int SetEntityUrl(const char* szUrl)
     if(!szUrl)
         return ret::A_FAIL_INVALID_CSTR;
 
-    g_szEntity.append(szUrl);
+    g_Entity.append(szUrl);
 
     return ret::A_OK;
 }
 
-const char* GetWorkingDirectory() { return g_szWorkingDirectory.c_str(); }
-const char* GetConfigDirectory() { return g_szConfigDirectory.c_str(); }
-const char* GetEntityUrl() { return g_szEntity.c_str(); }
+const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
+const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
+const char* GetEntityUrl() { return g_Entity.c_str(); }
 

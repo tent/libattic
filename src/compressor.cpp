@@ -19,7 +19,9 @@ Compressor::~Compressor()
 
 }
 
-ret::eCode Compressor::CompressFile(std::string &szFilePath, std::string &szOutputPath, int nDeflatedLevel)
+ret::eCode Compressor::CompressFile( const std::string &szFilePath, 
+                                     std::string &szOutputPath, 
+                                     int nDeflatedLevel)
 {
     // Pass in path to file needing compressing, output path is the compressed file's destination
     // deflate level (1-9) level of compression
@@ -60,7 +62,7 @@ ret::eCode Compressor::CompressFile(std::string &szFilePath, std::string &szOutp
     return ret::A_OK;
 }
 
-ret::eCode Compressor::DecompressFile(std::string &szFilePath, std::string &szOutputPath)
+ret::eCode Compressor::DecompressFile(const std::string &szFilePath, std::string &szOutputPath)
 {
     try
     {
