@@ -4,6 +4,8 @@
 #include <fstream>
 #include <vector>
 
+#include <stdio.h>
+
 #include "utils.h"
 
 FileInfo::FileInfo()

@@ -27,15 +27,15 @@ class ConnectionManager
     void GenerateNonce(std::string &out);
     void GenerateHmacSha256(std::string &out);
 
-    curl_slist* AddBodyToForm( const std::string &body,
-                               curl_httppost *post, 
-                               curl_httppost *last, 
-                               curl_slist *list);
+    void AddBodyToForm( const std::string &body,
+                               curl_httppost **post, 
+                               curl_httppost **last, 
+                               curl_slist **list);
 
-    curl_slist* AddAttachmentToForm( const std::string &path, 
-                              curl_httppost *post, 
-                              curl_httppost *last, 
-                              curl_slist *list);
+    void AddAttachmentToForm( const std::string &path, 
+                                     curl_httppost **post, 
+                                     curl_httppost **last, 
+                                     curl_slist **list);
 public:
 
     void BuildAuthHeader( const std::string &url, 

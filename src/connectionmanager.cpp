@@ -480,13 +480,17 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
     curl_slist *partlist = 0;
 
-/*
-    partlist = AddBodyToForm( szBody,
-                              formpost,
-                              lastptr,
-                              partlist );
-   */ 
+    curl_slist      **pl = &partlist;
 
+    curl_httppost   **fp = &formpost;
+    curl_httppost   **lp = &lastptr;
+
+    AddBodyToForm( szBody,
+                   fp,
+                   lp,
+                   pl );
+
+    /*
     // Fill out json header
     partlist = curl_slist_append( partlist, 
                                   "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
@@ -509,18 +513,21 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                   CURLFORM_CONTENTHEADER, partlist,
                   CURLFORM_END);
     
+                  */
     // Add Attachment(s)
     curl_slist *attachlist = 0;
+    curl_slist **al = &attachlist;
 
     std::list<std::string>::iterator itr = filepaths->begin();
     // Go through file 
     for(; itr != filepaths->end(); itr++) 
     {
         std::cout<<"Adding attachment ... " << std::endl;
-        attachlist = AddAttachmentToForm( *itr, 
-                             formpost,
-                             lastptr,
-                             attachlist);
+        
+        AddAttachmentToForm( *itr, 
+                             fp,
+                             lp,
+                             al);
     }
     
     pCurl = curl_easy_init();
@@ -1065,13 +1072,13 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
     curl_easy_cleanup(pCurl);
 }
 
-curl_slist* ConnectionManager::AddBodyToForm( const std::string &body,
-                                              curl_httppost *post, 
-                                              curl_httppost *last, 
-                                              curl_slist *list)
+void ConnectionManager::AddBodyToForm( const std::string &body,
+                                              curl_httppost **post, 
+                                              curl_httppost **last, 
+                                              curl_slist **list)
 {
     // Fill out json header
-    list = curl_slist_append( list, 
+    *list = curl_slist_append( *list, 
                               "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
 
     std::cout<< "BODY : " << body << std::endl;
@@ -1082,26 +1089,25 @@ curl_slist* ConnectionManager::AddBodyToForm( const std::string &body,
     std::string jcl("Content-Length: ");
     jcl.append(szLen);
 
-    list = curl_slist_append(list, jcl.c_str());
-    list = curl_slist_append(list, "Content-Type: application/vnd.tent.v0+json");
-    list = curl_slist_append(list, "Content-Transfer-Encoding: binary");
+    *list = curl_slist_append(*list, jcl.c_str());
+    *list = curl_slist_append(*list, "Content-Type: application/vnd.tent.v0+json");
+    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
 
-    curl_formadd( &post,
-                  &last,
+    curl_formadd( &*post,
+                  &*last,
                   CURLFORM_COPYNAME, "jsonbody",
                   CURLFORM_COPYCONTENTS, body.c_str(),
-                  CURLFORM_CONTENTHEADER, list,
+                  CURLFORM_CONTENTHEADER, *list,
                   CURLFORM_END);
 
-    return list;
 }
 
 
 
-curl_slist* ConnectionManager::AddAttachmentToForm( const std::string &path, 
-                                             curl_httppost *post, 
-                                             curl_httppost *last, 
-                                             curl_slist *list)
+void ConnectionManager::AddAttachmentToForm( const std::string &path, 
+                                                    curl_httppost **post, 
+                                                    curl_httppost **last, 
+                                                    curl_slist **list)
 {
     // Addes an attachment as a part to the form
 
@@ -1118,8 +1124,8 @@ curl_slist* ConnectionManager::AddAttachmentToForm( const std::string &path,
     cd += name;
     cd.append("\"");
 
-    list = curl_slist_append(list, "Content-Transfer-Encoding: binary");
-    list = curl_slist_append(list, cd.c_str());
+    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
+    *list = curl_slist_append(*list, cd.c_str());
     
     // Append size to a string
     char szBuffer[256];
@@ -1132,20 +1138,18 @@ curl_slist* ConnectionManager::AddAttachmentToForm( const std::string &path,
     std::cout<< "CL : " << cl <<std::endl;
     std::cout<< "USIZE : " << uSize << std::endl;
         
-    list = curl_slist_append(list,  cl.c_str());
-    list = curl_slist_append(list, "Content-Type: application/octet-stream");
+    *list = curl_slist_append(*list,  cl.c_str());
+    *list = curl_slist_append(*list, "Content-Type: application/octet-stream");
 
     std::cout << " name : " << name << std::endl;
     std::cout << " path : " << path << std::endl;
 
-    curl_formadd( &post, 
-                  &last, 
+    curl_formadd( &*post, 
+                  &*last, 
                   CURLFORM_COPYNAME, name.c_str(),
                   CURLFORM_FILE, path.c_str(), 
-                  CURLFORM_CONTENTHEADER, list,
+                  CURLFORM_CONTENTHEADER, *list,
                   CURLFORM_END);     
-
-    return list;
 
 }
 
@@ -1171,49 +1175,33 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
     static const char szExpectBuf[] = "Expect:";
 
     curl_slist *partlist = 0;
-
-/*
-    partlist = AddBodyToForm( szBody,
-                              formpost,
-                              lastptr,
-                              partlist );
-   */ 
-
-    // Fill out json header
-    partlist = curl_slist_append( partlist, 
-                                  "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
-
-    char szLen[256];
-    memset(szLen, '\0', sizeof(char)*256);                                              
-    snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
-
-    std::string jcl("Content-Length: ");
-    jcl.append(szLen);
-
-    partlist = curl_slist_append(partlist, jcl.c_str());
-    partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
-    partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
-
-    curl_formadd( &formpost,
-                  &lastptr,
-                  CURLFORM_COPYNAME, "jsonbody",
-                  CURLFORM_COPYCONTENTS, szBody.c_str(),
-                  CURLFORM_CONTENTHEADER, partlist,
-                  CURLFORM_END);
     
-    // Add Attachment(s)
-    curl_slist *attachlist = 0;
+    curl_slist      **pl = &partlist; 
+    curl_httppost   **fp = &formpost;
+    curl_httppost   **lp = &lastptr;
 
+
+    AddBodyToForm( szBody,
+                   fp,
+                   lp,
+                   pl );
+
+
+    // Add Attachment(s)
     std::list<std::string>::iterator itr = filepaths->begin();
     // Go through file 
+    curl_slist *attachlist = 0;
+
+    curl_slist **al = &attachlist;
+    
     for(; itr != filepaths->end(); itr++) 
     {
-        std::cout<<"Adding attachment ... " << std::endl;
-        attachlist = AddAttachmentToForm( *itr, 
-                             formpost,
-                             lastptr,
-                             attachlist);
-    }
+                std::cout<<"Adding attachment ... " << std::endl;
+        AddAttachmentToForm( *itr, 
+                             fp,
+                             lp,
+                             al);
+   }
     
     pCurl = curl_easy_init();
     multi_handle = curl_multi_init();
@@ -1322,7 +1310,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         /* free slist */ 
         curl_slist_free_all (headerlist);
         curl_slist_free_all (partlist);
-        curl_slist_free_all (attachlist);
+        //curl_slist_free_all (attachlist);
     }
 
     curl_easy_cleanup(pCurl);

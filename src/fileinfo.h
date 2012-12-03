@@ -30,7 +30,7 @@ public:
     
     std::string GetFileName() const         { return m_FileName; }
     std::string GetFilePath() const         { return m_FilePath; }
-    std::string GetChunkName() const        { return m_ChunkName; }
+    void GetChunkName(std::string& out) const { out = m_ChunkName; }
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }
     Credentials GetCredentials() const      { return m_Credentials; }

@@ -376,9 +376,28 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     utils::ExtractFileName(filepath, filename);
 
     // construct chunk filepaths
-    std::list<std::string> paths;
-    paths.push_back(filepath);
+    std::string chunkName; 
+    fi->GetChunkName(chunkName);
+    std::string chunkPath = g_TempDirectory;
+    chunkPath.append("/");
+    chunkPath.append(chunkName);
+    chunkPath.append("_");
 
+    std::string path;
+    char buf[256];
+    std::list<std::string> paths;
+
+    for(unsigned int i=0; i< fi->GetChunkCount(); i++)
+    {
+        memset(buf, '\0', 256);
+        snprintf(buf, 256, "%lu", i);
+
+        path.clear();
+        path += chunkPath + buf;
+
+        paths.push_back(path);
+
+    }
 
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          NULL,
@@ -461,8 +480,29 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
     // Set chunkfilepaths and pass that in
 
+    // construct chunk filepaths
+    std::string chunkName; 
+    fi->GetChunkName(chunkName);
+    std::string chunkPath = g_TempDirectory;
+    chunkPath.append("/");
+    chunkPath.append(chunkName);
+    chunkPath.append("_");
+
+    std::string path;
+    char buf[256];
     std::list<std::string> paths;
-    paths.push_back(filepath);
+
+    for(unsigned int i=0; i< fi->GetChunkCount(); i++)
+    {
+        memset(buf, '\0', 256);
+        snprintf(buf, 256, "%lu", i);
+
+        path.clear();
+        path += chunkPath + buf;
+
+        paths.push_back(path);
+
+    }
 
 
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 

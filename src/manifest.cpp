@@ -113,7 +113,10 @@ bool Manifest::WriteOutManifest()
             line.append((*itr).second->GetFilePath().c_str());
             line.append("\t");
 
-            line.append((*itr).second->GetChunkName().c_str());
+            std::string chunkName;
+            (*itr).second->GetChunkName(chunkName);
+
+            line.append(chunkName.c_str());
             line.append("\t");
 
             char szBuffer[256];
