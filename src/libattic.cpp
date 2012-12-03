@@ -12,6 +12,13 @@
 #include "filemanager.h"
 #include "utils.h"
 
+
+// TODO :: introduce queue'ing mechanism, to protect against multiple
+//         file operation spam
+//         probably map string enum::state
+//         on each operation lock file set state
+//         return new error codes if file is in the process of being processed.
+
 // Constants, (later to be abstracted elsewhere)
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
 static const char* g_szAppData = "app";
