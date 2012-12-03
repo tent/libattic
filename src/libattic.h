@@ -6,6 +6,7 @@
 
 extern "C"
 {
+
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
                         const char* szUrl, 

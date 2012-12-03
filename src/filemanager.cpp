@@ -17,14 +17,16 @@ FileManager::FileManager()
 
 }
 
-FileManager::FileManager(std::string &szManifestFilepath, std::string &szWorkingDirectory, unsigned int uFileStride)
+FileManager::FileManager( const std::string &szManifestFilepath, 
+                          const std::string &workingDirectory, 
+                          unsigned int uFileStride)
 {
     // Set manifest path
     m_ManifestFilePath = szManifestFilepath;
     m_Manifest.SetFilePath(m_ManifestFilePath);
 
     // Set working directory
-    m_WorkingDirectory = szWorkingDirectory;
+    m_WorkingDirectory = workingDirectory;
 
     // Set File Stride
     m_FileStride = uFileStride;
@@ -55,7 +57,7 @@ bool FileManager::ShutdownFileManager()
     return m_Manifest.WriteOutManifest();
 }
 
-bool FileManager::LoadManifest(std::string &szFilePath)
+bool FileManager::LoadManifest(const std::string &szFilePath)
 {
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
@@ -185,7 +187,9 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     // Compress
     // Generate Compression filepath
     std::string comppath;
+
     GenerateCompressionPath(fi, comppath);
+
     status = m_Compressor.CompressFile(szFilePath, comppath, 1);
     if(status != ret::A_OK)
         return status;
@@ -197,6 +201,7 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     // Generate Credentials
     Credentials cred = m_Crypto.GenerateCredentials();
     fi->SetCredentials(cred);
+
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
     if(status != ret::A_OK)
         return status;
@@ -205,7 +210,7 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 
     // ChunkFile
     // Generate Chunk Directory 
-    status = m_Chunker.ChunkFile(fi, cryptpath, m_WorkingDirectory);
+    status = m_Chunker.ChunkFile(fi, cryptpath, m_TempDirectory);
     if(status != ret::A_OK)
         return status;
 
@@ -238,7 +243,8 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
     
     if(split.size() > 0)
     { 
-        szOutPath = m_WorkingDirectory + "/" + split[0] + "_cmp";
+        //szOutPath = m_WorkingDirectory + "/" + split[0] + "_cmp";
+        szOutPath = m_TempDirectory + "/" + split[0] + "_cmp";
     }
 }
 
@@ -252,7 +258,8 @@ void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
     
     if(split.size() > 0)
     { 
-        szOutPath = m_WorkingDirectory + "/" + split[0] + "_enc";
+        //szOutPath = m_WorkingDirectory + "/" + split[0] + "_enc";
+        szOutPath = m_TempDirectory + "/" + split[0] + "_enc";
     }
 }
 
@@ -303,9 +310,13 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
     return status;
 }
 
-std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool bStripFileType, std::string &filename, std::string &szPostfix)
+void FileManager::ConstructOutboundPath( const std::string &workingDir, 
+                                         const std::string &filename, 
+                                         const std::string &postfix,
+                                         std::string &outboundPath,
+                                         bool bStripFileType)
 {
-    std::string path = szWorkingDir;
+    std::string path = workingDir;
 
     std::string fn = filename;
 
@@ -313,9 +324,10 @@ std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool b
     {
         std::vector<std::string> out;
         utils::SplitString(fn, '.', out);
+
         if(out.size() > 0)
         {
-            filename = out[0];
+            fn = out[0];
         }
     }
 
@@ -325,11 +337,11 @@ std::string FileManager::ConstructOutboundPath(std::string &szWorkingDir, bool b
         path.append("/");
 
     // Attach postfix to filename
-    fn += szPostfix;
+    fn += postfix;
 
     path += fn;
     
-    return path;
+    outboundPath = path;
 }
 
 FileInfo* FileManager::CreateFileInfo()

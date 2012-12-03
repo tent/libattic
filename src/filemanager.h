@@ -18,10 +18,11 @@ class FileManager
     bool ReadInHeader(std::string &h);
     bool ReadInEntry(std::string &e);
 
-    std::string ConstructOutboundPath( std::string &szWorkingDir, 
-                                       bool bStripFileType, 
-                                       std::string &filename, 
-                                       std::string &szPostfix);
+    void ConstructOutboundPath( const std::string &workingDir, 
+                                const std::string &filename, 
+                                const std::string &postfix,
+                                std::string &outboundPath,
+                                bool bStripFileType);
     
     void GenerateCompressionPath(FileInfo* fi, std::string &szOutPath);
     void GenerateCryptoPath(FileInfo* fi, std::string &szOutPath);
@@ -30,8 +31,8 @@ class FileManager
     FileManager operator=(const FileManager &rhs) { return *this; }
 public:
     FileManager();
-    FileManager( std::string &szManifestFilepath, 
-                 std::string &szWorkingDirectory, 
+    FileManager( const std::string &szManifestFilepath, 
+                 const std::string &workingDirectory, 
                  unsigned int uFileStride = 400000);
 
     ~FileManager();
@@ -39,9 +40,8 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
 
-    bool LoadManifest(std::string &szFilePath);
+    bool LoadManifest(const std::string &szFilePath);
     bool WriteOutChanges();
-
     
     ret::eCode IndexFile(const std::string &szFilePath);
     ret::eCode RemoveFile(const std::string &szFileName);
@@ -61,15 +61,19 @@ public:
                               const std::string &postId,
                               const std::string &postVersion);
 
-    void InsertToManifest(FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
+    void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
 
-    std::string GetManifestFilePath() { return m_ManifestFilePath; }
-    std::string GetWorkingDirectory() { return m_WorkingDirectory; }
-    unsigned int GetFileStride()      { return m_FileStride; }
+    
+    void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
+    void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
+    void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
 
-    void SetManifestFilePath(std::string &szFilepath)   { m_ManifestFilePath = szFilepath; }
-    void SetWorkingDirectory(std::string &szWorkingDir) { m_WorkingDirectory = szWorkingDir; }
-    void SetFileStride(unsigned int uFileStride )       { m_FileStride = uFileStride; }
+    unsigned int GetFileStride() const      { return m_FileStride; }
+
+    void SetManifestFilePath(const std::string &szFilepath)     { m_ManifestFilePath = szFilepath; }
+    void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
+    void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
+    void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
 
     Manifest::EntriesMap* GetManifestEntries() { return m_Manifest.GetEntries(); }
 
@@ -84,9 +88,9 @@ private:
     std::ofstream       m_ofStream;
 
     std::string         m_ManifestFilePath; // Location of manifest
-    std::string         m_WorkingDirectory; // Location where file copies will be made to
-                                            // and file operations will happen. (ie : crypto,
-                                            // compression, chunking, etc ...)
+    std::string         m_WorkingDirectory; // Location where original files live.
+    std::string         m_TempDirectory;    // Location where file copies will be made and manipulated
+                                            // compression, chunking, cryptio, etc ...
                                             
     unsigned int        m_FileStride;       // Generic file stride to be used by chunker,  
                                             // compressor, and crypto

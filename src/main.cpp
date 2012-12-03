@@ -242,6 +242,7 @@ TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
     SetConfigDirectory("./config");
+    SetTempDirectory("./data/temp");
 
     int status = LoadAppFromFile();
     if(status != ret::A_OK)

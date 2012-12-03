@@ -10,7 +10,7 @@
 
 class FileInfo
 {
-    std::string ExtractFileName(const std::string &filepath);
+    void ExtractFileName(const std::string &filepath, std::string &out);
 public:
     FileInfo();
     ~FileInfo();

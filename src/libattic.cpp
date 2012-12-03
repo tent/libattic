@@ -34,10 +34,10 @@ static AccessToken g_at;
 
 static std::string g_WorkingDirectory;
 static std::string g_ConfigDirectory;
-static std::string g_szTempDirectory;
+static std::string g_TempDirectory;
 
-std::string g_Entity;
-std::string g_szAuthorizationURL;
+static std::string g_Entity;
+static std::string g_AuthorizationURL;
 
 // Local utility functions
 void CheckUrlAndAppendTrailingSlash(std::string &szString);
@@ -56,6 +56,7 @@ int InitializeFileManager()
     szFilePath.append(g_szManifest);
 
     g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
+    g_pFileManager->SetTempDirectory(g_TempDirectory);
 
     if(!g_pFileManager->StartupFileManager())
         return ret::A_FAIL_TO_LOAD_FILE;
@@ -75,7 +76,14 @@ int ShutdownFileManager()
     return ret::A_OK;
 }
 
-int StartupAppInstance(const char* szAppName, const char* szAppDescription, const char* szUrl, const char* szIcon, char* redirectUris[], unsigned int uriCount, char* scopes[], unsigned int scopeCount)
+int StartupAppInstance( const char* szAppName, 
+                        const char* szAppDescription, 
+                        const char* szUrl, 
+                        const char* szIcon, 
+                        char* redirectUris[], 
+                        unsigned int uriCount, 
+                        char* scopes[], 
+                        unsigned int scopeCount)
 {
     g_pApp = new TentApp();                                                
 
@@ -192,12 +200,12 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     val.AddValue("tent_post_types", "all");
     //val.AddValue("tent_post_types", "https://tent.io/types/posts/status/v0.1.0");
 
-    g_szAuthorizationURL.clear();
-    g_szAuthorizationURL.append(szApiRoot);
+    g_AuthorizationURL.clear();
+    g_AuthorizationURL.append(szApiRoot);
 
-    CheckUrlAndAppendTrailingSlash(g_szAuthorizationURL);
+    CheckUrlAndAppendTrailingSlash(g_AuthorizationURL);
 
-    g_szAuthorizationURL.append("oauth/authorize");
+    g_AuthorizationURL.append("oauth/authorize");
 
     std::string params;
     val.SerializeToString(params);
@@ -206,14 +214,14 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     // TODO:: encode these parameters
     //
 
-    g_szAuthorizationURL.append(params);
+    g_AuthorizationURL.append(params);
 
     return ret::A_OK;
 }
 
 const char* GetAuthorizationURL()
 {
-    return g_szAuthorizationURL.c_str();
+    return g_AuthorizationURL.c_str();
 }
 
 void CheckUrlAndAppendTrailingSlash(std::string &szString)
@@ -927,7 +935,7 @@ int SetTempDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
-    g_szTempDirectory.append(szDir);
+    g_TempDirectory.append(szDir);
 
     return ret::A_OK;
 }
