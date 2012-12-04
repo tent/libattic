@@ -19,9 +19,16 @@ class FileInfo;
 
 class Manifest
 {
+    // SQLite specific ///////////////////////////////////
     void OpenSqliteDb();
+    void CloseSqliteDb();
+    void CreateTable();
+    void PerformQuery(const char* pQuery);
+    void QueryForFile(const std::string &filename);
+    void InsertFileInfo(const FileInfo* fi);
+    void RemoveFile(const std::string &filename);
     void CheckIfTableExists(const std::string &tableName);
-
+    //////////////////////////////////////////////////////
 
     bool WriteOutManifestHeader(std::ofstream &ofs);
 public:
@@ -51,9 +58,8 @@ public:
     EntriesMap* GetEntries() { return &m_entries; }
 
 private:
-
-    EntriesMap            m_entries;  // Do not delete entries, just clear the map.
-                                      // FileInfoFactory will take care of deletion.
+    EntriesMap          m_entries;  // Do not delete entries, just clear the map.
+                                    // FileInfoFactory will take care of deletion.
 
     sqlite3*            m_pDb;
     std::ifstream       m_ifStream;

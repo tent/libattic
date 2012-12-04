@@ -27,6 +27,25 @@
 
 #include "url.h"
 
+
+TEST(SQLITE, TEST)
+{
+    SetTempDirectory("./data/temp");
+    SetConfigDirectory("./config");
+    SetWorkingDirectory("./data");
+
+    int status = InitializeFileManager();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+
+    ASSERT_EQ(status, ret::A_OK);
+
+}
+
 /*   
 TEST(DELETE, AFILE)
 {
@@ -184,8 +203,8 @@ TEST(PULL, ALL)
 /*
 TEST(PULL, AFILE)
 {
+    SetTempDirectory("./data/temp");
     SetConfigDirectory("./config");
-    // Set Working dir
     SetWorkingDirectory("./data");
 
     // Load App
@@ -219,7 +238,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("./data/oa.pdf");
+    status = PullFile("./data/oglin.pdf");
 
     if(status != ret::A_OK)
     {
@@ -236,8 +255,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
-   
+/*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");

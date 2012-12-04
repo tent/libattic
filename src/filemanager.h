@@ -59,10 +59,11 @@ public:
                               const std::string &chunkCount,
                               const std::string &fileSize,
                               const std::string &postId,
-                              const std::string &postVersion);
+                              const std::string &postVersion,
+                              const std::string &key,
+                              const std::string &iv);
 
     void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
-
     
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }

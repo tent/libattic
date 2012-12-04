@@ -390,7 +390,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     for(unsigned int i=0; i< fi->GetChunkCount(); i++)
     {
         memset(buf, '\0', 256);
-        snprintf(buf, 256, "%lu", i);
+        snprintf(buf, 256, "%u", i);
 
         path.clear();
         path += chunkPath + buf;
@@ -495,7 +495,7 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     for(unsigned int i=0; i< fi->GetChunkCount(); i++)
     {
         memset(buf, '\0', 256);
-        snprintf(buf, 256, "%lu", i);
+        snprintf(buf, 256, "%u", i);
 
         path.clear();
         path += chunkPath + buf;
@@ -563,7 +563,10 @@ int PushFile(const char* szFilePath)
     }
 
     // Check for existing post
-    if(fi->GetPostID().empty())
+    std::string postid;
+    fi->GetPostID(postid);
+
+    if(postid.empty())
     {
         // New Post
         // Construct post url
@@ -579,7 +582,7 @@ int PushFile(const char* szFilePath)
         // Modify Post
         std::string posturl = g_Entity;
         posturl += "/tent/posts/";
-        posturl += fi->GetPostID();
+        posturl += postid;
 
         std::cout<< " POST URL : " << posturl << std::endl;
 
@@ -604,7 +607,8 @@ int DeleteFile(const char* szFileName)
     if(!fi)
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     
-    std::string postid = fi->GetPostID();
+    std::string postid;
+    fi->GetPostID(postid);
 
     ret::eCode status = ret::A_OK;
     // Delete post
@@ -676,7 +680,6 @@ int PullFile(const char* szFilePath)
 
     utils::ExtractFileName(filepath, filename);
 
-
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
@@ -694,9 +697,67 @@ int PullFile(const char* szFilePath)
         
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     }
+    // Construct Post URL
+    std::string postpath = g_Entity;
+    postpath.append("/tent/posts/");
+    std::string postid;
+    fi->GetPostID(postid);
+    postpath += postid;
 
+    // Get Post
+    std::string response;
+    ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,
+                                                        NULL,
+                                                        response,
+                                                        g_at.GetMacAlgorithm(), 
+                                                        g_at.GetAccessToken(), 
+                                                        g_at.GetMacKey(), 
+                                                        true);
+
+
+    std::cout << "RESPONSE : " << response << std::endl;
+
+    // Deserialize response into post
+    Post resp;
+
+    JsonSerializer::DeserializeObject(&resp, response);
+
+    std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;
+    // Construct list of attachments
+
+    Post::AttachmentVec* av = resp.GetAttachments();
+    Post::AttachmentVec::iterator itr = av->begin();
+
+    std::string attachmentpath;
+    std::string outpath;
+   
+    for(;itr != av->end(); itr++)
+    {
+        // Construct attachment path
+        attachmentpath.clear();
+        attachmentpath += postpath;
+        attachmentpath.append("/attachments/");
+        attachmentpath += (*itr)->Name;
+        std::cout<< attachmentpath << std::endl;
+
+        outpath.clear();
+        outpath += g_TempDirectory;
+        CheckUrlAndAppendTrailingSlash(outpath);
+        outpath += (*itr)->Name;
+
+        // Request attachment
+        GetFileAndWriteOut(attachmentpath, outpath);
+    }
+    
+    // Construct File
+    std::cout << "STATUS : " << g_pFileManager->ConstructFile(filename) << std::endl;
+    
+    // Pull all attachments
+    //
+    // Reconstruct
     // If found get the post id and pull it
 
+/*
     // Construct URL
     std::string attachmentpath = g_Entity;
     attachmentpath.append("/tent/posts/");
@@ -709,7 +770,7 @@ int PullFile(const char* szFilePath)
     std::string buf;
     //GetFile(attachmentpath, buf);
     GetFileAndWriteOut(attachmentpath, filepath);
-
+*/
     /* 
     // write out to directory
     std::cout<<"FILE SIZE : " << buf.size() << std::endl;
@@ -900,7 +961,8 @@ int SyncAtticPosts()
 
 
 
-                        
+                       // TODO:: reimplement syncing with proper key stores
+                       /* 
                         FileInfo* fi = g_pFileManager->CreateFileInfo( pAtt->Name,
                                                                        path,
                                                                        "",
@@ -910,6 +972,7 @@ int SyncAtticPosts()
                                                                        "0");
 
                         g_pFileManager->InsertToManifest(fi);
+                        */
 
                     }
                 }

@@ -33,7 +33,7 @@ public:
                           const std::string &chunkDir);
 
     ret::eCode DeChunkFile( FileInfo *fi, 
-                            const std::string &szOutboundPath, 
+                            const std::string &outboundPath, 
                             const std::string &chunkDir);
 
     unsigned int GetChunkSize() { return m_chunkSize; }

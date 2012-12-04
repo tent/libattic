@@ -59,6 +59,8 @@ bool FileManager::ShutdownFileManager()
 
 bool FileManager::LoadManifest(const std::string &szFilePath)
 {
+    m_Manifest.Initialize();
+
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(m_ifStream.is_open())
@@ -130,7 +132,7 @@ bool FileManager::ReadInEntry(std::string &e)
     utils::SplitString(e, '\t', split);
     
     // Check for correct number of params
-    if(split.size() < 7)
+    if(split.size() < 9)
         return false;
 
     FileInfo* fi = CreateFileInfo ( split[0],
@@ -139,7 +141,10 @@ bool FileManager::ReadInEntry(std::string &e)
                                     split[3],
                                     split[4],
                                     split[5],
-                                    split[6] );
+                                    split[6],
+                                    split[7],
+                                    split[8]);
+
     
     m_Manifest.InsertFileInfo(fi);
 
@@ -151,7 +156,9 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
                                        const std::string &chunkCount,
                                        const std::string &fileSize,
                                        const std::string &postId,
-                                       const std::string &postVersion)
+                                       const std::string &postVersion,
+                                       const std::string &key,
+                                       const std::string &iv)
 {
     FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
 
@@ -169,11 +176,13 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     fi->SetPostID(postId);
     // Post Version
     fi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
+    // Key 
+    fi->SetKey(key);
+    // Iv
+    fi->SetIv(iv);
 
     return fi;
 }
-
-
 
 ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 {
@@ -239,7 +248,10 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
 
     // strip any file type
     std::vector<std::string> split;
-    utils::SplitString(fi->GetFileName(), '.', split);
+    std::string filename;
+    fi->GetFileName(filename);
+
+    utils::SplitString(filename, '.', split);
     
     if(split.size() > 0)
     { 
@@ -254,7 +266,10 @@ void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
         return;
     // strip any file type
     std::vector<std::string> split;
-    utils::SplitString(fi->GetFileName(), '.', split);
+    std::string filename;
+    fi->GetFileName(filename);
+
+    utils::SplitString(filename, '.', split);
     
     if(split.size() > 0)
     { 
@@ -273,37 +288,55 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
 
-    /*
+    std::string chunkpath;
+
     // Construct outbound path
     std::string pstfx = "dchnk";
-    std::string chunkPath = ConstructOutboundPath(m_WorkingDirectory, true, filename, pstfx);
-    // De-chunk
-    status = m_Chunker.DeChunkFile(fi, chunkPath, m_WorkingDirectory);
+    ConstructOutboundPath( m_TempDirectory, 
+                           filename, 
+                           pstfx, 
+                           chunkpath, 
+                           true);
+
+    std::cout << " CHUNKPATH : " << chunkpath << std::endl;
+
+    status = m_Chunker.DeChunkFile(fi, chunkpath, m_TempDirectory);
 
     if(status != ret::A_OK)
         return status;
-    */
 
-    /*
     // Decrypt chunks
+    std::string decrypPath;
     pstfx.clear();
     pstfx.append("dcry");
-    std::string decrypPath = ConstructOutboundPath(m_WorkingDirectory, true, filename, pstfx);
-    status = m_Crypto.DecryptFile(chunkPath, decrypPath, fi->GetCredentials());
+    ConstructOutboundPath( m_TempDirectory, 
+                           filename, 
+                           pstfx, 
+                           decrypPath, 
+                           true);
+
+    std::cout << " DECRYP PATH : " << decrypPath << std::endl;
+
+    status = m_Crypto.DecryptFile(chunkpath, decrypPath, fi->GetCredentials());
     
     if(status != ret::A_OK)
         return status;
-    */
 
     // Decompress
-    //pstfx.clear();
+    std::string decompPath;
+    pstfx.clear();
 
-    /*
-    std::string pstfx; // temporary remove when adding back encryption and chunking
-    std::string decompPath = ConstructOutboundPath(m_WorkingDirectory, false, filename, pstfx);
+    //std::string pstfx; // temporary remove when adding back encryption and chunking
+    ConstructOutboundPath( m_TempDirectory, 
+                           filename, 
+                           pstfx, 
+                           decompPath,
+                           true);
+
+    std::cout<< " DECOMP PATH : " << decompPath << std::endl;
+
     status = m_Compressor.DecompressFile(decrypPath, decompPath);
 
-    */
     //if(status != ret::A_OK) // Currently useless check, here for consistency's sake.
     //    return status;
 

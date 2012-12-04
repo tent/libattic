@@ -42,7 +42,9 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
-ret::eCode Crypto::EncryptFile(const std::string &szFilepath, const std::string &szOutputPath, const Credentials &cred)
+ret::eCode Crypto::EncryptFile( const std::string &szFilepath, 
+                                const std::string &szOutputPath, 
+                                const Credentials &cred)
 {
     // create ifstream (read in)
     std::ifstream ifs;
@@ -100,7 +102,10 @@ ret::eCode Crypto::EncryptFile(const std::string &szFilepath, const std::string 
     return ret::A_OK;
 }
 
-bool Crypto::EncryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs)
+bool Crypto::EncryptData( const char* pData, 
+                          unsigned int size, 
+                          const Credentials &cred, 
+                          std::ofstream &ofs)
 {
     // Take data,
     // Encrypt
@@ -128,6 +133,10 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, const Credentials
        // Write out cipher to ofstream
        ofs.write(cipher.c_str(), cipher.size());
        std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
+       std::cout << " KEY : " << cred.key << std::endl;
+       std::cout << " IV : " << cred.iv << std::endl;
+
+
     }
     catch (CryptoPP::Exception &e)
     {
@@ -138,8 +147,14 @@ bool Crypto::EncryptData(const char* pData, unsigned int size, const Credentials
     return true;
 }
 
-ret::eCode Crypto::DecryptFile(const std::string &szFilePath, const std::string &szOutputPath, const Credentials &cred)
+ret::eCode Crypto::DecryptFile( const std::string &szFilePath, 
+                                const std::string &szOutputPath, 
+                                const Credentials &cred)
 {
+
+    std::cout << " KEY : " << cred.key << std::endl;
+    std::cout << " IV : " << cred.iv << std::endl;
+
     // szFilePath, is the path to the encrypted data.
 
     // create ifstream (read in)
@@ -191,7 +206,10 @@ ret::eCode Crypto::DecryptFile(const std::string &szFilePath, const std::string 
     return ret::A_OK;
 }
 
-bool Crypto::DecryptData(const char* pData, unsigned int size, const Credentials &cred, std::ofstream &ofs)
+bool Crypto::DecryptData( const char* pData, 
+                          unsigned int size, 
+                          const Credentials &cred, 
+                          std::ofstream &ofs)
 {
     // pData is the cypher
     // Read in cypher
