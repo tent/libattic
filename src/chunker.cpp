@@ -17,7 +17,7 @@ Chunker::~Chunker()
 
 }
 
-ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const std::string &szChunkDir)
+ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const std::string &chunkDir)
 {
     // TODO ::
     // - check if there are currently chunks with a given filename already in the 
@@ -55,7 +55,7 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const
 
         SetName(chunkName, name, count);
 
-        if(!WriteChunk(szBuffer, szChunkDir, name))
+        if(!WriteChunk(szBuffer, chunkDir, name))
         {
             m_ifStream.close();
             if(szBuffer)
@@ -81,8 +81,11 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const
 
     return ret::A_OK;
 }
-
-ret::eCode Chunker::DeChunkFile(FileInfo *fi, const std::string &szOutboundPath, const std::string &szChunkDir)
+#include <cstring>
+#include <cerrno>
+ret::eCode Chunker::DeChunkFile( FileInfo *fi, 
+                                 const std::string &outboundPath, 
+                                 const std::string &chunkDir)
 {
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
@@ -91,24 +94,30 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, const std::string &szOutboundPath,
     std::string chunkName;
     fi->GetChunkName(chunkName);
 
-    if(!VerifyAllChunkExistence(chunkName, szChunkDir, fi->GetChunkCount()))
+    if(!VerifyAllChunkExistence(chunkName, chunkDir, fi->GetChunkCount()))
         return ret::A_FAIL_VERIFY_CHUNKS;
 
     // Open stream for output file
     if(m_ofStream.is_open())
+    {
+        std::cout << " closing " << std::endl;
         m_ofStream.close();
+    }
 
-    m_ofStream.open(szOutboundPath.c_str(), std::ofstream::out | std::ofstream::binary);
+    m_ofStream.open(outboundPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!m_ofStream.is_open())
+    {
+        // strerror, <- STANDARD DEF, NON STANDARD IMPLEMENTATION, MAY NOT WORK
+        std::cout << " ERROR : " << std::strerror(errno) << std::endl;
         return ret::A_FAIL_OPEN;
+    }
 
     std::string fileName;
     std::string inputPath;
     // Cycle through chunks
     for(unsigned int i=0; i<fi->GetChunkCount(); i++)
     {
-        chunkName.clear();
         // assemble chunk name
         char szBuffer[256];
         memset(szBuffer, 0, (sizeof(char)*256));
@@ -117,13 +126,17 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, const std::string &szOutboundPath,
         fileName = chunkName + "_" + szBuffer;
         // assemble path
         inputPath.clear();
-        inputPath = szChunkDir + "/" + fileName;
+        inputPath = chunkDir + "/" + fileName;
 
         // Open input stream
         m_ifStream.open(inputPath.c_str(), std::ifstream::in | std::ifstream::binary);
 
         if(!m_ifStream.is_open())
+        {
+            // strerror, <- STANDARD DEF, NON STANDARD IMPLEMENTATION, MAY NOT WORK
+            std::cout << " ERROR 2 : " << std::strerror(errno) << std::endl;
             return ret::A_FAIL_OPEN;
+        }
 
         // Get Size of Chunk
         m_ifStream.seekg(0, std::ifstream::end);
@@ -142,14 +155,13 @@ ret::eCode Chunker::DeChunkFile(FileInfo *fi, const std::string &szOutboundPath,
         m_ifStream.close();
         delete pBuf;
         pBuf = 0;
- 
     }
-    m_ofStream.close();
 
+    m_ofStream.close();
     return ret::A_OK;
 }
 
-bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std::string &szChunkDir, unsigned int uCount)
+bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std::string &chunkDir, unsigned int uCount)
 {
     std::string path;
     for(unsigned int i=0; i<uCount; i++)
@@ -160,7 +172,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std:
         memset(szBuffer, 0, (sizeof(char)*256));
         snprintf(szBuffer, (sizeof(char)*256), "%d", i);
 
-        path = szChunkDir + "/" + szChunkName + "_" + szBuffer;
+        path = chunkDir + "/" + szChunkName + "_" + szBuffer;
         if(!utils::CheckFileSize(path))
             return false;
     }
@@ -168,7 +180,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std:
     return true;
 }
 
-bool Chunker::WriteChunk(char* szBuffer, const std::string &szChunkDir, const std::string &szName)
+bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std::string &szName)
 {
     if(!szBuffer)
     {
@@ -176,7 +188,7 @@ bool Chunker::WriteChunk(char* szBuffer, const std::string &szChunkDir, const st
     }
     // resolve path
     std::string path;
-    path = szChunkDir + "/" + szName;
+    path = chunkDir + "/" + szName;
 
     m_ofStream.open(path.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 
