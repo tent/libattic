@@ -28,12 +28,12 @@ namespace utils
         return out;
     }
 
-    static unsigned int CheckFileSize(const std::string &szFilePath)
+    static unsigned int CheckFileSize(const std::string &filepath)
     {
         unsigned int fileSize = 0;
 
         std::ifstream ifs;
-        ifs.open (szFilePath.c_str(), std::ifstream::binary);
+        ifs.open (filepath.c_str(), std::ifstream::binary);
 
         if(ifs.is_open())
         {
@@ -87,22 +87,36 @@ namespace utils
         srand(time(0));
     }
 
-    static void ExtractFileName(const std::string& szFilePath, std::string& out)
+    static void ExtractFileName(const std::string& filepath, std::string& out)
     {
-        unsigned int size = szFilePath.size();                     
+        unsigned int size = filepath.size();                     
         if(size)                                                   
         {                                                          
             // Check if passed a directory                         
-            if(szFilePath[size-1] == '/')                          
+            if(filepath[size-1] == '/')                          
                 return;                                       
 
             std::vector<std::string> split;                          
-            utils::SplitString(szFilePath, '/', split);              
+            utils::SplitString(filepath, '/', split);              
             if(split.size())                                         
             {                                                      
                 out = split[split.size()-1];                          
             }                                                      
          }                                                          
+    }
+
+    static bool CheckAndRemoveRelativePath(const std::string &filepath, std::string &out)
+    {
+        if(filepath.size())
+        {
+            if(filepath[0] == '.')
+            {
+                out = filepath;
+                out.erase(0,1);
+                return true;
+            }
+        }
+        return false;
     }
 
 }
