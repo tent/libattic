@@ -16,6 +16,9 @@ int StartupAppInstance( const char* szAppName,
                         char* scopes[], 
                         unsigned int scopeCount);
 
+
+int TestQuery();
+
 int ShutdownAppInstance();
 
 int InitializeFileManager();

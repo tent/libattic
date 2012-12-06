@@ -203,6 +203,8 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     if(status != ret::A_OK)
         return status;
 
+    std::cout<< " file compressed " << std::endl;
+
     // Encrypt
     // Generate Crypto filepath
     std::string cryptpath;
@@ -215,6 +217,8 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     if(status != ret::A_OK)
         return status;
 
+    std::cout<< " file encrypted " << std::endl;
+
     // Shove keys into a sqlite entry (and FileInfo?)
 
     // ChunkFile
@@ -223,8 +227,10 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     if(status != ret::A_OK)
         return status;
 
+    std::cout<< " file chunked " << std::endl;
     // Check if manifest is loaded
     // Write manifest entry
+
     m_Manifest.InsertFileInfo(fi);
 
     bool success = m_Manifest.WriteOutManifest();

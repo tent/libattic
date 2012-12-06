@@ -24,8 +24,9 @@ class Manifest
     void CloseSqliteDb();
     void CreateTable();
     void PerformQuery(const char* pQuery);
-    void QueryForFile(const std::string &filename);
-    void InsertFileInfo(const FileInfo* fi);
+    void PerformSelect(const char* pSelect);
+
+    void InsertFileInfoToDb(const FileInfo* fi);
     void RemoveFile(const std::string &filename);
     void CheckIfTableExists(const std::string &tableName);
     //////////////////////////////////////////////////////
@@ -33,6 +34,8 @@ class Manifest
     bool WriteOutManifestHeader(std::ofstream &ofs);
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
+
+    void QueryForFile(const std::string &filename);
 
     Manifest();
     ~Manifest();

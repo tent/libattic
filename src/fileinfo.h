@@ -28,15 +28,16 @@ public:
     void SetPostID(const std::string &szID)         { m_PostID = szID; }
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
 
-    void SetKey(const std::string &key) { m_Key = key; }
-    void SetIv(const std::string &iv) { m_Iv = iv; }
-    
+    void SetKey(const std::string &key) { memcpy(m_Credentials.key, key.c_str(), key.size()); }
+    void SetIv(const std::string &iv) { memcpy(m_Credentials.iv, iv.c_str(), iv.size() ); }
+
     void GetFileName(std::string &out) const    { out = m_FileName; }
     void GetFilePath(std::string &out) const    { out = m_FilePath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
-    void GetKey(std::string &out) const         { out = m_Key; }
-    void GetIv(std::string &out) const          { out = m_Iv; }
+
+    void GetKey(std::string &out) const { out.append((const char*)m_Credentials.key, m_Credentials.GetKeySize()); }
+    void GetIv(std::string &out) const  { out.append((const char*)m_Credentials.iv, m_Credentials.GetIvSize()); }
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }
@@ -55,8 +56,6 @@ private:
 
     std::string     m_PostID; // Id of the post the file is potentially attached to
 
-    std::string     m_Key;
-    std::string     m_Iv;
 
     unsigned int    m_PostVersion; // Version of the post the file is attached to
 

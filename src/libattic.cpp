@@ -48,6 +48,12 @@ static int GetFile(const std::string& url, std::string &out);
 static ret::eCode DeletePost(const std::string& szPostID);
 //////// API start
 
+int TestQuery() 
+{
+    g_pFileManager->TestQuery();
+
+}
+
 int InitializeFileManager()
 {
     // Construct path

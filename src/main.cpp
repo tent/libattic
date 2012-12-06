@@ -40,11 +40,24 @@ TEST(SQLITE, TEST)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
-
-
     ASSERT_EQ(status, ret::A_OK);
 
+    status = LoadAppFromFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    TestQuery();
+
+
+    ShutdownFileManager();
+    ShutdownAppInstance();
 }
+/*
+*/
 
 /*   
 TEST(DELETE, AFILE)
@@ -291,7 +304,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFile("./data/oglin.pdf");
+    status = PushFile("./data/oa2.pdf");
 
     if(status != ret::A_OK)
     {
