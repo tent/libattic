@@ -423,7 +423,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     if(!postid.empty())
     {
        fi->SetPostID(postid); 
-       fi->SetPostVersion(0); // temporary for now, change later
+       fi->SetPostVersion(int(0)); // temporary for now, change later
        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
     }

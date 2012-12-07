@@ -40,7 +40,7 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
 
-    void TestQuery() { std::string a(""); m_Manifest.QueryForFile(a); }
+    void TestQuery() { std::string a(""); FileInfo fi; m_Manifest.QueryForFile(a, fi); }
 
     bool LoadManifest(const std::string &szFilePath);
     bool WriteOutChanges();

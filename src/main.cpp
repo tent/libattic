@@ -27,7 +27,7 @@
 
 #include "url.h"
 
-
+/*
 TEST(SQLITE, TEST)
 {
     SetTempDirectory("./data/temp");
@@ -51,7 +51,6 @@ TEST(SQLITE, TEST)
     ASSERT_EQ(status, ret::A_OK);
 
     TestQuery();
-
 
     ShutdownFileManager();
     ShutdownAppInstance();
@@ -268,7 +267,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");

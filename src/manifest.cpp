@@ -11,6 +11,7 @@
 #include "utils.h"
 
 
+static const std::string g_table("infotable");
 
 Manifest::Manifest()
 {
@@ -102,7 +103,13 @@ void Manifest::CreateTable()
     if(!m_pDb)
         return;
 
-    const char* pexc = "CREATE TABLE IF NOT EXISTS infotable (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));";
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024,
+              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
+              g_table.c_str()
+            );
 
     PerformQuery(pexc);
 
@@ -138,38 +145,77 @@ void Manifest::PerformQuery(const char* pQuery)
 //                       char **pzErrmsg       /* Error msg written here */
 //                       );
 //                      void sqlite3_free_table(char **result);
-void Manifest::PerformSelect(const char* pSelect)
+void Manifest::PerformSelect(const char* pSelect, SelectResult &out)
 {
     if(!m_pDb || !pSelect)
         return;
 
     char *szError = NULL;
-    char ***results = NULL;
-    int *pnRow = NULL;
-    int *pnCol = NULL;
-    char **pzErr = NULL;
-
-    std::cout << " here " << std::endl;
+    //char **results;
+    //int nRow = 0;
+    //int nCol = 0; 
+    char *pzErr = NULL;
 
     int rc = sqlite3_get_table( m_pDb,
-                                pSelect,     /* SQL to be evaluated */
-                                results,     /* Results of the query */
-                                pnRow,       /* Number of result rows written here */
-                                pnCol,      /* Number of result columns written here */
-                                pzErr        /* Error msg written here */
+                                pSelect,       /* SQL to be evaluated */
+                                &out.results,  /* Results of the query */
+                                &out.nRow,     /* Number of result rows written here */
+                                &out.nCol,     /* Number of result columns written here */
+                                &pzErr         /* Error msg written here */
                                );
 
-    std::cout << " here " << std::endl;
-    //sqlite3_free_table(*results);
+    if(pzErr)
+    {
+        std::cout << " Perform Select Error : " << pzErr << std::endl;
+    }
 
 }
 
-void Manifest::QueryForFile(const std::string &filename)
+void Manifest::QueryForFile(const std::string &filename, FileInfo &out)
 {
-    const char* pexc = "SELECT * FROM infotable";
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "SELECT * FROM infotable WHERE filename=\"%s\";",
+              filename.c_str()
+            );
+     
     std::cout<< " EXECING : " << pexc << std::endl;
-    //PerformQuery(pexc);
-    PerformSelect(pexc);
+
+    SelectResult res;
+    PerformSelect(pexc, res);
+
+    std::cout << " Row count : " << res.nRow << std::endl;
+    std::cout << " Col count : " << res.nCol << std::endl;
+
+    int step = 0;
+    for(int i=0; i<res.nRow+1; i++)
+    {
+        step = i*res.nCol;
+        std::cout<< " step : " << step << std::endl;
+
+        for(int j=0; j<res.nCol; j++)
+        {
+            std::cout << " Results : " << res.results[j+step] << std::endl;
+        }
+
+        if(step > 0)
+        {
+            out.SetFileName(res.results[0+step]);
+            out.SetFilePath(res.results[1+step]);
+            out.SetChunkName(res.results[2+step]);
+            out.SetChunkCount(res.results[3+step]);
+            out.SetFileSize(res.results[4+step]);
+            out.SetPostID(res.results[5+step]);
+            out.SetPostVersion(res.results[6+step]);
+            out.SetKey(res.results[7+step]);
+            out.SetIv(res.results[8+step]);
+        }
+    }
+
+    sqlite3_free_table(res.results);
+
 }
 
 void Manifest::InsertFileInfoToDb(const FileInfo* fi)
@@ -186,11 +232,12 @@ void Manifest::InsertFileInfoToDb(const FileInfo* fi)
     fi->GetKey(key);
     fi->GetIv(iv);
 
+    std::cout << "ESTIMATED SIZE : " << filename.size() + filepath.size() + chunkname.size() + postid.size() + key.size() + iv.size() << std::endl;
 
-    char* pexc = new char[1024];
+    char pexc[1024];
     snprintf( pexc,
               1024, 
-              "INSERT INTO infotable (filename, filepath, chunkname, chunkcount, filesize, postid, postversion, key, iv) VALUES (%s, %s, %s, %u, %u, %s, %d, %s, %s);",
+              "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, filesize, postid, postversion, key, iv) VALUES (\"%s\", \"%s\", \"%s\", %u, %u, \"%s\", %d, \"%s\", \"%s\");",
               filename.c_str(),
               filepath.c_str(),
               chunkname.c_str(),
@@ -199,18 +246,19 @@ void Manifest::InsertFileInfoToDb(const FileInfo* fi)
               postid.c_str(),
               fi->GetPostVersion(),
               key.c_str(),
-              iv.c_str()); 
+              iv.c_str()
+            ); 
 
     std::cout << " KEY : " << key << std::endl;
     std::cout << " IV : " << iv << std::endl;
 
     std::cout << " INSERT : \n" << pexc << std::endl;
     PerformQuery(pexc);
-
 }
 
 void Manifest::RemoveFile(const std::string &filename)
 {
+    // TODO :: this
 
 }
 

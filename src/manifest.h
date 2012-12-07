@@ -17,6 +17,13 @@
 
 class FileInfo;
 
+struct SelectResult
+{
+    char** results;
+    int nRow;
+    int nCol;
+};
+
 class Manifest
 {
     // SQLite specific ///////////////////////////////////
@@ -24,7 +31,7 @@ class Manifest
     void CloseSqliteDb();
     void CreateTable();
     void PerformQuery(const char* pQuery);
-    void PerformSelect(const char* pSelect);
+    void PerformSelect(const char* pSelect, SelectResult &out);
 
     void InsertFileInfoToDb(const FileInfo* fi);
     void RemoveFile(const std::string &filename);
@@ -35,7 +42,7 @@ class Manifest
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
-    void QueryForFile(const std::string &filename);
+    void QueryForFile(const std::string &filename, FileInfo& out);
 
     Manifest();
     ~Manifest();

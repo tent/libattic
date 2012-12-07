@@ -21,11 +21,18 @@ public:
     void SetFileName(const std::string &filename)     { m_FileName = filename; }
     void SetFilePath(const std::string &filepath)     { m_FilePath = filepath; }
     void SetChunkName(const std::string &chunkname)   { m_ChunkName = chunkname; }
+
+    void SetChunkCount(const std::string& count)        { m_ChunkCount = atoi(count.c_str()); }
     void SetChunkCount(const unsigned int unChunkCount) { m_ChunkCount = unChunkCount; }
+
+    void SetFileSize(const std::string& file)           { m_FileSize = atoi(file.c_str()); }
     void SetFileSize(const unsigned int unFileSize)     { m_FileSize = unFileSize; }
+
     void SetCredentials(const Credentials &tCred)       { m_Credentials = tCred; }
 
     void SetPostID(const std::string &szID)         { m_PostID = szID; }
+
+    void SetPostVersion(const std::string& version)      { m_PostVersion = atoi(version.c_str()); }
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
 
     void SetKey(const std::string &key) { memcpy(m_Credentials.key, key.c_str(), key.size()); }
