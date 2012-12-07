@@ -27,7 +27,7 @@
 
 #include "url.h"
 
-/*
+
 TEST(SQLITE, TEST)
 {
     SetTempDirectory("./data/temp");
@@ -267,7 +267,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
