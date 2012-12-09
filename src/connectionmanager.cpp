@@ -62,8 +62,6 @@ ConnectionManager::ConnectionManager()
 
 ConnectionManager::~ConnectionManager()
 {
-///if(m_pInstance)
-  //  m_pInstance->Shutdown();
 }
 
 ConnectionManager* ConnectionManager::GetInstance()
@@ -80,18 +78,10 @@ ConnectionManager* ConnectionManager::GetInstance()
 void ConnectionManager::Initialize()
 {
     utils::SeedRand();
-
-//    curl_global_init(CURL_GLOBAL_DEFAULT);
-//    pCurl = curl_easy_init();
 }
 
 void ConnectionManager::Shutdown()
 {
-//    if(pCurl)
- //       curl_easy_cleanup(pCurl);
-
- //   curl_global_cleanup();
-
     if(m_pInstance)
     {
         delete m_pInstance;
@@ -169,6 +159,7 @@ void ConnectionManager::HttpDelete( const std::string &url,
 }
 
 
+// TODO :: refactor this to use the write out to string func
 void ConnectionManager::HttpGet( const std::string &url, 
                                  const UrlParams* pParams,
                                  std::string &out, 
@@ -242,11 +233,6 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
         curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
         //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
         
-        /*
-        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc);
-        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s);
-*/
-
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
         curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &out);
 
@@ -272,6 +258,7 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
     curl_easy_cleanup(pCurl);
 }
 
+// TODO :: depricated?
 void ConnectionManager::HttpGetAttachment( const std::string &url, 
                                            const UrlParams* pParams, 
                                            std::string &out, 
@@ -346,6 +333,7 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
 
 }
 
+// TODO :: depricated?
 void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
                                                       const UrlParams* pParams,
                                                       const std::string &szFilePath, 
@@ -400,6 +388,7 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
 }
 
 
+// TODO :: change writeout func to use string
 void ConnectionManager::HttpPost( const std::string &url, 
                                   const UrlParams* pParams,
                                   const std::string &body, 

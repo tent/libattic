@@ -37,8 +37,8 @@ public:
     void SetPostVersion(const std::string& version)      { m_PostVersion = atoi(version.c_str()); }
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
 
-    void SetKey(const std::string &key) { memcpy(m_Credentials.key, key.c_str(), key.size()); }
-    void SetIv(const std::string &iv) { memcpy(m_Credentials.iv, iv.c_str(), iv.size() ); }
+    void SetKey(const std::string &key) { memcpy(&m_Credentials.key, key.c_str(), m_Credentials.GetKeySize() ); }
+    void SetIv(const std::string &iv) { memcpy(&m_Credentials.iv, iv.c_str(), m_Credentials.GetIvSize() ); }
 
     void GetFileName(std::string &out) const    { out = m_FileName; }
     void GetFilePath(std::string &out) const    { out = m_FilePath; }
@@ -65,9 +65,7 @@ private:
 
     std::string     m_PostID; // Id of the post the file is potentially attached to
 
-
     unsigned int    m_PostVersion; // Version of the post the file is attached to
-
     unsigned int    m_ChunkCount;
     unsigned int    m_FileSize;   // Filesize, not compressed
 

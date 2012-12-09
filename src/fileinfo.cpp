@@ -15,7 +15,7 @@ FileInfo::FileInfo()
 
 FileInfo::~FileInfo()
 {
-    std::cout<<"delete"<<std::endl;
+    std::cout<<"fi delete"<<std::endl;
 }
 
 bool FileInfo::InitializeFile(const std::string &filepath)
@@ -64,17 +64,26 @@ FileInfoFactory::FileInfoFactory()
 FileInfoFactory::~FileInfoFactory()
 {
     
-    std::cout<<"size : " << m_FileList.size() << std::endl;
+
     std::deque<FileInfo*>::iterator itr = m_FileList.begin();
-    for(;*itr != NULL; itr++)
+    for(;itr != m_FileList.end();)
     {
-        std::cout<<"delete"<<std::endl;
-        delete *itr;
+        std::cout<<"size : " << m_FileList.size() << std::endl;
+        if(*itr)
+        {
+
+            std::cout<<"delete"<<std::endl;
+            delete *itr;
+            //*itr = NULL;
+        }
+        std::cout<<"+"<<std::endl;
+        itr++;
+        m_FileList.pop_front();
     }
 
     std::cout<<"clear"<<std::endl;
     m_FileList.clear();
-    std::cout<<"+"<<std::endl;
+
 
     
 }
