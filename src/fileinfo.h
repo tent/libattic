@@ -17,6 +17,8 @@ public:
 
     // Init a file
     bool InitializeFile(const std::string &filepath);
+
+    bool IsValid() { return !m_FileName.empty(); }
     
     void SetFileName(const std::string &filename)     { m_FileName = filename; }
     void SetFilePath(const std::string &filepath)     { m_FilePath = filepath; }

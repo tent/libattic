@@ -40,7 +40,7 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
 
-    void TestQuery() { std::string a(""); FileInfo fi; m_Manifest.QueryForFile(a, fi); }
+    //void TestQuery() { std::string a(""); FileInfo fi; m_Manifest.QueryForFile(a, &fi); }
 
     bool LoadManifest(const std::string &szFilePath);
     bool WriteOutChanges();
@@ -77,6 +77,9 @@ public:
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
+
+
+    void SetFilePostId(const std::string &filename, const std::string postid);
 
     Manifest::EntriesMap* GetManifestEntries() { return m_Manifest.GetEntries(); }
 

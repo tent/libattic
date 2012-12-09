@@ -25,7 +25,7 @@
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
 static const char* g_szAppData = "app";
 static const char* g_szAuthToken = "at";
-static const char* g_szManifest = "manifest._mn";
+static const char* g_szManifest = "manifest";
 
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
@@ -50,7 +50,7 @@ static ret::eCode DeletePost(const std::string& szPostID);
 
 int TestQuery() 
 {
-    g_pFileManager->TestQuery();
+    //g_pFileManager->TestQuery();
 
 }
 
@@ -419,13 +419,21 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
     JsonSerializer::DeserializeObject(&p, response);
 
+    int status = ret::A_OK;
     std::string postid = p.GetID();
     if(!postid.empty())
     {
-       fi->SetPostID(postid); 
-       fi->SetPostVersion(0); // temporary for now, change later
-       std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-       std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+        fi->SetPostID(postid); 
+        fi->SetPostVersion(0); // temporary for now, change later
+        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
+
+        if(g_pFileManager)
+            g_pFileManager->SetFilePostId(filename, postid);
+        else
+            std::cout<< "INVALID FILEMANAGER " << std::endl;
+
     }
 
     if(pData)
@@ -434,7 +442,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
         pData = 0;
     }
 
-    return ret::A_OK;
+    return status;
 }
 // utility
 //////
@@ -532,6 +540,7 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
        fi->SetPostVersion(p.GetVersion()); // temporary for now, change later
        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
     }
 
     if(pData)
@@ -554,6 +563,7 @@ int PushFile(const char* szFilePath)
     std::string filepath(szFilePath);
     std::string fn;
     utils::ExtractFileName(filepath, fn);
+    std::cout << " Getting file info ... " << std::endl;
 
     FileInfo* fi = g_pFileManager->GetFileInfo(fn);
 
@@ -696,6 +706,7 @@ int PullFile(const char* szFilePath)
     
     std::cout<<"FILE NAME : " << filename << std::endl;
     FileInfo* fi = g_pFileManager->GetFileInfo(filename);
+    std::cout<<"HERE"<<std::endl;
 
     if(!fi)
     {
@@ -706,6 +717,7 @@ int PullFile(const char* szFilePath)
     // Construct Post URL
     std::string postpath = g_Entity;
     postpath.append("/tent/posts/");
+
     std::string postid;
     fi->GetPostID(postid);
     postpath += postid;

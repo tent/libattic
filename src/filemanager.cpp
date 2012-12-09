@@ -41,6 +41,7 @@ FileManager::~FileManager()
 
 bool FileManager::StartupFileManager()
 {
+    /*
     // Load manifest
     if(!FileExists(m_ManifestFilePath))
     {
@@ -48,19 +49,28 @@ bool FileManager::StartupFileManager()
         m_Manifest.CreateEmptyManifest();
     }
 
-    return LoadManifest(m_ManifestFilePath);
+*/
+
+    m_Manifest.Initialize();
+    //return LoadManifest(m_ManifestFilePath);
+    return true;
 }
 
 bool FileManager::ShutdownFileManager()
 {
     // Write out manifest
-    return m_Manifest.WriteOutManifest();
+    //return m_Manifest.WriteOutManifest();
+
+    m_Manifest.Shutdown();
+    return true;
 }
 
 bool FileManager::LoadManifest(const std::string &szFilePath)
 {
-    m_Manifest.Initialize();
 
+    return true;
+
+/*
     m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(m_ifStream.is_open())
@@ -102,6 +112,7 @@ bool FileManager::LoadManifest(const std::string &szFilePath)
     }
 
     return false;
+    */
 }
 
 bool FileManager::WriteOutChanges()
@@ -186,6 +197,7 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
 
 ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 {
+    std::cout << "Indexing file ... " << std::endl;
     ret::eCode status = ret::A_OK;
     // Create an entry
     //  Get File info
@@ -233,7 +245,7 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 
     m_Manifest.InsertFileInfo(fi);
 
-    bool success = m_Manifest.WriteOutManifest();
+    //bool success = m_Manifest.WriteOutManifest();
     return status;
 }
 
@@ -266,6 +278,11 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
     }
 }
 
+void FileManager::SetFilePostId(const std::string &filename, const std::string postid)
+{
+    m_Manifest.InsertFilePostID(filename, postid);
+}
+
 void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
 {
     if(!fi)
@@ -289,11 +306,17 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
 
     ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
-    FileInfo *fi = m_Manifest.RetrieveFileInfo(filename);
+
+    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
+    //FileInfo *fi = m_Manifest.RetrieveFileInfo(filename);
 
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
 
+    m_Manifest.QueryForFile(filename, fi);
+
+    if(!fi)
+        return ret::A_FAIL_INVALID_PTR;
     std::string chunkpath;
 
     // Construct outbound path
@@ -403,5 +426,17 @@ bool FileManager::FileExists(std::string& szFilepath)
 
 FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
-    return m_Manifest.RetrieveFileInfo(filename);
+    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
+
+    if(!fi)
+        std::cout<<"INVALID"<<std::endl;
+
+    m_Manifest.QueryForFile(filename, fi);
+    if(!fi)
+        std::cout<<"INVALID"<<std::endl;
+    std::cout<<"427"<<std::endl;
+    //if(!fi->IsValid())
+     //   return NULL;
+    //return m_Manifest.RetrieveFileInfo(filename);
+    return fi;
 }

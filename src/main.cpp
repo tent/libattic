@@ -27,7 +27,7 @@
 
 #include "url.h"
 
-
+/*
 TEST(SQLITE, TEST)
 {
     SetTempDirectory("./data/temp");
@@ -212,7 +212,6 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
 TEST(PULL, AFILE)
 {
     SetTempDirectory("./data/temp");
@@ -250,7 +249,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("./data/oglin.pdf");
+    status = PullFile("./data/oa2.pdf");
 
     if(status != ret::A_OK)
     {
@@ -267,7 +266,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+ /*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
