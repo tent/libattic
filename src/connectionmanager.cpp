@@ -93,7 +93,10 @@ void ConnectionManager::Shutdown()
  //   curl_global_cleanup();
 
     if(m_pInstance)
+    {
         delete m_pInstance;
+        m_pInstance = NULL;
+    }
 }
 
 void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl, 

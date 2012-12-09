@@ -260,8 +260,10 @@ TEST(PULL, AFILE)
 
     ///////////////////////////////////////////////////////////////////////
     // Shutdown
-    ShutdownFileManager();
+
     ShutdownAppInstance();
+    ShutdownFileManager();
+
 }
 
 /*

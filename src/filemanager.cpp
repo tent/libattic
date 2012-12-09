@@ -60,7 +60,6 @@ bool FileManager::ShutdownFileManager()
 {
     // Write out manifest
     //return m_Manifest.WriteOutManifest();
-
     m_Manifest.Shutdown();
     return true;
 }
@@ -308,7 +307,6 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
     // Retrieve File Info from manifest
 
     FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
-    //FileInfo *fi = m_Manifest.RetrieveFileInfo(filename);
 
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
@@ -355,7 +353,6 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
     std::string decompPath;
     pstfx.clear();
 
-    //std::string pstfx; // temporary remove when adding back encryption and chunking
     ConstructOutboundPath( m_TempDirectory, 
                            filename, 
                            pstfx, 
@@ -365,9 +362,6 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
     std::cout<< " DECOMP PATH : " << decompPath << std::endl;
 
     status = m_Compressor.DecompressFile(decrypPath, decompPath);
-
-    //if(status != ret::A_OK) // Currently useless check, here for consistency's sake.
-    //    return status;
 
     return status;
 }

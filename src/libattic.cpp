@@ -72,13 +72,44 @@ int InitializeFileManager()
 
 int ShutdownFileManager()
 {
+    std::cout<<"fm"<<std::endl;
     if(g_pFileManager)
     {
+        
+        std::cout<<"fm"<<std::endl;
         g_pFileManager->ShutdownFileManager();
+        std::cout<<"fm"<<std::endl;
+
         delete g_pFileManager;
-        g_pFileManager = 0;
+        g_pFileManager = NULL;
+
+        std::cout<<"fm"<<std::endl;
     }
 
+    return ret::A_OK;
+}
+
+
+int ShutdownAppInstance()
+{
+    std::cout<<"here"<<std::endl;
+    if(g_pApp)
+    {
+    std::cout<<"here"<<std::endl;
+        delete g_pApp;
+        g_pApp = NULL;
+
+    std::cout<<"here"<<std::endl;
+    }
+    else
+    {
+        return ret::A_FAIL_INVALID_PTR;
+    }
+
+    std::cout<<"here"<<std::endl;
+    ConnectionManager::GetInstance()->Shutdown();
+
+    std::cout<<"here"<<std::endl;
     return ret::A_OK;
 }
 
@@ -118,24 +149,6 @@ int StartupAppInstance( const char* szAppName,
         }
     }
     
-    return ret::A_OK;
-}
-
-
-int ShutdownAppInstance()
-{
-    if(g_pApp)
-    {
-        delete g_pApp;
-        g_pApp = 0;
-    }
-    else
-    {
-        return ret::A_FAIL_INVALID_PTR;
-    }
-
-    ConnectionManager::GetInstance()->Shutdown();
-
     return ret::A_OK;
 }
 
