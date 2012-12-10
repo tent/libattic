@@ -53,6 +53,7 @@ private:
     std::string m_Code;
     std::string m_TokenType;
 };
+
 class TentApp : public JsonSerializable
 {
     public:

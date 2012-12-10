@@ -119,5 +119,14 @@ namespace utils
         return false;
     }
 
+    static void CheckUrlAndAppendTrailingSlash(std::string &url)
+    {
+        if(url.empty())                                 
+            return;                                          
+
+        if(url[url.size()-1] != '/')               
+            url.append("/");                            
+    }
+
 }
 #endif

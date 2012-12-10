@@ -18,6 +18,7 @@ TaskArbiter::~TaskArbiter()
 
 void* ThreadFunc(void* arg)
 {
+    std::cout<<"thread func"<<::std::endl;
     if(arg)
     {
         Task* pTask = (Task*)arg;
@@ -35,6 +36,7 @@ void* ThreadFunc(void* arg)
 // its probably joinable)
 void TaskArbiter::SpinOffTask(Task* pTask)
 {
+    std::cout<<"Spinning off task..."<<std::endl;
     if(!pTask)
         return;
 

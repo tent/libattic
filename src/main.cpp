@@ -249,8 +249,9 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("./data/oa2.pdf");
+    //status = PullFile("./data/oa2.pdf");
 
+    status = PullFileTask("./data/oa2.pdf");
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -261,6 +262,7 @@ TEST(PULL, AFILE)
     ///////////////////////////////////////////////////////////////////////
     // Shutdown
 
+    std::cout<<"shutting down"<< std::endl;
     ShutdownAppInstance();
     ShutdownFileManager();
 
