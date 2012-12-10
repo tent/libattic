@@ -12,8 +12,8 @@ class FileInfo
 {
     void ExtractFileName(const std::string &filepath, std::string &out);
 public:
-    FileInfo();
-    ~FileInfo();
+    FileInfo() {} 
+    ~FileInfo() {}
 
     // Init a file
     bool InitializeFile(const std::string &filepath);
@@ -52,10 +52,7 @@ public:
     unsigned int GetFileSize() const        { return m_FileSize; }
     Credentials GetCredentials() const      { return m_Credentials; }
 
-
     unsigned int GetPostVersion() const { return m_PostVersion ; }
-
-    
 private:    
     Credentials     m_Credentials;
 
@@ -68,7 +65,6 @@ private:
     unsigned int    m_PostVersion; // Version of the post the file is attached to
     unsigned int    m_ChunkCount;
     unsigned int    m_FileSize;   // Filesize, not compressed
-
 };
 
 
