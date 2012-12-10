@@ -6,9 +6,11 @@
 
 class Task // Inherit from this to implement specific tasks   
 {                                                             
-public:                                                       
+
+protected:
     Task(){}                                                  
-    virtual ~Task(){}                                         
+public:                                                       
+    virtual ~Task(){}
     
     virtual void RunTask() = 0;                               
 };                                                            

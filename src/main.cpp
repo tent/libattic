@@ -252,6 +252,8 @@ TEST(PULL, AFILE)
     //status = PullFile("./data/oa2.pdf");
 
     status = PullFileTask("./data/oa2.pdf");
+
+    for(;;){sleep(100);}
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;

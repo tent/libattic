@@ -30,7 +30,7 @@ public:
 
     ~PullTask();
 
-    virtual void RunTask();
+    void RunTask();
 
 private:
    AccessToken          m_At;

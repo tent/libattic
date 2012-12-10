@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "task.h"
+#include "pulltask.h"
 
 volatile static unsigned int g_ThreadCount = 0;
 
@@ -21,7 +22,9 @@ void* ThreadFunc(void* arg)
     std::cout<<"thread func"<<::std::endl;
     if(arg)
     {
+        std::cout<<"attempting to run task"<<std::endl;
         Task* pTask = (Task*)arg;
+
         pTask->RunTask();
     }
     else
@@ -48,6 +51,8 @@ void TaskArbiter::SpinOffTask(Task* pTask)
         std::cout<<"ERROR SPINNING OFF A TASK : " << rc << std::endl;
         return;
     }
+
+    std::cout<< " Created thread : " << thread << std::endl;
 
     g_ThreadCount++;
     m_ThreadHandles.push_back(thread);

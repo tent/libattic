@@ -706,7 +706,7 @@ int PullFileTask(const char* szFilePath)
 {
     TaskArbiter arb;
 
-    PullTask t( g_pApp, 
+    PullTask* t = new PullTask( g_pApp, 
                    g_pFileManager, 
                    ConnectionManager::GetInstance(),
                    g_at,
@@ -714,7 +714,7 @@ int PullFileTask(const char* szFilePath)
                    szFilePath,
                    g_TempDirectory);
 
-    arb.SpinOffTask(&t);
+    arb.SpinOffTask(t);
 
     return ret::A_OK;
 }
@@ -786,7 +786,7 @@ int PullFile(const char* szFilePath)
         attachmentpath += postpath;
         attachmentpath.append("/attachments/");
         attachmentpath += (*itr)->Name;
-        std::cout<< attachmentpath << std::endl;
+        std::cout<< "ATTACHMENT PATH : " << attachmentpath << std::endl;
 
         outpath.clear();
         outpath += g_TempDirectory;

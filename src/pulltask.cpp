@@ -43,7 +43,10 @@ PullTask::~PullTask()
 
 void PullTask::RunTask()
 {
+    std::cout<<" RUNNING TASK " << std::endl;
 
+    std::cout<<" FILEPATH : " << m_Filepath << std::endl;
+    PullFile(m_Filepath);
 }
 
 int PullTask::PullFile(const std::string& filepath)
@@ -106,6 +109,8 @@ int PullTask::PullFile(const std::string& filepath)
     // Construct list of attachments                                                             
 
     Post::AttachmentVec* av = resp.GetAttachments();                                             
+
+    std::cout<< " VEC COUNT : " << av->size() << std::endl;
     Post::AttachmentVec::iterator itr = av->begin();                                             
 
     std::string attachmentpath;                                                                  
@@ -124,6 +129,8 @@ int PullTask::PullFile(const std::string& filepath)
         outpath += m_TempDirectory;                                                          
         utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
         outpath += (*itr)->Name;                                                             
+
+        std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
 
         // Request attachment                                                                
         GetFileAndWriteOut(attachmentpath, outpath);                                         
