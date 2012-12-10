@@ -2,10 +2,12 @@
 
 #include <iostream>
 
+#include "task.h"
+
+volatile static unsigned int g_ThreadCount = 0;
+
 TaskArbiter::TaskArbiter()
 {
-    m_ThreadCount = 0;
-
 }
 
 TaskArbiter::~TaskArbiter()
@@ -24,6 +26,7 @@ void* ThreadFunc(void* arg)
     else
         std::cout<<"invalid arg passed to thread"<<std::endl;
 
+    g_ThreadCount--;
     pthread_exit(NULL);
 }
 
@@ -44,5 +47,6 @@ void TaskArbiter::SpinOffTask(Task* pTask)
         return;
     }
 
+    g_ThreadCount++;
     m_ThreadHandles.push_back(thread);
 }

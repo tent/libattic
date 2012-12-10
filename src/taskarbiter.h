@@ -7,14 +7,7 @@
 
 #include <pthread.h>
 
-class Task // Inherit from this to implement specific tasks
-{
-public:
-    Task(){}
-    virtual ~Task(){}
-
-    virtual void RunTask() = 0;
-};
+class Task;
 
 class TaskArbiter
 {
@@ -28,7 +21,7 @@ public:
 
 private:
     std::deque<pthread_t>  m_ThreadHandles; 
-    unsigned int m_ThreadCount; // current thread count
+    volatile unsigned int m_ThreadCount; // current thread count
 
 };
 

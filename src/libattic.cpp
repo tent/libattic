@@ -32,6 +32,7 @@ static FileManager* g_pFileManager = 0;
 
 static AccessToken g_at;
 
+// Consider making these volatile
 static std::string g_WorkingDirectory;
 static std::string g_ConfigDirectory;
 static std::string g_TempDirectory;
