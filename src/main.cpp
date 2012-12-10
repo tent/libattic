@@ -27,7 +27,7 @@
 
 #include "url.h"
 
-
+/*
 TEST(SQLITE, TEST)
 {
     SetTempDirectory("./data/temp");
@@ -40,11 +40,23 @@ TEST(SQLITE, TEST)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
-
-
     ASSERT_EQ(status, ret::A_OK);
 
+    status = LoadAppFromFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    TestQuery();
+
+    ShutdownFileManager();
+    ShutdownAppInstance();
 }
+/*
+*/
 
 /*   
 TEST(DELETE, AFILE)
@@ -200,7 +212,6 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
 TEST(PULL, AFILE)
 {
     SetTempDirectory("./data/temp");
@@ -238,7 +249,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("./data/oglin.pdf");
+    status = PullFile("./data/oa2.pdf");
 
     if(status != ret::A_OK)
     {
@@ -249,13 +260,15 @@ TEST(PULL, AFILE)
 
     ///////////////////////////////////////////////////////////////////////
     // Shutdown
-    ShutdownFileManager();
+
     ShutdownAppInstance();
+    ShutdownFileManager();
+
 }
 
 /*
  */
-/*
+ /*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -291,7 +304,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFile("./data/oglin.pdf");
+    status = PushFile("./data/oa2.pdf");
 
     if(status != ret::A_OK)
     {

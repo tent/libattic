@@ -14,8 +14,12 @@
 
 
 
-struct Credentials
+class Credentials
 {
+public:
+    Credentials() {}
+    ~Credentials() {}
+
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
     byte iv[CryptoPP::AES::BLOCKSIZE];
     

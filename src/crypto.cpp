@@ -135,6 +135,11 @@ bool Crypto::EncryptData( const char* pData,
        std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
        std::cout << " KEY : " << cred.key << std::endl;
        std::cout << " IV : " << cred.iv << std::endl;
+/*
+       std::string holdkey;
+       holdkey.append(cred.key, cred.GetKeySize());
+       std::cout<< "HOLD KEY : " << holdkey << std::endl;
+       */
 
 
     }

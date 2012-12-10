@@ -8,15 +8,6 @@
 
 #include "utils.h"
 
-FileInfo::FileInfo()
-{
-
-}
-
-FileInfo::~FileInfo()
-{
-
-}
 
 bool FileInfo::InitializeFile(const std::string &filepath)
 {
@@ -27,7 +18,6 @@ bool FileInfo::InitializeFile(const std::string &filepath)
     // Extract Filename
     ExtractFileName(filepath, m_FileName); 
     // Check file size
-    //if(!CheckFileSize())
     m_FileSize = utils::CheckFileSize(filepath);
 
     if(!m_FileSize)
@@ -63,20 +53,23 @@ FileInfoFactory::FileInfoFactory()
 
 FileInfoFactory::~FileInfoFactory()
 {
-    std::deque<FileInfo*>::iterator itr;
-    for(itr=m_FileList.begin(); itr != m_FileList.end(); itr++)
+    std::deque<FileInfo*>::iterator itr = m_FileList.begin();
+    for(;itr != m_FileList.end();)
     {
         if(*itr)
         {
             delete *itr;
-            *itr = 0;
+            *itr = NULL;
         }
+        itr++;
+        m_FileList.pop_front();
     }
+
+    m_FileList.clear();
 }
 
 FileInfo* FileInfoFactory::CreateFileInfoObject() 
 {
-
     FileInfo* fp = new FileInfo();
 
     m_FileList.push_back(fp);

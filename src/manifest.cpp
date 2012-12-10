@@ -11,6 +11,7 @@
 #include "utils.h"
 
 
+static const std::string g_table("infotable");
 
 Manifest::Manifest()
 {
@@ -58,7 +59,6 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 void Manifest::Initialize()
 {
     OpenSqliteDb();
-
 }
 
 void Manifest::Shutdown()
@@ -68,7 +68,9 @@ void Manifest::Shutdown()
 
 void Manifest::OpenSqliteDb()
 {
-    int rc = sqlite3_open("test.db", &m_pDb);
+    
+    int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
+
     if( rc )
     {
         // failed
@@ -76,36 +78,13 @@ void Manifest::OpenSqliteDb()
     }
     else
     {
-        if(m_pDb)
-            std::cout<<"not nil"<<std::endl;
-        // success
-        std::cout << "Open database successfully" << std::endl;
-
-        // Check if table exists
-        const char* pexc = "CREATE TABLE IF NOT EXISTS infotable (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));";
-
-        char* szError;
-        rc = sqlite3_exec(m_pDb, pexc, callback, 0, &szError);
-        std::cout << " rc : " << rc << std::endl;
-
-        if(szError)
-            std::cout<<"ERROR : " << szError << std::endl;
-
-        if(rc != SQLITE_OK)
+        if(!m_pDb)
         {
-            fprintf(stderr, "SQL error: %s\n", szError);
-            sqlite3_free(szError);
+            std::cout << " invlid db instance " << std::endl;
+            return;
         }
 
-        const char* p2 = " INSERT INTO infotable (filename) values ('Allen')";
-        rc = sqlite3_exec(m_pDb, p2, callback, 0, &szError);
-
-        if(rc != SQLITE_OK)
-        {
-            fprintf(stderr, "SQL error: %s\n", szError);
-            sqlite3_free(szError);
-        }
-        sqlite3_close(m_pDb);
+        CreateTable();
     }
 }
 
@@ -124,8 +103,15 @@ void Manifest::CreateTable()
     if(!m_pDb)
         return;
 
-    const char* pexc = "CREATE TABLE IF NOT EXISTS infotable (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));";
+    char pexc[1024];
 
+    snprintf( pexc,
+              1024,
+              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
+              g_table.c_str()
+            );
+
+    PerformQuery(pexc);
 
 }
 
@@ -134,8 +120,7 @@ void Manifest::PerformQuery(const char* pQuery)
     if(!m_pDb || !pQuery)
         return;
 
-    char* szError;
-
+    char* szError = NULL;
     int rc = sqlite3_exec( m_pDb, 
                            pQuery, 
                            NULL, 
@@ -145,23 +130,199 @@ void Manifest::PerformQuery(const char* pQuery)
     if(rc != SQLITE_OK)
     {
         fprintf(stderr, "SQL error: %s\n", szError);
-        sqlite3_free(szError);
+        if(szError)
+        {
+            sqlite3_free(szError);
+            szError = NULL;
+        }
     }
 
 }
 
-void Manifest::QueryForFile(const std::string &filename)
+// int sqlite3_get_table(
+//                       sqlite3 *db,          /* An open database */
+//                       const char *zSql,     /* SQL to be evaluated */
+//                       char ***pazResult,    /* Results of the query */
+//                       int *pnRow,           /* Number of result rows written here */
+//                       int *pnColumn,        /* Number of result columns written here */
+//                       char **pzErrmsg       /* Error msg written here */
+//                       );
+//                      void sqlite3_free_table(char **result);
+void Manifest::PerformSelect(const char* pSelect, SelectResult &out)
 {
+    if(!m_pDb || !pSelect)
+        return;
+
+    char *szError = NULL;
+    //char **results;
+    //int nRow = 0;
+    //int nCol = 0; 
+    char *pzErr = NULL;
+
+    int rc = sqlite3_get_table( m_pDb,
+                                pSelect,       /* SQL to be evaluated */
+                                &out.results,  /* Results of the query */
+                                &out.nRow,     /* Number of result rows written here */
+                                &out.nCol,     /* Number of result columns written here */
+                                &pzErr         /* Error msg written here */
+                               );
+
+    if(pzErr)
+    {
+        std::cout << " Perform Select Error : " << pzErr << std::endl;
+    }
 
 }
 
-void Manifest::InsertFileInfo(const FileInfo* fi)
+void Manifest::QueryForFile(const std::string &filename, FileInfo* out)
 {
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "SELECT * FROM infotable WHERE filename=\"%s\";",
+              filename.c_str()
+            );
+     
+    std::cout<< " EXECING : " << pexc << std::endl;
+
+    SelectResult res;
+    PerformSelect(pexc, res);
+
+    std::cout << " Row count : " << res.nRow << std::endl;
+    std::cout << " Col count : " << res.nCol << std::endl;
+
+    int step = 0;
+    for(int i=0; i<res.nRow+1; i++)
+    {
+        step = i*res.nCol;
+        std::cout<< " step : " << step << std::endl;
+
+        for(int j=0; j<res.nCol; j++)
+        {
+            std::cout << " Results : " << res.results[j+step] << std::endl;
+        }
+
+        if(step > 0)
+        {
+            out->SetFileName(res.results[0+step]);
+            out->SetFilePath(res.results[1+step]);
+            out->SetChunkName(res.results[2+step]);
+            out->SetChunkCount(res.results[3+step]);
+            out->SetFileSize(res.results[4+step]);
+            out->SetPostID(res.results[5+step]);
+            out->SetPostVersion(res.results[6+step]);
+            out->SetKey(res.results[7+step]);
+            out->SetIv(res.results[8+step]);
+        }
+    }
+
+    sqlite3_free_table(res.results);
+
+}
+
+void Manifest::InsertFileInfoToDb(const FileInfo* fi)
+{
+    if(!fi)
+        return;
+
+    std::string filename, filepath, chunkname, postid;
+
+    fi->GetFileName(filename);
+    fi->GetFilePath(filepath);
+    fi->GetChunkName(chunkname);
+    fi->GetPostID(postid);
+
+    Credentials cred = fi->GetCredentials();
+
+    std::cout<< " name : " << filename << std::endl;
+    std::cout<< " path : " << filepath << std::endl;
+    std::cout<< " chunk name : " << chunkname << std::endl;
+    std::cout<< " count : " << fi->GetChunkCount() << std::endl;
+    std::cout<< " filesize : " << fi->GetFileSize() << std::endl;
+    std::cout<< " id : " << postid << std::endl;
+    std::cout<< " version : " << fi->GetPostVersion() << std::endl;
+    
+    char *szKey = reinterpret_cast<char*>(cred.key);
+    std::cout<< " key : " << szKey << std::endl;
+
+    char *szIv = reinterpret_cast<char*>(cred.iv);
+    std::cout<< " iv : " << szIv << std::endl;
+
+    char pexc[1024];
+    snprintf( pexc,
+              1024, 
+              "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, filesize, postid, postversion, key, iv) VALUES (\"%s\", \"%s\", \"%s\", %u, %u, \"%s\", %d, \'%s\', \'%s\');",
+              filename.c_str(),
+              filepath.c_str(),
+              chunkname.c_str(),
+              fi->GetChunkCount(),
+              fi->GetFileSize(),
+              postid.c_str(),
+              fi->GetPostVersion(),
+              szKey,
+              szIv
+            ); 
+
+    // Memcpy the key and iv
+
+    char szkey[100000];
+    
+    memcpy(szkey,  &cred.key, cred.GetKeySize());
+
+    std::cout<< " COPIED KEY : " << szkey << std::endl;
+
+    std::cout<< " ORIGINAL KEY : " << cred.key << std::endl;
+
+    char* p = reinterpret_cast<char*>(cred.key);
+
+    std::cout<< " REINTERP : " << p << std::endl;
+
+    char test[10000];
+    snprintf(test, 10000, "%s", p);
+
+    std::cout<< " TEST : " << test << std::endl;
+
+    byte szUn[10000];
+    memcpy(szUn, szkey, cred.GetKeySize());
+
+    std::cout<< " COPIED AGAIN : " << szUn << std::endl;
+
+    std::cout << " INSERT : \n" << pexc << std::endl;
+
+    PerformQuery(pexc);
+}
+
+
+bool Manifest::InsertFilePostID(const std::string& filename, const std::string &id)
+{
+    std::cout<<" HERE " << std::endl;
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "UPDATE infotable SET postid=\"%s\" WHERE filename=\"%s\";",
+              id.c_str(),
+              filename.c_str()
+            ); 
+
+
+    std::cout << "INSERT POST ID : " << pexc << std::endl;
+    PerformQuery(pexc);
+
+}
+
+void Manifest::InsertCredentialsToDb(const FileInfo* fi)
+{
+    if(!fi)
+        return;
+
 
 }
 
 void Manifest::RemoveFile(const std::string &filename)
 {
+    // TODO :: this
 
 }
 
@@ -170,7 +331,7 @@ bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
     if(ofs)
     {
         char countBuf[256];
-        snprintf(countBuf, (sizeof(char)*256), "%lu", m_entries.size());
+        snprintf(countBuf, (sizeof(char)*256), "%lu", m_Entries.size());
 
         std::string manifestData;
         manifestData.append(countBuf);
@@ -186,8 +347,20 @@ bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
 
 bool Manifest::WriteOutManifest()
 {
+    EntriesMap::iterator itr = m_Entries.begin();
+
+    for(;itr != m_Entries.end(); itr++)
+    {
+        std::cout << " test " << std::endl;
+        InsertFileInfoToDb(itr->second);
+
+    }
+
+
+
+    /*
     // TODO :: use a filepath
-    m_ofStream.open(m_filePath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    m_ofStream.open(m_Filepath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 
     if(m_ofStream.is_open())
     {
@@ -197,7 +370,7 @@ bool Manifest::WriteOutManifest()
         std::string line;
 
         std::map<std::string, FileInfo*>::iterator itr; 
-        for(itr = m_entries.begin(); itr != m_entries.end(); itr++)
+        for(itr = m_Entries.begin(); itr != m_Entries.end(); itr++)
         {
             line.clear();
 
@@ -277,6 +450,8 @@ bool Manifest::WriteOutManifest()
     }
 
    return false; 
+   */
+   return true;
 }
 
 bool Manifest::InsertFileInfo(FileInfo* fi)
@@ -289,8 +464,10 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
 
     std::string fn;
     fi->GetFileName(fn);
-    m_entries[fn] = fi;
+    m_Entries[fn] = fi;
     m_entryCount++;
+
+    InsertFileInfoToDb(fi);
 
     return true;
 }
@@ -298,12 +475,12 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
 bool Manifest::RemoveFileInfo(const std::string &filename)
 {
     EntriesMap::iterator itr;
-    itr = m_entries.find(filename);
+    itr = m_Entries.find(filename);
 
-    if(itr == m_entries.end())
+    if(itr == m_Entries.end())
         return false;
 
-    m_entries.erase(itr);
+    m_Entries.erase(itr);
 
     return true;
 }
@@ -311,10 +488,13 @@ bool Manifest::RemoveFileInfo(const std::string &filename)
 
 FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
 {
+    std::cout << "DEPRICATED" << std::endl;
+    // Depricated
+    // Check in fileinfo already loaded
     EntriesMap::iterator itr;
-    itr = m_entries.find(s);
+    itr = m_Entries.find(s);
 
-    if(itr == m_entries.end())
+    if(itr == m_Entries.end())
         return 0;
     return itr->second;
 }
@@ -322,16 +502,16 @@ FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
 bool Manifest::CreateEmptyManifest()
 {
 
-    m_ofStream.open(m_filePath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    //m_ofStream.open(m_Filepath.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 
-    WriteOutManifestHeader(m_ofStream);
-    m_ofStream.close();
+    //WriteOutManifestHeader(m_ofStream);
+    //m_ofStream.close();
     return true;
 }
 
 bool Manifest::IsFileInManifest(const std::string &filename)
 {
-    if(m_entries.find(filename) != m_entries.end())
+    if(m_Entries.find(filename) != m_Entries.end())
         return true;
 
     return false;

@@ -25,7 +25,7 @@
 static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
 static const char* g_szAppData = "app";
 static const char* g_szAuthToken = "at";
-static const char* g_szManifest = "manifest._mn";
+static const char* g_szManifest = "manifest";
 
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
@@ -48,6 +48,12 @@ static int GetFile(const std::string& url, std::string &out);
 static ret::eCode DeletePost(const std::string& szPostID);
 //////// API start
 
+int TestQuery() 
+{
+    //g_pFileManager->TestQuery();
+
+}
+
 int InitializeFileManager()
 {
     // Construct path
@@ -66,13 +72,44 @@ int InitializeFileManager()
 
 int ShutdownFileManager()
 {
+    std::cout<<"fm"<<std::endl;
     if(g_pFileManager)
     {
+        
+        std::cout<<"fm"<<std::endl;
         g_pFileManager->ShutdownFileManager();
+        std::cout<<"fm"<<std::endl;
+
         delete g_pFileManager;
-        g_pFileManager = 0;
+        g_pFileManager = NULL;
+
+        std::cout<<"fm"<<std::endl;
     }
 
+    return ret::A_OK;
+}
+
+
+int ShutdownAppInstance()
+{
+    std::cout<<"here"<<std::endl;
+    if(g_pApp)
+    {
+    std::cout<<"here"<<std::endl;
+        delete g_pApp;
+        g_pApp = NULL;
+
+    std::cout<<"here"<<std::endl;
+    }
+    else
+    {
+        return ret::A_FAIL_INVALID_PTR;
+    }
+
+    std::cout<<"here"<<std::endl;
+    ConnectionManager::GetInstance()->Shutdown();
+
+    std::cout<<"here"<<std::endl;
     return ret::A_OK;
 }
 
@@ -112,24 +149,6 @@ int StartupAppInstance( const char* szAppName,
         }
     }
     
-    return ret::A_OK;
-}
-
-
-int ShutdownAppInstance()
-{
-    if(g_pApp)
-    {
-        delete g_pApp;
-        g_pApp = 0;
-    }
-    else
-    {
-        return ret::A_FAIL_INVALID_PTR;
-    }
-
-    ConnectionManager::GetInstance()->Shutdown();
-
     return ret::A_OK;
 }
 
@@ -413,13 +432,21 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
 
     JsonSerializer::DeserializeObject(&p, response);
 
+    int status = ret::A_OK;
     std::string postid = p.GetID();
     if(!postid.empty())
     {
-       fi->SetPostID(postid); 
-       fi->SetPostVersion(0); // temporary for now, change later
-       std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-       std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+        fi->SetPostID(postid); 
+        fi->SetPostVersion(0); // temporary for now, change later
+        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
+
+        if(g_pFileManager)
+            g_pFileManager->SetFilePostId(filename, postid);
+        else
+            std::cout<< "INVALID FILEMANAGER " << std::endl;
+
     }
 
     if(pData)
@@ -428,7 +455,7 @@ static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
         pData = 0;
     }
 
-    return ret::A_OK;
+    return status;
 }
 // utility
 //////
@@ -526,6 +553,7 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
        fi->SetPostVersion(p.GetVersion()); // temporary for now, change later
        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
     }
 
     if(pData)
@@ -548,6 +576,7 @@ int PushFile(const char* szFilePath)
     std::string filepath(szFilePath);
     std::string fn;
     utils::ExtractFileName(filepath, fn);
+    std::cout << " Getting file info ... " << std::endl;
 
     FileInfo* fi = g_pFileManager->GetFileInfo(fn);
 
@@ -690,6 +719,7 @@ int PullFile(const char* szFilePath)
     
     std::cout<<"FILE NAME : " << filename << std::endl;
     FileInfo* fi = g_pFileManager->GetFileInfo(filename);
+    std::cout<<"HERE"<<std::endl;
 
     if(!fi)
     {
@@ -700,6 +730,7 @@ int PullFile(const char* szFilePath)
     // Construct Post URL
     std::string postpath = g_Entity;
     postpath.append("/tent/posts/");
+
     std::string postid;
     fi->GetPostID(postid);
     postpath += postid;
