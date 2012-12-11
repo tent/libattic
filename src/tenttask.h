@@ -61,11 +61,11 @@ public:
     void SetCallback(void (*cb)(int, void*)) { mCallback = cb; }
 
 protected:
-    void Callback()
+    void Callback(int code, void* p)
     {
         std::cout<<" Callback " << std::endl;
         if(mCallback)
-            mCallback(0, NULL); 
+            mCallback(code, p); 
 
     }
 

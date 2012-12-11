@@ -42,9 +42,9 @@ void PullTask::RunTask()
 
     std::string filepath;
     GetFilepath(filepath);
-    PullFile(filepath);
+    int status = PullFile(filepath);
 
-    Callback();
+    Callback(status, NULL);
 }
 
 int PullTask::PullFile(const std::string& filepath)

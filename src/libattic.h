@@ -47,18 +47,13 @@ int LoadAppFromFile();
 int LoadAccessToken();
 
 // Pushfile to tent
-int PushFile(const char* szFilePath);
-
-int PushFileTask(const char* szFilePath, void (*callback)(int, void*) );
+int PushFile(const char* szFilePath, void (*callback)(int, void*));
 
 // Pullfile from tent
-int PullFile(const char* szFilePath);
-
-// Test method
-int PullFileTask(const char* szFilePath, void (*callback)(int, void*));
+int PullFile(const char* szFilePath, void (*callback)(int, void*));
 
 // Delete a file
-int DeleteFile(const char* szFileName);
+int DeleteFile(const char* szFileName, void (*callback)(int, void*));
 
 // Pull All files in manifest
 int PullAllFiles();

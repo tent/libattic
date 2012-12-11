@@ -58,12 +58,17 @@ TEST(SQLITE, TEST)
 /*
 */
 
-/*   
+   
+void FOOCALL(int a, void* p)
+{
+    std::cout<< " CALLBACK FOOCAL : " << a << std::endl;
+}
+
 TEST(DELETE, AFILE)
 {
     SetConfigDirectory("./config");
-    // Set Working Dir first
     SetWorkingDirectory("./data");
+    SetTempDirectory("./data/temp");
 
     int status = LoadAppFromFile();
 
@@ -96,7 +101,16 @@ TEST(DELETE, AFILE)
     ///////////////////////
     //do stuff here
 
-    status = DeleteFile("oa.pdf");
+    status = DeleteFile("oa3.pdf", &FOOCALL);
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -285,7 +299,7 @@ void FOOFUN(int a, void* b)
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
 
 }
-
+/*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -321,9 +335,9 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = PushFileTask("./data/oa1.pdf", &FOOFUN);
-    status = PushFileTask("./data/oa2.pdf", &FOOFUN);
-    status = PushFileTask("./data/oa3.pdf", &FOOFUN);
+    status = PushFile("./data/oa1.pdf", &FOOFUN);
+    status = PushFile("./data/oa2.pdf", &FOOFUN);
+    status = PushFile("./data/oa3.pdf", &FOOFUN);
 
     for(;;)
     {
@@ -332,6 +346,7 @@ TEST(PUSH, AFILE)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
+
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;

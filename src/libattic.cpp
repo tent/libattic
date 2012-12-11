@@ -15,7 +15,7 @@
 #include "taskarbiter.h"
 #include "pulltask.h"
 #include "pushtask.h"
-
+#include "deletetask.h"
 
 // TODO :: 
 // Things to wrap with mutexes
@@ -336,7 +336,7 @@ int LoadAppFromFile()
     return ret::A_OK;
 }
 
-int PushFileTask(const char* szFilePath, void (*callback)(int, void*) )
+int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
@@ -352,59 +352,36 @@ int PushFileTask(const char* szFilePath, void (*callback)(int, void*) )
     return ret::A_OK;
 }
 
-int DeleteFile(const char* szFileName)
+int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
-    if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    if(!g_pFileManager)
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    PullTask* t = new PullTask( g_pApp, 
+                                g_pFileManager, 
+                                ConnectionManager::GetInstance(),
+                                g_at,
+                                g_Entity,
+                                szFilePath,
+                                g_TempDirectory,
+                                callback);
 
-    FileInfo* fi = g_pFileManager->GetFileInfo(szFileName);
+    g_Arb.SpinOffTask(t);
 
-    if(!fi)
-        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-    
-    std::string postid;
-    fi->GetPostID(postid);
-
-    ret::eCode status = ret::A_OK;
-    // Delete post
-    status = DeletePost(postid);
-    
-    // Remove from Manifest
-    status = g_pFileManager->RemoveFile(szFileName);
-
-    return status; 
+    return ret::A_OK;
 }
 
-static ret::eCode DeletePost(const std::string& szPostID)
+int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 {
-    if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+    DeleteTask* t = new DeleteTask( g_pApp, 
+                                    g_pFileManager, 
+                                    ConnectionManager::GetInstance(),
+                                    g_at,
+                                    g_Entity,
+                                    szFileName,
+                                    g_TempDirectory,
+                                    callback);
 
-    if(!g_pFileManager)
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    g_Arb.SpinOffTask(t);
 
-
-    // Modify Post
-    std::string posturl = g_Entity;
-    posturl += "/tent/posts/";
-    posturl += szPostID;
-
-    std::cout<< " DELETE URL : " << posturl << std::endl;
-
-    std::string response;
-    ConnectionManager::GetInstance()->HttpDelete( posturl,    
-                                                  NULL,
-                                                  response,  
-                                                  g_at.GetMacAlgorithm(), 
-                                                  g_at.GetAccessToken(), 
-                                                  g_at.GetMacKey(), 
-                                                  true);     
-
-    std::cout<<"RESPONSE : " << response << std::endl;
-            
     return ret::A_OK;
 }
 
@@ -425,28 +402,13 @@ int PullAllFiles()
     for(;itr != pEntryMap->end(); itr++)
     {
         std::string fn = itr->first;
-        PullFileTask((filepath + fn).c_str(), NULL);
+        PullFile((filepath + fn).c_str(), NULL);
     }
     
     return ret::A_OK;
 }
 
-int PullFileTask(const char* szFilePath, void (*callback)(int, void*))
-{
 
-    PullTask* t = new PullTask( g_pApp, 
-                                g_pFileManager, 
-                                ConnectionManager::GetInstance(),
-                                g_at,
-                                g_Entity,
-                                szFilePath,
-                                g_TempDirectory,
-                                callback);
-
-    g_Arb.SpinOffTask(t);
-
-    return ret::A_OK;
-}
 
 int GetAtticPostCount() 
 {
@@ -480,6 +442,16 @@ int GetAtticPostCount()
 
 int SyncAtticPosts()
 {
+    // TODO :: this needs to be re-done.
+    //
+    //This should be renamed to sync Attic Manifest or SyncAtticMetaData
+    // 1. Head request all posts of type attic
+    // 2. Build FileInfo Objects for each
+    // 3. Insert into Sqlite
+    //
+    // Create a new method PullAllFiles for the actual downloading of the files.
+    // - this may already exist and need updating
+    /*
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
     
@@ -559,6 +531,7 @@ int SyncAtticPosts()
 
 
                        // TODO:: reimplement syncing with proper key stores
+                       */
                        /* 
                         FileInfo* fi = g_pFileManager->CreateFileInfo( pAtt->Name,
                                                                        path,
@@ -570,7 +543,7 @@ int SyncAtticPosts()
 
                         g_pFileManager->InsertToManifest(fi);
                         */
-
+/*
                     }
                 }
             }
@@ -588,7 +561,7 @@ int SyncAtticPosts()
     }
 
     PullAllFiles();
-
+*/
     return ret::A_OK;
 }
 

@@ -9,8 +9,6 @@
 #include "errorcodes.h"
 #include "utils.h"
 
-
-
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
                     ConnectionManager* pCon, 
@@ -43,9 +41,9 @@ void PushTask::RunTask()
     std::string filepath;
     GetFilepath(filepath);
 
-    PushFile(filepath);
+    int status = PushFile(filepath);
     // Callback
-    Callback();
+    Callback(status, NULL);
 }
 
 int PushTask::PushFile(const std::string& filepath)

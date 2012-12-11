@@ -36,14 +36,18 @@ class Manifest
     // SQLite specific ///////////////////////////////////
     void OpenSqliteDb();
     void CloseSqliteDb();
-    void CreateTable();
-    void PerformQuery(const char* pQuery);
-    void PerformSelect(const char* pSelect, SelectResult &out);
 
-    void InsertFileInfoToDb(const FileInfo* fi);
-    void InsertCredentialsToDb(const FileInfo* fi);
+    bool CreateTable();
 
-    void RemoveFile(const std::string &filename);
+    bool PerformQuery(const char* pQuery);
+    bool PerformSelect(const char* pSelect, SelectResult &out);
+
+    bool InsertFileInfoToDb(const FileInfo* fi);
+    bool InsertCredentialsToDb(const FileInfo* fi);
+
+    bool QueryForFileExistence(const std::string& filename);
+
+    bool RemoveFileFromDb(const std::string &filename);
     void CheckIfTableExists(const std::string &tableName);
     //////////////////////////////////////////////////////
 
@@ -51,7 +55,8 @@ class Manifest
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
-    void QueryForFile(const std::string &filename, FileInfo* out);
+    // TODO pull this back to private
+    bool QueryForFile(const std::string &filename, FileInfo* out);
 
     Manifest();
     ~Manifest();
@@ -64,7 +69,6 @@ public:
 
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string& filename, const std::string &id);
-
 
     bool RemoveFileInfo(const std::string &filename);
 
