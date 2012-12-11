@@ -17,8 +17,18 @@ PushTask::PushTask( TentApp* pApp,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
-                    const std::string& tempdir)
+                    const std::string& tempdir) 
+                    :
+                    TentTask ( pApp,
+                               pFm,
+                               pCon,
+                               at,
+                               entity,
+                               filepath,
+                               tempdir
+                            )
 {
+    /*
     m_pTentApp = pApp;
     m_pFileManager = pFm;
     m_pConnectionManager = pCon; 
@@ -28,6 +38,7 @@ PushTask::PushTask( TentApp* pApp,
     m_Entity = entity;
     m_Filepath = filepath;
     m_TempDirectory = tempdir;
+    */
 }
 
 PushTask::~PushTask()
@@ -37,15 +48,21 @@ PushTask::~PushTask()
 
 void PushTask::RunTask()
 {
-    PushFile(m_Filepath);
+    // Run the task
+    std::string filepath;
+    GetFilepath(filepath);
+
+    PushFile(filepath);
+    // Callback
+    Callback();
 }
 
 int PushTask::PushFile(const std::string& filepath)
 {
-    if(!m_pTentApp)
+    if(!GetTentApp())
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    if(!m_pFileManager)
+    if(!GetFileManager())
         return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     std::string fn;
@@ -53,25 +70,25 @@ int PushTask::PushFile(const std::string& filepath)
 
     std::cout << " Getting file info ... " << std::endl;
 
-    while(m_pFileManager->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
-    FileInfo* fi = m_pFileManager->GetFileInfo(fn);
-    m_pFileManager->Unlock();
+    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
+    FileInfo* fi = GetFileManager()->GetFileInfo(fn);
+    GetFileManager()->Unlock();
 
     if(!fi)
     {
         int status = 0;
 
-        while(m_pFileManager->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         std::cout << "INDEXING FILE : " << std::endl;
-        status = m_pFileManager->IndexFile(filepath);
-        m_pFileManager->Unlock();
+        status = GetFileManager()->IndexFile(filepath);
+        GetFileManager()->Unlock();
 
         if(status != ret::A_OK)
             return status;
 
-        while(m_pFileManager->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        fi = m_pFileManager->GetFileInfo(fn);
-        m_pFileManager->Unlock();
+        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        fi = GetFileManager()->GetFileInfo(fn);
+        GetFileManager()->Unlock();
     }
 
     // Check for existing post
@@ -82,7 +99,9 @@ int PushTask::PushFile(const std::string& filepath)
     {
         // New Post
         // Construct post url
-        std::string posturl = m_Entity;
+        std::string posturl;
+        GetEntity(posturl);
+
         posturl += "/tent/posts";
 
         std::cout<< " POST URL : " << posturl << std::endl;
@@ -92,11 +111,12 @@ int PushTask::PushFile(const std::string& filepath)
     else
     {
         // Modify Post
-        std::string posturl = m_Entity;
+        std::string posturl;
+        GetEntity(posturl);
         posturl += "/tent/posts/";
         posturl += postid;
 
-        std::cout<< " POST URL : " << posturl << std::endl;
+        std::cout<< " PUT URL : " << posturl << std::endl;
 
         return PutFile(posturl, filepath, fi);
 
@@ -108,7 +128,7 @@ int PushTask::PushFile(const std::string& filepath)
 int PushTask::PostFile(const std::string& url, const std::string &filepath, FileInfo* fi)
 {
     // file path preferably to a chunked file.
-    if(!m_pTentApp)
+    if(!GetTentApp())
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     std::string postType("https://tent.io/types/post/attic/v0.1.0");
@@ -152,7 +172,9 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
     // construct chunk filepaths
     std::string chunkName; 
     fi->GetChunkName(chunkName);
-    std::string chunkPath = m_TempDirectory;
+
+    std::string chunkPath;// = m_TempDirectory;
+    GetTempDirectory(chunkPath);
     chunkPath.append("/");
     chunkPath.append(chunkName);
     chunkPath.append("_");
@@ -173,14 +195,15 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
 
     }
 
+    AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          NULL,
                                                          postBuffer, 
                                                          &paths, 
                                                          response, 
-                                                         m_At.GetMacAlgorithm(), 
-                                                         m_At.GetAccessToken(), 
-                                                         m_At.GetMacKey(), 
+                                                         at->GetMacAlgorithm(), 
+                                                         at->GetAccessToken(), 
+                                                         at->GetMacKey(), 
                                                          true);
     
     std::cout<<"RESPONSE : " << response << std::endl;
@@ -196,13 +219,12 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
         std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
         std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
 
-
-        if(m_pFileManager)
+        if(GetFileManager())
         {
 
-            while(m_pFileManager->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-            m_pFileManager->SetFilePostId(filename, postid);
-            m_pFileManager->Unlock();
+            while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+            GetFileManager()->SetFilePostId(filename, postid);
+            GetFileManager()->Unlock();
         }
         else
             std::cout<< "INVALID FILEMANAGER " << std::endl;
@@ -221,7 +243,7 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
 int PushTask::PutFile(const std::string& url, const std::string &filepath, FileInfo* fi)
 {
     // file path preferably to a chunked file.
-    if(!m_pTentApp)
+    if(!GetTentApp())
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     std::string postType("https://tent.io/types/post/attic/v0.1.0");
@@ -269,7 +291,9 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
     // construct chunk filepaths
     std::string chunkName; 
     fi->GetChunkName(chunkName);
-    std::string chunkPath = m_TempDirectory;
+
+    std::string chunkPath; // = m_TempDirectory;
+    GetTempDirectory(chunkPath);
     chunkPath.append("/");
     chunkPath.append(chunkName);
     chunkPath.append("_");
@@ -287,18 +311,17 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
         path += chunkPath + buf;
 
         paths.push_back(path);
-
     }
 
-
+    AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                         NULL,
                                                         postBuffer, 
                                                         &paths, 
                                                         response, 
-                                                        m_At.GetMacAlgorithm(), 
-                                                        m_At.GetAccessToken(), 
-                                                        m_At.GetMacKey(), 
+                                                        at->GetMacAlgorithm(), 
+                                                        at->GetAccessToken(), 
+                                                        at->GetMacKey(), 
                                                         true);
  
     std::cout<<"RESPONSE : " << response << std::endl;
@@ -312,7 +335,6 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
        fi->SetPostVersion(p.GetVersion()); // temporary for now, change later
        std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
        std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
-
     }
 
     if(pData)

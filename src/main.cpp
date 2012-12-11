@@ -212,7 +212,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-
+/*
 TEST(PULL, AFILE)
 {
     SetTempDirectory("./data/temp");
@@ -279,7 +279,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");

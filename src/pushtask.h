@@ -5,15 +5,9 @@
 
 #include <string>
 
-#include "tentapp.h"
-#include "task.h"
+#include "tenttask.h"
 
-class TentApp;
-class FileInfo;
-class FileManager;
-class ConnectionManager;
-
-class PushTask : public Task
+class PushTask : public TentTask
 {
     int PushFile(const std::string& filepath);
     int PostFile(const std::string& url, const std::string &filepath, FileInfo* fi);
@@ -32,15 +26,6 @@ public:
     void RunTask();
 
 private:
-   AccessToken          m_At;
-
-   std::string          m_Entity;
-   std::string          m_Filepath;
-   std::string          m_TempDirectory;
-
-   TentApp*             m_pTentApp; 
-   FileManager*         m_pFileManager;
-   ConnectionManager*   m_pConnectionManager;
 };
 
 #endif

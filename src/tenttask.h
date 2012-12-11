@@ -5,9 +5,12 @@
 
 #include <string>
 
-
 #include "tentapp.h"
 #include "task.h"
+
+#include "filemanager.h"
+#include "connectionmanager.h"
+
 
 // TODO :: WIP tent specific task abstractiom, abstract all things common
 //          out of push pull and other tent tasks here. do this after other tasks work 100%
@@ -39,9 +42,34 @@ public:
 
     }
 
-    AccessToken* GetAccessToken() { return *m_At; }
+    /*
+    virtual void RunTask()
+    {
+    }
+    */
 
+    AccessToken* GetAccessToken() { return &m_At; }
+    
+    void GetEntity(std::string &out)        { out = m_Entity; }
+    void GetFilepath(std::string &out)      { out = m_Filepath; }
+    void GetTempDirectory(std::string &out) { out = m_TempDirectory; } 
+
+    TentApp* GetTentApp()                       { return m_pTentApp; }
+    FileManager* GetFileManager()               { return m_pFileManager; } 
+    ConnectionManager* GetConnectionManager()   { return m_pConnectionManager; } 
+
+    void SetCallback(void (*cb)(int, void*)) { callback = cb; }
+
+protected:
+    void Callback()
+    {
+        std::cout<<" Callback " << std::endl;
+        if(callback)
+            callback(0, NULL); 
+
+    }
 private:
+//protected:
     AccessToken          m_At;
 
     std::string          m_Entity;
@@ -51,6 +79,8 @@ private:
     TentApp*             m_pTentApp; 
     FileManager*         m_pFileManager;
     ConnectionManager*   m_pConnectionManager;
+
+    void (*callback)(int, void*);
 };
 
 #endif
