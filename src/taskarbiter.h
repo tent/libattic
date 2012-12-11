@@ -7,14 +7,33 @@
 
 #include <pthread.h>
 
-class Task // Inherit from this to implement specific tasks
+
+#include <iostream> // temp remove
+
+
+
+class MutexClass
 {
 public:
-    Task(){}
-    virtual ~Task(){}
+    MutexClass()
+    {
+       pthread_mutex_init(&m_Mutex, NULL);
+    }
 
-    virtual void RunTask() = 0;
+    virtual ~MutexClass()
+    {
+        pthread_mutex_destroy(&m_Mutex);
+    }
+
+    int TryLock() {std::cout << " locking ... " << std::endl; return pthread_mutex_trylock(&m_Mutex); } // as all things unix 0 is ok
+    int Unlock() {std::cout << " unlocking ... " << std::endl;  return pthread_mutex_unlock(&m_Mutex); }
+
+private:
+    pthread_mutex_t m_Mutex;
+
 };
+
+class Task;
 
 class TaskArbiter
 {
@@ -25,14 +44,12 @@ public:
 
     void SpinOffTask(Task* pTask); // Spin off detached thread
 
-
 private:
     std::deque<pthread_t>  m_ThreadHandles; 
-    unsigned int m_ThreadCount; // current thread count
 
 };
 
-
+volatile static unsigned int g_ThreadCount = 0;
 
 #endif
 

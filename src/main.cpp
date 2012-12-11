@@ -212,6 +212,7 @@ TEST(PULL, ALL)
 }
 /*
 */
+
 TEST(PULL, AFILE)
 {
     SetTempDirectory("./data/temp");
@@ -249,8 +250,17 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     ///////////////////////////////////////////////////////////////////////
 
-    status = PullFile("./data/oa2.pdf");
+    //status = PullFile("./data/oa2.pdf");
 
+    status = PullFileTask("./data/oa2.pdf");
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -261,6 +271,7 @@ TEST(PULL, AFILE)
     ///////////////////////////////////////////////////////////////////////
     // Shutdown
 
+    std::cout<<"shutting down"<< std::endl;
     ShutdownAppInstance();
     ShutdownFileManager();
 
@@ -268,7 +279,7 @@ TEST(PULL, AFILE)
 
 /*
  */
- /*
+/*
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -304,8 +315,15 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFile("./data/oa2.pdf");
+    status = PushFileTask("./data/oa2.pdf");
 
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;

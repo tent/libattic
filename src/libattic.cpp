@@ -12,6 +12,17 @@
 #include "filemanager.h"
 #include "utils.h"
 
+#include "taskarbiter.h"
+#include "pulltask.h"
+#include "pushtask.h"
+
+
+// TODO :: 
+// Things to wrap with mutexes
+//  - app
+//  - filemanager
+//  - connectionmanager
+//  - access token? (perhaps provide a copy per operation)
 
 // TODO :: introduce queue'ing mechanism, to protect against multiple
 //         file operation spam
@@ -32,6 +43,7 @@ static FileManager* g_pFileManager = 0;
 
 static AccessToken g_at;
 
+// Consider making these volatile
 static std::string g_WorkingDirectory;
 static std::string g_ConfigDirectory;
 static std::string g_TempDirectory;
@@ -40,7 +52,6 @@ static std::string g_Entity;
 static std::string g_AuthorizationURL;
 
 // Local utility functions
-void CheckUrlAndAppendTrailingSlash(std::string &szString);
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
@@ -58,7 +69,7 @@ int InitializeFileManager()
 {
     // Construct path
     std::string szFilePath(g_ConfigDirectory);
-    CheckUrlAndAppendTrailingSlash(szFilePath);
+    utils::CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szManifest);
 
     g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
@@ -222,7 +233,7 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     g_AuthorizationURL.clear();
     g_AuthorizationURL.append(szApiRoot);
 
-    CheckUrlAndAppendTrailingSlash(g_AuthorizationURL);
+    utils::CheckUrlAndAppendTrailingSlash(g_AuthorizationURL);
 
     g_AuthorizationURL.append("oauth/authorize");
 
@@ -243,15 +254,6 @@ const char* GetAuthorizationURL()
     return g_AuthorizationURL.c_str();
 }
 
-void CheckUrlAndAppendTrailingSlash(std::string &szString)
-{
-    if(szString.empty())
-        return;
-
-    if(szString[szString.size()-1] != '/')
-        szString.append("/");
-}
-
 
 int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 {
@@ -264,7 +266,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     rcode.SetTokenType(std::string("mac"));
 
     std::string path(szApiRoot);
-    CheckUrlAndAppendTrailingSlash(path);
+    utils::CheckUrlAndAppendTrailingSlash(path);
     path.append("apps/");
     path.append(g_pApp->GetAppID());
     path.append("/authorizations");
@@ -296,7 +298,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     // Construct path
     std::string szSavePath(g_ConfigDirectory);
-    CheckUrlAndAppendTrailingSlash(szSavePath);
+    utils::CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAuthToken);
     
     g_at.SaveToFile(std::string(szSavePath));
@@ -308,7 +310,7 @@ int LoadAccessToken()
 {
     // Construct path
     std::string szFilePath(g_ConfigDirectory);
-    CheckUrlAndAppendTrailingSlash(szFilePath);
+    utils::CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szAuthToken);
 
     return g_at.LoadFromFile(szFilePath);
@@ -320,7 +322,7 @@ int SaveAppToFile()
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
     std::string szSavePath(g_ConfigDirectory);
-    CheckUrlAndAppendTrailingSlash(szSavePath);
+    utils::CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
     return g_pApp->SaveToFile(szSavePath);
@@ -333,7 +335,7 @@ int LoadAppFromFile()
 
     // Construct path
     std::string szSavePath(g_ConfigDirectory);
-    CheckUrlAndAppendTrailingSlash(szSavePath);
+    utils::CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(g_szAppData);
 
     g_pApp->LoadFromFile(szSavePath);
@@ -565,6 +567,23 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     return ret::A_OK;
 }
 
+int PushFileTask(const char* szFilePath)
+{
+    TaskArbiter arb;
+
+    PushTask* t = new PushTask( g_pApp, 
+                                g_pFileManager, 
+                                ConnectionManager::GetInstance(),
+                                g_at,
+                                g_Entity,
+                                szFilePath,
+                                g_TempDirectory);
+
+    arb.SpinOffTask(t);
+
+    return ret::A_OK;
+}
+
 int PushFile(const char* szFilePath)
 {
     if(!g_pApp)
@@ -691,7 +710,7 @@ int PullAllFiles()
     Manifest::EntriesMap::iterator itr = pEntryMap->begin();
 
     std::string filepath = g_WorkingDirectory;
-    CheckUrlAndAppendTrailingSlash(filepath);
+    utils::CheckUrlAndAppendTrailingSlash(filepath);
 
     for(;itr != pEntryMap->end(); itr++)
     {
@@ -699,6 +718,23 @@ int PullAllFiles()
         PullFile((filepath + fn).c_str());
     }
     
+    return ret::A_OK;
+}
+
+int PullFileTask(const char* szFilePath)
+{
+    TaskArbiter arb;
+
+    PullTask* t = new PullTask( g_pApp, 
+                   g_pFileManager, 
+                   ConnectionManager::GetInstance(),
+                   g_at,
+                   g_Entity,
+                   szFilePath,
+                   g_TempDirectory);
+
+    arb.SpinOffTask(t);
+
     return ret::A_OK;
 }
 
@@ -769,11 +805,11 @@ int PullFile(const char* szFilePath)
         attachmentpath += postpath;
         attachmentpath.append("/attachments/");
         attachmentpath += (*itr)->Name;
-        std::cout<< attachmentpath << std::endl;
+        std::cout<< "ATTACHMENT PATH : " << attachmentpath << std::endl;
 
         outpath.clear();
         outpath += g_TempDirectory;
-        CheckUrlAndAppendTrailingSlash(outpath);
+        utils::CheckUrlAndAppendTrailingSlash(outpath);
         outpath += (*itr)->Name;
 
         // Request attachment
@@ -810,7 +846,7 @@ int PullFile(const char* szFilePath)
     {
         //std::string outpath = g_WorkingDirectory;
         std::string outpath = filepath; 
-        //CheckUrlAndAppendTrailingSlash(outpath);
+        //utils::CheckUrlAndAppendTrailingSlash(outpath);
         //outpath += filename;
         std::ofstream ofs;
         std::cout<<outpath<<std::endl;
@@ -982,7 +1018,7 @@ int SyncAtticPosts()
                     {
 
                         std::string path = g_WorkingDirectory;
-                        CheckUrlAndAppendTrailingSlash(path);
+                        utils::CheckUrlAndAppendTrailingSlash(path);
                         path += pAtt->Name;
 
                         

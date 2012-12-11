@@ -49,8 +49,13 @@ int LoadAccessToken();
 // Pushfile to tent
 int PushFile(const char* szFilePath);
 
+int PushFileTask(const char* szFilePath);
+
 // Pullfile from tent
 int PullFile(const char* szFilePath);
+
+// Test method
+int PullFileTask(const char* szFilePath);
 
 // Delete a file
 int DeleteFile(const char* szFileName);

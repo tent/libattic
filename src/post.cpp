@@ -97,6 +97,8 @@ void Post::Serialize(Json::Value& root)
 
 void Post::Deserialize(Json::Value& root)
 {
+    std::cout<<" Deserializing " << std::endl;
+
     m_ID = root.get("id", "").asString();
     m_Entity = root.get("entity", "").asString();
     m_PublishedAt = root.get("published_at", "").asInt(); 
@@ -134,15 +136,12 @@ void Post::Deserialize(Json::Value& root)
 
             if(aobj.isObject())
             {
-
-                if(aobj.size() == 4)
+                if(aobj.size() >= 4)
                 {
                     Json::ValueIterator ii = aobj.begin();
 
                     for(; ii != aobj.end(); ii++)
                     {
-                        //std::cout<<ii.key().asString()<<std::endl;
-                        //std::cout<<*ii << std::endl;
                         pAtch->AssignKeyValue(ii.key().asString(), (*ii));
                     }
                     //pAtch->AssignKeyValue(itr.key(), *itr);

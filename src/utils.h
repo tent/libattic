@@ -119,5 +119,33 @@ namespace utils
         return false;
     }
 
+    static void CheckUrlAndAppendTrailingSlash(std::string &url)
+    {
+        if(url.empty())                                 
+            return;                                          
+
+        if(url[url.size()-1] != '/')               
+            url.append("/");                            
+    }
+
+    static void GenerateRandomString(std::string& out, unsigned int len = 10)
+    {
+        static const char alph[] = { "0123456789"
+                                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                     "abcdefghijklmnopqrstuvwxyz"};
+
+        std::cout<< " alph : " << alph << std::endl;
+
+        unsigned int size = sizeof(alph)-1;
+
+        for(unsigned int i=0; i<len; i++) 
+        {
+            out += alph[rand()%size];
+        }
+
+        std::cout<< "randome string : " << out << std::endl;
+
+    }
+
 }
 #endif

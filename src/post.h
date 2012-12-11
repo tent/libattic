@@ -55,16 +55,10 @@ struct Attachment : public JsonSerializable
 
     virtual void Deserialize(Json::Value& root)
     {
-        std::cout<< " HERE " << std::endl;
         Type = root.get("type", "").asString();
-        
-        std::cout<< " HERE " << std::endl;
         Category = root.get("category", "").asString();
-        std::cout<< " HERE " << std::endl;
         Name = root.get("name", "").asString();
-        std::cout<< " HERE " << std::endl;
         Size = root.get("size", 0).asUInt();
-        std::cout<< " HERE " << std::endl;
     }
 
     

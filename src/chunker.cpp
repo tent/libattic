@@ -29,11 +29,14 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const
         return ret::A_FAIL_INVALID_PTR;
 
     // Resolve Chunk Name   
-    // TODO :: Generate Chunk names 
     std::string chunkName;
-    chunkName.append("chunk");
+    fi->GetChunkName(chunkName);
 
-    fi->SetChunkName(chunkName);
+    if(chunkName.empty())
+    {
+        utils::GenerateRandomString(chunkName);
+        fi->SetChunkName(chunkName);
+    }
 
     unsigned int count = 0;
     std::cout<< "Filepath " << szFilePath <<std::endl;

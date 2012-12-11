@@ -12,7 +12,9 @@
 #include "crypto.h"
 #include "errorcodes.h"
 
-class FileManager
+#include "taskarbiter.h"
+
+class FileManager : public MutexClass
 {
     FileInfo* CreateFileInfo();
     bool ReadInHeader(std::string &h);
