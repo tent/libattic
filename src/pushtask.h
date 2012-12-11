@@ -1,7 +1,6 @@
 
-
-#ifndef PULLTASK_H_
-#define PULLTASK_H_
+#ifndef PUSHTASK_H_
+#define PUSHTASK_H_
 #pragma once
 
 #include <string>
@@ -10,16 +9,17 @@
 #include "task.h"
 
 class TentApp;
+class FileInfo;
 class FileManager;
 class ConnectionManager;
 
-class PullTask: public Task
+class PushTask : public Task
 {
-    int PullFile(const std::string& filepath);
-    int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
-
+    int PushFile(const std::string& filepath);
+    int PostFile(const std::string& url, const std::string &filepath, FileInfo* fi);
+    int PutFile(const std::string& url, const std::string &filepath, FileInfo* fi);
 public:
-    PullTask( TentApp* pApp, 
+    PushTask( TentApp* pApp, 
               FileManager* pFm, 
               ConnectionManager* pCon, 
               const AccessToken& at,
@@ -27,7 +27,7 @@ public:
               const std::string& filepath,
               const std::string& tempdir);
 
-    ~PullTask();
+    ~PushTask();
 
     void RunTask();
 

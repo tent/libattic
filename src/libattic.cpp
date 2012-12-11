@@ -12,6 +12,11 @@
 #include "filemanager.h"
 #include "utils.h"
 
+#include "taskarbiter.h"
+#include "pulltask.h"
+#include "pushtask.h"
+
+
 // TODO :: 
 // Things to wrap with mutexes
 //  - app
@@ -562,6 +567,23 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi)
     return ret::A_OK;
 }
 
+int PushFileTask(const char* szFilePath)
+{
+    TaskArbiter arb;
+
+    PushTask* t = new PushTask( g_pApp, 
+                                g_pFileManager, 
+                                ConnectionManager::GetInstance(),
+                                g_at,
+                                g_Entity,
+                                szFilePath,
+                                g_TempDirectory);
+
+    arb.SpinOffTask(t);
+
+    return ret::A_OK;
+}
+
 int PushFile(const char* szFilePath)
 {
     if(!g_pApp)
@@ -698,9 +720,6 @@ int PullAllFiles()
     
     return ret::A_OK;
 }
-
-#include "taskarbiter.h"
-#include "pulltask.h"
 
 int PullFileTask(const char* szFilePath)
 {

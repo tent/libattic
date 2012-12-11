@@ -12,7 +12,7 @@
 //         manifest to filemanager. (centralize all file writing)
 //
 
-FileManager::FileManager()
+FileManager::FileManager() : MutexClass()
 {
 
 }
@@ -424,13 +424,12 @@ FileInfo* FileManager::GetFileInfo(const std::string &filename)
 
     if(!fi)
         std::cout<<"INVALID"<<std::endl;
-
     m_Manifest.QueryForFile(filename, fi);
+
     if(!fi)
         std::cout<<"INVALID"<<std::endl;
     std::cout<<"427"<<std::endl;
-    //if(!fi->IsValid())
-     //   return NULL;
-    //return m_Manifest.RetrieveFileInfo(filename);
+    if(!fi->IsValid())
+        return NULL;
     return fi;
 }

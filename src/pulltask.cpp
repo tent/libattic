@@ -9,12 +9,6 @@
 #include "errorcodes.h"
 #include "utils.h"
 
-PullTask::PullTask()
-{
-    m_pTentApp = NULL;
-    m_pFileManager = NULL;
-    m_pConnectionManager = NULL; 
-}
 
 PullTask::PullTask( TentApp* pApp, 
                     FileManager* pFm, 
@@ -44,7 +38,6 @@ PullTask::~PullTask()
 void PullTask::RunTask()
 {
     std::cout<<" RUNNING TASK " << std::endl;
-
     std::cout<<" FILEPATH : " << m_Filepath << std::endl;
     PullFile(m_Filepath);
 }
@@ -67,7 +60,9 @@ int PullTask::PullFile(const std::string& filepath)
 
     std::cout<<"FILE NAME : " << filename << std::endl;                                          
 
+    while(m_pFileManager->TryLock()) { /* Spinlock, temporary */}
     FileInfo* fi = m_pFileManager->GetFileInfo(filename);                                        
+    m_pFileManager->Unlock();
 
     std::cout<<"HERE"<<std::endl;                                                                
 
@@ -137,7 +132,9 @@ int PullTask::PullFile(const std::string& filepath)
     }                                                                                        
 
     // Construct File                                                                        
+    while(m_pFileManager->TryLock()) { /* Spinlock, temporary */}
     std::cout << "STATUS : " << m_pFileManager->ConstructFile(filename) << std::endl;        
+    m_pFileManager->Unlock();
 
     return ret::A_OK;  
 }
