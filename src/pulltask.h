@@ -6,14 +6,9 @@
 
 #include <string>
 
-#include "tentapp.h"
-#include "task.h"
+#include "tenttask.h"
 
-class TentApp;
-class FileManager;
-class ConnectionManager;
-
-class PullTask: public Task
+class PullTask: public TentTask
 {
     int PullFile(const std::string& filepath);
     int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
@@ -25,22 +20,15 @@ public:
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,
-              const std::string& tempdir);
+              const std::string& tempdir,
+              void (*callback)(int, void*));
 
     ~PullTask();
 
     void RunTask();
 
 private:
-   AccessToken          m_At;
-
-   std::string          m_Entity;
-   std::string          m_Filepath;
-   std::string          m_TempDirectory;
-
-   TentApp*             m_pTentApp; 
-   FileManager*         m_pFileManager;
-   ConnectionManager*   m_pConnectionManager;
+   
 };
 
 #endif

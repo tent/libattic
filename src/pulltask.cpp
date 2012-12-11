@@ -16,17 +16,18 @@ PullTask::PullTask( TentApp* pApp,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
-                    const std::string& tempdir)
+                    const std::string& tempdir,
+                    void (*callback)(int, void*))
+                    :
+                    TentTask( pApp,
+                              pFm,
+                              pCon,
+                              at,
+                              entity,
+                              filepath,
+                              tempdir,
+                              callback )
 {
-    m_pTentApp = pApp;
-    m_pFileManager = pFm;
-    m_pConnectionManager = pCon; 
-
-    m_At = at;
-
-    m_Entity = entity;
-    m_Filepath = filepath;
-    m_TempDirectory = tempdir;
 
 }
 
@@ -38,31 +39,34 @@ PullTask::~PullTask()
 void PullTask::RunTask()
 {
     std::cout<<" RUNNING TASK " << std::endl;
-    std::cout<<" FILEPATH : " << m_Filepath << std::endl;
-    PullFile(m_Filepath);
+
+    std::string filepath;
+    GetFilepath(filepath);
+    PullFile(filepath);
+
+    Callback();
 }
 
 int PullTask::PullFile(const std::string& filepath)
 {                                                                                                
-    ////std::string filepath(szFilePath);                                                            
     std::string filename;                                                                        
 
     utils::ExtractFileName(filepath, filename);                                                  
 
-    if(!m_pTentApp)                                                                                  
+    if(!GetTentApp())                                                                                  
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                             
 
-    if(!m_pFileManager)                                                                          
+    if(!GetFileManager())                                                                          
         return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
-    if(!m_pConnectionManager)
+    if(!GetConnectionManager())
         return ret::A_LIB_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
 
     std::cout<<"FILE NAME : " << filename << std::endl;                                          
 
-    while(m_pFileManager->TryLock()) { /* Spinlock, temporary */}
-    FileInfo* fi = m_pFileManager->GetFileInfo(filename);                                        
-    m_pFileManager->Unlock();
+    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
+    FileInfo* fi = GetFileManager()->GetFileInfo(filename);                                        
+    GetFileManager()->Unlock();
 
     std::cout<<"HERE"<<std::endl;                                                                
 
@@ -74,7 +78,8 @@ int PullTask::PullFile(const std::string& filepath)
     }                                                                                            
 
     // Construct Post URL                                                                        
-    std::string postpath = m_Entity;                                                             
+    std::string postpath;// = m_Entity;                                                             
+    GetEntity(postpath);
 
     postpath.append("/tent/posts/");                                                             
 
@@ -83,13 +88,14 @@ int PullTask::PullFile(const std::string& filepath)
     postpath += postid;                                                                          
 
     // Get Post                                                                                  
+    AccessToken* at = GetAccessToken();
     std::string response;                                                                        
     ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,                                
                                                         NULL,                                    
                                                         response,                                
-                                                        m_At.GetMacAlgorithm(),                  
-                                                        m_At.GetAccessToken(),                   
-                                                        m_At.GetMacKey(),                        
+                                                        at->GetMacAlgorithm(),                  
+                                                        at->GetAccessToken(),                   
+                                                        at->GetMacKey(),                        
                                                         true);                                   
 
 
@@ -121,7 +127,8 @@ int PullTask::PullFile(const std::string& filepath)
         std::cout<< attachmentpath << std::endl;                                             
 
         outpath.clear();                                                                     
-        outpath += m_TempDirectory;                                                          
+        GetTempDirectory(outpath);
+
         utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
         outpath += (*itr)->Name;                                                             
 
@@ -132,9 +139,9 @@ int PullTask::PullFile(const std::string& filepath)
     }                                                                                        
 
     // Construct File                                                                        
-    while(m_pFileManager->TryLock()) { /* Spinlock, temporary */}
-    std::cout << "STATUS : " << m_pFileManager->ConstructFile(filename) << std::endl;        
-    m_pFileManager->Unlock();
+    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
+    std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
+    GetFileManager()->Unlock();
 
     return ret::A_OK;  
 }
@@ -142,15 +149,16 @@ int PullTask::PullFile(const std::string& filepath)
 int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &filepath)           
 {                                                                                            
     // file path preferably to a chunked file.                                               
-    if(!m_pTentApp)                                                                              
+    if(!GetTentApp())                                                                              
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                         
 
+    AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                     
                                                                     NULL,                    
                                                                     filepath,                
-                                                                    m_At.GetMacAlgorithm(),  
-                                                                    m_At.GetAccessToken(),   
-                                                                    m_At.GetMacKey(),
+                                                                    at->GetMacAlgorithm(),  
+                                                                    at->GetAccessToken(),   
+                                                                    at->GetMacKey(),
                                                                     true);                   
 
     return ret::A_OK;                                                                        

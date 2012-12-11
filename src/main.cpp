@@ -280,6 +280,12 @@ TEST(PULL, AFILE)
 /*
  */
 
+void FOOFUN(int a, void* b)
+{
+    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
+
+}
+
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -315,7 +321,7 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = PushFileTask("./data/oa2.pdf");
+    status = PushFileTask("./data/oa2.pdf", &FOOFUN);
 
     for(;;)
     {

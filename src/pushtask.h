@@ -19,7 +19,8 @@ public:
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,
-              const std::string& tempdir);
+              const std::string& tempdir, 
+              void (*callback)(int, void*));
 
     ~PushTask();
 

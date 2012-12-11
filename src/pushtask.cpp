@@ -17,7 +17,8 @@ PushTask::PushTask( TentApp* pApp,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
-                    const std::string& tempdir) 
+                    const std::string& tempdir,
+                    void (*callback)(int, void*))
                     :
                     TentTask ( pApp,
                                pFm,
@@ -25,20 +26,10 @@ PushTask::PushTask( TentApp* pApp,
                                at,
                                entity,
                                filepath,
-                               tempdir
-                            )
+                               tempdir,
+                               callback )
 {
-    /*
-    m_pTentApp = pApp;
-    m_pFileManager = pFm;
-    m_pConnectionManager = pCon; 
 
-    m_At = at;
-
-    m_Entity = entity;
-    m_Filepath = filepath;
-    m_TempDirectory = tempdir;
-    */
 }
 
 PushTask::~PushTask()

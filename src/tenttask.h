@@ -11,9 +11,6 @@
 #include "filemanager.h"
 #include "connectionmanager.h"
 
-
-// TODO :: WIP tent specific task abstractiom, abstract all things common
-//          out of push pull and other tent tasks here. do this after other tasks work 100%
 class TentTask : public Task
 {
 
@@ -24,7 +21,8 @@ public:
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,
-              const std::string& tempdir)
+              const std::string& tempdir, 
+              void (*callback)(int, void*))
     {
         m_pTentApp = pApp;
         m_pFileManager = pFm;
@@ -35,6 +33,8 @@ public:
         m_Entity = entity;
         m_Filepath = filepath;
         m_TempDirectory = tempdir;
+
+        mCallback = callback;
     }
 
     virtual ~TentTask()
@@ -58,18 +58,18 @@ public:
     FileManager* GetFileManager()               { return m_pFileManager; } 
     ConnectionManager* GetConnectionManager()   { return m_pConnectionManager; } 
 
-    void SetCallback(void (*cb)(int, void*)) { callback = cb; }
+    void SetCallback(void (*cb)(int, void*)) { mCallback = cb; }
 
 protected:
     void Callback()
     {
         std::cout<<" Callback " << std::endl;
-        if(callback)
-            callback(0, NULL); 
+        if(mCallback)
+            mCallback(0, NULL); 
 
     }
+
 private:
-//protected:
     AccessToken          m_At;
 
     std::string          m_Entity;
@@ -80,7 +80,7 @@ private:
     FileManager*         m_pFileManager;
     ConnectionManager*   m_pConnectionManager;
 
-    void (*callback)(int, void*);
+    void (*mCallback)(int, void*);
 };
 
 #endif
