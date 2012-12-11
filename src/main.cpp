@@ -320,8 +320,10 @@ TEST(PUSH, AFILE)
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
-   
+
+    status = PushFileTask("./data/oa1.pdf", &FOOFUN);
     status = PushFileTask("./data/oa2.pdf", &FOOFUN);
+    status = PushFileTask("./data/oa3.pdf", &FOOFUN);
 
     for(;;)
     {

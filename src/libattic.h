@@ -51,7 +51,6 @@ int PushFile(const char* szFilePath);
 
 int PushFileTask(const char* szFilePath, void (*callback)(int, void*) );
 
-
 // Pullfile from tent
 int PullFile(const char* szFilePath);
 

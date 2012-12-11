@@ -41,6 +41,7 @@ static const char* g_szManifest = "manifest";
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
 
+static TaskArbiter g_Arb;
 static AccessToken g_at;
 
 // Consider making these volatile
@@ -70,55 +71,45 @@ int InitializeFileManager()
     utils::CheckUrlAndAppendTrailingSlash(szFilePath);
     szFilePath.append(g_szManifest);
 
-    g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
-    g_pFileManager->SetTempDirectory(g_TempDirectory);
+    if(!g_pFileManager)
+    {
+        g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
+        g_pFileManager->SetTempDirectory(g_TempDirectory);
 
-    if(!g_pFileManager->StartupFileManager())
-        return ret::A_FAIL_TO_LOAD_FILE;
+        if(!g_pFileManager->StartupFileManager())
+            return ret::A_FAIL_TO_LOAD_FILE;
+    }
 
     return ret::A_OK;
 }
 
 int ShutdownFileManager()
 {
-    std::cout<<"fm"<<std::endl;
+    // Blind shutdown
     if(g_pFileManager)
     {
-        
-        std::cout<<"fm"<<std::endl;
         g_pFileManager->ShutdownFileManager();
-        std::cout<<"fm"<<std::endl;
-
         delete g_pFileManager;
         g_pFileManager = NULL;
-
-        std::cout<<"fm"<<std::endl;
     }
 
     return ret::A_OK;
 }
 
-
 int ShutdownAppInstance()
 {
-    std::cout<<"here"<<std::endl;
     if(g_pApp)
     {
-    std::cout<<"here"<<std::endl;
         delete g_pApp;
         g_pApp = NULL;
-
-    std::cout<<"here"<<std::endl;
     }
     else
     {
         return ret::A_FAIL_INVALID_PTR;
     }
 
-    std::cout<<"here"<<std::endl;
     ConnectionManager::GetInstance()->Shutdown();
 
-    std::cout<<"here"<<std::endl;
     return ret::A_OK;
 }
 
@@ -237,10 +228,10 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
 
     std::string params;
     val.SerializeToString(params);
+
     std::cout<<"PARAMS : " << params << std::endl;
 
     // TODO:: encode these parameters
-    //
 
     g_AuthorizationURL.append(params);
 
@@ -347,8 +338,6 @@ int LoadAppFromFile()
 
 int PushFileTask(const char* szFilePath, void (*callback)(int, void*) )
 {
-    TaskArbiter arb;
-
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
@@ -358,7 +347,7 @@ int PushFileTask(const char* szFilePath, void (*callback)(int, void*) )
                                 g_TempDirectory,
                                 callback);
 
-    arb.SpinOffTask(t);
+    g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
 }
@@ -444,18 +433,17 @@ int PullAllFiles()
 
 int PullFileTask(const char* szFilePath, void (*callback)(int, void*))
 {
-    TaskArbiter arb;
 
     PullTask* t = new PullTask( g_pApp, 
-                   g_pFileManager, 
-                   ConnectionManager::GetInstance(),
-                   g_at,
-                   g_Entity,
-                   szFilePath,
-                   g_TempDirectory,
-                   callback);
+                                g_pFileManager, 
+                                ConnectionManager::GetInstance(),
+                                g_at,
+                                g_Entity,
+                                szFilePath,
+                                g_TempDirectory,
+                                callback);
 
-    arb.SpinOffTask(t);
+    g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
 }
