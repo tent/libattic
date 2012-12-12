@@ -93,6 +93,18 @@ void Post::Serialize(Json::Value& root)
     }
 
     root["version"] = m_Version;
+    
+    // Attic Specific 
+    if(!m_Name.empty())
+        root["name"] = m_Name;
+    if(!m_Path.empty())
+        root["path"] = m_Path;
+
+    root["size"] = m_Size;
+    /*
+    if(!m_Type.empty())
+        root["type"] = m_Type;
+        */
 }
 
 void Post::Deserialize(Json::Value& root)

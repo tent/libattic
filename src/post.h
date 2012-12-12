@@ -77,26 +77,26 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    std::string GetID() { return m_ID; }
-    std::string GetPostType() { return m_Type; }
+    void GetID(std::string& out)        { out = m_ID; }
+    void GetPostType(std::string& out)  { out = m_Type; }
+    unsigned int GetAttachmentCount()   { return m_Attachments.size(); }
+    AttachmentVec* GetAttachments()     { return &m_Attachments; }
+    unsigned int GetVersion()           { return m_Version; }
 
-    void SetID(const std::string &szId) { m_ID = szId; }
-    void setEntity(const std::string &szEntity) { m_Entity = szEntity; }
+    void SetID(const std::string &id)         { m_ID = id; }
+    void setEntity(const std::string &entity) { m_Entity = entity; }
     void SetPublishedAt(unsigned int uUnixTime) { m_PublishedAt = uUnixTime; }
-
-    void SetType(const std::string &szType) { m_Type = szType; }
-
-    void SetContent(const std::string &szType, const std::string &szVal) { m_Content[szType] = szVal; }
+    void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
+    void SetType(const std::string &type)     { m_Type = type; }
+    void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
+    void SetPermission(const std::string &permission, bool bVal) { m_Permissions[permission] = bVal; }
 
     void PushBackAttachment(Attachment* pAtch) { m_Attachments.push_back(pAtch); }
+
+    void SetName(const std::string &name) { m_Name = name; }
+    void SetPath(const std::string &path) { m_Path = path; }
+    void SetSize(const int size) { m_Size = size; }
     
-    void SetPermission(const std::string &szPermission, bool bVal) { m_Permissions[szPermission] = bVal; }
-
-    unsigned int GetAttachmentCount() { return m_Attachments.size(); }
-    AttachmentVec* GetAttachments() { return &m_Attachments; }
-    unsigned int GetVersion() { return m_Version; }
-
-
 private:
     std::string                         m_ID;
     std::string                         m_Entity;
@@ -115,6 +115,12 @@ private:
     std::map<std::string, bool>         m_Permissions;
 
     unsigned int                        m_Version;
+
+    // Attic specific post
+    std::string                         m_Name; //Required    String  Name of the file
+    std::string                         m_Path;  //Required    String  Relative location of the file within the Attic folder
+    int                                 m_Size; //Required    Integer
+    //std::string                         m_Type; //Optional    Mimetype //To be added
 };
 
 #endif
