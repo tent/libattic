@@ -1,12 +1,13 @@
 
-#include "synctask.h"
+#include "syncposttask.h"
 
+#include "atticpost.h"
 #include "urlparams.h"
 #include "constants.h"
 #include "errorcodes.h"
 #include "utils.h"
 
-SyncTask::SyncTask( TentApp* pApp, 
+SyncPostsTask::SyncPostsTask( TentApp* pApp, 
                     FileManager* pFm, 
                     ConnectionManager* pCon, 
                     const AccessToken& at,
@@ -31,12 +32,12 @@ SyncTask::SyncTask( TentApp* pApp,
 
 }
 
-SyncTask::~SyncTask()
+SyncPostsTask::~SyncPostsTask()
 {
 
 }
 
-void SyncTask::RunTask()
+void SyncPostsTask::RunTask()
 {
 
     int status = SyncAtticPosts();
@@ -44,7 +45,7 @@ void SyncTask::RunTask()
     Callback(status, NULL);
 }
 
-int SyncTask::SyncAtticPosts()
+int SyncPostsTask::SyncAtticPosts()
 {
     // TODO :: this needs to be re-done.
     //
@@ -63,6 +64,8 @@ int SyncTask::SyncAtticPosts()
         return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     int postcount = GetAtticPostCount();
+
+    std::cout << " NUMBER OF POSTS : " << postcount << std::endl;
 
     if(postcount <= 0)
         return ret::A_FAIL_COULD_NOT_FIND_POSTS;
@@ -99,64 +102,75 @@ int SyncTask::SyncAtticPosts()
     int count = 0;
     for(;itr != root.end(); itr++)
     {
-        Post p;
+        AtticPost p;
         //JsonSerializer::DeserializeObject(&p, (*itr).asString());
         
+        //std::cout<< "POST : " << (*itr).asString() << std::endl;
+
         // Deserialize directly into posts
         p.Deserialize(*itr);
         count++;
-        std::cout<<p.GetPostType()<<std::endl;
 
+        std::cout<< "POST TYPE : " << std::endl;
+        std::string posttype;
+        p.GetPostType(posttype);
+        std::cout<<posttype<<std::endl;
+
+        // Check content type
+        p.CheckContent();
+        
         // if proper post type
-        if(p.GetPostType().compare(g_szAtticPostType) == 0 && p.GetAttachmentCount() > 0)
+        if(posttype.compare(g_szAtticPostType) == 0 && p.GetAttachmentCount() > 0)
         {
+          
+            // Get Attachment
             // Check Attachment
             Post::AttachmentVec *pVec = p.GetAttachments();
-            Post::AttachmentVec::iterator itr = pVec->begin();
+            //Post::AttachmentVec::iterator itr = pVec->begin();
+            Post::AttachmentVec::iterator itr = pVec->end();
 
             for(;itr != pVec->end(); itr++)
             {
                 Attachment* pAtt = (*itr);
                 if(pAtt)
                 {
+
                     // Populate Manifest
+                    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
                     if(!GetFileManager()->FindFileInManifest(pAtt->Name))
                     {
-
+                        std::cout<< " HERE : -----------------------------" << std::endl;
                         std::string path;
                         GetWorkingDirectory(path);
                         utils::CheckUrlAndAppendTrailingSlash(path);
                         path += pAtt->Name;
-
                         
                         char szLen[256];
                         memset(szLen, 0, sizeof(char)*256);                        
                         snprintf(szLen, (sizeof(char)*256),  "%u", pAtt->Size);
 
+                        // TODO:: reimplement syncing with proper key stores
 
-
-                       // TODO:: reimplement syncing with proper key stores
-                       /* 
+                        /*
                         FileInfo* fi = GetFileManager()->CreateFileInfo( pAtt->Name,
-                                                                       path,
-                                                                       "",
-                                                                       "0",
-                                                                       szLen,
-                                                                       p.GetID(),
-                                                                       "0");
+                                                                         path,
+                                                                         "",
+                                                                         "0",
+                                                                         szLen,
+                                                                         p.GetID(),
+                                                                         "0");
 
                         GetFileManager()->InsertToManifest(fi);
                         */
-
                     }
+                    GetFileManager()->Unlock();
                 }
             }
+            
         }
     }
 
     std::cout<< " COUNT : " << count << std::endl;
-
-
 
     if(postcount > 200)
     {
@@ -169,7 +183,7 @@ int SyncTask::SyncAtticPosts()
     return ret::A_OK;
 };
 
-int SyncTask::GetAtticPostCount()                                                                  
+int SyncPostsTask::GetAtticPostCount()                                                                  
 {                                                                                        
     std::string url;
     GetEntity(url);

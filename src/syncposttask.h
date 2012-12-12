@@ -6,12 +6,12 @@
 
 #include "tenttask.h"
 
-class SyncTask : public TentTask
+class SyncPostsTask : public TentTask
 {
     int GetAtticPostCount();
     int SyncAtticPosts();
 public:
-    SyncTask( TentApp* pApp, 
+    SyncPostsTask( TentApp* pApp, 
               FileManager* pFm, 
               ConnectionManager* pCon, 
               const AccessToken& at,
@@ -22,7 +22,7 @@ public:
               const std::string& configdir,
               void (*callback)(int, void*));
 
-    ~SyncTask();
+    ~SyncPostsTask();
 
     void RunTask();
 
