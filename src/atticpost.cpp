@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 
-#include<iostream>
+#include "constants.h"
 
 AtticPost::AtticPost()
 {
-
+    // PostType
+    SetPostType(g_szAtticPostType);
 }
 
 AtticPost::~AtticPost()
@@ -17,7 +18,6 @@ AtticPost::~AtticPost()
 
 void AtticPost::Serialize(Json::Value& root)
 {
-    std::cout<<" ATTIC POST SERIALIZE " << std::endl;
     // Insert post specific things into post content
     SetContent("name", m_Name); 
     SetContent("path", m_Path);
@@ -31,8 +31,6 @@ void AtticPost::Serialize(Json::Value& root)
 
 void AtticPost::Deserialize(Json::Value& root)
 {
-    std::cout<<" ATTIC POST DESERIALIZE " << std::endl;
-
     Post::Deserialize(root);
 
     // Extract attic post specific things from post content

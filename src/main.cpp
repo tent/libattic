@@ -63,7 +63,7 @@ void FOOCALL(int a, void* p)
 {
     std::cout<< " CALLBACK FOOCAL : " << a << std::endl;
 }
-
+/*
 TEST(DELETE, AFILE)
 {
     SetConfigDirectory("./config");
@@ -124,11 +124,15 @@ TEST(DELETE, AFILE)
 /*
  */
 /*
+void SYNCCALL(int a, void* p)
+{
+    std::cout<< " CALLBACK FOOCAL : " << a << std::endl;
+}
 TEST(SYNC, ALL)
 {
     SetConfigDirectory("./config");
-    // Set Working Dir first
     SetWorkingDirectory("./data");
+    SetTempDirectory("./data/temp");
 
     int status = LoadAppFromFile();
 
@@ -160,7 +164,16 @@ TEST(SYNC, ALL)
     ASSERT_EQ(status, ret::A_OK);
 
     // Sync some posts
-    status = SyncAtticPosts();
+    status = SyncAtticPostsMetaData(&SYNCCALL);
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
 
     if(status != ret::A_OK)
     {
@@ -299,7 +312,7 @@ void FOOFUN(int a, void* b)
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
 
 }
-/*
+
 TEST(PUSH, AFILE)
 {
     SetWorkingDirectory("./data");
@@ -335,9 +348,11 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = PushFile("./data/oa1.pdf", &FOOFUN);
-    status = PushFile("./data/oa2.pdf", &FOOFUN);
-    status = PushFile("./data/oa3.pdf", &FOOFUN);
+    //status = PushFile("./data/oa1.pdf", &FOOFUN);
+//    status = PushFile("./data/oa2.pdf", &FOOFUN);
+//    status = PushFile("./data/oa3.pdf", &FOOFUN);
+
+    status = PushFile("./data/oa4.pdf", &FOOFUN);
 
     for(;;)
     {

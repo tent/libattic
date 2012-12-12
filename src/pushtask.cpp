@@ -3,11 +3,13 @@
 
 #include <list>
 
+#include "atticpost.h"
 #include "filemanager.h"
 #include "connectionmanager.h"
 
 #include "errorcodes.h"
 #include "utils.h"
+#include "constants.h"
 
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
@@ -117,6 +119,24 @@ int PushTask::PushFile(const std::string& filepath)
 
     return ret::A_OK;
 }
+int PushTask::CreateAndSerializeAtticPost( bool pub,
+                                           const std::string& filepath,
+                                           const std::string& filename,
+                                           unsigned int size,
+                                           std::string& out)
+{
+    // Create a post 
+    AtticPost p;
+    p.SetPermission(std::string("public"), pub);
+    p.SetFilepath(filepath);
+    p.SetFilename(filename);
+    p.SetSize(size);
+
+    // Serialize Post
+    JsonSerializer::SerializeObject(&p, out);
+    return ret::A_OK;
+}
+
 
 int PushTask::PostFile(const std::string& url, const std::string &filepath, FileInfo* fi)
 {
@@ -124,19 +144,6 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
     if(!GetTentApp())
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string postType("https://tent.io/types/post/attic/v0.1.0");
-
-    // Create a post 
-    Post p;
-    p.SetType(postType);
-    p.SetContent("text", "testing");
-    p.SetPermission(std::string("public"), false);
-
-    // Serialize Post
-    std::string postBuffer;
-    JsonSerializer::SerializeObject(&p, postBuffer);
-    std::cout << " POST BUFFER : " << postBuffer << std::endl;
-    
 
     // Read in file
     std::cout<< "FILEPATH : " << filepath << std::endl;
@@ -161,6 +168,16 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
     std::string response;
     std::string filename;
     utils::ExtractFileName(filepath, filename);
+
+    // Create a post 
+    std::string postBuffer;
+    CreateAndSerializeAtticPost( false,
+                                 filepath,
+                                 filename,
+                                 size,
+                                 postBuffer);
+
+    std::cout << " POST BUFFER : " << postBuffer << std::endl;
 
     // construct chunk filepaths
     std::string chunkName; 
@@ -201,10 +218,12 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
     
     std::cout<<"RESPONSE : " << response << std::endl;
 
+    AtticPost p;
     JsonSerializer::DeserializeObject(&p, response);
 
     int status = ret::A_OK;
-    std::string postid = p.GetID();
+    std::string postid;
+    p.GetID(postid);
     if(!postid.empty())
     {
         fi->SetPostID(postid); 
@@ -239,20 +258,7 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
     if(!GetTentApp())
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
-    std::string postType("https://tent.io/types/post/attic/v0.1.0");
-
-    // Create a post 
-    Post p;
-    p.SetType(postType);
-    p.SetContent("text", "testing");
-    p.SetPermission(std::string("public"), false);
-
-    // Serialize Post
-    std::string postBuffer;
-    JsonSerializer::SerializeObject(&p, postBuffer);
-    std::cout << " POST BUFFER : " << postBuffer << std::endl;
-
-    // Read in file
+        // Read in file
     std::cout<< "FILEPATH : " << filepath << std::endl;
     unsigned int size = utils::CheckFileSize(filepath);
 
@@ -278,6 +284,17 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
     std::string filename;
 
     utils::ExtractFileName(filepath, filename);
+
+    // Create a post 
+    std::string postBuffer;
+    CreateAndSerializeAtticPost( false,
+                                 filepath,
+                                 filename,
+                                 size,
+                                 postBuffer);
+
+    std::cout << " POST BUFFER : " << postBuffer << std::endl;
+
 
     // Set chunkfilepaths and pass that in
 
@@ -319,9 +336,11 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
  
     std::cout<<"RESPONSE : " << response << std::endl;
 
+    AtticPost p;
     JsonSerializer::DeserializeObject(&p, response);
 
-    std::string postid = p.GetID();
+    std::string postid;
+    p.GetID(postid);
     if(!postid.empty())
     {
        fi->SetPostID(postid); 

@@ -58,6 +58,12 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*));
 // Pull All files in manifest
 int PullAllFiles();
 
+// Sync attic metadata
+int SyncAtticMetaData(void (*callback)(int, void*));
+
+// Sync with attic posts
+int SyncAtticPostsMetaData(void (*callback)(int, void*));
+
 // TODO :: filter attic posts, and construct manifest from that if none is present
 //         compare data and make sure both are up to data
 

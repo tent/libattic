@@ -16,6 +16,7 @@
 #include "pulltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
+#include "syncposttask.h"
 
 #include "constants.h"
 
@@ -387,6 +388,30 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
     return ret::A_OK;
 }
 
+int SyncAtticMetaData( void (*callback)(int, void*) )
+{
+
+    return ret::A_OK;
+}
+
+int SyncAtticPostsMetaData(void (*callback)(int, void*))
+{
+    SyncPostsTask* t = new SyncPostsTask( g_pApp, 
+                                          g_pFileManager, 
+                                          ConnectionManager::GetInstance(),
+                                          g_at,
+                                          g_Entity,
+                                          "",
+                                          g_TempDirectory,
+                                          g_WorkingDirectory,
+                                          g_ConfigDirectory,
+                                          callback);
+
+    g_Arb.SpinOffTask(t);
+
+    return ret::A_OK;
+}
+
 int PullAllFiles()
 {
     if(!g_pApp)
@@ -407,166 +432,6 @@ int PullAllFiles()
         PullFile((filepath + fn).c_str(), NULL);
     }
     
-    return ret::A_OK;
-}
-
-
-
-int GetAtticPostCount() 
-{
-    //tobedeleted
-    if(!g_pApp)
-        return -1;
-
-    std::string url = g_Entity;
-    // TODO :: make this provider agnostic
-    url += "/tent/posts/count";
-
-    UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
-
-    std::string response;
-    ConnectionManager::GetInstance()->HttpGetWithAuth( url,
-                                                       &params,
-                                                       response, 
-                                                       g_at.GetMacAlgorithm(), 
-                                                       g_at.GetAccessToken(), 
-                                                       g_at.GetMacKey(), 
-                                                       true);
-
-    std::cout<< "RESPONSE : " << response << std::endl;
-
-    int count = -1;
-    count = atoi(response.c_str());
-
-    return count;
-}
-
-
-int SyncAtticPosts()
-{
-
-    //tobedeleted
-    // TODO :: this needs to be re-done.
-    //
-    //This should be renamed to sync Attic Manifest or SyncAtticMetaData
-    // 1. Head request all posts of type attic
-    // 2. Build FileInfo Objects for each
-    // 3. Insert into Sqlite
-    //
-    // Create a new method PullAllFiles for the actual downloading of the files.
-    // - this may already exist and need updating
-    /*
-    if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
-    
-    if(!g_pFileManager)
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-
-
-    int postcount = GetAtticPostCount();
-
-    if(postcount <= 0)
-        return ret::A_FAIL_COULD_NOT_FIND_POSTS;
-
-    std::string url = g_Entity;
-    url += "/tent/posts";
-
-    UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
-    params.AddValue(std::string("limit"), std::string("200"));
-
-    std::string response;
-    ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
-                                                       &params,
-                                                       response, 
-                                                       g_at.GetMacAlgorithm(), 
-                                                       g_at.GetAccessToken(), 
-                                                       g_at.GetMacKey(), 
-                                                       true);
-
-    std::cout<< " RESPONSE : " << response << std::endl;
-
-    Json::Value root;
-    Json::Reader reader;
-
-    if(!reader.parse(response, root))
-        return -1;
-
-
-    Json::ValueIterator itr = root.begin();
-
-    int count = 0;
-    for(;itr != root.end(); itr++)
-    {
-        Post p;
-        //JsonSerializer::DeserializeObject(&p, (*itr).asString());
-        
-        // Deserialize directly into posts
-        p.Deserialize(*itr);
-        count++;
-        std::cout<<p.GetPostType()<<std::endl;
-
-        // if proper post type
-        if(p.GetPostType().compare(g_szAtticPostType) == 0 && p.GetAttachmentCount() > 0)
-        {
-            // Check Attachment
-            Post::AttachmentVec *pVec = p.GetAttachments();
-            Post::AttachmentVec::iterator itr = pVec->begin();
-
-            for(;itr != pVec->end(); itr++)
-            {
-                Attachment* pAtt = (*itr);
-                if(pAtt)
-                {
-                    // Populate Manifest
-                    if(!g_pFileManager->FindFileInManifest(pAtt->Name))
-                    {
-
-                        std::string path = g_WorkingDirectory;
-                        utils::CheckUrlAndAppendTrailingSlash(path);
-                        path += pAtt->Name;
-
-                        
-                        char szLen[256];
-                        memset(szLen, 0, sizeof(char)*256);                        
-                        snprintf(szLen, (sizeof(char)*256),  "%u", pAtt->Size);
-
-
-
-                       // TODO:: reimplement syncing with proper key stores
-                       */
-                       /* 
-                        FileInfo* fi = g_pFileManager->CreateFileInfo( pAtt->Name,
-                                                                       path,
-                                                                       "",
-                                                                       "0",
-                                                                       szLen,
-                                                                       p.GetID(),
-                                                                       "0");
-
-                        g_pFileManager->InsertToManifest(fi);
-                        */
-/*
-                    }
-                }
-            }
-        }
-    }
-
-    std::cout<< " COUNT : " << count << std::endl;
-
-
-
-    if(postcount > 200)
-    {
-               // Loop through and gather posts
-
-    }
-
-    PullAllFiles();
-*/
     return ret::A_OK;
 }
 

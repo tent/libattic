@@ -115,57 +115,36 @@ int SyncPostsTask::SyncAtticPosts()
         std::string posttype;
         p.GetPostType(posttype);
         std::cout<<posttype<<std::endl;
-
-        // Check content type
-        p.CheckContent();
         
         // if proper post type
-        if(posttype.compare(g_szAtticPostType) == 0 && p.GetAttachmentCount() > 0)
+        if(posttype.compare(g_szAtticPostType) == 0)
         {
-          
-            // Get Attachment
-            // Check Attachment
-            Post::AttachmentVec *pVec = p.GetAttachments();
-            //Post::AttachmentVec::iterator itr = pVec->begin();
-            Post::AttachmentVec::iterator itr = pVec->end();
 
-            for(;itr != pVec->end(); itr++)
-            {
-                Attachment* pAtt = (*itr);
-                if(pAtt)
-                {
 
-                    // Populate Manifest
-                    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-                    if(!GetFileManager()->FindFileInManifest(pAtt->Name))
-                    {
-                        std::cout<< " HERE : -----------------------------" << std::endl;
-                        std::string path;
-                        GetWorkingDirectory(path);
-                        utils::CheckUrlAndAppendTrailingSlash(path);
-                        path += pAtt->Name;
-                        
-                        char szLen[256];
-                        memset(szLen, 0, sizeof(char)*256);                        
-                        snprintf(szLen, (sizeof(char)*256),  "%u", pAtt->Size);
+            while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
 
-                        // TODO:: reimplement syncing with proper key stores
+            //FileInfo* fi = GetFileManager()->CreateFileInfo();
 
-                        /*
-                        FileInfo* fi = GetFileManager()->CreateFileInfo( pAtt->Name,
-                                                                         path,
-                                                                         "",
-                                                                         "0",
-                                                                         szLen,
-                                                                         p.GetID(),
-                                                                         "0");
+            /*
+            std::string &filename,          
+            std::string &filepath,          
+            std::string &chunkName,         
+            std::string &chunkCount,        
+            std::string &fileSize,          
+            std::string &postId,            
+            std::string &postVersion,       
+            std::string &key,               
+            std::string &iv
+            */
 
-                        GetFileManager()->InsertToManifest(fi);
-                        */
-                    }
-                    GetFileManager()->Unlock();
-                }
-            }
+            //GetFileManager()->InsertToManifest(fi);
+            
+            // Do a comparison with sqlite db, perhaps prune on server side 
+
+
+            GetFileManager()->Unlock();
+
+            
             
         }
     }

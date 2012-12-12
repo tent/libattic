@@ -189,8 +189,15 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
             );
      
     std::cout<< " EXECING : " << pexc << std::endl;
+    
+    SelectResult res;
+    if(PerformSelect(pexc,res))
+    {
+        if(res.nRow)
+            return true;
+    }
 
-    return PerformQuery(pexc);
+    return false;
 }
 
 bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
@@ -419,7 +426,6 @@ bool Manifest::RemoveFileInfo(const std::string &filename)
     return RemoveFileFromDb(filename);
 }
 
-
 FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
 {
     std::cout << "DEPRICATED" << std::endl;
@@ -433,13 +439,11 @@ FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
     return itr->second;
 }
 
-
-
 bool Manifest::IsFileInManifest(const std::string &filename)
 {
     // TODO :: search for file in sqlite db not in in memory map (or do both)
-    if(m_Entries.find(filename) != m_Entries.end())
-        return true;
+//    if(m_Entries.find(filename) != m_Entries.end())
+//        return true;
 
     return QueryForFileExistence(filename);
 }

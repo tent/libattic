@@ -60,7 +60,6 @@ struct Attachment : public JsonSerializable
         Name = root.get("name", "").asString();
         Size = root.get("size", 0).asUInt();
     }
-
     
 };
 
@@ -79,24 +78,20 @@ public:
 
     void GetID(std::string& out)        { out = m_ID; }
     void GetPostType(std::string& out)  { out = m_Type; }
+    void GetContent(const std::string& key, std::string& out);
     unsigned int GetAttachmentCount()   { return m_Attachments.size(); }
     AttachmentVec* GetAttachments()     { return &m_Attachments; }
     unsigned int GetVersion()           { return m_Version; }
 
-    void SetID(const std::string &id)         { m_ID = id; }
-    void setEntity(const std::string &entity) { m_Entity = entity; }
+    void SetID(const std::string &id)           { m_ID = id; }
+    void setEntity(const std::string &entity)   { m_Entity = entity; }
     void SetPublishedAt(unsigned int uUnixTime) { m_PublishedAt = uUnixTime; }
+    void SetPostType(const std::string &type)   { m_Type = type; }
     void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
-    void SetType(const std::string &type)     { m_Type = type; }
-    void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
-    void SetPermission(const std::string &permission, bool bVal) { m_Permissions[permission] = bVal; }
+    void SetPermission(const std::string &permission, bool Val) { m_Permissions[permission] = Val; }
 
     void PushBackAttachment(Attachment* pAtch) { m_Attachments.push_back(pAtch); }
 
-    void SetName(const std::string &name) { m_Name = name; }
-    void SetPath(const std::string &path) { m_Path = path; }
-    void SetSize(const int size) { m_Size = size; }
-    
 private:
     std::string                         m_ID;
     std::string                         m_Entity;
@@ -106,7 +101,8 @@ private:
     std::vector<std::string>            m_Licenses;
     std::string                         m_Type;
 
-    std::map<std::string, std::string>  m_Content;
+    typedef std::map<std::string, std::string> ContentMap;
+    ContentMap                          m_Content;
 
     AttachmentVec                       m_Attachments;
 
@@ -115,12 +111,6 @@ private:
     std::map<std::string, bool>         m_Permissions;
 
     unsigned int                        m_Version;
-
-    // Attic specific post
-    std::string                         m_Name; //Required    String  Name of the file
-    std::string                         m_Path;  //Required    String  Relative location of the file within the Attic folder
-    int                                 m_Size; //Required    Integer
-    //std::string                         m_Type; //Optional    Mimetype //To be added
 };
 
 #endif

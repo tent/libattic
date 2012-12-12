@@ -28,11 +28,20 @@ Post::~Post()
         m_Attachments.clear();
 
     }
+}
 
+void Post::GetContent(const std::string& key, std::string& out)
+{
+    ContentMap::iterator itr = m_Content.find(key);
+    if(itr != m_Content.end())
+    {
+        out = itr->second;
+    }
 }
 
 void Post::Serialize(Json::Value& root)
 {
+    // General Post
     if(!m_ID.empty())
         root["id"] = m_ID;
     if(!m_Entity.empty())
@@ -94,46 +103,31 @@ void Post::Serialize(Json::Value& root)
 
     root["version"] = m_Version;
     
-    // Attic Specific 
-    if(!m_Name.empty())
-        root["name"] = m_Name;
-    if(!m_Path.empty())
-        root["path"] = m_Path;
-
-    root["size"] = m_Size;
-    /*
-    if(!m_Type.empty())
-        root["type"] = m_Type;
-        */
 }
 
 void Post::Deserialize(Json::Value& root)
 {
     std::cout<<" Deserializing " << std::endl;
 
-    m_ID = root.get("id", "").asString();
-    m_Entity = root.get("entity", "").asString();
-    m_PublishedAt = root.get("published_at", "").asInt(); 
-    m_ReceivedAt = root.get("received_at", "").asInt();
-
-    m_Version = root.get("version", "").asUInt();
+    // General Post
+    m_ID            = root.get("id", "").asString();
+    m_Entity        = root.get("entity", "").asString();
+    m_PublishedAt   = root.get("published_at", 0).asInt(); 
+    m_ReceivedAt    = root.get("received_at", 0).asInt();
+    m_Version       = root.get("version", 0).asUInt();
 
     JsonSerializer::DeserializeIntoVector(root["mentions"], m_Mentions);
     JsonSerializer::DeserializeIntoVector(root["licenses"], m_Licenses);
 
-    m_Type = root.get("type", "").asString();
-
     // TODO :: content is dynamic, and can be a variety of things
     //         serialization and deserialization is more complex than
     //         just a map of strings
-    /*
+   
     JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
-    */
+    
 
     // Deserialize this into an array of objects
-
     Json::Value atch(Json::arrayValue);
-
     atch = root["attachments"];
 
     if(atch.size() > 0)
@@ -175,7 +169,6 @@ void Post::Deserialize(Json::Value& root)
 
     JsonSerializer::DeserializeObjectValueIntoMap(root["views"], m_Views);
     JsonSerializer::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
-
 }
 
 

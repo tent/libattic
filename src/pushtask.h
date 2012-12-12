@@ -9,6 +9,12 @@
 
 class PushTask : public TentTask
 {
+    int CreateAndSerializeAtticPost( bool pub,
+                                     const std::string& filepath,
+                                     const std::string& filename,
+                                     unsigned int size,
+                                     std::string& out);
+
     int PushFile(const std::string& filepath);
     int PostFile(const std::string& url, const std::string &filepath, FileInfo* fi);
     int PutFile(const std::string& url, const std::string &filepath, FileInfo* fi);
