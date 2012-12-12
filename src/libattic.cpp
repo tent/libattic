@@ -17,6 +17,8 @@
 #include "pushtask.h"
 #include "deletetask.h"
 
+#include "constants.h"
+
 // TODO :: 
 // Things to wrap with mutexes
 //  - app
@@ -31,12 +33,6 @@
 //         return new error codes if file is in the process of being processed.
 //
 // TODO :: Set up methods to set the chunk size and whatnot
-
-// Constants, (later to be abstracted elsewhere)
-static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";
-static const char* g_szAppData = "app";
-static const char* g_szAuthToken = "at";
-static const char* g_szManifest = "manifest";
 
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
@@ -345,6 +341,8 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                 g_Entity,
                                 szFilePath,
                                 g_TempDirectory,
+                                g_WorkingDirectory,
+                                g_ConfigDirectory,
                                 callback);
 
     g_Arb.SpinOffTask(t);
@@ -362,6 +360,8 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                 g_Entity,
                                 szFilePath,
                                 g_TempDirectory,
+                                g_WorkingDirectory,
+                                g_ConfigDirectory,
                                 callback);
 
     g_Arb.SpinOffTask(t);
@@ -378,6 +378,8 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                     g_Entity,
                                     szFileName,
                                     g_TempDirectory,
+                                    g_WorkingDirectory,
+                                    g_ConfigDirectory,
                                     callback);
 
     g_Arb.SpinOffTask(t);
@@ -412,6 +414,7 @@ int PullAllFiles()
 
 int GetAtticPostCount() 
 {
+    //tobedeleted
     if(!g_pApp)
         return -1;
 
@@ -442,6 +445,8 @@ int GetAtticPostCount()
 
 int SyncAtticPosts()
 {
+
+    //tobedeleted
     // TODO :: this needs to be re-done.
     //
     //This should be renamed to sync Attic Manifest or SyncAtticMetaData

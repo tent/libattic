@@ -20,6 +20,8 @@ public:
               const std::string& entity,
               const std::string& filepath,
               const std::string& tempdir, 
+              const std::string& workingdir,
+              const std::string& configdir,
               void (*callback)(int, void*));
 
     ~PushTask();

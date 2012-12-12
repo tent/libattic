@@ -22,6 +22,8 @@ public:
               const std::string& entity,
               const std::string& filepath,
               const std::string& tempdir, 
+              const std::string& workingdir,
+              const std::string& configdir,
               void (*callback)(int, void*))
     {
         m_pTentApp = pApp;
@@ -33,6 +35,8 @@ public:
         m_Entity = entity;
         m_Filepath = filepath;
         m_TempDirectory = tempdir;
+        m_WorkingDirectory = workingdir;
+        m_ConfigDirectory = configdir;
 
         mCallback = callback;
     }
@@ -50,9 +54,11 @@ public:
 
     AccessToken* GetAccessToken() { return &m_At; }
     
-    void GetEntity(std::string &out)        { out = m_Entity; }
-    void GetFilepath(std::string &out)      { out = m_Filepath; }
-    void GetTempDirectory(std::string &out) { out = m_TempDirectory; } 
+    void GetEntity(std::string &out)            { out = m_Entity; }
+    void GetFilepath(std::string &out)          { out = m_Filepath; }
+    void GetTempDirectory(std::string &out)     { out = m_TempDirectory; } 
+    void GetWorkingDirectory(std::string &out)  { out = m_WorkingDirectory; }
+    void GetConfigDirectory(std::string &out)   { out = m_ConfigDirectory; }
 
     TentApp* GetTentApp()                       { return m_pTentApp; }
     FileManager* GetFileManager()               { return m_pFileManager; } 
@@ -75,6 +81,8 @@ private:
     std::string          m_Entity;
     std::string          m_Filepath;
     std::string          m_TempDirectory;
+    std::string          m_WorkingDirectory;
+    std::string          m_ConfigDirectory;
 
     TentApp*             m_pTentApp; 
     FileManager*         m_pFileManager;

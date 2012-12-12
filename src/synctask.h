@@ -1,36 +1,32 @@
 
 
-#ifndef PULLTASK_H_
-#define PULLTASK_H_
+#ifndef SYNCTASK_H_
+#define SYNCTASK_H_
 #pragma once
-
-#include <string>
 
 #include "tenttask.h"
 
-class PullTask: public TentTask
+class SyncTask : public TentTask
 {
-    int PullFile(const std::string& filepath);
-    int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
-
+    int GetAtticPostCount();
+    int SyncAtticPosts();
 public:
-    PullTask( TentApp* pApp, 
+    SyncTask( TentApp* pApp, 
               FileManager* pFm, 
               ConnectionManager* pCon, 
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,
-              const std::string& tempdir,
+              const std::string& tempdir, 
               const std::string& workingdir,
               const std::string& configdir,
               void (*callback)(int, void*));
 
-    ~PullTask();
+    ~SyncTask();
 
     void RunTask();
 
-private:
-   
+
 };
 
 #endif

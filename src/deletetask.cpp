@@ -14,6 +14,8 @@ DeleteTask::DeleteTask( TentApp* pApp,
                         const std::string& entity,
                         const std::string& filepath,
                         const std::string& tempdir, 
+                        const std::string& workingdir,
+                        const std::string& configdir,
                         void (*callback)(int, void*))
                         :
                         TentTask( pApp,
@@ -23,6 +25,8 @@ DeleteTask::DeleteTask( TentApp* pApp,
                                   entity,
                                   filepath,
                                   tempdir,
+                                  workingdir,
+                                  configdir,
                                   callback)
 {
 
