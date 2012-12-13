@@ -39,6 +39,9 @@ class Crypto
                       const Credentials &cred, 
                       std::ofstream &ofs);
 
+    bool ScryptEncode( const std::string &input, 
+                       std::string &out, 
+                       unsigned int size);
 public:
     Crypto(unsigned int uStride = 400000);
     ~Crypto();
@@ -56,6 +59,11 @@ public:
     unsigned int GetStride() { return m_Stride; }
 
     void SetStride(unsigned int uStride) { m_Stride = uStride; }
+
+    void GenerateKeyIvFromPassphrase( const std::string &name, 
+                                      const std::string &pass, 
+                                      std::string &outKey,
+                                      std::string &outIv);
     
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation

@@ -267,3 +267,75 @@ bool Crypto::DecryptData( const char* pData,
 
     return true;
 }
+extern "C"
+{
+    #include "crypto_scrypt.h"
+    int crypto_scrypt( const uint8_t *,
+                       size_t,
+                       const uint8_t *,
+                       size_t,
+                       uint64_t,
+                       uint32_t,
+                       uint32_t,
+                       uint8_t *,
+                       size_t);
+}
+
+void Crypto::GenerateKeyIvFromPassphrase( const std::string &name, 
+                                          const std::string &pass, 
+                                          std::string &outKey,
+                                          std::string &outIv)
+{
+    ScryptEncode(pass, outKey, CryptoPP::AES::MAX_KEYLENGTH);
+    ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
+}
+
+bool Crypto::ScryptEncode( const std::string &input, 
+                           std::string &out,
+                           unsigned int size)
+{
+    uint8_t salt[32]; // 16 <- do 16, 64 or 128
+
+    uint8_t* password;
+    size_t plen;
+
+    uint64_t N = 16384;
+    uint32_t r = 8;
+    uint32_t p = 1;
+
+    //uint8_t dk[64]; // Derived key
+    uint8_t dk[size]; // Derived key
+    
+    std::cout<< " INPUT : " << input << std::endl;
+    std::cout<< " SIZE : " << size << std::endl;
+
+    char* pData = new char[size];
+    memcpy(pData, input.c_str(), size);
+
+    std::cout<< "Data Buffer : \n" << pData << std::endl;
+
+    uint8_t* buf = reinterpret_cast<uint8_t*>(pData);
+
+    std::cout << crypto_scrypt( (uint8_t*)input.c_str(),
+                                input.size(),
+                                (uint8_t*)"supersalt",
+                                9,
+                                N,
+                                r,
+                                p,
+                                dk,
+                                size) << std::endl;
+    
+    std::cout << "DK : \n " << dk << std::endl;
+    
+    out.append( reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
+    
+    std::cout<<" String DK :\n " << out << std::endl;
+
+    if(pData)
+    {
+        delete pData;
+        pData = NULL;
+    }
+}
+

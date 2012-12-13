@@ -239,6 +239,7 @@ TEST(PULL, ALL)
 }
 /*
 */
+/*
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -789,6 +790,7 @@ int crypto_scrypt( const uint8_t *,
 
 TEST(SCRYPT, ENCRYPT)
 {
+    /*
     uint8_t salt[32]; // 16 <- do 16, 64 or 128
 
     uint8_t* password;
@@ -811,6 +813,14 @@ TEST(SCRYPT, ENCRYPT)
     std::cout << crypto_scrypt((uint8_t*)"pw", 2, (uint8_t*)"salt", 4, N, r, p, dk, 64) << std::endl;
     std::cout << "DK " << dk << std::endl;
     // This produces they key to be used to encrypt the other keys.
+     */
+
+    Crypto cp;
+    std::string key, iv;
+    cp.GenerateKeyIvFromPassphrase( "manuel",
+                                    "passwordhuh",
+                                    key,
+                                    iv);
 }
 /*
 */
