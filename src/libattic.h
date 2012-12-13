@@ -17,13 +17,12 @@ int StartupAppInstance( const char* szAppName,
                         unsigned int scopeCount);
 
 
-int TestQuery();
+int InitLibAttic( const char* szWorkingDirectory, 
+                  const char* szConfigDirectory,
+                  const char* szTempDirectory,
+                  const char* szEntityURL);
 
-int ShutdownAppInstance();
-
-int InitializeFileManager();
-
-int ShutdownFileManager();
+int ShutdownLibAttic();
 
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);

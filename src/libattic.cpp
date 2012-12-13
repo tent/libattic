@@ -55,10 +55,51 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
 static ret::eCode DeletePost(const std::string& szPostID);
 //////// API start
 
-int TestQuery() 
-{
-    //g_pFileManager->TestQuery();
+int InitializeFileManager();
+int ShutdownFileManager();
+int ShutdownAppInstance();
 
+int InitLibAttic( const char* szWorkingDirectory, 
+                  const char* szConfigDirectory,
+                  const char* szTempDirectory,
+                  const char* szEntityURL)
+{
+    SetConfigDirectory(szConfigDirectory);
+    SetWorkingDirectory(szWorkingDirectory);
+    SetTempDirectory(szTempDirectory);
+
+    int status = SetEntityUrl(szEntityURL);
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    status = InitializeFileManager();
+    if(status != ret::A_OK)
+    {
+            std::cout<<"FAILED : " << status << std::endl;
+    }
+
+    return status;
+}
+
+int ShutdownLibAttic()
+{
+    int status = ShutdownFileManager();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
+    }
+
+    status = ShutdownAppInstance();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
+    }
+
+    return status;
 }
 
 int InitializeFileManager()

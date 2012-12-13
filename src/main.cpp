@@ -239,22 +239,20 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+void PULLFUN(int a, void* b)
+{
+    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
+
+}
 TEST(PULL, AFILE)
 {
-    SetTempDirectory("./data/temp");
-    SetConfigDirectory("./config");
-    SetWorkingDirectory("./data");
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
 
     // Load App
     int status = LoadAppFromFile();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    // Set Entity 
-    status = SetEntityUrl("https://manuel.tent.is");
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -267,19 +265,8 @@ TEST(PULL, AFILE)
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
-   
-    // Init File Manager
-    status = InitializeFileManager();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED FILEMANGER: " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-    ///////////////////////////////////////////////////////////////////////
 
-    //status = PullFile("./data/oa2.pdf");
-
-    status = PullFileTask("./data/oa2.pdf");
+    status = PullFile("./data/oa2.pdf", &PULLFUN);
 
     for(;;)
     {
@@ -299,14 +286,13 @@ TEST(PULL, AFILE)
     // Shutdown
 
     std::cout<<"shutting down"<< std::endl;
-    ShutdownAppInstance();
-    ShutdownFileManager();
+    ShutdownLibAttic();
 
 }
 
 /*
  */
-
+/*
 void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -315,17 +301,13 @@ void FOOFUN(int a, void* b)
 
 TEST(PUSH, AFILE)
 {
-    SetWorkingDirectory("./data");
-    SetConfigDirectory("./config");
-    SetTempDirectory("./data/temp");
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
 
+    // Load app from file
     int status = LoadAppFromFile();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    status = SetEntityUrl("https://manuel.tent.is");
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -340,14 +322,6 @@ TEST(PUSH, AFILE)
     }
     ASSERT_EQ(status, ret::A_OK);
    
-    status = InitializeFileManager();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
     //status = PushFile("./data/oa1.pdf", &FOOFUN);
 //    status = PushFile("./data/oa2.pdf", &FOOFUN);
 //    status = PushFile("./data/oa3.pdf", &FOOFUN);
@@ -369,8 +343,7 @@ TEST(PUSH, AFILE)
     ASSERT_EQ(status, ret::A_OK);
    
     // Shutdown
-    ShutdownFileManager();
-    ShutdownAppInstance();
+    ShutdownLibAttic();
 
 }
 /*
@@ -798,16 +771,24 @@ TEST(CURL, POST)
     curl_global_cleanup();
 
     }
-
-    extern "C"
-    {
+/*
+*/
+extern "C"
+{
 #include "crypto_scrypt.h"
-    int crypto_scrypt(const uint8_t *, size_t, const uint8_t *, size_t, uint64_t,
-            uint32_t, uint32_t, uint8_t *, size_t);
-    }
+int crypto_scrypt( const uint8_t *, 
+                   size_t, 
+                   const uint8_t *, 
+                   size_t, 
+                   uint64_t,
+                   uint32_t, 
+                   uint32_t, 
+                   uint8_t *, 
+                   size_t);
+}
 
-    TEST(SCRYPT, ENCRYPT)
-    {
+TEST(SCRYPT, ENCRYPT)
+{
     uint8_t salt[32]; // 16 <- do 16, 64 or 128
 
     uint8_t* password;
@@ -819,8 +800,9 @@ TEST(CURL, POST)
 
     uint8_t dk[64];
 
-    //password = new uint8_t[256];
-    //memcpy(password, "thisismypassword", 16);
+    password = new uint8_t[256];
+    memset(password, '\0', sizeof(uint8_t)*256);
+    memcpy(password, "thisismypassword", 16);
     //plen = 16;
 
     // Recommended numbers
@@ -829,12 +811,13 @@ TEST(CURL, POST)
     std::cout << crypto_scrypt((uint8_t*)"pw", 2, (uint8_t*)"salt", 4, N, r, p, dk, 64) << std::endl;
     std::cout << "DK " << dk << std::endl;
     // This produces they key to be used to encrypt the other keys.
-    }
-    */
-    /*
-     */
-    /*
-    TEST(COMPRESS, ENCRYPT)
+}
+/*
+*/
+/*
+ */
+/*
+TEST(COMPRESS, ENCRYPT)
     {
         // Compress
         Compressor cmp;
