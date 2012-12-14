@@ -80,6 +80,8 @@ int GetAtticPostCount();
 int SyncAtticPosts();
 
 int SaveChanges();
+
+int TestQuery();
 }
 #endif
 

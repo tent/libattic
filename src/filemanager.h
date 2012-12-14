@@ -69,6 +69,7 @@ public:
 
     void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
     
+    unsigned int GetManifestVersion() { return m_Manifest.GetVersionNumber(); }
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }

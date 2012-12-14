@@ -27,22 +27,14 @@
 
 #include "url.h"
 
-/*
 TEST(SQLITE, TEST)
 {
-    SetTempDirectory("./data/temp");
-    SetConfigDirectory("./config");
-    SetWorkingDirectory("./data");
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
 
-    int status = InitializeFileManager();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = LoadAppFromFile();
+    int status = LoadAppFromFile();
 
     if(status != ret::A_OK)
     {
@@ -52,8 +44,7 @@ TEST(SQLITE, TEST)
 
     TestQuery();
 
-    ShutdownFileManager();
-    ShutdownAppInstance();
+    ShutdownLibAttic();
 }
 /*
 */

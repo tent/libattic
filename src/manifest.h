@@ -90,7 +90,7 @@ public:
     
     EntriesMap* GetEntries() { return &m_Entries; }
 
-    unsigned int GetVersionNumber() { return m_VersionNumber; }
+    unsigned int GetVersionNumber() { return QueryForVersion(); }//return m_VersionNumber; }
 
 private:
     EntriesMap          m_Entries;  // Do not delete entries, just clear the map.

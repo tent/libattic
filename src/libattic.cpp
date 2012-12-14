@@ -59,6 +59,13 @@ int InitializeFileManager();
 int ShutdownFileManager();
 int ShutdownAppInstance();
 
+
+int TestQuery()
+{
+
+    std::cout<< " VERsIoN : " << g_pFileManager->GetManifestVersion() << std::endl;
+}
+
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,

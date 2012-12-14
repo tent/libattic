@@ -217,7 +217,8 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
 
     snprintf( pexc,
               1024, 
-              "SELECT * FROM infotable WHERE filename=\"%s\";",
+              "SELECT * FROM %s WHERE filename=\"%s\";",
+              g_infotable.c_str(),
               filename.c_str()
             );
      
@@ -251,12 +252,46 @@ unsigned int Manifest::QueryForVersion()
     if(!PerformSelect(pexc, res))
     {
         // Most likely doesn't exist, if not create it and set to 1
-        InsertVersionNumber(1);
+        std::cout<<"Doesn't exist..."<<std::endl;
+        version = 0;
     }
     else 
     {
         std::cout << " Row count : " << res.nRow << std::endl;
         std::cout << " Col count : " << res.nCol << std::endl;
+
+
+        std::string hold;
+        if(res.nRow == 0)
+        {
+            std::cout<<" no entry, set default"<<std::endl;
+            InsertVersionNumber(1);
+        }
+        else
+        {
+            // Extract version number
+            int step = 0;
+            for(int i=0; i < res.nRow+1; i++)
+            {
+                step = i*res.nCol;
+                /*
+                for(int j=0; j < res.nCol; j++)
+                {
+                    std::cout<< "\t" << res.results[j + step];
+                }
+                */
+
+                if(step > 0)
+                {
+                    hold = res.results[1 + step];
+                    break;
+                }
+
+            }
+
+            version = atoi(hold.c_str());
+            //std::cout<<" VERSION : " << version << std::endl;
+        }
     }
 
     return version;
