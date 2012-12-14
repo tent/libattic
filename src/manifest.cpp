@@ -252,7 +252,6 @@ void Manifest::QueryForMetaPostID(std::string &out)
     {
         // Most likely doesn't exist, if not create it and set to 1
         std::cout<<"Doesn't exist..."<<std::endl;
-        version = 0;
     }
     else 
     {
@@ -365,9 +364,6 @@ bool Manifest::InsertVersionNumber(unsigned int version)
 
 bool Manifest::InsertPostID(const std::string &postID)
 {
-    char ver[256];
-    snprintf(ver, 256, "%u", version);
-
     char pexc[1024];
     snprintf( pexc,
               1024, 
@@ -378,7 +374,6 @@ bool Manifest::InsertPostID(const std::string &postID)
             ); 
 
     return PerformQuery(pexc);
-
 }
 
 bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
