@@ -75,7 +75,7 @@ int PushTask::PushFile(const std::string& filepath)
 
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         std::cout << "INDEXING FILE : " << std::endl;
-        status = GetFileManager()->IndexFile(filepath);
+        status = GetFileManager()->IndexFile(filepath, true);
         GetFileManager()->Unlock();
 
         if(status != ret::A_OK)
@@ -94,9 +94,9 @@ int PushTask::PushFile(const std::string& filepath)
     {
         // New Post
         // Construct post url
+        // TODO :: abstract this common functionality somewhere else, utils?
         std::string posturl;
         GetEntity(posturl);
-
         posturl += "/tent/posts";
 
         std::cout<< " POST URL : " << posturl << std::endl;
@@ -129,9 +129,9 @@ int PushTask::CreateAndSerializeAtticPost( bool pub,
     // Create a post 
     AtticPost p;
     p.SetPermission(std::string("public"), pub);
-    p.SetFilepath(filepath);
-    p.SetFilename(filename);
-    p.SetSize(size);
+    p.AtticPostSetFilepath(filepath);
+    p.AtticPostSetFilename(filename);
+    p.AtticPostSetSize(size);
 
     // Serialize Post
     JsonSerializer::SerializeObject(&p, out);

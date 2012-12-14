@@ -16,7 +16,7 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    void SetAtticRoot(const std::string &root) { m_AtticRoot = root; }
+    void MetaSetAtticRoot(const std::string &root) { m_AtticRoot = root; }
 
 private:
     std::string m_AtticRoot;

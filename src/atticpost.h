@@ -16,10 +16,10 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    void SetFilename(const std::string &name) { m_Name = name; }            
-    void SetFilepath(const std::string &path) { m_Path = path; }            
-    void SetMIME(const std::string &type) { m_Type = type; }
-    void SetSize(const int size) { m_Size = size; }                         
+    void AtticPostSetFilename(const std::string &name) { m_Name = name; }            
+    void AtticPostSetFilepath(const std::string &path) { m_Path = path; }            
+    void AtticPostSetMIME(const std::string &type) { m_Type = type; }
+    void AtticPostSetSize(const int size) { m_Size = size; }                         
 
 private:
     // Attic specific post                       

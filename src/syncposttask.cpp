@@ -94,7 +94,7 @@ int SyncPostsTask::SyncAtticPosts()
     Json::Reader reader;
 
     if(!reader.parse(response, root))
-        return -1;
+        return ret::A_FAIL_JSON_PARSE;
 
 
     Json::ValueIterator itr = root.begin();

@@ -26,14 +26,14 @@ class FileManager : public MutexClass
                                 std::string &outboundPath,
                                 bool bStripFileType);
     
-    void GenerateCompressionPath(FileInfo* fi, std::string &szOutPath);
-    void GenerateCryptoPath(FileInfo* fi, std::string &szOutPath);
+    void GenerateCompressionPath(FileInfo* fi, std::string &outpath);
+    void GenerateCryptoPath(FileInfo* fi, std::string &outpath);
 
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
 public:
     FileManager();
-    FileManager( const std::string &szManifestFilepath, 
+    FileManager( const std::string &manifestpath, 
                  const std::string &workingDirectory, 
                  unsigned int uFileStride = 400000);
 
@@ -42,13 +42,13 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
    
-    ret::eCode IndexFile(const std::string &szFilePath);
-    ret::eCode RemoveFile(const std::string &szFileName);
+    ret::eCode IndexFile(const std::string &filepath, const bool insert);
+    ret::eCode RemoveFile(const std::string &filename);
 
     ret::eCode ConstructFile(std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
-    bool FileExists(std::string& szFilepath);               // File exists on disc
+    bool FileExists(std::string& filepath);               // File exists on disc
 
     FileInfo* GetFileInfo(const std::string &filename);
 
@@ -71,7 +71,7 @@ public:
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
     unsigned int GetFileStride() const               { return m_FileStride; }
 
-    void SetManifestFilePath(const std::string &szFilepath)     { m_ManifestFilePath = szFilepath; }
+    void SetManifestFilePath(const std::string &filepath)     { m_ManifestFilePath = filepath; }
     void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); }
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }

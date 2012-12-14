@@ -17,12 +17,12 @@ FileManager::FileManager() : MutexClass()
 
 }
 
-FileManager::FileManager( const std::string &szManifestFilepath, 
+FileManager::FileManager( const std::string &manifestpath, 
                           const std::string &workingDirectory, 
                           unsigned int uFileStride)
 {
     // Set manifest path
-    m_ManifestFilePath = szManifestFilepath;
+    m_ManifestFilePath = manifestpath;
     m_Manifest.SetFilePath(m_ManifestFilePath);
 
     // Set working directory
@@ -126,14 +126,14 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     return fi;
 }
 
-ret::eCode FileManager::IndexFile(const std::string &szFilePath)
+ret::eCode FileManager::IndexFile(const std::string &filepath, const bool insert)
 {
     std::cout << "Indexing file ... " << std::endl;
     ret::eCode status = ret::A_OK;
     // Create an entry
     //  Get File info
     FileInfo* fi = CreateFileInfo();
-    fi->InitializeFile(szFilePath);
+    fi->InitializeFile(filepath);
 
     //
     // Compress
@@ -142,7 +142,7 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
 
     GenerateCompressionPath(fi, comppath);
 
-    status = m_Compressor.CompressFile(szFilePath, comppath, 1);
+    status = m_Compressor.CompressFile(filepath, comppath, 1);
     if(status != ret::A_OK)
         return status;
 
@@ -174,23 +174,24 @@ ret::eCode FileManager::IndexFile(const std::string &szFilePath)
     // Check if manifest is loaded
     // Write manifest entry
 
-    m_Manifest.InsertFileInfo(fi);
+    if(insert)
+        m_Manifest.InsertFileInfo(fi);
 
     //bool success = m_Manifest.WriteOutManifest();
     return status;
 }
 
-ret::eCode FileManager::RemoveFile(const std::string &szFileName)
+ret::eCode FileManager::RemoveFile(const std::string &filename)
 {
     ret::eCode status = ret::A_OK;
 
-    if(!m_Manifest.RemoveFileInfo(szFileName))
+    if(!m_Manifest.RemoveFileInfo(filename))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
 
     return status;
 }
 
-void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
+void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &outpath)
 {
     if(!fi)
         return;
@@ -204,8 +205,26 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &szOutPath)
     
     if(split.size() > 0)
     { 
-        //szOutPath = m_WorkingDirectory + "/" + split[0] + "_cmp";
-        szOutPath = m_TempDirectory + "/" + split[0] + "_cmp";
+        //outpath = m_WorkingDirectory + "/" + split[0] + "_cmp";
+        outpath = m_TempDirectory + "/" + split[0] + "_cmp";
+    }
+}
+
+void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &outpath)
+{
+    if(!fi)
+        return;
+    // strip any file type
+    std::vector<std::string> split;
+    std::string filename;
+    fi->GetFileName(filename);
+
+    utils::SplitString(filename, '.', split);
+    
+    if(split.size() > 0)
+    { 
+        //outpath = m_WorkingDirectory + "/" + split[0] + "_enc";
+        outpath = m_TempDirectory + "/" + split[0] + "_enc";
     }
 }
 
@@ -214,23 +233,7 @@ void FileManager::SetFilePostId(const std::string &filename, const std::string p
     m_Manifest.InsertFilePostID(filename, postid);
 }
 
-void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &szOutPath)
-{
-    if(!fi)
-        return;
-    // strip any file type
-    std::vector<std::string> split;
-    std::string filename;
-    fi->GetFileName(filename);
 
-    utils::SplitString(filename, '.', split);
-    
-    if(split.size() > 0)
-    { 
-        //szOutPath = m_WorkingDirectory + "/" + split[0] + "_enc";
-        szOutPath = m_TempDirectory + "/" + split[0] + "_enc";
-    }
-}
 
 ret::eCode FileManager::ConstructFile(std::string &filename)
 {
@@ -342,9 +345,9 @@ bool FileManager::FindFileInManifest(const std::string &filename)
     return m_Manifest.IsFileInManifest(filename);
 }
 
-bool FileManager::FileExists(std::string& szFilepath)          
+bool FileManager::FileExists(std::string& filepath)          
 {                                                           
-        std::ifstream infile(szFilepath.c_str());               
+        std::ifstream infile(filepath.c_str());               
         bool bVal = infile.good();
         infile.close();
         return bVal;                               
