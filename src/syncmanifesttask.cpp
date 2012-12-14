@@ -26,12 +26,12 @@ SyncManifestTask::SyncManifestTask( TentApp* pApp,
 
 }
 
-SyncManifest::~SyncManifestTask()
+SyncManifestTask::~SyncManifestTask()
 {
 
 }
 
-void SyncManifest::RunTask()
+void SyncManifestTask::RunTask()
 {
 
 }

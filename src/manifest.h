@@ -55,7 +55,10 @@ class Manifest
 
     // MetaTable
     unsigned int QueryForVersion();
+    void QueryForMetaPostID(std::string &out);
+
     bool InsertVersionNumber(unsigned int version);
+    bool InsertPostID(const std::string &postID);
     //////////////////////////////////////////////////////
 
     bool WriteOutManifestHeader(std::ofstream &ofs);
@@ -75,7 +78,7 @@ public:
     bool WriteOutManifest();    
 
     bool InsertFileInfo(FileInfo* fi);
-    bool InsertFilePostID(const std::string& filename, const std::string &id);
+    bool InsertFilePostID(const std::string &filename, const std::string &id);
 
     bool RemoveFileInfo(const std::string &filename);
 
@@ -91,6 +94,8 @@ public:
     EntriesMap* GetEntries() { return &m_Entries; }
 
     unsigned int GetVersionNumber() { return QueryForVersion(); }//return m_VersionNumber; }
+    void GetPostID(std::string &out) { }
+
 
 private:
     EntriesMap          m_Entries;  // Do not delete entries, just clear the map.

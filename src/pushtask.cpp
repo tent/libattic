@@ -119,6 +119,7 @@ int PushTask::PushFile(const std::string& filepath)
 
     return ret::A_OK;
 }
+
 int PushTask::CreateAndSerializeAtticPost( bool pub,
                                            const std::string& filepath,
                                            const std::string& filename,
@@ -136,7 +137,6 @@ int PushTask::CreateAndSerializeAtticPost( bool pub,
     JsonSerializer::SerializeObject(&p, out);
     return ret::A_OK;
 }
-
 
 int PushTask::PostFile(const std::string& url, const std::string &filepath, FileInfo* fi)
 {

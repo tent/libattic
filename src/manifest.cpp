@@ -234,6 +234,60 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
     return false;
 }
 
+void Manifest::QueryForMetaPostID(std::string &out)
+{
+   char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "SELECT * FROM %s WHERE key=\"%s\";",
+              g_metatable.c_str(),
+              "post" 
+            );
+     
+    std::cout<< " EXECING : " << pexc << std::endl;
+
+    SelectResult res;
+    if(!PerformSelect(pexc, res))
+    {
+        // Most likely doesn't exist, if not create it and set to 1
+        std::cout<<"Doesn't exist..."<<std::endl;
+        version = 0;
+    }
+    else 
+    {
+        if(res.nRow == 0)
+        {
+            std::cout<<" no entry..."<<std::endl;
+        }
+        else
+        {
+            // Extract version number
+            int step = 0;
+            for(int i=0; i < res.nRow+1; i++)
+            {
+                step = i*res.nCol;
+                /*
+                for(int j=0; j < res.nCol; j++)
+                {
+                    std::cout<< "\t" << res.results[j + step];
+                }
+                */
+
+                if(step > 0)
+                {
+                    out = res.results[1 + step];
+                    break;
+                }
+            }
+
+            std::cout<<" POST : " << out << std::endl;
+        }
+    }
+
+
+}
+
 unsigned int Manifest::QueryForVersion()
 {
     char pexc[1024];
@@ -307,6 +361,24 @@ bool Manifest::InsertVersionNumber(unsigned int version)
             ); 
 
     return PerformQuery(pexc);
+}
+
+bool Manifest::InsertPostID(const std::string &postID)
+{
+    char ver[256];
+    snprintf(ver, 256, "%u", version);
+
+    char pexc[1024];
+    snprintf( pexc,
+              1024, 
+              "INSERT OR REPLACE INTO \"%s\" (key, value) VALUES (\"%s\", \"%s\");",
+              g_metatable.c_str(),
+              "post",
+              postID.c_str() 
+            ); 
+
+    return PerformQuery(pexc);
+
 }
 
 bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
