@@ -816,11 +816,10 @@ TEST(SCRYPT, ENCRYPT)
      */
 
     Crypto cp;
-    std::string key, iv;
+    Credentials cred;
     cp.GenerateKeyIvFromPassphrase( "manuel",
                                     "passwordhuh",
-                                    key,
-                                    iv);
+                                    cred);
 }
 /*
 */

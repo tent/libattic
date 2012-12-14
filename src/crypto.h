@@ -62,8 +62,8 @@ public:
 
     void GenerateKeyIvFromPassphrase( const std::string &name, 
                                       const std::string &pass, 
-                                      std::string &outKey,
-                                      std::string &outIv);
+                                      Credentials& out);
+
     
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation
