@@ -41,19 +41,14 @@ public:
 
     bool StartupFileManager();
     bool ShutdownFileManager();
-
-    //void TestQuery() { std::string a(""); FileInfo fi; m_Manifest.QueryForFile(a, &fi); }
-
-    bool LoadManifest(const std::string &szFilePath);
-    bool WriteOutChanges();
-    
+   
     ret::eCode IndexFile(const std::string &szFilePath);
     ret::eCode RemoveFile(const std::string &szFileName);
 
     ret::eCode ConstructFile(std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
-    bool FileExists(std::string& szFilepath);           // File exists on disc
+    bool FileExists(std::string& szFilepath);               // File exists on disc
 
     FileInfo* GetFileInfo(const std::string &filename);
 
@@ -69,19 +64,18 @@ public:
 
     void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
     
-    unsigned int GetManifestVersion() { return m_Manifest.GetVersionNumber(); }
+    unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
+    void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
-
-    unsigned int GetFileStride() const      { return m_FileStride; }
+    unsigned int GetFileStride() const               { return m_FileStride; }
 
     void SetManifestFilePath(const std::string &szFilepath)     { m_ManifestFilePath = szFilepath; }
+    void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); }
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
-
-
     void SetFilePostId(const std::string &filename, const std::string postid);
 
 private:
