@@ -42,8 +42,8 @@ class Manifest
     bool CreateInfoTable();
     bool CreateMetaTable();
 
-    bool PerformQuery(const char* pQuery);
-    bool PerformSelect(const char* pSelect, SelectResult &out);
+    bool PerformQuery(const char* pQuery) const;
+    bool PerformSelect(const char* pSelect, SelectResult &out) const;
 
     // InfoTable
     bool InsertFileInfoToDb(const FileInfo* fi);
@@ -55,11 +55,11 @@ class Manifest
     void CheckIfTableExists(const std::string &tableName);
 
     // MetaTable
-    unsigned int QueryForVersion();
-    void QueryForMetaPostID(std::string &out);
+    unsigned int QueryForVersion() const;
+    void QueryForMetaPostID(std::string &out) const;
 
-    bool InsertVersionNumber(unsigned int version);
-    bool InsertPostID(const std::string &postID);
+    bool InsertVersionNumber(unsigned int version) const;
+    bool InsertPostID(const std::string &postID) const;
     //////////////////////////////////////////////////////
 
     void SetIsDirty(bool dirty) { m_Dirty = dirty; } 
@@ -84,8 +84,8 @@ public:
     bool IsFileInManifest(const std::string &filename);
 
     unsigned int GetEntryCount()        { return m_EntryCount; }
-    unsigned int GetVersionNumber()     { return QueryForVersion(); }//return m_VersionNumber; }
-    void GetPostID(std::string &out)    { QueryForMetaPostID(out); }
+    unsigned int GetVersionNumber() const    { return QueryForVersion(); }//return m_VersionNumber; }
+    void GetPostID(std::string &out) const    { QueryForMetaPostID(out); }
     bool GetIsDirty()                   { return m_Dirty; } 
 
     void SetPostID(const std::string &id)   { InsertPostID(id); }

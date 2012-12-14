@@ -147,7 +147,7 @@ bool Manifest::CreateMetaTable()
 }
 
 
-bool Manifest::PerformQuery(const char* pQuery)
+bool Manifest::PerformQuery(const char* pQuery) const
 {
     if(!m_pDb || !pQuery)
         return false;
@@ -182,7 +182,7 @@ bool Manifest::PerformQuery(const char* pQuery)
 //                       char **pzErrmsg       /* Error msg written here */
 //                       );
 //                      void sqlite3_free_table(char **result);
-bool Manifest::PerformSelect(const char* pSelect, SelectResult &out)
+bool Manifest::PerformSelect(const char* pSelect, SelectResult &out) const
 {
     if(!m_pDb || !pSelect)
         return false;
@@ -234,7 +234,7 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
     return false;
 }
 
-void Manifest::QueryForMetaPostID(std::string &out)
+void Manifest::QueryForMetaPostID(std::string &out) const
 {
    char pexc[1024];
 
@@ -287,7 +287,7 @@ void Manifest::QueryForMetaPostID(std::string &out)
 
 }
 
-unsigned int Manifest::QueryForVersion()
+unsigned int Manifest::QueryForVersion() const
 {
     char pexc[1024];
 
@@ -345,7 +345,7 @@ unsigned int Manifest::QueryForVersion()
     return version;
 }
 
-bool Manifest::InsertVersionNumber(unsigned int version)
+bool Manifest::InsertVersionNumber(unsigned int version) const
 {
     char ver[256];
     snprintf(ver, 256, "%u", version);
@@ -362,7 +362,7 @@ bool Manifest::InsertVersionNumber(unsigned int version)
     return PerformQuery(pexc);
 }
 
-bool Manifest::InsertPostID(const std::string &postID)
+bool Manifest::InsertPostID(const std::string &postID) const
 {
     char pexc[1024];
     snprintf( pexc,
