@@ -257,10 +257,6 @@ unsigned int Manifest::QueryForVersion()
     }
     else 
     {
-        std::cout << " Row count : " << res.nRow << std::endl;
-        std::cout << " Col count : " << res.nCol << std::endl;
-
-
         std::string hold;
         if(res.nRow == 0)
         {
@@ -286,7 +282,6 @@ unsigned int Manifest::QueryForVersion()
                     hold = res.results[1 + step];
                     break;
                 }
-
             }
 
             version = atoi(hold.c_str());
