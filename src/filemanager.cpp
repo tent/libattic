@@ -41,82 +41,14 @@ FileManager::~FileManager()
 
 bool FileManager::StartupFileManager()
 {
-    /*
-    // Load manifest
-    if(!FileExists(m_ManifestFilePath))
-    {
-        // Create manifest
-        m_Manifest.CreateEmptyManifest();
-    }
-
-*/
-
     m_Manifest.Initialize();
-    //return LoadManifest(m_ManifestFilePath);
     return true;
 }
 
 bool FileManager::ShutdownFileManager()
 {
-    // Write out manifest
-    //return m_Manifest.WriteOutManifest();
     m_Manifest.Shutdown();
     return true;
-}
-
-bool FileManager::LoadManifest(const std::string &szFilePath)
-{
-
-    return true;
-
-/*
-    m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
-
-    if(m_ifStream.is_open())
-    {
-        unsigned int line_count = 0;
-        std::string line;
-        bool ok;
-        // Read Line by line
-        while(!m_ifStream.eof())
-        {
-            std::getline(m_ifStream, line);
-            if(line_count == 0)
-            {
-                // header info
-                std::cout<<"HEADER INFO : "<<line<<std::endl;
-                ok = ReadInHeader(line);
-            }
-            else
-            {
-                // Its an entry
-                std::cout<<"ENTRY INFO : "<<line<<std::endl;
-                ok = ReadInEntry(line);
-            }
-            
-            if(!ok)
-            {
-                std::cout<< " FAILED TO READ IN HEADER " << std::endl;
-                //m_ifStream.close();
-                //return false;
-            }
-            if(m_Manifest.GetEntryCount() == line_count)
-                break;
-
-            line_count++;
-        }
-
-        m_ifStream.close();
-        return true;
-    }
-
-    return false;
-    */
-}
-
-bool FileManager::WriteOutChanges()
-{
-    return m_Manifest.WriteOutManifest(); 
 }
 
 bool FileManager::ReadInHeader(std::string &h)

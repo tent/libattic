@@ -33,7 +33,13 @@ SyncManifestTask::~SyncManifestTask()
 
 void SyncManifestTask::RunTask()
 {
-
+    // Get Metadata Post id
+        // If none exists create first metadata post
+    // Pull Metadata Post
+        // Compare versions
+        // If server version newer, replace client version
+            // This is more involved, if manifest is direct there needs to be some sort of merge
+        // If client version is newer, PUT new post, (bump version number) 
 }
 
 

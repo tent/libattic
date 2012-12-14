@@ -84,8 +84,6 @@ public:
 
     void SetFilePostId(const std::string &filename, const std::string postid);
 
-    Manifest::EntriesMap* GetManifestEntries() { return m_Manifest.GetEntries(); }
-
 private:
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;

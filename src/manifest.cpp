@@ -21,6 +21,7 @@ Manifest::Manifest()
     m_EntryCount = 0;
     m_VersionNumber = 0;
     m_pDb = NULL;
+    m_Dirty = false;
 }
 
 Manifest::~Manifest()
@@ -70,7 +71,6 @@ void Manifest::Shutdown()
 
 void Manifest::OpenSqliteDb()
 {
-    
     int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
 
     if( rc )
@@ -545,31 +545,6 @@ bool Manifest::RemoveFileFromDb(const std::string &filename)
     return PerformQuery(pexc);
 }
 
-bool Manifest::WriteOutManifestHeader(std::ofstream &ofs)
-{
-    if(ofs)
-    {
-        char countBuf[256];
-        snprintf(countBuf, (sizeof(char)*256), "%lu", m_Entries.size());
-
-        std::string manifestData;
-        manifestData.append(countBuf);
-        manifestData.append("\n");
-
-        m_ofStream.write(manifestData.c_str(), manifestData.size());
-
-        return true;
-    }
-
-    return false;
-}
-
-bool Manifest::WriteOutManifest()
-{
-    // Depricated :: TODO remove this
-   return true;
-}
-
 bool Manifest::InsertFileInfo(FileInfo* fi)
 {
     if(!fi)
@@ -582,47 +557,29 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     //        in memory upon use? Should we load them in?, should
     //        we set perhaps a half life?
 
-    std::string fn;
-    fi->GetFileName(fn);
-   
-    m_Entries[fn] = fi;
-    m_EntryCount++;
+    bool status = InsertFileInfoToDb(fi);
+    if(status)
+    {
+        SetIsDirty(true);
+    }
 
-    InsertFileInfoToDb(fi);
-
-    return true;
+    return status;
 }
 
 bool Manifest::RemoveFileInfo(const std::string &filename)
 {
-    EntriesMap::iterator itr;
-    // Remove from in memory store
-    itr = m_Entries.find(filename);
-    if(itr != m_Entries.end())
-        m_Entries.erase(itr);
+    bool status = RemoveFileFromDb(filename);
+    if(status)
+    {
+        SetIsDirty(true);
+    }
 
-    return RemoveFileFromDb(filename);
+    return status;
 }
 
-FileInfo* Manifest::RetrieveFileInfo(const std::string &s)
-{
-    std::cout << "DEPRICATED" << std::endl;
-    // Depricated
-    // Check in fileinfo already loaded
-    EntriesMap::iterator itr;
-    itr = m_Entries.find(s);
-
-    if(itr == m_Entries.end())
-        return 0;
-    return itr->second;
-}
 
 bool Manifest::IsFileInManifest(const std::string &filename)
 {
-    // TODO :: search for file in sqlite db not in in memory map (or do both)
-//    if(m_Entries.find(filename) != m_Entries.end())
-//        return true;
-
     return QueryForFileExistence(filename);
 }
 

@@ -33,6 +33,7 @@ public:
 
 class Manifest
 {
+    // TODO :: abstract table specific methods
     // SQLite specific ///////////////////////////////////
     void OpenSqliteDb();
     void CloseSqliteDb();
@@ -61,7 +62,7 @@ class Manifest
     bool InsertPostID(const std::string &postID);
     //////////////////////////////////////////////////////
 
-    bool WriteOutManifestHeader(std::ofstream &ofs);
+    void SetIsDirty(bool dirty) { m_Dirty = dirty; } 
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
@@ -75,32 +76,23 @@ public:
     void Shutdown();
 
     bool CreateEmptyManifest();
-    bool WriteOutManifest();    
 
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
 
     bool RemoveFileInfo(const std::string &filename);
-
     bool IsFileInManifest(const std::string &filename);
 
-    FileInfo* RetrieveFileInfo(const std::string &s);
+    unsigned int GetEntryCount()        { return m_EntryCount; }
+    unsigned int GetVersionNumber()     { return QueryForVersion(); }//return m_VersionNumber; }
+    void GetPostID(std::string &out)    { QueryForMetaPostID(out); }
+    bool GetIsDirty()                   { return m_Dirty; } 
 
+    void SetPostID(const std::string &id)   { InsertPostID(id); }
+    void SetEntryCount(unsigned int count)  { m_EntryCount = count; }
     void SetFilePath(std::string &filePath) { m_Filepath = filePath; }
-    
-    unsigned int GetEntryCount() { return m_EntryCount; }
-    void SetEntryCount(unsigned int count) { m_EntryCount = count; }
-    
-    EntriesMap* GetEntries() { return &m_Entries; }
-
-    unsigned int GetVersionNumber() { return QueryForVersion(); }//return m_VersionNumber; }
-    void GetPostID(std::string &out) { }
-
 
 private:
-    EntriesMap          m_Entries;  // Do not delete entries, just clear the map.
-                                    // FileInfoFactory will take care of deletion.
-
     sqlite3*            m_pDb;
     std::ifstream       m_ifStream;
     std::ofstream       m_ofStream;
@@ -111,6 +103,8 @@ private:
     unsigned int        m_EntryCount;   // Number of entries in the manifest
     
     unsigned int        m_VersionNumber; // Version Number of sqlitedb
+
+    bool                m_Dirty; // Has manifest been written to since last sync
 };
 
 #endif

@@ -17,6 +17,7 @@
 #include "pushtask.h"
 #include "deletetask.h"
 #include "syncposttask.h"
+#include "syncmanifesttask.h"
 
 #include "constants.h"
 
@@ -393,7 +394,6 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                 g_WorkingDirectory,
                                 g_ConfigDirectory,
                                 callback);
-
     g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
@@ -412,7 +412,6 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                 g_WorkingDirectory,
                                 g_ConfigDirectory,
                                 callback);
-
     g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
@@ -430,7 +429,6 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                     g_WorkingDirectory,
                                     g_ConfigDirectory,
                                     callback);
-
     g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
@@ -438,13 +436,17 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 
 int SyncAtticMetaData( void (*callback)(int, void*) )
 {
-    // Pull the latest metadata
-    //
-    // Check the versions
-    //
-    // Replace what's on disk
-    //
-    // If there is no post, create one
+    SyncManifestTask* t = new SyncManifestTask( g_pApp, 
+                                                g_pFileManager, 
+                                                ConnectionManager::GetInstance(),
+                                                g_at,
+                                                g_Entity,
+                                                "",
+                                                g_TempDirectory,
+                                                g_WorkingDirectory,
+                                                g_ConfigDirectory,
+                                                callback);
+    g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
 }
@@ -461,7 +463,6 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
                                           g_WorkingDirectory,
                                           g_ConfigDirectory,
                                           callback);
-
     g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
@@ -469,6 +470,8 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
 
 int PullAllFiles()
 {
+    // DEPRICATED
+    /*
     if(!g_pApp)
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
 
@@ -487,6 +490,7 @@ int PullAllFiles()
         PullFile((filepath + fn).c_str(), NULL);
     }
     
+    */
     return ret::A_OK;
 }
 
@@ -501,9 +505,6 @@ int SaveChanges()
         return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     ret::eCode status = ret::A_OK;
-
-    if(!g_pFileManager->WriteOutChanges())
-        status = ret::A_FAIL_TO_WRITE_OUT_MANIFEST;
 
     return status;
 }
