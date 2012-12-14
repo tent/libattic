@@ -11,13 +11,15 @@
 #include "utils.h"
 
 
-static const std::string g_table("infotable");
+static const std::string g_infotable("infotable");
+static const std::string g_metatable("metatable");
 
 Manifest::Manifest()
 {
     // Set the default filename
-    m_fileName.append("manifest._mn");
-    m_entryCount = 0;
+    m_Filename.append("manifest._mn");
+    m_EntryCount = 0;
+    m_VersionNumber = 0;
     m_pDb = NULL;
 }
 
@@ -84,7 +86,7 @@ void Manifest::OpenSqliteDb()
             return;
         }
 
-        CreateTable();
+        CreateTables();
     }
 }
 
@@ -98,21 +100,52 @@ void Manifest::CloseSqliteDb()
 
 }
 
-bool Manifest::CreateTable()
+bool Manifest::CreateTables()
 {
     if(!m_pDb)
         return false;
 
+    if(!CreateInfoTable())
+    {
+        std::cout<<" Failed to create infotable..." << std::endl;
+        return false;
+    }
+
+    if(!CreateMetaTable())
+    {
+        std::cout<<" Failed to create metatable..." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool Manifest::CreateInfoTable()
+{
     char pexc[1024];
 
     snprintf( pexc,
               1024,
               "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
-              g_table.c_str()
+              g_infotable.c_str()
             );
 
     return PerformQuery(pexc);
 }
+
+bool Manifest::CreateMetaTable()
+{
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024,
+              "CREATE TABLE IF NOT EXISTS %s (key TEXT, value TEXT, PRIMARY KEY(key ASC));",
+              g_metatable.c_str()
+            );
+
+    return PerformQuery(pexc);
+}
+
 
 bool Manifest::PerformQuery(const char* pQuery)
 {
@@ -180,7 +213,7 @@ bool Manifest::PerformSelect(const char* pSelect, SelectResult &out)
 
 bool Manifest::QueryForFileExistence(const std::string& filename)
 {
-  char pexc[1024];
+    char pexc[1024];
 
     snprintf( pexc,
               1024, 
@@ -200,13 +233,60 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
     return false;
 }
 
+unsigned int Manifest::QueryForVersion()
+{
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "SELECT * FROM %s WHERE key=\"%s\";",
+              g_metatable.c_str(),
+              "version" 
+            );
+     
+    std::cout<< " EXECING : " << pexc << std::endl;
+
+    SelectResult res;
+    unsigned int version = 1;
+    if(!PerformSelect(pexc, res))
+    {
+        // Most likely doesn't exist, if not create it and set to 1
+        InsertVersionNumber(1);
+    }
+    else 
+    {
+        std::cout << " Row count : " << res.nRow << std::endl;
+        std::cout << " Col count : " << res.nCol << std::endl;
+    }
+
+    return version;
+}
+
+bool Manifest::InsertVersionNumber(unsigned int version)
+{
+    char ver[256];
+    snprintf(ver, 256, "%u", version);
+
+    char pexc[1024];
+    snprintf( pexc,
+              1024, 
+              "INSERT OR REPLACE INTO \"%s\" (key, value) VALUES (\"%s\", \"%s\");",
+              g_metatable.c_str(),
+              "version",
+              ver
+            ); 
+
+    return PerformQuery(pexc);
+}
+
 bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "SELECT * FROM infotable WHERE filename=\"%s\";",
+              "SELECT * FROM %s WHERE filename=\"%s\";",
+              g_infotable.c_str(),
               filename.c_str()
             );
      
@@ -281,7 +361,7 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     snprintf( pexc,
               1024, 
               "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, filesize, postid, postversion, key, iv) VALUES (\"%s\", \"%s\", \"%s\", %u, %u, \"%s\", %d, \'%s\', \'%s\');",
-              g_table.c_str(),
+              g_infotable.c_str(),
               filename.c_str(),
               filepath.c_str(),
               chunkname.c_str(),
@@ -293,8 +373,8 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
               szIv
             ); 
 
+    /*
     // Memcpy the key and iv
-
     char szkey[100000];
     
     memcpy(szkey,  &cred.key, cred.GetKeySize());
@@ -318,6 +398,7 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " COPIED AGAIN : " << szUn << std::endl;
 
     std::cout << " INSERT : \n" << pexc << std::endl;
+    */
 
     return PerformQuery(pexc);
 }
@@ -331,7 +412,7 @@ bool Manifest::InsertFilePostID(const std::string& filename, const std::string &
     snprintf( pexc,
               1024, 
               "UPDATE \"%s\" SET postid=\"%s\" WHERE filename=\"%s\";",
-              g_table.c_str(),
+              g_infotable.c_str(),
               id.c_str(),
               filename.c_str()
             ); 
@@ -359,7 +440,7 @@ bool Manifest::RemoveFileFromDb(const std::string &filename)
     snprintf( pexc,
               1024, 
               "DELETE FROM \"%s\"  WHERE filename=\"%s\";",
-              g_table.c_str(),
+              g_infotable.c_str(),
               filename.c_str()
             ); 
 
@@ -408,7 +489,7 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     fi->GetFileName(fn);
    
     m_Entries[fn] = fi;
-    m_entryCount++;
+    m_EntryCount++;
 
     InsertFileInfoToDb(fi);
 

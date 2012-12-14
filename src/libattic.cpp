@@ -431,6 +431,13 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 
 int SyncAtticMetaData( void (*callback)(int, void*) )
 {
+    // Pull the latest metadata
+    //
+    // Check the versions
+    //
+    // Replace what's on disk
+    //
+    // If there is no post, create one
 
     return ret::A_OK;
 }

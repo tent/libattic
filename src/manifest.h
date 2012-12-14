@@ -37,11 +37,14 @@ class Manifest
     void OpenSqliteDb();
     void CloseSqliteDb();
 
-    bool CreateTable();
+    bool CreateTables();
+    bool CreateInfoTable();
+    bool CreateMetaTable();
 
     bool PerformQuery(const char* pQuery);
     bool PerformSelect(const char* pSelect, SelectResult &out);
 
+    // InfoTable
     bool InsertFileInfoToDb(const FileInfo* fi);
     bool InsertCredentialsToDb(const FileInfo* fi);
 
@@ -49,6 +52,10 @@ class Manifest
 
     bool RemoveFileFromDb(const std::string &filename);
     void CheckIfTableExists(const std::string &tableName);
+
+    // MetaTable
+    unsigned int QueryForVersion();
+    bool InsertVersionNumber(unsigned int version);
     //////////////////////////////////////////////////////
 
     bool WriteOutManifestHeader(std::ofstream &ofs);
@@ -78,10 +85,12 @@ public:
 
     void SetFilePath(std::string &filePath) { m_Filepath = filePath; }
     
-    unsigned int GetEntryCount() { return m_entryCount; }
-    void SetEntryCount(unsigned int count) { m_entryCount = count; }
+    unsigned int GetEntryCount() { return m_EntryCount; }
+    void SetEntryCount(unsigned int count) { m_EntryCount = count; }
     
     EntriesMap* GetEntries() { return &m_Entries; }
+
+    unsigned int GetVersionNumber() { return m_VersionNumber; }
 
 private:
     EntriesMap          m_Entries;  // Do not delete entries, just clear the map.
@@ -93,8 +102,10 @@ private:
 
     // Manifest specific data
     std::string         m_Filepath;     // path to manifest file
-    std::string         m_fileName;     // filename of the manifest
-    unsigned int        m_entryCount;   // Number of entries in the manifest
+    std::string         m_Filename;     // filename of the manifest
+    unsigned int        m_EntryCount;   // Number of entries in the manifest
+    
+    unsigned int        m_VersionNumber; // Version Number of sqlitedb
 };
 
 #endif
