@@ -3,14 +3,18 @@
 #define CREDENTIALSMANAGER_H_
 #pragma once
 
+#include "taskarbiter.h"
 #include "masterkey.h"
 #include "accesstoken.h"
 
-class CredentialsManager
+class CredentialsManager : public MutexClass
 {
 public:
     CredentialsManager();
     ~CredentialsManager();
+
+    int Initialize();
+    int Shutdown();
 
     MasterKey GetMasterKeyCopy() const      { return m_MasterKey; }
     AccessToken GetAccessTokenCopy() const  { return m_AccessToken; }

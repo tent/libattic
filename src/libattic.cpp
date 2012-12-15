@@ -5,6 +5,7 @@
 
 #include "errorcodes.h"
 #include "connectionmanager.h"
+#include "credentialsmanager.h"
 #include "tentapp.h"
 #include "jsonserializable.h"
 #include "urlparams.h"
@@ -38,9 +39,11 @@
 
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
+static CredentialsManager* g_pCredManager = 0;
 
 static TaskArbiter g_Arb;
-static AccessToken g_at;
+
+static AccessToken g_at; // To be replaced
 
 // Consider making these volatile
 static std::string g_WorkingDirectory;
@@ -57,8 +60,14 @@ static ret::eCode DeletePost(const std::string& szPostID);
 //////// API start
 
 int InitializeFileManager();
+int InitializeCredentialsManager();
 int ShutdownFileManager();
+int ShutdownCredentialsManager();
 int ShutdownAppInstance();
+
+
+
+
 
 
 int TestQuery()
@@ -129,6 +138,18 @@ int InitializeFileManager()
     return ret::A_OK;
 }
 
+int InitializeCredentialsManager()
+{
+    int status = ret::A_OK;
+    if(!g_pCredManager)
+    {
+        g_pCredManager = new CredentialsManager();
+        status = g_pCredManager->Initialize();
+    }
+
+    return status;
+}
+
 int ShutdownFileManager()
 {
     // Blind shutdown
@@ -140,6 +161,19 @@ int ShutdownFileManager()
     }
 
     return ret::A_OK;
+}
+
+int ShutdownCredentialsManager()
+{
+    int status = ret::A_OK;
+    if(g_pCredManager)
+    {
+        status = g_pCredManager->Shutdown();
+        delete g_pCredManager;
+        g_pCredManager = NULL;
+    }
+
+    return status;
 }
 
 int ShutdownAppInstance()
