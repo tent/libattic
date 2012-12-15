@@ -438,7 +438,7 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     fi->GetChunkName(chunkname);
     fi->GetPostID(postid);
 
-    Credentials cred = fi->GetCredentials();
+    Credentials cred = fi->GetCredentialsCopy();
 
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
