@@ -12,11 +12,11 @@ AccessToken::~AccessToken()
 {
 
 }
-ret::eCode AccessToken::SaveToFile(const std::string& szFilePath)
+ret::eCode AccessToken::SaveToFile(const std::string& filepath)
 {
     std::ofstream ofs;
 
-    ofs.open(szFilePath.c_str(), std::ofstream::out | std::ofstream::binary); 
+    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary); 
 
     if(!ofs.is_open())
         return ret::A_FAIL_OPEN;
@@ -30,10 +30,10 @@ ret::eCode AccessToken::SaveToFile(const std::string& szFilePath)
     return ret::A_OK;
 }
 
-ret::eCode AccessToken::LoadFromFile(const std::string& szFilePath)
+ret::eCode AccessToken::LoadFromFile(const std::string& filepath)
 {
     std::ifstream ifs;
-    ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
         return ret::A_FAIL_OPEN;

@@ -12,6 +12,11 @@ public:
     CredentialsManager();
     ~CredentialsManager();
 
+    MasterKey GetMasterKeyCopy() const      { return m_MasterKey; }
+    AccessToken GetAccessTokenCopy() const  { return m_AccessToken; }
+
+    void SetAccessToken(const AccessToken& at)  { m_AccessToken = at; }
+    void SetMasterKey(const MasterKey& mk)      { m_MasterKey = mk; }
 
 private:
     MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb

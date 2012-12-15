@@ -15,8 +15,8 @@ public:
 
     // TODO :: move this to some other place, the file manager could 
     //         be in charge of saving state to disk
-    ret::eCode SaveToFile(const std::string& szFilePath);
-    ret::eCode LoadFromFile(const std::string& szFilePath);
+    ret::eCode SaveToFile(const std::string& filepath);
+    ret::eCode LoadFromFile(const std::string& filepath);
 
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
