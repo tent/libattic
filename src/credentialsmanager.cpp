@@ -17,13 +17,13 @@ CredentialsManager::~CredentialsManager()
 int CredentialsManager::Initialize()
 {
 
-    ret::A_OK;
+    return ret::A_OK;
 }
 
 int CredentialsManager::Shutdown()
 {
 
-    ret::A_OK;
+    return ret::A_OK;
 }
 
 int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)

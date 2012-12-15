@@ -42,7 +42,6 @@ static FileManager* g_pFileManager = 0;
 static CredentialsManager* g_pCredManager = 0;
 
 static TaskArbiter g_Arb;
-static AccessToken g_at; // To be replaced
 
 // Consider making these volatile
 static std::string g_WorkingDirectory;
@@ -369,31 +368,24 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     std::cout<< " RESPONSE : " << response << std::endl;
 
     // Should have an auth token
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+   
     // deserialize auth token
-    // TODO :: Depricated access from CredManager
-    if(!JsonSerializer::DeserializeObject(&g_at, response))
-        return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
-    // perhaps save it out
+    g_pCredManager->DeserializeIntoAccessToken(response);
+    g_pCredManager->WriteOutAccessToken();
 
-    // Construct path
-    std::string szSavePath(g_ConfigDirectory);
-    utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(cnst::g_szAuthToken);
-    
-    g_at.SaveToFile(std::string(szSavePath));
+    g_pCredManager->Unlock();
 
     return ret::A_OK;
 }
 
 int LoadAccessToken()
 {
-    //TODO :: Depricated use Credentials manager
-    // Construct path
-    std::string szFilePath(g_ConfigDirectory);
-    utils::CheckUrlAndAppendTrailingSlash(szFilePath);
-    szFilePath.append(cnst::g_szAuthToken);
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    int status = g_pCredManager->LoadAccessToken();
+    g_pCredManager->Unlock();
 
-    return g_at.LoadFromFile(szFilePath);
+    return status; 
 }
 
 int SaveAppToFile()
@@ -429,11 +421,16 @@ int LoadAppFromFile()
 
 int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
+    AccessToken at;
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy();
+    g_pCredManager->Unlock();
+
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
                                 g_pCredManager,
-                                g_at,
+                                at,
                                 g_Entity,
                                 szFilePath,
                                 g_TempDirectory,
@@ -447,12 +444,16 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 
 int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
+    AccessToken at;
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy();
+    g_pCredManager->Unlock();
 
     PullTask* t = new PullTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
                                 g_pCredManager,
-                                g_at,
+                                at,
                                 g_Entity,
                                 szFilePath,
                                 g_TempDirectory,
@@ -466,11 +467,16 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 
 int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 {
+    AccessToken at;
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy();
+    g_pCredManager->Unlock();
+
     DeleteTask* t = new DeleteTask( g_pApp, 
                                     g_pFileManager, 
                                     ConnectionManager::GetInstance(),
                                     g_pCredManager,
-                                    g_at,
+                                    at,
                                     g_Entity,
                                     szFileName,
                                     g_TempDirectory,
@@ -484,11 +490,16 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 
 int SyncAtticMetaData( void (*callback)(int, void*) )
 {
+    AccessToken at;
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy();
+    g_pCredManager->Unlock();
+
     SyncManifestTask* t = new SyncManifestTask( g_pApp, 
                                                 g_pFileManager, 
                                                 ConnectionManager::GetInstance(),
                                                 g_pCredManager,
-                                                g_at,
+                                                at,
                                                 g_Entity,
                                                 "",
                                                 g_TempDirectory,
@@ -502,11 +513,16 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
 
 int SyncAtticPostsMetaData(void (*callback)(int, void*))
 {
+    AccessToken at;
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy();
+    g_pCredManager->Unlock();
+
     SyncPostsTask* t = new SyncPostsTask( g_pApp, 
                                           g_pFileManager, 
                                           ConnectionManager::GetInstance(),
                                           g_pCredManager,
-                                          g_at,
+                                          at,
                                           g_Entity,
                                           "",
                                           g_TempDirectory,

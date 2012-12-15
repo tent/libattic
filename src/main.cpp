@@ -39,25 +39,8 @@ TEST(SYNC, TEST)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    // Load App
-    int status = LoadAppFromFile();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    // Load Access Token
-    status = LoadAccessToken();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
     // Sync meta data store
-    status = SyncAtticMetaData(&SYNCCALL);
+    int status = SyncAtticMetaData(&SYNCCALL);
 
     for(;;)
     {
