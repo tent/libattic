@@ -126,16 +126,24 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     return fi;
 }
 
-ret::eCode FileManager::IndexFile(const std::string &filepath, const bool insert)
+ret::eCode FileManager::IndexFile( const std::string &filepath, 
+                                   const bool insert,
+                                   FileInfo* fi)
 {
+    // TODO :: Handle re-indexing, a file was edited, or the temporary folder was deleted
     std::cout << "Indexing file ... " << std::endl;
     ret::eCode status = ret::A_OK;
     // Create an entry
     //  Get File info
-    FileInfo* fi = CreateFileInfo();
-    fi->InitializeFile(filepath);
+    bool reindex = true;
+    if(!fi)
+    {
+        std::cout << " NEW FILE " << std::endl;
+        fi = CreateFileInfo();
+        fi->InitializeFile(filepath);
+        reindex = false;
+    }
 
-    //
     // Compress
     // Generate Compression filepath
     std::string comppath;
@@ -152,9 +160,19 @@ ret::eCode FileManager::IndexFile(const std::string &filepath, const bool insert
     // Generate Crypto filepath
     std::string cryptpath;
     GenerateCryptoPath(fi, cryptpath);
-    // Generate Credentials
-    Credentials cred = m_Crypto.GenerateCredentials();
-    fi->SetCredentials(cred);
+
+    Credentials cred;
+    if(!reindex)
+    {
+        // Generate Credentials
+        cred = m_Crypto.GenerateCredentials();
+        fi->SetCredentials(cred);
+    }
+    else
+    {
+        // Use existing Credentials
+        cred = fi->GetCredentialsCopy();
+    }
 
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
     if(status != ret::A_OK)
@@ -165,6 +183,9 @@ ret::eCode FileManager::IndexFile(const std::string &filepath, const bool insert
     // Shove keys into a sqlite entry (and FileInfo?)
 
     // ChunkFile
+    std::string cn;
+    fi->GetChunkName(cn);
+    std::cout<<" <--------------------- CHUNK NAME : " << cn << std::endl;
     // Generate Chunk Directory 
     status = m_Chunker.ChunkFile(fi, cryptpath, m_TempDirectory);
     if(status != ret::A_OK)
@@ -177,7 +198,6 @@ ret::eCode FileManager::IndexFile(const std::string &filepath, const bool insert
     if(insert)
         m_Manifest.InsertFileInfo(fi);
 
-    //bool success = m_Manifest.WriteOutManifest();
     return status;
 }
 
@@ -279,7 +299,7 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
 
     std::cout << " DECRYP PATH : " << decrypPath << std::endl;
 
-    status = m_Crypto.DecryptFile(chunkpath, decrypPath, fi->GetCredentials());
+    status = m_Crypto.DecryptFile(chunkpath, decrypPath, fi->GetCredentialsCopy());
     
     if(status != ret::A_OK)
         return status;

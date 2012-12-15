@@ -42,7 +42,10 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
    
-    ret::eCode IndexFile(const std::string &filepath, const bool insert);
+    ret::eCode IndexFile( const std::string &filepath, 
+                          const bool insert, 
+                          FileInfo* fi = NULL);
+
     ret::eCode RemoveFile(const std::string &filename);
 
     ret::eCode ConstructFile(std::string &filename);

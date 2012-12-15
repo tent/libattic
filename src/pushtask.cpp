@@ -87,6 +87,18 @@ int PushTask::PushFile(const std::string& filepath)
         fi = GetFileManager()->GetFileInfo(fn);
         GetFileManager()->Unlock();
     }
+    else
+    {
+        // Make sure temporary pieces exist
+        // be able to pass in chosen chunkname
+        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        std::cout << "INDEXING FILE : " << std::endl;
+        int status = GetFileManager()->IndexFile(filepath, true, fi);
+        GetFileManager()->Unlock();
+
+        if(status != ret::A_OK)
+            return status;
+    }
 
     // Check for existing post
     std::string postid;
@@ -208,6 +220,8 @@ int PushTask::PostFile(const std::string& url, const std::string &filepath, File
     }
 
     AccessToken* at = GetAccessToken();
+
+    std::cout<<" ACCESS TOKEN : " << at->GetAccessToken() << std::endl;
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          NULL,
                                                          postBuffer, 
@@ -325,7 +339,10 @@ int PushTask::PutFile(const std::string& url, const std::string &filepath, FileI
         paths.push_back(path);
     }
 
+
     AccessToken* at = GetAccessToken();
+
+    std::cout<<" ACCESS TOKEN : " << at->GetAccessToken() << std::endl;
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                         NULL,
                                                         postBuffer, 
