@@ -166,10 +166,11 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
     if(!post)
         return;
 
-    
+    // Create ephemeral fileinfo object for manifest
+    // determine where it's located
+    // index to filemanger, do not insert to manifest
     // Take meta data post,
     // attach manifest to it
-    
     
     // Create Post Path
     if(postID.empty())
@@ -180,7 +181,6 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
     else
     {
         // MULTIPART PUT
-
     }
 
 }

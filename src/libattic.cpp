@@ -385,8 +385,6 @@ int LoadAccessToken()
     {
         AccessToken at;
         at = g_pCredManager->GetAccessTokenCopy();
-        std::cout<< " AT : " << at.GetAccessToken() << std::endl;
-        std::cout<< " STATUS " << status << std::endl;
     }
     g_pCredManager->Unlock();
 

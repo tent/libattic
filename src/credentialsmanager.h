@@ -26,7 +26,7 @@ public:
     int LoadAccessToken();
 
     MasterKey GetMasterKeyCopy() const      { return m_MasterKey; }
-    AccessToken GetAccessTokenCopy()  { return m_AccessToken; }
+    AccessToken GetAccessTokenCopy() const  { return m_AccessToken; }
 
     void SetConfigDirectory(const std::string& dir)     { m_ConfigDirectory = dir; }
     void SetAccessToken(const AccessToken& at)          { m_AccessToken = at; }

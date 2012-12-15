@@ -276,6 +276,7 @@ TEST(PULL, ALL)
 /*
 */
 
+/*
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -314,7 +315,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+
 void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
