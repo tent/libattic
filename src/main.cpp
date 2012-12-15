@@ -27,6 +27,18 @@
 
 #include "url.h"
 
+/*
+TEST(INIT, TEST)
+{
+     InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    ShutdownLibAttic();
+
+}
+/*
 void SYNCCALL(int a, void* p)
 {
     std::cout<< " CALLBACK SYNC : " << a << std::endl;
@@ -59,7 +71,8 @@ TEST(SYNC, TEST)
 
     ShutdownLibAttic();
 }
-
+/*
+ */
 /*
 TEST(SQLITE, TEST)
 {
@@ -82,13 +95,11 @@ TEST(SQLITE, TEST)
 }
 /*
 */
-
-   
+/*
 void FOOCALL(int a, void* p)
 {
     std::cout<< " CALLBACK FOOCAL : " << a << std::endl;
 }
-/*
 TEST(DELETE, AFILE)
 {
     SetConfigDirectory("./config");
@@ -264,7 +275,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -277,22 +288,7 @@ TEST(PULL, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    // Load App
-    int status = LoadAppFromFile();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    // Load Access Token
-    status = LoadAccessToken();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = PullFile("./data/oa2.pdf", &PULLFUN);
+    int status = PullFile("./data/oa4.pdf", &PULLFUN);
 
     for(;;)
     {
@@ -332,27 +328,11 @@ TEST(PUSH, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    // Load app from file
-    int status = LoadAppFromFile();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    // Load Access Token
-    status = LoadAccessToken();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-   
-    //status = PushFile("./data/oa1.pdf", &FOOFUN);
+       //status = PushFile("./data/oa1.pdf", &FOOFUN);
 //    status = PushFile("./data/oa2.pdf", &FOOFUN);
 //    status = PushFile("./data/oa3.pdf", &FOOFUN);
 
-    status = PushFile("./data/oa4.pdf", &FOOFUN);
+    int status = PushFile("./data/oa4.pdf", &FOOFUN);
 
     for(;;)
     {
@@ -799,6 +779,7 @@ TEST(CURL, POST)
     }
 /*
 */
+/*
 extern "C"
 {
 #include "crypto_scrypt.h"
@@ -815,31 +796,6 @@ int crypto_scrypt( const uint8_t *,
 
 TEST(SCRYPT, ENCRYPT)
 {
-    /*
-    uint8_t salt[32]; // 16 <- do 16, 64 or 128
-
-    uint8_t* password;
-    size_t plen;
-
-    uint64_t N = 16384;
-    uint32_t r = 8;
-    uint32_t p = 1;
-
-    uint8_t dk[64];
-
-    password = new uint8_t[256];
-    memset(password, '\0', sizeof(uint8_t)*256);
-    memcpy(password, "thisismypassword", 16);
-    //plen = 16;
-
-    // Recommended numbers
-    // N=16384, r=8, p=1
-    std::cout<< " PASS : " << password << std::endl;
-    std::cout << crypto_scrypt((uint8_t*)"pw", 2, (uint8_t*)"salt", 4, N, r, p, dk, 64) << std::endl;
-    std::cout << "DK " << dk << std::endl;
-    // This produces they key to be used to encrypt the other keys.
-     */
-
     Crypto cp;
     Credentials cred;
     cp.GenerateKeyIvFromPassphrase( "manuel",

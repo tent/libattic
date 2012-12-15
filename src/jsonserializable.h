@@ -9,9 +9,10 @@
 
 class JsonSerializable
 {
+
 public:
     JsonSerializable() {};
-    virtual ~JsonSerializable() {};
+    virtual ~JsonSerializable(){};
 
     virtual void Serialize(Json::Value& root) = 0;
     virtual void Deserialize(Json::Value& root) = 0;

@@ -12,6 +12,7 @@ AccessToken::~AccessToken()
 {
 
 }
+
 ret::eCode AccessToken::SaveToFile(const std::string& filepath)
 {
     std::ofstream ofs;

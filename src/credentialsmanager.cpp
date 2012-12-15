@@ -54,7 +54,13 @@ int CredentialsManager::LoadAccessToken()
     std::string path;
     ConstructAccessTokenPath(path);
 
-    return m_AccessToken.LoadFromFile(path);               
+    int status = m_AccessToken.LoadFromFile(path);               
+    std::cout<<" INSIDE THE AT STUDIO : " << m_AccessToken.GetAccessToken() << std::endl;
+
+    AccessToken at = GetAccessTokenCopy();
+    std::cout<<" INDOOR COPY : " << at.GetAccessToken() << std::endl;
+
+    return status;
 }
 
 
