@@ -50,7 +50,7 @@ public:
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }
-    Credentials GetCredentials() const      { return m_Credentials; }
+    Credentials GetCredentialsCopy() const  { return m_Credentials; }
 
     unsigned int GetPostVersion() const { return m_PostVersion ; }
 private:    
