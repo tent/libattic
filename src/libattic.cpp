@@ -35,14 +35,13 @@
 //         on each operation lock file set state
 //         return new error codes if file is in the process of being processed.
 //
-// TODO :: Set up methods to set the chunk size and whatnot
+// TODO :: Consider moving TentApp into Credentials Manager
 
 static TentApp* g_pApp = 0;
 static FileManager* g_pFileManager = 0;
 static CredentialsManager* g_pCredManager = 0;
 
 static TaskArbiter g_Arb;
-
 static AccessToken g_at; // To be replaced
 
 // Consider making these volatile
@@ -65,14 +64,8 @@ int ShutdownFileManager();
 int ShutdownCredentialsManager();
 int ShutdownAppInstance();
 
-
-
-
-
-
 int TestQuery()
 {
-
     std::cout<< " VERsIoN : " << g_pFileManager->GetManifestVersion() << std::endl;
 }
 
@@ -85,6 +78,7 @@ int InitLibAttic( const char* szWorkingDirectory,
     SetWorkingDirectory(szWorkingDirectory);
     SetTempDirectory(szTempDirectory);
 
+    // Essential
     int status = SetEntityUrl(szEntityURL);
     if(status != ret::A_OK)
     {
@@ -102,6 +96,10 @@ int InitLibAttic( const char* szWorkingDirectory,
     {
             std::cout<<"cm FAILED : " << status << std::endl;
     }
+
+    // Non-essential
+    LoadAppFromFile();
+    LoadAccessToken();
 
     return status;
 }
@@ -134,7 +132,7 @@ int InitializeFileManager()
     // Construct path
     std::string szFilePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szFilePath);
-    szFilePath.append(g_szManifest);
+    szFilePath.append(cnst::g_szManifest);
 
     if(!g_pFileManager)
     {
@@ -154,6 +152,7 @@ int InitializeCredentialsManager()
     if(!g_pCredManager)
     {
         g_pCredManager = new CredentialsManager();
+        g_pCredManager->SetConfigDirectory(g_ConfigDirectory);
         status = g_pCredManager->Initialize();
     }
 
@@ -371,6 +370,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     // Should have an auth token
     // deserialize auth token
+    // TODO :: Depricated access from CredManager
     if(!JsonSerializer::DeserializeObject(&g_at, response))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
     // perhaps save it out
@@ -378,7 +378,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     // Construct path
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(g_szAuthToken);
+    szSavePath.append(cnst::g_szAuthToken);
     
     g_at.SaveToFile(std::string(szSavePath));
 
@@ -387,10 +387,11 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
 int LoadAccessToken()
 {
+    //TODO :: Depricated use Credentials manager
     // Construct path
     std::string szFilePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szFilePath);
-    szFilePath.append(g_szAuthToken);
+    szFilePath.append(cnst::g_szAuthToken);
 
     return g_at.LoadFromFile(szFilePath);
 }
@@ -402,7 +403,7 @@ int SaveAppToFile()
 
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(g_szAppData);
+    szSavePath.append(cnst::g_szAppData);
 
     return g_pApp->SaveToFile(szSavePath);
 }
@@ -415,7 +416,7 @@ int LoadAppFromFile()
     // Construct path
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(g_szAppData);
+    szSavePath.append(cnst::g_szAppData);
 
     g_pApp->LoadFromFile(szSavePath);
 
@@ -431,6 +432,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
+                                g_pCredManager,
                                 g_at,
                                 g_Entity,
                                 szFilePath,
@@ -449,6 +451,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     PullTask* t = new PullTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
+                                g_pCredManager,
                                 g_at,
                                 g_Entity,
                                 szFilePath,
@@ -466,6 +469,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
     DeleteTask* t = new DeleteTask( g_pApp, 
                                     g_pFileManager, 
                                     ConnectionManager::GetInstance(),
+                                    g_pCredManager,
                                     g_at,
                                     g_Entity,
                                     szFileName,
@@ -483,6 +487,7 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
     SyncManifestTask* t = new SyncManifestTask( g_pApp, 
                                                 g_pFileManager, 
                                                 ConnectionManager::GetInstance(),
+                                                g_pCredManager,
                                                 g_at,
                                                 g_Entity,
                                                 "",
@@ -500,6 +505,7 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
     SyncPostsTask* t = new SyncPostsTask( g_pApp, 
                                           g_pFileManager, 
                                           ConnectionManager::GetInstance(),
+                                          g_pCredManager,
                                           g_at,
                                           g_Entity,
                                           "",

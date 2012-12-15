@@ -8,7 +8,7 @@
 AtticPost::AtticPost()
 {
     // PostType
-    SetPostType(g_szAtticPostType);
+    SetPostType(cnst::g_szAtticPostType);
 }
 
 AtticPost::~AtticPost()

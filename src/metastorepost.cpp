@@ -5,7 +5,7 @@
 
 MetaStorePost::MetaStorePost()
 {
-    SetPostType(g_szAtticMetaStorePostType);
+    SetPostType(cnst::g_szAtticMetaStorePostType);
 }
 
 MetaStorePost::~MetaStorePost()

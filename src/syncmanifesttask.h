@@ -20,6 +20,7 @@ public:
     SyncManifestTask( TentApp* pApp, 
                       FileManager* pFm, 
                       ConnectionManager* pCon, 
+                      CredentialsManager* pCm,
                       const AccessToken& at,
                       const std::string& entity,
                       const std::string& filepath,

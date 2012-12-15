@@ -7,6 +7,7 @@
 SyncManifestTask::SyncManifestTask( TentApp* pApp, 
                   FileManager* pFm, 
                   ConnectionManager* pCon, 
+                  CredentialsManager* pCm,
                   const AccessToken& at,
                   const std::string& entity,
                   const std::string& filepath,
@@ -18,6 +19,7 @@ SyncManifestTask::SyncManifestTask( TentApp* pApp,
                   TentTask( pApp,
                             pFm,
                             pCon,
+                            pCm,
                             at,
                             entity,
                             filepath,
@@ -100,7 +102,7 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
     url += "/tent/posts";                                                                    
 
     UrlParams params;                                                                        
-    params.AddValue(std::string("post_types"), std::string(g_szAtticMetaStorePostType));              
+    params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticMetaStorePostType));              
 
     AccessToken* at = GetAccessToken();                                                      
 
@@ -136,7 +138,7 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
         std::cout<<posttype<<std::endl;
 
         // if proper post type
-        if(posttype.compare(g_szAtticMetaStorePostType) == 0)
+        if(posttype.compare(cnst::g_szAtticMetaStorePostType) == 0)
         {
             std::cout<<" Proper Post type: " << std::endl;
         }

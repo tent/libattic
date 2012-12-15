@@ -10,6 +10,7 @@
 
 #include "filemanager.h"
 #include "connectionmanager.h"
+#include "credentialsmanager.h"
 
 class TentTask : public Task
 {
@@ -18,6 +19,7 @@ public:
     TentTask( TentApp* pApp, 
               FileManager* pFm, 
               ConnectionManager* pCon, 
+              CredentialsManager* pCm,
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,

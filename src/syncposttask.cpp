@@ -10,6 +10,7 @@
 SyncPostsTask::SyncPostsTask( TentApp* pApp, 
                     FileManager* pFm, 
                     ConnectionManager* pCon, 
+                    CredentialsManager* pCm,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
@@ -21,6 +22,7 @@ SyncPostsTask::SyncPostsTask( TentApp* pApp,
                     TentTask( pApp,
                               pFm,
                               pCon,
+                              pCm,
                               at,
                               entity,
                               filepath,
@@ -75,7 +77,7 @@ int SyncPostsTask::SyncAtticPosts()
     url += "/tent/posts";
 
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));
+    params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticPostType));
     params.AddValue(std::string("limit"), std::string("200"));
 
     AccessToken* at = GetAccessToken();
@@ -117,7 +119,7 @@ int SyncPostsTask::SyncAtticPosts()
         std::cout<<posttype<<std::endl;
         
         // if proper post type
-        if(posttype.compare(g_szAtticPostType) == 0)
+        if(posttype.compare(cnst::g_szAtticPostType) == 0)
         {
 
 
@@ -171,7 +173,7 @@ int SyncPostsTask::GetAtticPostCount()
     url += "/tent/posts/count";                                                          
 
     UrlParams params;                                                                    
-    params.AddValue(std::string("post_types"), std::string(g_szAtticPostType));          
+    params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticPostType));          
 
     AccessToken* at = GetAccessToken();
     std::string response;                                                                
