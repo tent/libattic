@@ -88,13 +88,19 @@ int InitLibAttic( const char* szWorkingDirectory,
     int status = SetEntityUrl(szEntityURL);
     if(status != ret::A_OK)
     {
-        std::cout<<"FAILED : " << status << std::endl;
+        std::cout<<"seu FAILED : " << status << std::endl;
     }
 
     status = InitializeFileManager();
     if(status != ret::A_OK)
     {
-            std::cout<<"FAILED : " << status << std::endl;
+            std::cout<<"fm FAILED : " << status << std::endl;
+    }
+
+    status = InitializeCredentialsManager();
+    if(status != ret::A_OK)
+    {
+            std::cout<<"cm FAILED : " << status << std::endl;
     }
 
     return status;
@@ -103,14 +109,18 @@ int InitLibAttic( const char* szWorkingDirectory,
 int ShutdownLibAttic()
 {
     int status = ShutdownFileManager();
-
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
     }
 
+    status = ShutdownCredentialsManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown credentials manager" << std::endl;
+    }
+    
     status = ShutdownAppInstance();
-
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
