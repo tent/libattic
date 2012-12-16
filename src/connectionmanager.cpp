@@ -110,9 +110,9 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
 void ConnectionManager::HttpDelete( const std::string &url,
                                     const UrlParams* pParams,
                                     std::string &responseOut,
-                                    const std::string &szMacAlgorithm, 
-                                    const std::string &szMacID, 
-                                    const std::string &szMacKey, 
+                                    const std::string &macalgorithm, 
+                                    const std::string &macid, 
+                                    const std::string &mackey, 
                                     bool verbose)
 {
 
@@ -130,8 +130,8 @@ void ConnectionManager::HttpDelete( const std::string &url,
         std::string authheader;
         BuildAuthHeader( urlPath, 
                          std::string("DELETE"), 
-                         szMacID, 
-                         szMacKey, 
+                         macid, 
+                         mackey, 
                          authheader);
   
         headers = curl_slist_append(headers, authheader.c_str());
@@ -197,9 +197,9 @@ void ConnectionManager::HttpGet( const std::string &url,
 void ConnectionManager::HttpGetWithAuth( const std::string &url, 
                                          const UrlParams* pParams,
                                          std::string &out, 
-                                         const std::string &szMacAlgorithm, 
-                                         const std::string &szMacID, 
-                                         const std::string &szMacKey, 
+                                         const std::string &macalgorithm, 
+                                         const std::string &macid, 
+                                         const std::string &mackey, 
                                          bool verbose)
 {
 
@@ -222,8 +222,8 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
         std::string authheader;
         BuildAuthHeader( urlPath, 
                          std::string("GET"), 
-                         szMacID, 
-                         szMacKey,
+                         macid, 
+                         mackey,
                          authheader);
 
         headers = curl_slist_append(headers, authheader.c_str());
@@ -262,9 +262,9 @@ void ConnectionManager::HttpGetWithAuth( const std::string &url,
 void ConnectionManager::HttpGetAttachment( const std::string &url, 
                                            const UrlParams* pParams, 
                                            std::string &out, 
-                                           const std::string &szMacAlgorithm, 
-                                           const std::string &szMacID, 
-                                           const std::string &szMacKey, 
+                                           const std::string &macalgorithm, 
+                                           const std::string &macid, 
+                                           const std::string &mackey, 
                                            bool verbose)
 {
 
@@ -290,7 +290,7 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
         //headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
 
         std::string authheader;
-        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("GET"), macid, mackey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
         std::cout << " GETTING URL " << url << std::endl;
@@ -336,10 +336,10 @@ void ConnectionManager::HttpGetAttachment( const std::string &url,
 // TODO :: depricated?
 void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
                                                       const UrlParams* pParams,
-                                                      const std::string &szFilePath, 
-                                                      const std::string &szMacAlgorithm, 
-                                                      const std::string &szMacID, 
-                                                      const std::string &szMacKey, 
+                                                      const std::string &filepath, 
+                                                      const std::string &macalgorithm, 
+                                                      const std::string &macid, 
+                                                      const std::string &mackey, 
                                                       bool verbose)
 {
         CURL* pCurl = curl_easy_init();
@@ -347,7 +347,7 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
 
         // Write out to file
         FILE *fp;
-        fp = fopen(szFilePath.c_str(), "wb");
+        fp = fopen(filepath.c_str(), "wb");
 
         if(verbose)
             curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
@@ -360,7 +360,7 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
 
         // Build Auth header
         std::string authheader;
-        BuildAuthHeader(urlPath, std::string("GET"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("GET"), macid, mackey, authheader);
         headers = curl_slist_append(headers, authheader.c_str());
 
         curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
@@ -451,12 +451,12 @@ void ConnectionManager::HttpPost( const std::string &url,
 
 void ConnectionManager::HttpMultipartPut( const std::string &url, 
                                           const UrlParams* pParams,
-                                          const std::string &szBody, 
+                                          const std::string &body, 
                                           std::list<std::string>* filepaths, 
                                           std::string &responseOut, 
-                                          const std::string &szMacAlgorithm, 
-                                          const std::string &szMacID, 
-                                          const std::string &szMacKey, 
+                                          const std::string &macalgorithm, 
+                                          const std::string &macid, 
+                                          const std::string &mackey, 
                                           bool verbose)
 {
     // Send Multiple files as attachments
@@ -477,7 +477,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
     curl_httppost   **fp = &formpost;
     curl_httppost   **lp = &lastptr;
 
-    AddBodyToForm( szBody,
+    AddBodyToForm( body,
                    fp,
                    lp,
                    pl );
@@ -489,7 +489,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
     char szLen[256];
     memset(szLen, '\0', sizeof(char)*256);                                              
-    snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
+    snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
 
     std::string jcl("Content-Length: ");
     jcl.append(szLen);
@@ -501,7 +501,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
     curl_formadd( &formpost,
                   &lastptr,
                   CURLFORM_COPYNAME, "jsonbody",
-                  CURLFORM_COPYCONTENTS, szBody.c_str(),
+                  CURLFORM_COPYCONTENTS, body.c_str(),
                   CURLFORM_CONTENTHEADER, partlist,
                   CURLFORM_END);
     
@@ -545,7 +545,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
         //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
         std::string authheader;
-        BuildAuthHeader(urlPath, std::string("PUT"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("PUT"), macid, mackey, authheader);
         headerlist = curl_slist_append(headerlist, authheader.c_str());
 
         /* what URL that receives this POST */ 
@@ -640,13 +640,13 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
 void ConnectionManager::HttpMultipartPut( const std::string &url, 
                                           const UrlParams* pParams,
-                                          const std::string &szBody, 
-                                          const std::string &szFilePath, 
-                                          const std::string &szFileName,
+                                          const std::string &body, 
+                                          const std::string &filepath, 
+                                          const std::string &filename,
                                           std::string &responseOut, 
-                                          const std::string &szMacAlgorithm, 
-                                          const std::string &szMacID, 
-                                          const std::string &szMacKey, 
+                                          const std::string &macalgorithm, 
+                                          const std::string &macid, 
+                                          const std::string &mackey, 
                                           const char* pData,
                                           unsigned int uSize,
                                           bool verbose )
@@ -664,8 +664,8 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
             
             // Add json
             WriteOut postd; // Post content to be read
-            postd.readptr = szBody.c_str(); // serialized json (should be)
-            postd.sizeleft = szBody.size();
+            postd.readptr = body.c_str(); // serialized json (should be)
+            postd.sizeleft = body.size();
 
             curl_slist *partlist = 0;
 
@@ -677,7 +677,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
             curl_formadd( &formpost,
                           &lastptr,
                           CURLFORM_COPYNAME, "jsonbody",
-                          CURLFORM_COPYCONTENTS, szBody.c_str(),
+                          CURLFORM_COPYCONTENTS, body.c_str(),
                           CURLFORM_CONTENTHEADER, partlist,
                           CURLFORM_END);
 
@@ -687,7 +687,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
             std::string cd;
             cd.append("Content-Disposition: form-data; name=\"attach[0]\"; filename=\"");
-            cd += szFileName;
+            cd += filename;
             cd.append("\"");
 
             attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
@@ -742,7 +742,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
                 //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
                 std::string authheader;
-                BuildAuthHeader(urlPath, std::string("PUT"), szMacID, szMacKey, authheader);
+                BuildAuthHeader(urlPath, std::string("PUT"), macid, mackey, authheader);
                 headerlist = curl_slist_append(headerlist, authheader.c_str());
 
                 /* what URL that receives this POST */ 
@@ -847,13 +847,13 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
 void ConnectionManager::HttpMultipartPost( const std::string &url, 
                                            const UrlParams* pParams,
-                                           const std::string &szBody, 
-                                           const std::string &szFilePath, 
-                                           const std::string &szFileName,
+                                           const std::string &body, 
+                                           const std::string &filepath, 
+                                           const std::string &filename,
                                            std::string &responseOut, 
-                                           const std::string &szMacAlgorithm, 
-                                           const std::string &szMacID, 
-                                           const std::string &szMacKey, 
+                                           const std::string &macalgorithm, 
+                                           const std::string &macid, 
+                                           const std::string &mackey, 
                                            const char* pData,
                                            unsigned int uSize,
                                            bool verbose)
@@ -871,8 +871,8 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
         // Add json
         WriteOut postd; // Post content to be read
-        postd.readptr = szBody.c_str(); // serialized json (should be)
-        postd.sizeleft = szBody.size();
+        postd.readptr = body.c_str(); // serialized json (should be)
+        postd.sizeleft = body.size();
 
         curl_slist *partlist = 0;
         
@@ -880,7 +880,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
         char szLen[256];
         memset(szLen, '\0', sizeof(char)*256);                                              
-        snprintf(szLen, (sizeof(char)*256),  "%lu", szBody.size());     
+        snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
 
         std::string jcl("Content-Length: ");
         jcl.append(szLen);
@@ -892,7 +892,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         curl_formadd( &formpost,
                       &lastptr,
                       CURLFORM_COPYNAME, "jsonbody",
-                      CURLFORM_COPYCONTENTS, szBody.c_str(),
+                      CURLFORM_COPYCONTENTS, body.c_str(),
                       CURLFORM_CONTENTHEADER, partlist,
                       CURLFORM_END);
 
@@ -902,7 +902,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
 
         std::string cd;
         cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
-        cd += szFileName;
+        cd += filename;
         cd.append("\"");
 
         attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
@@ -963,7 +963,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
             //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
             std::string authheader;
-            BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
+            BuildAuthHeader(urlPath, std::string("POST"), macid, mackey, authheader);
             headerlist = curl_slist_append(headerlist, authheader.c_str());
 
             /* what URL that receives this POST */ 
@@ -1147,12 +1147,12 @@ void ConnectionManager::AddAttachmentToForm( const std::string &path,
 
 void ConnectionManager::HttpMultipartPost( const std::string &url, 
                                            const UrlParams* pParams,
-                                           const std::string &szBody, 
+                                           const std::string &body, 
                                            std::list<std::string>* filepaths, 
                                            std::string &responseOut, 
-                                           const std::string &szMacAlgorithm, 
-                                           const std::string &szMacID, 
-                                           const std::string &szMacKey, 
+                                           const std::string &macalgorithm, 
+                                           const std::string &macid, 
+                                           const std::string &mackey, 
                                            bool verbose)
 {
     // Send Multiple files as attachments
@@ -1173,7 +1173,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
     curl_httppost   **lp = &lastptr;
 
 
-    AddBodyToForm( szBody,
+    AddBodyToForm( body,
                    fp,
                    lp,
                    pl );
@@ -1218,7 +1218,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
 
         std::string authheader;
-        BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
+        BuildAuthHeader(urlPath, std::string("POST"), macid, mackey, authheader);
         headerlist = curl_slist_append(headerlist, authheader.c_str());
 
         /* what URL that receives this POST */ 
@@ -1314,9 +1314,9 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
                                           const UrlParams* pParams,
                                           const std::string &body, 
                                           std::string &responseOut, 
-                                          const std::string &szMacAlgorithm, 
-                                          const std::string &szMacID, 
-                                          const std::string &szMacKey, 
+                                          const std::string &macalgorithm, 
+                                          const std::string &macid, 
+                                          const std::string &mackey, 
                                           bool verbose)
 {
 
@@ -1339,7 +1339,7 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
     headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
 
     std::string authheader;
-    BuildAuthHeader(urlPath, std::string("POST"), szMacID, szMacKey, authheader);
+    BuildAuthHeader(urlPath, std::string("POST"), macid, mackey, authheader);
     headers = curl_slist_append(headers, authheader.c_str());
 
     // Set url
@@ -1377,8 +1377,8 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
 
 void ConnectionManager::BuildAuthHeader( const std::string &url, 
                                          const std::string &requestMethod, 
-                                         const std::string &szMacID, 
-                                         const std::string &szMacKey, 
+                                         const std::string &macid, 
+                                         const std::string &mackey, 
                                          std::string& out)
 {
     std::string n;
@@ -1388,7 +1388,7 @@ void ConnectionManager::BuildAuthHeader( const std::string &url,
     out.append("Authorization: ");
     
     out.append("MAC id=\"");
-    out.append(szMacID.c_str());
+    out.append(macid.c_str());
     out.append("\", ");
 
     time_t t = time(0);
@@ -1434,7 +1434,7 @@ void ConnectionManager::BuildAuthHeader( const std::string &url,
     requestString.append("\n\n");
 
     std::string signedreq;
-    SignRequest(requestString,szMacKey, signedreq);
+    SignRequest(requestString, mackey, signedreq);
 
     out.append("mac=\"");
     out.append(signedreq.c_str());
@@ -1458,22 +1458,24 @@ void ConnectionManager::GenerateNonce(std::string &out)
 #include <string.h>
 #include <stdio.h>
 #include <base64.h>
-void ConnectionManager::SignRequest(const std::string &szRequest, const std::string &szKey, std::string &out)
+void ConnectionManager::SignRequest( const std::string &request, 
+                                     const std::string &key, 
+                                     std::string &out)
 {
     std::string mac, encoded, som;
 
     try
     {
-  //      std::cout<< "Key : " << szKey << std::endl;
-        unsigned char szReqBuffer[szRequest.size()];
-        memcpy(szReqBuffer, szKey.c_str(), strlen(szKey.c_str())+1);
+  //      std::cout<< "Key : " << key << std::endl;
+        unsigned char szReqBuffer[request.size()];
+        memcpy(szReqBuffer, key.c_str(), strlen(key.c_str())+1);
 
  //       std::cout<< " BUFFER : " << szReqBuffer << std::endl;
-        //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, szRequest.size());
+        //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, request.size());
 
-        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(szKey.c_str())+1);
+        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(key.c_str())+1);
 
-        CryptoPP::StringSource( szRequest,
+        CryptoPP::StringSource( request,
                                 true, 
                                 new CryptoPP::HashFilter(hmac,
                                 new CryptoPP::StringSink(mac)

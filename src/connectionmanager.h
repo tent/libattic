@@ -28,24 +28,23 @@ class ConnectionManager
     void GenerateHmacSha256(std::string &out);
 
     void AddBodyToForm( const std::string &body,
-                               curl_httppost **post, 
-                               curl_httppost **last, 
-                               curl_slist **list);
+                        curl_httppost **post, 
+                        curl_httppost **last, 
+                        curl_slist **list);
 
     void AddAttachmentToForm( const std::string &path, 
-                                     curl_httppost **post, 
-                                     curl_httppost **last, 
-                                     curl_slist **list);
+                              curl_httppost **post, 
+                              curl_httppost **last, 
+                              curl_slist **list);
 public:
-
     void BuildAuthHeader( const std::string &url, 
                           const std::string &requestMethod, 
-                          const std::string &szMacID, 
-                          const std::string &szMacKey, 
+                          const std::string &macid, 
+                          const std::string &mackey, 
                           std::string &out);
 
-    void SignRequest( const std::string &szRequest, 
-                      const std::string &szKey, 
+    void SignRequest( const std::string &request, 
+                      const std::string &key, 
                       std::string &out);
 
     void Initialize();
@@ -66,25 +65,25 @@ public:
     void HttpGetWithAuth( const std::string &url, 
                           const UrlParams* pParams,
                           std::string &out, 
-                          const std::string &szMacAlgorithm, 
-                          const std::string &szMacID, 
-                          const std::string &szMacKey, 
+                          const std::string &macalgorithm, 
+                          const std::string &macid, 
+                          const std::string &mackey, 
                           bool verbose = false);
 
     void HttpGetAttachment( const std::string &url, 
                             const UrlParams* pParams,
                             std::string &out, 
-                            const std::string &szMacAlgorithm, 
-                            const std::string &szMacID, 
-                            const std::string &szMacKey, 
+                            const std::string &macalgorithm, 
+                            const std::string &macid, 
+                            const std::string &mackey, 
                             bool verbose = false);
     
     void HttpGetAttachmentWriteToFile( const std::string &url, 
                                        const UrlParams* pParams,
-                                       const std::string &szFilePath, 
-                                       const std::string &szMacAlgorithm, 
-                                       const std::string &szMacID, 
-                                       const std::string &szMacKey, 
+                                       const std::string &filepath, 
+                                       const std::string &macalgorithm, 
+                                       const std::string &macid, 
+                                       const std::string &mackey, 
                                        bool verbose = false);
 
     void HttpPost( const std::string &url, 
@@ -96,29 +95,29 @@ public:
     void HttpDelete( const std::string &url,
                      const UrlParams* pParams,
                      std::string &responseOut,
-                     const std::string &szMacAlgorithm, 
-                     const std::string &szMacID, 
-                     const std::string &szMacKey, 
+                     const std::string &macalgorithm, 
+                     const std::string &macid, 
+                     const std::string &mackey, 
                      bool verbose = false);
 
     void HttpPostWithAuth( const std::string &url, 
                            const UrlParams* pParams,
                            const std::string &body, 
                            std::string &responseOut, 
-                           const std::string &szMacAlgorithm, 
-                           const std::string &szMacID, 
-                           const std::string &szMacKey, 
+                           const std::string &macalgorithm, 
+                           const std::string &macid, 
+                           const std::string &mackey, 
                            bool verbose = false);
 
     void HttpMultipartPost( const std::string &url, 
                             const UrlParams* pParams,
-                            const std::string &szBody, 
-                            const std::string &szFilePath, 
-                            const std::string &szFileName,
+                            const std::string &body, 
+                            const std::string &filepath, 
+                            const std::string &filename,
                             std::string &responseOut, 
-                            const std::string &szMacAlgorithm, 
-                            const std::string &szMacID, 
-                            const std::string &szMacKey, 
+                            const std::string &macalgorithm, 
+                            const std::string &macid, 
+                            const std::string &mackey, 
                             const char* pData,
                             unsigned int uSize,
                             bool verbose = false);
@@ -126,24 +125,24 @@ public:
     // This is the replacement for all other mutlipart posts pending testing
     void HttpMultipartPost( const std::string &url, 
                             const UrlParams* pParams,
-                            const std::string &szBody, 
+                            const std::string &body, 
                             std::list<std::string>* filepaths, 
                             std::string &responseOut, 
-                            const std::string &szMacAlgorithm, 
-                            const std::string &szMacID, 
-                            const std::string &szMacKey, 
+                            const std::string &macalgorithm, 
+                            const std::string &macid, 
+                            const std::string &mackey, 
                             bool verbose = false);
 
 
     void HttpMultipartPut( const std::string &url, 
                            const UrlParams* pParams,
-                           const std::string &szBody, 
-                           const std::string &szFilePath, 
-                           const std::string &szFileName,
+                           const std::string &body, 
+                           const std::string &filepath, 
+                           const std::string &filename,
                            std::string &responseOut, 
-                           const std::string &szMacAlgorithm, 
-                           const std::string &szMacID, 
-                           const std::string &szMacKey, 
+                           const std::string &macalgorithm, 
+                           const std::string &macid, 
+                           const std::string &mackey, 
                            const char* pData,
                            unsigned int uSize,
                            bool verbose = false);
@@ -151,19 +150,17 @@ public:
     // This is the replacement for all other multipart puts, pending testing
     void HttpMultipartPut( const std::string &url, 
                             const UrlParams* pParams,
-                            const std::string &szBody, 
+                            const std::string &body, 
                             std::list<std::string>* filepaths, 
                             std::string &responseOut, 
-                            const std::string &szMacAlgorithm, 
-                            const std::string &szMacID, 
-                            const std::string &szMacKey, 
+                            const std::string &macalgorithm, 
+                            const std::string &macid, 
+                            const std::string &mackey, 
                             bool verbose = false);
     
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;
-
-    //CURL* m_pCurl;  // Curl instance
 };
 
 #endif
