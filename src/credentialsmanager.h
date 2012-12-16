@@ -12,7 +12,7 @@
 
 class CredentialsManager : public MutexClass
 {
-    void ConstructAccessTokenPath(std::string& out);
+
 public:
     CredentialsManager();
     ~CredentialsManager();
@@ -24,6 +24,9 @@ public:
     int DeserializeIntoAccessToken(const std::string& buffer); 
     int WriteOutAccessToken();
     int LoadAccessToken();
+
+    void ConstructAccessTokenPath(std::string& out);
+    void ConstructManifestPath(std::string& out);
 
     MasterKey GetMasterKeyCopy() const      { return m_MasterKey; }
     AccessToken GetAccessTokenCopy() const  { return m_AccessToken; }

@@ -41,6 +41,14 @@ void CredentialsManager::ConstructAccessTokenPath(std::string& out)
     out.append(cnst::g_szAuthToken);                       
 }
 
+void CredentialsManager::ConstructManifestPath(std::string& out)
+{
+    // Construct path
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);      
+    out.append(cnst::g_szManifest);     
+}
+
 int CredentialsManager::WriteOutAccessToken()
 {
     std::string path;
