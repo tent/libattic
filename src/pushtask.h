@@ -6,6 +6,7 @@
 #include <string>
 
 #include "tenttask.h"
+#include "atticpost.h"
 
 class PushTask : public TentTask
 {
@@ -15,9 +16,14 @@ class PushTask : public TentTask
                                      unsigned int size,
                                      std::string& out);
 
-    int PushFile(const std::string& filepath);
-    int PostFile(const std::string& url, const std::string &filepath, FileInfo* fi);
-    int PutFile(const std::string& url, const std::string &filepath, FileInfo* fi);
+    int CreateAtticPost(AtticPost& post,
+                        bool pub,
+                        const std::string& filepath,
+                        const std::string& filename, 
+                        unsigned int size);
+
+    int PushFile( const std::string& filepath );
+
 public:
     PushTask( TentApp* pApp, 
               FileManager* pFm, 
