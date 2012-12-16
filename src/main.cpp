@@ -38,7 +38,8 @@ TEST(INIT, TEST)
     ShutdownLibAttic();
 
 }
-/*
+*/
+
 void SYNCCALL(int a, void* p)
 {
     std::cout<< " CALLBACK SYNC : " << a << std::endl;
@@ -315,7 +316,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 
 void FOOFUN(int a, void* b)
 {

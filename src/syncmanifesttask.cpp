@@ -211,6 +211,26 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
         posturl += postID;
         fi->SetPostID(postID);
         // MULTIPART PUT
+        //
+        //
+        std::cout<< " POST URL : " << posturl << std::endl;                 
+
+        unsigned int size = utils::CheckFilesize(filepath);                 
+        MetaStorePost p;                                                        
+        CreateManifestPost(p);
+
+        std::string tempdir;                                                
+        GetTempDirectory(tempdir);                                          
+
+        AccessToken* at = GetAccessToken();                                 
+        status = conops::PutFile( posturl,                                 
+                                  filepath,                                
+                                  tempdir,                                 
+                                  GetFileManager(),                        
+                                  GetConnectionManager(),                  
+                                  fi,                          
+                                  &p,                                      
+                                  *at);                                    
     }
 
     return status;
