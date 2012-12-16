@@ -65,6 +65,17 @@ public:
                               const std::string &key,
                               const std::string &iv);
 
+    FileInfo* CreateFileInfo( const std::string &filename,
+                              const std::string &filepath,
+                              const std::string &chunkName,
+                              const std::string &chunkCount,
+                              const std::string &fileSize,
+                              const std::string &postId,
+                              const std::string &postVersion,
+                              unsigned char *key, // byte
+                              unsigned char *iv); // byte
+
+
     void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
@@ -79,7 +90,7 @@ public:
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
-    void SetFilePostId(const std::string &filename, const std::string postid);
+    void SetFilePostId(const std::string &filename, const std::string& postid);
 
 private:
     FileInfoFactory     m_FileInfoFactory;

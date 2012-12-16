@@ -164,25 +164,33 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
         return;
 
     // Create ephemeral fileinfo object for manifest
-    // determine where it's located
+    FileInfo* fi = CreateManifestFileInfoAndIndex();
+    // determine where it's located // Its in the config folder, always
     // index to filemanger, do not insert to manifest
+    //
     // Take meta data post,
     // attach manifest to it
+    
+    std::string posturl;               
+    GetEntity(posturl);                
+    posturl += "/tent/posts";          
     
     // Create Post Path
     if(postID.empty())
     {
-        // MULTIPART POST
 
     }
     else
     {
+        posturl += "/";
+        posturl += postID;
+        fi->SetPostID(postID);
         // MULTIPART PUT
     }
 
 }
 
-FileInfo* SyncManifestTask::CreateManifestFileInfo()
+FileInfo* SyncManifestTask::CreateManifestFileInfoAndIndex()
 {
     std::string path;
     MasterKey mk;
@@ -193,26 +201,30 @@ FileInfo* SyncManifestTask::CreateManifestFileInfo()
         // Construct Path
         GetCredentialsManager()->ConstructManifestPath(path);
         // Get Master Key
-        mk = GetCredentialsManager()->GetMansterKeyCopy();
+        mk = GetCredentialsManager()->GetMasterKeyCopy();
     
         GetCredentialsManager()->Unlock();
     }
 
 
     Credentials cred = mk.GetCredentialsCopy();
-    FileInfo* fiileInfo* fi = NULL;
+    FileInfo* fi = NULL;
 
     {
         while(!GetFileManager()->TryLock()) { sleep(0); }
         fi = GetFileManager()->CreateFileInfo( cnst::g_szManifest,
                                                path,
-                                               ""
+                                               "",
                                                "",                
                                                "",
                                                "",
-                                               ""
-                                               &cred.key,                       
-                                               &cred.iv);                       
+                                               "",
+                                               cred.key,                       
+                                               cred.iv);                       
+
+        GetFileManager()->IndexFile( path,
+                                     false,
+                                     fi);
 
         GetFileManager()->Unlock();
     }

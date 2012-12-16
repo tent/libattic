@@ -31,6 +31,7 @@ public:
         m_pTentApp = pApp;
         m_pFileManager = pFm;
         m_pConnectionManager = pCon; 
+        m_pCredentialsManager = pCm;
 
         m_At = at;
 
@@ -65,6 +66,7 @@ public:
     TentApp* GetTentApp()                       { return m_pTentApp; }
     FileManager* GetFileManager()               { return m_pFileManager; } 
     ConnectionManager* GetConnectionManager()   { return m_pConnectionManager; } 
+    CredentialsManager* GetCredentialsManager() { return m_pCredentialsManager; } 
 
     void SetCallback(void (*cb)(int, void*)) { mCallback = cb; }
 
@@ -89,6 +91,7 @@ private:
     TentApp*             m_pTentApp; 
     FileManager*         m_pFileManager;
     ConnectionManager*   m_pConnectionManager;
+    CredentialsManager*  m_pCredentialsManager;
 
     void (*mCallback)(int, void*);
 };

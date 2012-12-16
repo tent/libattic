@@ -99,6 +99,33 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
                                        const std::string &fileSize,
                                        const std::string &postId,
                                        const std::string &postVersion,
+                                       unsigned char *key, // byte
+                                       unsigned char *iv) // byte
+{
+    char* pKey = reinterpret_cast<char*>(key);
+    char* pIv = reinterpret_cast<char*>(iv);
+
+    FileInfo* fi = CreateFileInfo( filename,
+                                   filepath,
+                                   chunkName,
+                                   chunkCount,
+                                   fileSize,
+                                   postId,
+                                   postVersion,
+                                   std::string(pKey),
+                                   std::string(pIv)
+                                 );
+   return fi;
+}
+
+
+FileInfo* FileManager::CreateFileInfo( const std::string &filename,
+                                       const std::string &filepath,
+                                       const std::string &chunkName,
+                                       const std::string &chunkCount,
+                                       const std::string &fileSize,
+                                       const std::string &postId,
+                                       const std::string &postVersion,
                                        const std::string &key,
                                        const std::string &iv)
 {
@@ -248,7 +275,7 @@ void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &outpath)
     }
 }
 
-void FileManager::SetFilePostId(const std::string &filename, const std::string postid)
+void FileManager::SetFilePostId(const std::string &filename, const std::string& postid)
 {
     m_Manifest.InsertFilePostID(filename, postid);
 }

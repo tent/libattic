@@ -7,6 +7,7 @@ Post::Post()
     m_TentApp = 0;
     m_PublishedAt = 0;
     m_ReceivedAt = 0;
+    m_Version = 0;
 }
 
 Post::~Post()
@@ -101,7 +102,7 @@ void Post::Serialize(Json::Value& root)
         root["permissions"] = permissions;
     }
 
-    root["version"] = m_Version;
+    //root["version"] = m_Version;
     
 }
 
