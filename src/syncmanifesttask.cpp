@@ -3,6 +3,8 @@
 
 #include "urlparams.h"
 #include "constants.h"
+#include "conoperations.h"
+#include "utils.h"
 
 SyncManifestTask::SyncManifestTask( TentApp* pApp, 
                   FileManager* pFm, 
@@ -158,14 +160,17 @@ void SyncManifestTask::CreateManifestPost(MetaStorePost& post)
     post.MetaSetAtticRoot(root);
 }
 
-void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost* post)
+int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost* post)
 {
     if(!post)
-        return;
+        return ret::A_FAIL_INVALID_PTR;
 
     // Create ephemeral fileinfo object for manifest
     FileInfo* fi = CreateManifestFileInfoAndIndex();
     // determine where it's located // Its in the config folder, always
+    std::string filepath, filename;
+    fi->GetFilepath(filepath);
+    fi->GetFilename(filename);
     // index to filemanger, do not insert to manifest
     //
     // Take meta data post,
@@ -175,10 +180,30 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
     GetEntity(posturl);                
     posturl += "/tent/posts";          
     
+    int status = ret::A_OK;
     // Create Post Path
     if(postID.empty())
     {
+        // New Post                                                         
+        std::cout<< " POST URL : " << posturl << std::endl;                 
 
+        unsigned int size = utils::CheckFilesize(filepath);                 
+        MetaStorePost p;                                                        
+        CreateManifestPost(p);
+
+        std::string tempdir;                                                
+        GetTempDirectory(tempdir);                                          
+
+        AccessToken* at = GetAccessToken();                                 
+        status = conops::PostFile( posturl,                                 
+                                   filepath,                                
+                                   tempdir,                                 
+                                   GetFileManager(),                        
+                                   GetConnectionManager(),                  
+                                   fi,                          
+                                   &p,                                      
+                                   *at);                                    
+                                                          
     }
     else
     {
@@ -188,6 +213,7 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
         // MULTIPART PUT
     }
 
+    return status;
 }
 
 FileInfo* SyncManifestTask::CreateManifestFileInfoAndIndex()

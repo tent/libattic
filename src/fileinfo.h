@@ -10,7 +10,7 @@
 
 class FileInfo
 {
-    void ExtractFileName(const std::string &filepath, std::string &out);
+    void ExtractFilename(const std::string &filepath, std::string &out);
 public:
     FileInfo() {} 
     ~FileInfo() {}
@@ -18,10 +18,10 @@ public:
     // Init a file
     bool InitializeFile(const std::string &filepath);
 
-    bool IsValid() { return !m_FileName.empty(); }
+    bool IsValid() { return !m_Filename.empty(); }
     
-    void SetFileName(const std::string &filename)     { m_FileName = filename; }
-    void SetFilePath(const std::string &filepath)     { m_FilePath = filepath; }
+    void SetFilename(const std::string &filename)     { m_Filename = filename; }
+    void SetFilepath(const std::string &filepath)     { m_Filepath = filepath; }
     void SetChunkName(const std::string &chunkname)   { m_ChunkName = chunkname; }
 
     void SetChunkCount(const std::string& count)        { m_ChunkCount = atoi(count.c_str()); }
@@ -40,8 +40,8 @@ public:
     void SetKey(const std::string &key) { memcpy(&m_Credentials.key, key.c_str(), m_Credentials.GetKeySize() ); }
     void SetIv(const std::string &iv) { memcpy(&m_Credentials.iv, iv.c_str(), m_Credentials.GetIvSize() ); }
 
-    void GetFileName(std::string &out) const    { out = m_FileName; }
-    void GetFilePath(std::string &out) const    { out = m_FilePath; }
+    void GetFilename(std::string &out) const    { out = m_Filename; }
+    void GetFilepath(std::string &out) const    { out = m_Filepath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
 
@@ -56,8 +56,8 @@ public:
 private:    
     Credentials     m_Credentials;
 
-    std::string     m_FileName;   // File within directory
-    std::string     m_FilePath;   // Directory
+    std::string     m_Filename;   // File within directory
+    std::string     m_Filepath;   // Directory
     std::string     m_ChunkName;
 
     std::string     m_PostID; // Id of the post the file is potentially attached to

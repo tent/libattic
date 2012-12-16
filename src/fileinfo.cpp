@@ -14,11 +14,11 @@ bool FileInfo::InitializeFile(const std::string &filepath)
     // Check if Valid File
     //
     // Set filepath
-    m_FilePath = filepath;
+    m_Filepath = filepath;
     // Extract Filename
-    ExtractFileName(filepath, m_FileName); 
+    ExtractFilename(filepath, m_Filename); 
     // Check file size
-    m_FileSize = utils::CheckFileSize(filepath);
+    m_FileSize = utils::CheckFilesize(filepath);
 
     if(!m_FileSize)
         return false;
@@ -26,7 +26,7 @@ bool FileInfo::InitializeFile(const std::string &filepath)
     return true;
 }
 
-void FileInfo::ExtractFileName(const std::string &filepath, std::string &out)
+void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
 {
     std::string name;
     unsigned int size = filepath.size();

@@ -409,8 +409,8 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
 
         if(step > 0)
         {
-            out->SetFileName(res.results[0+step]);
-            out->SetFilePath(res.results[1+step]);
+            out->SetFilename(res.results[0+step]);
+            out->SetFilepath(res.results[1+step]);
             out->SetChunkName(res.results[2+step]);
             out->SetChunkCount(res.results[3+step]);
             out->SetFileSize(res.results[4+step]);
@@ -433,8 +433,8 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
 
     std::string filename, filepath, chunkname, postid;
 
-    fi->GetFileName(filename);
-    fi->GetFilePath(filepath);
+    fi->GetFilename(filename);
+    fi->GetFilepath(filepath);
     fi->GetChunkName(chunkname);
     fi->GetPostID(postid);
 

@@ -5,23 +5,54 @@
 
 #include "utils.h"
 #include "connectionmanager.h"
+#include "fileinfo.h"
 #include "filemanager.h"
+#include "atticpost.h"
 
 namespace conops
 {
-    int AssembleChunkPaths( const std::string& dir, 
-                            const FileInfo* fi, 
-                            std::list<std::string>& out);
+    static int AssembleChunkPaths( const std::string& dir, 
+                                   const FileInfo* fi, 
+                                   std::list<std::string>& out)
+    {
+
+        // This may be abstracted
+        // construct chunk filepaths
+        std::string chunkName; 
+        fi->GetChunkName(chunkName);
+        std::string chunkPath = dir;
+
+        // Assemble chunk paths list
+        chunkPath.append("/");
+        chunkPath.append(chunkName);
+        chunkPath.append("_");
+
+        std::string path;
+        char buf[256];
+
+        for(unsigned int i=0; i< fi->GetChunkCount(); i++)
+        {
+            memset(buf, '\0', 256);
+            snprintf(buf, 256, "%u", i);
+
+            path.clear();
+            path += chunkPath + buf;
+
+            out.push_back(path);
+        }
+
+        return ret::A_OK;
+    }
 
 
-    int PostFile( const std::string& url, 
-                  const std::string& filepath, 
-                  const std::string& TempDirectory,
-                  FileManager* fm,
-                  ConnectionManager* cm,
-                  FileInfo* fi,
-                  Post* post,
-                  AccessToken& at )
+    static int PostFile( const std::string& url, 
+                         const std::string& filepath, 
+                         const std::string& TempDirectory,
+                         FileManager* fm,
+                         ConnectionManager* cm,
+                         FileInfo* fi,
+                         Post* post,
+                         AccessToken& at )
     {
         if(!fm)
             return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
@@ -64,7 +95,7 @@ namespace conops
             {
                 while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
                 std::string filename;
-                fi->GetFileName(filename);
+                fi->GetFilename(filename);
                 fm->SetFilePostId(filename, postid);
                 fm->Unlock();
             }
@@ -74,14 +105,14 @@ namespace conops
         return status;
     }    
 
-    int PutFile( const std::string& url, 
-                 const std::string& filepath, 
-                 const std::string& TempDirectory,
-                 FileManager* fm,
-                 ConnectionManager* cm,
-                 FileInfo* fi,
-                 Post* post,
-                 AccessToken& at )
+    static int PutFile( const std::string& url, 
+                        const std::string& filepath, 
+                        const std::string& TempDirectory,
+                        FileManager* fm,
+                        ConnectionManager* cm,
+                        FileInfo* fi,
+                        Post* post,
+                        AccessToken& at )
     {    
         if(!fm)
             return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
@@ -122,38 +153,6 @@ namespace conops
         return ret::A_OK;
     }    
 
-    int AssembleChunkPaths( const std::string& dir, 
-                            const FileInfo* fi, 
-                            std::list<std::string>& out)
-    {
-
-        // This may be abstracted
-        // construct chunk filepaths
-        std::string chunkName; 
-        fi->GetChunkName(chunkName);
-        std::string chunkPath = dir;
-
-        // Assemble chunk paths list
-        chunkPath.append("/");
-        chunkPath.append(chunkName);
-        chunkPath.append("_");
-
-        std::string path;
-        char buf[256];
-
-        for(unsigned int i=0; i< fi->GetChunkCount(); i++)
-        {
-            memset(buf, '\0', 256);
-            snprintf(buf, 256, "%u", i);
-
-            path.clear();
-            path += chunkPath + buf;
-
-            out.push_back(path);
-        }
-
-        return ret::A_OK;
-    }
 
 };
 

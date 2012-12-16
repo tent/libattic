@@ -132,9 +132,9 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
 
     // Filename (str)
-    fi->SetFileName(filename);
+    fi->SetFilename(filename);
     // Filepath (str)
-    fi->SetFilePath(filepath);
+    fi->SetFilepath(filepath);
     // ChunkName (str)
     fi->SetChunkName(chunkName);
     // ChunkCount (unsigned int)
@@ -246,7 +246,7 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &outpath)
     // strip any file type
     std::vector<std::string> split;
     std::string filename;
-    fi->GetFileName(filename);
+    fi->GetFilename(filename);
 
     utils::SplitString(filename, '.', split);
     
@@ -264,7 +264,7 @@ void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &outpath)
     // strip any file type
     std::vector<std::string> split;
     std::string filename;
-    fi->GetFileName(filename);
+    fi->GetFilename(filename);
 
     utils::SplitString(filename, '.', split);
     

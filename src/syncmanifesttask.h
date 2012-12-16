@@ -15,7 +15,7 @@ class SyncManifestTask : public TentTask
     void PullManifestPost(const std::string id);
     int SearchForManifestPost(MetaStorePost& out);
     void CreateManifestPost(MetaStorePost& post);
-    void PushManifestPost(const std::string& postID, MetaStorePost* post);
+    int PushManifestPost(const std::string& postID, MetaStorePost* post);
 
 public:
     SyncManifestTask( TentApp* pApp, 

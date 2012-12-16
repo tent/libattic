@@ -176,7 +176,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std:
         snprintf(szBuffer, (sizeof(char)*256), "%d", i);
 
         path = chunkDir + "/" + szChunkName + "_" + szBuffer;
-        if(!utils::CheckFileSize(path))
+        if(!utils::CheckFilesize(path))
             return false;
     }
 

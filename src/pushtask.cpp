@@ -118,7 +118,7 @@ int PushTask::PushFile(const std::string& filepath)
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
 
-        unsigned int size = utils::CheckFileSize(filepath);
+        unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         CreateAtticPost(p,
                         false,
@@ -147,7 +147,7 @@ int PushTask::PushFile(const std::string& filepath)
 
         std::cout<< " PUT URL : " << posturl << std::endl;
         
-        unsigned int size = utils::CheckFileSize(filepath);
+        unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         CreateAtticPost(p,
                         false,

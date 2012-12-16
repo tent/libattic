@@ -1108,7 +1108,7 @@ void ConnectionManager::AddAttachmentToForm( const std::string &path,
     utils::ExtractFileName(path, name);
 
     // Get Filesize
-    unsigned int uSize = utils::CheckFileSize(path);
+    unsigned int uSize = utils::CheckFilesize(path);
 
     // Gather some information about the content
     std::string cd;
