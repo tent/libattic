@@ -54,10 +54,7 @@ void SyncManifestTask::RunTask()
         // If server version newer, replace client version
             // This is more involved, if manifest is direct there needs to be some sort of merge
         // If client version is newer, PUT new post, (bump version number) 
-
-
 }
-
 
 void SyncManifestTask::GetManifestPostID(std::string&out)
 {
@@ -185,4 +182,40 @@ void SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost
 
 }
 
+FileInfo* SyncManifestTask::CreateManifestFileInfo()
+{
+    std::string path;
+    MasterKey mk;
 
+    {
+        while(!GetCredentialsManager()->TryLock()) { sleep(0); }
+ 
+        // Construct Path
+        GetCredentialsManager()->ConstructManifestPath(path);
+        // Get Master Key
+        mk = GetCredentialsManager()->GetMansterKeyCopy();
+    
+        GetCredentialsManager()->Unlock();
+    }
+
+
+    Credentials cred = mk.GetCredentialsCopy();
+    FileInfo* fiileInfo* fi = NULL;
+
+    {
+        while(!GetFileManager()->TryLock()) { sleep(0); }
+        fi = GetFileManager()->CreateFileInfo( cnst::g_szManifest,
+                                               path,
+                                               ""
+                                               "",                
+                                               "",
+                                               "",
+                                               ""
+                                               &cred.key,                       
+                                               &cred.iv);                       
+
+        GetFileManager()->Unlock();
+    }
+
+    return fi;
+}

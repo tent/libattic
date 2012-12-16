@@ -10,6 +10,7 @@
 class SyncManifestTask : public TentTask
 {
     
+    FileInfo* CreateManifestFileInfo();
     void GetManifestPostID(std::string& out);
     void PullManifestPost(const std::string id);
     int SearchForManifestPost(MetaStorePost& out);
