@@ -15,7 +15,7 @@ public:
 
     time_t GetTimeCreated() const           { return m_Created; }
     time_t GetExpires() const               { return m_Expires; }
-    Credentials GetCredentials() const      { return m_Cred; }
+    Credentials GetCredentialsCopy() const  { return m_Cred; }
     
     void SetTimeCreated(const time_t time)          { m_Created = time; }
     void SetTimeExpires(const time_t time)          { m_Expires = time; }
