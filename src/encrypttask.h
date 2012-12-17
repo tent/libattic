@@ -3,29 +3,22 @@
 #define ENCRYPTTASK_H_
 #pragma once
 
+#include <string>
+#include "cryptotask.h"
 
-#include "tenttask.h"
-
-class EncryptTask : public TentTask
+class EncryptTask : public CryptoTask
 {
 
 public:
-    EncryptTask( TentApp* pApp, 
-                 FileManager* pFm, 
-                 ConnectionManager* pCon, 
-                 CredentialsManager* pCm,
-                 const AccessToken& at,
-                 const std::string& entity,
-                 const std::string& filepath,
-                 const std::string& tempdir,
-                 const std::string& workingdir,
-                 const std::string& configdir,
-                 void (*callback)(int, void*));
+    EncryptTask( const std::string& filepath, const std::string& outpath);
 
     ~EncryptTask();
 
     void RunTask();
 
+private:
+    std::string     m_Filepath;
+    std::string     m_Outpath;
 
 
 };

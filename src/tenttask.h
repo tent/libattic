@@ -50,9 +50,7 @@ public:
     }
 
     /*
-    virtual void RunTask()
-    {
-    }
+    virtual void RunTask() {}
     */
 
     AccessToken* GetAccessToken() { return &m_At; }
