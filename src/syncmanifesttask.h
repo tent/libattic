@@ -6,11 +6,12 @@
 
 #include "tenttask.h"
 #include "metastorepost.h"
+#include "crypto.h"
 
 class SyncManifestTask : public TentTask
 {
     
-    FileInfo* CreateManifestFileInfoAndIndex();
+    FileInfo* CreateManifestFileInfoAndEncrypt();
     void GetManifestPostID(std::string& out);
     void PullManifestPost(const std::string id);
     int SearchForManifestPost(MetaStorePost& out);
@@ -33,6 +34,9 @@ public:
     ~SyncManifestTask();
     
     void RunTask();
+
+private:
+    Crypto  m_Crypto;
  
 };
 

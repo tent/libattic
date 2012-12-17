@@ -40,9 +40,12 @@ SyncManifestTask::~SyncManifestTask()
 
 void SyncManifestTask::RunTask()
 {
+    std::cout<<"running sync manifest task"<<std::endl;
     std::string postid;
     // Get Metadata Post id
     GetManifestPostID(postid);
+
+    std::cout<<"Post ID : " << postid << std::endl;
     if(postid.empty())
     {
         // Create new metadata post
@@ -58,7 +61,7 @@ void SyncManifestTask::RunTask()
         // If client version is newer, PUT new post, (bump version number) 
 }
 
-void SyncManifestTask::GetManifestPostID(std::string&out)
+void SyncManifestTask::GetManifestPostID(std::string& out)
 {
     // Get Metadata Post id
     while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
@@ -71,6 +74,7 @@ void SyncManifestTask::GetManifestPostID(std::string&out)
         MetaStorePost p;
         SearchForManifestPost(p);
         p.GetID(out);
+        std::cout<<" OUT POST ID : " << out << std::endl;
 
         if(!out.empty())
         {
@@ -118,17 +122,19 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
     Json::Value root;                                                                            
     Json::Reader reader;                                                                         
 
+    std::cout<<"HERE " << std::endl;
     if(!reader.parse(response, root))                                                            
         return ret::A_FAIL_JSON_PARSE; // TODO :: Create failed to parse message
+
+    std::cout<<"HERE " << std::endl;
 
     Json::ValueIterator itr = root.begin();                                                      
 
     int count = 0;                                                                               
     for(;itr != root.end(); itr++)                                                               
     {                                                                                            
-        JsonSerializer::DeserializeObject(&out, (*itr).asString());                              
-
         out.Deserialize(*itr);                                                                     
+
         count++;                                                                                 
 
         std::cout<< "POST TYPE : " << std::endl;                                                 
@@ -139,7 +145,9 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
         // if proper post type
         if(posttype.compare(cnst::g_szAtticMetaStorePostType) == 0)
         {
-            std::cout<<" Proper Post type: " << std::endl;
+            std::cout<<" Proper Post type " << std::endl;
+            break; // TODO :: if there are more than one metastore post types there is a problem
+                   // just grab the first for now.
         }
     }
 
@@ -166,7 +174,7 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
         return ret::A_FAIL_INVALID_PTR;
 
     // Create ephemeral fileinfo object for manifest
-    FileInfo* fi = CreateManifestFileInfoAndIndex();
+    FileInfo* fi = CreateManifestFileInfoAndEncrypt();
     // determine where it's located // Its in the config folder, always
     std::string filepath, filename;
     fi->GetFilepath(filepath);
@@ -236,7 +244,7 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
     return status;
 }
 
-FileInfo* SyncManifestTask::CreateManifestFileInfoAndIndex()
+FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 {
     std::string path;
     MasterKey mk;
@@ -252,27 +260,34 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndIndex()
         GetCredentialsManager()->Unlock();
     }
 
-
     Credentials cred = mk.GetCredentialsCopy();
+
+    std::cout<<" Encrypting "<< std::endl;
+    std::string outPath = path;
+    outPath += "_enc";
+
+    m_Crypto.EncryptFile(path, outPath, cred);
+ 
     FileInfo* fi = NULL;
 
     {
         while(!GetFileManager()->TryLock()) { sleep(0); }
         fi = GetFileManager()->CreateFileInfo( cnst::g_szManifest,
                                                path,
-                                               "",
-                                               "",                
+                                               outPath,
+                                               "1",                
                                                "",
                                                "",
                                                "",
                                                cred.key,                       
                                                cred.iv);                       
 
-        GetFileManager()->IndexFile( path,
-                                     false,
-                                     fi);
+        //GetFileManager()->IndexFile( path,
+        //                            false,
+        //                           fi);
 
         GetFileManager()->Unlock();
+
     }
 
     return fi;
