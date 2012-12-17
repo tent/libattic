@@ -30,7 +30,7 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)
 {
     if(!JsonSerializer::DeserializeObject(&m_AccessToken, buffer))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
-    ret::A_OK;
+    return ret::A_OK;
 }
 
 void CredentialsManager::ConstructAccessTokenPath(std::string& out)
@@ -65,5 +65,13 @@ int CredentialsManager::LoadAccessToken()
     return m_AccessToken.LoadFromFile(path);               
 }
 
+int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const std::string& pass)
+{
+    Credentials cred;
+    m_Crypto.GenerateKeyIvFromPassphrase( user, pass, cred );
+    m_MasterKey.SetCredentials(cred);
+
+    return ret::A_OK;
+}
 
 

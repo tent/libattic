@@ -8,6 +8,7 @@
 #include "taskarbiter.h"
 #include "masterkey.h"
 #include "accesstoken.h"
+#include "crypto.h"
 
 
 class CredentialsManager : public MutexClass
@@ -25,6 +26,9 @@ public:
     int WriteOutAccessToken();
     int LoadAccessToken();
 
+    // MasterKey
+    int EnterUserNameAndPassword(const std::string& user, const std::string& pass);
+
     void ConstructAccessTokenPath(std::string& out);
     void ConstructManifestPath(std::string& out);
 
@@ -36,6 +40,7 @@ public:
     void SetMasterKey(const MasterKey& mk)              { m_MasterKey = mk; }
 
 private:
+    Crypto          m_Crypto;
     MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb
     AccessToken     m_AccessToken;  // Access Token used to auth during tent posts
 

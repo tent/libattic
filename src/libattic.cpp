@@ -62,6 +62,10 @@ int InitializeCredentialsManager();
 int ShutdownFileManager();
 int ShutdownCredentialsManager();
 int ShutdownAppInstance();
+int SetWorkingDirectory(const char* szDir);
+int SetConfigDirectory(const char* szDir);
+int SetTempDirectory(const char* szDir);
+
 
 int TestQuery()
 {
@@ -124,6 +128,16 @@ int ShutdownLibAttic()
     }
 
     return status;
+}
+
+int EnterUserNameAndPass(const char* szUser, const char* szPass)
+{
+
+    while(!g_pCredManager->TryLock()) { sleep(0); }
+
+    g_pCredManager->EnterUserNameAndPassword(szUser, szPass);
+
+    g_pCredManager->Unlock();
 }
 
 int InitializeFileManager()

@@ -1,11 +1,12 @@
 
-
 #ifndef LIBATTIC_H_
 #define LIBATTIC_H_
+#pragma once
 
-
+/*
 extern "C"
 {
+*/
 
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
@@ -23,6 +24,9 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL);
 
 int ShutdownLibAttic();
+
+// Master Key
+int EnterUserNameAndPass(const char* szUser, const char* szPass);
 
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);
@@ -42,7 +46,6 @@ int SaveAppToFile();
 // Load the app in json from a file (Just a utility you probably don't
 // want to use this in production)
 int LoadAppFromFile();
-
 int LoadAccessToken();
 
 // Pushfile to tent
@@ -63,13 +66,6 @@ int SyncAtticMetaData(void (*callback)(int, void*));
 // Sync with attic posts
 int SyncAtticPostsMetaData(void (*callback)(int, void*));
 
-// TODO :: filter attic posts, and construct manifest from that if none is present
-//         compare data and make sure both are up to data
-
-int SetWorkingDirectory(const char* szDir);
-int SetConfigDirectory(const char* szDir);
-int SetTempDirectory(const char* szDir);
-
 int SetEntityUrl(const char* szUrl);
 
 const char* GetWorkingDirectory();
@@ -82,6 +78,7 @@ int SyncAtticPosts();
 int SaveChanges();
 
 int TestQuery();
-}
+
+//}
 #endif
 
