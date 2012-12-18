@@ -40,11 +40,17 @@ SyncManifestTask::~SyncManifestTask()
 
 void SyncManifestTask::RunTask()
 {
+
     std::cout<<"running sync manifest task"<<std::endl;
     std::string postid;
     // Get Metadata Post id
     GetManifestPostID(postid);
     std::cout<<"Post ID : " << postid << std::endl;
+
+    /*
+    DeleteManifestPost(postid);
+    return;
+    */
 
     if(postid.empty())
     {
@@ -70,18 +76,60 @@ void SyncManifestTask::RunTask()
         {
             std::cout<<"higher"<<std::endl;
             // higher - upload
+            //PushManifestPost(postid, &m_ManifestPost);
         }
         else if(localversion < postversion)
         {
             std::cout<<"lower"<<std::endl;
             // lower - download / overwrite / possibly merge
+
+            // download manifest
+            //PullManifestPostAttachment(postid);
+                // write out to a temp file
+                // do a comparision
+                // unload old manifest
+                // write into new manifest
+                // reload manifest
         }
         else
         {
             std::cout<<"same"<<std::endl;
+
+            PullManifestPostAttachment(postid);
             // same - merge
         }
     }
+}
+
+int SyncManifestTask::DeleteManifestPost(const std::string& postid)
+{
+    // Remove from filemanager
+    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+    GetFileManager()->SetManifestPostID("");
+    GetFileManager()->Unlock();
+
+    // Remove from server
+    // Construct Post URL                                
+    std::string postpath;// = m_Entity;                  
+    GetEntity(postpath);
+    postpath.append("/tent/posts/");                     
+    postpath += postid;                                  
+
+    AccessToken* at = GetAccessToken();                                                              
+    std::string resp;
+    ConnectionManager::GetInstance()->HttpDelete( postpath,
+                                                  NULL,                            
+                                                  resp,                        
+                                                  at->GetMacAlgorithm(),           
+                                                  at->GetAccessToken(),            
+                                                  at->GetMacKey(),                 
+                                                  true);                           
+
+    std::cout<<" COUT : " << resp << std::endl;
+
+    return 0;
+ 
+
 }
 
 void SyncManifestTask::GetManifestPostID(std::string& out)
@@ -108,10 +156,78 @@ void SyncManifestTask::GetManifestPostID(std::string& out)
     }
 }
 
-void SyncManifestTask::PullManifestPost(const std::string id)
+int SyncManifestTask::PullManifestPostAttachment(const std::string& postid)
 {
+    // Construct Post URL                                
+    std::string postpath;// = m_Entity;                  
+    GetEntity(postpath);
+    postpath.append("/tent/posts/");                     
+    postpath += postid;                                  
 
+   // Assemble attachment path
+    Post::AttachmentVec* av = m_ManifestPost.GetAttachments();             
+
+    std::cout<< " VEC COUNT : " << av->size() << std::endl;      
+    Post::AttachmentVec::iterator itr = av->begin();             
+
+    std::string attachmentpath;                                  
+    std::string outpath;                                         
+
+    for(;itr != av->end(); itr++)                                
+    {                                                            
+        // Construct attachment path                             
+        attachmentpath.clear();                                  
+        attachmentpath += postpath;                              
+        attachmentpath.append("/attachments/");                  
+        attachmentpath += (*itr)->Name;                          
+        std::cout<< attachmentpath << std::endl;                 
+
+        outpath.clear();                                         
+        GetConfigDirectory(outpath);
+                             
+        utils::CheckUrlAndAppendTrailingSlash(outpath);          
+        outpath += (*itr)->Name;                                 
+
+        std::cout<<" NAME : " <<  (*itr)->Name << std::endl;     
+
+        outpath += "_tmp";
+
+        // Request attachment                                    
+        GetFileAndWriteOut(attachmentpath, outpath);             
+        // Decrypt
+        std::string keypath;
+        MasterKey mk;
+        GetMasterKeyFromCredentials(mk, keypath);
+        Credentials cred = mk.GetCredentialsCopy();
+
+        std::cout<<" Decrypting "<< std::endl;
+        std::string path = outpath;
+        path += "_hld";
+        m_Crypto.EncryptFile(outpath, path, cred);
+ 
+
+    }                                                            
+
+    return ret::A_OK;                                                                      
 }
+
+int SyncManifestTask::GetFileAndWriteOut(const std::string& url, const std::string &filepath)
+{                                                                                                    
+    //file path preferably to a chunked file.                                                       
+    if(!GetTentApp())                                                                                
+        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                                 
+
+    AccessToken* at = GetAccessToken();                                                              
+    ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                             
+                                                                    NULL,                            
+                                                                    filepath,                        
+                                                                    at->GetMacAlgorithm(),           
+                                                                    at->GetAccessToken(),            
+                                                                    at->GetMacKey(),                 
+                                                                    true);                           
+
+    return ret::A_OK;                                                                                
+}                                                                                                    
 
 int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
 {
@@ -190,7 +306,7 @@ void SyncManifestTask::CreateManifestPost(MetaStorePost& post)
     post.MetaSetAtticRoot(root);
 }
 
-int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost* post)
+int SyncManifestTask::PushManifestPost(const std::string& postid, MetaStorePost* post)
 {
     if(!post)
         return ret::A_FAIL_INVALID_PTR;
@@ -212,7 +328,7 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
     
     int status = ret::A_OK;
     // Create Post Path
-    if(postID.empty())
+    if(postid.empty())
     {
         // New Post                                                         
         std::cout<< " POST URL : " << posturl << std::endl;                 
@@ -224,6 +340,10 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
         std::string tempdir;                                                
         GetTempDirectory(tempdir);                                          
 
+        filepath += "_enc";
+        std::cout<<" FILEPATH : " << filepath << std::endl;
+        PostManifest(posturl, filepath);
+        /*
         AccessToken* at = GetAccessToken();                                 
         status = conops::PostFile( posturl,                                 
                                    filepath,                                
@@ -233,25 +353,30 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
                                    fi,                          
                                    &p,                                      
                                    *at);                                    
-                                                          
+         */                                                 
     }
     else
     {
         posturl += "/";
-        posturl += postID;
-        fi->SetPostID(postID);
+        posturl += postid;
+        fi->SetPostID(postid);
         // MULTIPART PUT
         //
         //
-        std::cout<< " POST URL : " << posturl << std::endl;                 
+        std::cout<< " PUT URL : " << posturl << std::endl;                 
 
-        unsigned int size = utils::CheckFilesize(filepath);                 
+        //unsigned int size = utils::CheckFilesize(filepath);                 
         MetaStorePost p;                                                        
         CreateManifestPost(p);
 
         std::string tempdir;                                                
         GetTempDirectory(tempdir);                                          
+        
+        filepath += "_enc";
+        std::cout<<" FILEPATH : " << filepath << std::endl;        
 
+        PutManifest(posturl, filepath);
+        /*
         AccessToken* at = GetAccessToken();                                 
         status = conops::PutFile( posturl,                                 
                                   filepath,                                
@@ -261,26 +386,72 @@ int SyncManifestTask::PushManifestPost(const std::string& postID, MetaStorePost*
                                   fi,                          
                                   &p,                                      
                                   *at);                                    
+                                  */
     }
 
     return status;
+}
+
+int SyncManifestTask::PostManifest(const std::string& url, const std::string& filepath)
+{
+    std::list<std::string> paths;
+    paths.push_back(filepath);
+
+    // Multipart post
+
+    std::string postBuffer;
+    JsonSerializer::SerializeObject(&m_ManifestPost, postBuffer);
+
+    std::string response;
+    AccessToken* at = GetAccessToken();
+    ConnectionManager::GetInstance()->HttpMultipartPost( url, 
+                                                         NULL,
+                                                         postBuffer, 
+                                                         &paths, 
+                                                         response, 
+                                                         at->GetMacAlgorithm(), 
+                                                         at->GetAccessToken(), 
+                                                         at->GetMacKey(), 
+                                                         true);
+
+    std::cout<<"RESPONSE : " << response << std::endl;
+
+    return 0;
+}
+
+int SyncManifestTask::PutManifest(const std::string& url, const std::string& filepath)
+{
+    std::list<std::string> paths;
+    paths.push_back(filepath);
+
+    // Multipart post
+
+    std::string postBuffer;
+    JsonSerializer::SerializeObject(&m_ManifestPost, postBuffer);
+
+    std::string response;
+    AccessToken* at = GetAccessToken();
+    ConnectionManager::GetInstance()->HttpMultipartPut( url, 
+                                                        NULL,
+                                                        postBuffer, 
+                                                        &paths, 
+                                                        response, 
+                                                        at->GetMacAlgorithm(), 
+                                                        at->GetAccessToken(), 
+                                                        at->GetMacKey(), 
+                                                        true);
+
+    std::cout<<"RESPONSE : " << response << std::endl;
+
+
+    return 0;
 }
 
 FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 {
     std::string path;
     MasterKey mk;
-
-    {
-        while(!GetCredentialsManager()->TryLock()) { sleep(0); }
- 
-        // Construct Path
-        GetCredentialsManager()->ConstructManifestPath(path);
-        // Get Master Key
-        mk = GetCredentialsManager()->GetMasterKeyCopy();
-    
-        GetCredentialsManager()->Unlock();
-    }
+    GetMasterKeyFromCredentials(mk, path);
 
     Credentials cred = mk.GetCredentialsCopy();
 
@@ -313,4 +484,15 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
     }
 
     return fi;
+}
+
+void SyncManifestTask::GetMasterKeyFromCredentials(MasterKey& mk, std::string& outpath)
+{
+    while(!GetCredentialsManager()->TryLock()) { sleep(0); }
+    // Construct Path
+    GetCredentialsManager()->ConstructManifestPath(outpath);
+    // Get Master Key
+    mk = GetCredentialsManager()->GetMasterKeyCopy();
+
+    GetCredentialsManager()->Unlock();
 }

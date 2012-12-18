@@ -13,10 +13,18 @@ class SyncManifestTask : public TentTask
     
     FileInfo* CreateManifestFileInfoAndEncrypt();
     void GetManifestPostID(std::string& out);
-    void PullManifestPost(const std::string id);
+    int PullManifestPostAttachment(const std::string& postid);
+    int GetFileAndWriteOut(const std::string& url, const std::string &filepath);
     int SearchForManifestPost(MetaStorePost& out);
     void CreateManifestPost(MetaStorePost& post);
-    int PushManifestPost(const std::string& postID, MetaStorePost* post);
+    int PushManifestPost(const std::string& postid, MetaStorePost* post);
+
+    int DeleteManifestPost(const std::string& postid);
+
+    int PostManifest(const std::string& url, const std::string& filepath);
+    int PutManifest(const std::string& url, const std::string& filepath);
+
+    void GetMasterKeyFromCredentials(MasterKey& mk, std::string& outpath);
 
 public:
     SyncManifestTask( TentApp* pApp, 

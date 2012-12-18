@@ -56,7 +56,6 @@ void PullTask::RunTask()
 int PullTask::PullFile(const std::string& filepath)
 {                                                                                                
     std::string filename;                                                                        
-
     utils::ExtractFileName(filepath, filename);                                                  
 
     if(!GetTentApp())                                                                                  
@@ -79,7 +78,6 @@ int PullTask::PullFile(const std::string& filepath)
     if(!fi)                                                                                      
     {                                                                                            
         std::cout<<"NULL FILE INFO"<<std::endl;                                                  
-
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
     }                                                                                            
 
