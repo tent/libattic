@@ -23,6 +23,8 @@ public:
         PUSH=0,                                                         
         PULL,                                                           
         DELETE,                                                         
+        SYNCMANIFEST,
+        SYNCPOSTS,
         ENCRYPT,
         DECRYPT
     };                                                                  

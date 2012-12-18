@@ -7,6 +7,8 @@
 #include "pushtask.h"
 #include "deletetask.h"
 #include "encrypttask.h"
+#include "syncmanifesttask.h"
+#include "syncposttask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -36,20 +38,83 @@ Task* TaskFactory::CreateTentTask( TaskType type,
                                    const std::string& configdir,                 
                                    void (*callback)(int, void*))
 {
-
+    Task* t = NULL;
     switch(type)
     {
     case PUSH:
         {
-
+            t = new PushTask( pApp,                            
+                              pFm,                    
+                              pCon,
+                              pCm,                    
+                              at,
+                              entity,                          
+                              filepath,                        
+                              tempdir,                   
+                              workingdir,                
+                              configdir,                 
+                              callback);                         
+            break;
         }
     case PULL:
         {
-
+            t = new PullTask( pApp,                            
+                              pFm,                    
+                              pCon,
+                              pCm,                    
+                              at,
+                              entity,                          
+                              filepath,                        
+                              tempdir,                   
+                              workingdir,                
+                              configdir,                 
+                              callback);        
+            break;
         }
     case DELETE:
         {
-
+            t = new DeleteTask( pApp,                            
+                                pFm,                    
+                                pCon,
+                                pCm,                    
+                                at,
+                                entity,                          
+                                filepath,                        
+                                tempdir,                   
+                                workingdir,                
+                                configdir,                 
+                                callback);       
+            break;
+        }
+    case SYNCMANIFEST:
+        {
+            t = new SyncManifestTask( pApp,                    
+                                      pFm,                     
+                                      pCon,                    
+                                      pCm,                     
+                                      at,                      
+                                      entity,                  
+                                      filepath,                
+                                      tempdir,                 
+                                      workingdir,              
+                                      configdir,               
+                                      callback);               
+            break;
+        }
+    case SYNCPOSTS:
+        {
+            t = new SyncPostsTask( pApp,                    
+                                   pFm,                     
+                                   pCon,                    
+                                   pCm,                     
+                                   at,                      
+                                   entity,                  
+                                   filepath,                
+                                   tempdir,                 
+                                   workingdir,              
+                                   configdir,               
+                                   callback);               
+            break;
         }
     default:
         {
@@ -57,6 +122,12 @@ Task* TaskFactory::CreateTentTask( TaskType type,
         }
     }
 
+    if(t)
+    {
+        m_TaskMap.push_back(t);
+    }
+    
+    return t;
 }
 
 Task* TaskFactory::CreateCryptoTask( TaskType type,
@@ -68,7 +139,20 @@ Task* TaskFactory::CreateCryptoTask( TaskType type,
 
     switch(type)
     {
+    case ENCRYPT:
+        {
 
+            break;
+        }
+    case DECRYPT:
+        {
+
+            break;
+        }
+    default:
+        {
+
+        }
     }
 
 }

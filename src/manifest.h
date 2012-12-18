@@ -83,14 +83,16 @@ public:
     bool RemoveFileInfo(const std::string &filename);
     bool IsFileInManifest(const std::string &filename);
 
-    unsigned int GetEntryCount()        { return m_EntryCount; }
-    unsigned int GetVersionNumber() const    { return QueryForVersion(); }//return m_VersionNumber; }
+    unsigned int GetEntryCount()              { return m_EntryCount; }
+    unsigned int GetVersionNumber() const     { return QueryForVersion(); }//return m_VersionNumber; }
     void GetPostID(std::string &out) const    { QueryForMetaPostID(out); }
-    bool GetIsDirty()                   { return m_Dirty; } 
+    bool GetIsDirty()                         { return m_Dirty; } 
 
     void SetPostID(const std::string &id)   { InsertPostID(id); }
     void SetEntryCount(unsigned int count)  { m_EntryCount = count; }
     void SetFilePath(std::string &filePath) { m_Filepath = filePath; }
+
+    void CompareAndMergeDb(sqlite3* pDb);
 
 private:
     sqlite3*            m_pDb;

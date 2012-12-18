@@ -13,7 +13,6 @@ TaskArbiter::TaskArbiter()
 
 TaskArbiter::~TaskArbiter()
 {
-
 }
 
 void* ThreadFunc(void* arg)
@@ -24,7 +23,9 @@ void* ThreadFunc(void* arg)
         std::cout<<"attempting to run task"<<std::endl;
         Task* pTask = (Task*)arg;
 
+        pTask->SetRunningState();
         pTask->RunTask();
+        pTask->SetFinishedState();
     }
     else
         std::cout<<"invalid arg passed to thread"<<std::endl;
@@ -58,4 +59,5 @@ void TaskArbiter::SpinOffTask(Task* pTask)
     g_ThreadCount++;
     std::cout<<" G THREAD COUNT : " << g_ThreadCount << std::endl;
     m_ThreadHandles.push_back(thread);
+
 }

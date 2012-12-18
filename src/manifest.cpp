@@ -583,3 +583,9 @@ bool Manifest::IsFileInManifest(const std::string &filename)
     return QueryForFileExistence(filename);
 }
 
+void Manifest::CompareAndMergeDb(sqlite3* pDb)
+{
+    // Select * db
+
+}
+
