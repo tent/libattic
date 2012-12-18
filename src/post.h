@@ -111,6 +111,7 @@ private:
     std::map<std::string, bool>         m_Permissions;
 
     unsigned int                        m_Version;
+
 };
 
 #endif

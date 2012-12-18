@@ -37,6 +37,7 @@ public:
 
 private:
     Crypto  m_Crypto;
+    MetaStorePost m_ManifestPost;
  
 };
 

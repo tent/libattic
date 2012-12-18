@@ -44,8 +44,8 @@ void SyncManifestTask::RunTask()
     std::string postid;
     // Get Metadata Post id
     GetManifestPostID(postid);
-
     std::cout<<"Post ID : " << postid << std::endl;
+
     if(postid.empty())
     {
         // Create new metadata post
@@ -53,12 +53,35 @@ void SyncManifestTask::RunTask()
         CreateManifestPost(post);
         PushManifestPost(postid, &post);
     }
+    else
+    {
+        // Pull Metadata Post
+        SearchForManifestPost(m_ManifestPost);
 
-    // Pull Metadata Post
-        // Compare versions
-        // If server version newer, replace client version
-            // This is more involved, if manifest is direct there needs to be some sort of merge
-        // If client version is newer, PUT new post, (bump version number) 
+        while(!GetFileManager()->TryLock()) { sleep(0); }
+        unsigned int localversion = GetFileManager()->GetManifestVersion();
+        GetFileManager()->Unlock();
+        unsigned int postversion = m_ManifestPost.GetVersion();
+
+        std::cout<<"Post version : " << postversion << std::endl;
+
+        // Compare version numbers
+        if(localversion > postversion)
+        {
+            std::cout<<"higher"<<std::endl;
+            // higher - upload
+        }
+        else if(localversion < postversion)
+        {
+            std::cout<<"lower"<<std::endl;
+            // lower - download / overwrite / possibly merge
+        }
+        else
+        {
+            std::cout<<"same"<<std::endl;
+            // same - merge
+        }
+    }
 }
 
 void SyncManifestTask::GetManifestPostID(std::string& out)
@@ -71,9 +94,8 @@ void SyncManifestTask::GetManifestPostID(std::string& out)
     if(out.empty())
     {
         // Search the server for metastore post
-        MetaStorePost p;
-        SearchForManifestPost(p);
-        p.GetID(out);
+        SearchForManifestPost(m_ManifestPost);
+        m_ManifestPost.GetID(out);
         std::cout<<" OUT POST ID : " << out << std::endl;
 
         if(!out.empty())
