@@ -3,7 +3,6 @@
 #define TASKARBITER_H_
 #pragma once
 
-#include <deque>
 #include <pthread.h>
 
 #include "mutexclass.h"
@@ -22,8 +21,8 @@ public:
     void SpinOffTask(Task* pTask); // Spin off detached thread
 
 private:
-    TaskQueue              m_TaskQueue;
-    std::deque<pthread_t>  m_ThreadHandles; 
+    TaskQueue*             m_pTaskQueue;
+    ThreadPool*            m_pPool;
 
 };
 

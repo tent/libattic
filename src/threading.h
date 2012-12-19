@@ -10,40 +10,56 @@
 
 class TaskQueue;
 
-class ThreadState : public MutexClass                                                            
+class ThreadState                                                         
 {                                                                                                
 public:                                                                                          
     enum RunningState                                                                            
     {                                                                                            
         IDLE = 0,                                                                                
         RUNNING,                                                                                 
-        EXIT                                                                                     
-    };                                                                                           
+        EXIT,
+        FINISHED
+    };
+
 public:                                                                                          
     ThreadState(){ m_State = IDLE; }                                               
     ~ThreadState(){}                                                                             
 
-    void SetStateIdle() { if(m_State != EXIT) m_State = IDLE; }                                  
-    void SetStateRunning() { if(m_State != EXIT) m_State = RUNNING; }                            
-    void SetStateExit() { m_State = EXIT; }                                                      
+    void SetStateIdle()     { if(m_State != EXIT) m_State = IDLE; } 
+    void SetStateRunning()  { if(m_State != EXIT) m_State = RUNNING; }
+    void SetStateExit()     { m_State = EXIT; }
+    void SetStateFinished() { m_State = FINISHED; }
 
-    int GetThreadState() { return m_State; }                                                     
+    int GetThreadState() { return m_State; }                                               
 
 private:                                                                                         
     RunningState m_State;                                                                        
 };                                                                                               
 
-struct ThreadData                                                                                
-{                                                                                                
-    ThreadState state;                                                                           
-    TaskQueue*  pTq;                                                                             
-    pthread_t   handle;                                                                          
+class ThreadData  : public MutexClass
+{                    
+public:
+    ThreadData() {}
+    ~ThreadData() {}
+
+
+    ThreadState* GetThreadState()   { return &m_State; }
+    TaskQueue* GetTaskQueue()       { return m_pTq; }
+    pthread_t GetThreadHandle()     { return m_Handle; }   
+
+    void SetTaskQueue(TaskQueue* pTq) { m_pTq = pTq; }
+    void SetThreadHandle(pthread_t handle) { m_Handle; }
+
+private:
+    ThreadState m_State;                                                
+    TaskQueue*  m_pTq;                                                                             
+    pthread_t   m_Handle;                                                                          
 };                                                                                               
 
 class ThreadPool                                                                                 
 {                                                                                                
 public:                                                                                          
-    ThreadPool(unsigned int nCount = 1);
+    ThreadPool(TaskQueue* pQueue, unsigned int nCount = 1);
     ~ThreadPool();
 
     void ExtendPool(unsigned int stride);                                                        
@@ -51,6 +67,7 @@ public:
 
 private:                                                                                         
     std::deque<ThreadData*>  m_ThreadData;                                                       
+    TaskQueue* m_TaskQueue;
     unsigned int m_ThreadCount;                                                                  
 };                                                                                               
 

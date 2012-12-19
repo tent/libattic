@@ -9,10 +9,26 @@
 
 TaskArbiter::TaskArbiter()
 {
+    std::cout<<"here"<<std::endl;
+    m_pTaskQueue = NULL;
+    m_pTaskQueue = new TaskQueue();
+
+    m_pPool = new ThreadPool(m_pTaskQueue, 2);
 }
 
 TaskArbiter::~TaskArbiter()
 {
+    if(m_pTaskQueue)
+    {
+        delete m_pTaskQueue;
+        m_pTaskQueue = NULL;
+    }
+
+    if(m_pPool)
+    {
+        delete m_pPool;
+        m_pPool = NULL;
+    }
 
 }
 
@@ -40,14 +56,16 @@ void TaskArbiter::SpinOffTask(Task* pTask)
     g_ThreadCount++;
     std::cout<<" G THREAD COUNT : " << g_ThreadCount << std::endl;
     m_ThreadHandles.push_back(thread);
-    */
+
 
     ThreadData* pData = new ThreadData();
-    pData->pTq = &m_TaskQueue;
+    pData->pTq = m_pTaskQueue;
 
-    while(!m_TaskQueue.TryLock()) { sleep(0); }
-    m_TaskQueue.PushBack(pTask);
-    m_TaskQueue.Unlock();
+    */
+    while(!m_pTaskQueue->TryLock()) { sleep(0); }
+    m_pTaskQueue->PushBack(pTask);
+    m_pTaskQueue->Unlock();
+
 }
 
 

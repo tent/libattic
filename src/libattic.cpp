@@ -443,7 +443,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     at = g_pCredManager->GetAccessTokenCopy();
     g_pCredManager->Unlock();
 
-    std::cout << " ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
+    std::cout << " ACCESS TOKEN >> " << at.GetAccessToken() << std::endl;
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
@@ -479,6 +479,8 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                 g_ConfigDirectory,
                                 callback);
     g_Arb.SpinOffTask(t);
+
+    std::cout<<"Returning...."<<std::endl;
 
     return ret::A_OK;
 }

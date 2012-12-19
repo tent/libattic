@@ -5,8 +5,6 @@
 
 #include<pthread.h>
 
-#include <iostream> // TODO :: temporary, remove
-
 class MutexClass                                                                                  
 {                                                                                                 
 public:                                                                                           
@@ -22,12 +20,12 @@ public:
 
     int TryLock()                                                                                 
     {                                                                                             
-        std::cout << " locking ... " << std::endl; return pthread_mutex_trylock(&m_Mutex);        
+        return pthread_mutex_trylock(&m_Mutex);        
     } // as all things unix 0 is ok                                                               
 
     int Unlock()                                                                                  
     {                                                                                             
-        std::cout << " unlocking ... " << std::endl;  return pthread_mutex_unlock(&m_Mutex);      
+        return pthread_mutex_unlock(&m_Mutex);      
     }                                                                                             
 
 private:                                                                                          
