@@ -13,27 +13,7 @@ TaskArbiter::TaskArbiter()
 
 TaskArbiter::~TaskArbiter()
 {
-}
 
-void* ThreadFunc(void* arg)
-{
-    std::cout<<"thread func"<<::std::endl;
-    if(arg)
-    {
-        std::cout<<"attempting to run task"<<std::endl;
-        Task* pTask = (Task*)arg;
-
-        pTask->SetRunningState();
-        pTask->RunTask();
-        pTask->SetFinishedState();
-    }
-    else
-        std::cout<<"invalid arg passed to thread"<<std::endl;
-
-    std::cout<<"thread exiting ... " << std::endl;
-    g_ThreadCount--;
-    std::cout << " G THREAD COUNT : " << g_ThreadCount << std::endl;
-    pthread_exit(NULL);
 }
 
 // Spin off detached thread, (not explicitly detached,
@@ -41,6 +21,7 @@ void* ThreadFunc(void* arg)
 // its probably joinable)
 void TaskArbiter::SpinOffTask(Task* pTask)
 {
+    /*
     std::cout<<"Spinning off task..."<<std::endl;
     if(!pTask)
         return;
@@ -59,5 +40,14 @@ void TaskArbiter::SpinOffTask(Task* pTask)
     g_ThreadCount++;
     std::cout<<" G THREAD COUNT : " << g_ThreadCount << std::endl;
     m_ThreadHandles.push_back(thread);
+    */
 
+    ThreadData* pData = new ThreadData();
+    pData->pTq = &m_TaskQueue;
+
+    while(!m_TaskQueue.TryLock()) { sleep(0); }
+    m_TaskQueue.PushBack(pTask);
+    m_TaskQueue.Unlock();
 }
+
+
