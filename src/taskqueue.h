@@ -8,22 +8,36 @@
 #include "mutexclass.h"
 #include "task.h"
 
+#include <iostream>
 class TaskQueue : public MutexClass                                                
 {                                                                                  
 public:                                                                            
-    TaskQueue(){}                                                                  
+    TaskQueue(){m_TaskQueue.clear();}                                                                  
+
     ~TaskQueue(){}                                                                 
 
-    void PushBack(Task* pTask) { if(pTask) m_TaskQueue.push_back(pTask); }     
+    void PushBack(Task* pTask) 
+    { 
+        while(TryLock()) { sleep(0); }
+        if(pTask) m_TaskQueue.push_back(pTask);
+        Unlock();
+    }
 
     Task* PopFront()                                                           
     {                                                                              
+        while(TryLock()) { sleep(0); }
         Task* pTask = NULL;                                                        
-        if(!m_TaskQueue.empty())                                                   
+        
+        if(m_TaskQueue.size() > 0)                                                   
         {                                                                          
+            std::cout<<" Popping off task ... "<< m_TaskQueue.size() << std::endl;
             pTask = m_TaskQueue.front();                                           
-            m_TaskQueue.pop_front();                                               
+            m_TaskQueue[0] = NULL;
+            m_TaskQueue.pop_front();
+            std::cout<<" size now : " << m_TaskQueue.size() << std::endl;            
+            
         }                                                                          
+        Unlock();
         return pTask;                                                              
     }                                                                              
 

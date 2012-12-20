@@ -75,7 +75,8 @@ int TestQuery()
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
-                  const char* szEntityURL)
+                  const char* szEntityURL,
+                  unsigned int threadCount)
 {
     SetConfigDirectory(szConfigDirectory);
     SetWorkingDirectory(szWorkingDirectory);
@@ -102,7 +103,18 @@ int InitLibAttic( const char* szWorkingDirectory,
 
     // Non-essential
     LoadAppFromFile();
+    std::cout<<"yip"<<std::endl;
     LoadAccessToken();
+
+    std::cout<<"yup"<<std::endl;
+
+    status = g_Arb.Initialize(threadCount);
+    if(status != ret::A_OK)
+    {
+        std::cout<<"arb FAILED : " << status << std::endl;
+    }
+
+    std::cout<<"initialization success"<<std::endl;
 
     return status;
 }
@@ -127,17 +139,22 @@ int ShutdownLibAttic()
         std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
     }
 
+    status = g_Arb.Shutdown();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
+
+    }
+
     return status;
 }
 
 int EnterUserNameAndPass(const char* szUser, const char* szPass)
 {
 
-    while(!g_pCredManager->TryLock()) { sleep(0); }
 
     g_pCredManager->EnterUserNameAndPassword(szUser, szPass);
 
-    g_pCredManager->Unlock();
 }
 
 int InitializeFileManager()
@@ -381,27 +398,23 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     std::cout<< " RESPONSE : " << response << std::endl;
 
-    while(!g_pCredManager->TryLock()) { sleep(0); }
     // deserialize auth token
     g_pCredManager->DeserializeIntoAccessToken(response);
     g_pCredManager->WriteOutAccessToken();
-    g_pCredManager->Unlock();
 
     return ret::A_OK;
 }
 
 int LoadAccessToken()
 {
-    while(!g_pCredManager->TryLock()) { sleep(0); }
     int status = g_pCredManager->LoadAccessToken();
 
     if(status == ret::A_OK)
     {
         AccessToken at;
-        at = g_pCredManager->GetAccessTokenCopy();
+        g_pCredManager->GetAccessTokenCopy(at);
     }
-    g_pCredManager->Unlock();
-
+    
     return status; 
 }
 
@@ -439,9 +452,7 @@ int LoadAppFromFile()
 int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
     AccessToken at;
-    while(!g_pCredManager->TryLock()) { sleep(0); }
-    at = g_pCredManager->GetAccessTokenCopy();
-    g_pCredManager->Unlock();
+    g_pCredManager->GetAccessTokenCopy(at);
 
     std::cout << " ACCESS TOKEN >> " << at.GetAccessToken() << std::endl;
     PushTask* t = new PushTask( g_pApp, 
@@ -463,9 +474,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
     AccessToken at;
-    while(!g_pCredManager->TryLock()) { sleep(0); }
-    at = g_pCredManager->GetAccessTokenCopy();
-    g_pCredManager->Unlock();
+    g_pCredManager->GetAccessTokenCopy(at);
 
     PullTask* t = new PullTask( g_pApp, 
                                 g_pFileManager, 
@@ -488,9 +497,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 {
     AccessToken at;
-    while(!g_pCredManager->TryLock()) { sleep(0); }
-    at = g_pCredManager->GetAccessTokenCopy();
-    g_pCredManager->Unlock();
+    g_pCredManager->GetAccessTokenCopy(at);
 
     DeleteTask* t = new DeleteTask( g_pApp, 
                                     g_pFileManager, 
@@ -511,9 +518,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 int SyncAtticMetaData( void (*callback)(int, void*) )
 {
     AccessToken at;
-    while(!g_pCredManager->TryLock()) { sleep(0); }
-    at = g_pCredManager->GetAccessTokenCopy();
-    g_pCredManager->Unlock();
+    g_pCredManager->GetAccessTokenCopy(at);
 
     SyncManifestTask* t = new SyncManifestTask( g_pApp, 
                                                 g_pFileManager, 
@@ -534,9 +539,7 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
 int SyncAtticPostsMetaData(void (*callback)(int, void*))
 {
     AccessToken at;
-    while(!g_pCredManager->TryLock()) { sleep(0); }
-    at = g_pCredManager->GetAccessTokenCopy();
-    g_pCredManager->Unlock();
+    g_pCredManager->GetAccessTokenCopy(at);
 
     SyncPostsTask* t = new SyncPostsTask( g_pApp, 
                                           g_pFileManager, 

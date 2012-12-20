@@ -6,14 +6,13 @@
 #include "pulltask.h"
 
 
-
 TaskArbiter::TaskArbiter()
 {
     std::cout<<"here"<<std::endl;
     m_pTaskQueue = NULL;
     m_pTaskQueue = new TaskQueue();
 
-    m_pPool = new ThreadPool(m_pTaskQueue, 2);
+    m_pPool = new ThreadPool();
 }
 
 TaskArbiter::~TaskArbiter()
@@ -29,7 +28,26 @@ TaskArbiter::~TaskArbiter()
         delete m_pPool;
         m_pPool = NULL;
     }
+}
 
+int TaskArbiter::Initialize(unsigned int poolSize)
+{
+    if(m_pPool)
+    {
+        m_pPool->Initialize();
+        m_pPool->SetTaskQueue(m_pTaskQueue);
+        m_pPool->ExtendPool(poolSize);
+    }
+}
+
+int TaskArbiter::Shutdown()
+{
+    if(m_pPool)
+    {
+        m_pPool->Shutdown();
+    }
+
+    return ret::A_OK;
 }
 
 // Spin off detached thread, (not explicitly detached,
@@ -60,11 +78,11 @@ void TaskArbiter::SpinOffTask(Task* pTask)
 
     ThreadData* pData = new ThreadData();
     pData->pTq = m_pTaskQueue;
-
     */
-    while(!m_pTaskQueue->TryLock()) { sleep(0); }
+
+    //while(!m_pTaskQueue->TryLock()) { sleep(0); }
     m_pTaskQueue->PushBack(pTask);
-    m_pTaskQueue->Unlock();
+    //m_pTaskQueue->Unlock();
 
 }
 

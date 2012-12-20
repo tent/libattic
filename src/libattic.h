@@ -21,7 +21,8 @@ int StartupAppInstance( const char* szAppName,
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
-                  const char* szEntityURL);
+                  const char* szEntityURL,
+                  unsigned int threadCount = 2);
 
 int ShutdownLibAttic();
 

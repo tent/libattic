@@ -64,7 +64,7 @@ void SyncManifestTask::RunTask()
         // Pull Metadata Post
         SearchForManifestPost(m_ManifestPost);
 
-        while(!GetFileManager()->TryLock()) { sleep(0); }
+        while(GetFileManager()->TryLock()) { sleep(0); }
         unsigned int localversion = GetFileManager()->GetManifestVersion();
         GetFileManager()->Unlock();
         unsigned int postversion = m_ManifestPost.GetVersion();
@@ -464,7 +464,7 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
     FileInfo* fi = NULL;
 
     {
-        while(!GetFileManager()->TryLock()) { sleep(0); }
+        while(GetFileManager()->TryLock()) { sleep(0); }
         fi = GetFileManager()->CreateFileInfo( cnst::g_szManifest,
                                                path,
                                                outPath,
@@ -488,11 +488,8 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 
 void SyncManifestTask::GetMasterKeyFromCredentials(MasterKey& mk, std::string& outpath)
 {
-    while(!GetCredentialsManager()->TryLock()) { sleep(0); }
     // Construct Path
-    GetCredentialsManager()->ConstructManifestPath(outpath);
+    GetCredentialsManager()->GetManifestPath(outpath);
     // Get Master Key
-    mk = GetCredentialsManager()->GetMasterKeyCopy();
-
-    GetCredentialsManager()->Unlock();
+    GetCredentialsManager()->GetMasterKeyCopy(mk);
 }

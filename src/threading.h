@@ -3,7 +3,7 @@
 #define THREADING_H_
 #pragma once
 
-#include <deque>
+#include <vector>
 #include <pthread.h>
 
 #include "mutexclass.h"
@@ -48,7 +48,7 @@ public:
     pthread_t GetThreadHandle()     { return m_Handle; }   
 
     void SetTaskQueue(TaskQueue* pTq) { m_pTq = pTq; }
-    void SetThreadHandle(pthread_t handle) { m_Handle; }
+    void SetThreadHandle(pthread_t handle) { m_Handle = handle; }
 
 private:
     ThreadState m_State;                                                
@@ -59,14 +59,19 @@ private:
 class ThreadPool                                                                                 
 {                                                                                                
 public:                                                                                          
-    ThreadPool(TaskQueue* pQueue, unsigned int nCount = 1);
+    ThreadPool();
     ~ThreadPool();
 
-    void ExtendPool(unsigned int stride);                                                        
-    void AbridgePool(unsigned int stride);                                                       
+    int Initialize();
+    int Shutdown();
+
+    void SetTaskQueue(TaskQueue* pQueue);
+    int ExtendPool(unsigned int stride);                                                        
+    int AbridgePool(unsigned int stride);                                                       
 
 private:                                                                                         
-    std::deque<ThreadData*>  m_ThreadData;                                                       
+    std::vector<pthread_t>    m_ThreadHandles;
+    std::vector<ThreadData*>  m_ThreadData;                                                       
     TaskQueue* m_TaskQueue;
     unsigned int m_ThreadCount;                                                                  
 };                                                                                               

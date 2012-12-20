@@ -14,6 +14,8 @@
 class CredentialsManager : public MutexClass
 {
 
+    void ConstructAccessTokenPath(std::string& out);
+    void ConstructManifestPath(std::string& out);
 public:
     CredentialsManager();
     ~CredentialsManager();
@@ -29,15 +31,15 @@ public:
     // MasterKey
     int EnterUserNameAndPassword(const std::string& user, const std::string& pass);
 
-    void ConstructAccessTokenPath(std::string& out);
-    void ConstructManifestPath(std::string& out);
 
-    MasterKey GetMasterKeyCopy() const      { return m_MasterKey; }
-    AccessToken GetAccessTokenCopy() const  { return m_AccessToken; }
+    void GetManifestPath(std::string& out);
+    void GetAccessTokenPath(std::string& out);
+    void GetMasterKeyCopy(MasterKey& key);
+    void GetAccessTokenCopy(AccessToken& tk);
 
-    void SetConfigDirectory(const std::string& dir)     { m_ConfigDirectory = dir; }
-    void SetAccessToken(const AccessToken& at)          { m_AccessToken = at; }
-    void SetMasterKey(const MasterKey& mk)              { m_MasterKey = mk; }
+    void SetConfigDirectory(const std::string& dir);
+    void SetAccessToken(const AccessToken& at);     
+    void SetMasterKey(const MasterKey& mk);     
 
 private:
     Crypto          m_Crypto;

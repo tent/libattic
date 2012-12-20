@@ -18,6 +18,9 @@ public:
     TaskArbiter();
     ~TaskArbiter();
 
+    int Initialize(unsigned int poolSize);
+    int Shutdown();
+
     void SpinOffTask(Task* pTask); // Spin off detached thread
 
 private:
