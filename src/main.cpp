@@ -27,6 +27,8 @@
 
 #include "url.h"
 
+#include "threading.h"
+
 /*
 TEST(INIT, TEST)
 {

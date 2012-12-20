@@ -1,14 +1,12 @@
 #include "taskarbiter.h"
 
-#include <iostream>
-
 #include "task.h"
+#include "taskqueue.h"
 #include "pulltask.h"
-
+#include "threading.h"
 
 TaskArbiter::TaskArbiter()
 {
-    std::cout<<"here"<<std::endl;
     m_pTaskQueue = NULL;
     m_pTaskQueue = new TaskQueue();
 
@@ -55,35 +53,7 @@ int TaskArbiter::Shutdown()
 // its probably joinable)
 void TaskArbiter::SpinOffTask(Task* pTask)
 {
-    /*
-    std::cout<<"Spinning off task..."<<std::endl;
-    if(!pTask)
-        return;
-
-    pthread_t thread;
-    int rc = pthread_create(&thread, NULL, ThreadFunc, (void*)pTask);
-
-    if(rc)
-    {
-        std::cout<<"ERROR SPINNING OFF A TASK : " << rc << std::endl;
-        return;
-    }
-
-    std::cout<< " Created thread : " << thread << std::endl;
-
-    g_ThreadCount++;
-    std::cout<<" G THREAD COUNT : " << g_ThreadCount << std::endl;
-    m_ThreadHandles.push_back(thread);
-
-
-    ThreadData* pData = new ThreadData();
-    pData->pTq = m_pTaskQueue;
-    */
-
-    //while(!m_pTaskQueue->TryLock()) { sleep(0); }
     m_pTaskQueue->PushBack(pTask);
-    //m_pTaskQueue->Unlock();
-
 }
 
 

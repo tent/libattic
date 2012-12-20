@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "mutexclass.h"
 #include "taskarbiter.h"
 #include "masterkey.h"
 #include "accesstoken.h"

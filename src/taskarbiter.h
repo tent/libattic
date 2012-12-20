@@ -5,12 +5,9 @@
 
 #include <pthread.h>
 
-#include "mutexclass.h"
-#include "threading.h"
-#include "taskqueue.h"
-
 class Task;
 class TaskQueue;
+class ThreadPool;
 
 class TaskArbiter
 {

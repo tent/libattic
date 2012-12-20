@@ -39,32 +39,12 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)
     return status;
 }
 
-void CredentialsManager::ConstructAccessTokenPath(std::string& out)
-{
-    // do not lock, used internally
-    // Construct path
-    out = m_ConfigDirectory;
-    utils::CheckUrlAndAppendTrailingSlash(out);      
-    out.append(cnst::g_szAuthToken);                       
-
-}
-
-void CredentialsManager::ConstructManifestPath(std::string& out)
-{
-    // do not lock, used internally
-    // Construct path
-    out = m_ConfigDirectory;
-    utils::CheckUrlAndAppendTrailingSlash(out);      
-    out.append(cnst::g_szManifest);     
-}
-
 void CredentialsManager::GetManifestPath(std::string& out)
 {
     while(TryLock()) { sleep(0);}
     ConstructManifestPath(out);
     Unlock();
 }
-
 
 void CredentialsManager::GetAccessTokenPath(std::string& out)
 {
@@ -97,7 +77,6 @@ int CredentialsManager::LoadAccessToken()
 
     Unlock();
 
-    std::cout<<"-0--"<<std::endl;
     return status;               
 }
 
@@ -147,6 +126,25 @@ void CredentialsManager::GetAccessTokenCopy(AccessToken& tk)
     while(TryLock()) { sleep(0);}
     tk = m_AccessToken; 
     Unlock();
+}
+
+void CredentialsManager::ConstructAccessTokenPath(std::string& out)
+{
+    // do not lock, used internally
+    // Construct path
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);      
+    out.append(cnst::g_szAuthToken);                       
+
+}
+
+void CredentialsManager::ConstructManifestPath(std::string& out)
+{
+    // do not lock, used internally
+    // Construct path
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);      
+    out.append(cnst::g_szManifest);     
 }
 
 

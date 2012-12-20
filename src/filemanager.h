@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 
+#include "mutexclass.h"
 #include "manifest.h"
 #include "chunker.h"
 #include "fileinfo.h"
