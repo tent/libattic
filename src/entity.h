@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include "mutexclass.h"
 
 class Entity
 {
@@ -22,13 +23,14 @@ private:
     std::string     m_ApiRoot;
 };
 
-
-
-class EntityManager
+class EntityManager : public MutexClass
 {
 public:
     EntityManager();
     ~EntityManager();
+
+    int Initialize();
+    int Shutdown();
 
     void Discover(const std::string& entityurl);
 

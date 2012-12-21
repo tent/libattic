@@ -3,15 +3,17 @@
 #include <fstream>
 #include <string>
 
-#include "errorcodes.h"
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
+#include "filemanager.h"
+#include "entity.h"
+
+#include "utils.h"
+#include "errorcodes.h"
 #include "tentapp.h"
 #include "jsonserializable.h"
 #include "urlparams.h"
 #include "post.h"
-#include "filemanager.h"
-#include "utils.h"
 
 #include "taskarbiter.h"
 #include "pulltask.h"
@@ -37,9 +39,10 @@
 //
 // TODO :: Consider moving TentApp into Credentials Manager
 
-static TentApp* g_pApp = 0;
-static FileManager* g_pFileManager = 0;
-static CredentialsManager* g_pCredManager = 0;
+static TentApp*             g_pApp = 0;
+static FileManager*         g_pFileManager = 0;
+static CredentialsManager*  g_pCredManager = 0;
+static EntityManager*       g_pEntityManager = 0;
 
 static TaskArbiter g_Arb;
 
@@ -59,9 +62,13 @@ static ret::eCode DeletePost(const std::string& szPostID);
 
 int InitializeFileManager();
 int InitializeCredentialsManager();
+int InitializeEntityManager();
+
 int ShutdownFileManager();
 int ShutdownCredentialsManager();
 int ShutdownAppInstance();
+int ShutdownEntityManager();
+
 int SetWorkingDirectory(const char* szDir);
 int SetConfigDirectory(const char* szDir);
 int SetTempDirectory(const char* szDir);
@@ -101,12 +108,15 @@ int InitLibAttic( const char* szWorkingDirectory,
             std::cout<<"cm FAILED : " << status << std::endl;
     }
 
+    status = InitializeEntityManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"em FAILED : " << status << std::endl;
+    }
+
     // Non-essential
     LoadAppFromFile();
-    std::cout<<"yip"<<std::endl;
     LoadAccessToken();
-
-    std::cout<<"yup"<<std::endl;
 
     status = g_Arb.Initialize(threadCount);
     if(status != ret::A_OK)
@@ -137,6 +147,12 @@ int ShutdownLibAttic()
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
+    }
+
+    status = ShutdownEntityManager();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
     }
 
     status = g_Arb.Shutdown();
@@ -189,6 +205,18 @@ int InitializeCredentialsManager()
     return status;
 }
 
+int InitializeEntityManager()
+{
+    int status = ret::A_OK;
+    if(!g_pEntityManager)
+    {
+        g_pEntityManager = new EntityManager();
+        status = g_pEntityManager->Initialize();
+    }
+
+    return status;
+}
+
 int ShutdownFileManager()
 {
     // Blind shutdown
@@ -210,8 +238,25 @@ int ShutdownCredentialsManager()
         while(g_pCredManager->TryLock()) { sleep(0); }
         status = g_pCredManager->Shutdown();
         g_pCredManager->Unlock();
+
         delete g_pCredManager;
         g_pCredManager = NULL;
+    }
+
+    return status;
+}
+
+int ShutdownEntityManager()
+{
+    int status = ret::A_OK;
+    if(g_pEntityManager)
+    {
+        while(g_pEntityManager->TryLock()) { sleep(0); }
+        status = g_pEntityManager->Shutdown();
+        g_pEntityManager->Unlock();
+
+        delete g_pEntityManager;
+        g_pEntityManager = NULL;
     }
 
     return status;
