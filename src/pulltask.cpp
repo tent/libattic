@@ -107,7 +107,6 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Deserialize response into post                                                            
     Post resp;                                                                                   
-
     JsonSerializer::DeserializeObject(&resp, response);                                          
 
     std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;               

@@ -33,14 +33,14 @@ public:
     int EnterUserNameAndPassword(const std::string& user, const std::string& pass);
 
 
-    void GetManifestPath(std::string& out);
-    void GetAccessTokenPath(std::string& out);
-    void GetMasterKeyCopy(MasterKey& key);
-    void GetAccessTokenCopy(AccessToken& tk);
+    void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
+    void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
+    void GetMasterKeyCopy(MasterKey& key)       { key = m_MasterKey; }
+    void GetAccessTokenCopy(AccessToken& tk)    { tk = m_AccessToken; }
 
-    void SetConfigDirectory(const std::string& dir);
-    void SetAccessToken(const AccessToken& at);     
-    void SetMasterKey(const MasterKey& mk);     
+    void SetConfigDirectory(const std::string& dir) { m_ConfigDirectory = dir; }
+    void SetAccessToken(const AccessToken& at)      { m_AccessToken = at; }
+    void SetMasterKey(const MasterKey& mk)          { m_MasterKey = mk; }
 
 private:
     Crypto          m_Crypto;

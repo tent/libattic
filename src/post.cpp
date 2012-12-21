@@ -127,6 +127,7 @@ void Post::Deserialize(Json::Value& root)
     JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
     
 
+    std::cout<<"-----------------"<<std::endl;
     // Deserialize this into an array of objects
     Json::Value atch(Json::arrayValue);
     atch = root["attachments"];

@@ -92,6 +92,7 @@ bool FileManager::ReadInEntry(std::string &e)
 
     return true;
 }
+
 FileInfo* FileManager::CreateFileInfo( const std::string &filename,
                                        const std::string &filepath,
                                        const std::string &chunkName,
