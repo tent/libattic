@@ -70,14 +70,6 @@ public:
                           const std::string &mackey, 
                           bool verbose = false);
 
-    void HttpGetAttachment( const std::string &url, 
-                            const UrlParams* pParams,
-                            std::string &out, 
-                            const std::string &macalgorithm, 
-                            const std::string &macid, 
-                            const std::string &mackey, 
-                            bool verbose = false);
-    
     void HttpGetAttachmentWriteToFile( const std::string &url, 
                                        const UrlParams* pParams,
                                        const std::string &filepath, 
