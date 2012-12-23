@@ -71,6 +71,7 @@ void Manifest::Shutdown()
 
 void Manifest::OpenSqliteDb()
 {
+    std::cout<<" attempting to open : " << m_Filepath << std::endl;
     int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
 
     if( rc )

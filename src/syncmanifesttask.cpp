@@ -116,7 +116,7 @@ int SyncManifestTask::DeleteManifestPost(const std::string& postid)
     postpath += postid;                                  
 
     AccessToken* at = GetAccessToken();                                                              
-    std::string resp;
+    Response resp;
     ConnectionManager::GetInstance()->HttpDelete( postpath,
                                                   NULL,                            
                                                   resp,                        
@@ -125,7 +125,8 @@ int SyncManifestTask::DeleteManifestPost(const std::string& postid)
                                                   at->GetMacKey(),                 
                                                   true);                           
 
-    std::cout<<" COUT : " << resp << std::endl;
+    std::cout<<" CODE : " << resp.code << std::endl;
+    std::cout<<" COUT : " << resp.body << std::endl;
 
     return 0;
  
@@ -217,9 +218,11 @@ int SyncManifestTask::GetFileAndWriteOut(const std::string& url, const std::stri
     if(!GetTentApp())                                                                                
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                                 
 
+    Response response;
     AccessToken* at = GetAccessToken();                                                              
     ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                             
                                                                     NULL,                            
+                                                                    response,
                                                                     filepath,                        
                                                                     at->GetMacAlgorithm(),           
                                                                     at->GetAccessToken(),            
@@ -247,7 +250,7 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
 
     AccessToken* at = GetAccessToken();                                                      
 
-    std::string response;                                                                    
+    Response response;                                                                    
     ConnectionManager::GetInstance()->HttpGetWithAuth( url,                                  
                                                        &params,                              
                                                        response,                             
@@ -256,12 +259,13 @@ int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
                                                        at->GetMacKey(),                      
                                                        true);                                
 
-    std::cout<< " RESPONSE : " << response << std::endl;                                     
+    std::cout<< " CODE : " << response.code <<std::endl;
+    std::cout<< " RESPONSE : " << response.body << std::endl;                                     
     Json::Value root;                                                                            
     Json::Reader reader;                                                                         
 
     std::cout<<"HERE " << std::endl;
-    if(!reader.parse(response, root))                                                            
+    if(!reader.parse(response.body, root))                                                            
         return ret::A_FAIL_JSON_PARSE; // TODO :: Create failed to parse message
 
     std::cout<<"HERE " << std::endl;
@@ -402,7 +406,7 @@ int SyncManifestTask::PostManifest(const std::string& url, const std::string& fi
     std::string postBuffer;
     JsonSerializer::SerializeObject(&m_ManifestPost, postBuffer);
 
-    std::string response;
+    Response response;
     AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                          NULL,
@@ -414,7 +418,8 @@ int SyncManifestTask::PostManifest(const std::string& url, const std::string& fi
                                                          at->GetMacKey(), 
                                                          true);
 
-    std::cout<<"RESPONSE : " << response << std::endl;
+    std::cout<<"CODE : " << response.code << std::endl;
+    std::cout<<"RESPONSE : " << response.body << std::endl;
 
     return 0;
 }
@@ -429,7 +434,7 @@ int SyncManifestTask::PutManifest(const std::string& url, const std::string& fil
     std::string postBuffer;
     JsonSerializer::SerializeObject(&m_ManifestPost, postBuffer);
 
-    std::string response;
+    Response response;
     AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                         NULL,
@@ -441,7 +446,8 @@ int SyncManifestTask::PutManifest(const std::string& url, const std::string& fil
                                                         at->GetMacKey(), 
                                                         true);
 
-    std::cout<<"RESPONSE : " << response << std::endl;
+    std::cout<<"CODE : " << response.code << std::endl;
+    std::cout<<"RESPONSE : " << response.body << std::endl;
 
 
     return 0;

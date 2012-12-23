@@ -30,6 +30,19 @@
 #include "threading.h"
 
 /*
+TEST(DISCOVER, TEST)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    TestQuery();
+
+    ShutdownLibAttic();
+}
+
+/*
 TEST(INIT, TEST)
 {
      InitLibAttic( "./data",
@@ -318,7 +331,6 @@ TEST(PULL, AFILE)
 
 /*
  */
-
 
 void FOOFUN(int a, void* b)
 {

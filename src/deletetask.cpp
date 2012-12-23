@@ -99,8 +99,8 @@ int DeleteTask::DeletePost(const std::string& szPostID)
     std::cout<< " DELETE URL : " << posturl << std::endl;
 
     AccessToken* at = GetAccessToken();
-    std::string response;
 
+    Response response;
     ConnectionManager::GetInstance()->HttpDelete( posturl,
                                                   NULL,
                                                   response,
@@ -109,7 +109,8 @@ int DeleteTask::DeletePost(const std::string& szPostID)
                                                   at->GetMacKey(),
                                                   true);
 
-    std::cout<<"RESPONSE : " << response << std::endl;
+    std::cout<<"Code : " << response.code << std::endl;
+    std::cout<<"RESPONSE : " << response.body << std::endl;
 
     return ret::A_OK;
 }   

@@ -76,7 +76,9 @@ int SetTempDirectory(const char* szDir);
 
 int TestQuery()
 {
-    std::cout<< " VERsIoN : " << g_pFileManager->GetManifestVersion() << std::endl;
+    EntityManager em;
+    em.Discover("https://manuel.tent.is/profile");
+
 }
 
 int InitLibAttic( const char* szWorkingDirectory, 
@@ -335,17 +337,19 @@ int RegisterApp(const char* szPostPath)
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
     std::cout << " JSON : " << serialized << std::endl;
-    std::string response;
+    
+    Response response;
 
     pCm->HttpPost( path, 
                    NULL,
                    serialized,
                    response);
 
-    std::cout<< " RESPONSE " << response << std::endl;
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " RESPONSE " << response.body << std::endl;
 
     // Deserialize new data into app
-    if(!JsonSerializer::DeserializeObject(g_pApp, response))
+    if(!JsonSerializer::DeserializeObject(g_pApp, response.body))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
 
     return ret::A_OK;
@@ -432,7 +436,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     if(!JsonSerializer::SerializeObject(&rcode, serialized))
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
-    std::string response;
+    Response response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
     pCm->HttpPostWithAuth( path, 
                            NULL,
@@ -443,11 +447,12 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
                            g_pApp->GetMacKey(), 
                            false);
 
-    std::cout<< " RESPONSE : " << response << std::endl;
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " RESPONSE : " << response.body << std::endl;
 
     while(g_pCredManager->TryLock()) { sleep(0); }
     // deserialize auth token
-    g_pCredManager->DeserializeIntoAccessToken(response);
+    g_pCredManager->DeserializeIntoAccessToken(response.body);
     g_pCredManager->WriteOutAccessToken();
     g_pCredManager->Unlock();
 

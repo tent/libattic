@@ -93,7 +93,7 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Get Post                                                                                  
     AccessToken* at = GetAccessToken();
-    std::string response;                                                                        
+    Response response;                                                                        
     ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,                                
                                                         NULL,                                    
                                                         response,                                
@@ -103,11 +103,12 @@ int PullTask::PullFile(const std::string& filepath)
                                                         true);                                   
 
 
-    std::cout << "RESPONSE : " << response << std::endl;                                         
+    std::cout << "CODE : " << response.code << std::endl;
+    std::cout << "RESPONSE : " << response.body << std::endl;                                         
 
     // Deserialize response into post                                                            
     Post resp;                                                                                   
-    JsonSerializer::DeserializeObject(&resp, response);                                          
+    JsonSerializer::DeserializeObject(&resp, response.body);                                          
 
     std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;               
     // Construct list of attachments                                                             
@@ -155,9 +156,11 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
     if(!GetTentApp())                                                                              
         return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                         
 
+    Response response;
     AccessToken* at = GetAccessToken();
     ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                     
                                                                     NULL,                    
+                                                                    response,
                                                                     filepath,                
                                                                     at->GetMacAlgorithm(),  
                                                                     at->GetAccessToken(),   

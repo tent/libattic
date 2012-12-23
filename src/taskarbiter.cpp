@@ -36,6 +36,8 @@ int TaskArbiter::Initialize(unsigned int poolSize)
         m_pPool->SetTaskQueue(m_pTaskQueue);
         m_pPool->ExtendPool(poolSize);
     }
+
+    return ret::A_OK;
 }
 
 int TaskArbiter::Shutdown()

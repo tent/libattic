@@ -80,8 +80,8 @@ int SyncPostsTask::SyncAtticPosts()
     params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticPostType));
     params.AddValue(std::string("limit"), std::string("200"));
 
+    Response response;
     AccessToken* at = GetAccessToken();
-    std::string response;
     ConnectionManager::GetInstance()->HttpGetWithAuth( url, 
                                                        &params,
                                                        response, 
@@ -90,12 +90,13 @@ int SyncPostsTask::SyncAtticPosts()
                                                        at->GetMacKey(), 
                                                        true);
 
-    std::cout<< " RESPONSE : " << response << std::endl;
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " RESPONSE : " << response.body << std::endl;
 
     Json::Value root;
     Json::Reader reader;
 
-    if(!reader.parse(response, root))
+    if(!reader.parse(response.body, root))
         return ret::A_FAIL_JSON_PARSE;
 
 
@@ -121,8 +122,6 @@ int SyncPostsTask::SyncAtticPosts()
         // if proper post type
         if(posttype.compare(cnst::g_szAtticPostType) == 0)
         {
-
-
             while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
 
             //FileInfo* fi = GetFileManager()->CreateFileInfo();
@@ -175,8 +174,8 @@ int SyncPostsTask::GetAtticPostCount()
     UrlParams params;                                                                    
     params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticPostType));          
 
+    Response response;
     AccessToken* at = GetAccessToken();
-    std::string response;                                                                
     ConnectionManager::GetInstance()->HttpGetWithAuth( url,                              
                                                        &params,                          
                                                        response,                         
@@ -185,10 +184,11 @@ int SyncPostsTask::GetAtticPostCount()
                                                        at->GetMacKey(),                 
                                                        true);                            
 
-    std::cout<< "RESPONSE : " << response << std::endl;                                  
+    std::cout<< "CODE : " << response.code << std::endl;
+    std::cout<< "RESPONSE : " << response.body << std::endl;                                  
 
     int count = -1;                                                                      
-    count = atoi(response.c_str());                                                      
+    count = atoi(response.body.c_str());                                                      
 
     return count;                                                                        
 }                                                                                        

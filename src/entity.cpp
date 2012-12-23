@@ -4,6 +4,8 @@
 #include "errorcodes.h"
 #include "connectionmanager.h"
 
+#include <iostream>
+
 EntityManager::EntityManager()
 {
 
@@ -16,8 +18,12 @@ EntityManager::~EntityManager()
 
 void EntityManager::Discover(const std::string& entityurl)
 {
-    std::string response;
-    ConnectionManager::GetInstance()->HttpGet(entityurl, NULL, response);
+    Response response;
+    int code = ConnectionManager::GetInstance()->HttpGet(entityurl, NULL, response);
+
+    std::cout<< " resp : " << response.body << std::endl;
+
+    std::cout<< " code : " << response.code << std::endl;
 
 }
 

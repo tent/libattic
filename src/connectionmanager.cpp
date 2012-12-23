@@ -13,6 +13,7 @@
 #include "url.h"
 #include "urlparams.h"
 #include "utils.h"
+#include "errorcodes.h"
 
 struct WriteOut
 {
@@ -25,7 +26,9 @@ static size_t WriteOutFunc( void *ptr,
                             size_t nmemb, 
                             struct tdata *s);
 
-static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms);
+static int wait_on_socket( curl_socket_t sockfd, 
+                           int for_recv, 
+                           long timeout_ms);
 
 static size_t WriteOutToString( void *ptr, 
                                 size_t size, 
@@ -91,61 +94,72 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
 }
 
 
-void ConnectionManager::HttpDelete( const std::string &url,
-                                    const UrlParams* pParams,
-                                    std::string &responseOut,
-                                    const std::string &macalgorithm, 
-                                    const std::string &macid, 
-                                    const std::string &mackey, 
-                                    bool verbose)
+int ConnectionManager::HttpDelete( const std::string& url,
+                                   const UrlParams* pParams,
+                                   Response& responseOut,
+                                   const std::string& macalgorithm, 
+                                   const std::string& macid, 
+                                   const std::string& mackey, 
+                                   bool verbose)
 {
 
-        CURL* pCurl = curl_easy_init();
-        CURLcode res; 
+    CURL* pCurl = curl_easy_init();
+    CURLcode res; 
 
-        curl_slist *headers = 0; // Init to null, always
+    curl_slist *headers = 0; // Init to null, always
 
-        if(verbose)
-            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
-        std::string urlPath = url;
-        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
-        std::string authheader;
-        BuildAuthHeader( urlPath, 
-                         std::string("DELETE"), 
-                         macid, 
-                         mackey, 
-                         authheader);
-  
-        headers = curl_slist_append(headers, authheader.c_str());
+    std::string authheader;
+    BuildAuthHeader( urlPath, 
+                     std::string("DELETE"), 
+                     macid, 
+                     mackey, 
+                     authheader);
 
-        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
-        curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+    headers = curl_slist_append(headers, authheader.c_str());
 
-        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut);
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
+    curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body);
 
-        res = curl_easy_perform(pCurl);
+    curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
-        if(res != CURLE_OK)
-        {
-            std::cout<<"ERRR"<<std::endl;
-            responseOut.append("ERR");
-            return;
-        }
+    res = curl_easy_perform(pCurl);
 
-        curl_easy_cleanup(pCurl);
+    if(res != CURLE_OK)
+    {
+        return ret::A_FAIL_CURL_PERF;
+    }
 
+    responseOut.code = GetResponseCode(pCurl);
+
+    curl_easy_cleanup(pCurl);
+    return ret::A_OK;
 }
 
-void ConnectionManager::HttpGet( const std::string &url, 
-                                 const UrlParams* pParams,
-                                 std::string &out, 
-                                 bool verbose)
+int ConnectionManager::GetResponseCode(CURL* pCurl)
+{
+    if(!pCurl)
+        return -1;
+
+    long responsecode = 0;
+    curl_easy_getinfo (pCurl, CURLINFO_RESPONSE_CODE, &responsecode);
+
+    return responsecode; 
+}
+
+int ConnectionManager::HttpGet( const std::string &url, 
+                                const UrlParams* pParams,
+                                Response& responseOut, 
+                                bool verbose)
 {
 
     CURL* pCurl = curl_easy_init();
@@ -163,7 +177,7 @@ void ConnectionManager::HttpGet( const std::string &url,
 
     curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &out);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body);
 
     // Write out headers 
     curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
@@ -173,83 +187,83 @@ void ConnectionManager::HttpGet( const std::string &url,
     if(res != CURLE_OK)
     {
         std::cout<<"ERRR"<<std::endl;
-        return;
+        return ret::A_FAIL_CURL_PERF;
     }
 
+    responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
 }
 
-void ConnectionManager::HttpGetWithAuth( const std::string &url, 
-                                         const UrlParams* pParams,
-                                         std::string &out, 
-                                         const std::string &macalgorithm, 
-                                         const std::string &macid, 
-                                         const std::string &mackey, 
-                                         bool verbose)
+int ConnectionManager::HttpGetWithAuth( const std::string& url, 
+                                        const UrlParams* pParams,
+                                        Response& responseOut, 
+                                        const std::string& macalgorithm, 
+                                        const std::string& macid, 
+                                        const std::string& mackey, 
+                                        bool verbose)
 {
 
-        CURL* pCurl = curl_easy_init();
-        CURLcode res; 
+    CURL* pCurl = curl_easy_init();
+    CURLcode res; 
 
-        if(verbose)
-            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
 
-        std::string urlPath = url;
-        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
-        curl_slist *headers = 0; // Init to null, always
-        // TODO :: ABSTRACT HEADERS OUT
-        headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
-        //headers = curl_slist_append(headers, "Accept: binary" );
-        headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
-        //headers = curl_slist_append(headers, "Content-Type: binary");
+    curl_slist *headers = 0; // Init to null, always
+    // TODO :: ABSTRACT HEADERS OUT
+    headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+    //headers = curl_slist_append(headers, "Accept: binary" );
+    headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+    //headers = curl_slist_append(headers, "Content-Type: binary");
 
-        std::string authheader;
-        BuildAuthHeader( urlPath, 
-                         std::string("GET"), 
-                         macid, 
-                         mackey,
-                         authheader);
+    std::string authheader;
+    BuildAuthHeader( urlPath, 
+                     std::string("GET"), 
+                     macid, 
+                     mackey,
+                     authheader);
 
-        headers = curl_slist_append(headers, authheader.c_str());
+    headers = curl_slist_append(headers, authheader.c_str());
 
-        std::cout << " GETTING URL " << url << std::endl;
-        std::cout << " URLPATH : " <<urlPath << std::endl;
-        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-        //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
-        
-        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &out);
+    std::cout << " GETTING URL " << url << std::endl;
+    std::cout << " URLPATH : " <<urlPath << std::endl;
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
+    
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body);
 
-        // Write out headers 
-        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
-
-
-        res = curl_easy_perform(pCurl);
+    // Write out headers 
+    curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
 
 
-        std::cout<< "OUT SIZE : " << out.size() << std::endl;
+    res = curl_easy_perform(pCurl);
 
-        if(res != CURLE_OK)
-        {
-            std::cout<<"ERRR"<<std::endl;
-            return;
-        }
+    if(res != CURLE_OK)
+    {
+        return ret::A_FAIL_CURL_PERF;
+    }
 
-
-
-        curl_slist_free_all (headers);
-
+    responseOut.code = GetResponseCode(pCurl);
+    curl_slist_free_all (headers);
     curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
 }
 
-void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
-                                                      const UrlParams* pParams,
-                                                      const std::string &filepath, 
-                                                      const std::string &macalgorithm, 
-                                                      const std::string &macid, 
-                                                      const std::string &mackey, 
-                                                      bool verbose)
+int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
+                                                     const UrlParams* pParams,
+                                                     Response& responseOut,
+                                                     const std::string &filepath, 
+                                                     const std::string &macalgorithm, 
+                                                     const std::string &macid, 
+                                                     const std::string &mackey, 
+                                                     bool verbose)
 {
     CURL* pCurl = curl_easy_init();
     CURLcode res; 
@@ -289,24 +303,22 @@ void ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
     if(res != CURLE_OK)
     {
         std::cout<<"ERRR"<<std::endl;
-        return;
+        return ret::A_FAIL_CURL_PERF;
     }
-
-
     fclose(fp);
 
+    responseOut.code = GetResponseCode(pCurl);
     curl_slist_free_all (headers);
     curl_easy_cleanup(pCurl);
 
+    return ret::A_OK;
 }
 
-
-// TODO :: change writeout func to use string
-void ConnectionManager::HttpPost( const std::string &url, 
-                                  const UrlParams* pParams,
-                                  const std::string &body, 
-                                  std::string &responseOut, 
-                                  bool verbose)
+int ConnectionManager::HttpPost( const std::string& url, 
+                                 const UrlParams* pParams,
+                                 const std::string& body, 
+                                 Response& responseOut, 
+                                 bool verbose)
 {
 
     CURL* pCurl = curl_easy_init();
@@ -343,27 +355,31 @@ void ConnectionManager::HttpPost( const std::string &url,
 
     // Set read response func and data
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
-    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)
     {
         std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        return ret::A_FAIL_CURL_PERF;
     }
-
+ 
+    responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
 }
 
-void ConnectionManager::HttpMultipartPut( const std::string &url, 
-                                          const UrlParams* pParams,
-                                          const std::string &body, 
-                                          std::list<std::string>* filepaths, 
-                                          std::string &responseOut, 
-                                          const std::string &macalgorithm, 
-                                          const std::string &macid, 
-                                          const std::string &mackey, 
-                                          bool verbose)
+int ConnectionManager::HttpMultipartPut( const std::string &url, 
+                                         const UrlParams* pParams,
+                                         const std::string &body, 
+                                         std::list<std::string>* filepaths, 
+                                         Response& responseOut, 
+                                         const std::string &macalgorithm, 
+                                         const std::string &macid, 
+                                         const std::string &mackey, 
+                                         bool verbose)
 {
     // Send Multiple files as attachments
     CURL* pCurl = 0;
@@ -469,7 +485,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
         curl_multi_add_handle(multi_handle, pCurl);
 
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
         curl_multi_perform(multi_handle, &still_running);
 
@@ -534,6 +550,7 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
         } while (still_running);
 */
 
+        responseOut.code = GetResponseCode(pCurl);
         curl_multi_cleanup(multi_handle);
 
         /* then cleanup the formpost chain */ 
@@ -547,520 +564,18 @@ void ConnectionManager::HttpMultipartPut( const std::string &url,
 
     curl_easy_cleanup(pCurl);
 
+    return ret::A_OK;
 }
 
-void ConnectionManager::HttpMultipartPut( const std::string &url, 
+int ConnectionManager::HttpMultipartPost( const std::string &url, 
                                           const UrlParams* pParams,
                                           const std::string &body, 
-                                          const std::string &filepath, 
-                                          const std::string &filename,
-                                          std::string &responseOut, 
+                                          std::list<std::string>* filepaths, 
+                                          Response& responseOut, 
                                           const std::string &macalgorithm, 
                                           const std::string &macid, 
                                           const std::string &mackey, 
-                                          const char* pData,
-                                          unsigned int uSize,
-                                          bool verbose )
-{
-    
-            CURL* pCurl;
-            CURLM *multi_handle;
-            
-            int still_running = 0;
-
-            curl_httppost *formpost=NULL;
-            curl_httppost *lastptr=NULL;
-            curl_slist *headerlist=NULL;
-            static const char buf[] = "Expect:";
-            
-            curl_slist *partlist = 0;
-            partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
-            partlist = curl_slist_append(partlist, "Content-Length: 206");
-            partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
-            partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
-
-            curl_formadd( &formpost,
-                          &lastptr,
-                          CURLFORM_COPYNAME, "jsonbody",
-                          CURLFORM_COPYCONTENTS, body.c_str(),
-                          CURLFORM_CONTENTHEADER, partlist,
-                          CURLFORM_END);
-
-            // Read in file 
-            curl_slist *attachlist = 0;
-            //std::string testBuf("this is my testbuffer");
-
-            std::string cd;
-            cd.append("Content-Disposition: form-data; name=\"attach[0]\"; filename=\"");
-            cd += filename;
-            cd.append("\"");
-
-            attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
-            attachlist = curl_slist_append(attachlist, cd.c_str());
-
-            char szBuffer[256];
-            memset(szBuffer, '\0', sizeof(char)*256);                                              
-            snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
-
-            std::string cl("Content-Length: ");
-            cl.append(szBuffer);
-
-            if(!pData)
-            {
-                std::cout<<"INVALID DATA PTR "<< std::endl;
-                return;
-            }
-            
-            attachlist = curl_slist_append(attachlist,  cl.c_str());
-            attachlist = curl_slist_append(attachlist, "Content-Type: binary");
-
-            curl_formadd( &formpost,
-                          &lastptr,
-                          CURLFORM_COPYNAME, "attatchment",
-                          //CURLFORM_BUFFER, "thisthing",
-                          CURLFORM_PTRCONTENTS, pData,
-                          CURLFORM_CONTENTSLENGTH, uSize,
-                          //CURLFORM_BUFFERLENGTH, uSize,
-                          //CURLFORM_BUFFERPTR, pData, 
-                          CURLFORM_CONTENTHEADER, attachlist,
-                          CURLFORM_END);
-
-            pCurl = curl_easy_init(); 
-            multi_handle = curl_multi_init();
-           
-            /* initalize custom header list (stating that Expect: 100-continue is not
-            *      wanted */ 
-            headerlist = curl_slist_append(headerlist, buf);
-
-            if(pCurl && multi_handle)
-            {
-                if(verbose)
-                    curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
-
-                std::string urlPath = url;
-                EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
-
-                struct curl_slist *headers=NULL;
-                 
-                headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
-                headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
-                //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
-
-                std::string authheader;
-                BuildAuthHeader( urlPath, 
-                                 std::string("PUT"), 
-                                 macid, 
-                                 mackey, 
-                                 authheader);
-
-                headerlist = curl_slist_append(headerlist, authheader.c_str());
-
-                /* what URL that receives this POST */ 
-                curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-                curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
-                curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
-
-                //curl_easy_setopt(pCurl, CURLOPT_PUT, 1L);
-
-                curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
-
-                curl_multi_add_handle(multi_handle, pCurl);
-
-                // Set read response func and data
-                //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-                //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
-            
-                std::cout<<"here"<<std::endl;
-                curl_multi_perform(multi_handle, &still_running);
-
-                std::cout<<"here"<<std::endl;
-
-                do {
-                    struct timeval timeout;
-                    int rc; /* select() return code */ 
-                 
-                    fd_set fdread;
-                    fd_set fdwrite;
-                    fd_set fdexcep;
-                    int maxfd = -1;
-                                          
-                    long curl_timeo = -1;
-                                                 
-                    FD_ZERO(&fdread);
-                    FD_ZERO(&fdwrite);
-                    FD_ZERO(&fdexcep);
-                                                               
-                    /* set a suitable timeout to play around with */ 
-                    timeout.tv_sec = 1;
-                    timeout.tv_usec = 0;
-                           
-                    curl_multi_timeout(multi_handle, &curl_timeo);
-                    if(curl_timeo >= 0) {
-                       timeout.tv_sec = curl_timeo / 1000;
-                       if(timeout.tv_sec > 1)
-                            timeout.tv_sec = 1;
-                       else
-                            timeout.tv_usec = (curl_timeo % 1000) * 1000;
-                     }
-                                                                                                                                      
-                    /* get file descriptors from the transfers */ 
-                    curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
-
-                    /* In a real-world program you OF COURSE check the return code of the
-                    function calls.  On success, the value of maxfd is guaranteed to be
-                    greater or equal than -1.  We call select(maxfd + 1, ...), specially in
-                    case of (maxfd == -1), we call select(0, ...), which is basically equal
-                    to sleep. */ 
-
-                    rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
-
-                    switch(rc) {
-                    case -1:
-                    /* select error */ 
-                    break;
-                    case 0:
-                    default:
-                    /* timeout or readable/writable sockets */ 
-                    printf("perform!\n");
-                    curl_multi_perform(multi_handle, &still_running);
-                    printf("running: %d!\n", still_running);
-                    break;
-                    }
-                } while(still_running);
-
-                /* lets start the fetch */
-                /*
-                do {
-                        while(::curl_multi_perform(multi_handle, &still_running) ==
-                                        CURLM_CALL_MULTI_PERFORM);
-                } while (still_running);
-                */
-                std::cout<<"here"<<std::endl;
-
-                //responseOut.clear();
-                //responseOut.append(ExtractDataToString(s));
-                //DestroyDataObject(s);
-                curl_multi_cleanup(multi_handle);
-
-                /* then cleanup the formpost chain */ 
-                curl_formfree(formpost);
-                                                                   
-                /* free slist */ 
-                curl_slist_free_all (headerlist);
-                curl_slist_free_all (partlist);
-                curl_slist_free_all (attachlist);
-            }
-
-        curl_easy_cleanup(pCurl);
-}
-
-
-void ConnectionManager::HttpMultipartPost( const std::string &url, 
-                                           const UrlParams* pParams,
-                                           const std::string &body, 
-                                           const std::string &filepath, 
-                                           const std::string &filename,
-                                           std::string &responseOut, 
-                                           const std::string &macalgorithm, 
-                                           const std::string &macid, 
-                                           const std::string &mackey, 
-                                           const char* pData,
-                                           unsigned int uSize,
-                                           bool verbose)
-{
-        // Standard multipart 
-
-        CURL* pCurl = 0;
-        CURLM *multi_handle = 0;
-        int still_running = 0;
-
-        curl_slist *headerlist=NULL;
-        curl_httppost *formpost=NULL;
-        curl_httppost *lastptr=NULL;
-        static const char buf[] = "Expect:";
-
-        curl_slist *partlist = 0;
-        partlist = curl_slist_append(partlist, "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
-
-        char szLen[256];
-        memset(szLen, '\0', sizeof(char)*256);                                              
-        snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
-
-        std::string jcl("Content-Length: ");
-        jcl.append(szLen);
-
-        partlist = curl_slist_append(partlist, jcl.c_str());
-        partlist = curl_slist_append(partlist, "Content-Type: application/vnd.tent.v0+json");
-        partlist = curl_slist_append(partlist, "Content-Transfer-Encoding: binary");
-
-        curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_COPYNAME, "jsonbody",
-                      CURLFORM_COPYCONTENTS, body.c_str(),
-                      CURLFORM_CONTENTHEADER, partlist,
-                      CURLFORM_END);
-
-        
-        // Read in file 
-        curl_slist *attachlist = 0;
-
-        std::string cd;
-        cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
-        cd += filename;
-        cd.append("\"");
-
-        attachlist = curl_slist_append(attachlist, "Content-Transfer-Encoding: binary");
-        //attachlist = curl_slist_append(attachlist, "Content-Disposition: form-data; name=\"buffer[0]\"; filename=\"thisthing.lst\"");
-        attachlist = curl_slist_append(attachlist, cd.c_str());
-
-        //
-        char szBuffer[256];
-        memset(szBuffer, '\0', sizeof(char)*256);                                              
-        snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
-
-        std::string cl("Content-Length: ");
-        cl.append(szBuffer);
-
-        std::cout<< "STRLEN : " << strlen(pData) << std::endl;
-        std::cout<< "CL : " << cl <<std::endl;
-        std::cout<< "USIZE : " << uSize << std::endl;
-            
-        attachlist = curl_slist_append(attachlist,  cl.c_str());
-        attachlist = curl_slist_append(attachlist, "Content-Type: application/octet-stream");
-
-        if(!pData)
-        {
-            std::cout<<"INVALID DATA PTR"<<std::endl;
-            return;
-        }
-
-        curl_formadd( &formpost,
-                      &lastptr,
-                      CURLFORM_COPYNAME, "attatchment",
-                      CURLFORM_COPYCONTENTS, pData,
-                      CURLFORM_CONTENTSLENGTH, uSize,
-                      CURLFORM_CONTENTHEADER, attachlist,
-                      CURLFORM_END);
-
-
-        pCurl = curl_easy_init();
-        multi_handle = curl_multi_init();
-       
-        /* initalize custom header list (stating that Expect: 100-continue is not
-        *      wanted */ 
-        headerlist = curl_slist_append(headerlist, buf);
-
-        if(pCurl && multi_handle)
-        {
-            if(verbose)
-                curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
-                
-            std::string urlPath = url;
-            EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
-
-            curl_slist *headers=NULL;
-             
-            headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
-            headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
-            //headerlist = curl_slist_append(headerlist, "Content-Type: application/vnd.tent.v0+json");
-
-            std::string authheader;
-            BuildAuthHeader( urlPath, 
-                             std::string("POST"), 
-                             macid, 
-                             mackey, 
-                             authheader);
-
-            headerlist = curl_slist_append(headerlist, authheader.c_str());
-
-            /* what URL that receives this POST */ 
-            curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
-
-            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
-            curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
-
-            curl_multi_add_handle(multi_handle, pCurl);
-
-            // Set read response func and data
-            //curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutFunc); 
-            //curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, s); 
-
-            curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-            curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
-        
-            std::cout<<"here"<<std::endl;
-            curl_multi_perform(multi_handle, &still_running);
-
-            std::cout<<"here"<<std::endl;
-            /* lets start the fetch */
-            do {
-                    struct timeval timeout;
-                    int rc; /* select() return code */ 
-                 
-                    fd_set fdread;
-                    fd_set fdwrite;
-                    fd_set fdexcep;
-                    int maxfd = -1;
-                                          
-                    long curl_timeo = -1;
-                                                 
-                    FD_ZERO(&fdread);
-                    FD_ZERO(&fdwrite);
-                    FD_ZERO(&fdexcep);
-                                                               
-                    /* set a suitable timeout to play around with */ 
-                    timeout.tv_sec = 1;
-                    timeout.tv_usec = 0;
-                           
-                    curl_multi_timeout(multi_handle, &curl_timeo);
-                    if(curl_timeo >= 0) {
-                       timeout.tv_sec = curl_timeo / 1000;
-                       if(timeout.tv_sec > 1)
-                            timeout.tv_sec = 1;
-                       else
-                            timeout.tv_usec = (curl_timeo % 1000) * 1000;
-                     }
-                                                                                                                                      
-                    /* get file descriptors from the transfers */ 
-                    curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
-
-                    /* In a real-world program you OF COURSE check the return code of the
-                    function calls.  On success, the value of maxfd is guaranteed to be
-                    greater or equal than -1.  We call select(maxfd + 1, ...), specially in
-                    case of (maxfd == -1), we call select(0, ...), which is basically equal
-                    to sleep. */ 
-
-                    rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
-
-                    switch(rc) {
-                    case -1:
-                    /* select error */ 
-                    break;
-                    case 0:
-                    default:
-                    /* timeout or readable/writable sockets */ 
-                    printf("perform!\n");
-                    curl_multi_perform(multi_handle, &still_running);
-                    printf("running: %d!\n", still_running);
-                    break;
-                    }
-                } while(still_running);
-
-/*
-            do {
-                    while(::curl_multi_perform(multi_handle, &still_running) ==
-                                    CURLM_CALL_MULTI_PERFORM);
-            } while (still_running);
-*/
-            std::cout<<"here"<<std::endl;
-            std::cout<<"finished..."<<std::endl;
-            //responseOut.clear();
-            //responseOut.append(ExtractDataToString(s));
-            //DestroyDataObject(s);
-            curl_multi_cleanup(multi_handle);
-
-            /* then cleanup the formpost chain */ 
-            curl_formfree(formpost);
-                                                               
-            /* free slist */ 
-            curl_slist_free_all (headerlist);
-            curl_slist_free_all (partlist);
-            curl_slist_free_all (attachlist);
-        }
-
-    curl_easy_cleanup(pCurl);
-}
-
-void ConnectionManager::AddBodyToForm( const std::string &body,
-                                              curl_httppost **post, 
-                                              curl_httppost **last, 
-                                              curl_slist **list)
-{
-    // Fill out json header
-    *list = curl_slist_append( *list, 
-                              "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
-
-    std::cout<< "BODY : " << body << std::endl;
-    char szLen[256];
-    memset(szLen, '\0', sizeof(char)*256);                                              
-    snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
-
-    std::string jcl("Content-Length: ");
-    jcl.append(szLen);
-
-    *list = curl_slist_append(*list, jcl.c_str());
-    *list = curl_slist_append(*list, "Content-Type: application/vnd.tent.v0+json");
-    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
-
-    curl_formadd( &*post,
-                  &*last,
-                  CURLFORM_COPYNAME, "jsonbody",
-                  CURLFORM_COPYCONTENTS, body.c_str(),
-                  CURLFORM_CONTENTHEADER, *list,
-                  CURLFORM_END);
-
-}
-
-
-
-void ConnectionManager::AddAttachmentToForm( const std::string &path, 
-                                                    curl_httppost **post, 
-                                                    curl_httppost **last, 
-                                                    curl_slist **list)
-{
-    // Addes an attachment as a part to the form
-
-    // Extract Filename
-    std::string name;
-    utils::ExtractFileName(path, name);
-
-    // Get Filesize
-    unsigned int uSize = utils::CheckFilesize(path);
-
-    // Gather some information about the content
-    std::string cd;
-    cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
-    cd += name;
-    cd.append("\"");
-
-    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
-    *list = curl_slist_append(*list, cd.c_str());
-    
-    // Append size to a string
-    char szBuffer[256];
-    memset(szBuffer, '\0', sizeof(char)*256);                                              
-    snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
-
-    std::string cl("Content-Length: ");
-    cl.append(szBuffer);
-
-    std::cout<< "CL : " << cl <<std::endl;
-    std::cout<< "USIZE : " << uSize << std::endl;
-        
-    *list = curl_slist_append(*list,  cl.c_str());
-    *list = curl_slist_append(*list, "Content-Type: application/octet-stream");
-
-    std::cout << " name : " << name << std::endl;
-    std::cout << " path : " << path << std::endl;
-
-    curl_formadd( &*post, 
-                  &*last, 
-                  CURLFORM_COPYNAME, name.c_str(),
-                  CURLFORM_FILE, path.c_str(), 
-                  CURLFORM_CONTENTHEADER, *list,
-                  CURLFORM_END);     
-
-}
-
-void ConnectionManager::HttpMultipartPost( const std::string &url, 
-                                           const UrlParams* pParams,
-                                           const std::string &body, 
-                                           std::list<std::string>* filepaths, 
-                                           std::string &responseOut, 
-                                           const std::string &macalgorithm, 
-                                           const std::string &macid, 
-                                           const std::string &mackey, 
-                                           bool verbose)
+                                          bool verbose)
 {
     // Send Multiple files as attachments
     CURL* pCurl = 0;
@@ -1141,7 +656,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         curl_multi_add_handle(multi_handle, pCurl);
 
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
-        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
         curl_multi_perform(multi_handle, &still_running);
 
@@ -1206,6 +721,7 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
         } while (still_running);
 */
 
+        responseOut.code = GetResponseCode(pCurl);
         curl_multi_cleanup(multi_handle);
 
         /* then cleanup the formpost chain */ 
@@ -1218,14 +734,14 @@ void ConnectionManager::HttpMultipartPost( const std::string &url,
     }
 
     curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
 }
 
-
-
-void ConnectionManager::HttpPostWithAuth( const std::string &url, 
+int ConnectionManager::HttpPostWithAuth( const std::string &url, 
                                           const UrlParams* pParams,
                                           const std::string &body, 
-                                          std::string &responseOut, 
+                                          Response &responseOut, 
                                           const std::string &macalgorithm, 
                                           const std::string &macid, 
                                           const std::string &mackey, 
@@ -1272,18 +788,102 @@ void ConnectionManager::HttpPostWithAuth( const std::string &url,
 
     // Set read response func and data
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
-    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut); 
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)
     {
         std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        return ret::A_FAIL_CURL_PERF;
     }
 
+    responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
 
+    return ret::A_OK;
+
 }
+
+void ConnectionManager::AddBodyToForm( const std::string &body,
+                                              curl_httppost **post, 
+                                              curl_httppost **last, 
+                                              curl_slist **list)
+{
+    // Fill out json header
+    *list = curl_slist_append( *list, 
+                              "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
+
+    std::cout<< "BODY : " << body << std::endl;
+    char szLen[256];
+    memset(szLen, '\0', sizeof(char)*256);                                              
+    snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
+
+    std::string jcl("Content-Length: ");
+    jcl.append(szLen);
+
+    *list = curl_slist_append(*list, jcl.c_str());
+    *list = curl_slist_append(*list, "Content-Type: application/vnd.tent.v0+json");
+    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
+
+    curl_formadd( &*post,
+                  &*last,
+                  CURLFORM_COPYNAME, "jsonbody",
+                  CURLFORM_COPYCONTENTS, body.c_str(),
+                  CURLFORM_CONTENTHEADER, *list,
+                  CURLFORM_END);
+
+}
+
+void ConnectionManager::AddAttachmentToForm( const std::string &path, 
+                                                    curl_httppost **post, 
+                                                    curl_httppost **last, 
+                                                    curl_slist **list)
+{
+    // Addes an attachment as a part to the form
+
+    // Extract Filename
+    std::string name;
+    utils::ExtractFileName(path, name);
+
+    // Get Filesize
+    unsigned int uSize = utils::CheckFilesize(path);
+
+    // Gather some information about the content
+    std::string cd;
+    cd.append("Content-Disposition: form-data; name=\"attach\"; filename=\"");
+    cd += name;
+    cd.append("\"");
+
+    *list = curl_slist_append(*list, "Content-Transfer-Encoding: binary");
+    *list = curl_slist_append(*list, cd.c_str());
+    
+    // Append size to a string
+    char szBuffer[256];
+    memset(szBuffer, '\0', sizeof(char)*256);                                              
+    snprintf(szBuffer, (sizeof(char)*256),  "%d", uSize);     
+
+    std::string cl("Content-Length: ");
+    cl.append(szBuffer);
+
+    std::cout<< "CL : " << cl <<std::endl;
+    std::cout<< "USIZE : " << uSize << std::endl;
+        
+    *list = curl_slist_append(*list,  cl.c_str());
+    *list = curl_slist_append(*list, "Content-Type: application/octet-stream");
+
+    std::cout << " name : " << name << std::endl;
+    std::cout << " path : " << path << std::endl;
+
+    curl_formadd( &*post, 
+                  &*last, 
+                  CURLFORM_COPYNAME, name.c_str(),
+                  CURLFORM_FILE, path.c_str(), 
+                  CURLFORM_CONTENTHEADER, *list,
+                  CURLFORM_END);     
+
+}
+
 
 void ConnectionManager::BuildAuthHeader( const std::string &url, 
                                          const std::string &requestMethod, 

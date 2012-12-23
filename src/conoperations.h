@@ -65,7 +65,7 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        std::string response;
+        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                              NULL,
@@ -77,10 +77,11 @@ namespace conops
                                                              at.GetMacKey(), 
                                                              true);
         
-        std::cout<<"RESPONSE : " << response << std::endl;
+        std::cout<<"CODE : " << response.code << std::endl;
+        std::cout<<"RESPONSE : " << response.body << std::endl;
 
         AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response);
+        JsonSerializer::DeserializeObject(&p, response.body);
 
         int status = ret::A_OK;
         std::string postid;
@@ -123,7 +124,7 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        std::string response;
+        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                             NULL,
@@ -135,10 +136,11 @@ namespace conops
                                                             at.GetMacKey(), 
                                                             true);
      
-        std::cout<<"RESPONSE : " << response << std::endl;
+        std::cout<<"CODE : " << response.code << std::endl;
+        std::cout<<"RESPONSE : " << response.body << std::endl;
 
         AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response);
+        JsonSerializer::DeserializeObject(&p, response.body);
 
         std::string postid;
         p.GetID(postid);
