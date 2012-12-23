@@ -131,7 +131,7 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 
 ###############################################################################
 # To compile a static lib
-#add_library(attic STATIC ${libattic_SOURCE})
+add_library(attic STATIC ${libattic_SOURCE})
 
 ## this doesn't need to be set
 #SET_TARGET_PROPERTIES(attic PROPERTIES
@@ -140,10 +140,10 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ./third_party/jsoncpp
 
 ###############################################################################
 # To compile the test executable
-add_executable(attic ${libattic_SOURCE})
+#add_executable(attic ${libattic_SOURCE})
 
 #link libs
-target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 
