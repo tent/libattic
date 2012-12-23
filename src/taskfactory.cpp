@@ -25,6 +25,8 @@ TaskFactory::~TaskFactory()
 
 }
 
+
+
 Task* TaskFactory::CreateTentTask( TaskType type,                                
                                    TentApp* pApp,                                
                                    FileManager* pFm,                             
@@ -124,7 +126,7 @@ Task* TaskFactory::CreateTentTask( TaskType type,
 
     if(t)
     {
-        m_TaskMap.push_back(t);
+        m_ActiveTasks.push_back(t);
     }
     
     return t;
@@ -157,4 +159,21 @@ Task* TaskFactory::CreateCryptoTask( TaskType type,
 
 }
 
+void TaskFactory::TaskFinished(int code, Task* pTask)
+{
+    if(code == ret::A_OK && pTask)
+    {
+        // Reset task and return it into the active pool
+    }
+    else
+    {
+        // Log error
+        if(pTask)
+        {
+            delete pTask;
+            pTask = NULL;
+        }
+    }
+
+}
 

@@ -26,6 +26,14 @@ public:
     std::string GetMacAlgorithm() const  { return m_MacAlgorithm; }
     std::string GetTokenType() const     { return m_TokenType; }
 
+    void Reset()
+    {
+        m_AccessToken.clear();
+        m_MacKey.clear();
+        m_MacAlgorithm.clear();
+        m_TokenType.clear();
+    }
+
 private:
     std::string m_AccessToken;
     std::string m_MacKey;

@@ -29,6 +29,7 @@ public:
         DECRYPT
     };                                                                  
 
+    void TaskFinished(int code, Task* pTask);
 public:                                                                 
     TaskFactory();                                                      
     ~TaskFactory();                                                     
@@ -53,7 +54,8 @@ public:
                             bool generate=true);
 
 private:
-    std::deque<Task*>   m_TaskMap;
+    std::map<TaskType, std::deque<Task*> >  m_TaskPool;
+    std::deque<Task*>   m_ActiveTasks;
 
 };                                                                      
 

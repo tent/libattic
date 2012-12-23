@@ -66,7 +66,36 @@ public:
     ConnectionManager* GetConnectionManager()   { return m_pConnectionManager; } 
     CredentialsManager* GetCredentialsManager() { return m_pCredentialsManager; } 
 
-    void SetCallback(void (*cb)(int, void*)) { mCallback = cb; }
+    void SetTentApp(TentApp* pApp)                        { m_pTentApp = pApp; }
+    void SetFileManager(FileManager* pFm)                 { m_pFileManager = pFm; }
+    void SetConnectionManager(ConnectionManager* pCon)    { m_pConnectionManager = pCon; }
+    void SetCredentialsManager(CredentialsManager* pCm)   { m_pCredentialsManager = pCm; }
+    void SetAccessToken(const AccessToken& at)                  { m_At = at; }
+    void SetEntity(const std::string& entity)                   { m_Entity = entity; }
+    void SetFilepath(const std::string& filepath)               { m_Filepath = filepath; }
+    void SetTempDirectory(const std::string& tempdir)           { m_TempDirectory = tempdir; }
+    void SetWorkingDirectory(const std::string& workingdir)     { m_WorkingDirectory = workingdir; }
+    void SetConfigDirectory(const std::string& configdir)       { m_ConfigDirectory = configdir; }
+    void SetCallback(void (*cb)(int, void*))                    { mCallback = cb; }
+
+
+    void Reset()
+    {
+        m_pTentApp = NULL;
+        m_pFileManager = NULL;
+        m_pConnectionManager = NULL;
+        m_pCredentialsManager = NULL;
+
+        m_At.Reset();
+
+        m_Entity.clear();
+        m_Filepath.clear();
+        m_TempDirectory.clear();
+        m_WorkingDirectory.clear();
+        m_ConfigDirectory.clear();
+
+        mCallback = NULL;
+    }
 
 protected:
     void Callback(int code, void* p)
@@ -74,7 +103,6 @@ protected:
         std::cout<<" Callback " << std::endl;
         if(mCallback)
             mCallback(code, p); 
-
     }
 
 private:
