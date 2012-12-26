@@ -29,7 +29,7 @@
 
 #include "threading.h"
 
-
+/*
 TEST(DISCOVER, TEST)
 {
     InitLibAttic( "./data",
@@ -331,7 +331,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+
 
 void FOOFUN(int a, void* b)
 {
