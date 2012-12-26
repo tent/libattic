@@ -12,9 +12,9 @@ Tent profile info section.
 ## Process
 
 1. File is created/modified.
-2. File is compressed.
-3. File is encrypted.
-4. File is broken into chunks.
+2. File is broken into chunks.
+3. File is compressed.
+4. File is encrypted.
 5. Tent posts are created with chunks as attachments.
 6. Details about the file are added to the metadata posts.
 
