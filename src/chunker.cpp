@@ -17,7 +17,7 @@ Chunker::~Chunker()
 
 }
 
-ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const std::string &chunkDir)
+ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const std::string &chunkDir)
 {
     // TODO ::
     // - check if there are currently chunks with a given filename already in the 
@@ -39,8 +39,8 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &szFilePath, const
     }
 
     unsigned int count = 0;
-    std::cout<< "Filepath " << szFilePath <<std::endl;
-    m_ifStream.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
+    std::cout<< "Filepath " << filepath <<std::endl;
+    m_ifStream.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if (!m_ifStream.is_open())
     {
@@ -164,7 +164,9 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
     return ret::A_OK;
 }
 
-bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std::string &chunkDir, unsigned int uCount)
+bool Chunker::VerifyAllChunkExistence( const std::string &chunkName, 
+                                       const std::string &chunkDir, 
+                                       unsigned int uCount)
 {
     std::string path;
     for(unsigned int i=0; i<uCount; i++)
@@ -175,7 +177,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std:
         memset(szBuffer, 0, (sizeof(char)*256));
         snprintf(szBuffer, (sizeof(char)*256), "%d", i);
 
-        path = chunkDir + "/" + szChunkName + "_" + szBuffer;
+        path = chunkDir + "/" + chunkName + "_" + szBuffer;
         if(!utils::CheckFilesize(path))
             return false;
     }
@@ -183,7 +185,7 @@ bool Chunker::VerifyAllChunkExistence(const std::string &szChunkName, const std:
     return true;
 }
 
-bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std::string &szName)
+bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std::string &name)
 {
     if(!szBuffer)
     {
@@ -191,7 +193,7 @@ bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std:
     }
     // resolve path
     std::string path;
-    path = chunkDir + "/" + szName;
+    path = chunkDir + "/" + name;
 
     m_ofStream.open(path.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 
@@ -209,15 +211,15 @@ bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std:
     return false;
 }
 
-void Chunker::SetName(const std::string &szBaseName, std::string &szNameOut, int nCount)
+void Chunker::SetName(const std::string &basename, std::string &nameOut, int nCount)
 {
     // Set the name
-    szNameOut.clear();
-    szNameOut.append(szBaseName.c_str());
-    szNameOut.append("_");
+    nameOut.clear();
+    nameOut.append(basename.c_str());
+    nameOut.append("_");
 
     char countBuf[256];
     snprintf(countBuf, sizeof(countBuf), "%d", nCount);
-    szNameOut.append(countBuf); 
+    nameOut.append(countBuf); 
 }
 
