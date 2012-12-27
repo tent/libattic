@@ -42,7 +42,7 @@ public:
 private:
     TaskState   m_State;
 
-    void (*m_CallbackFinished)(int, void*);
+    void (*m_CallbackFinished)(int, Task*);
 };                                                            
 
 
