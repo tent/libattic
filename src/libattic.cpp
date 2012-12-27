@@ -15,6 +15,7 @@
 #include "urlparams.h"
 #include "post.h"
 
+#include "taskfactory.h"
 #include "taskarbiter.h"
 #include "pulltask.h"
 #include "pushtask.h"
@@ -45,6 +46,7 @@ static CredentialsManager*  g_pCredManager = 0;
 static EntityManager*       g_pEntityManager = 0;
 
 static TaskArbiter g_Arb;
+static TaskFactory g_TaskFactory;
 
 // Consider making these volatile
 static std::string g_WorkingDirectory;
@@ -126,6 +128,12 @@ int InitLibAttic( const char* szWorkingDirectory,
         std::cout<<"arb FAILED : " << status << std::endl;
     }
 
+    status = g_TaskFactory.Initialize();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Task Factory FAILED : " << status << std::endl;
+    }
+
     std::cout<<"initialization success"<<std::endl;
 
     return status;
@@ -161,6 +169,13 @@ int ShutdownLibAttic()
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
+
+    }
+
+    status = g_TaskFactory.Shutdown();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
 
     }
 
@@ -515,7 +530,23 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    std::cout << " ACCESS TOKEN >> " << at.GetAccessToken() << std::endl;
+    while(g_TaskFactory.TryLock()) { sleep(0); };
+    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::PUSH,
+                                            g_pApp, 
+                                            g_pFileManager, 
+                                            ConnectionManager::GetInstance(),
+                                            g_pCredManager,
+                                            at,
+                                            g_Entity,
+                                            szFilePath,
+                                            g_TempDirectory,
+                                            g_WorkingDirectory,
+                                            g_ConfigDirectory,
+                                            callback);
+    g_Arb.SpinOffTask(t);
+    g_TaskFactory.Unlock();
+
+    /*
     PushTask* t = new PushTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
@@ -528,6 +559,8 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                 g_ConfigDirectory,
                                 callback);
     g_Arb.SpinOffTask(t);
+    */
+
 
     return ret::A_OK;
 }
@@ -539,6 +572,23 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
+    while(g_TaskFactory.TryLock()) { sleep(0); };
+    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::PULL,
+                                            g_pApp, 
+                                            g_pFileManager, 
+                                            ConnectionManager::GetInstance(),
+                                            g_pCredManager,
+                                            at,
+                                            g_Entity,
+                                            szFilePath,
+                                            g_TempDirectory,
+                                            g_WorkingDirectory,
+                                            g_ConfigDirectory,
+                                            callback);
+    g_Arb.SpinOffTask(t);
+    g_TaskFactory.Unlock();
+
+    /*
     PullTask* t = new PullTask( g_pApp, 
                                 g_pFileManager, 
                                 ConnectionManager::GetInstance(),
@@ -551,6 +601,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                 g_ConfigDirectory,
                                 callback);
     g_Arb.SpinOffTask(t);
+    */
 
     std::cout<<"Returning...."<<std::endl;
 
@@ -564,6 +615,23 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
+    while(g_TaskFactory.TryLock()) { sleep(0); };
+    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::DELETE,
+                                            g_pApp, 
+                                            g_pFileManager, 
+                                            ConnectionManager::GetInstance(),
+                                            g_pCredManager,
+                                            at,
+                                            g_Entity,
+                                            szFileName,
+                                            g_TempDirectory,
+                                            g_WorkingDirectory,
+                                            g_ConfigDirectory,
+                                            callback);
+    g_Arb.SpinOffTask(t);
+    g_TaskFactory.Unlock();
+
+    /*
     DeleteTask* t = new DeleteTask( g_pApp, 
                                     g_pFileManager, 
                                     ConnectionManager::GetInstance(),
@@ -576,6 +644,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                     g_ConfigDirectory,
                                     callback);
     g_Arb.SpinOffTask(t);
+    */
 
     return ret::A_OK;
 }
@@ -587,6 +656,23 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
+    while(g_TaskFactory.TryLock()) { sleep(0); };
+    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::SYNCMANIFEST,
+                                            g_pApp, 
+                                            g_pFileManager, 
+                                            ConnectionManager::GetInstance(),
+                                            g_pCredManager,
+                                            at,
+                                            g_Entity,
+                                            "",
+                                            g_TempDirectory,
+                                            g_WorkingDirectory,
+                                            g_ConfigDirectory,
+                                            callback);
+    g_Arb.SpinOffTask(t);
+    g_TaskFactory.Unlock();
+
+    /*
     SyncManifestTask* t = new SyncManifestTask( g_pApp, 
                                                 g_pFileManager, 
                                                 ConnectionManager::GetInstance(),
@@ -599,6 +685,7 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
                                                 g_ConfigDirectory,
                                                 callback);
     g_Arb.SpinOffTask(t);
+    */
 
     return ret::A_OK;
 }
@@ -610,6 +697,7 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
+    // TODO :: fix this...
     SyncPostsTask* t = new SyncPostsTask( g_pApp, 
                                           g_pFileManager, 
                                           ConnectionManager::GetInstance(),

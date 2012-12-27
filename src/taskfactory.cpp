@@ -25,7 +25,52 @@ TaskFactory::~TaskFactory()
 
 }
 
+int TaskFactory::Initialize()
+{
+    std::cout<<" Initializing task factory " << std::endl;
 
+
+    return ret::A_OK;
+}
+
+int TaskFactory::Shutdown()
+{
+    std::cout<<" Shutting down task factory " << std::endl;
+
+    TaskMap::iterator itr = m_TaskPool.begin();
+
+    for(;itr != m_TaskPool.end(); itr++)
+    {
+        TaskPool* pPool = &(itr->second);
+        TaskPool::iterator ii = pPool->begin();
+
+        for(;pPool->size() > 0;)
+        {
+            std::cout<<" deleting task ... " << std::endl;
+            Task* pTask = pPool->front();
+            delete pTask;
+            pTask = NULL;
+            pPool->pop_front();
+        }
+    }
+
+    // TODO :: when pools come into use remove the following ...
+    TaskPool::iterator ii = m_ActiveTasks.begin();
+
+    while(m_ActiveTasks.size() > 0)
+    {
+        Task* pTask = m_ActiveTasks.front();
+        std::cout<<" deleting task ... " << std::endl;
+
+        delete pTask;
+        pTask = NULL;
+
+        m_ActiveTasks.pop_front();
+    }
+
+
+    return ret::A_OK;
+}
 
 Task* TaskFactory::CreateTentTask( TaskType type,                                
                                    TentApp* pApp,                                
@@ -40,6 +85,9 @@ Task* TaskFactory::CreateTentTask( TaskType type,
                                    const std::string& configdir,                 
                                    void (*callback)(int, void*))
 {
+
+    std::cout<< " Creating tent task ... " << std::endl;
+
     Task* t = NULL;
     switch(type)
     {
@@ -174,6 +222,5 @@ void TaskFactory::TaskFinished(int code, Task* pTask)
             pTask = NULL;
         }
     }
-
 }
 

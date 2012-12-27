@@ -7,6 +7,7 @@
 #include <deque>
 
 #include "accesstoken.h"
+#include "mutexclass.h"
 
 class Task;
 class TentApp;
@@ -15,7 +16,7 @@ class ConnectionManager;
 class CredentialsManager;
 class Credentials;
 
-class TaskFactory
+class TaskFactory : public MutexClass
 {                                                                       
 public:                                                                 
     enum TaskType                                                       
@@ -33,6 +34,9 @@ public:
 public:                                                                 
     TaskFactory();                                                      
     ~TaskFactory();                                                     
+
+    int Initialize();
+    int Shutdown();
 
     Task* CreateTentTask( TaskType type,                                
                           TentApp* pApp,                                
@@ -54,8 +58,11 @@ public:
                             bool generate=true);
 
 private:
-    std::map<TaskType, std::deque<Task*> >  m_TaskPool;
-    std::deque<Task*>   m_ActiveTasks;
+    typedef std::deque<Task*> TaskPool;
+    typedef std::map<TaskType, TaskPool> TaskMap;
+
+    TaskMap     m_TaskPool;
+    TaskPool    m_ActiveTasks;
 
 };                                                                      
 
