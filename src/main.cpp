@@ -31,6 +31,39 @@
 
 #include "rollsum.h"
 
+TEST(HASH, CRYPTO)
+{
+    Crypto cp;
+
+    std::string filepath;
+    filepath += "./data/ghh.pdf";
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+
+    if(ifs.is_open())
+    {
+        ifs.seekg (0, std::ios::end);
+        int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+
+        char* buf = new char[size];
+        ifs.read(buf, size);
+        ifs.close();
+
+        std::string source;
+        source.append(buf, size);
+        std::string hash;
+        cp.GenerateHash(source, hash);
+
+        std::cout<< "buffer size : " << size << std::endl;
+        std::cout<< "HASH : " << hash << std::endl;
+
+        delete[] buf;
+    }
+
+}
+/*
 TEST(ROLLSUM, TEST)
 {
     std::string filepath;

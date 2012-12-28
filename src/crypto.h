@@ -13,7 +13,6 @@
 #include "errorcodes.h"
 
 
-
 class Credentials
 {
 public:
@@ -29,6 +28,7 @@ public:
 
 class Crypto
 {
+                      
     bool EncryptData( const char* pData, 
                       unsigned int size, 
                       const Credentials &cred, 
@@ -64,6 +64,9 @@ public:
                                       const std::string &pass, 
                                       Credentials& out);
 
+   bool GenerateHash( const std::string& source, 
+                       std::string& hashOut);
+  
     
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation
