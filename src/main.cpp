@@ -34,7 +34,8 @@
 TEST(ROLLSUM, TEST)
 {
     std::string filepath;
-    filepath += "./data/cassandra11.pdf";
+    //filepath += "./data/cassandra11.pdf";
+    filepath += "./data/ghh.pdf";
 
     std::ifstream ifs;
     ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);

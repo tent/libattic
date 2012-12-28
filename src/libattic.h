@@ -80,6 +80,9 @@ int SaveChanges();
 
 int TestQuery();
 
+// Utility function
+int DeleteAllPosts();
+
 //}
 #endif
 
