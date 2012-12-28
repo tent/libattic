@@ -5,13 +5,21 @@
 #pragma once
 
 #include <time.h>
+
+#include "jsonserializable.h"
 #include "crypto.h"
 
-class MasterKey
+class MasterKey : JsonSerializable
 {
 public:
-    MasterKey() {}
-    ~MasterKey(){}
+    MasterKey();
+    ~MasterKey();
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+
+    void WriteToFile();
+    void LoadFromFile();
 
     time_t GetTimeCreated() const           { return m_Created; }
     time_t GetExpires() const               { return m_Expires; }
