@@ -5,6 +5,7 @@
 #pragma once
 
 #include <time.h>
+#include <string>
 
 #include "jsonserializable.h"
 #include "crypto.h"
@@ -18,8 +19,8 @@ public:
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
 
-    void WriteToFile();
-    void LoadFromFile();
+    void WriteToFile(const std::string& filepath);
+    void LoadFromFile(const std::string& filepath);
 
     time_t GetTimeCreated() const           { return m_Created; }
     time_t GetExpires() const               { return m_Expires; }

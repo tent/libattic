@@ -20,7 +20,7 @@ public:
     ~Credentials() {}
 
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
-    byte iv[CryptoPP::AES::BLOCKSIZE];
+    byte iv[CryptoPP::AES::BLOCKSIZE]; // TODO :: this is probably going to be removed in the future.
     
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
