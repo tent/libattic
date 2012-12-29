@@ -9,6 +9,9 @@
 #include <aes.h>         
 #include <gcm.h>         
 
+#include <sha.h>
+#include <base64.h>
+
 const int TAG_SIZE = 16;
 
 Crypto::Crypto(unsigned int uStride)
@@ -42,6 +45,24 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
+bool Crypto::GenerateHash( const std::string& source, 
+                           std::string& hashOut)
+{
+    CryptoPP::SHA256 hash;
+
+    CryptoPP::StringSource src( source.c_str(), 
+                                true,
+                                new CryptoPP::HashFilter( hash,
+                                    new CryptoPP::Base64Encoder (
+                                        new CryptoPP::StringSink(hashOut)
+                                        )
+                                    )
+                             );
+
+    return true;
+}
+
+                       
 ret::eCode Crypto::EncryptFile( const std::string &szFilepath, 
                                 const std::string &szOutputPath, 
                                 const Credentials &cred)

@@ -13,7 +13,6 @@
 #include "errorcodes.h"
 
 
-
 class Credentials
 {
 public:
@@ -21,7 +20,7 @@ public:
     ~Credentials() {}
 
     byte key[CryptoPP::AES::MAX_KEYLENGTH];
-    byte iv[CryptoPP::AES::BLOCKSIZE];
+    byte iv[CryptoPP::AES::BLOCKSIZE]; // TODO :: this is probably going to be removed in the future.
     
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
@@ -29,6 +28,7 @@ public:
 
 class Crypto
 {
+                      
     bool EncryptData( const char* pData, 
                       unsigned int size, 
                       const Credentials &cred, 
@@ -64,6 +64,9 @@ public:
                                       const std::string &pass, 
                                       Credentials& out);
 
+   bool GenerateHash( const std::string& source, 
+                       std::string& hashOut);
+  
     
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation

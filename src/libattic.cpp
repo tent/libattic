@@ -546,22 +546,6 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     g_Arb.SpinOffTask(t);
     g_TaskFactory.Unlock();
 
-    /*
-    PushTask* t = new PushTask( g_pApp, 
-                                g_pFileManager, 
-                                ConnectionManager::GetInstance(),
-                                g_pCredManager,
-                                at,
-                                g_Entity,
-                                szFilePath,
-                                g_TempDirectory,
-                                g_WorkingDirectory,
-                                g_ConfigDirectory,
-                                callback);
-    g_Arb.SpinOffTask(t);
-    */
-
-
     return ret::A_OK;
 }
 
@@ -587,21 +571,6 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                             callback);
     g_Arb.SpinOffTask(t);
     g_TaskFactory.Unlock();
-
-    /*
-    PullTask* t = new PullTask( g_pApp, 
-                                g_pFileManager, 
-                                ConnectionManager::GetInstance(),
-                                g_pCredManager,
-                                at,
-                                g_Entity,
-                                szFilePath,
-                                g_TempDirectory,
-                                g_WorkingDirectory,
-                                g_ConfigDirectory,
-                                callback);
-    g_Arb.SpinOffTask(t);
-    */
 
     std::cout<<"Returning...."<<std::endl;
 
@@ -631,21 +600,6 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
     g_Arb.SpinOffTask(t);
     g_TaskFactory.Unlock();
 
-    /*
-    DeleteTask* t = new DeleteTask( g_pApp, 
-                                    g_pFileManager, 
-                                    ConnectionManager::GetInstance(),
-                                    g_pCredManager,
-                                    at,
-                                    g_Entity,
-                                    szFileName,
-                                    g_TempDirectory,
-                                    g_WorkingDirectory,
-                                    g_ConfigDirectory,
-                                    callback);
-    g_Arb.SpinOffTask(t);
-    */
-
     return ret::A_OK;
 }
 
@@ -672,21 +626,6 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
     g_Arb.SpinOffTask(t);
     g_TaskFactory.Unlock();
 
-    /*
-    SyncManifestTask* t = new SyncManifestTask( g_pApp, 
-                                                g_pFileManager, 
-                                                ConnectionManager::GetInstance(),
-                                                g_pCredManager,
-                                                at,
-                                                g_Entity,
-                                                "",
-                                                g_TempDirectory,
-                                                g_WorkingDirectory,
-                                                g_ConfigDirectory,
-                                                callback);
-    g_Arb.SpinOffTask(t);
-    */
-
     return ret::A_OK;
 }
 
@@ -710,6 +649,12 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
                                           g_ConfigDirectory,
                                           callback);
     g_Arb.SpinOffTask(t);
+
+    return ret::A_OK;
+}
+
+int DeleteAllPosts()
+{
 
     return ret::A_OK;
 }

@@ -29,6 +29,72 @@
 
 #include "threading.h"
 
+#include "rollsum.h"
+
+TEST(HASH, CRYPTO)
+{
+    Crypto cp;
+
+    std::string filepath;
+    filepath += "./data/ghh.pdf";
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+
+    if(ifs.is_open())
+    {
+        ifs.seekg (0, std::ios::end);
+        int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+
+        char* buf = new char[size];
+        ifs.read(buf, size);
+        ifs.close();
+
+        std::string source;
+        source.append(buf, size);
+        std::string hash;
+        cp.GenerateHash(source, hash);
+
+        std::cout<< "buffer size : " << size << std::endl;
+        std::cout<< "HASH : " << hash << std::endl;
+
+        delete[] buf;
+    }
+
+}
+/*
+TEST(ROLLSUM, TEST)
+{
+    std::string filepath;
+    //filepath += "./data/cassandra11.pdf";
+    filepath += "./data/ghh.pdf";
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+
+    if(ifs.is_open())
+    {
+        ifs.seekg (0, std::ios::end);
+        int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+
+        char* buf = new char[size];
+        ifs.read(buf, size);
+        ifs.close();
+
+        int bits = -1;
+        int out = FindOffset(reinterpret_cast<unsigned char*>(buf), size, &bits);
+        std::cout << " OUT : " << out << std::endl;
+        uint32_t sum = rollsum_sum(reinterpret_cast<unsigned char*>(buf), 3, size);
+
+        std::cout << " SUM " << sum << std::endl;
+        printf("sum1a = 0x%08x\n", sum);
+        delete[] buf;
+    }
+
+}
+
 /*
 TEST(DISCOVER, TEST)
 {
@@ -331,7 +397,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 
 void FOOFUN(int a, void* b)
 {
