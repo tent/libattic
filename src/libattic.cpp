@@ -79,7 +79,9 @@ int SetTempDirectory(const char* szDir);
 int TestQuery()
 {
     EntityManager em;
-    em.Discover("https://manuel.tent.is/profile");
+    
+    em.Discover(g_Entity);
+    //em.Discover("https://manuel.tent.is/profile");
 
 }
 
@@ -690,7 +692,7 @@ int EnterUserNameAndPass(const char* szUser, const char* szPass)
 // Master Key
 int EnterPassphrase(const char* szPass)
 {
-    // Enter the passphrase and generate the key.
+    // Enter the passphrase and generate phrase token
 
     return ret::A_OK;
 }

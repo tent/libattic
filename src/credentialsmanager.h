@@ -17,6 +17,7 @@ class CredentialsManager : public MutexClass
 {
     int GenerateMasterKey();
 
+    void ConstructPhraseTokenPath(std::string& out);
     void ConstructAccessTokenPath(std::string& out);
     void ConstructManifestPath(std::string& out);
 public:
@@ -31,13 +32,19 @@ public:
     int WriteOutAccessToken();
     int LoadAccessToken();
 
+    // Phrase Token
+    int DeserializeIntoPhraseToken(const std::string& buffer);
+    int WriteOutPhraseToken();
+    int LoadPhraseToken();
+
+    // Pass Phrase
+    int EnterPassphrase(const std::string& pass, std::string& salt);
+    int RegisterPassphrase(const std::string& pass);
+    int ChangePassphrase(const std::string& oldpass, const std::string& newpass);
+
     // MasterKey
+
     //int EnterUserNameAndPassword(const std::string& user, const std::string& pass);
-
-    int EnterPassphrase(const std::string& pass);
-    
-
-
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
     void GetMasterKeyCopy(MasterKey& key)       { key = m_MasterKey; }

@@ -40,8 +40,11 @@ class Crypto
                       std::ofstream &ofs);
 
     bool ScryptEncode( const std::string &input, 
+                       const std::string &salt,
                        std::string &out, 
                        unsigned int size);
+
+    int CheckSalt(std::string& salt);
 public:
     Crypto(unsigned int uStride = 400000);
     ~Crypto();
@@ -60,10 +63,11 @@ public:
 
     void SetStride(unsigned int uStride) { m_Stride = uStride; }
 
-    void GenerateKeyFromPassphrase( const std::string &pass, 
-                                    Credentials& out);
+    int GenerateKeyFromPassphrase( const std::string &pass, 
+                                   std::string &salt,
+                                   Credentials& out);
 
-   bool GenerateHash( const std::string& source, 
+    bool GenerateHash( const std::string& source, 
                        std::string& hashOut);
   
     

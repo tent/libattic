@@ -31,6 +31,7 @@
 
 #include "rollsum.h"
 
+/*
 TEST(HASH, CRYPTO)
 {
     Crypto cp;
@@ -94,8 +95,9 @@ TEST(ROLLSUM, TEST)
     }
 
 }
-
 /*
+ */
+
 TEST(DISCOVER, TEST)
 {
     InitLibAttic( "./data",

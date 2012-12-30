@@ -6,13 +6,15 @@
 
 #include <hex.h>         
 #include <filters.h>     
-#include <aes.h>         
 #include <gcm.h>         
 
 #include <sha.h>
 #include <base64.h>
 
+#include "utils.h"
+
 const int TAG_SIZE = 16;
+const int SALT_SIZE = 16;
 
 Crypto::Crypto(unsigned int uStride)
 {
@@ -156,7 +158,8 @@ bool Crypto::EncryptData( const char* pData,
        std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
        std::cout << " KEY : " << cred.key << std::endl;
        std::cout << " IV : " << cred.iv << std::endl;
-/*
+
+       /*
        std::string holdkey;
        holdkey.append(cred.key, cred.GetKeySize());
        std::cout<< "HOLD KEY : " << holdkey << std::endl;
@@ -302,28 +305,40 @@ extern "C"
                        size_t);
 }
 
-void Crypto::GenerateKeyFromPassphrase( const std::string &pass, 
-                                        Credentials& out)
+int Crypto::GenerateKeyFromPassphrase( const std::string& pass, 
+                                       std::string& salt,
+                                       Credentials& out)
 {
+    int status = ret::A_OK;
     std::string outKey; //, outIv;
 
-    ScryptEncode(pass, outKey, CryptoPP::AES::MAX_KEYLENGTH);
-    //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
+    // Check salt for size and correctness
+    status = CheckSalt(salt);
 
-    // Copy into credentials // Char to to byte (unsigned char) conversion
-    // just allow it.
-    memcpy(out.key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
-    //memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
+    if(status == ret::A_OK)
+    {
+        ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH);
+        //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
 
-    std::cout << "Cred key : \n" << out.key << std::endl;
-    //std::cout << "Cred iv : \n" << out.iv << std::endl;
+        // Copy into credentials // Char to to byte (unsigned char) conversion
+        // just allow it.
+        memcpy(out.key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
+        //memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
+
+        std::cout << "Cred key : \n" << out.key << std::endl;
+        //std::cout << "Cred iv : \n" << out.iv << std::endl;
+    }
+
+    return status;
 }
 
 bool Crypto::ScryptEncode( const std::string &input, 
+                           const std::string &salt,
                            std::string &out,
                            unsigned int size)
 {
-    uint8_t salt[32]; // 16 <- do 16, 64 or 128
+    // Note* pass in 16 bit salt
+    //uint8_t salt[32]; // 16 <- do 16, 64 or 128
 
     uint8_t* password;
     size_t plen;
@@ -347,6 +362,18 @@ bool Crypto::ScryptEncode( const std::string &input,
 
     std::cout << crypto_scrypt( (uint8_t*)input.c_str(),
                                 input.size(),
+                                (uint8_t*)salt.c_str(),
+                                salt.size(),
+                                N,
+                                r,
+                                p,
+                                dk,
+                                size) << std::endl;
+    
+
+    /*
+    std::cout << crypto_scrypt( (uint8_t*)input.c_str(),
+                                input.size(),
                                 (uint8_t*)"supersalt",
                                 9,
                                 N,
@@ -354,6 +381,7 @@ bool Crypto::ScryptEncode( const std::string &input,
                                 p,
                                 dk,
                                 size) << std::endl;
+                                */
     
     std::cout << "DK : \n " << dk << std::endl;
     
@@ -366,5 +394,25 @@ bool Crypto::ScryptEncode( const std::string &input,
         delete pData;
         pData = NULL;
     }
+
+    return true;
+}
+
+int Crypto::CheckSalt(std::string& salt)
+{
+    int status = ret::A_OK;
+
+    if(salt.empty())
+    {
+        // Generate salt
+        utils::GenerateRandomString(salt, SALT_SIZE);
+    }
+
+    // Check for correct size
+    if(salt.size() != SALT_SIZE)
+    {
+        status = ret::A_FAIL_SCRYPT_INVALID_SALT_SIZE;
+    }
+    return status;
 }
 

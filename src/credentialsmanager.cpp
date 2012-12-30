@@ -42,19 +42,39 @@ int CredentialsManager::WriteOutAccessToken()
 {
     std::string path;
     ConstructAccessTokenPath(path);
-    int status = m_AccessToken.SaveToFile(path);  
-
-    return status;             
+    return m_AccessToken.SaveToFile(path);  
 }
 
 int CredentialsManager::LoadAccessToken()
 {
     std::string path;
     ConstructAccessTokenPath(path);
-    int status = m_AccessToken.LoadFromFile(path);
-
-    return status;               
+    return m_AccessToken.LoadFromFile(path);
 }
+
+int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer)
+{
+    int status = ret::A_OK;
+    if(!JsonSerializer::DeserializeObject(&m_PhraseToken, buffer))
+        status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
+
+    return status;
+}
+
+int CredentialsManager::WriteOutPhraseToken()
+{
+    std::string path;
+    ConstructPhraseTokenPath(path);
+    return m_PhraseToken.SaveToFile(path);
+}
+
+int CredentialsManager::LoadPhraseToken()
+{
+    std::string path;
+    ConstructPhraseTokenPath(path);
+    return m_PhraseToken.LoadFromFile(path);
+}
+
 /*
 int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const std::string& pass)
 {
@@ -66,12 +86,16 @@ int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const 
 }
 */
 
-int CredentialsManager::EnterPassphrase(const std::string& pass)
+int CredentialsManager::EnterPassphrase(const std::string& pass, std::string& salt)
 {
     Credentials cred;
-    m_Crypto.GenerateKeyFromPassphrase(pass, cred);
+    m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
     // Create Passphrase token
-    m_MasterKey.SetCredentials(cred);
+    std::string key;
+    key.append(reinterpret_cast<char*>(cred.key), cred.GetKeySize()); 
+    m_PhraseToken.SetKey(key);
+    // Write it out
+    WriteOutPhraseToken();
 
     return ret::A_OK;
 }
@@ -103,4 +127,11 @@ void CredentialsManager::ConstructManifestPath(std::string& out)
     out.append(cnst::g_szManifestName);     
 }
 
+
+void CredentialsManager::ConstructPhraseTokenPath(std::string& out)
+{
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);      
+    out.append(cnst::g_szPhraseTokenName);
+}
 
