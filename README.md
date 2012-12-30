@@ -196,6 +196,8 @@ versions and share files with other users.
 ## Library Interaction Abstract
 
 ### Core API
+ALL DEPRICATED, look at libattic.h for actual implementation.
+
  - **StartupAttic()**
     - This method will essentially take care of all necessary start up functionality of the attic.
     - This includes:

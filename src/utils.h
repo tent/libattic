@@ -148,9 +148,10 @@ namespace utils
 
     }
 
+    typedef std::vector<std::string> taglist;
     static void FindAndExtractAllTags( const std::string& tag, 
                                        const std::string& content, 
-                                       std::vector<std::string>& out)
+                                       taglist& out)
     {
         size_t found;
 

@@ -5,10 +5,9 @@
 #include <iostream> // TODO :: remove this
 
 #include "utils.h"
+#include "constants.h"
 #include "errorcodes.h"
 #include "connectionmanager.h"
-
-
 
 EntityManager::EntityManager()
 {
@@ -20,7 +19,22 @@ EntityManager::~EntityManager()
 
 }
 
-void EntityManager::Discover(const std::string& entityurl)
+int EntityManager::Initialize()
+{
+    // Load entity info from somewhere ... if it exists
+
+    return ret::A_OK;
+}
+
+int EntityManager::Shutdown()
+{
+    // Clear out Entity vector
+
+    return ret::A_OK;
+}
+
+
+Entity* EntityManager::Discover(const std::string& entityurl)
 {
     // Check entity url
     std::string profpath = entityurl;
@@ -31,36 +45,77 @@ void EntityManager::Discover(const std::string& entityurl)
 
     Response response;
     int code = ConnectionManager::GetInstance()->HttpGet(profpath, NULL, response);
-
     std::cout<< " resp : " << response.body << std::endl;
-
     std::cout<< " code : " << response.code << std::endl;
+
+    Entity* pEntity = NULL;
 
     if(response.code == 200)
     {
-        std::vector<std::string> tags;
+        pEntity = new Entity();
+
         // Parse out all link tags
+        utils::taglist tags;
         utils::FindAndExtractAllTags("link", response.body, tags);
 
-        std::cout<< " size : " << tags.size() << std::endl;
+        std::string str;
+        for(int i = 0; i< tags.size() ; i++)
+        {
+            std::cout<< "\t" << tags[i] << std::endl;
+            size_t found = tags[i].find(cnst::g_szProfileRel);
 
-//        for(int i = 0; i< tags.size() ; i++)
-//            std::cout<< "\t" << tags[i] << std::endl;
+            if(found != std::string::npos)
+            {
+                std::cout<< " FOUND : " << i << std::endl;
+                // Extract Profile url
+                size_t b = tags[i].find("https");
+                size_t e = tags[i].find("\"", b+1);
+                size_t diff = e - b;
+
+                str.clear();
+                str = tags[i].substr(b, diff);
+                std::cout<<" SUBSTR : " << str << std::endl;
+
+                pEntity->PushBackProfileUrl(str);
+
+                Response resp;
+                int code = ConnectionManager::GetInstance()->HttpGet(str, NULL, resp);
+                std::cout<< " resp : " << resp.body << std::endl;
+                std::cout<< " code : " << resp.code << std::endl;
+            }
+        }
 
         // Grab entity api root etc
+        RetrieveEntityProfiles(pEntity);
     }
+
+    return pEntity;
 }
 
-int EntityManager::Initialize()
+void EntityManager::RetrieveEntityProfiles(Entity* pEntity)
 {
+    unsigned int profcount = pEntity->GetProfileCount();
+    if(pEntity && profcount)
+    {
+        const Entity::ProfileList* ProfList = pEntity->GetProfileList();
+        Entity::ProfileList::const_iterator itr = ProfList->begin();
 
-    return ret::A_OK;
-}
+        while(itr != ProfList->end())
+        {
+            Response response;
+            int code = ConnectionManager::GetInstance()->HttpGet(*itr, NULL, response);
+            std::cout<< " resp : " << response.body << std::endl;
+            std::cout<< " code : " << response.code << std::endl;
 
-int EntityManager::Shutdown()
-{
-
-    return ret::A_OK;
+            if(response.code == 200)
+            {
+                // Deserialize into Profile Object
+                //
+                // Push back into entity
+            }
+            itr++;
+        }
+    }
 }
 
 
