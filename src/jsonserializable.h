@@ -39,6 +39,16 @@ public:
         return true;
     }
 
+    static bool SerializeObject(JsonSerializable* pObj, Json::Value &val)
+    {
+        if(pObj && val.isObject())
+        {
+            pObj->Serialize(val);
+            return true;
+        }
+        return false;
+    }
+
     static bool DeserializeObject(JsonSerializable* pObj, const std::string& input)
     {
         if(!pObj)
@@ -55,7 +65,18 @@ public:
         return true;
     }
 
-    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec)        
+    static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val)
+    {
+        if(pObj && val.isObject())
+        {
+            pObj->Deserialize(val);
+            return true;
+        }
+
+        return false;
+    }
+
+    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec) 
     {                                                                                           
         if(val.isObject())                                                                      
         {                                                                                       
@@ -73,28 +94,28 @@ public:
     }                                                                                           
 
     static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec)
-    {                                                                                                           
-        vec.clear();                                                                                            
-                                            
-        Json::ValueIterator itr = val.begin();                                                                  
-        for(; itr != val.end(); itr++)                                                                          
-        {                                                                                                       
+    {
+        vec.clear();
+        Json::ValueIterator itr = val.begin();
+        for(; itr != val.end(); itr++)
+        { 
             if((*itr).isConvertibleTo(Json::stringValue))
-                vec.push_back((*itr).asString());                                                                   
-        }                                                                                                       
-    }                                                                                                           
+                vec.push_back((*itr).asString());
+        }
+    }
+
     static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
-    {                                                                                                           
-        if(val.isObject())                                                                                      
-        {                                                                                                       
-            vec.clear();                                                                                        
-            Json::ValueIterator itr = val.begin();                                                              
+    {
+        if(val.isObject())
+        {
+            vec.clear();
+            Json::ValueIterator itr = val.begin();
                                                                                     
-            for(; itr != val.end(); itr++)                                                                      
-            {                                                                                                   
-                vec.push_back(itr.key().asString());                                                            
-            }                                                                                                   
-        }                                                                                                       
+            for(; itr != val.end(); itr++)
+            { 
+                vec.push_back(itr.key().asString());
+            }
+        }
     }
 
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m)
