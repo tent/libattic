@@ -9,6 +9,7 @@
 #include "errorcodes.h"
 #include "connectionmanager.h"
 
+
 EntityManager::EntityManager()
 {
 
@@ -97,8 +98,8 @@ void EntityManager::RetrieveEntityProfiles(Entity* pEntity)
     unsigned int profcount = pEntity->GetProfileCount();
     if(pEntity && profcount)
     {
-        const Entity::ProfileList* ProfList = pEntity->GetProfileList();
-        Entity::ProfileList::const_iterator itr = ProfList->begin();
+        const Entity::UrlList* ProfList = pEntity->GetProfileList();
+        Entity::UrlList::const_iterator itr = ProfList->begin();
 
         while(itr != ProfList->end())
         {
@@ -110,8 +111,11 @@ void EntityManager::RetrieveEntityProfiles(Entity* pEntity)
             if(response.code == 200)
             {
                 // Deserialize into Profile Object
-                //
+                Profile* pProf = new Profile();
+                JsonSerializer::DeserializeObject(pProf, response.body);
+                
                 // Push back into entity
+                pEntity->PushBackProfile(pProf);
             }
             itr++;
         }
