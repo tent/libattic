@@ -52,12 +52,30 @@ int CredentialsManager::LoadAccessToken()
 
     return status;               
 }
-
+/*
 int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const std::string& pass)
 {
     Credentials cred;
     m_Crypto.GenerateKeyIvFromPassphrase( user, pass, cred );
     m_MasterKey.SetCredentials(cred);
+
+    return ret::A_OK;
+}
+*/
+
+int CredentialsManager::EnterPassphrase(const std::string& pass)
+{
+    Credentials cred;
+    m_Crypto.GenerateKeyFromPassphrase(pass, cred);
+    m_MasterKey.SetCredentials(cred);
+
+    return ret::A_OK;
+}
+
+int CredentialsManager::GenerateMasterKey()
+{
+    // Generate random master key that will be used to encrypt all files,
+    // This key will be encrypted itself with the passphrase - scrypt
 
     return ret::A_OK;
 }

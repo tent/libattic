@@ -302,22 +302,21 @@ extern "C"
                        size_t);
 }
 
-void Crypto::GenerateKeyIvFromPassphrase( const std::string &name, 
-                                          const std::string &pass, 
-                                          Credentials& out)
+void Crypto::GenerateKeyFromPassphrase( const std::string &pass, 
+                                        Credentials& out)
 {
-    std::string outKey, outIv;
+    std::string outKey; //, outIv;
 
     ScryptEncode(pass, outKey, CryptoPP::AES::MAX_KEYLENGTH);
-    ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
+    //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
 
     // Copy into credentials // Char to to byte (unsigned char) conversion
     // just allow it.
     memcpy(out.key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
-    memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
+    //memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
 
     std::cout << "Cred key : \n" << out.key << std::endl;
-    std::cout << "Cred iv : \n" << out.iv << std::endl;
+    //std::cout << "Cred iv : \n" << out.iv << std::endl;
 }
 
 bool Crypto::ScryptEncode( const std::string &input, 

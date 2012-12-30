@@ -182,14 +182,6 @@ int ShutdownLibAttic()
     return status;
 }
 
-int EnterUserNameAndPass(const char* szUser, const char* szPass)
-{
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    g_pCredManager->EnterUserNameAndPassword(szUser, szPass);
-    g_pCredManager->Unlock();
-
-}
-
 int InitializeFileManager()
 {
     // Construct path
@@ -682,6 +674,45 @@ int PullAllFiles()
     }
     
     */
+    return ret::A_OK;
+}
+/*
+OLD / Depricated
+int EnterUserNameAndPass(const char* szUser, const char* szPass)
+{
+    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->EnterUserNameAndPassword(szUser, szPass);
+    g_pCredManager->Unlock();
+
+}
+*/
+
+// Master Key
+int EnterPassphrase(const char* szPass)
+{
+    // Enter the passphrase and generate the key.
+
+    return ret::A_OK;
+}
+
+int RegisterPassphrase(const char* szPass)
+{
+    // Register a new passphrase.
+
+    // Enter passphrase to generate key.
+
+    // Create random master key
+
+    // Encrypt with passphrase key
+
+    // Save and post
+
+    return ret::A_OK;
+}
+
+int ChangePassphrase(const char* szOld, const char* szNew)
+{
+
     return ret::A_OK;
 }
 

@@ -60,9 +60,8 @@ public:
 
     void SetStride(unsigned int uStride) { m_Stride = uStride; }
 
-    void GenerateKeyIvFromPassphrase( const std::string &name, 
-                                      const std::string &pass, 
-                                      Credentials& out);
+    void GenerateKeyFromPassphrase( const std::string &pass, 
+                                    Credentials& out);
 
    bool GenerateHash( const std::string& source, 
                        std::string& hashOut);
