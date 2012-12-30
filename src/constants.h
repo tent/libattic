@@ -6,6 +6,10 @@
 
 namespace cnst
 {
+    // Profile Types
+    static const char* g_szBasicProfileType = "https://tent.io/types/info/basic/v0.1.0";
+    static const char* g_szCoreProfileType = "https://tent.io/types/info/core/v0.1.0";
+
     // Link Header profile relationship 
     static const char* g_szProfileRel = "https://tent.io/rels/profile";
 
