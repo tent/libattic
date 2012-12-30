@@ -14,7 +14,9 @@
 namespace utils
 {
     typedef std::vector<std::string> split;
-    static std::vector<std::string> &SplitString(const std::string &s, char delim, split &out)
+    static std::vector<std::string> &SplitString( const std::string &s, 
+                                                  char delim, 
+                                                  split &out)
     {
         std::stringstream ss(s);
         std::string item;
@@ -142,10 +144,44 @@ namespace utils
             out += alph[rand()%size];
         }
 
-        std::cout<< "randome string : " << out << std::endl;
+        std::cout<< "random string : " << out << std::endl;
 
     }
 
+    static void FindAndExtractAllTags( const std::string& tag, 
+                                       const std::string& content, 
+                                       std::vector<std::string>& out)
+    {
+        size_t found;
+
+        std::string btag;
+        btag += "<";
+        btag += tag;
+
+        found = content.find(btag);
+        std::string str;
+        while(found != std::string::npos)
+        {
+            // Extract tag
+
+            // Find the end of the tag
+            size_t pos = content.find("/>", found);
+            size_t dif = ((pos-found)+2);
+
+            if(dif < 0)
+                break; // TODO:: perhaps log an error
+           
+            str.clear();
+            str = content.substr(found, dif);
+            
+            // Push back on vector
+            out.push_back(str);
+            
+            // Look for the next tag
+            found = content.find(btag, pos);
+        }
+    } 
 }
+
 #endif
 
