@@ -16,6 +16,9 @@ CredentialsManager::~CredentialsManager()
 
 int CredentialsManager::Initialize()
 {
+    // Search for and load/create access token
+    //
+    // Search for and load/create phrase token
 
     return ret::A_OK;
 }
@@ -67,6 +70,7 @@ int CredentialsManager::EnterPassphrase(const std::string& pass)
 {
     Credentials cred;
     m_Crypto.GenerateKeyFromPassphrase(pass, cred);
+    // Create Passphrase token
     m_MasterKey.SetCredentials(cred);
 
     return ret::A_OK;
@@ -86,7 +90,7 @@ void CredentialsManager::ConstructAccessTokenPath(std::string& out)
     // Construct path
     out = m_ConfigDirectory;
     utils::CheckUrlAndAppendTrailingSlash(out);      
-    out.append(cnst::g_szAuthToken);                       
+    out.append(cnst::g_szAuthTokenName);                       
 
 }
 
@@ -96,7 +100,7 @@ void CredentialsManager::ConstructManifestPath(std::string& out)
     // Construct path
     out = m_ConfigDirectory;
     utils::CheckUrlAndAppendTrailingSlash(out);      
-    out.append(cnst::g_szManifest);     
+    out.append(cnst::g_szManifestName);     
 }
 
 

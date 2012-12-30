@@ -471,7 +471,7 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 
     {
         while(GetFileManager()->TryLock()) { sleep(0); }
-        fi = GetFileManager()->CreateFileInfo( cnst::g_szManifest,
+        fi = GetFileManager()->CreateFileInfo( cnst::g_szManifestName,
                                                path,
                                                outPath,
                                                "1",                

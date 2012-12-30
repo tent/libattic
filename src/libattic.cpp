@@ -187,7 +187,7 @@ int InitializeFileManager()
     // Construct path
     std::string szFilePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szFilePath);
-    szFilePath.append(cnst::g_szManifest);
+    szFilePath.append(cnst::g_szManifestName);
 
     if(!g_pFileManager)
     {
@@ -491,7 +491,7 @@ int SaveAppToFile()
 
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(cnst::g_szAppData);
+    szSavePath.append(cnst::g_szAppDataName);
 
     return g_pApp->SaveToFile(szSavePath);
 }
@@ -504,7 +504,7 @@ int LoadAppFromFile()
     // Construct path
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
-    szSavePath.append(cnst::g_szAppData);
+    szSavePath.append(cnst::g_szAppDataName);
 
     g_pApp->LoadFromFile(szSavePath);
 

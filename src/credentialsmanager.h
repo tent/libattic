@@ -9,6 +9,7 @@
 #include "taskarbiter.h"
 #include "masterkey.h"
 #include "accesstoken.h"
+#include "phrasetoken.h"
 #include "crypto.h"
 
 
@@ -50,6 +51,7 @@ private:
     Crypto          m_Crypto;
     MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb
     AccessToken     m_AccessToken;  // Access Token used to auth during tent posts
+    PhraseToken     m_PhraseToken;
 
     std::string     m_ConfigDirectory;
 };

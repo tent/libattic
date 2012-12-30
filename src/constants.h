@@ -16,9 +16,10 @@ namespace cnst
     static const char* g_szAtticMetaStorePostType = "https://tent.io/types/post/attic-metastore/v0.1.0";
 
 
-    static const char* g_szAppData = "app";                                              
-    static const char* g_szAuthToken = "at";                                             
-    static const char* g_szManifest = "manifest";                                        
+    static const char* g_szAppDataName = "app";                                              
+    static const char* g_szAuthTokenName = "at";                                             
+    static const char* g_szPhraseTokenName = "phst";
+    static const char* g_szManifestName = "manifest";                                        
 };
 
 
