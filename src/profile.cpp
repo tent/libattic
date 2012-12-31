@@ -2,10 +2,37 @@
 
 #include "constants.h"
 
+AtticProfileInfo::AtticProfileInfo()
+{
+    m_Permissions.SetIsPublic(false);
+}
+
+AtticProfileInfo::~AtticProfileInfo()
+{
+
+}
+
+void AtticProfileInfo::Serialize(Json::Value& root)
+{
+    root["salt"] = m_Salt;
+    root["mk"] = m_MasterKey;
+
+    Json::Value perm(Json::objectValue);
+    JsonSerializer::SerializeObject(&m_Permissions, perm);
+    root["permissions"] = perm;
+}
+
+void AtticProfileInfo::Deserialize(Json::Value& root)
+{
+    m_Salt = root.get("salt", "").asString();
+    m_MasterKey = root.get("mk", "").asString();
+
+    JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
+}
 
 CoreProfileInfo::CoreProfileInfo()
 {
-
+    m_Permissions.SetIsPublic(true);
 }
 
 CoreProfileInfo::~CoreProfileInfo()
@@ -46,7 +73,7 @@ void CoreProfileInfo::Deserialize(Json::Value& root)
 
 BasicProfileInfo::BasicProfileInfo()
 {
-
+    m_Permissions.SetIsPublic(true);
 }
 
 BasicProfileInfo::~BasicProfileInfo()
@@ -81,28 +108,67 @@ void BasicProfileInfo::Deserialize(Json::Value& root)
 
 Profile::Profile()
 {
-
+    m_pAtticInfo = NULL;
+    m_pCoreInfo = NULL;
+    m_pBasicInfo = NULL;
 }
 
 Profile::~Profile()
 {
+    if(m_pAtticInfo)
+    {
+        delete m_pAtticInfo;
+        m_pAtticInfo = NULL; 
+    }
 
+    if(m_pCoreInfo)
+    {
+        delete m_pCoreInfo;
+        m_pCoreInfo = NULL;
+    }
+
+    if(m_pBasicInfo)
+    {
+        delete m_pBasicInfo;
+        m_pBasicInfo = NULL;
+    }
 }
 
 void Profile::Serialize(Json::Value& root)
 {
-    Json::Value core(Json::objectValue);
-    JsonSerializer::SerializeObject(&m_CoreInfo, core);
-    root[cnst::g_szCoreProfileType] = core;
+    if(m_pAtticInfo)
+    {
+        Json::Value attic(Json::objectValue);
+        JsonSerializer::SerializeObject(m_pAtticInfo, attic);
+        root[cnst::g_szAtticProfileType] = attic;
+    }
 
-    Json::Value basic(Json::objectValue);
-    JsonSerializer::SerializeObject(&m_BasicInfo, basic);
-    root[cnst::g_szBasicProfileType] = basic;
+    if(m_pCoreInfo)
+    {
+        Json::Value core(Json::objectValue);
+        JsonSerializer::SerializeObject(m_pCoreInfo, core);
+        root[cnst::g_szCoreProfileType] = core;
+    }
+
+    if(m_pBasicInfo)
+    {
+        Json::Value basic(Json::objectValue);
+        JsonSerializer::SerializeObject(m_pBasicInfo, basic);
+        root[cnst::g_szBasicProfileType] = basic;
+    }
 }
 
 void Profile::Deserialize(Json::Value& root)
 {
-    JsonSerializer::DeserializeObject(&m_CoreInfo, root[cnst::g_szCoreProfileType]);
-    JsonSerializer::DeserializeObject(&m_BasicInfo, root[cnst::g_szBasicProfileType]);
+    if(!m_pAtticInfo)
+        m_pAtticInfo = new AtticProfileInfo();
+    JsonSerializer::DeserializeObject(m_pAtticInfo, root[cnst::g_szAtticProfileType]);
 
+    if(!m_pCoreInfo)
+        m_pCoreInfo = new CoreProfileInfo();
+    JsonSerializer::DeserializeObject(m_pCoreInfo, root[cnst::g_szCoreProfileType]);
+
+    if(!m_pBasicInfo)
+        m_pBasicInfo = new BasicProfileInfo();
+    JsonSerializer::DeserializeObject(m_pBasicInfo, root[cnst::g_szBasicProfileType]);
 }
