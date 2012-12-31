@@ -23,6 +23,7 @@ namespace cnst
     static const char* g_szAtticPostType = "https://tent.io/types/post/attic/v0.1.0";    
     static const char* g_szAtticMetaStorePostType = "https://tent.io/types/post/attic-metastore/v0.1.0";
 
+    // Filenames
     static const char* g_szAppDataName = "app";                                              
     static const char* g_szAuthTokenName = "at";                                             
     static const char* g_szPhraseTokenName = "phst";

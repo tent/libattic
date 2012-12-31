@@ -47,6 +47,19 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
+void Crypto::GenerateCredentials(Credentials& cred)
+{
+    memset(cred.key, 0, cred.GetKeySize());
+    memset(cred.iv, 0, cred.GetIvSize());
+
+    // Generate a random key
+    CryptoPP::SecByteBlock key(CryptoPP::AES::MAX_KEYLENGTH);
+    m_Rnd.GenerateBlock( cred.key, cred.GetKeySize());
+
+    // // Generate a random IV
+    m_Rnd.GenerateBlock(cred.iv, cred.GetIvSize()); 
+}
+
 bool Crypto::GenerateHash( const std::string& source, 
                            std::string& hashOut)
 {

@@ -16,6 +16,7 @@ CredentialsManager::~CredentialsManager()
 
 int CredentialsManager::Initialize()
 {
+    // Pull Profile Info to get latest data
     // Search for and load/create access token
     //
     // Search for and load/create phrase token
@@ -85,6 +86,32 @@ int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const 
     return ret::A_OK;
 }
 */
+
+int CredentialsManager::RegisterPassphrase(const std::string& pass)
+{
+    // TODO :: perhaps check profile if these things exist
+    
+    if(pass.empty())
+        return ret::A_FAIL_EMPTY_PASSPHRASE;
+
+    // Generate Salt
+    std::string salt;
+    m_Crypto.CheckSalt(salt);
+
+    // Generate Passphrase Key 
+    Credentials cred;
+    m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
+
+    // Create Master Key
+    Credentials MasterKey;
+    m_Crypto.GenerateCredentials(MasterKey);
+
+    // Create Post data
+
+    // Create Local auth token
+
+    return ret::A_OK;
+}
 
 int CredentialsManager::EnterPassphrase(const std::string& pass, std::string& salt)
 {

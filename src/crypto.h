@@ -44,11 +44,12 @@ class Crypto
                        std::string &out, 
                        unsigned int size);
 
-    int CheckSalt(std::string& salt);
+
 public:
     Crypto(unsigned int uStride = 400000);
     ~Crypto();
 
+    void GenerateCredentials(Credentials& cred);
     Credentials GenerateCredentials(); 
 
     ret::eCode EncryptFile( const std::string &szFilepath, 
@@ -62,6 +63,8 @@ public:
     unsigned int GetStride() { return m_Stride; }
 
     void SetStride(unsigned int uStride) { m_Stride = uStride; }
+
+    int CheckSalt(std::string& salt);
 
     int GenerateKeyFromPassphrase( const std::string &pass, 
                                    std::string &salt,
