@@ -3,27 +3,6 @@
 #include "constants.h"
 
 
-Permissions::Permissions()
-{
-    m_Public = false;
-}
-
-Permissions::~Permissions()
-{
-
-}
-
-void Permissions::Serialize(Json::Value& root)
-{
-    root["public"] = m_Public;
-
-}
-
-void Permissions::Deserialize(Json::Value& root)
-{
-    m_Public = root.get("public", false).asBool();
-}
-
 CoreProfileInfo::CoreProfileInfo()
 {
 
@@ -51,6 +30,10 @@ void CoreProfileInfo::Serialize(Json::Value& root)
         JsonSerializer::SerializeVector(servers, m_Servers);
         root["servers"] = servers;
     }
+
+    Json::Value perm(Json::objectValue);
+    JsonSerializer::SerializeObject(&m_Permissions, perm);
+    root["permissions"] = perm;
 }
 
 void CoreProfileInfo::Deserialize(Json::Value& root)
@@ -58,6 +41,7 @@ void CoreProfileInfo::Deserialize(Json::Value& root)
     m_Entity = root.get("entity", "").asString();
     JsonSerializer::DeserializeIntoVector(root["licenses"], m_Licenses); 
     JsonSerializer::DeserializeIntoVector(root["servers"], m_Servers); 
+    JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
 }
 
 BasicProfileInfo::BasicProfileInfo()
@@ -78,6 +62,10 @@ void BasicProfileInfo::Serialize(Json::Value& root)
     root["location"] = m_Location;
     root["gender"] = m_Gender;
     root["bio"] = m_Bio;
+
+    Json::Value perm(Json::objectValue);
+    JsonSerializer::SerializeObject(&m_Permissions, perm);
+    root["permissions"] = perm;
 }
 
 void BasicProfileInfo::Deserialize(Json::Value& root)
@@ -88,6 +76,7 @@ void BasicProfileInfo::Deserialize(Json::Value& root)
     m_Location = root.get("location", "").asString();
     m_Gender = root.get("gender", "").asString();   
     m_Bio = root.get("bio", "").asString();      
+    JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
 }
 
 Profile::Profile()
@@ -115,4 +104,5 @@ void Profile::Deserialize(Json::Value& root)
 {
     JsonSerializer::DeserializeObject(&m_CoreInfo, root[cnst::g_szCoreProfileType]);
     JsonSerializer::DeserializeObject(&m_BasicInfo, root[cnst::g_szBasicProfileType]);
+
 }

@@ -7,24 +7,8 @@
 #include <string>
 
 #include "jsonserializable.h"
+#include "permissions.h"
 
-class Permissions : public JsonSerializable
-{
-public:
-    Permissions();
-    ~Permissions();
-
-    void Serialize(Json::Value& root);
-    void Deserialize(Json::Value& root);
-
-    bool GetIsPublic() const { return m_Public; }
-
-    void SetIsPublic(const bool pub) { m_Public = pub; }
-
-private:
-    bool    m_Public;
-
-};
 
 class CoreProfileInfo : public JsonSerializable
 {
@@ -42,6 +26,7 @@ private:
     std::string m_Entity;     //`json:"entity"`   //The canonical entity identitifier.
     ServerList  m_Licenses;   //`json:"licenses"` //The licenses the entity publishes content under.
     LicenseList m_Servers;    //`json:"servers"`  //The canonical API roots that can be used to interact with the entity.
+    Permissions m_Permissions; // `json:"permissions"
 };
 
 class BasicProfileInfo : public JsonSerializable
@@ -60,6 +45,7 @@ private:
     std::string     m_Location;  //`json:"location"`   // Location to be displayed publicly.
     std::string     m_Gender;    //`json:"gender"`     // Gender to be displayed publicly.
     std::string     m_Bio;       //`json:"bio"`        // Biography/self-description to be displayed publicly.
+    Permissions     m_Permissions; // `json:"permissions"
 };
 
 class Profile : public JsonSerializable
@@ -73,6 +59,7 @@ public:
 private:
     CoreProfileInfo     m_CoreInfo;
     BasicProfileInfo    m_BasicInfo;
+
 };
 
 #endif
