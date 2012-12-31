@@ -8,6 +8,24 @@
 
 #include "jsonserializable.h"
 
+class Permissions : public JsonSerializable
+{
+public:
+    Permissions();
+    ~Permissions();
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+
+    bool GetIsPublic() const { return m_Public; }
+
+    void SetIsPublic(const bool pub) { m_Public = pub; }
+
+private:
+    bool    m_Public;
+
+};
+
 class CoreProfileInfo : public JsonSerializable
 {
 public:

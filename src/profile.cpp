@@ -3,6 +3,27 @@
 #include "constants.h"
 
 
+Permissions::Permissions()
+{
+    m_Public = false;
+}
+
+Permissions::~Permissions()
+{
+
+}
+
+void Permissions::Serialize(Json::Value& root)
+{
+    root["public"] = m_Public;
+
+}
+
+void Permissions::Deserialize(Json::Value& root)
+{
+    m_Public = root.get("public", false).asBool();
+}
+
 CoreProfileInfo::CoreProfileInfo()
 {
 
