@@ -16,6 +16,7 @@ void AtticProfileInfo::Serialize(Json::Value& root)
 {
     root["salt"] = m_Salt;
     root["mk"] = m_MasterKey;
+    root["mk_iv"] = m_Iv;
 
     Json::Value perm(Json::objectValue);
     JsonSerializer::SerializeObject(&m_Permissions, perm);
@@ -26,6 +27,7 @@ void AtticProfileInfo::Deserialize(Json::Value& root)
 {
     m_Salt = root.get("salt", "").asString();
     m_MasterKey = root.get("mk", "").asString();
+    m_Iv = root.get("mk_iv", "").asString();
 
     JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
 }

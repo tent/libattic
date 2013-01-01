@@ -27,7 +27,9 @@ public:
 private:
     Permissions m_Permissions;  // `json:"permissions"`
     std::string m_MasterKey;    // `json:"mk"`   // The encrypted Master Key
+    std::string m_Iv;           // `json:"mk_iv"` //The IV used to encrypt the master key
     std::string m_Salt;         // `json:"salt"` // The encrypted salt
+
 };
 
 class CoreProfileInfo : public JsonSerializable
