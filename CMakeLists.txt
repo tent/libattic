@@ -60,11 +60,7 @@ INCLUDE_DIRECTORIES(./third_party/googletest/include)
 INCLUDE_DIRECTORIES(./third_party/c5)
 INCLUDE_DIRECTORIES(./third_party/sqlite)
 INCLUDE_DIRECTORIES(./third_party/jsoncpp/include)
-
-INCLUDE_DIRECTORIES(./src/scrypt/lib/crypto)
-INCLUDE_DIRECTORIES(./src/scrypt/lib/util)
-INCLUDE_DIRECTORIES(./src/scrypt/lib/scryptenc)
-INCLUDE_DIRECTORIES(./src/scrypt/lib)
+INCLUDE_DIRECTORIES(./third_party/scryptlib)
 
 # This is where binary files will go
 file(MAKE_DIRECTORY ./bin)
@@ -75,7 +71,9 @@ project(libattic)
 file(GLOB_RECURSE libattic_SOURCE 
     "src/*.cpp"
     "src/*.c"
-    "third_party/sqlite/*.c")
+    "third_party/sqlite/*.c"
+    "third_party/scryptlib/*.c")
+
 
 file(GLOB_RECURSE libattic_HEADERS 
     "src/*.h")
