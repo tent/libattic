@@ -169,8 +169,8 @@ namespace utils
             size_t pos = content.find("/>", found);
             size_t dif = ((pos-found)+2);
 
-            if(dif < 0)
-                break; // TODO:: perhaps log an error
+            //if(dif < 0) // dif is unsigned so this is a useless check
+            //    break; // TODO:: perhaps log an error
            
             str.clear();
             str = content.substr(found, dif);

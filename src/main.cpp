@@ -31,6 +31,19 @@
 
 #include "rollsum.h"
 
+TEST(REGISTER, PASSPHRASE)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    RegisterPassphrase("password");
+
+    ShutdownLibAttic();
+
+}
+
 /*
 TEST(HASH, CRYPTO)
 {
@@ -97,7 +110,7 @@ TEST(ROLLSUM, TEST)
 }
 /*
  */
-
+/*
 TEST(DISCOVER, TEST)
 {
     InitLibAttic( "./data",

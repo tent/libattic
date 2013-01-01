@@ -24,6 +24,7 @@
 #include "syncmanifesttask.h"
 
 #include "constants.h"
+#include "credentials.h"
 
 // TODO :: 
 // Things to wrap with mutexes
@@ -700,12 +701,51 @@ int EnterPassphrase(const char* szPass)
 int RegisterPassphrase(const char* szPass)
 {
     // Register a new passphrase.
-
+    PhraseToken pt;
+    MasterKey mk;
+    while(g_pCredManager->TryLock()) { sleep(0); }
     // Enter passphrase to generate key.
-
+    g_pCredManager->RegisterPassphrase(szPass, pt);
     // Create random master key
+    g_pCredManager->GenerateMasterKey(mk);
+    g_pCredManager->Unlock();
 
-    // Encrypt with passphrase key
+    // Encrypt MasterKey with passphrase key
+    Credentials cred = mk.GetCredentialsCopy();
+    std::string key;
+    cred.GetKey(key);
+
+    std::cout<< " Master Key : " << key << std::endl;
+
+    // Setup passphrase cred to encrypt master key
+    std::string passphrase;
+    pt.GetKey(passphrase);
+
+    Crypto crypto;
+    // Generate iv
+    std::string iv;
+    crypto.GenerateIV(iv);
+
+    Credentials enc;
+    enc.SetKey(passphrase);
+    enc.SetIv(iv);
+
+    std::string out;
+    crypto.EncryptString(key, enc, out);
+
+    std::cout<<" out : " << out << std::endl;
+    
+
+    std::string dec;
+    crypto.DecryptString(out, enc, dec);
+
+    std::cout<< " dec : " << dec << std::endl;
+
+    if(key == dec)
+        std::cout<< " TEH SAME SUCCESS " << std::endl;
+    
+    // Create Profile post for 
+    // MasterKey and Salt
 
     // Save and post
 

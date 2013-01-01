@@ -478,8 +478,8 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
                                                "",
                                                "",
                                                "",
-                                               cred.key,                       
-                                               cred.iv);                       
+                                               cred.m_Key,                       
+                                               cred.m_Iv);                       
 
         //GetFileManager()->IndexFile( path,
         //                            false,

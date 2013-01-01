@@ -87,10 +87,21 @@ int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const 
 }
 */
 
-int CredentialsManager::RegisterPassphrase(const std::string& pass)
+int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
+{
+    // Create Master Key
+    Credentials MasterKey;
+    m_Crypto.GenerateCredentials(MasterKey);
+
+    mkOut.SetCredentials(MasterKey);
+
+    return ret::A_OK;
+}
+
+int CredentialsManager::RegisterPassphrase( const std::string& pass, 
+                                            PhraseToken& ptOut)
 {
     // TODO :: perhaps check profile if these things exist
-    
     if(pass.empty())
         return ret::A_FAIL_EMPTY_PASSPHRASE;
 
@@ -98,28 +109,26 @@ int CredentialsManager::RegisterPassphrase(const std::string& pass)
     std::string salt;
     m_Crypto.CheckSalt(salt);
 
+    ptOut.SetSalt(salt);
+
     // Generate Passphrase Key 
     Credentials cred;
     m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
-
-    // Create Master Key
-    Credentials MasterKey;
-    m_Crypto.GenerateCredentials(MasterKey);
-
-    // Create Post data
-
-    // Create Local auth token
+    
+    ptOut.SetKey(reinterpret_cast<char*>(cred.m_Key));
 
     return ret::A_OK;
 }
 
-int CredentialsManager::EnterPassphrase(const std::string& pass, std::string& salt)
+int CredentialsManager::EnterPassphrase( const std::string& pass, 
+                                         std::string& salt, 
+                                         PhraseToken& ptOut)
 {
     Credentials cred;
     m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
     // Create Passphrase token
     std::string key;
-    key.append(reinterpret_cast<char*>(cred.key), cred.GetKeySize()); 
+    key.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
     m_PhraseToken.SetKey(key);
     // Write it out
     WriteOutPhraseToken();

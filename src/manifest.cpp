@@ -449,10 +449,10 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " id : " << postid << std::endl;
     std::cout<< " version : " << fi->GetPostVersion() << std::endl;
     
-    char *szKey = reinterpret_cast<char*>(cred.key);
+    char *szKey = reinterpret_cast<char*>(cred.m_Key);
     std::cout<< " key : " << szKey << std::endl;
 
-    char *szIv = reinterpret_cast<char*>(cred.iv);
+    char *szIv = reinterpret_cast<char*>(cred.m_Iv);
     std::cout<< " iv : " << szIv << std::endl;
 
     char pexc[1024];

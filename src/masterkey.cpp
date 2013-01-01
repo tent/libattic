@@ -19,8 +19,8 @@ void MasterKey::Serialize(Json::Value& root)
     root["expires"] = (int)m_Expires;
 
     // Credentials
-    root["key"] = m_Cred.key;
-    root["iv" ] = m_Cred.iv;    // This is obsolete, probably won't exist in the future
+    root["key"] = m_Cred.m_Key;
+    root["iv" ] = m_Cred.m_Iv;    // This is obsolete, probably won't exist in the future
 }
 
 void MasterKey::Deserialize(Json::Value& root)
@@ -33,12 +33,12 @@ void MasterKey::Deserialize(Json::Value& root)
 
     if(!key.empty())
     {
-        memcpy(m_Cred.key, key.c_str(), key.size());
+        memcpy(m_Cred.m_Key, key.c_str(), key.size());
     }
 
     if(!iv.empty())
     {
-        memcpy(m_Cred.iv, iv.c_str(), iv.size());
+        memcpy(m_Cred.m_Iv, iv.c_str(), iv.size());
     }
 }
 

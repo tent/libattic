@@ -37,16 +37,16 @@ public:
     void SetPostVersion(const std::string& version)      { m_PostVersion = atoi(version.c_str()); }
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
 
-    void SetKey(const std::string &key) { memcpy(&m_Credentials.key, key.c_str(), m_Credentials.GetKeySize() ); }
-    void SetIv(const std::string &iv) { memcpy(&m_Credentials.iv, iv.c_str(), m_Credentials.GetIvSize() ); }
+    void SetKey(const std::string &key) { memcpy(&m_Credentials.m_Key, key.c_str(), m_Credentials.GetKeySize() ); }
+    void SetIv(const std::string &iv) { memcpy(&m_Credentials.m_Iv, iv.c_str(), m_Credentials.GetIvSize() ); }
 
     void GetFilename(std::string &out) const    { out = m_Filename; }
     void GetFilepath(std::string &out) const    { out = m_Filepath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
 
-    void GetKey(std::string &out) const { out.append((const char*)m_Credentials.key, m_Credentials.GetKeySize()); }
-    void GetIv(std::string &out) const  { out.append((const char*)m_Credentials.iv, m_Credentials.GetIvSize()); }
+    void GetKey(std::string &out) const { out.append((const char*)m_Credentials.m_Key, m_Credentials.GetKeySize()); }
+    void GetIv(std::string &out) const  { out.append((const char*)m_Credentials.m_Iv, m_Credentials.GetIvSize()); }
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }

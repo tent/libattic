@@ -12,11 +12,9 @@
 #include "phrasetoken.h"
 #include "crypto.h"
 
-
 class CredentialsManager : public MutexClass
 {
     int GenerateMasterKey();
-
     void ConstructPhraseTokenPath(std::string& out);
     void ConstructAccessTokenPath(std::string& out);
     void ConstructManifestPath(std::string& out);
@@ -38,9 +36,18 @@ public:
     int LoadPhraseToken();
 
     // Pass Phrase
-    int EnterPassphrase(const std::string& pass, std::string& salt);
-    int RegisterPassphrase(const std::string& pass);
-    int ChangePassphrase(const std::string& oldpass, const std::string& newpass);
+    int EnterPassphrase( const std::string& pass, 
+                         std::string& salt, 
+                         PhraseToken& ptOut);
+
+    int RegisterPassphrase( const std::string& pass, 
+                            PhraseToken& ptOut);
+
+    int ChangePassphrase( const std::string& oldpass, 
+                          const std::string& newpass, 
+                          PhraseToken& ptOut);
+    
+    int GenerateMasterKey( MasterKey& mkOut);
 
     // MasterKey
 
