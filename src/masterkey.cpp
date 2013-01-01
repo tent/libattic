@@ -1,7 +1,8 @@
-
 #include "masterkey.h"
 
 #include <fstream>
+
+#include "utils.h"
 
 MasterKey::MasterKey()
 {
@@ -73,7 +74,20 @@ void MasterKey::LoadFromFile(const std::string& filepath)
 
         ifs.close();
     }
-
 }
 
+void MasterKey::GenerateMasterKeyWithSentinel()
+{
+    std::string key;
+    GetMasterKey(key);
+
+    std::string sent;
+    utils::GenerateRandomString(sent, 4);
+
+    sent += sent;
+
+    m_KeyWithSentinel.clear();
+    m_KeyWithSentinel += sent;
+    m_KeyWithSentinel += key;
+}
 

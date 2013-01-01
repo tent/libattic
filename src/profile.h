@@ -20,12 +20,15 @@ public:
 
     void GetSalt(std::string& out) const { out = m_Salt; }
     void GetMasterKey(std::string& out) const { out = m_MasterKey; }
+    void GetIv(std::string& out) const { out = m_Iv; }
 
     void SetSalt(const std::string& salt) { m_Salt = salt; }
     void SetMasterKey(const std::string& mk) { m_MasterKey = mk; }
+    void SetIv(const std::string& iv) { m_Iv = iv; }
     
 private:
     Permissions m_Permissions;  // `json:"permissions"`
+
     std::string m_MasterKey;    // `json:"mk"`   // The encrypted Master Key
     std::string m_Iv;           // `json:"mk_iv"` //The IV used to encrypt the master key
     std::string m_Salt;         // `json:"salt"` // The encrypted salt

@@ -25,6 +25,7 @@
 
 #include "constants.h"
 #include "credentials.h"
+#include "profile.h"
 
 // TODO :: 
 // Things to wrap with mutexes
@@ -92,6 +93,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
+    utils::SeedRand();
     SetConfigDirectory(szConfigDirectory);
     SetWorkingDirectory(szWorkingDirectory);
     SetTempDirectory(szTempDirectory);
@@ -694,12 +696,26 @@ int EnterUserNameAndPass(const char* szUser, const char* szPass)
 int EnterPassphrase(const char* szPass)
 {
     // Enter the passphrase and generate phrase token
+    // TODO :: when entering the passphrase always check against the master key with sentinel
+    //         if the first 8 bytes don't match (4 bytes == next 4 bytes) then the user entered
+    //         the wrong passphrase.
+    //         so put a check for that everytime the user enteres the passphrase
+    
+    // Check for correct passphrase
 
+    // Return success
     return ret::A_OK;
 }
 
 int RegisterPassphrase(const char* szPass)
 {
+    // TODO :: probably should check if a passphrase already exists
+    // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
+    //          - at the begining of the master key append 4 random bytes repeated twice,
+    //          - check the first 4 against the latter 4 and if they are the same you entered
+    //            the passphrase in correctly.
+    //          - obviously skip the first 8 bytes when getting the master key
+
     // Register a new passphrase.
     PhraseToken pt;
     MasterKey mk;
@@ -710,12 +726,12 @@ int RegisterPassphrase(const char* szPass)
     g_pCredManager->GenerateMasterKey(mk);
     g_pCredManager->Unlock();
 
-    // Encrypt MasterKey with passphrase key
-    Credentials cred = mk.GetCredentialsCopy();
     std::string key;
-    cred.GetKey(key);
-
+    mk.GetMasterKey(key);
     std::cout<< " Master Key : " << key << std::endl;
+
+    mk.GenerateKeyWithSentinel();
+    // Create Sentinel bytes
 
     // Setup passphrase cred to encrypt master key
     std::string passphrase;
@@ -730,11 +746,11 @@ int RegisterPassphrase(const char* szPass)
     enc.SetKey(passphrase);
     enc.SetIv(iv);
 
+    // Encrypt MasterKey with passphrase key
     std::string out;
     crypto.EncryptString(key, enc, out);
 
     std::cout<<" out : " << out << std::endl;
-    
 
     std::string dec;
     crypto.DecryptString(out, enc, dec);
@@ -742,9 +758,28 @@ int RegisterPassphrase(const char* szPass)
     std::cout<< " dec : " << dec << std::endl;
 
     if(key == dec)
-        std::cout<< " TEH SAME SUCCESS " << std::endl;
-    
+        std::cout<< " THE SAME SUCCESS " << std::endl;
+
+    std::string salt;
+    pt.GetSalt(salt);
     // Create Profile post for 
+    AtticProfileInfo AtticProf;
+    AtticProf.SetMasterKey(out);
+    AtticProf.SetSalt(salt);
+    AtticProf.SetIv(iv);
+
+    std::string output;
+    JsonSerializer::SerializeObject(&AtticProf, output);
+
+    std::cout<< " serialized output : " << output << std::endl;
+
+    AtticProfileInfo ap;
+    JsonSerializer::DeserializeObject(&ap, output);
+
+    std::string masterkey;
+    ap.GetMasterKey(masterkey);
+    std::cout<<" KEY : " << masterkey << std::endl;
+
     // MasterKey and Salt
 
     // Save and post

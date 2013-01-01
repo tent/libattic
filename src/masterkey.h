@@ -22,9 +22,12 @@ public:
     void WriteToFile(const std::string& filepath);
     void LoadFromFile(const std::string& filepath);
 
-    time_t GetTimeCreated() const           { return m_Created; }
-    time_t GetExpires() const               { return m_Expires; }
-    Credentials GetCredentialsCopy() const  { return m_Cred; }
+    void GenerateMasterKeyWithSentinel();
+
+    void GetMasterKey(std::string& out)                     { m_Cred.GetKey(out); }
+    void GetMasterKeyWithSentinel(std::string& out) const   { out = m_KeyWithSentinel; }
+    time_t GetTimeCreated() const                           { return m_Created; }
+    time_t GetExpires() const                               { return m_Expires; }
     
     void SetTimeCreated(const time_t time)          { m_Created = time; }
     void SetTimeExpires(const time_t time)          { m_Expires = time; }
@@ -32,6 +35,7 @@ public:
 
 private:
     Credentials  m_Cred;
+    std::string  m_KeyWithSentinel;
     time_t m_Created; // Time created
     time_t m_Expires; // Time set to expire by
 
