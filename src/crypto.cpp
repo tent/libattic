@@ -34,30 +34,39 @@ Credentials Crypto::GenerateCredentials()
     // be used, then stored (if needed), and fall 
     // out of scope as quickly as possible
     Credentials cred;
-    memset(cred.key, 0, cred.GetKeySize());
-    memset(cred.iv, 0, cred.GetIvSize());
+    memset(cred.m_Key, 0, cred.GetKeySize());
+    memset(cred.m_Iv, 0, cred.GetIvSize());
 
     // Generate a random key
     CryptoPP::SecByteBlock key(CryptoPP::AES::MAX_KEYLENGTH);
-    m_Rnd.GenerateBlock( cred.key, cred.GetKeySize());
+    m_Rnd.GenerateBlock( cred.m_Key, cred.GetKeySize());
 
     // // Generate a random IV
-    m_Rnd.GenerateBlock(cred.iv, cred.GetIvSize()); 
+    m_Rnd.GenerateBlock(cred.m_Iv, cred.GetIvSize()); 
 
     return cred;
 }
 
+void Crypto::GenerateIV(std::string& out)
+{
+    byte iv[CryptoPP::AES::BLOCKSIZE];
+    memset(iv, 0, CryptoPP::AES::BLOCKSIZE);
+    m_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE); 
+
+    out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
+}
+
 void Crypto::GenerateCredentials(Credentials& cred)
 {
-    memset(cred.key, 0, cred.GetKeySize());
-    memset(cred.iv, 0, cred.GetIvSize());
+    memset(cred.m_Key, 0, cred.GetKeySize());
+    memset(cred.m_Iv, 0, cred.GetIvSize());
 
     // Generate a random key
     CryptoPP::SecByteBlock key(CryptoPP::AES::MAX_KEYLENGTH);
-    m_Rnd.GenerateBlock( cred.key, cred.GetKeySize());
+    m_Rnd.GenerateBlock( cred.m_Key, cred.GetKeySize());
 
     // // Generate a random IV
-    m_Rnd.GenerateBlock(cred.iv, cred.GetIvSize()); 
+    m_Rnd.GenerateBlock(cred.m_Iv, cred.GetIvSize()); 
 }
 
 bool Crypto::GenerateHash( const std::string& source, 
@@ -77,6 +86,81 @@ bool Crypto::GenerateHash( const std::string& source,
     return true;
 }
 
+int Crypto::EncryptString( const std::string& data,
+                           const Credentials& cred,
+                           std::string& out)
+{
+    try
+    {
+        std::string cipher;
+
+        CryptoPP::GCM<CryptoPP::AES>::Encryption e;
+        e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+
+        CryptoPP::StringSource( data,
+                                true,
+                                new CryptoPP::AuthenticatedEncryptionFilter( e,
+                                new CryptoPP::StringSink(cipher),
+                                false,
+                                TAG_SIZE)
+                              );
+
+       // Write out cipher to ofstream
+       out = cipher;
+       std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
+       std::cout << " KEY : " << cred.m_Key << std::endl;
+       std::cout << " IV : " << cred.m_Iv << std::endl;
+
+    }
+    catch (CryptoPP::Exception &e)
+    {
+            std::cerr << e.what() << "\n";
+            return ret::A_FAIL_ENCRYPT;
+    }
+
+    return ret::A_OK;
+}
+
+int Crypto::DecryptString( const std::string& cipher,
+                           const Credentials& cred,
+                           std::string& out)
+{
+    try                                                                                 
+    {                                                                                       
+        CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
+        d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+
+        // Recovered Plain Data                                                             
+        std::string rpdata;                                                                 
+        CryptoPP::AuthenticatedDecryptionFilter df ( d,                                              
+                                                     new CryptoPP::StringSink(rpdata),
+                                                     CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS, 
+                                                     TAG_SIZE          
+                                                   );                                                             
+        CryptoPP::StringSource( cipher,                                                      
+                                true,                                                 
+                                new CryptoPP::Redirector( df /*  , PASS_EVERYTHING */ )
+                              ); // StringSource
+
+        // If the object does not throw, here's the only                 
+        //  opportunity to check the data's integrity                    
+        if (df.GetLastResult() == true )                                 
+        {                                                                
+            //std::cout<< "recovered text : " << rpdata << "\n";           
+            // Write out data to ofstream
+            out = rpdata;
+        }                                                                
+
+    }
+    catch (CryptoPP::Exception &e)                               
+    {                                                            
+        std::cerr << e.what() << "\n";                           
+        return ret::A_FAIL_DECRYPT;
+    }                                                            
+
+
+    return ret::A_OK;
+}
                        
 ret::eCode Crypto::EncryptFile( const std::string &szFilepath, 
                                 const std::string &szOutputPath, 
@@ -140,8 +224,8 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
 
 bool Crypto::EncryptData( const char* pData, 
                           unsigned int size, 
-                          const Credentials &cred, 
-                          std::ofstream &ofs)
+                          const Credentials& cred, 
+                          std::ofstream& ofs)
 {
     // Take data,
     // Encrypt
@@ -156,7 +240,7 @@ bool Crypto::EncryptData( const char* pData,
         data.append(pData, size);
 
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
-        e.SetKeyWithIV(cred.key, cred.GetKeySize(), cred.iv, cred.GetIvSize());
+        e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
         CryptoPP::StringSource( data,
                                 true,
@@ -169,12 +253,12 @@ bool Crypto::EncryptData( const char* pData,
        // Write out cipher to ofstream
        ofs.write(cipher.c_str(), cipher.size());
        std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
-       std::cout << " KEY : " << cred.key << std::endl;
-       std::cout << " IV : " << cred.iv << std::endl;
+       std::cout << " KEY : " << cred.m_Key << std::endl;
+       std::cout << " IV : " << cred.m_Iv << std::endl;
 
        /*
        std::string holdkey;
-       holdkey.append(cred.key, cred.GetKeySize());
+       holdkey.append(cred.m_Key, cred.GetKeySize());
        std::cout<< "HOLD KEY : " << holdkey << std::endl;
        */
 
@@ -194,8 +278,8 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
                                 const Credentials &cred)
 {
 
-    std::cout << " KEY : " << cred.key << std::endl;
-    std::cout << " IV : " << cred.iv << std::endl;
+    std::cout << " KEY : " << cred.m_Key << std::endl;
+    std::cout << " IV : " << cred.m_Iv << std::endl;
 
     // szFilePath, is the path to the encrypted data.
 
@@ -263,7 +347,7 @@ bool Crypto::DecryptData( const char* pData,
         std::string cipher;
         cipher.append(pData, size);
         CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
-        d.SetKeyWithIV(cred.key, cred.GetKeySize(), cred.iv, cred.GetIvSize());
+        d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
         // Recovered Plain Data                                                             
         std::string rpdata;                                                                 
@@ -335,10 +419,10 @@ int Crypto::GenerateKeyFromPassphrase( const std::string& pass,
 
         // Copy into credentials // Char to to byte (unsigned char) conversion
         // just allow it.
-        memcpy(out.key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
+        memcpy(out.m_Key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
         //memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
 
-        std::cout << "Cred key : \n" << out.key << std::endl;
+        std::cout << "Cred key : \n" << out.m_Key << std::endl;
         //std::cout << "Cred iv : \n" << out.iv << std::endl;
     }
 

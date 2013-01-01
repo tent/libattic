@@ -11,20 +11,7 @@
 #include <osrng.h>
 
 #include "errorcodes.h"
-
-
-class Credentials
-{
-public:
-    Credentials() {}
-    ~Credentials() {}
-
-    byte key[CryptoPP::AES::MAX_KEYLENGTH];
-    byte iv[CryptoPP::AES::BLOCKSIZE]; // TODO :: this is probably going to be removed in the future.
-    
-    size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
-    size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
-};
+#include "credentials.h"
 
 class Crypto
 {
@@ -50,15 +37,26 @@ public:
     ~Crypto();
 
     void GenerateCredentials(Credentials& cred);
+    void GenerateIV(std::string& out);
+
     Credentials GenerateCredentials(); 
 
-    ret::eCode EncryptFile( const std::string &szFilepath, 
-                            const std::string &szOutputPath, 
-                            const Credentials &cred);
+    ret::eCode EncryptFile( const std::string& szFilepath, 
+                            const std::string& szOutputPath, 
+                            const Credentials& cred);
 
-    ret::eCode DecryptFile( const std::string &szFilepath, 
-                            const std::string &szOutputPath, 
-                            const Credentials &cred);
+    ret::eCode DecryptFile( const std::string& szFilepath, 
+                            const std::string& szOutputPath, 
+                            const Credentials& cred);
+
+    int EncryptString( const std::string& data,
+                       const Credentials& cred,
+                       std::string& out);
+
+    int DecryptString( const std::string& cipher,
+                       const Credentials& cred,
+                       std::string& out);
+
 
     unsigned int GetStride() { return m_Stride; }
 
