@@ -81,7 +81,7 @@ Entity* EntityManager::Discover(const std::string& entityurl)
 
                 Response resp;
                 int code = ConnectionManager::GetInstance()->HttpGet(str, NULL, resp);
-                //std::cout<< " resp : " << resp.body << std::endl;
+                std::cout<< " resp : " << resp.body << std::endl;
                 std::cout<< " code : " << resp.code << std::endl;
             }
         }

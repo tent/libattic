@@ -72,14 +72,14 @@ void UrlParams::SerializeAndEncodeToString(CURL* pCurl, std::string &out) const
         {
             hold.clear();
             hold.append(*valItr);
-            char *pPm = curl_easy_escape(pCurl, hold.c_str() , hold.size()); 
+            // TODO :: make sure this isn't leaking
+            char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size()); 
             out.append(pPm);
             
             if(*valItr != itr->second.back())
                 out.append(",");
         }
     }
-
 }
 
 

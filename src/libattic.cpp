@@ -758,7 +758,7 @@ int RegisterPassphrase(const char* szPass)
     std::string out;
     crypto.EncryptString(key, enc, out);
 
-    std::cout<<" out : " << out << std::endl;
+    std::cout<<" encrypted out : " << out << std::endl;
 
     std::string dec;
     crypto.DecryptString(out, enc, dec);
@@ -802,7 +802,20 @@ int RegisterPassphrase(const char* szPass)
 
     // TODO :: add the type as url params and just pass the attic profile type
     // UrlParams params
+    std::string hold("https://cupcake.io/types/info/attic/v0.1.0");
+    char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
+    url.append("/");
+    url.append(pPm);
+
     conops::HttpPost(url, NULL, output, at);
+
+    std::string profurl;
+    g_pEntity->GetFrontProfileUrl(profurl);
+    std::cout<< " PROFILE URL : " << profurl << std::endl;
+    Response resp;
+
+    conops::HttpGet(profurl, NULL, at);
+
 
     return ret::A_OK;
 }

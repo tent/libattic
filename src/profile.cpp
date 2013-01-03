@@ -1,5 +1,6 @@
 #include "profile.h"
 
+#include <cbase64.h>
 #include "constants.h"
 
 AtticProfileInfo::AtticProfileInfo()
@@ -14,9 +15,9 @@ AtticProfileInfo::~AtticProfileInfo()
 
 void AtticProfileInfo::Serialize(Json::Value& root)
 {
-    root["salt"] = m_Salt;
-    root["mk"] = m_MasterKey;
-    root["mk_iv"] = m_Iv;
+    root["salt"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_Salt.c_str()), m_Salt.size());
+    root["mk"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_MasterKey.c_str()), m_MasterKey.size());
+    root["mk_iv"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_Iv.c_str()), m_Iv.size());
 
     Json::Value perm(Json::objectValue);
     JsonSerializer::SerializeObject(&m_Permissions, perm);
@@ -25,9 +26,12 @@ void AtticProfileInfo::Serialize(Json::Value& root)
 
 void AtticProfileInfo::Deserialize(Json::Value& root)
 {
-    m_Salt = root.get("salt", "").asString();
-    m_MasterKey = root.get("mk", "").asString();
-    m_Iv = root.get("mk_iv", "").asString();
+    m_Salt = cb64::base64_decode(root.get("salt", "").asString());
+    m_MasterKey = cb64::base64_decode(root.get("mk", "").asString());
+    m_Iv = cb64::base64_decode(root.get("mk_iv", "").asString());
+
+    std::cout<<"SALTY : " << m_Salt << std::endl;
+    std::cout<<"MASTERKEY : " << m_MasterKey << std::endl;
 
     JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
 }

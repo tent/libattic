@@ -61,6 +61,7 @@ INCLUDE_DIRECTORIES(./third_party/c5)
 INCLUDE_DIRECTORIES(./third_party/sqlite)
 INCLUDE_DIRECTORIES(./third_party/jsoncpp/include)
 INCLUDE_DIRECTORIES(./third_party/scryptlib)
+INCLUDE_DIRECTORIES(./third_party/base64)
 
 # This is where binary files will go
 file(MAKE_DIRECTORY ./bin)
@@ -72,7 +73,8 @@ file(GLOB_RECURSE libattic_SOURCE
     "src/*.cpp"
     "src/*.c"
     "third_party/sqlite/*.c"
-    "third_party/scryptlib/*.c")
+    "third_party/scryptlib/*.c"
+    "third_party/base64/*.cpp")
 
 
 file(GLOB_RECURSE libattic_HEADERS 

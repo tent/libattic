@@ -889,8 +889,8 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
     curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
     */
-    curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, &body);
-    curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
+    curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, body.c_str());
+    //curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
 
     // Write out headers 
     curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
