@@ -13,7 +13,7 @@ class Entity;
 
 class EntityManager : public MutexClass
 {
-    void RetrieveEntityProfiles(Entity* pEntity, const AccessToken& at);
+    void RetrieveEntityProfiles(Entity& ent, const AccessToken& at);
 public:
     EntityManager();
     ~EntityManager();
@@ -21,7 +21,7 @@ public:
     int Initialize();
     int Shutdown();
 
-    Entity* Discover(const std::string& entityurl, const AccessToken& at);
+    int Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut);
 private:
     std::vector<Entity*> m_Entities; // TODO :: change this to a map, make it queryable
 

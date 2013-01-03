@@ -176,7 +176,7 @@ namespace conops
    
     static int HttpGet( const std::string& url,
                         const UrlParams* pParams,
-                        AccessToken& at,
+                        const AccessToken& at,
                         Response& responseOut)
     {
         ConnectionManager::GetInstance()->HttpGetWithAuth( url,                               

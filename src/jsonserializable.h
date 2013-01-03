@@ -4,7 +4,6 @@
 #pragma once
 
 #include <string>
-
 #include <json/json.h>
 
 class JsonSerializable
@@ -38,6 +37,7 @@ public:
 
         return true;
     }
+
 
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val)
     {
@@ -174,6 +174,7 @@ public:
 
         }
     }
+
 
 };
 

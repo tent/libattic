@@ -52,21 +52,23 @@ static EntityManager*       g_pEntityManager = NULL;
 static TaskArbiter g_Arb;
 static TaskFactory g_TaskFactory;
 
-// Consider making these volatile
+// Directories
 static std::string g_WorkingDirectory;
 static std::string g_ConfigDirectory;
 static std::string g_TempDirectory;
 
+// var
 static std::string g_EntityUrl;
-static Entity* g_pEntity = NULL;
 static std::string g_AuthorizationURL;
+static PhraseToken  g_Pt;
+static Entity g_Entity;
 
 // Local utility functions
-static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
-static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi);
-static ret::eCode DeletePost(const std::string& szPostID);
-//////// API start
+static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
+static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
+static ret::eCode DeletePost(const std::string& szPostID); // Depricated
 
+//
 int InitializeFileManager();
 int InitializeCredentialsManager();
 int InitializeEntityManager();
@@ -80,16 +82,25 @@ int SetWorkingDirectory(const char* szDir);
 int SetConfigDirectory(const char* szDir);
 int SetTempDirectory(const char* szDir);
 
+int LoadEntity();
+int SaveEntity();
+
+int LoadPhraseToken();
+int SavePhraseToken(PhraseToken& pt);
+
+void GetPhraseTokenFilepath(std::string& out);
+void GetEntityFilepath(std::string& out);
 
 int TestQuery()
 {
-    EntityManager em;
+   // EntityManager em;
     
-    g_pEntity = em.Discover(g_EntityUrl);
+    //g_Entity = em.Discover(g_EntityUrl);
     //em.Discover("https://manuel.tent.is/profile");
 
 }
 
+//////// API start
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
@@ -129,7 +140,8 @@ int InitLibAttic( const char* szWorkingDirectory,
     // Non-essential
     LoadAppFromFile();
     LoadAccessToken();
-
+    LoadPhraseToken();
+    
     status = g_Arb.Initialize(threadCount);
     if(status != ret::A_OK)
     {
@@ -143,6 +155,9 @@ int InitLibAttic( const char* szWorkingDirectory,
     }
 
     std::cout<<"initialization success"<<std::endl;
+
+    // Load Entity
+    LoadEntity();
 
     return status;
 }
@@ -229,11 +244,6 @@ int InitializeEntityManager()
     {
         g_pEntityManager = new EntityManager();
         status = g_pEntityManager->Initialize();
-        // Load Entity
-        // TODO :: Load from file, otherwise discover
-        g_pEntity = g_pEntityManager->Discover(g_EntityUrl);
-
-        // TODO :: write entity out to file
     }
 
     return status;
@@ -724,103 +734,171 @@ int RegisterPassphrase(const char* szPass)
     //            the passphrase in correctly.
     //          - obviously skip the first 8 bytes when getting the master key
 
-    // Register a new passphrase.
-    PhraseToken pt;
-    MasterKey mk;
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    // Enter passphrase to generate key.
-    g_pCredManager->RegisterPassphrase(szPass, pt);
-    // Create random master key
-    g_pCredManager->GenerateMasterKey(mk);
-    g_pCredManager->Unlock();
+    if(g_Pt.IsKeyEmpty())
+    {
+        // Register a new passphrase.
+        MasterKey mk;
+        while(g_pCredManager->TryLock()) { sleep(0); }
+        // Enter passphrase to generate key.
+        g_pCredManager->RegisterPassphrase(szPass, g_Pt);
+        // Create random master key
+        g_pCredManager->GenerateMasterKey(mk);
+        g_pCredManager->Unlock();
 
-    std::string key;
-    mk.GetMasterKey(key);
-    std::cout<< " Master Key : " << key << std::endl;
+        SavePhraseToken(g_Pt);
 
-    mk.InsertSentinelIntoMasterKey();
-    // Create Sentinel bytes
+        std::string key;
+        mk.GetMasterKey(key);
+        std::cout<< " Master Key : " << key << std::endl;
 
-    // Setup passphrase cred to encrypt master key
-    std::string passphrase;
-    pt.GetKey(passphrase);
+        mk.InsertSentinelIntoMasterKey();
+        // Create Sentinel bytes
 
-    Crypto crypto;
-    // Generate iv
-    std::string iv;
-    crypto.GenerateIV(iv);
+        // Setup passphrase cred to encrypt master key
+        std::string passphrase;
+        g_Pt.GetKey(passphrase);
 
-    Credentials enc;
-    enc.SetKey(passphrase);
-    enc.SetIv(iv);
+        Crypto crypto;
+        // Generate iv
+        std::string iv;
+        crypto.GenerateIV(iv);
 
-    // Encrypt MasterKey with passphrase key
-    std::string out;
-    crypto.EncryptString(key, enc, out);
+        Credentials enc;
+        enc.SetKey(passphrase);
+        enc.SetIv(iv);
 
-    std::cout<<" encrypted out : " << out << std::endl;
+        // Encrypt MasterKey with passphrase key
+        std::string out;
+        crypto.EncryptString(key, enc, out);
 
-    std::string dec;
-    crypto.DecryptString(out, enc, dec);
+        std::cout<<" encrypted out : " << out << std::endl;
 
-    std::cout<< " dec : " << dec << std::endl;
+        std::string dec;
+        crypto.DecryptString(out, enc, dec);
 
-    if(key == dec)
-        std::cout<< " THE SAME SUCCESS " << std::endl;
+        std::cout<< " dec : " << dec << std::endl;
 
-    std::string salt;
-    pt.GetSalt(salt);
-    // Create Profile post for 
-    AtticProfileInfo* pAtticProf = new AtticProfileInfo();
-    // MasterKey and Salt
-    pAtticProf->SetMasterKey(out);
-    pAtticProf->SetSalt(salt);
-    pAtticProf->SetIv(iv);
+        if(key == dec)
+            std::cout<< " THE SAME SUCCESS " << std::endl;
 
-    std::string output;
-    JsonSerializer::SerializeObject(pAtticProf, output);
+        std::string salt;
+        g_Pt.GetSalt(salt);
+        // Create Profile post for 
+        AtticProfileInfo* pAtticProf = new AtticProfileInfo();
+        // MasterKey and Salt
+        pAtticProf->SetMasterKey(out);
+        pAtticProf->SetSalt(salt);
+        pAtticProf->SetIv(iv);
 
-    std::cout<< " serialized output : " << output << std::endl;
+        std::string output;
+        JsonSerializer::SerializeObject(pAtticProf, output);
 
-    AtticProfileInfo ap;
-    JsonSerializer::DeserializeObject(&ap, output);
+        std::cout<< " serialized output : " << output << std::endl;
 
-    std::string masterkey;
-    ap.GetMasterKey(masterkey);
-    std::cout<<" KEY : " << masterkey << std::endl;
-    std::string url;
-    g_pEntity->GetFrontProfileUrl(url);
-    std::cout<<" PROFILE URL : " <<url << std::endl;
+        AtticProfileInfo ap;
+        JsonSerializer::DeserializeObject(&ap, output);
 
-    // Save and post
+        std::string masterkey;
+        ap.GetMasterKey(masterkey);
+        std::cout<<" KEY : " << masterkey << std::endl;
+        std::string url;
+        g_Entity.GetFrontProfileUrl(url);
+        std::cout<<" PROFILE URL : " <<url << std::endl;
 
-    AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+        // Save and post
 
+        AccessToken at;
+        while(g_pCredManager->TryLock()) { sleep(0); }
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    // TODO :: add the type as url params and just pass the attic profile type
-    // UrlParams params
-    std::string hold("https://cupcake.io/types/info/attic/v0.1.0");
-    char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
-    url.append("/");
-    url.append(pPm);
+        // TODO :: add the type as url params and just pass the attic profile type
+        // UrlParams params
+        std::string hold("https://cupcake.io/types/info/attic/v0.1.0");
+        char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
+        url.append("/");
+        url.append(pPm);
 
-    conops::HttpPost(url, NULL, output, at);
+        Response resp;
+        conops::HttpPost(url, NULL, output, at, resp);
 
-    std::string profurl;
-    g_pEntity->GetFrontProfileUrl(profurl);
-    std::cout<< " PROFILE URL : " << profurl << std::endl;
-    Response resp;
+        /*
+        std::string profurl;
+        g_Entity.GetFrontProfileUrl(profurl);
+        std::cout<< " PROFILE URL : " << profurl << std::endl;
 
-    conops::HttpGet(profurl, NULL, at);
+        Response resp;
+        conops::HttpGet(profurl, NULL, at, resp);
+        */
 
+        return ret::A_OK;
+    }
+    return ret::A_FAIL_REGISTER_PASSPHRASE;
+}
+
+int ChangePassphrase(const char* szOld, const char* szNew)
+{
 
     return ret::A_OK;
 }
 
-int ChangePassphrase(const char* szOld, const char* szNew)
+int LoadPhraseToken()
+{
+    std::string ptpath;
+    GetPhraseTokenFilepath(ptpath);
+    return g_Pt.LoadFromFile(ptpath);
+}
+
+int SavePhraseToken(PhraseToken& pt)
+{
+    std::string ptpath;
+    GetPhraseTokenFilepath(ptpath);
+    return g_Pt.SaveToFile(ptpath);
+}
+
+void GetPhraseTokenFilepath(std::string& out)
+{
+    out += g_ConfigDirectory;
+    out += "/";
+    out += cnst::g_szPhraseTokenName;
+}
+
+void GetEntityFilepath(std::string& out)
+{
+    out += g_ConfigDirectory;
+    out += "/";
+    out += cnst::g_szEntityName;
+}
+
+int LoadEntity()
+{
+    std::string entpath;
+    GetEntityFilepath(entpath);
+    int status = g_Entity.LoadFromFile(entpath);
+ 
+    if(status != ret::A_OK)
+    {
+        std::cout<<"discovering...."<<std::endl;
+        // Load Entity
+        AccessToken at;
+        while(g_pCredManager->TryLock()) { sleep(0); }
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
+
+        // TODO :: Load from file, otherwise discover
+        std::cout<< " ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
+        
+        status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
+
+        // TODO :: write entity out to file
+        g_Entity.WriteToFile(entpath);
+
+    }
+
+    return status;
+}
+
+int SaveEntity()
 {
 
     return ret::A_OK;

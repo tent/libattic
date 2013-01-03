@@ -88,13 +88,39 @@ void Entity::Serialize(Json::Value& root)
     JsonSerializer::SerializeVector(urllist, m_ProfileUrls); 
     root["profile_urls"] = urllist;
 
+    std::vector<std::string> profiles;
+    ProfileList::iterator itr = m_Profiles.begin();
+
+    std::string buffer;
+    for(;itr != m_Profiles.end(); itr++)
+    {
+        buffer.clear();
+        JsonSerializer::SerializeObject(*itr, buffer);
+        profiles.push_back(buffer);
+    }
+
     Json::Value profilelist;
-    JsonSerializer::SerializeObjectVector(profilelist, m_Profiles);
+    JsonSerializer::SerializeVector(profilelist, profiles);
     root["profile_list"] = profilelist;
 }
 
 void Entity::Deserialize(Json::Value& root)
 {
+    m_EntityUrl = root.get("entity_url", "").asString();
+    m_ApiRoot = root.get("api_root", "").asString();
+
+    JsonSerializer::DeserializeIntoVector(root["profile_urls"], m_ProfileUrls);
+    std::vector<std::string> profiles;
+    JsonSerializer::DeserializeIntoVector(root["profile_list"], profiles);
+
+    std::vector<std::string>::iterator itr = profiles.begin();
+    for(;itr != profiles.end(); itr++)
+    {
+        std::cout<<"loading profile : " << *itr << std::endl;
+        Profile* p = new Profile();
+        JsonSerializer::DeserializeObject(p, *itr);
+        m_Profiles.push_back(p);
+    }
 
 }
 

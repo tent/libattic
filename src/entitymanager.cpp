@@ -35,7 +35,7 @@ int EntityManager::Shutdown()
 }
 
 
-Entity* EntityManager::Discover(const std::string& entityurl, const AccessToken& at)
+int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
 {
     // Check entity url
     std::string profpath = entityurl;
@@ -50,11 +50,9 @@ Entity* EntityManager::Discover(const std::string& entityurl, const AccessToken&
                      at,
                      response );
 
-    Entity* pEntity = NULL;
 
     if(response.code == 200)
     {
-        pEntity = new Entity();
 
         // Parse out all link tags
         utils::taglist tags;
@@ -78,7 +76,7 @@ Entity* EntityManager::Discover(const std::string& entityurl, const AccessToken&
                 str = tags[i].substr(b, diff);
                 std::cout<<" SUBSTR : " << str << std::endl;
 
-                pEntity->PushBackProfileUrl(str);
+                entOut.PushBackProfileUrl(str);
 
                 /*
                 Response resp;
@@ -94,18 +92,18 @@ Entity* EntityManager::Discover(const std::string& entityurl, const AccessToken&
         }
 
         // Grab entity api root etc
-        RetrieveEntityProfiles(pEntity, at);
+        RetrieveEntityProfiles(entOut, at);
     }
 
-    return pEntity;
+    ret::A_OK;
 }
 
-void EntityManager::RetrieveEntityProfiles(Entity* pEntity, const AccessToken& at)
+void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
 {
-    unsigned int profcount = pEntity->GetProfileCount();
-    if(pEntity && profcount)
+    unsigned int profcount = ent.GetProfileCount();
+    if(profcount)
     {
-        const Entity::UrlList* ProfList = pEntity->GetProfileList();
+        const Entity::UrlList* ProfList = ent.GetProfileList();
         Entity::UrlList::const_iterator itr = ProfList->begin();
 
         while(itr != ProfList->end())
@@ -126,7 +124,7 @@ void EntityManager::RetrieveEntityProfiles(Entity* pEntity, const AccessToken& a
                 JsonSerializer::DeserializeObject(pProf, response.body);
                 
                 // Push back into entity
-                pEntity->PushBackProfile(pProf);
+                ent.PushBackProfile(pProf);
             }
             itr++;
         }

@@ -38,7 +38,7 @@ TEST(REGISTER, PASSPHRASE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    RegisterPassphrase("password");
+//    RegisterPassphrase("password");
 
     ShutdownLibAttic();
 

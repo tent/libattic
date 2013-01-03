@@ -18,18 +18,18 @@ PhraseToken::~PhraseToken()
 void PhraseToken::Serialize(Json::Value& root)
 {
     root["key"] = m_Key;
+    root["salt"] = m_Salt;
 }
 
 void PhraseToken::Deserialize(Json::Value& root)
 {
     m_Key = root.get("key", "").asString();
+    m_Salt = root.get("salt", "").asString();
 }
 
 int PhraseToken::SaveToFile(const std::string& filepath)
 {
     std::ofstream ofs;
-
-
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())

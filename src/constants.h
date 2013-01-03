@@ -28,6 +28,7 @@ namespace cnst
     static const char* g_szAuthTokenName = "at";                                             
     static const char* g_szPhraseTokenName = "phst";
     static const char* g_szManifestName = "manifest";                                        
+    static const char* g_szEntityName = "ent";
 };
 
 

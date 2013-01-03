@@ -17,6 +17,9 @@ public:
 
     int SaveToFile(const std::string& filepath);
     int LoadFromFile(const std::string& filepath);
+    
+    bool IsKeyEmpty() { return m_Key.empty(); }
+    bool IsSaltEmpty() { return m_Salt.empty(); }
 
     void GetKey(std::string& out) { out = m_Key; }
     void GetSalt(std::string& out) { out = m_Salt; }

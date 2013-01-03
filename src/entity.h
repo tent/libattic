@@ -12,7 +12,7 @@
 class Entity : public JsonSerializable
 {
 public:
-    typedef std::vector<JsonSerializable *> ProfileList;
+    typedef std::vector<Profile*> ProfileList;
     typedef std::vector<std::string> UrlList;
     
     Entity();
