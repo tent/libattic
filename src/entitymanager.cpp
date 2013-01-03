@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "constants.h"
 #include "errorcodes.h"
-#include "connectionmanager.h"
+#include "conoperations.h"
 
 
 EntityManager::EntityManager()
@@ -35,7 +35,7 @@ int EntityManager::Shutdown()
 }
 
 
-Entity* EntityManager::Discover(const std::string& entityurl)
+Entity* EntityManager::Discover(const std::string& entityurl, const AccessToken& at)
 {
     // Check entity url
     std::string profpath = entityurl;
@@ -45,9 +45,10 @@ Entity* EntityManager::Discover(const std::string& entityurl)
     std::cout<<" discovering ... : " << profpath << std::endl;
 
     Response response;
-    int code = ConnectionManager::GetInstance()->HttpGet(profpath, NULL, response);
-    //std::cout<< " resp : " << response.body << std::endl;
-    std::cout<< " code : " << response.code << std::endl;
+    conops::HttpGet( profpath, 
+                     NULL,
+                     at,
+                     response );
 
     Entity* pEntity = NULL;
 
@@ -79,21 +80,27 @@ Entity* EntityManager::Discover(const std::string& entityurl)
 
                 pEntity->PushBackProfileUrl(str);
 
+                /*
                 Response resp;
-                int code = ConnectionManager::GetInstance()->HttpGet(str, NULL, resp);
-                std::cout<< " resp : " << resp.body << std::endl;
+                conops::HttpGet( str, 
+                                 NULL,
+                                 at,
+                                 resp);
+    
+            //    std::cout<< " resp : " << resp.body << std::endl;
                 std::cout<< " code : " << resp.code << std::endl;
+                */
             }
         }
 
         // Grab entity api root etc
-        RetrieveEntityProfiles(pEntity);
+        RetrieveEntityProfiles(pEntity, at);
     }
 
     return pEntity;
 }
 
-void EntityManager::RetrieveEntityProfiles(Entity* pEntity)
+void EntityManager::RetrieveEntityProfiles(Entity* pEntity, const AccessToken& at)
 {
     unsigned int profcount = pEntity->GetProfileCount();
     if(pEntity && profcount)
@@ -104,10 +111,14 @@ void EntityManager::RetrieveEntityProfiles(Entity* pEntity)
         while(itr != ProfList->end())
         {
             Response response;
-            int code = ConnectionManager::GetInstance()->HttpGet(*itr, NULL, response);
-            //std::cout<< " resp : " << response.body << std::endl;
-            std::cout<< " code : " << response.code << std::endl;
+            conops::HttpGet( *itr, 
+                             NULL,
+                             at,
+                             response);
 
+            std::cout<< " resp : " << response.body << std::endl;
+            std::cout<< " code : " << response.code << std::endl;
+ 
             if(response.code == 200)
             {
                 // Deserialize into Profile Object

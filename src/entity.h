@@ -6,17 +6,24 @@
 #include <vector>
 #include <string>
 
+#include "jsonserializable.h"
 #include "profile.h"
 
-class Entity
+class Entity : public JsonSerializable
 {
 public:
-    typedef std::vector<Profile*> ProfileList;
+    typedef std::vector<JsonSerializable *> ProfileList;
     typedef std::vector<std::string> UrlList;
     
     Entity();
     ~Entity();
+
+    int WriteToFile(const std::string& filepath);
+    int LoadFromFile(const std::string& filepath);
     
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+
     void PushBackProfile(Profile* pProf) { m_Profiles.push_back(pProf); }
     void PushBackProfileUrl(const std::string& url) { m_ProfileUrls.push_back(url); }
 

@@ -5,13 +5,15 @@
 
 #include <string>
 #include <vector>
+
 #include "mutexclass.h"
+#include "accesstoken.h"
 
 class Entity;
 
 class EntityManager : public MutexClass
 {
-    void RetrieveEntityProfiles(Entity* pEntity);
+    void RetrieveEntityProfiles(Entity* pEntity, const AccessToken& at);
 public:
     EntityManager();
     ~EntityManager();
@@ -19,7 +21,7 @@ public:
     int Initialize();
     int Shutdown();
 
-    Entity* Discover(const std::string& entityurl);
+    Entity* Discover(const std::string& entityurl, const AccessToken& at);
 private:
     std::vector<Entity*> m_Entities; // TODO :: change this to a map, make it queryable
 
