@@ -155,6 +155,28 @@ namespace conops
         return ret::A_OK;
     }    
 
+    static int HttpPost( const std::string& url,
+                         const UrlParams* pParams,
+                         const std::string& body,
+                         AccessToken& at)
+    {
+        Response response;
+        std::cout<<" here " << std::endl;
+        ConnectionManager::GetInstance()->HttpPutWithAuth( url,
+                                                    pParams,
+                                                    body,
+                                                    response,
+                                                    at.GetMacAlgorithm(), 
+                                                    at.GetAccessToken(), 
+                                                    at.GetMacKey(), 
+                                                    true);
+
+        std::cout<<" here " << std::endl;
+        std::cout<<" response : " << response.body << std::endl;
+
+        return ret::A_OK;
+    }
+
 
 };
 

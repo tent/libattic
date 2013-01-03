@@ -199,12 +199,12 @@ int SyncManifestTask::PullManifestPostAttachment(const std::string& postid)
         std::string keypath;
         MasterKey mk;
         GetMasterKeyFromCredentials(mk, keypath);
-        Credentials cred = mk.GetCredentialsCopy();
+       // Credentials cred = mk.GetCredentialsCopy();
 
         std::cout<<" Decrypting "<< std::endl;
         std::string path = outpath;
         path += "_hld";
-        m_Crypto.EncryptFile(outpath, path, cred);
+        //m_Crypto.EncryptFile(outpath, path, cred);
  
 
     }                                                            
@@ -455,6 +455,7 @@ int SyncManifestTask::PutManifest(const std::string& url, const std::string& fil
 
 FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 {
+    /*
     std::string path;
     MasterKey mk;
     GetMasterKeyFromCredentials(mk, path);
@@ -489,7 +490,11 @@ FileInfo* SyncManifestTask::CreateManifestFileInfoAndEncrypt()
 
     }
 
+
     return fi;
+
+    */
+    return NULL;
 }
 
 void SyncManifestTask::GetMasterKeyFromCredentials(MasterKey& mk, std::string& outpath)

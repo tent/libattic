@@ -110,6 +110,16 @@ public:
                           const std::string &mackey, 
                           bool verbose = false);
 
+    int HttpPutWithAuth( const std::string &url, 
+                          const UrlParams* pParams,
+                          const std::string &body, 
+                          Response& responseOut, 
+                          const std::string &macalgorithm, 
+                          const std::string &macid, 
+                          const std::string &mackey, 
+                          bool verbose = false);
+
+
     int HttpMultipartPost( const std::string &url, 
                            const UrlParams* pParams,
                            const std::string &body, 

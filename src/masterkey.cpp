@@ -76,7 +76,7 @@ void MasterKey::LoadFromFile(const std::string& filepath)
     }
 }
 
-void MasterKey::GenerateMasterKeyWithSentinel()
+void MasterKey::InsertSentinelIntoMasterKey()
 {
     std::string key;
     GetMasterKey(key);

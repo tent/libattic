@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 
+#include "entitymanager.h"
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
@@ -26,6 +27,7 @@
 #include "constants.h"
 #include "credentials.h"
 #include "profile.h"
+#include "conoperations.h"
 
 // TODO :: 
 // Things to wrap with mutexes
@@ -42,10 +44,10 @@
 //
 // TODO :: Consider moving TentApp into Credentials Manager
 
-static TentApp*             g_pApp = 0;
-static FileManager*         g_pFileManager = 0;
-static CredentialsManager*  g_pCredManager = 0;
-static EntityManager*       g_pEntityManager = 0;
+static TentApp*             g_pApp = NULL;
+static FileManager*         g_pFileManager = NULL;
+static CredentialsManager*  g_pCredManager = NULL;
+static EntityManager*       g_pEntityManager = NULL;
 
 static TaskArbiter g_Arb;
 static TaskFactory g_TaskFactory;
@@ -55,7 +57,8 @@ static std::string g_WorkingDirectory;
 static std::string g_ConfigDirectory;
 static std::string g_TempDirectory;
 
-static std::string g_Entity;
+static std::string g_EntityUrl;
+static Entity* g_pEntity = NULL;
 static std::string g_AuthorizationURL;
 
 // Local utility functions
@@ -82,7 +85,7 @@ int TestQuery()
 {
     EntityManager em;
     
-    em.Discover(g_Entity);
+    g_pEntity = em.Discover(g_EntityUrl);
     //em.Discover("https://manuel.tent.is/profile");
 
 }
@@ -226,6 +229,11 @@ int InitializeEntityManager()
     {
         g_pEntityManager = new EntityManager();
         status = g_pEntityManager->Initialize();
+        // Load Entity
+        // TODO :: Load from file, otherwise discover
+        g_pEntity = g_pEntityManager->Discover(g_EntityUrl);
+
+        // TODO :: write entity out to file
     }
 
     return status;
@@ -534,7 +542,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                             ConnectionManager::GetInstance(),
                                             g_pCredManager,
                                             at,
-                                            g_Entity,
+                                            g_EntityUrl,
                                             szFilePath,
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -560,7 +568,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                             ConnectionManager::GetInstance(),
                                             g_pCredManager,
                                             at,
-                                            g_Entity,
+                                            g_EntityUrl,
                                             szFilePath,
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -588,7 +596,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                             ConnectionManager::GetInstance(),
                                             g_pCredManager,
                                             at,
-                                            g_Entity,
+                                            g_EntityUrl,
                                             szFileName,
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -614,7 +622,7 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
                                             ConnectionManager::GetInstance(),
                                             g_pCredManager,
                                             at,
-                                            g_Entity,
+                                            g_EntityUrl,
                                             "",
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -639,7 +647,7 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
                                           ConnectionManager::GetInstance(),
                                           g_pCredManager,
                                           at,
-                                          g_Entity,
+                                          g_EntityUrl,
                                           "",
                                           g_TempDirectory,
                                           g_WorkingDirectory,
@@ -730,7 +738,7 @@ int RegisterPassphrase(const char* szPass)
     mk.GetMasterKey(key);
     std::cout<< " Master Key : " << key << std::endl;
 
-    mk.GenerateKeyWithSentinel();
+    mk.InsertSentinelIntoMasterKey();
     // Create Sentinel bytes
 
     // Setup passphrase cred to encrypt master key
@@ -763,13 +771,14 @@ int RegisterPassphrase(const char* szPass)
     std::string salt;
     pt.GetSalt(salt);
     // Create Profile post for 
-    AtticProfileInfo AtticProf;
-    AtticProf.SetMasterKey(out);
-    AtticProf.SetSalt(salt);
-    AtticProf.SetIv(iv);
+    AtticProfileInfo* pAtticProf = new AtticProfileInfo();
+    // MasterKey and Salt
+    pAtticProf->SetMasterKey(out);
+    pAtticProf->SetSalt(salt);
+    pAtticProf->SetIv(iv);
 
     std::string output;
-    JsonSerializer::SerializeObject(&AtticProf, output);
+    JsonSerializer::SerializeObject(pAtticProf, output);
 
     std::cout<< " serialized output : " << output << std::endl;
 
@@ -779,10 +788,23 @@ int RegisterPassphrase(const char* szPass)
     std::string masterkey;
     ap.GetMasterKey(masterkey);
     std::cout<<" KEY : " << masterkey << std::endl;
-
-    // MasterKey and Salt
+    std::string url;
+    g_pEntity->GetFrontProfileUrl(url);
+    std::cout<<" PROFILE URL : " <<url << std::endl;
 
     // Save and post
+    Profile prof;
+    prof.SetAtticInfo(pAtticProf);
+
+    AccessToken at;
+    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy(at);
+    g_pCredManager->Unlock();
+
+    std::string body;
+    JsonSerializer::SerializeObject(&prof, body);
+    std::cout<< " BODY : " << body << std::endl;
+    conops::HttpPost(url, NULL, body, at);
 
     return ret::A_OK;
 }
@@ -843,12 +865,12 @@ int SetEntityUrl(const char* szUrl)
     if(!szUrl)
         return ret::A_FAIL_INVALID_CSTR;
 
-    g_Entity.append(szUrl);
+    g_EntityUrl.append(szUrl);
 
     return ret::A_OK;
 }
 
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
-const char* GetEntityUrl() { return g_Entity.c_str(); }
+const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
 

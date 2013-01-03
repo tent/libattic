@@ -20,7 +20,23 @@ struct WriteOut
     const char *readptr;
     int sizeleft;
 };
-
+static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
+{
+      struct WriteOut *pooh = (struct WriteOut *)userp;
+       
+        if(size*nmemb < 1)
+                return 0;
+         
+          if(pooh->sizeleft) {
+                  *(char *)ptr = pooh->readptr[0]; /* copy one single byte */ 
+                      pooh->readptr++;                 /* advance pointer */ 
+                          pooh->sizeleft--;                /* less data left */ 
+                              return 1;                        /* we return 1 byte at a time! */ 
+                                }
+           
+            return 0;                          /* no more data left to deliver */ 
+}
+ 
 static size_t WriteOutFunc( void *ptr, 
                             size_t size, 
                             size_t nmemb, 
@@ -326,14 +342,17 @@ int ConnectionManager::HttpPost( const std::string& url,
     postd.readptr = body.c_str(); // serialized json (should be)
     postd.sizeleft = body.size();
 
+
     CURLcode res; 
 
     if(verbose)
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
 
+    std::cout<<"here1"<<std::endl;
     std::string urlPath = url;
     EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
+    std::cout<<"here1"<<std::endl;
     curl_slist *headers = 0; // Init to null, always
     headers = curl_slist_append( headers, 
                                  "Accept: application/vnd.tent.v0+json" );
@@ -347,6 +366,7 @@ int ConnectionManager::HttpPost( const std::string& url,
     curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
 
     // Set Post data 
+    curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
     curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
     curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
 
@@ -357,6 +377,10 @@ int ConnectionManager::HttpPost( const std::string& url,
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
+    std::cout<<"here1"<<std::endl;
+    if(!pCurl)
+        std::cout<<"wtf"<<std::endl;
+
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)
@@ -365,9 +389,11 @@ int ConnectionManager::HttpPost( const std::string& url,
         return ret::A_FAIL_CURL_PERF;
     }
  
+    std::cout<<"here1"<<std::endl;
     responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
 
+    std::cout<<"here1"<<std::endl;
     return ret::A_OK;
 }
 
@@ -780,6 +806,7 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
 
     // Set Post data 
+    curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
     curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
     curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
 
@@ -804,6 +831,86 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     return ret::A_OK;
 
 }
+
+int ConnectionManager::HttpPutWithAuth( const std::string &url, 
+                                          const UrlParams* pParams,
+                                          const std::string &body, 
+                                          Response &responseOut, 
+                                          const std::string &macalgorithm, 
+                                          const std::string &macid, 
+                                          const std::string &mackey, 
+                                          bool verbose)
+{
+
+    CURL* pCurl = curl_easy_init();
+    WriteOut postd; // Post content to be read
+    postd.readptr = body.c_str(); // serialized json (should be)
+    postd.sizeleft = body.size();
+
+    CURLcode res; 
+
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
+
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+    ////////////////////////////////
+    std::cout<<" OUT LEN : " << body.size() << std::endl;
+    char szLen[256];
+    memset(szLen, '\0', sizeof(char)*256);                                              
+    snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
+
+    std::string jcl("Content-Length: ");
+    jcl.append(szLen);
+
+
+    curl_slist *headers = 0; // Init to null, always
+    headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+    headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+    headers = curl_slist_append(headers, jcl.c_str());
+
+    std::string authheader;
+    BuildAuthHeader( urlPath, 
+                     std::string("PUT"), 
+                     macid, 
+                     mackey, 
+                     authheader);
+
+    headers = curl_slist_append(headers, authheader.c_str());
+
+    // Set url
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    // Set that we want to Post
+    //curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
+    curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
+    // Set Post data 
+    curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
+    curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
+    curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
+
+    // Write out headers 
+    curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+
+    // Set read response func and data
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
+    
+    res = curl_easy_perform(pCurl);
+
+    if(res != CURLE_OK)
+    {
+        std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        return ret::A_FAIL_CURL_PERF;
+    }
+
+    responseOut.code = GetResponseCode(pCurl);
+    curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
+
+}
+
 
 void ConnectionManager::AddBodyToForm( const std::string &body,
                                               curl_httppost **post, 
@@ -1104,6 +1211,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 
 static size_t WriteOutToString(void *ptr, size_t size, size_t nmemb, std::string *s)
 {
+    std::cout<<"Write out to string ... "<< std::endl;
     unsigned int start_size = s->size();
 
     std::cout<<"SIZE : " << size << std::endl;

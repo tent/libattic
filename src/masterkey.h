@@ -22,7 +22,7 @@ public:
     void WriteToFile(const std::string& filepath);
     void LoadFromFile(const std::string& filepath);
 
-    void GenerateMasterKeyWithSentinel();
+    void InsertSentinelIntoMasterKey();
 
     void GetMasterKey(std::string& out)                     { m_Cred.GetKey(out); }
     void GetMasterKeyWithSentinel(std::string& out) const   { out = m_KeyWithSentinel; }
