@@ -793,18 +793,16 @@ int RegisterPassphrase(const char* szPass)
     std::cout<<" PROFILE URL : " <<url << std::endl;
 
     // Save and post
-    Profile prof;
-    prof.SetAtticInfo(pAtticProf);
 
     AccessToken at;
     while(g_pCredManager->TryLock()) { sleep(0); }
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    std::string body;
-    JsonSerializer::SerializeObject(&prof, body);
-    std::cout<< " BODY : " << body << std::endl;
-    conops::HttpPost(url, NULL, body, at);
+
+    // TODO :: add the type as url params and just pass the attic profile type
+    // UrlParams params
+    conops::HttpPost(url, NULL, output, at);
 
     return ret::A_OK;
 }
