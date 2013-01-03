@@ -19,12 +19,14 @@ void PhraseToken::Serialize(Json::Value& root)
 {
     root["key"] = m_Key;
     root["salt"] = m_Salt;
+    root["iv"] = m_Iv;
 }
 
 void PhraseToken::Deserialize(Json::Value& root)
 {
     m_Key = root.get("key", "").asString();
     m_Salt = root.get("salt", "").asString();
+    m_Iv = root.get("iv", "").asString();
 }
 
 int PhraseToken::SaveToFile(const std::string& filepath)

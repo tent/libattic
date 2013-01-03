@@ -107,6 +107,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
+    // Init sequence ORDER MATTERS
     utils::SeedRand();
     SetConfigDirectory(szConfigDirectory);
     SetWorkingDirectory(szWorkingDirectory);
@@ -140,7 +141,7 @@ int InitLibAttic( const char* szWorkingDirectory,
     // Non-essential
     LoadAppFromFile();
     LoadAccessToken();
-    LoadPhraseToken();
+
     
     status = g_Arb.Initialize(threadCount);
     if(status != ret::A_OK)
@@ -156,8 +157,9 @@ int InitLibAttic( const char* szWorkingDirectory,
 
     std::cout<<"initialization success"<<std::endl;
 
-    // Load Entity
+    // Load Entity Authentication  - ORDER MATTERS
     LoadEntity();
+    LoadPhraseToken();
 
     return status;
 }
@@ -720,7 +722,40 @@ int EnterPassphrase(const char* szPass)
     //         so put a check for that everytime the user enteres the passphrase
     
     // Check for correct passphrase
+    std::string key;
+    g_Pt.GetKey(key);
+    std::cout<<"KEY : " << key << std::endl;
+    
+    std::string dirtykey;
+    g_Pt.GetDirtyKey(dirtykey);
+    std::cout<<"DIRTY KEY : " << dirtykey << std::endl;
+    
+    std::string iv;
+    g_Pt.GetIv(iv);
 
+    std::string salt;
+    g_Pt.GetSalt(salt);
+
+    std::string keyOut;
+    while(g_pCredManager->TryLock()) { sleep(0); }
+    // Enter passphrase to generate key.
+    g_pCredManager->EnterPassphrase(szPass, salt, keyOut);
+    // Create random master key
+    g_pCredManager->Unlock();
+
+    std::cout<< " KEY OUT : " << keyOut << std::endl;
+    std::cout<< " SIZE : " << keyOut.size() << std::endl;
+
+    Credentials enc;
+    enc.SetKey(keyOut);
+    enc.SetIv(iv);
+
+    // Check sentinel bytes
+    //
+    // extract actual key apart from sentinel bytes
+
+
+    Crypto crypto;
     // Return success
     return ret::A_OK;
 }
@@ -787,6 +822,7 @@ int RegisterPassphrase(const char* szPass)
         AtticProfileInfo* pAtticProf = new AtticProfileInfo();
         // MasterKey and Salt
         pAtticProf->SetMasterKey(out);
+
         pAtticProf->SetSalt(salt);
         pAtticProf->SetIv(iv);
 
@@ -844,9 +880,37 @@ int ChangePassphrase(const char* szOld, const char* szNew)
 
 int LoadPhraseToken()
 {
+    std::cout<< " Loading Phrase Token ... " << std::endl;
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
-    return g_Pt.LoadFromFile(ptpath);
+    int status = g_Pt.LoadFromFile(ptpath);
+    if(status != ret::A_OK)
+    {
+        // Extract Info from entity
+        Profile* prof = g_Entity.GetFrontProfile();
+        if(prof)
+        {
+            AtticProfileInfo* atpi = prof->GetAtticInfo();
+            if(atpi)
+            {
+                std::string salt;
+                atpi->GetSalt(salt);
+                g_Pt.SetSalt(salt);
+
+                std::string iv;
+                atpi->GetIv(iv);
+                g_Pt.SetIv(iv);
+
+                std::string key;
+                atpi->GetMasterKey(key);
+                g_Pt.SetDirtyKey(key);
+            }
+        }
+
+        status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
+    }
+
+    return status; 
 }
 
 int SavePhraseToken(PhraseToken& pt)
@@ -887,7 +951,6 @@ int LoadEntity()
 
         // TODO :: Load from file, otherwise discover
         std::cout<< " ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
-        
         status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
 
         // TODO :: write entity out to file

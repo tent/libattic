@@ -38,7 +38,7 @@ public:
     // Pass Phrase
     int EnterPassphrase( const std::string& pass, 
                          std::string& salt, 
-                         PhraseToken& ptOut);
+                         std::string& keyOut);
 
     int RegisterPassphrase( const std::string& pass, 
                             PhraseToken& ptOut);

@@ -44,7 +44,6 @@ int Entity::WriteToFile(const std::string& filepath)
     ofs.close();
 
     return ret::A_OK;
-
 }
 
 int Entity::LoadFromFile(const std::string& filepath)
@@ -121,7 +120,6 @@ void Entity::Deserialize(Json::Value& root)
         JsonSerializer::DeserializeObject(p, *itr);
         m_Profiles.push_back(p);
     }
-
 }
 
 

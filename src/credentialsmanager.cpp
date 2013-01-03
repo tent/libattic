@@ -122,16 +122,12 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
 
 int CredentialsManager::EnterPassphrase( const std::string& pass, 
                                          std::string& salt, 
-                                         PhraseToken& ptOut)
+                                         std::string& keyOut)
 {
     Credentials cred;
     m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
     // Create Passphrase token
-    std::string key;
-    key.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
-    m_PhraseToken.SetKey(key);
-    // Write it out
-    WriteOutPhraseToken();
+    keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
 
     return ret::A_OK;
 }

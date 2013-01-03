@@ -27,8 +27,10 @@ public:
     void PushBackProfile(Profile* pProf) { m_Profiles.push_back(pProf); }
     void PushBackProfileUrl(const std::string& url) { m_ProfileUrls.push_back(url); }
 
-    const UrlList* GetProfileList() const { return &m_ProfileUrls; }
+    const UrlList* GetProfileUrlList() const { return &m_ProfileUrls; }
     void GetFrontProfileUrl(std::string& out) { if(m_ProfileUrls.size()) out = m_ProfileUrls.front(); }
+    ProfileList* GetProfileList(){ return &m_Profiles; }
+    Profile* GetFrontProfile() { if(m_Profiles.size()) { return m_Profiles.front(); } return NULL; }
     void GetEntityUrl(std::string& out) const { out = m_EntityUrl; }
     void GetApiRoot(std::string& out) const { out = m_ApiRoot; }
     unsigned int GetProfileCount() { return m_ProfileUrls.size(); }

@@ -39,6 +39,7 @@ TEST(REGISTER, PASSPHRASE)
                   "https://manuel.tent.is");
 
 //    RegisterPassphrase("password");
+    EnterPassphrase("password");
 
     ShutdownLibAttic();
 

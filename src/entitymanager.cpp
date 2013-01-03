@@ -50,7 +50,6 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
                      at,
                      response );
 
-
     if(response.code == 200)
     {
 
@@ -103,10 +102,10 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
     unsigned int profcount = ent.GetProfileCount();
     if(profcount)
     {
-        const Entity::UrlList* ProfList = ent.GetProfileList();
-        Entity::UrlList::const_iterator itr = ProfList->begin();
+        const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
+        Entity::UrlList::const_iterator itr = ProfUrlList->begin();
 
-        while(itr != ProfList->end())
+        while(itr != ProfUrlList->end())
         {
             Response response;
             conops::HttpGet( *itr, 
