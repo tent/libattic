@@ -722,9 +722,11 @@ int EnterPassphrase(const char* szPass)
     //         so put a check for that everytime the user enteres the passphrase
     
     // Check for correct passphrase
-    std::string key;
-    g_Pt.GetKey(key);
-    std::cout<<"KEY : " << key << std::endl;
+    // Get Information from entity
+
+    std::string phrasekey;
+    g_Pt.GetPhraseKey(phrasekey);
+    std::cout<<"PHRASE KEY : " << phrasekey << std::endl;
     
     std::string dirtykey;
     g_Pt.GetDirtyKey(dirtykey);
@@ -736,26 +738,60 @@ int EnterPassphrase(const char* szPass)
     std::string salt;
     g_Pt.GetSalt(salt);
 
-    std::string keyOut;
+    std::string phraseKey;
     while(g_pCredManager->TryLock()) { sleep(0); }
     // Enter passphrase to generate key.
-    g_pCredManager->EnterPassphrase(szPass, salt, keyOut);
+    g_pCredManager->EnterPassphrase(szPass, salt, phraseKey);
     // Create random master key
     g_pCredManager->Unlock();
 
-    std::cout<< " KEY OUT : " << keyOut << std::endl;
-    std::cout<< " SIZE : " << keyOut.size() << std::endl;
+    std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
+    std::cout<< " SIZE : " << phraseKey.size() << std::endl;
+    std::cout<<" IV : " << iv << std::endl;
 
     Credentials enc;
-    enc.SetKey(keyOut);
+    enc.SetKey(phraseKey);
     enc.SetIv(iv);
 
+    std::string mk;
+    // Get encrypted master key that needs decrypting
+    Profile* prof = g_Entity.GetFrontProfile();
+    if(prof)
+    {
+        AtticProfileInfo* atpi = prof->GetAtticInfo();
+        if(atpi)
+        {
+
+            atpi->GetMasterKey(mk);
+            std::cout<<"ATTIC MASTER KEY : " << mk << std::endl;
+
+            std::string iiiv;
+            atpi->GetIv(iiiv);
+            std::cout<<"ATTIC IV : " << iiiv << std::endl;
+            g_Pt.SetIv(iiiv);
+
+        }
+
+    }
+    std::cout<<" here "<<std::endl;
+
+    // Attempt to Decrypt Master Key
+    std::string out;
+    Crypto crypto;
+    crypto.DecryptString(mk, enc, out);
+
+    std::cout<<"------------------------------------" << std::endl;
+    std::cout<<"DECRYPTED MASTER KEY : " << out << std::endl;
+
+    std::cout<<out[0]<<std::endl;
+    std::cout<<out[4]<<std::endl;
+
+    // TODO ::
     // Check sentinel bytes
     //
     // extract actual key apart from sentinel bytes
 
 
-    Crypto crypto;
     // Return success
     return ret::A_OK;
 }
@@ -768,8 +804,10 @@ int RegisterPassphrase(const char* szPass)
     //          - check the first 4 against the latter 4 and if they are the same you entered
     //            the passphrase in correctly.
     //          - obviously skip the first 8 bytes when getting the master key
+    //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
 
-    if(g_Pt.IsKeyEmpty())
+    std::cout<<" Registering Passphrase ... " << std::endl;
+    //if(g_Pt.IsPhraseKeyEmpty())
     {
         // Register a new passphrase.
         MasterKey mk;
@@ -780,59 +818,82 @@ int RegisterPassphrase(const char* szPass)
         g_pCredManager->GenerateMasterKey(mk);
         g_pCredManager->Unlock();
 
-        SavePhraseToken(g_Pt);
-
-        std::string key;
-        mk.GetMasterKey(key);
-        std::cout<< " Master Key : " << key << std::endl;
-
         mk.InsertSentinelIntoMasterKey();
+
+        std::string ptsalt;
+        g_Pt.GetSalt(ptsalt);
+        std::cout<<" PHRASE TOKEN SALT : " << ptsalt << std::endl;
+
+        std::string dirtykey;
+        //mk.GetMasterKey(key);
+        mk.GetMasterKeyWithSentinel(dirtykey);
+        std::cout<< " Master Key(dirty) : " << dirtykey << std::endl;
+        g_Pt.SetDirtyKey(dirtykey);
+
         // Create Sentinel bytes
 
         // Setup passphrase cred to encrypt master key
         std::string passphrase;
-        g_Pt.GetKey(passphrase);
+        g_Pt.GetPhraseKey(passphrase);
 
         Crypto crypto;
         // Generate iv
         std::string iv;
         crypto.GenerateIV(iv);
 
+        std::cout<<" Generated IV : " << iv << std::endl;
+
         Credentials enc;
         enc.SetKey(passphrase);
         enc.SetIv(iv);
 
+        g_Pt.SetIv(iv);
+
         // Encrypt MasterKey with passphrase key
         std::string out;
-        crypto.EncryptString(key, enc, out);
-
+        crypto.EncryptString(dirtykey, enc, out);
         std::cout<<" encrypted out : " << out << std::endl;
 
+        // Decrypt with credentials to test
+        std::cout<<"Decrypt test ************************************"<<std::endl;
         std::string dec;
         crypto.DecryptString(out, enc, dec);
+        std::cout<< " decrypted out (test) : " << dec << std::endl;
 
-        std::cout<< " dec : " << dec << std::endl;
-
-        if(key == dec)
+        if(dirtykey == dec)
             std::cout<< " THE SAME SUCCESS " << std::endl;
+
+        std::cout<<"**************************************************"<<std::endl;
 
         std::string salt;
         g_Pt.GetSalt(salt);
         // Create Profile post for 
         AtticProfileInfo* pAtticProf = new AtticProfileInfo();
-        // MasterKey and Salt
+        // MasterKey with sentinel and Salt
         pAtticProf->SetMasterKey(out);
-
         pAtticProf->SetSalt(salt);
         pAtticProf->SetIv(iv);
 
         std::string output;
         JsonSerializer::SerializeObject(pAtticProf, output);
-
         std::cout<< " serialized output : " << output << std::endl;
 
+        // Test to make sure it deserialized properly
         AtticProfileInfo ap;
         JsonSerializer::DeserializeObject(&ap, output);
+        std::cout<<"\nDeserialize test ************************************"<<std::endl;
+        std::string keytest;
+        ap.GetMasterKey(keytest);
+        std::cout<<" encrypted key : " << keytest << std::endl;
+        std::string salttest;
+        ap.GetSalt(salttest);
+        std::cout<<" salt : " << salttest << std::endl;
+        std::string ivtest;
+        ap.GetIv(ivtest);
+        std::cout<<" iv : " << ivtest << std::endl;
+
+        std::cout<<"**************************************************\n"<<std::endl;
+
 
         std::string masterkey;
         ap.GetMasterKey(masterkey);
@@ -842,6 +903,7 @@ int RegisterPassphrase(const char* szPass)
         std::cout<<" PROFILE URL : " <<url << std::endl;
 
         // Save and post
+
 
         AccessToken at;
         while(g_pCredManager->TryLock()) { sleep(0); }
@@ -858,6 +920,8 @@ int RegisterPassphrase(const char* szPass)
         Response resp;
         conops::HttpPost(url, NULL, output, at, resp);
 
+        std::cout<< " http RESPONSE : " << resp.body << std::endl;
+
         /*
         std::string profurl;
         g_Entity.GetFrontProfileUrl(profurl);
@@ -867,6 +931,7 @@ int RegisterPassphrase(const char* szPass)
         conops::HttpGet(profurl, NULL, at, resp);
         */
 
+        SavePhraseToken(g_Pt);
         return ret::A_OK;
     }
     return ret::A_FAIL_REGISTER_PASSPHRASE;
@@ -884,15 +949,18 @@ int LoadPhraseToken()
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
     int status = g_Pt.LoadFromFile(ptpath);
-    if(status != ret::A_OK)
+    if(status == ret::A_OK)
     {
+        std::cout<<" Loading succeeded ... " << std::endl;
         // Extract Info from entity
         Profile* prof = g_Entity.GetFrontProfile();
         if(prof)
         {
+            std::cout<<" profile ... " << std::endl;
             AtticProfileInfo* atpi = prof->GetAtticInfo();
             if(atpi)
             {
+                std::cout<<" attic profile " << std::endl;
                 std::string salt;
                 atpi->GetSalt(salt);
                 g_Pt.SetSalt(salt);
@@ -903,13 +971,17 @@ int LoadPhraseToken()
 
                 std::string key;
                 atpi->GetMasterKey(key);
+                std::cout<<"Getting master key ... : " << key << std::endl;
                 g_Pt.SetDirtyKey(key);
             }
         }
-
+    }
+    else 
+    {
         status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
     }
 
+    std::cout<<" Loading phrase token status : " << status << std::endl;
     return status; 
 }
 

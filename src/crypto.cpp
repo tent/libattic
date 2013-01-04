@@ -107,9 +107,11 @@ int Crypto::EncryptString( const std::string& data,
 
        // Write out cipher to ofstream
        out = cipher;
+       /*
        std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
        std::cout << " KEY : " << cred.m_Key << std::endl;
        std::cout << " IV : " << cred.m_Iv << std::endl;
+       */
 
     }
     catch (CryptoPP::Exception &e)
@@ -447,13 +449,13 @@ bool Crypto::ScryptEncode( const std::string &input,
     //uint8_t dk[64]; // Derived key
     uint8_t dk[size]; // Derived key
     
-    std::cout<< " INPUT : " << input << std::endl;
-    std::cout<< " SIZE : " << size << std::endl;
+//    std::cout<< " INPUT : " << input << std::endl;
+//    std::cout<< " SIZE : " << size << std::endl;
 
     char* pData = new char[size];
     memcpy(pData, input.c_str(), size);
 
-    std::cout<< "Data Buffer : \n" << pData << std::endl;
+ //   std::cout<< "Data Buffer : \n" << pData << std::endl;
 
     uint8_t* buf = reinterpret_cast<uint8_t*>(pData);
 
@@ -480,11 +482,7 @@ bool Crypto::ScryptEncode( const std::string &input,
                                 size) << std::endl;
                                 */
     
-    std::cout << "DK : \n " << dk << std::endl;
-    
     out.append( reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
-    
-    std::cout<<" String DK :\n " << out << std::endl;
 
     if(pData)
     {

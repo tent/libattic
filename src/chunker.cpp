@@ -1,6 +1,7 @@
 
 #include "chunker.h"
 
+#include <iostream>
 #include <string.h> // Note* yes, this is different than <string>, be aware
 #include <stdio.h>
 

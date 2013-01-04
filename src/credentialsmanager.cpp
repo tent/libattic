@@ -115,7 +115,8 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     Credentials cred;
     m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
     
-    ptOut.SetKey(reinterpret_cast<char*>(cred.m_Key));
+    // Set the key generated from phrase
+    ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
 
     return ret::A_OK;
 }

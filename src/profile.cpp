@@ -29,10 +29,6 @@ void AtticProfileInfo::Deserialize(Json::Value& root)
     m_Salt = cb64::base64_decode(root.get("salt", "").asString());
     m_MasterKey = cb64::base64_decode(root.get("mk", "").asString());
     m_Iv = cb64::base64_decode(root.get("mk_iv", "").asString());
-
-    std::cout<<"SALTY : " << m_Salt << std::endl;
-    std::cout<<"MASTERKEY : " << m_MasterKey << std::endl;
-
     JsonSerializer::DeserializeObject(&m_Permissions, root["permissions"]);
 }
 

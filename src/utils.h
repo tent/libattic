@@ -2,7 +2,6 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -135,17 +134,12 @@ namespace utils
                                      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                      "abcdefghijklmnopqrstuvwxyz"};
 
-        std::cout<< " alph : " << alph << std::endl;
-
         unsigned int size = sizeof(alph)-1;
 
         for(unsigned int i=0; i<len; i++) 
         {
             out += alph[rand()%size];
         }
-
-        std::cout<< "random string : " << out << std::endl;
-
     }
 
     typedef std::vector<std::string> taglist;

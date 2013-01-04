@@ -60,10 +60,12 @@ int Entity::LoadFromFile(const std::string& filepath)
                                                                                                   
     ifs.read(pBuf, size);                                                                         
                                                                                                   
+    /*
     // sanity check size and readcount should be the same                                         
     int readcount = ifs.gcount();                                                                 
     if(readcount != size)                                                                         
-    std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
+        std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
+        */
     
     std::string loaded(pBuf);                                                                     
     
@@ -115,7 +117,6 @@ void Entity::Deserialize(Json::Value& root)
     std::vector<std::string>::iterator itr = profiles.begin();
     for(;itr != profiles.end(); itr++)
     {
-        std::cout<<"loading profile : " << *itr << std::endl;
         Profile* p = new Profile();
         JsonSerializer::DeserializeObject(p, *itr);
         m_Profiles.push_back(p);

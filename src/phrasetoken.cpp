@@ -17,14 +17,14 @@ PhraseToken::~PhraseToken()
 
 void PhraseToken::Serialize(Json::Value& root)
 {
-    root["key"] = m_Key;
+    root["phrase_key"] = m_PhraseKey;
     root["salt"] = m_Salt;
     root["iv"] = m_Iv;
 }
 
 void PhraseToken::Deserialize(Json::Value& root)
 {
-    m_Key = root.get("key", "").asString();
+    m_PhraseKey = root.get("phrase_key", "").asString();
     m_Salt = root.get("salt", "").asString();
     m_Iv = root.get("iv", "").asString();
 }
