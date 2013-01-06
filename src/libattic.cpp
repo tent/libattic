@@ -723,77 +723,78 @@ int EnterPassphrase(const char* szPass)
     
     // Check for correct passphrase
     // Get Information from entity
+    int status = ret::A_OK;
 
-    std::string phrasekey;
+    std::string phrasekey, dirtykey;
     g_Pt.GetPhraseKey(phrasekey);
-    std::cout<<"PHRASE KEY : " << phrasekey << std::endl;
-    
-    std::string dirtykey;
     g_Pt.GetDirtyKey(dirtykey);
-    std::cout<<"DIRTY KEY : " << dirtykey << std::endl;
     
-    std::string iv;
+    std::string iv, salt;
     g_Pt.GetIv(iv);
-
-    std::string salt;
     g_Pt.GetSalt(salt);
 
     std::string phraseKey;
     while(g_pCredManager->TryLock()) { sleep(0); }
     // Enter passphrase to generate key.
-    g_pCredManager->EnterPassphrase(szPass, salt, phraseKey);
+    status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey);
     // Create random master key
     g_pCredManager->Unlock();
-
-    std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
-    std::cout<< " SIZE : " << phraseKey.size() << std::endl;
-    std::cout<<" IV : " << iv << std::endl;
-
-    Credentials enc;
-    enc.SetKey(phraseKey);
-    enc.SetIv(iv);
-
-    std::string mk;
-    // Get encrypted master key that needs decrypting
-    Profile* prof = g_Entity.GetFrontProfile();
-    if(prof)
+    
+    if(status == ret::A_OK)
     {
-        AtticProfileInfo* atpi = prof->GetAtticInfo();
-        if(atpi)
+        Credentials enc;
+        enc.SetKey(phraseKey);
+        enc.SetIv(iv);
+
+        std::string mk;
+        // Get encrypted master key that needs decrypting
+        Profile* prof = g_Entity.GetFrontProfile();
+        if(prof)
         {
-
-            atpi->GetMasterKey(mk);
-            std::cout<<"ATTIC MASTER KEY : " << mk << std::endl;
-
-            std::string iiiv;
-            atpi->GetIv(iiiv);
-            std::cout<<"ATTIC IV : " << iiiv << std::endl;
-            g_Pt.SetIv(iiiv);
-
+            AtticProfileInfo* atpi = prof->GetAtticInfo();
+            if(atpi)
+            {
+                atpi->GetMasterKey(mk);
+                std::string iiiv;
+                atpi->GetIv(iiiv);
+                g_Pt.SetIv(iiiv);
+            }
         }
 
+        // Attempt to Decrypt Master Key
+        std::string out;
+        Crypto crypto;
+        crypto.DecryptString(mk, enc, out);
+
+        // Check sentinel bytes
+        std::string sentone, senttwo;
+        sentone = out.substr(0, 4);
+        senttwo = out.substr(4, 4);
+        
+        if(sentone == senttwo)
+        {
+            // extract actual key apart from sentinel bytes
+            std::string keyActual;
+            keyActual = out.substr(8);
+
+            // Shove this somewhere
+            MasterKey masterKey;
+            masterKey.SetMasterKey(keyActual);
+
+            // Insert Into Credentials Manager
+            while(g_pCredManager->TryLock()) { sleep(0); }
+            g_pCredManager->SetMasterKey(masterKey);
+            g_pCredManager->Unlock();
+
+        }
+        else
+        {
+            status = A_FAIL_SENTINEL_MISMATCH;
+        }
     }
-    std::cout<<" here "<<std::endl;
-
-    // Attempt to Decrypt Master Key
-    std::string out;
-    Crypto crypto;
-    crypto.DecryptString(mk, enc, out);
-
-    std::cout<<"------------------------------------" << std::endl;
-    std::cout<<"DECRYPTED MASTER KEY : " << out << std::endl;
-
-    std::cout<<out[0]<<std::endl;
-    std::cout<<out[4]<<std::endl;
-
-    // TODO ::
-    // Check sentinel bytes
-    //
-    // extract actual key apart from sentinel bytes
-
 
     // Return success
-    return ret::A_OK;
+    return status;
 }
 
 int RegisterPassphrase(const char* szPass)

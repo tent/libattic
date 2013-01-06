@@ -32,6 +32,7 @@ public:
     void SetTimeCreated(const time_t time)          { m_Created = time; }
     void SetTimeExpires(const time_t time)          { m_Expires = time; }
     void SetCredentials(const Credentials& cred)    { m_Cred = cred; }
+    void SetMasterKey(const std::string& key)       { m_Cred.SetKey(key); } 
 
 private:
     Credentials  m_Cred;
