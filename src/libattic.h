@@ -30,6 +30,7 @@ int ShutdownLibAttic();
 int EnterPassphrase(const char* szPass);
 int RegisterPassphrase(const char* szPass, bool override = false);
 int ChangePassphrase(const char* szOld, const char* szNew);
+int GetPhraseStatus();
 
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);

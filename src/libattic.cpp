@@ -62,13 +62,14 @@ static std::string g_EntityUrl;
 static std::string g_AuthorizationURL;
 static PhraseToken  g_Pt;
 static Entity g_Entity;
+static bool g_bEnteredPassphrase = false;
 
 // Local utility functions
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
 static ret::eCode DeletePost(const std::string& szPostID); // Depricated
 
-//
+// inward faceing functions
 int InitializeFileManager();
 int InitializeCredentialsManager();
 int InitializeEntityManager();
@@ -87,6 +88,8 @@ int SaveEntity();
 
 int LoadPhraseToken();
 int SavePhraseToken(PhraseToken& pt);
+
+int LoadMasterKey(); // call with a valid phrase token
 
 void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
@@ -203,7 +206,6 @@ int ShutdownLibAttic()
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
-
     }
 
     return status;
@@ -803,6 +805,8 @@ int EnterPassphrase(const char* szPass)
             g_pCredManager->SetMasterKey(masterKey);
             g_pCredManager->Unlock();
 
+            g_Pt.SetPhraseKey(phraseKey);
+            SavePhraseToken(g_Pt);
         }
         else
         {
@@ -823,6 +827,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     while(g_pCredManager->TryLock()) { sleep(0); }
     // Enter passphrase to generate key.
     g_pCredManager->RegisterPassphrase(pass, g_Pt); // This generates a random salt
+                                                    // Sets Phrase key
     // Create random master key
     g_pCredManager->CreateMasterKeyWithPass(mk, masterkey); // Create Master Key with given pass
     g_pCredManager->SetMasterKey(mk);
@@ -960,6 +965,9 @@ int LoadPhraseToken()
                 atpi->GetMasterKey(key);
                 std::cout<<"Getting master key ... : " << key << std::endl;
                 g_Pt.SetDirtyKey(key);
+
+                // Save token to file
+                SavePhraseToken(g_Pt);
             }
         }
     }
@@ -977,6 +985,31 @@ int SavePhraseToken(PhraseToken& pt)
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
     return g_Pt.SaveToFile(ptpath);
+}
+
+int PhraseStatus()
+{
+    int status = ret::A_OK;
+
+    if(!g_bEnteredPassphrase)
+    {
+        status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
+    }
+
+    return status;
+}
+
+int LoadMasterKey()
+{
+    int status = ret::A_OK;
+    // Check for valid phrase token
+   if(!g_Pt.IsPhraseKeyEmpty())
+   {
+       // "Enter Password"
+
+   }
+
+   return status;
 }
 
 void GetPhraseTokenFilepath(std::string& out)
