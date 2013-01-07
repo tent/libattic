@@ -767,6 +767,7 @@ int EnterPassphrase(const char* szPass)
         Profile* prof = g_Entity.GetFrontProfile();
         if(prof)
         {
+            std::cout<<"got prof"<<std::endl;
             AtticProfileInfo* atpi = prof->GetAtticInfo();
             if(atpi)
             {
@@ -935,7 +936,7 @@ int LoadPhraseToken()
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
     int status = g_Pt.LoadFromFile(ptpath);
-    if(status == ret::A_OK)
+    if(status != ret::A_OK)
     {
         std::cout<<" Loading succeeded ... " << std::endl;
         // Extract Info from entity
