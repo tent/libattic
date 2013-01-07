@@ -789,7 +789,7 @@ int EnterPassphrase(const char* szPass)
         }
         else
         {
-            status = A_FAIL_SENTINEL_MISMATCH;
+            status = ret::A_FAIL_SENTINEL_MISMATCH;
         }
     }
 
@@ -817,44 +817,41 @@ int RegisterPassphrase(const char* szPass)
         g_pCredManager->RegisterPassphrase(szPass, g_Pt);
         // Create random master key
         g_pCredManager->GenerateMasterKey(mk);
+        g_pCredManager->SetMasterKey(mk);
         g_pCredManager->Unlock();
 
         mk.InsertSentinelIntoMasterKey();
 
         std::string ptsalt;
-        g_Pt.GetSalt(ptsalt);
-        std::cout<<" PHRASE TOKEN SALT : " << ptsalt << std::endl;
+        g_Pt.GetSalt(ptsalt);  // Phrase Token
 
         std::string dirtykey;
         //mk.GetMasterKey(key);
         mk.GetMasterKeyWithSentinel(dirtykey);
-        std::cout<< " Master Key(dirty) : " << dirtykey << std::endl;
-        g_Pt.SetDirtyKey(dirtykey);
+        g_Pt.SetDirtyKey(dirtykey); // Phrase Token
 
         // Create Sentinel bytes
 
         // Setup passphrase cred to encrypt master key
         std::string passphrase;
-        g_Pt.GetPhraseKey(passphrase);
+        g_Pt.GetPhraseKey(passphrase); // Phrase Token
 
         Crypto crypto;
         // Generate iv
         std::string iv;
         crypto.GenerateIV(iv);
 
-        std::cout<<" Generated IV : " << iv << std::endl;
-
         Credentials enc;
         enc.SetKey(passphrase);
         enc.SetIv(iv);
 
-        g_Pt.SetIv(iv);
+        g_Pt.SetIv(iv); // Phrase Token
 
         // Encrypt MasterKey with passphrase key
         std::string out;
         crypto.EncryptString(dirtykey, enc, out);
-        std::cout<<" encrypted out : " << out << std::endl;
 
+        /*
         // Decrypt with credentials to test
         std::cout<<"Decrypt test ************************************"<<std::endl;
         std::string dec;
@@ -865,6 +862,7 @@ int RegisterPassphrase(const char* szPass)
             std::cout<< " THE SAME SUCCESS " << std::endl;
 
         std::cout<<"**************************************************"<<std::endl;
+        */
 
         std::string salt;
         g_Pt.GetSalt(salt);
@@ -875,36 +873,12 @@ int RegisterPassphrase(const char* szPass)
         pAtticProf->SetSalt(salt);
         pAtticProf->SetIv(iv);
 
+        // Save and post
         std::string output;
         JsonSerializer::SerializeObject(pAtticProf, output);
-        std::cout<< " serialized output : " << output << std::endl;
 
-        // Test to make sure it deserialized properly
-        AtticProfileInfo ap;
-        JsonSerializer::DeserializeObject(&ap, output);
-        std::cout<<"\nDeserialize test ************************************"<<std::endl;
-        std::string keytest;
-        ap.GetMasterKey(keytest);
-        std::cout<<" encrypted key : " << keytest << std::endl;
-        std::string salttest;
-        ap.GetSalt(salttest);
-        std::cout<<" salt : " << salttest << std::endl;
-        std::string ivtest;
-        ap.GetIv(ivtest);
-        std::cout<<" iv : " << ivtest << std::endl;
-
-        std::cout<<"**************************************************\n"<<std::endl;
-
-
-        std::string masterkey;
-        ap.GetMasterKey(masterkey);
-        std::cout<<" KEY : " << masterkey << std::endl;
         std::string url;
         g_Entity.GetFrontProfileUrl(url);
-        std::cout<<" PROFILE URL : " <<url << std::endl;
-
-        // Save and post
-
 
         AccessToken at;
         while(g_pCredManager->TryLock()) { sleep(0); }
@@ -921,16 +895,9 @@ int RegisterPassphrase(const char* szPass)
         Response resp;
         conops::HttpPost(url, NULL, output, at, resp);
 
-        std::cout<< " http RESPONSE : " << resp.body << std::endl;
+        if(resp.code != 200)
+            return ret::A_FAIL_NON_200;
 
-        /*
-        std::string profurl;
-        g_Entity.GetFrontProfileUrl(profurl);
-        std::cout<< " PROFILE URL : " << profurl << std::endl;
-
-        Response resp;
-        conops::HttpGet(profurl, NULL, at, resp);
-        */
 
         SavePhraseToken(g_Pt);
         return ret::A_OK;
