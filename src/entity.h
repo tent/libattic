@@ -30,6 +30,7 @@ public:
     const UrlList* GetProfileUrlList() const { return &m_ProfileUrls; }
     void GetFrontProfileUrl(std::string& out) { if(m_ProfileUrls.size()) out = m_ProfileUrls.front(); }
     ProfileList* GetProfileList(){ return &m_Profiles; }
+    Profile* GetActiveProfile() const { return m_pActiveProfile; }
     Profile* GetFrontProfile() { if(m_Profiles.size()) { return m_Profiles.front(); } return NULL; }
     void GetEntityUrl(std::string& out) const { out = m_EntityUrl; }
     void GetApiRoot(std::string& out) const { out = m_ApiRoot; }
@@ -37,12 +38,17 @@ public:
     
     void SetEntityUrl(const std::string& url) { m_EntityUrl = url; }
     void SetApiRoot(const std::string& root) { m_ApiRoot = root; }
+    void SetActiveProfile(Profile* pProf) { m_pActiveProfile = pProf; }
+
+    bool HasAtticProfile() { if(m_pActiveProfile && m_pActiveProfile->GetAtticInfo()) return true ; return false; }
 
 private:
     ProfileList     m_Profiles;
     UrlList         m_ProfileUrls;
     std::string     m_EntityUrl;
     std::string     m_ApiRoot;
+
+    Profile*        m_pActiveProfile;
 };
 
 #endif

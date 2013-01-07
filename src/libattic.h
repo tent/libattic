@@ -28,7 +28,7 @@ int ShutdownLibAttic();
 
 // Master Key
 int EnterPassphrase(const char* szPass);
-int RegisterPassphrase(const char* szPass);
+int RegisterPassphrase(const char* szPass, bool override = false);
 int ChangePassphrase(const char* szOld, const char* szNew);
 
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")

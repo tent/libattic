@@ -47,7 +47,9 @@ public:
                           const std::string& newpass, 
                           PhraseToken& ptOut);
     
+    int GenerateMasterKey( std::string& keyOut);
     int GenerateMasterKey( MasterKey& mkOut);
+    int CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key);
 
     // MasterKey
 

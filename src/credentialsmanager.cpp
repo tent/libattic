@@ -87,6 +87,15 @@ int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const 
 }
 */
 
+int CredentialsManager::CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key)
+{
+    Credentials MasterKey;
+    MasterKey.SetKey(key);
+    mkOut.SetCredentials(MasterKey);
+
+    return ret::A_OK;
+}
+
 int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
 {
     // Create Master Key
@@ -94,6 +103,17 @@ int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
     m_Crypto.GenerateCredentials(MasterKey);
 
     mkOut.SetCredentials(MasterKey);
+
+    return ret::A_OK;
+}
+
+int CredentialsManager::GenerateMasterKey( std::string& keyOut)
+{
+    // Create Master Key
+    Credentials MasterKey;
+    m_Crypto.GenerateCredentials(MasterKey);
+
+    MasterKey.GetKey(keyOut);
 
     return ret::A_OK;
 }

@@ -7,7 +7,7 @@
 
 Entity::Entity()
 {
-
+    m_pActiveProfile = NULL;
 }
 
 Entity::~Entity()
@@ -121,6 +121,9 @@ void Entity::Deserialize(Json::Value& root)
         JsonSerializer::DeserializeObject(p, *itr);
         m_Profiles.push_back(p);
     }
+
+    // Set the front profile as active by default
+    m_pActiveProfile = GetFrontProfile();
 }
 
 
