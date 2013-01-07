@@ -14,6 +14,7 @@
 #include "errorcodes.h"
 
 #include "taskarbiter.h"
+#include "masterkey.h"
 
 class FileManager : public MutexClass
 {
@@ -86,14 +87,17 @@ public:
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
     unsigned int GetFileStride() const               { return m_FileStride; }
 
-    void SetManifestFilePath(const std::string &filepath)     { m_ManifestFilePath = filepath; }
+    void SetManifestFilePath(const std::string &filepath)       { m_ManifestFilePath = filepath; }
     void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); }
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
     void SetFilePostId(const std::string &filename, const std::string& postid);
+    void SetMasterKey(const MasterKey& mk)                      { m_MasterKey = mk; } 
 
 private:
+    MasterKey           m_MasterKey;
+
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;
     Chunker             m_Chunker;
