@@ -89,6 +89,7 @@ int SaveEntity();
 int LoadPhraseToken();
 int SavePhraseToken(PhraseToken& pt);
 
+
 int LoadMasterKey(); // call with a valid phrase token
 
 void GetPhraseTokenFilepath(std::string& out);
@@ -807,6 +808,7 @@ int EnterPassphrase(const char* szPass)
 
             g_Pt.SetPhraseKey(phraseKey);
             SavePhraseToken(g_Pt);
+            g_bEnteredPassphrase = true;
         }
         else
         {
@@ -899,7 +901,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     if(resp.code != 200)
         return ret::A_FAIL_NON_200;
 
-
+    g_bEnteredPassphrase = true;
     SavePhraseToken(g_Pt);
     return ret::A_OK;
 
@@ -968,6 +970,7 @@ int LoadPhraseToken()
 
                 // Save token to file
                 SavePhraseToken(g_Pt);
+                g_bEnteredPassphrase = true;
             }
         }
     }
