@@ -4,16 +4,18 @@
 #pragma once
 
 #include <string>
-#include <deque>
+#include <vector>
 
 #include "crypto.h"
+
+class ChunkInfo;
 
 class FileInfo
 {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
-    FileInfo() {} 
-    ~FileInfo() {}
+    FileInfo();  
+    ~FileInfo(); 
 
     // Init a file
     bool InitializeFile(const std::string &filepath);
@@ -53,7 +55,12 @@ public:
     Credentials GetCredentialsCopy() const  { return m_Credentials; }
 
     unsigned int GetPostVersion() const { return m_PostVersion ; }
+
+    void PushChunkBack(ChunkInfo* pChunk) { m_Chunks.push_back(pChunk); }
+    std::vector<ChunkInfo*>* GetChunkInfoList() { return &m_Chunks; }
+
 private:    
+    std::vector<ChunkInfo*> m_Chunks;
     Credentials     m_Credentials;
 
     std::string     m_Filename;   // File within directory
@@ -65,20 +72,6 @@ private:
     unsigned int    m_PostVersion; // Version of the post the file is attached to
     unsigned int    m_ChunkCount;
     unsigned int    m_FileSize;   // Filesize, not compressed
-};
-
-
-class FileInfoFactory
-{
-public:
-    FileInfoFactory();
-    ~FileInfoFactory();
-
-    FileInfo* CreateFileInfoObject();
-
-private:
-    std::deque<FileInfo*> m_FileList; // List of FileInfo objects created.
-
 };
 
 #endif

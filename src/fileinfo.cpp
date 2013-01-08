@@ -3,11 +3,36 @@
 
 #include <fstream>
 #include <vector>
-
 #include <stdio.h>
 
+#include "chunkinfo.h"
 #include "utils.h"
 
+FileInfo::FileInfo()
+{
+
+}
+
+FileInfo::~FileInfo()
+{
+    if(m_Chunks.size() > 0)
+    {
+        std::vector<ChunkInfo*>::iterator itr = m_Chunks.begin();
+
+        for(;itr != m_Chunks.end(); itr++)
+        {
+            if(*itr)
+            {
+
+                delete *itr;
+                *itr = NULL;
+                std::cout<<" DELETING CHUNKINFO " << std::endl;
+            }
+
+        }
+
+    }
+}
 
 bool FileInfo::InitializeFile(const std::string &filepath)
 {
@@ -46,33 +71,4 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
     out = name;
 }
 
-FileInfoFactory::FileInfoFactory()
-{
 
-}
-
-FileInfoFactory::~FileInfoFactory()
-{
-    std::deque<FileInfo*>::iterator itr = m_FileList.begin();
-    for(;itr != m_FileList.end();)
-    {
-        if(*itr)
-        {
-            delete *itr;
-            *itr = NULL;
-        }
-        itr++;
-        m_FileList.pop_front();
-    }
-
-    m_FileList.clear();
-}
-
-FileInfo* FileInfoFactory::CreateFileInfoObject() 
-{
-    FileInfo* fp = new FileInfo();
-
-    m_FileList.push_back(fp);
-
-    return fp;
-}
