@@ -7,6 +7,7 @@
 #include <fstream>
 
 #include "errorcodes.h"
+#include "crypto.h"
 
 class FileInfo;
 
@@ -16,9 +17,10 @@ class Chunker
                                   const std::string &chunkDir, 
                                   unsigned int uCount);
 
-    bool WriteChunk( char* szBuffer, 
-                     const std::string &chunkDir, 
-                     const std::string &name);
+    bool WriteOutChunk( char* szBuffer, 
+                        const std::string &chunkDir, 
+                        const std::string &name,
+                        std::string& hashOut);
 
     void SetName( const std::string &basename, 
                   std::string &nameOut, 
@@ -41,6 +43,7 @@ public:
     void SetChunkSize(unsigned int uChunkSize) { m_chunkSize = uChunkSize; }
 
 private:
+    Crypto          m_Crypto;
     std::ifstream   m_ifStream;
     std::ofstream   m_ofStream;
 

@@ -7,6 +7,7 @@
 
 #include "fileinfo.h"
 #include "utils.h"
+#include "chunkinfo.h"
 
 Chunker::Chunker(unsigned int nChunkSize)
 {
@@ -54,12 +55,14 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
     // Build the Chunk
     while(!m_ifStream.eof())
     {
+
         // Zero out memory
         memset(szBuffer, 0, sizeof(char)*m_chunkSize);
 
         SetName(chunkName, name, count);
 
-        if(!WriteChunk(szBuffer, chunkDir, name))
+        std::string hashOut;
+        if(!WriteOutChunk(szBuffer, chunkDir, name, hashOut))
         {
             m_ifStream.close();
             if(szBuffer)
@@ -70,6 +73,11 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
 
             return ret::A_FAIL_WRITE_CHUNK;
         }
+
+        // Create Chunk info
+        ChunkInfo* ci = new ChunkInfo(name, hashOut);
+        // Push back into fileinfo
+        fi->PushChunkBack(ci);
         
         count++;
     }
@@ -186,7 +194,10 @@ bool Chunker::VerifyAllChunkExistence( const std::string &chunkName,
     return true;
 }
 
-bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std::string &name)
+bool Chunker::WriteOutChunk( char* szBuffer, 
+                             const std::string &chunkDir, 
+                             const std::string &name,
+                             std::string& hashOut)
 {
     if(!szBuffer)
     {
@@ -201,6 +212,9 @@ bool Chunker::WriteChunk(char* szBuffer, const std::string &chunkDir, const std:
     if(m_ofStream.is_open())
     {
         m_ifStream.read(szBuffer, m_chunkSize);
+
+        // Calculate hash
+        m_Crypto.GenerateHash(szBuffer, hashOut);
 
         int readcount = m_ifStream.gcount();
 

@@ -855,7 +855,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     Crypto crypto;
     // Generate iv
     std::string iv;
-    crypto.GenerateIV(iv);
+    crypto.GenerateIv(iv);
 
     Credentials enc;
     enc.SetKey(passphrase);

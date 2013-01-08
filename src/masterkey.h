@@ -24,6 +24,7 @@ public:
 
     void InsertSentinelIntoMasterKey();
 
+    void GetMasterKeyCredentials(Credentials& out)          { out = m_Cred; }
     void GetMasterKey(std::string& out)                     { m_Cred.GetKey(out); }
     void GetMasterKeyWithSentinel(std::string& out) const   { out = m_KeyWithSentinel; }
     time_t GetTimeCreated() const                           { return m_Created; }
@@ -33,6 +34,9 @@ public:
     void SetTimeExpires(const time_t time)          { m_Expires = time; }
     void SetCredentials(const Credentials& cred)    { m_Cred = cred; }
     void SetMasterKey(const std::string& key)       { m_Cred.SetKey(key); } 
+    void SetIv(const std::string& iv)               { m_Cred.SetIv(iv); }
+
+    bool IsEmpty() { return m_KeyWithSentinel.empty(); }
 
 private:
     Credentials  m_Cred;

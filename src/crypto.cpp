@@ -47,7 +47,7 @@ Credentials Crypto::GenerateCredentials()
     return cred;
 }
 
-void Crypto::GenerateIV(std::string& out)
+void Crypto::GenerateIv(std::string& out)
 {
     byte iv[CryptoPP::AES::BLOCKSIZE];
     memset(iv, 0, CryptoPP::AES::BLOCKSIZE);

@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "utils.h"
+#include "chunkinfo.h"
 
 // TODO :: considering removing all file reading/writing out of 
 //         manifest to filemanager. (centralize all file writing)
@@ -154,12 +155,194 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     return fi;
 }
 
+void FileManager::GenerateCompressionPath(std::string filename, std::string &outpath)
+{
+    // strip any file type
+    std::vector<std::string> split;
+    utils::SplitString(filename, '.', split);
+    
+    if(split.size() > 0)
+    { 
+        outpath = m_TempDirectory + "/" + split[0] + "_cmp";
+    }
+
+}
+
+int FileManager::ChunkFile(FileInfo* fi)
+{
+    int status = ret::A_OK;
+
+    if(fi)
+    {
+        std::string filepath;
+        fi->GetFilepath(filepath);
+
+        // Generate Chunk Directory 
+        status = m_Chunker.ChunkFile(fi, filepath, m_TempDirectory);
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+        
+    return status;
+}
+
+int FileManager::CompressChunks(FileInfo* fi)
+{
+    int status = ret::A_OK;
+
+    if(fi)
+    {
+        std::vector<ChunkInfo*>* pInfo = fi->GetChunkInfoList();
+        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+
+        for(;itr != pInfo->end(); itr++)
+        {
+
+            std::string chunkname;
+            (*itr)->GetChunkName(chunkname);
+            
+            std::string comppath;
+            GenerateCompressionPath(chunkname, comppath);
+
+            std::string filepath;
+            filepath += m_TempDirectory + "/" + chunkname;
+
+            status = m_Compressor.CompressFile(filepath, comppath, 1);
+            if(status != ret::A_OK)
+                break;
+
+            std::cout<< " file compressed " << std::endl;
+        }
+
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::EncryptChunks(FileInfo* fi)
+{
+    int status = ret::A_OK;
+
+    if(fi)
+    {
+    
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::IndexFileNew( const std::string& filepath,
+                               const bool insert,
+                               FileInfo* fi)
+{
+    // Chunk
+    // Compress
+    // Encrpyt
+    // Post
+    
+    // TODO :: Handle re-indexing, a file was edited, or the temporary folder was deleted
+    std::cout << "Indexing file ... " << std::endl;
+    int status = ret::A_OK;
+
+    if(!m_MasterKey.IsEmpty())
+        status = ret::A_FAIL_INVALID_MASTERKEY;
+      std::cout<< " file chunked " << std::endl;
+   
+    if(status == ret::A_OK)
+    {
+        // Create an entry
+        //  Get File info
+        bool reindex = true;
+        if(!fi)
+        {
+            std::cout << " NEW FILE " << std::endl;
+            fi = CreateFileInfo();
+            fi->InitializeFile(filepath);
+            reindex = false;
+        }
+ 
+        // Chunk File
+        status = ChunkFile(fi);
+        if(status != ret::A_OK)
+            return status;
+
+        // Compress Chunks
+        status = CompressChunks(fi);
+        if(status != ret::A_OK)
+            return status;
+
+        // Encrypt Chunks
+        status = EncryptChunks(fi);
+        if(status != ret::A_OK)
+            return status;
+
+
+        //<<<<<<<<<<<<old>>>>>>>>>>>>>>>>>>>.//
+        // Encrypt
+        // Generate Crypto filepath
+        std::string cryptpath;
+        GenerateCryptoPath(fi, cryptpath);
+
+        Credentials cred;
+        if(!reindex)
+        {
+            m_MasterKey.GetMasterKeyCredentials(cred);
+
+            // Set random iv
+            std::string iv;
+            m_Crypto.GenerateIv(iv);
+            cred.SetIv(iv);
+            // Generate Credentials
+            //cred = m_Crypto.GenerateCredentials();
+            
+            fi->SetCredentials(cred);
+        }
+        else
+        {
+            // Use existing Credentials
+            cred = fi->GetCredentialsCopy();
+        }
+
+        //status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
+        if(status != ret::A_OK)
+            return status;
+
+        std::cout<< " file encrypted " << std::endl;
+
+        // Shove keys into a sqlite entry (and FileInfo?)
+
+       // Check if manifest is loaded
+        // Write manifest entry
+
+        if(insert)
+            m_Manifest.InsertFileInfo(fi);
+    }
+
+    return status;
+}
+
+
 ret::eCode FileManager::IndexFile( const std::string &filepath, 
                                    const bool insert,
                                    FileInfo* fi)
 {
     // TODO :: Handle re-indexing, a file was edited, or the temporary folder was deleted
     std::cout << "Indexing file ... " << std::endl;
+
+    if(!m_MasterKey.IsEmpty())
+        return ret::A_FAIL_INVALID_MASTERKEY;
+
     ret::eCode status = ret::A_OK;
     // Create an entry
     //  Get File info
@@ -192,8 +375,15 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     Credentials cred;
     if(!reindex)
     {
+        m_MasterKey.GetMasterKeyCredentials(cred);
+
+        // Set random iv
+        std::string iv;
+        m_Crypto.GenerateIv(iv);
+        cred.SetIv(iv);
         // Generate Credentials
-        cred = m_Crypto.GenerateCredentials();
+        //cred = m_Crypto.GenerateCredentials();
+        
         fi->SetCredentials(cred);
     }
     else

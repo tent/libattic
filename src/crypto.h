@@ -37,7 +37,7 @@ public:
     ~Crypto();
 
     void GenerateCredentials(Credentials& cred);
-    void GenerateIV(std::string& out);
+    void GenerateIv(std::string& out);
 
     Credentials GenerateCredentials(); 
 

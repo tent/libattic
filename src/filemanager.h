@@ -9,6 +9,7 @@
 #include "manifest.h"
 #include "chunker.h"
 #include "fileinfo.h"
+#include "fileinfofactory.h"
 #include "compressor.h"
 #include "crypto.h"
 #include "errorcodes.h"
@@ -29,8 +30,14 @@ class FileManager : public MutexClass
                                 bool bStripFileType);
     
     void GenerateCompressionPath(FileInfo* fi, std::string &outpath);
+    void GenerateCompressionPath(std::string filename, std::string &outpath);
+
     void GenerateCryptoPath(FileInfo* fi, std::string &outpath);
 
+    int ChunkFile(FileInfo* fi);
+    int CompressChunks(FileInfo* fi);
+    int EncryptChunks(FileInfo* fi);
+   
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
 public:
@@ -43,7 +50,12 @@ public:
 
     bool StartupFileManager();
     bool ShutdownFileManager();
-   
+
+    int IndexFileNew(const std::string& filepath,
+                     const bool insert,
+                     FileInfo* fi = NULL);
+
+  
     ret::eCode IndexFile( const std::string &filepath, 
                           const bool insert, 
                           FileInfo* fi = NULL);

@@ -31,6 +31,7 @@
 
 #include "rollsum.h"
 
+/*
 TEST(REGISTER, PASSPHRASE)
 {
     InitLibAttic( "./data",
@@ -44,6 +45,7 @@ TEST(REGISTER, PASSPHRASE)
     ShutdownLibAttic();
 
 }
+*/
 
 /*
 TEST(HASH, CRYPTO)
@@ -413,12 +415,11 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
 
-void FOOFUN(int a, void* b)
+
+static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
-
 }
 
 TEST(PUSH, AFILE)
@@ -447,8 +448,7 @@ TEST(PUSH, AFILE)
         std::cout<<"FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
-   
-    std::cout<< " shutting down " << std::endl;
+    std::cout<< " SHUTTING DOWN " << std::endl;
     // Shutdown
     ShutdownLibAttic();
 
