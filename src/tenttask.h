@@ -41,8 +41,15 @@ public:
         m_WorkingDirectory = workingdir;
         m_ConfigDirectory = configdir;
 
-        mCallback = callback;
+        mCallback = *callback;
     }
+
+    virtual void SetFinishedState()                                         
+    {                                                                       
+        Task::SetFinishedState();
+        if(mCallback)                                              
+            mCallback(ret::A_OK, NULL);                            
+    }                                                                       
 
     virtual ~TentTask()
     {

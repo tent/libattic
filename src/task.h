@@ -4,6 +4,7 @@
 #define TASK_H_
 #pragma once
 
+#include <iostream>
 #include "errorcodes.h"
 
 class Task // Inherit from this to implement specific tasks   
@@ -28,21 +29,12 @@ public:
     int GetTaskState() { return m_State; }
     void GetTaskState(TaskState state) { m_State = state; }
 
-    void SetIdleState() { m_State = IDLE; }
-    void SetRunningState() { m_State = RUNNING; }
-    void SetFinishedState() 
-    { 
-        m_State = FINISHED; 
-        if(m_CallbackFinished)
-            m_CallbackFinished(ret::A_OK, NULL);
-    }
-
-    void SetFinishedCallback(void(*cb)(int, Task*)) { m_CallbackFinished = cb; }
+    virtual void SetIdleState() { m_State = IDLE; }
+    virtual void SetRunningState() { m_State = RUNNING; }
+    virtual void SetFinishedState() { m_State = FINISHED; }
 
 private:
     TaskState   m_State;
-
-    void (*m_CallbackFinished)(int, Task*);
 };                                                            
 
 
