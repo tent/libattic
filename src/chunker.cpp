@@ -145,8 +145,6 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
 
         if(!m_ifStream.is_open())
         {
-            // strerror, <- STANDARD DEF, NON STANDARD IMPLEMENTATION, MAY NOT WORK
-            std::cout << " ERROR 2 : " << std::strerror(errno) << std::endl;
             return ret::A_FAIL_OPEN;
         }
 

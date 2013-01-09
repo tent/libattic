@@ -605,7 +605,7 @@ int FileManager::DechunkFile(FileInfo* pFi)
         //         for now just construct in temp directory
 
         std::string outpath; // Outbound directory path for fully constructed file
-        outpath = m_TempDirectory
+        outpath = m_TempDirectory;
 
         status = m_Chunker.DeChunkFile(pFi, outpath, m_TempDirectory);
     }
