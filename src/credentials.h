@@ -6,12 +6,13 @@
 #include <string>
 #include <stdio.h>
 
+#include <aes.h>
 
 class Credentials
 {
 public:
-    Credentials() {}
-    ~Credentials() {}
+    Credentials();
+    ~Credentials();
 
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
@@ -19,8 +20,8 @@ public:
     void GetKey(std::string& out) { out.append(reinterpret_cast<char*>(m_Key), GetKeySize()); }
     void GetIv(std::string& out) { out.append(reinterpret_cast<char*>(m_Iv), GetIvSize()); }
 
-    void SetKey(const std::string& key) { memcpy(m_Key, reinterpret_cast<const unsigned char*>(key.c_str()), GetKeySize()); }
-    void SetIv(const std::string& iv) { memcpy(m_Iv, reinterpret_cast<const unsigned char*>(iv.c_str()), GetIvSize()); }
+    int SetKey(const std::string& key);
+    int SetIv(const std::string& iv); 
 
     // TODO :: make this private
     byte m_Key[CryptoPP::AES::MAX_KEYLENGTH];
