@@ -96,7 +96,7 @@ int PushTask::PushFile(const std::string& filepath)
         // be able to pass in chosen chunkname
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         std::cout << "INDEXING FILE : " << std::endl;
-        int status = GetFileManager()->IndexFile(filepath, true, fi);
+        status = GetFileManager()->IndexFile(filepath, true, fi);
         GetFileManager()->Unlock();
 
         if(status != ret::A_OK)

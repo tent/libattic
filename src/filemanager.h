@@ -29,14 +29,21 @@ class FileManager : public MutexClass
                                 std::string &outboundPath,
                                 bool bStripFileType);
     
-    void GenerateCompressionPath(FileInfo* fi, std::string &outpath);
+    void GenerateCompressionPath(FileInfo* pFi, std::string &outpath);
     void GenerateCompressionPath(std::string filename, std::string &outpath);
 
-    void GenerateCryptoPath(FileInfo* fi, std::string &outpath);
+    void GenerateCryptoPath(FileInfo* pFi, std::string &outpath);
+    void GenerateEncryptionPath(std::string filename, std::string &outpath);
 
-    int ChunkFile(FileInfo* fi);
-    int CompressChunks(FileInfo* fi);
-    int EncryptChunks(FileInfo* fi);
+    int ChunkFile(FileInfo* pFi);
+    int CompressChunks(FileInfo* pFi);
+    int EncryptCompressedChunks(FileInfo* pFi);
+
+    int DecryptChunks(FileInfo* pFi);
+    int DecompressChunks(FileInfo* pFi);
+    int DechunkFile(FileInfo* pFi);
+
+    int CheckManifestForFile(const std::string& filename, FileInfo* pFi);
    
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
@@ -53,15 +60,16 @@ public:
 
     int IndexFileNew(const std::string& filepath,
                      const bool insert,
-                     FileInfo* fi = NULL);
+                     FileInfo* pFi = NULL);
 
   
     ret::eCode IndexFile( const std::string &filepath, 
                           const bool insert, 
-                          FileInfo* fi = NULL);
+                          FileInfo* pFi = NULL);
 
     ret::eCode RemoveFile(const std::string &filename);
 
+    int ConstructFileNew(std::string& filename);
     ret::eCode ConstructFile(std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
@@ -90,7 +98,7 @@ public:
                               unsigned char *iv); // byte
 
 
-    void InsertToManifest (FileInfo* fi) { if(fi) m_Manifest.InsertFileInfo(fi); }
+    void InsertToManifest (FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
     void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }

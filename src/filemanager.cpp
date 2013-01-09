@@ -13,6 +13,9 @@
 //         manifest to filemanager. (centralize all file writing)
 //
 
+static const char* szCompSuffix = "_cmp";
+static const char* szEncryptSuffix = "_enc";
+
 FileManager::FileManager() : MutexClass()
 {
 
@@ -78,7 +81,7 @@ bool FileManager::ReadInEntry(std::string &e)
     if(split.size() < 9)
         return false;
 
-    FileInfo* fi = CreateFileInfo ( split[0],
+    FileInfo* pFi = CreateFileInfo ( split[0],
                                     split[1],
                                     split[2],
                                     split[3],
@@ -89,7 +92,7 @@ bool FileManager::ReadInEntry(std::string &e)
                                     split[8]);
 
     
-    m_Manifest.InsertFileInfo(fi);
+    m_Manifest.InsertFileInfo(pFi);
 
     return true;
 }
@@ -107,7 +110,7 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     char* pKey = reinterpret_cast<char*>(key);
     char* pIv = reinterpret_cast<char*>(iv);
 
-    FileInfo* fi = CreateFileInfo( filename,
+    FileInfo* pFi = CreateFileInfo( filename,
                                    filepath,
                                    chunkName,
                                    chunkCount,
@@ -117,7 +120,7 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
                                    std::string(pKey),
                                    std::string(pIv)
                                  );
-   return fi;
+   return pFi;
 }
 
 
@@ -131,28 +134,28 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
                                        const std::string &key,
                                        const std::string &iv)
 {
-    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
+    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
     // Filename (str)
-    fi->SetFilename(filename);
+    pFi->SetFilename(filename);
     // Filepath (str)
-    fi->SetFilepath(filepath);
+    pFi->SetFilepath(filepath);
     // ChunkName (str)
-    fi->SetChunkName(chunkName);
+    pFi->SetChunkName(chunkName);
     // ChunkCount (unsigned int)
-    fi->SetChunkCount((unsigned)atoi(chunkCount.c_str()));
+    pFi->SetChunkCount((unsigned)atoi(chunkCount.c_str()));
     // FileSize (unsigned int)
-    fi->SetFileSize((unsigned)atoi(fileSize.c_str()));
+    pFi->SetFileSize((unsigned)atoi(fileSize.c_str()));
     // Post ID
-    fi->SetPostID(postId);
+    pFi->SetPostID(postId);
     // Post Version
-    fi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
+    pFi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
     // Key 
-    fi->SetKey(key);
+    pFi->SetKey(key);
     // Iv
-    fi->SetIv(iv);
+    pFi->SetIv(iv);
 
-    return fi;
+    return pFi;
 }
 
 void FileManager::GenerateCompressionPath(std::string filename, std::string &outpath)
@@ -163,22 +166,33 @@ void FileManager::GenerateCompressionPath(std::string filename, std::string &out
     
     if(split.size() > 0)
     { 
-        outpath = m_TempDirectory + "/" + split[0] + "_cmp";
+        outpath = m_TempDirectory + "/" + split[0] + szCompSuffix;
     }
 
 }
 
-int FileManager::ChunkFile(FileInfo* fi)
+void FileManager::GenerateEncryptionPath(std::string filename, std::string &outpath)
+{
+    std::vector<std::string> split;
+    utils::SplitString(filename, '.', split);
+    
+    if(split.size() > 0)
+    { 
+        outpath = m_TempDirectory + "/" + split[0] + szEncryptSuffix;
+    }
+}
+
+int FileManager::ChunkFile(FileInfo* pFi)
 {
     int status = ret::A_OK;
 
-    if(fi)
+    if(pFi)
     {
         std::string filepath;
-        fi->GetFilepath(filepath);
+        pFi->GetFilepath(filepath);
 
         // Generate Chunk Directory 
-        status = m_Chunker.ChunkFile(fi, filepath, m_TempDirectory);
+        status = m_Chunker.ChunkFile(pFi, filepath, m_TempDirectory);
     }
     else
     {
@@ -188,35 +202,37 @@ int FileManager::ChunkFile(FileInfo* fi)
     return status;
 }
 
-int FileManager::CompressChunks(FileInfo* fi)
+int FileManager::CompressChunks(FileInfo* pFi)
 {
     int status = ret::A_OK;
 
-    if(fi)
+    if(pFi)
     {
-        std::vector<ChunkInfo*>* pInfo = fi->GetChunkInfoList();
+        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
         std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
 
         for(;itr != pInfo->end(); itr++)
         {
 
-            std::string chunkname;
-            (*itr)->GetChunkName(chunkname);
-            
-            std::string comppath;
-            GenerateCompressionPath(chunkname, comppath);
+            if(*itr)
+            {
+                std::string chunkname;
+                (*itr)->GetChunkName(chunkname);
+                
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
 
-            std::string filepath;
-            filepath += m_TempDirectory + "/" + chunkname;
+                std::string filepath;
+                filepath += m_TempDirectory + "/" + chunkname;
 
-            status = m_Compressor.CompressFile(filepath, comppath, 1);
-            if(status != ret::A_OK)
-                break;
+                status = m_Compressor.CompressFile(filepath, comppath, 1);
+
+                if(status != ret::A_OK)
+                    break;
+            }
 
             std::cout<< " file compressed " << std::endl;
         }
-
-
     }
     else
     {
@@ -226,13 +242,47 @@ int FileManager::CompressChunks(FileInfo* fi)
     return status;
 }
 
-int FileManager::EncryptChunks(FileInfo* fi)
+int FileManager::EncryptCompressedChunks(FileInfo* pFi)
 {
     int status = ret::A_OK;
 
-    if(fi)
+    if(pFi)
     {
-    
+        // Generate Credentials
+        Credentials cred;
+        m_MasterKey.GetMasterKeyCredentials(cred);
+        
+        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
+        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+
+        for(;itr != pInfo->end(); itr++)
+        {
+            if(*itr)
+            {
+                std::string chunkname;
+                (*itr)->GetChunkName(chunkname);
+                
+                // Generate unique Iv for chunk
+                std::string iv;
+                m_Crypto.GenerateIv(iv);
+                (*itr)->SetIv(iv);
+                status = cred.SetIv(iv);
+
+                if(status != ret::A_OK)
+                    break;
+
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
+
+                std::string encpath;
+                GenerateEncryptionPath(chunkname, encpath);
+
+                status = m_Crypto.EncryptFile(comppath, encpath, cred);
+
+                if(status != ret::A_OK)
+                    break;
+            }
+        }
     }
     else
     {
@@ -244,7 +294,7 @@ int FileManager::EncryptChunks(FileInfo* fi)
 
 int FileManager::IndexFileNew( const std::string& filepath,
                                const bool insert,
-                               FileInfo* fi)
+                               FileInfo* pFi)
 {
     // Chunk
     // Compress
@@ -264,69 +314,36 @@ int FileManager::IndexFileNew( const std::string& filepath,
         // Create an entry
         //  Get File info
         bool reindex = true;
-        if(!fi)
+        if(!pFi)
         {
             std::cout << " NEW FILE " << std::endl;
-            fi = CreateFileInfo();
-            fi->InitializeFile(filepath);
+            pFi = CreateFileInfo();
+            pFi->InitializeFile(filepath);
             reindex = false;
         }
  
         // Chunk File
-        status = ChunkFile(fi);
+        status = ChunkFile(pFi);
         if(status != ret::A_OK)
             return status;
 
         // Compress Chunks
-        status = CompressChunks(fi);
+        status = CompressChunks(pFi);
         if(status != ret::A_OK)
             return status;
 
         // Encrypt Chunks
-        status = EncryptChunks(fi);
+        status = EncryptCompressedChunks(pFi);
         if(status != ret::A_OK)
             return status;
 
-
-        //<<<<<<<<<<<<old>>>>>>>>>>>>>>>>>>>.//
-        // Encrypt
-        // Generate Crypto filepath
-        std::string cryptpath;
-        GenerateCryptoPath(fi, cryptpath);
-
-        Credentials cred;
-        if(!reindex)
-        {
-            m_MasterKey.GetMasterKeyCredentials(cred);
-
-            // Set random iv
-            std::string iv;
-            m_Crypto.GenerateIv(iv);
-            cred.SetIv(iv);
-            // Generate Credentials
-            //cred = m_Crypto.GenerateCredentials();
-            
-            fi->SetCredentials(cred);
-        }
-        else
-        {
-            // Use existing Credentials
-            cred = fi->GetCredentialsCopy();
-        }
-
-        //status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
-        if(status != ret::A_OK)
-            return status;
-
-        std::cout<< " file encrypted " << std::endl;
 
         // Shove keys into a sqlite entry (and FileInfo?)
 
-       // Check if manifest is loaded
+        // Check if manifest is loaded
         // Write manifest entry
-
         if(insert)
-            m_Manifest.InsertFileInfo(fi);
+            m_Manifest.InsertFileInfo(pFi);
     }
 
     return status;
@@ -335,7 +352,7 @@ int FileManager::IndexFileNew( const std::string& filepath,
 
 ret::eCode FileManager::IndexFile( const std::string &filepath, 
                                    const bool insert,
-                                   FileInfo* fi)
+                                   FileInfo* pFi)
 {
     // TODO :: Handle re-indexing, a file was edited, or the temporary folder was deleted
     std::cout << "Indexing file ... " << std::endl;
@@ -347,11 +364,11 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     // Create an entry
     //  Get File info
     bool reindex = true;
-    if(!fi)
+    if(!pFi)
     {
         std::cout << " NEW FILE " << std::endl;
-        fi = CreateFileInfo();
-        fi->InitializeFile(filepath);
+        pFi = CreateFileInfo();
+        pFi->InitializeFile(filepath);
         reindex = false;
     }
 
@@ -359,7 +376,7 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     // Generate Compression filepath
     std::string comppath;
 
-    GenerateCompressionPath(fi, comppath);
+    GenerateCompressionPath(pFi, comppath);
 
     status = m_Compressor.CompressFile(filepath, comppath, 1);
     if(status != ret::A_OK)
@@ -370,7 +387,7 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     // Encrypt
     // Generate Crypto filepath
     std::string cryptpath;
-    GenerateCryptoPath(fi, cryptpath);
+    GenerateCryptoPath(pFi, cryptpath);
 
     Credentials cred;
     if(!reindex)
@@ -384,12 +401,12 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
         // Generate Credentials
         //cred = m_Crypto.GenerateCredentials();
         
-        fi->SetCredentials(cred);
+        pFi->SetCredentials(cred);
     }
     else
     {
         // Use existing Credentials
-        cred = fi->GetCredentialsCopy();
+        cred = pFi->GetCredentialsCopy();
     }
 
     status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
@@ -402,10 +419,10 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
 
     // ChunkFile
     std::string cn;
-    fi->GetChunkName(cn);
+    pFi->GetChunkName(cn);
     std::cout<<" <--------------------- CHUNK NAME : " << cn << std::endl;
     // Generate Chunk Directory 
-    status = m_Chunker.ChunkFile(fi, cryptpath, m_TempDirectory);
+    status = m_Chunker.ChunkFile(pFi, cryptpath, m_TempDirectory);
     if(status != ret::A_OK)
         return status;
 
@@ -414,7 +431,7 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     // Write manifest entry
 
     if(insert)
-        m_Manifest.InsertFileInfo(fi);
+        m_Manifest.InsertFileInfo(pFi);
 
     return status;
 }
@@ -429,15 +446,15 @@ ret::eCode FileManager::RemoveFile(const std::string &filename)
     return status;
 }
 
-void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &outpath)
+void FileManager::GenerateCompressionPath(FileInfo* pFi, std::string &outpath)
 {
-    if(!fi)
+    if(!pFi)
         return;
 
     // strip any file type
     std::vector<std::string> split;
     std::string filename;
-    fi->GetFilename(filename);
+    pFi->GetFilename(filename);
 
     utils::SplitString(filename, '.', split);
     
@@ -448,14 +465,14 @@ void FileManager::GenerateCompressionPath(FileInfo* fi, std::string &outpath)
     }
 }
 
-void FileManager::GenerateCryptoPath(FileInfo* fi, std::string &outpath)
+void FileManager::GenerateCryptoPath(FileInfo* pFi, std::string &outpath)
 {
-    if(!fi)
+    if(!pFi)
         return;
     // strip any file type
     std::vector<std::string> split;
     std::string filename;
-    fi->GetFilename(filename);
+    pFi->GetFilename(filename);
 
     utils::SplitString(filename, '.', split);
     
@@ -472,21 +489,182 @@ void FileManager::SetFilePostId(const std::string &filename, const std::string& 
 }
 
 
+int FileManager::CheckManifestForFile(const std::string& filename, FileInfo* pFi)
+{
+    int status = ret::A_OK;
+
+    if(pFi)
+    {
+        if(!m_Manifest.QueryForFile(filename, pFi))
+        {
+            status = ret::A_FAIL_TO_QUERY_MANIFEST;
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::DecryptChunks(FileInfo* pFi)
+{
+    int status = ret::A_OK;
+
+    if(pFi)
+    {
+        // Get Credentials
+        Credentials cred;
+        m_MasterKey.GetMasterKeyCredentials(cred);
+        
+        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
+        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+
+        for(;itr != pInfo->end(); itr++)
+        {
+            if(*itr)
+            {
+                std::string chunkname;
+                (*itr)->GetChunkName(chunkname);
+
+                // Set given iv for chunk
+                std::string iv;
+                (*itr)->GetIv(iv);
+
+                status = cred.SetIv(iv);
+                if(status != ret::A_OK)
+                    break;
+
+                // going from enc to cmp
+                std::string encpath;
+                GenerateEncryptionPath(chunkname, encpath);
+
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
+
+                status = m_Crypto.DecryptFile(encpath, comppath, cred);
+                if(status != ret::A_OK)
+                    break;
+            }
+        }
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::DecompressChunks(FileInfo* pFi)
+{
+    int status = ret::A_OK;
+
+    if(pFi)
+    {
+        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
+        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+
+        for(;itr != pInfo->end(); itr++)
+        {
+            if(*itr)
+            {
+                std::string chunkname;
+                (*itr)->GetChunkName(chunkname);
+                
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
+
+                std::string chunkpath;
+                chunkpath += m_TempDirectory + "/" + chunkname;
+
+                status = m_Compressor.DecompressFile(comppath, chunkpath);
+
+                if(status != ret::A_OK)
+                    break;
+            }
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::DechunkFile(FileInfo* pFi)
+{
+    int status = ret::A_OK;
+
+    if(pFi)
+    {
+        // TODO :: figure out which directory this file actually belongs in,
+        //         for now just construct in temp directory
+
+        std::string outpath; // Outbound directory path for fully constructed file
+        outpath = m_TempDirectory
+
+        status = m_Chunker.DeChunkFile(pFi, outpath, m_TempDirectory);
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int FileManager::ConstructFileNew(std::string& filename)
+{
+    // TODO :: this assumes that the fileinfo AND chunkinfo will be successfully created
+    //         the chunk info data must be in the fileinfo, so before this, OUTSIDE of this,
+    //         pull the meta post and chunk post and do all that. and possibly insert into
+    //         manifest
+    int status = ret::A_OK;
+
+    // Retrieve File Info from manifest
+    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
+
+    status = CheckManifestForFile(filename, pFi);
+
+    if(status != ret::A_OK)
+        return status;
+
+    // Decrypt Chunks
+    status = DecryptChunks(pFi);
+    if(status != ret::A_OK)
+        return status;
+
+    // Decompress Chunks
+    status = DecompressChunks(pFi);
+    if(status != ret::A_OK)
+        return status;
+
+    // Construct File
+    status = DechunkFile(pFi);
+    if(status != ret::A_OK)
+        return status;
+
+    return status;
+}
 
 ret::eCode FileManager::ConstructFile(std::string &filename)
 {
 
+    // 
     ret::eCode status = ret::A_OK;
     // Retrieve File Info from manifest
+    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
-    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
-
-    if(!fi)
+    if(!pFi)
         return ret::A_FAIL_INVALID_PTR;
 
-    m_Manifest.QueryForFile(filename, fi);
+    m_Manifest.QueryForFile(filename, pFi);
 
-    if(!fi)
+    if(!pFi)
         return ret::A_FAIL_INVALID_PTR;
     std::string chunkpath;
 
@@ -500,7 +678,7 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
 
     std::cout << " CHUNKPATH : " << chunkpath << std::endl;
 
-    status = m_Chunker.DeChunkFile(fi, chunkpath, m_TempDirectory);
+    status = m_Chunker.DeChunkFile(pFi, chunkpath, m_TempDirectory);
 
     if(status != ret::A_OK)
         return status;
@@ -517,7 +695,7 @@ ret::eCode FileManager::ConstructFile(std::string &filename)
 
     std::cout << " DECRYP PATH : " << decrypPath << std::endl;
 
-    status = m_Crypto.DecryptFile(chunkpath, decrypPath, fi->GetCredentialsCopy());
+    status = m_Crypto.DecryptFile(chunkpath, decrypPath, pFi->GetCredentialsCopy());
     
     if(status != ret::A_OK)
         return status;
@@ -593,16 +771,16 @@ bool FileManager::FileExists(std::string& filepath)
 
 FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
-    FileInfo* fi = m_FileInfoFactory.CreateFileInfoObject();
+    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
-    if(!fi)
+    if(!pFi)
         std::cout<<"INVALID"<<std::endl;
-    m_Manifest.QueryForFile(filename, fi);
+    m_Manifest.QueryForFile(filename, pFi);
 
-    if(!fi)
+    if(!pFi)
         std::cout<<"INVALID"<<std::endl;
     std::cout<<"427"<<std::endl;
-    if(!fi->IsValid())
+    if(!pFi->IsValid())
         return NULL;
-    return fi;
+    return pFi;
 }
