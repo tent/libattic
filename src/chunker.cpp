@@ -99,6 +99,7 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
                                  const std::string &outboundPath, 
                                  const std::string &chunkDir)
 {
+    std::cout<<" Dechunking file " << std::endl;
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
     // Create output path
@@ -116,6 +117,7 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
         m_ofStream.close();
     }
 
+    std::cout<<" attempting to open outbound path : " << outboundPath << std::endl;
     m_ofStream.open(outboundPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!m_ofStream.is_open())

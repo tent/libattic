@@ -38,6 +38,7 @@ Manifest::~Manifest()
  * - Filepath (str)
  * - ChunkName (str)
  * - ChunkCount (unsigned int)
+ * - ChunkData (str)
  * - FileSize (unsigned int)
  * - PostID
  * - PostVersion
@@ -124,12 +125,19 @@ bool Manifest::CreateTables()
 bool Manifest::CreateInfoTable()
 {
     char pexc[1024];
-
+    snprintf( pexc,
+              1024,
+              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, postid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
+              g_infotable.c_str()
+            );
+     
+    /*
     snprintf( pexc,
               1024,
               "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
               g_infotable.c_str()
             );
+            */
 
     return PerformQuery(pexc);
 }
@@ -427,6 +435,8 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
     return true;
 }
 
+//"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, postid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
+              
 bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
 {
     if(!fi)
@@ -448,27 +458,31 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " filesize : " << fi->GetFileSize() << std::endl;
     std::cout<< " id : " << postid << std::endl;
     std::cout<< " version : " << fi->GetPostVersion() << std::endl;
+
+    std::string chunkdata;
+    fi->GetSerializedChunkData(chunkdata);
+
+    std::cout<<" chunkdata : " << chunkdata << std::endl;
     
     char *szKey = reinterpret_cast<char*>(cred.m_Key);
     std::cout<< " key : " << szKey << std::endl;
 
-    char *szIv = reinterpret_cast<char*>(cred.m_Iv);
-    std::cout<< " iv : " << szIv << std::endl;
+    std::string query = "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES ('";
 
     char pexc[1024];
     snprintf( pexc,
               1024, 
-              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, filesize, postid, postversion, key, iv) VALUES (\"%s\", \"%s\", \"%s\", %u, %u, \"%s\", %d, \'%s\', \'%s\');",
+              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (\"%s\", \"%s\", \"%s\", %u, \"%s\", %u, \"%s\", %d, \'%s\');",
               g_infotable.c_str(),
               filename.c_str(),
               filepath.c_str(),
               chunkname.c_str(),
               fi->GetChunkCount(),
+              chunkdata.c_str(),
               fi->GetFileSize(),
               postid.c_str(),
               fi->GetPostVersion(),
-              szKey,
-              szIv
+              szKey
             ); 
 
     /*

@@ -31,6 +31,23 @@
 
 #include "rollsum.h"
 
+TEST(NEWINDEX, AFILE)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    FileManager* pFm = GetFileManager();
+    int status = pFm->IndexFileNew("./data/oa5.pdf", true, NULL);
+    std::cout<<" STATUS : " << status << std::endl;
+
+//    status = pFm->ConstructFileNew("oa5.pdf");
+//    std::cout<<" STATUS : " << status << std::endl;
+
+    ShutdownLibAttic();
+
+}
 /*
 TEST(REGISTER, PASSPHRASE)
 {
@@ -415,7 +432,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 
 static void FOOFUN(int a, void* b)
 {

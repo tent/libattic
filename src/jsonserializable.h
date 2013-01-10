@@ -86,7 +86,7 @@ public:
         }                                                                                       
     }                                                                                           
                                                                                                 
-    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec)                       
+    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec)
     {                                                                                           
         std::vector<std::string>::iterator itr = vec.begin();                                   
         for(; itr != vec.end(); itr++)                                                          

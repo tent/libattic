@@ -268,6 +268,10 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
                 (*itr)->SetIv(iv);
                 status = cred.SetIv(iv);
 
+                std::string hash;
+                m_Crypto.GenerateHash(iv, hash);
+                (*itr)->SetCipherTextSum(hash);
+
                 if(status != ret::A_OK)
                     break;
 
@@ -344,6 +348,12 @@ int FileManager::IndexFileNew( const std::string& filepath,
         // Write manifest entry
         if(insert)
             m_Manifest.InsertFileInfo(pFi);
+
+
+        std::string jsontest;
+        pFi->GetSerializedChunkData(jsontest);
+        std::cout<<" SERIALIZED DATA : \n"<< jsontest << std::endl;
+        pFi->LoadSerializedChunkData(jsontest);
     }
 
     return status;
@@ -605,7 +615,9 @@ int FileManager::DechunkFile(FileInfo* pFi)
         //         for now just construct in temp directory
 
         std::string outpath; // Outbound directory path for fully constructed file
-        outpath = m_TempDirectory;
+        std::string filename;
+        pFi->GetFilename(filename);
+        outpath = m_TempDirectory + "/" + filename;
 
         status = m_Chunker.DeChunkFile(pFi, outpath, m_TempDirectory);
     }
@@ -617,7 +629,7 @@ int FileManager::DechunkFile(FileInfo* pFi)
     return status;
 }
 
-int FileManager::ConstructFileNew(std::string& filename)
+int FileManager::ConstructFileNew(const std::string& filename)
 {
     // TODO :: this assumes that the fileinfo AND chunkinfo will be successfully created
     //         the chunk info data must be in the fileinfo, so before this, OUTSIDE of this,

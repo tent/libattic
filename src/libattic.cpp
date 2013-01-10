@@ -96,7 +96,8 @@ void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
 
 int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey);
-
+//TODO TESTING METHODS REMOVE
+FileManager* GetFileManager() { return g_pFileManager; }
 int TestQuery()
 {
    // EntityManager em;

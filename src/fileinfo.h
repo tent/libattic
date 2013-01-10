@@ -59,6 +59,9 @@ public:
     void PushChunkBack(ChunkInfo* pChunk) { m_Chunks.push_back(pChunk); }
     std::vector<ChunkInfo*>* GetChunkInfoList() { return &m_Chunks; }
 
+    void GetSerializedChunkData(std::string& out) const;
+    bool LoadSerializedChunkData(const std::string& data);
+
 private:    
     std::vector<ChunkInfo*> m_Chunks;
     Credentials     m_Credentials;

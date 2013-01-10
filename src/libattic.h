@@ -1,12 +1,7 @@
-
 #ifndef LIBATTIC_H_
 #define LIBATTIC_H_
 #pragma once
 
-/*
-extern "C"
-{
-*/
 
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
@@ -86,6 +81,9 @@ int TestQuery();
 // Utility function
 int DeleteAllPosts();
 
-//}
+// TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
+class FileManager;
+FileManager* GetFileManager();
+
 #endif
 
