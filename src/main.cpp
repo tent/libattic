@@ -31,6 +31,7 @@
 
 #include "rollsum.h"
 
+/*
 TEST(NEWINDEX, AFILE)
 {
     InitLibAttic( "./data",
@@ -393,7 +394,6 @@ TEST(PULL, ALL)
 /*
 */
 
-/*
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -406,7 +406,8 @@ TEST(PULL, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    int status = PullFile("./data/oa4.pdf", &PULLFUN);
+    EnterPassphrase("password");
+    int status = PullFile("./data/oa5.pdf", &PULLFUN);
 
     for(;;)
     {

@@ -96,6 +96,9 @@ void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
 
 int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey);
+
+int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
+
 //TODO TESTING METHODS REMOVE
 FileManager* GetFileManager() { return g_pFileManager; }
 int TestQuery()
@@ -148,7 +151,6 @@ int InitLibAttic( const char* szWorkingDirectory,
     // Non-essential
     LoadAppFromFile();
     LoadAccessToken();
-
     
     status = g_Arb.Initialize(threadCount);
     if(status != ret::A_OK)
@@ -166,7 +168,29 @@ int InitLibAttic( const char* szWorkingDirectory,
 
     // Load Entity Authentication  - ORDER MATTERS
     LoadEntity();
-    LoadPhraseToken();
+    status = LoadPhraseToken();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Load Phrase FAILED : " << status << std::endl;
+    }
+
+    status = LoadMasterKey();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Load Master Key FAILED : " << status << std::endl;
+    }
+    else
+    {
+        // If loaded Set master key in filemanager
+        MasterKey mk;
+        while(g_pCredManager->TryLock()) { sleep(0); }
+        g_pCredManager->GetMasterKeyCopy(mk);
+        g_pCredManager->Unlock();
+
+        while(g_pFileManager->TryLock()) { sleep(0); }
+        g_pFileManager->SetMasterKey(mk);
+        g_pFileManager->Unlock();
+    }
 
     return status;
 }
@@ -732,6 +756,66 @@ int ChangePassphrase(const char* szOld, const char* szNew)
     return status;
 }
 
+int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
+{
+    int status = ret::A_OK;
+
+    Credentials enc;
+    enc.SetKey(phraseKey);
+    enc.SetIv(iv);
+
+    std::string mk;
+    // Get encrypted master key that needs decrypting
+    Profile* prof = g_Entity.GetFrontProfile();
+    if(prof)
+    {
+        AtticProfileInfo* atpi = prof->GetAtticInfo();
+        if(atpi)
+        {
+            atpi->GetMasterKey(mk);
+            std::string iiiv;
+            atpi->GetIv(iiiv);
+            g_Pt.SetIv(iiiv);
+        }
+    }
+
+    // Attempt to Decrypt Master Key
+    std::string out;
+    Crypto crypto;
+    crypto.DecryptString(mk, enc, out);
+
+    // Check sentinel bytes
+    std::string sentone, senttwo;
+    sentone = out.substr(0, 4);
+    senttwo = out.substr(4, 4);
+    
+    if(sentone == senttwo)
+    {
+        // extract actual key apart from sentinel bytes
+        std::string keyActual;
+        keyActual = out.substr(8);
+
+        // Shove this somewhere
+        MasterKey masterKey;
+        masterKey.SetMasterKey(keyActual);
+
+        // Insert Into Credentials Manager
+        while(g_pCredManager->TryLock()) { sleep(0); }
+        g_pCredManager->SetMasterKey(masterKey);
+        g_pCredManager->Unlock();
+
+        g_Pt.SetPhraseKey(phraseKey);
+        SavePhraseToken(g_Pt);
+        g_bEnteredPassphrase = true;
+    }
+    else
+    {
+        status = ret::A_FAIL_SENTINEL_MISMATCH;
+    }
+
+    return status;
+}
+
 // Master Key
 int EnterPassphrase(const char* szPass)
 {
@@ -762,62 +846,9 @@ int EnterPassphrase(const char* szPass)
     
     if(status == ret::A_OK)
     {
-        Credentials enc;
-        enc.SetKey(phraseKey);
-        enc.SetIv(iv);
-
-        std::string mk;
-        // Get encrypted master key that needs decrypting
-        Profile* prof = g_Entity.GetFrontProfile();
-        if(prof)
-        {
-            std::cout<<"got prof"<<std::endl;
-            AtticProfileInfo* atpi = prof->GetAtticInfo();
-            if(atpi)
-            {
-                atpi->GetMasterKey(mk);
-                std::string iiiv;
-                atpi->GetIv(iiiv);
-                g_Pt.SetIv(iiiv);
-            }
-        }
-
-        // Attempt to Decrypt Master Key
-        std::string out;
-        Crypto crypto;
-        crypto.DecryptString(mk, enc, out);
-
-        // Check sentinel bytes
-        std::string sentone, senttwo;
-        sentone = out.substr(0, 4);
-        senttwo = out.substr(4, 4);
-        
-        if(sentone == senttwo)
-        {
-            // extract actual key apart from sentinel bytes
-            std::string keyActual;
-            keyActual = out.substr(8);
-
-            // Shove this somewhere
-            MasterKey masterKey;
-            masterKey.SetMasterKey(keyActual);
-
-            // Insert Into Credentials Manager
-            while(g_pCredManager->TryLock()) { sleep(0); }
-            g_pCredManager->SetMasterKey(masterKey);
-            g_pCredManager->Unlock();
-
-            g_Pt.SetPhraseKey(phraseKey);
-            SavePhraseToken(g_Pt);
-            g_bEnteredPassphrase = true;
-        }
-        else
-        {
-            status = ret::A_FAIL_SENTINEL_MISMATCH;
-        }
+        status = DecryptMasterKey(phraseKey, iv);
     }
 
-    // Return success
     return status;
 }
 
@@ -943,8 +974,9 @@ int LoadPhraseToken()
     std::cout<< " Loading Phrase Token ... " << std::endl;
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
+    std::cout<<" PT PATH : " << ptpath << std::endl;
     int status = g_Pt.LoadFromFile(ptpath);
-    if(status != ret::A_OK)
+    if(status == ret::A_OK)
     {
         std::cout<<" Loading succeeded ... " << std::endl;
         // Extract Info from entity
@@ -1007,11 +1039,21 @@ int LoadMasterKey()
 {
     int status = ret::A_OK;
     // Check for valid phrase token
-   if(!g_Pt.IsPhraseKeyEmpty())
-   {
-       // "Enter Password"
+    if(g_Pt.IsPhraseKeyEmpty())
+    {
+        // "Enter Password"
+        g_bEnteredPassphrase = false;
+        status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
+    }
+    else
+    {
+        std::string phraseKey, iv;
+        g_Pt.GetPhraseKey(phraseKey);
+        g_Pt.GetIv(iv);
 
-   }
+        status = DecryptMasterKey(phraseKey, iv);
+
+    }   
 
    return status;
 }

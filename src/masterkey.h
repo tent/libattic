@@ -22,6 +22,7 @@ public:
     void WriteToFile(const std::string& filepath);
     void LoadFromFile(const std::string& filepath);
 
+    bool InsertDirtyKey(const std::string& key); // sets and verifies master key from dirty key
     void InsertSentinelIntoMasterKey();
 
     void GetMasterKeyCredentials(Credentials& out)          { out = m_Cred; }
@@ -35,6 +36,7 @@ public:
     void SetCredentials(const Credentials& cred)    { m_Cred = cred; }
     void SetMasterKey(const std::string& key)       { m_Cred.SetKey(key); } 
     void SetIv(const std::string& iv)               { m_Cred.SetIv(iv); }
+    
 
     bool IsEmpty() { return m_KeyWithSentinel.empty(); }
 

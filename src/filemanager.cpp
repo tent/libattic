@@ -520,6 +520,8 @@ int FileManager::CheckManifestForFile(const std::string& filename, FileInfo* pFi
 
 int FileManager::DecryptChunks(FileInfo* pFi)
 {
+
+    std::cout<<" Decrypt Chunks ... " << std::endl;
     int status = ret::A_OK;
 
     if(pFi)
@@ -527,6 +529,10 @@ int FileManager::DecryptChunks(FileInfo* pFi)
         // Get Credentials
         Credentials cred;
         m_MasterKey.GetMasterKeyCredentials(cred);
+
+        std::string key;
+        cred.GetKey(key);
+        std::cout<<" THIS KEY : " << key << std::endl;
         
         std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
         std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
@@ -542,6 +548,8 @@ int FileManager::DecryptChunks(FileInfo* pFi)
                 std::string iv;
                 (*itr)->GetIv(iv);
 
+                std::cout<<" THIS IV : " << iv << std::endl;
+
                 status = cred.SetIv(iv);
                 if(status != ret::A_OK)
                     break;
@@ -550,18 +558,24 @@ int FileManager::DecryptChunks(FileInfo* pFi)
                 std::string encpath;
                 GenerateEncryptionPath(chunkname, encpath);
 
+                std::cout<<" enc path : " << encpath << std::endl;
+
                 std::string comppath;
                 GenerateCompressionPath(chunkname, comppath);
 
                 status = m_Crypto.DecryptFile(encpath, comppath, cred);
                 if(status != ret::A_OK)
+                {
+                    std::cout<<" Failed to decrypt file code : " << status << std::endl;
                     break;
+                }
             }
         }
 
     }
     else
     {
+        std::cout<<" Invalid file info ptr " << std::endl;
         status = ret::A_FAIL_INVALID_PTR;
     }
 
@@ -642,20 +656,25 @@ int FileManager::ConstructFileNew(const std::string& filename)
 
     status = CheckManifestForFile(filename, pFi);
 
+    std::cout<< " how : " << status << std::endl;
+
     if(status != ret::A_OK)
         return status;
 
     // Decrypt Chunks
+    std::cout<< " decrypting ... " << std::endl;
     status = DecryptChunks(pFi);
     if(status != ret::A_OK)
         return status;
 
     // Decompress Chunks
+    std::cout<< " decompressing ... " << std::endl;
     status = DecompressChunks(pFi);
     if(status != ret::A_OK)
         return status;
 
     // Construct File
+    std::cout<< " constructing ... " << std::endl;
     status = DechunkFile(pFi);
     if(status != ret::A_OK)
         return status;

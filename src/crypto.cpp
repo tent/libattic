@@ -280,8 +280,8 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
                                 const Credentials &cred)
 {
 
-    std::cout << " KEY : " << cred.m_Key << std::endl;
-    std::cout << " IV : " << cred.m_Iv << std::endl;
+    std::cout << " KEY : " << reinterpret_cast<const char*>(cred.m_Key) << std::endl;
+    std::cout << " IV : " << reinterpret_cast<const char*>(cred.m_Iv) << std::endl;
 
     // szFilePath, is the path to the encrypted data.
 

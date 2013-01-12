@@ -76,6 +76,26 @@ void MasterKey::LoadFromFile(const std::string& filepath)
     }
 }
 
+bool MasterKey::InsertDirtyKey(const std::string& key)
+{
+    // sets and verifies master key from dirty key
+    // Check sentinel bytes                                 
+    std::string sentone, senttwo;                           
+    sentone = key.substr(0, 4);                             
+    senttwo = key.substr(4, 4);                             
+    
+    if(sentone != senttwo)                                  
+        return false;
+
+    m_KeyWithSentinel = key;
+    // extract actual key apart from sentinel bytes     
+    std::string keyActual;                              
+    keyActual = key.substr(8);                          
+    SetMasterKey(keyActual);
+   
+    return true;
+}
+
 void MasterKey::InsertSentinelIntoMasterKey()
 {
     std::string key;

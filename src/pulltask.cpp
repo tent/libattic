@@ -144,7 +144,9 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Construct File                                                                        
     while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-    std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
+//    std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
+    std::cout << " constructing file ... " << std::endl;
+    std::cout << " CONSTRUCT STATUS : " << GetFileManager()->ConstructFileNew(filename) << std::endl;        
     GetFileManager()->Unlock();
 
     return ret::A_OK;  

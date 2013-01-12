@@ -40,8 +40,9 @@ Manifest::~Manifest()
  * - ChunkCount (unsigned int)
  * - ChunkData (str)
  * - FileSize (unsigned int)
- * - PostID
- * - PostVersion
+ * - PostID (str)
+ * - PostVersion (unsigned int)
+ * - Key (blob)
  */
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
@@ -422,11 +423,11 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
             out->SetFilepath(res.results[1+step]);
             out->SetChunkName(res.results[2+step]);
             out->SetChunkCount(res.results[3+step]);
-            out->SetFileSize(res.results[4+step]);
-            out->SetPostID(res.results[5+step]);
-            out->SetPostVersion(res.results[6+step]);
-            out->SetKey(res.results[7+step]);
-            out->SetIv(res.results[8+step]);
+            out->LoadSerializedChunkData(res.results[4+step]);
+            out->SetFileSize(res.results[5+step]);
+            out->SetPostID(res.results[6+step]);
+            out->SetPostVersion(res.results[7+step]);
+            out->SetKey(res.results[8+step]);
         }
     }
 
@@ -439,17 +440,24 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
               
 bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
 {
+    if(!m_pDb)
+    {
+        std::cout<<"fail db " <<std::endl;
+        return false;
+    }
     if(!fi)
         return false;
 
-    std::string filename, filepath, chunkname, postid;
+    std::string filename, filepath, chunkname, chunkdata, postid, key;
 
     fi->GetFilename(filename);
     fi->GetFilepath(filepath);
     fi->GetChunkName(chunkname);
+    fi->GetSerializedChunkData(chunkdata);
     fi->GetPostID(postid);
 
     Credentials cred = fi->GetCredentialsCopy();
+    cred.GetKey(key);
 
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
@@ -458,61 +466,121 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " filesize : " << fi->GetFileSize() << std::endl;
     std::cout<< " id : " << postid << std::endl;
     std::cout<< " version : " << fi->GetPostVersion() << std::endl;
-
-    std::string chunkdata;
-    fi->GetSerializedChunkData(chunkdata);
-
-    std::cout<<" chunkdata : " << chunkdata << std::endl;
-    
-    char *szKey = reinterpret_cast<char*>(cred.m_Key);
-    std::cout<< " key : " << szKey << std::endl;
-
-    std::string query = "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES ('";
+    std::cout<< " chunkdata : " << chunkdata << std::endl;
+    std::cout<< " key : " << key << std::endl;
 
     char pexc[1024];
     snprintf( pexc,
               1024, 
-              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (\"%s\", \"%s\", \"%s\", %u, \"%s\", %u, \"%s\", %d, \'%s\');",
-              g_infotable.c_str(),
-              filename.c_str(),
-              filepath.c_str(),
-              chunkname.c_str(),
-              fi->GetChunkCount(),
-              chunkdata.c_str(),
-              fi->GetFileSize(),
-              postid.c_str(),
-              fi->GetPostVersion(),
-              szKey
+              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?);",
+              g_infotable.c_str()
             ); 
 
-    /*
-    // Memcpy the key and iv
-    char szkey[100000];
-    
-    memcpy(szkey,  &cred.key, cred.GetKeySize());
+    std::string query = "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?);";
 
-    std::cout<< " COPIED KEY : " << szkey << std::endl;
+    std::cout<< " STATEMENT " << pexc << std::endl;
 
-    std::cout<< " ORIGINAL KEY : " << cred.key << std::endl;
+    // Prepare statement
+    sqlite3_stmt* stmt = NULL;
+    int ret = sqlite3_prepare_v2(m_pDb, query.c_str(), -1, &stmt, 0);
 
-    char* p = reinterpret_cast<char*>(cred.key);
+    if(ret == SQLITE_OK)
+    {
+        if(stmt)
+        {
+            ret = sqlite3_bind_text(stmt, 1, filename.c_str(), filename.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    std::cout<< " REINTERP : " << p << std::endl;
+            ret = sqlite3_bind_text(stmt, 2, filepath.c_str(), filepath.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    char test[10000];
-    snprintf(test, 10000, "%s", p);
+            ret = sqlite3_bind_text(stmt, 3, chunkname.c_str(), chunkname.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    std::cout<< " TEST : " << test << std::endl;
+            ret = sqlite3_bind_int(stmt, 4, fi->GetChunkCount());
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    byte szUn[10000];
-    memcpy(szUn, szkey, cred.GetKeySize());
+            ret = sqlite3_bind_blob(stmt, 5, chunkdata.c_str(), chunkdata.size(), SQLITE_TRANSIENT);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    std::cout<< " COPIED AGAIN : " << szUn << std::endl;
+            ret = sqlite3_bind_int(stmt, 6, fi->GetFileSize());
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    std::cout << " INSERT : \n" << pexc << std::endl;
-    */
+            ret = sqlite3_bind_text(stmt, 7, postid.c_str(), postid.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
 
-    return PerformQuery(pexc);
+            ret = sqlite3_bind_int(stmt, 8, fi->GetPostVersion());
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_bind_blob(stmt, 9, key.c_str(), key.size(), SQLITE_TRANSIENT);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_step(stmt);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_finalize(stmt);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+        }
+        else
+        {
+            std::cout<< "Invalid statement" << std::endl;
+            printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+            return false;
+        }
+
+    }
+    else
+    {
+        std::cout<< "failed to prepare statement " << std::endl;
+        printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+        return false;
+    }
+
+    return true;
 }
 
 
