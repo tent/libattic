@@ -55,7 +55,7 @@ namespace conops
                          AccessToken& at )
     {
         if(!fm)
-            return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         // Multipart post
 
@@ -116,7 +116,7 @@ namespace conops
                         AccessToken& at )
     {    
         if(!fm)
-            return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         std::string postBuffer;
         JsonSerializer::SerializeObject(post, postBuffer);

@@ -83,13 +83,15 @@ void ConnectionManager::Initialize()
     utils::SeedRand();
 }
 
-void ConnectionManager::Shutdown()
+int ConnectionManager::Shutdown()
 {
     if(m_pInstance)
     {
         delete m_pInstance;
         m_pInstance = NULL;
     }
+
+    return ret::A_OK;
 }
 
 void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl, 

@@ -56,7 +56,7 @@ public:
                       std::string &out);
 
     void Initialize();
-    void Shutdown();
+    int Shutdown();
 
     // Note * the reason for the singleton, is that libcurl is not threadsafe
     // when it comes to sharing handles, at this point we don't need threads

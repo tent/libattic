@@ -29,6 +29,8 @@
 #include "profile.h"
 #include "conoperations.h"
 
+#include "libatticutils.h"
+
 // TODO :: 
 // Things to wrap with mutexes
 //  - app
@@ -70,15 +72,6 @@ static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // 
 static ret::eCode DeletePost(const std::string& szPostID); // Depricated
 
 // inward faceing functions
-int InitializeFileManager();
-int InitializeCredentialsManager();
-int InitializeEntityManager();
-
-int ShutdownFileManager();
-int ShutdownCredentialsManager();
-int ShutdownAppInstance();
-int ShutdownEntityManager();
-
 int SetWorkingDirectory(const char* szDir);
 int SetConfigDirectory(const char* szDir);
 int SetTempDirectory(const char* szDir);
@@ -130,19 +123,26 @@ int InitLibAttic( const char* szWorkingDirectory,
         std::cout<<"seu FAILED : " << status << std::endl;
     }
 
-    status = InitializeFileManager();
+    status = liba::InitializeFileManager( &g_pFileManager,
+                                          cnst::g_szManifestName,
+                                          g_ConfigDirectory,
+                                          g_TempDirectory );
     if(status != ret::A_OK)
     {
             std::cout<<"fm FAILED : " << status << std::endl;
     }
 
-    status = InitializeCredentialsManager();
+    status = liba::InitializeCredentialsManager( &g_pCredManager,
+                                                 g_ConfigDirectory);
+
+    if(!g_pCredManager)
+        std::cout<<"failed to create cred manager " << std::endl;
     if(status != ret::A_OK)
     {
             std::cout<<"cm FAILED : " << status << std::endl;
     }
 
-    status = InitializeEntityManager();
+    status = liba::InitializeEntityManager( &g_pEntityManager );
     if(status != ret::A_OK)
     {
         std::cout<<"em FAILED : " << status << std::endl;
@@ -197,25 +197,25 @@ int InitLibAttic( const char* szWorkingDirectory,
 
 int ShutdownLibAttic()
 {
-    int status = ShutdownFileManager();
+    int status = liba::ShutdownFileManager(g_pFileManager);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
     }
 
-    status = ShutdownCredentialsManager();
+    status = liba::ShutdownCredentialsManager(g_pCredManager);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown credentials manager" << std::endl;
     }
     
-    status = ShutdownAppInstance();
+    status = liba::ShutdownAppInstance(g_pApp);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
     }
 
-    status = ShutdownEntityManager();
+    status = liba::ShutdownEntityManager(g_pEntityManager);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
@@ -235,112 +235,6 @@ int ShutdownLibAttic()
     }
 
     return status;
-}
-
-int InitializeFileManager()
-{
-    // Construct path
-    std::string szFilePath(g_ConfigDirectory);
-    utils::CheckUrlAndAppendTrailingSlash(szFilePath);
-    szFilePath.append(cnst::g_szManifestName);
-
-    if(!g_pFileManager)
-    {
-        g_pFileManager = new FileManager(szFilePath, g_ConfigDirectory);
-        g_pFileManager->SetTempDirectory(g_TempDirectory);
-
-        if(!g_pFileManager->StartupFileManager())
-            return ret::A_FAIL_TO_LOAD_FILE;
-    }
-
-    return ret::A_OK;
-}
-
-int InitializeCredentialsManager()
-{
-    int status = ret::A_OK;
-    if(!g_pCredManager)
-    {
-        g_pCredManager = new CredentialsManager();
-        g_pCredManager->SetConfigDirectory(g_ConfigDirectory);
-        status = g_pCredManager->Initialize();
-    }
-
-    return status;
-}
-
-int InitializeEntityManager()
-{
-    int status = ret::A_OK;
-    if(!g_pEntityManager)
-    {
-        g_pEntityManager = new EntityManager();
-        status = g_pEntityManager->Initialize();
-    }
-
-    return status;
-}
-
-int ShutdownFileManager()
-{
-    // Blind shutdown
-    if(g_pFileManager)
-    {
-        g_pFileManager->ShutdownFileManager();
-        delete g_pFileManager;
-        g_pFileManager = NULL;
-    }
-
-    return ret::A_OK;
-}
-
-int ShutdownCredentialsManager()
-{
-    int status = ret::A_OK;
-    if(g_pCredManager)
-    {
-        while(g_pCredManager->TryLock()) { sleep(0); }
-        status = g_pCredManager->Shutdown();
-        g_pCredManager->Unlock();
-
-        delete g_pCredManager;
-        g_pCredManager = NULL;
-    }
-
-    return status;
-}
-
-int ShutdownEntityManager()
-{
-    int status = ret::A_OK;
-    if(g_pEntityManager)
-    {
-        while(g_pEntityManager->TryLock()) { sleep(0); }
-        status = g_pEntityManager->Shutdown();
-        g_pEntityManager->Unlock();
-
-        delete g_pEntityManager;
-        g_pEntityManager = NULL;
-    }
-
-    return status;
-}
-
-int ShutdownAppInstance()
-{
-    if(g_pApp)
-    {
-        delete g_pApp;
-        g_pApp = NULL;
-    }
-    else
-    {
-        return ret::A_FAIL_INVALID_PTR;
-    }
-
-    ConnectionManager::GetInstance()->Shutdown();
-
-    return ret::A_OK;
 }
 
 int StartupAppInstance( const char* szAppName, 
@@ -388,7 +282,7 @@ int RegisterApp(const char* szPostPath)
         return ret::A_FAIL_INVALID_PTR;
 
     if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     std::string path(szPostPath);
     ConnectionManager* pCm = ConnectionManager::GetInstance();
@@ -420,7 +314,7 @@ int RegisterApp(const char* szPostPath)
 int RequestAppAuthorizationURL(const char* szApiRoot)
 {
     if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     UrlParams val;
     val.AddValue(std::string("client_id"), g_pApp->GetAppID());
@@ -542,7 +436,7 @@ int LoadAccessToken()
 int SaveAppToFile()
 {
     if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
@@ -711,10 +605,10 @@ int PullAllFiles()
     // DEPRICATED
     /*
     if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     if(!g_pFileManager)
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     Manifest::EntriesMap* pEntryMap = g_pFileManager->GetManifestEntries();
     Manifest::EntriesMap::iterator itr = pEntryMap->begin();
@@ -1110,10 +1004,10 @@ int SaveChanges()
     // Use this method to force a system wide save
     
     if(!g_pApp)
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
     
     if(!g_pFileManager)
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     ret::eCode status = ret::A_OK;
 

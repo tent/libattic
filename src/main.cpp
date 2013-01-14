@@ -49,20 +49,31 @@ TEST(NEWINDEX, AFILE)
     ShutdownLibAttic();
 
 }
-/*
+*/
+
 TEST(REGISTER, PASSPHRASE)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    //RegisterPassphrase("password");
-    EnterPassphrase("password");
+    if(status == ret::A_OK)
+    {
+        //RegisterPassphrase("password");
+        EnterPassphrase("password");
+    }
+    else
+    {
+        std::cout<<" could not properly init "<< std::endl;
+        std::cout<<" status : " << status << std::endl;
+
+    }
 
     ShutdownLibAttic();
 
 }
+/*
 */
 
 /*
@@ -393,7 +404,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-
+/*
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;

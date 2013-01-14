@@ -59,13 +59,13 @@ int PullTask::PullFile(const std::string& filepath)
     utils::ExtractFileName(filepath, filename);                                                  
 
     if(!GetTentApp())                                                                                  
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                             
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                             
 
     if(!GetFileManager())                                                                          
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
     if(!GetConnectionManager())
-        return ret::A_LIB_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
 
     std::cout<<"FILE NAME : " << filename << std::endl;                                          
 
@@ -156,7 +156,7 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
 {                                                                                            
     // file path preferably to a chunked file.                                               
     if(!GetTentApp())                                                                              
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                         
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                         
 
     Response response;
     AccessToken* at = GetAccessToken();

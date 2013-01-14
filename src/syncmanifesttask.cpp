@@ -216,7 +216,7 @@ int SyncManifestTask::GetFileAndWriteOut(const std::string& url, const std::stri
 {                                                                                                    
     //file path preferably to a chunked file.                                                       
     if(!GetTentApp())                                                                                
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                                 
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                                 
 
     Response response;
     AccessToken* at = GetAccessToken();                                                              
@@ -235,10 +235,10 @@ int SyncManifestTask::GetFileAndWriteOut(const std::string& url, const std::stri
 int SyncManifestTask::SearchForManifestPost(MetaStorePost& out)
 {
     if(!GetTentApp())                                                                        
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                         
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                         
 
     if(!GetFileManager())                                                                    
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;                                 
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                 
 
     // Prepare URL TODO :: operations like this should be abstracted out somewhere perhaps utils
     std::string url;                                                                         
