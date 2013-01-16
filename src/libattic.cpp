@@ -81,8 +81,6 @@ int SaveEntity();
 
 int LoadPhraseToken();
 int SavePhraseToken(PhraseToken& pt);
-
-
 int LoadMasterKey(); // call with a valid phrase token
 
 void GetPhraseTokenFilepath(std::string& out);
@@ -197,7 +195,24 @@ int InitLibAttic( const char* szWorkingDirectory,
 
 int ShutdownLibAttic()
 {
-    int status = liba::ShutdownFileManager(g_pFileManager);
+    int status = ret::A_OK;
+
+    // Shutdown threading first, ALWAYS
+    status = g_Arb.Shutdown();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
+
+    }
+
+
+    status = g_TaskFactory.Shutdown();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
+    }
+
+    status = liba::ShutdownFileManager(g_pFileManager);
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
@@ -219,19 +234,6 @@ int ShutdownLibAttic()
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
-    }
-
-    status = g_Arb.Shutdown();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
-
-    }
-
-    status = g_TaskFactory.Shutdown();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
     }
 
     return status;
@@ -870,9 +872,10 @@ int LoadPhraseToken()
     GetPhraseTokenFilepath(ptpath);
     std::cout<<" PT PATH : " << ptpath << std::endl;
     int status = g_Pt.LoadFromFile(ptpath);
-    if(status == ret::A_OK)
+    if(status != ret::A_OK)
     {
-        std::cout<<" Loading succeeded ... " << std::endl;
+        // couldn't load from file (non existant)
+        // Extract partial info
         // Extract Info from entity
         Profile* prof = g_Entity.GetFrontProfile();
         if(prof)
@@ -897,13 +900,20 @@ int LoadPhraseToken()
 
                 // Save token to file
                 SavePhraseToken(g_Pt);
-                g_bEnteredPassphrase = true;
+                g_bEnteredPassphrase = false;
+
+                //status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
+                status = ret::A_OK;
             }
         }
     }
     else 
     {
-        status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
+        std::cout<<" Loading succeeded ... " << std::endl;
+        if(g_Pt.IsPhraseKeyEmpty())
+            g_bEnteredPassphrase = false;
+        else
+            g_bEnteredPassphrase = true;
     }
 
     std::cout<<" Loading phrase token status : " << status << std::endl;

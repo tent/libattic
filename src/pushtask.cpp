@@ -76,8 +76,9 @@ int PushTask::PushFile(const std::string& filepath)
     int status = ret::A_OK;
     if(!fi)
     {
-        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         std::cout << "INDEXING FILE 0 : " << std::endl;
+
+        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         status = GetFileManager()->IndexFileNew(filepath, true, NULL);
         GetFileManager()->Unlock();
 
@@ -90,10 +91,10 @@ int PushTask::PushFile(const std::string& filepath)
     }
     else
     {
+        std::cout << "INDEXING FILE 1 : " << std::endl;
         // Make sure temporary pieces exist
         // be able to pass in chosen chunkname
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        std::cout << "INDEXING FILE 1 : " << std::endl;
         status = GetFileManager()->IndexFileNew(filepath, true, fi);
         GetFileManager()->Unlock();
 
@@ -112,9 +113,6 @@ int PushTask::PushFile(const std::string& filepath)
     std::string posturl;
     GetEntity(posturl);
     posturl += "/tent/posts";
-
-
-
 
     if(postid.empty())
     {

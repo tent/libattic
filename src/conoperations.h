@@ -36,7 +36,7 @@ namespace conops
             snprintf(buf, 256, "%u", i);
 
             path.clear();
-            path += chunkPath + buf;
+            path += chunkPath + buf + "_enc";
 
             out.push_back(path);
         }

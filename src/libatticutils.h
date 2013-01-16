@@ -4,7 +4,6 @@
 #pragma once
 
 #include <string>
-#include <iostream>
 
 #include "utils.h"
 
@@ -15,38 +14,6 @@
 //#include "entity.h"
 
 // Inward facing utility methods used at libattic interface level
-
-/*
-int InitializeFileManager();
-int InitializeCredentialsManager();
-int InitializeEntityManager();
-
-int ShutdownFileManager();
-int ShutdownCredentialsManager();
-int ShutdownAppInstance();
-int ShutdownEntityManager();
-*/
-/*
-int SetWorkingDirectory(const char* szDir);
-int SetConfigDirectory(const char* szDir);
-int SetTempDirectory(const char* szDir);
-
-int LoadEntity();
-int SaveEntity();
-
-int LoadPhraseToken();
-int SavePhraseToken(PhraseToken& pt);
-
-int LoadMasterKey(); // call with a valid phrase token
-
-void GetPhraseTokenFilepath(std::string& out);
-void GetEntityFilepath(std::string& out);
-
-int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey);
-
-int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
-*/
-
 
 namespace liba
 {
@@ -87,7 +54,6 @@ namespace liba
 
         if(!(*pCm))
         {
-            std::cout<<" creating cred manager" << std::endl;
             (*pCm) = new CredentialsManager();
             (*pCm)->SetConfigDirectory(configDir);
             status = (*pCm)->Initialize();
