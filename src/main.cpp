@@ -30,6 +30,18 @@
 #include "threading.h"
 
 #include "rollsum.h"
+/*
+TEST(PULL, CREDENTIALS)
+{
+    /*
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+ 
+    ShutdownLibAttic();
+    */
+//}
 
 /*
 TEST(NEWINDEX, AFILE)
@@ -39,30 +51,49 @@ TEST(NEWINDEX, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
+    int status = 0;
+
     FileManager* pFm = GetFileManager();
-    int status = pFm->IndexFileNew("./data/oa5.pdf", true, NULL);
+
+    status = pFm->IndexFileNew("./data/oa5.pdf", true, NULL);
     std::cout<<" STATUS : " << status << std::endl;
+    
 
 //    status = pFm->ConstructFileNew("oa5.pdf");
 //    std::cout<<" STATUS : " << status << std::endl;
+    
 
     ShutdownLibAttic();
 
 }
 /*
+*/
+/*
 TEST(REGISTER, PASSPHRASE)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    //RegisterPassphrase("password");
-    EnterPassphrase("password");
+
+    //EnterPassphrase("password");
+    if(status == ret::A_OK)
+    {
+        //RegisterPassphrase("password");
+    //    EnterPassphrase("password");
+    }
+    else
+    {
+        std::cout<<" could not properly init "<< std::endl;
+        std::cout<<" status : " << status << std::endl;
+
+    }
 
     ShutdownLibAttic();
 
 }
+/*
 */
 
 /*
@@ -393,6 +424,7 @@ TEST(PULL, ALL)
 }
 /*
 */
+/*
 
 void PULLFUN(int a, void* b)
 {
@@ -433,7 +465,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+
 
 static void FOOFUN(int a, void* b)
 {

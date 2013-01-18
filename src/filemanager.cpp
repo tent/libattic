@@ -262,10 +262,22 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
                 std::string chunkname;
                 (*itr)->GetChunkName(chunkname);
                 
-                // Generate unique Iv for chunk
                 std::string iv;
-                m_Crypto.GenerateIv(iv);
-                (*itr)->SetIv(iv);
+                // Check for existing Iv
+                if((*itr)->HasIv())
+                {
+
+                    (*itr)->GetIv(iv);
+
+                    std::cout<<" USING EXISTING IV " << iv << std::endl;
+                }
+                else
+                {
+                    // Generate unique Iv for chunk
+                    m_Crypto.GenerateIv(iv);
+                    (*itr)->SetIv(iv);
+                }
+
                 status = cred.SetIv(iv);
 
                 std::string hash;

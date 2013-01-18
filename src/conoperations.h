@@ -36,7 +36,7 @@ namespace conops
             snprintf(buf, 256, "%u", i);
 
             path.clear();
-            path += chunkPath + buf;
+            path += chunkPath + buf + "_enc";
 
             out.push_back(path);
         }
@@ -55,7 +55,7 @@ namespace conops
                          AccessToken& at )
     {
         if(!fm)
-            return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         // Multipart post
 
@@ -116,7 +116,7 @@ namespace conops
                         AccessToken& at )
     {    
         if(!fm)
-            return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         std::string postBuffer;
         JsonSerializer::SerializeObject(post, postBuffer);

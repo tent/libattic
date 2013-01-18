@@ -59,13 +59,13 @@ int PullTask::PullFile(const std::string& filepath)
     utils::ExtractFileName(filepath, filename);                                                  
 
     if(!GetTentApp())                                                                                  
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                             
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                             
 
     if(!GetFileManager())                                                                          
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
     if(!GetConnectionManager())
-        return ret::A_LIB_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
 
     std::cout<<"FILE NAME : " << filename << std::endl;                                          
 
@@ -91,6 +91,8 @@ int PullTask::PullFile(const std::string& filepath)
     fi->GetPostID(postid);                                                                       
     postpath += postid;                                                                          
 
+    std::cout<<" POST ID : " << postid << std::endl;
+
     // Get Post                                                                                  
     AccessToken* at = GetAccessToken();
     Response response;                                                                        
@@ -106,48 +108,56 @@ int PullTask::PullFile(const std::string& filepath)
     std::cout << "CODE : " << response.code << std::endl;
     std::cout << "RESPONSE : " << response.body << std::endl;                                         
 
-    // Deserialize response into post                                                            
-    Post resp;                                                                                   
-    JsonSerializer::DeserializeObject(&resp, response.body);                                          
+    if(response.code == 200)
+    {
+        // Deserialize response into post                                                            
+        Post resp;                                                                                   
 
-    std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;               
-    // Construct list of attachments                                                             
+        JsonSerializer::DeserializeObject(&resp, response.body);                                          
 
-    Post::AttachmentVec* av = resp.GetAttachments();                                             
+        std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;               
+        // Construct list of attachments                                                             
 
-    std::cout<< " VEC COUNT : " << av->size() << std::endl;
-    Post::AttachmentVec::iterator itr = av->begin();                                             
+        Post::AttachmentVec* av = resp.GetAttachments();                                             
 
-    std::string attachmentpath;                                                                  
-    std::string outpath;                                                                         
+        std::cout<< " VEC COUNT : " << av->size() << std::endl;
+        Post::AttachmentVec::iterator itr = av->begin();                                             
 
-    for(;itr != av->end(); itr++)                                                            
-    {                                                                                        
-        // Construct attachment path                                                         
-        attachmentpath.clear();                                                              
-        attachmentpath += postpath;                                                          
-        attachmentpath.append("/attachments/");                                              
-        attachmentpath += (*itr)->Name;                                                      
-        std::cout<< attachmentpath << std::endl;                                             
+        std::string attachmentpath;                                                                  
+        std::string outpath;                                                                         
 
-        outpath.clear();                                                                     
-        GetTempDirectory(outpath);
+        for(;itr != av->end(); itr++)                                                            
+        {                                                                                        
+            // Construct attachment path                                                         
+            attachmentpath.clear();                                                              
+            attachmentpath += postpath;                                                          
+            attachmentpath.append("/attachments/");                                              
+            attachmentpath += (*itr)->Name;                                                      
+            std::cout<< attachmentpath << std::endl;                                             
 
-        utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
-        outpath += (*itr)->Name;                                                             
+            outpath.clear();                                                                     
+            GetTempDirectory(outpath);
 
-        std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
+            utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
+            outpath += (*itr)->Name;                                                             
 
-        // Request attachment                                                                
-        GetFileAndWriteOut(attachmentpath, outpath);                                         
-    }                                                                                        
+            std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
 
-    // Construct File                                                                        
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-//    std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
-    std::cout << " constructing file ... " << std::endl;
-    std::cout << " CONSTRUCT STATUS : " << GetFileManager()->ConstructFileNew(filename) << std::endl;        
-    GetFileManager()->Unlock();
+            // Request attachment                                                                
+            GetFileAndWriteOut(attachmentpath, outpath);                                         
+        }                                                                                        
+
+        // Construct File                                                                        
+        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
+//        std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
+        std::cout << " constructing file ... " << std::endl;
+        std::cout << " CONSTRUCT STATUS : " << GetFileManager()->ConstructFileNew(filename) << std::endl;        
+        GetFileManager()->Unlock();
+    }
+    else
+    {
+        return ret::A_FAIL_NON_200;
+    }
 
     return ret::A_OK;  
 }
@@ -156,7 +166,7 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
 {                                                                                            
     // file path preferably to a chunked file.                                               
     if(!GetTentApp())                                                                              
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;                                         
+        return ret::A_FAIL_INVALID_APP_INSTANCE;                                         
 
     Response response;
     AccessToken* at = GetAccessToken();

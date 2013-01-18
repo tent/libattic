@@ -60,10 +60,10 @@ void DeleteTask::RunTask()
 int DeleteTask::DeleteFile(const std::string& filename)
 {
     if(!GetTentApp())
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     if(!GetFileManager())
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
     FileInfo* fi = GetFileManager()->GetFileInfo(filename);

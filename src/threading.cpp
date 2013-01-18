@@ -174,7 +174,7 @@ int ThreadPool::ExtendPool(unsigned int stride)
         {
             // Error spinning off task
             std::cout<< " error spinning off task " << std::endl;
-            status = ret::A_LIB_FAIL_CREATE_THREAD;
+            status = ret::A_FAIL_CREATE_THREAD;
         }
         else
         {

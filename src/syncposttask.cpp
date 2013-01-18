@@ -60,10 +60,10 @@ int SyncPostsTask::SyncAtticPosts()
     // - this may already exist and need updating
     
     if(!GetTentApp())
-        return ret::A_LIB_FAIL_INVALID_APP_INSTANCE;
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
     
     if(!GetFileManager())
-        return ret::A_LIB_FAIL_INVALID_FILEMANAGER_INSTANCE;
+        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     int postcount = GetAtticPostCount();
 
