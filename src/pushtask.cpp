@@ -5,11 +5,10 @@
 
 #include "filemanager.h"
 #include "connectionmanager.h"
-
+#include "chunkinfo.h"
 #include "errorcodes.h"
 #include "utils.h"
 #include "constants.h"
-
 #include "conoperations.h"
 
 PushTask::PushTask( TentApp* pApp, 
@@ -121,7 +120,7 @@ int PushTask::PushFile(const std::string& filepath)
 
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
-        CreateAtticPost(p,
+        InitAtticPost(p,
                         false,
                         filepath,
                         filename,
@@ -150,7 +149,7 @@ int PushTask::PushFile(const std::string& filepath)
         
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
-        CreateAtticPost(p,
+        InitAtticPost(p,
                         false,
                         filepath,
                         filename,
@@ -173,18 +172,61 @@ int PushTask::PushFile(const std::string& filepath)
     return status;
 }
 
-int PushTask::CreateAtticPost( AtticPost& post,
+int PushTask::InitAtticPost( AtticPost& post,
                                bool pub,
                                const std::string& filepath,
                                const std::string& filename, 
-                               unsigned int size)
+                               unsigned int size,
+                               std::vector<ChunkInfo*>* pList)
 {
-    post.SetPermission(std::string("public"), pub);
-    post.AtticPostSetFilepath(filepath);
-    post.AtticPostSetFilename(filename);
-    post.AtticPostSetSize(size);
+    int status = ret::A_OK;
 
-    return ret::A_OK;
+    if(pList)
+    {
+        post.SetPermission(std::string("public"), pub);
+        post.AtticPostSetFilepath(filepath);
+        post.AtticPostSetFilename(filename);
+        post.AtticPostSetSize(size);
+        
+        std::vector<ChunkInfo*>::iterator itr = pList.begin();
+
+        std::string identifier, postids;
+        for(;itr != pList.end(); itr++)
+        {
+            identifier.clear();
+            postids.clear();
+
+            if(*itr)
+            {
+                
+
+
+            }
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
 }
 
+
+int PushTask::InitChunkPost(ChunkPost& post, std::vector<ChunkInfo*>* pList)
+{
+    int status = ret::A_OK;
+    if(pList)
+    {
+        post.SetChunkInfoList(pList);
+        
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
 

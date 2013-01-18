@@ -4,9 +4,13 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "tenttask.h"
 #include "atticpost.h"
+#include "chunkpost.h"
+
+class ChunkInfo;
 
 class PushTask : public TentTask
 {
@@ -16,11 +20,13 @@ class PushTask : public TentTask
                                      unsigned int size,
                                      std::string& out);
 
-    int CreateAtticPost(AtticPost& post,
+    int InitChunkPost(ChunkPost& post, std::vector<ChunkInfo*>* pList);
+    int InitAtticPost(AtticPost& post,
                         bool pub,
                         const std::string& filepath,
                         const std::string& filename, 
-                        unsigned int size);
+                        unsigned int size,
+                        std::vector<ChunkInfo*>* pList);
 
     int PushFile( const std::string& filepath );
 
