@@ -52,7 +52,8 @@ namespace conops
                          ConnectionManager* cm,
                          FileInfo* fi,
                          Post* post,
-                         AccessToken& at )
+                         AccessToken& at,
+                         Response& responseOut )
     {
         if(!fm)
             return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
@@ -65,23 +66,22 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                              NULL,
                                                              postBuffer, 
                                                              &paths, 
-                                                             response, 
+                                                             responseOut, 
                                                              at.GetMacAlgorithm(), 
                                                              at.GetAccessToken(), 
                                                              at.GetMacKey(), 
                                                              true);
         
-        std::cout<<"CODE : " << response.code << std::endl;
-        std::cout<<"RESPONSE : " << response.body << std::endl;
+        std::cout<<"CODE : " << responseOut.code << std::endl;
+        std::cout<<"RESPONSE : " << responseOut.body << std::endl;
 
         AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response.body);
+        JsonSerializer::DeserializeObject(&p, responseOut.body);
 
         int status = ret::A_OK;
         std::string postid;
@@ -113,8 +113,10 @@ namespace conops
                         ConnectionManager* cm,
                         FileInfo* fi,
                         Post* post,
-                        AccessToken& at )
+                        AccessToken& at,
+                        Response& responseOut)
     {    
+
         if(!fm)
             return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
@@ -124,23 +126,22 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                             NULL,
                                                             postBuffer, 
                                                             &paths, 
-                                                            response, 
+                                                            responseOut, 
                                                             at.GetMacAlgorithm(), 
                                                             at.GetAccessToken(), 
                                                             at.GetMacKey(), 
                                                             true);
      
-        std::cout<<"CODE : " << response.code << std::endl;
-        std::cout<<"RESPONSE : " << response.body << std::endl;
+        std::cout<<"CODE : " << responseOut.code << std::endl;
+        std::cout<<"RESPONSE : " << responseOut.body << std::endl;
 
         AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response.body);
+        JsonSerializer::DeserializeObject(&p, responseOut.body);
 
         std::string postid;
         p.GetID(postid);

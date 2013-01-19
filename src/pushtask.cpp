@@ -62,6 +62,7 @@ int PushTask::PushFile(const std::string& filepath)
     if(!GetFileManager())
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
+    // Index File
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
@@ -101,11 +102,30 @@ int PushTask::PushFile(const std::string& filepath)
             return status;
     }
 
+    // Create Chunk Post
+
+    // Send Attic Post
+    status = SendAtticPost(fi, filepath, filename);
+
+    return status;
+}
+
+
+int PushTask::SendChunkPost( FileInfo* fi, 
+                             const std::string& filepath, 
+                             const std::string& filename )
+
+{
+    int status = ret::A_OK;
+    // Create Chunk Post
     if(!fi)
         std::cout<<"invalid file info"<<std::endl;
-    // Check for existing post
-    std::string postid;
-    fi->GetPostID(postid);
+
+    std::string chunkPostId;
+    fi->GetChunkPostID(chunkPostId);
+
+    // Get ChunkInfo List
+    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -113,6 +133,45 @@ int PushTask::PushFile(const std::string& filepath)
     GetEntity(posturl);
     posturl += "/tent/posts";
 
+    if(chunkPostId.empty())
+    {
+        ChunkPost p;
+        InitChunkPost(p, pList);
+        // Post
+
+    }
+    else
+    {
+        // Put
+
+    }
+
+
+    return status;
+}
+
+int PushTask::SendAtticPost( FileInfo* fi, 
+                             const std::string& filepath, 
+                             const std::string& filename )
+{
+    int status = ret::A_OK;
+    // Create Attic Post
+    if(!fi)
+        std::cout<<"invalid file info"<<std::endl;
+    // Check for existing post
+    std::string postid;
+    fi->GetPostID(postid);
+
+    // Get ChunkInfo List
+    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
+
+    // Construct post url
+    // TODO :: abstract this common functionality somewhere else, utils?
+    std::string posturl;
+    GetEntity(posturl);
+    posturl += "/tent/posts";
+
+    Response response;
     if(postid.empty())
     {
         // New Post
@@ -121,13 +180,15 @@ int PushTask::PushFile(const std::string& filepath)
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         InitAtticPost(p,
-                        false,
-                        filepath,
-                        filename,
-                        size);
+                      false,
+                      filepath,
+                      filename,
+                      size,
+                      pList);
 
         std::string tempdir;
         GetTempDirectory(tempdir);
+
 
         AccessToken* at = GetAccessToken();
         status = conops::PostFile( posturl, 
@@ -137,7 +198,8 @@ int PushTask::PushFile(const std::string& filepath)
                                    GetConnectionManager(), 
                                    fi,
                                    &p,
-                                   *at);
+                                   *at,
+                                   response);
     }
     else
     {
@@ -150,10 +212,11 @@ int PushTask::PushFile(const std::string& filepath)
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         InitAtticPost(p,
-                        false,
-                        filepath,
-                        filename,
-                        size);
+                      false,
+                      filepath,
+                      filename,
+                      size,
+                      pList);
 
         std::string tempdir;
         GetTempDirectory(tempdir);
@@ -166,7 +229,12 @@ int PushTask::PushFile(const std::string& filepath)
                                   GetConnectionManager(), 
                                   fi,
                                   &p,
-                                  *at);
+                                  *at, response);
+    }
+
+    if(response.code != 200)
+    {
+        status = ret::A_FAIL_NON_200;
     }
 
     return status;
@@ -188,16 +256,18 @@ int PushTask::InitAtticPost( AtticPost& post,
         post.AtticPostSetFilename(filename);
         post.AtticPostSetSize(size);
         
-        std::vector<ChunkInfo*>::iterator itr = pList.begin();
+        std::vector<ChunkInfo*>::iterator itr = pList->begin();
 
         std::string identifier, postids;
-        for(;itr != pList.end(); itr++)
+        for(;itr != pList->end(); itr++)
         {
             identifier.clear();
             postids.clear();
 
             if(*itr)
             {
+                (*itr)->GetChecksum(identifier);
+
                 
 
 

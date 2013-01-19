@@ -35,6 +35,7 @@ public:
     void SetCredentials(const Credentials &tCred)       { m_Credentials = tCred; }
 
     void SetPostID(const std::string &szID)         { m_PostID = szID; }
+    void SetChunkPostID(const std::string &szID)    { m_ChunkPostID = szID; }
 
     void SetPostVersion(const std::string& version)      { m_PostVersion = atoi(version.c_str()); }
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
@@ -45,6 +46,7 @@ public:
     void GetFilename(std::string &out) const    { out = m_Filename; }
     void GetFilepath(std::string &out) const    { out = m_Filepath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
+    void GetChunkPostID(std::string &out) const { out = m_ChunkPostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
 
     void GetKey(std::string &out) const { out.append((const char*)m_Credentials.m_Key, m_Credentials.GetKeySize()); }
@@ -58,12 +60,14 @@ public:
 
     void PushChunkBack(ChunkInfo* pChunk) { m_Chunks.push_back(pChunk); }
     std::vector<ChunkInfo*>* GetChunkInfoList() { return &m_Chunks; }
+    //std::vector<std::string>* GetChunkPostsList() { return &m_ChunkPosts; }
 
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
 
 private:    
-    std::vector<ChunkInfo*> m_Chunks;
+    //std::vector<std::string>    m_ChunkPosts;
+    std::vector<ChunkInfo*>     m_Chunks;
     Credentials     m_Credentials;
 
     std::string     m_Filename;   // File within directory
@@ -71,6 +75,7 @@ private:
     std::string     m_ChunkName;
 
     std::string     m_PostID; // Id of the post the file is potentially attached to
+    std::string     m_ChunkPostID; // Id of the chunk post
 
     unsigned int    m_PostVersion; // Version of the post the file is attached to
     unsigned int    m_ChunkCount;
