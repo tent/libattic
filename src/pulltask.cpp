@@ -81,6 +81,7 @@ int PullTask::PullFile(const std::string& filepath)
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
     }                                                                                            
 
+
     // Construct Post URL                                                                        
     std::string postpath;// = m_Entity;                                                             
     GetEntity(postpath);
@@ -88,9 +89,11 @@ int PullTask::PullFile(const std::string& filepath)
     postpath.append("/tent/posts/");                                                             
 
     std::string postid;                                                                          
-    fi->GetPostID(postid);                                                                       
+    //fi->GetPostID(postid);                                                                       
+    fi->GetChunkPostID(postid);
     postpath += postid;                                                                          
 
+    /*
     std::cout<<" POST ID : " << postid << std::endl;
 
     // Get Post                                                                                  
@@ -107,51 +110,22 @@ int PullTask::PullFile(const std::string& filepath)
 
     std::cout << "CODE : " << response.code << std::endl;
     std::cout << "RESPONSE : " << response.body << std::endl;                                         
+    */
+
+    Response response;                                                                        
+    GetChunkPost(fi, response);
 
     if(response.code == 200)
     {
         // Deserialize response into post                                                            
         Post resp;                                                                                   
-
         JsonSerializer::DeserializeObject(&resp, response.body);                                          
 
-        std::cout << " Attachment Count : " << resp.GetAttachmentCount() << std::endl;               
-        // Construct list of attachments                                                             
-
-        Post::AttachmentVec* av = resp.GetAttachments();                                             
-
-        std::cout<< " VEC COUNT : " << av->size() << std::endl;
-        Post::AttachmentVec::iterator itr = av->begin();                                             
-
-        std::string attachmentpath;                                                                  
-        std::string outpath;                                                                         
-
-        for(;itr != av->end(); itr++)                                                            
-        {                                                                                        
-            // Construct attachment path                                                         
-            attachmentpath.clear();                                                              
-            attachmentpath += postpath;                                                          
-            attachmentpath.append("/attachments/");                                              
-            attachmentpath += (*itr)->Name;                                                      
-            std::cout<< attachmentpath << std::endl;                                             
-
-            outpath.clear();                                                                     
-            GetTempDirectory(outpath);
-
-            utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
-            outpath += (*itr)->Name;                                                             
-
-            std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
-
-            // Request attachment                                                                
-            GetFileAndWriteOut(attachmentpath, outpath);                                         
-        }                                                                                        
+        GetAttachmentsFromPost(postpath, resp);
 
         // Construct File                                                                        
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-//        std::cout << "STATUS : " << GetFileManager()->ConstructFile(filename) << std::endl;        
-        std::cout << " constructing file ... " << std::endl;
-        std::cout << " CONSTRUCT STATUS : " << GetFileManager()->ConstructFileNew(filename) << std::endl;        
+        GetFileManager()->ConstructFileNew(filename) << std::endl;        
         GetFileManager()->Unlock();
     }
     else
@@ -160,6 +134,87 @@ int PullTask::PullFile(const std::string& filepath)
     }
 
     return ret::A_OK;  
+}
+
+int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
+{
+    int status = ret::A_OK;
+
+    if(fi)
+    {
+        // Construct Post URL                                                                        
+        std::string postpath;// = m_Entity;                                                             
+        GetEntity(postpath);
+
+        postpath.append("/tent/posts/");                                                             
+
+        std::string postid;                                                                          
+        //fi->GetPostID(postid);                                                                       
+        fi->GetChunkPostID(postid);
+        postpath += postid;                                                                          
+
+        std::cout<<" POST ID : " << postid << std::endl;
+
+        // Get Post                                                                                  
+        AccessToken* at = GetAccessToken();
+        ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,                                
+                                                            NULL,                                    
+                                                            responseOut,                                
+                                                            at->GetMacAlgorithm(),                  
+                                                            at->GetAccessToken(),                   
+                                                            at->GetMacKey(),                        
+                                                            true);                                   
+
+
+        std::cout << "CODE : " << responseOut.code << std::endl;
+        std::cout << "RESPONSE : " << responseOut.body << std::endl;                                         
+
+        if(responseOut.code != 200)
+            status = ret::A_FAIL_NON_200;
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
+{
+    int status = ret::A_OK;
+
+    // Construct list of attachments                                                             
+    Post::AttachmentVec* av = post.GetAttachments();                                             
+
+    std::cout<< " VEC COUNT : " << av->size() << std::endl;
+    Post::AttachmentVec::iterator itr = av->begin();                                             
+
+    std::string attachmentpath, outpath;                                                                         
+
+    for(;itr != av->end(); itr++)                                                            
+    {                                                                                        
+        // Construct attachment path                                                         
+        attachmentpath.clear();                                                              
+        attachmentpath += postpath;                                                          
+        attachmentpath.append("/attachments/");                                              
+        attachmentpath += (*itr)->Name;                                                      
+        std::cout<< attachmentpath << std::endl;                                             
+
+        outpath.clear();                                                                     
+        GetTempDirectory(outpath);
+
+        utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
+        outpath += (*itr)->Name;                                                             
+
+        std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
+
+        // Request attachment                                                                
+        GetFileAndWriteOut(attachmentpath, outpath);                                         
+    }                                                                                        
+
+    
+    return status;
 }
 
 int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &filepath)           
