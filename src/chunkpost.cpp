@@ -62,10 +62,14 @@ void ChunkPost::Serialize(Json::Value& root)
 
         root["chunks"] = chunkval;
     }
+
+    Post::Serialize(root);
 }
 
 void ChunkPost::Deserialize(Json::Value& root)
 {
+    Post::Deserialize(root);
+
     std::vector<std::string> serializedList;
 
     JsonSerializer::DeserializeIntoVector(root["chunks"], serializedList);

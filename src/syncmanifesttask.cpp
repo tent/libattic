@@ -136,9 +136,9 @@ int SyncManifestTask::DeleteManifestPost(const std::string& postid)
 void SyncManifestTask::GetManifestPostID(std::string& out)
 {
     // Get Metadata Post id
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-    GetFileManager()->GetManifestPostID(out);
-    GetFileManager()->Unlock();
+    //while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+    //GetFileManager()->GetManifestPostID(out);
+    //GetFileManager()->Unlock();
 
     if(out.empty())
     {

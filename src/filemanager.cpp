@@ -510,6 +510,21 @@ void FileManager::SetFilePostId(const std::string &filename, const std::string& 
     m_Manifest.InsertFilePostID(filename, postid);
 }
 
+void FileManager::SetFileChunkPostId(const std::string &filename, const std::string& postid)
+{
+    m_Manifest.InsertFileChunkPostID(filename, postid);
+}
+
+void FileManager::GetFilePostId(const std::string& filename, std::string& out)
+{
+
+}
+
+void FileManager::GetFileChunkPostId(const std::string& filename, std::string& out)
+{
+
+}
+
 
 int FileManager::CheckManifestForFile(const std::string& filename, FileInfo* pFi)
 {
@@ -814,6 +829,7 @@ bool FileManager::FileExists(std::string& filepath)
 
 FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
+    // TODO :: refactor fileinfo factory to do searches for preloaded files, before creating a new file.
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
     if(!pFi)

@@ -101,18 +101,23 @@ public:
     void InsertToManifest (FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
-    void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }
+    //void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }// Depricated
+
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
     unsigned int GetFileStride() const               { return m_FileStride; }
 
+    void GetFilePostId(const std::string& filename, std::string& out);
+    void GetFileChunkPostId(const std::string& filename, std::string& out);
+
     void SetManifestFilePath(const std::string &filepath)       { m_ManifestFilePath = filepath; }
-    void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); }
+    void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); } // Depricated
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
     void SetFilePostId(const std::string &filename, const std::string& postid);
+    void SetFileChunkPostId(const std::string &filename, const std::string& postid);
     void SetMasterKey(const MasterKey& mk)                      { m_MasterKey = mk; } 
 
 private:

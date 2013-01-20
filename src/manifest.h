@@ -60,6 +60,7 @@ class Manifest
 
     bool InsertVersionNumber(unsigned int version) const;
     bool InsertPostID(const std::string &postID) const;
+
     //////////////////////////////////////////////////////
 
     void SetIsDirty(bool dirty) { m_Dirty = dirty; } 
@@ -79,13 +80,14 @@ public:
 
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
+    bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
 
     bool RemoveFileInfo(const std::string &filename);
     bool IsFileInManifest(const std::string &filename);
 
     unsigned int GetEntryCount()              { return m_EntryCount; }
     unsigned int GetVersionNumber() const     { return QueryForVersion(); }//return m_VersionNumber; }
-    void GetPostID(std::string &out) const    { QueryForMetaPostID(out); }
+    //void GetPostID(std::string &out) const    { QueryForMetaPostID(out); }
     bool GetIsDirty()                         { return m_Dirty; } 
 
     void SetPostID(const std::string &id)   { InsertPostID(id); }

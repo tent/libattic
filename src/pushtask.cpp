@@ -102,10 +102,33 @@ int PushTask::PushFile(const std::string& filepath)
             return status;
     }
 
-    // Create Chunk Post
+    if(status == ret::A_OK)
+    {
+        // Create Chunk Post
+        int trycount = 0;
+        for(status = SendChunkPost(fi, filepath, filename); status != ret::A_OK; trycount++)
+        {
+            status = SendChunkPost(fi, filepath, filename);
+            std::cout<<" RETRYING .................................." << std::endl;
+            if(trycount > 2)
+                break;
+        }
+    }
 
-    // Send Attic Post
-    status = SendAtticPost(fi, filepath, filename);
+    if(status == ret::A_OK)
+    {
+        // Send Attic Post
+        int trycount = 0;
+        for(status = SendAtticPost(fi, filepath, filename); status != ret::A_OK; trycount++)
+        {
+            status = SendAtticPost(fi, filepath, filename);
+            std::cout<<" RETRYING .................................." << std::endl;
+            if(trycount > 2)
+                break;
+        }
+    }
+
+    std::cout << "finishing up " << std::endl;
 
     return status;
 }
@@ -133,19 +156,90 @@ int PushTask::SendChunkPost( FileInfo* fi,
     GetEntity(posturl);
     posturl += "/tent/posts";
 
+    bool post = true;
+    Response response;
     if(chunkPostId.empty())
     {
         ChunkPost p;
         InitChunkPost(p, pList);
         // Post
+        std::string tempdir;
+        GetTempDirectory(tempdir);
 
+        AccessToken* at = GetAccessToken();
+        status = conops::PostFile( posturl, 
+                                   filepath, 
+                                   tempdir, 
+                                   GetConnectionManager(), 
+                                   fi,
+                                   &p,
+                                   *at,
+                                   response);
     }
     else
     {
         // Put
+        post = false;
+        // Modify Post
+        posturl += "/";
+        posturl += chunkPostId;
 
+        std::cout<< " PUT URL : " << posturl << std::endl;
+        
+        unsigned int size = utils::CheckFilesize(filepath);
+
+        ChunkPost p;
+        InitChunkPost(p, pList);
+
+        std::string tempdir;
+        GetTempDirectory(tempdir);
+
+        AccessToken* at = GetAccessToken();
+        status = conops::PutFile( posturl, 
+                                  filepath, 
+                                  tempdir, 
+                                  GetConnectionManager(), 
+                                  fi,
+                                  &p,
+                                  *at, response);
     }
 
+    // Handle Response
+    if(response.code == 200)
+    {
+        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
+
+        ChunkPost p;
+        JsonSerializer::DeserializeObject(&p, response.body);
+
+        std::string postid;
+        p.GetID(postid);
+
+        if(!postid.empty())
+        {
+            FileManager* fm = GetFileManager();
+            
+            fi->SetChunkPostID(postid); 
+            fi->SetPostVersion(0); // temporary for now, change later
+            std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+            std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
+            if(post)
+            {
+                std::string filename;
+                fi->GetFilename(filename);
+
+                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+                fm->SetFileChunkPostId(filename, postid);
+                fm->Unlock();
+            }
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }
@@ -171,6 +265,7 @@ int PushTask::SendAtticPost( FileInfo* fi,
     GetEntity(posturl);
     posturl += "/tent/posts";
 
+    bool post = true;
     Response response;
     if(postid.empty())
     {
@@ -186,23 +281,20 @@ int PushTask::SendAtticPost( FileInfo* fi,
                       size,
                       pList);
 
-        std::string tempdir;
-        GetTempDirectory(tempdir);
-
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(&p, postBuffer);
 
         AccessToken* at = GetAccessToken();
-        status = conops::PostFile( posturl, 
-                                   filepath, 
-                                   tempdir, 
-                                   GetFileManager(), 
-                                   GetConnectionManager(), 
-                                   fi,
-                                   &p,
+
+        status = conops::HttpPost( posturl,
+                                   NULL,
+                                   postBuffer,
                                    *at,
-                                   response);
+                                   response );
     }
     else
     {
+        post = false;
         // Modify Post
         posturl += "/";
         posturl += postid;
@@ -218,21 +310,46 @@ int PushTask::SendAtticPost( FileInfo* fi,
                       size,
                       pList);
 
-        std::string tempdir;
-        GetTempDirectory(tempdir);
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(&p, postBuffer);
 
         AccessToken* at = GetAccessToken();
-        status = conops::PutFile( posturl, 
-                                  filepath, 
-                                  tempdir, 
-                                  GetFileManager(), 
-                                  GetConnectionManager(), 
-                                  fi,
-                                  &p,
-                                  *at, response);
-    }
+        status = conops::HttpPut( posturl,
+                                   NULL,
+                                   postBuffer,
+                                   *at,
+                                   response );
+   }
 
-    if(response.code != 200)
+    // Handle Response
+    if(response.code == 200)
+    {
+        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
+
+        AtticPost p;
+        JsonSerializer::DeserializeObject(&p, response.body);
+
+        std::string postid;
+        p.GetID(postid);
+
+        if(!postid.empty())
+        {
+            FileManager* fm = GetFileManager();
+            fi->SetPostID(postid); 
+            if(post)
+            {
+                std::string filename;
+                fi->SetPostVersion(0); // temporary for now, change later
+                fi->GetFilename(filename);
+
+                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+                fm->SetFilePostId(filename, postid);
+                fm->Unlock();
+            }
+        }
+    }
+    else
     {
         status = ret::A_FAIL_NON_200;
     }
@@ -267,11 +384,20 @@ int PushTask::InitAtticPost( AtticPost& post,
             if(*itr)
             {
                 (*itr)->GetChecksum(identifier);
-
-                
-
-
+                post.PushBackChunkIdentifier(identifier);
             }
+        }
+
+        FileManager* fm = GetFileManager();
+        while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        FileInfo* fi = fm->GetFileInfo(filename);
+        fm->Unlock();
+
+        std::string chunkpostid;
+        if(fi)
+        {
+            fi->GetChunkPostID(chunkpostid);
+            post.PushBackChunkPostId(chunkpostid);
         }
     }
     else

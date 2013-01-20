@@ -10,7 +10,7 @@
 #include "atticpost.h"
 #include "chunkpost.h"
 
-class ChunkInfo;
+clas ChunkInf;
 
 class PushTask : public TentTask
 {
