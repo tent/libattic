@@ -458,9 +458,9 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     return status;
 }
 
-ret::eCode FileManager::RemoveFile(const std::string &filename)
+int FileManager::RemoveFile(const std::string &filename)
 {
-    ret::eCode status = ret::A_OK;
+    int status = ret::A_OK;
 
     if(!m_Manifest.RemoveFileInfo(filename))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;

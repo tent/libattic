@@ -93,25 +93,6 @@ int PullTask::PullFile(const std::string& filepath)
     fi->GetChunkPostID(postid);
     postpath += postid;                                                                          
 
-    /*
-    std::cout<<" POST ID : " << postid << std::endl;
-
-    // Get Post                                                                                  
-    AccessToken* at = GetAccessToken();
-    Response response;                                                                        
-    ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,                                
-                                                        NULL,                                    
-                                                        response,                                
-                                                        at->GetMacAlgorithm(),                  
-                                                        at->GetAccessToken(),                   
-                                                        at->GetMacKey(),                        
-                                                        true);                                   
-
-
-    std::cout << "CODE : " << response.code << std::endl;
-    std::cout << "RESPONSE : " << response.body << std::endl;                                         
-    */
-
     Response response;                                                                        
     GetChunkPost(fi, response);
 
@@ -125,7 +106,7 @@ int PullTask::PullFile(const std::string& filepath)
 
         // Construct File                                                                        
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-        GetFileManager()->ConstructFileNew(filename) << std::endl;        
+        GetFileManager()->ConstructFileNew(filename);
         GetFileManager()->Unlock();
     }
     else

@@ -67,7 +67,7 @@ public:
                           const bool insert, 
                           FileInfo* pFi = NULL);
 
-    ret::eCode RemoveFile(const std::string &filename);
+    int RemoveFile(const std::string &filename);
 
     int ConstructFileNew(const std::string& filename);
     ret::eCode ConstructFile(std::string &filename);

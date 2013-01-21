@@ -12,7 +12,7 @@ cmake_minimum_required (VERSION 2.6)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
-set(CMAKE_CXX_FLAGS "-g")
+set(CMAKE_CXX_FLAGS "-g -Wall")
 
 # Build dependencies
 # Build gtest libs
