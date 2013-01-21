@@ -82,6 +82,7 @@ int SaveEntity();
 int LoadPhraseToken();
 int SavePhraseToken(PhraseToken& pt);
 int LoadMasterKey(); // call with a valid phrase token
+int SetFileManagerMasterKey();
 
 void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
@@ -179,18 +180,25 @@ int InitLibAttic( const char* szWorkingDirectory,
     }
     else
     {
-        // If loaded Set master key in filemanager
-        MasterKey mk;
-        while(g_pCredManager->TryLock()) { sleep(0); }
-        g_pCredManager->GetMasterKeyCopy(mk);
-        g_pCredManager->Unlock();
-
-        while(g_pFileManager->TryLock()) { sleep(0); }
-        g_pFileManager->SetMasterKey(mk);
-        g_pFileManager->Unlock();
+        status = SetFileManagerMasterKey();
     }
 
     return status;
+}
+
+int SetFileManagerMasterKey()
+{
+    // If loaded Set master key in filemanager
+    MasterKey mk;
+    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetMasterKeyCopy(mk);
+    g_pCredManager->Unlock();
+
+    while(g_pFileManager->TryLock()) { sleep(0); }
+    g_pFileManager->SetMasterKey(mk);
+    g_pFileManager->Unlock();
+    
+    return ret::A_OK;
 }
 
 int ShutdownLibAttic()
@@ -642,7 +650,7 @@ int ChangePassphrase(const char* szOld, const char* szNew)
         g_pCredManager->GetMasterKeyCopy(mk);
         g_pCredManager->Unlock();
 
-        // Register new passphrase with attic
+            // Register new passphrase with attic
         std::string key;
         mk.GetMasterKey(key);
 
@@ -743,6 +751,16 @@ int EnterPassphrase(const char* szPass)
     if(status == ret::A_OK)
     {
         status = DecryptMasterKey(phraseKey, iv);
+
+        if(status == ret::A_OK)
+        {
+            // Reload phrase token
+            //LoadPhraseToken();
+            // Load Master Key
+            status = LoadMasterKey();
+            if(status == ret::A_OK)
+                status = SetFileManagerMasterKey();
+        }
     }
 
     return status;
@@ -864,7 +882,6 @@ int RegisterPassphrase(const char* szPass, bool override)
     return status;
 }
 
-
 int LoadPhraseToken()
 {
     std::cout<< " Loading Phrase Token ... " << std::endl;
@@ -903,8 +920,12 @@ int LoadPhraseToken()
                 g_bEnteredPassphrase = false;
 
                 //status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
-                status = ret::A_OK;
+                status = g_Pt.LoadFromFile(ptpath);
             }
+        }
+        else
+        {
+            status = ret::A_FAIL_INVALID_PTR;
         }
     }
     else 
@@ -916,6 +937,11 @@ int LoadPhraseToken()
             g_bEnteredPassphrase = true;
     }
 
+        std::string pk, dk;
+        g_Pt.GetDirtyKey(dk);
+        g_Pt.GetPhraseKey(pk);
+        std::cout<<" PHRASE KEY : " << pk << std::endl;
+        std::cout<<" DIRTY KEY : " << dk << std::endl;
     std::cout<<" Loading phrase token status : " << status << std::endl;
     return status; 
 }
@@ -956,10 +982,9 @@ int LoadMasterKey()
         g_Pt.GetIv(iv);
 
         status = DecryptMasterKey(phraseKey, iv);
-
     }   
 
-   return status;
+    return status;
 }
 
 void GetPhraseTokenFilepath(std::string& out)

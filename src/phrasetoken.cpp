@@ -63,7 +63,7 @@ int PhraseToken::LoadFromFile(const std::string& filepath)
     // sanity check size and readcount should be the same                                         
     int readcount = ifs.gcount();                                                                 
     if(readcount != size)                                                                         
-    std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
+        std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
     
     std::string loaded(pBuf);                                                                     
     

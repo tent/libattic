@@ -30,18 +30,20 @@
 #include "threading.h"
 
 #include "rollsum.h"
+
 /*
-TEST(PULL, CREDENTIALS)
+TEST(TESTINIT, CREDENTIALS)
 {
-    /*
     InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
- 
+
+    EnterPassphrase("password");
     ShutdownLibAttic();
-    */
-//}
+}
+/*
+*/
 
 /*
 TEST(NEWINDEX, AFILE)
@@ -424,7 +426,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+
 
 void PULLFUN(int a, void* b)
 {
@@ -465,7 +467,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 
 static void FOOFUN(int a, void* b)
 {
@@ -479,6 +481,7 @@ TEST(PUSH, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
+    EnterPassphrase("password");
        //status = PushFile("./data/oa1.pdf", &FOOFUN);
 //    status = PushFile("./data/oa2.pdf", &FOOFUN);
 //    status = PushFile("./data/oa3.pdf", &FOOFUN);

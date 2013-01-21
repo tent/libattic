@@ -657,10 +657,15 @@ int FileManager::DechunkFile(FileInfo* pFi)
 
         std::string outpath; // Outbound directory path for fully constructed file
         std::string filename;
+        std::string filepath;
         pFi->GetFilename(filename);
+        pFi->GetFilepath(filepath);
+
         outpath = m_TempDirectory + "/" + filename;
 
-        status = m_Chunker.DeChunkFile(pFi, outpath, m_TempDirectory);
+        //status = m_Chunker.DeChunkFile(pFi, outpath, m_TempDirectory);
+        //
+        status = m_Chunker.DeChunkFile(pFi, filepath, m_TempDirectory);
     }
     else
     {
