@@ -1,6 +1,5 @@
 #include "credentials.h"
 
-#include <iostream>
 #include "errorcodes.h"
 
 Credentials::Credentials()
@@ -23,10 +22,8 @@ int Credentials::SetKey(const std::string& key)
     else
     {
         status = ret::A_FAIL_KEYSIZE_MISMATCH;
-
     }
 
-        std::cout<<" KEY STATUS : " << status << std::endl;
     return status;
 }
 
@@ -42,7 +39,6 @@ int Credentials::SetIv(const std::string& iv)
         status = ret::A_FAIL_IVSIZE_MISMATCH;
     }
 
-        std::cout<<" IV STATUS : " << status << std::endl;
     return status;
 }
 
