@@ -57,10 +57,13 @@ void ChunkPost::Serialize(Json::Value& root)
             serializedList.push_back(val);
         }
 
+        std::string cval;
         Json::Value chunkval;
         JsonSerializer::SerializeVector(chunkval, serializedList);
+        JsonSerializer::SerializeJsonValue(chunkval, cval);
 
-        root["chunks"] = chunkval;
+        //root["chunks"] = chunkval;
+        SetContent("chunks", cval);
     }
 
     Post::Serialize(root);
@@ -70,9 +73,13 @@ void ChunkPost::Deserialize(Json::Value& root)
 {
     Post::Deserialize(root);
 
+    std::string cval;
+    Json::Value chunkval;
     std::vector<std::string> serializedList;
 
-    JsonSerializer::DeserializeIntoVector(root["chunks"], serializedList);
+    GetContent("chunks", cval);
+    JsonSerializer::DeserializeJsonValue(chunkval, cval);
+    JsonSerializer::DeserializeIntoVector(chunkval, serializedList);
 
     if(serializedList.size() > 0)
     {
