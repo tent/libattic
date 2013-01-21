@@ -49,6 +49,21 @@ public:
         return false;
     }
 
+    static bool SerializeJsonValue(Json::Value& root, std::string& output)
+    {
+        Json::StyledWriter writer;
+        output = writer.write(root);
+        return true;
+    }
+
+    static bool DeserializeJsonValue(Json::Value& val, std::string& input)
+    {
+        Json::Reader reader;
+        if(!reader.parse(input, val))
+            return false;
+        return true;
+    }
+
     static bool DeserializeObject(JsonSerializable* pObj, const std::string& input)
     {
         if(!pObj)
