@@ -40,7 +40,8 @@ Manifest::~Manifest()
  * - ChunkCount (unsigned int)
  * - ChunkData (str)
  * - FileSize (unsigned int)
- * - PostID (str)
+ * - MetaPostID (str)
+ * - ChunkPostID (str)
  * - PostVersion (unsigned int)
  * - Key (blob)
  */
@@ -128,7 +129,7 @@ bool Manifest::CreateInfoTable()
     char pexc[1024];
     snprintf( pexc,
               1024,
-              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, postid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
+              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               g_infotable.c_str()
             );
      
@@ -426,8 +427,9 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
             out->LoadSerializedChunkData(res.results[4+step]);
             out->SetFileSize(res.results[5+step]);
             out->SetPostID(res.results[6+step]);
-            out->SetPostVersion(res.results[7+step]);
-            out->SetKey(res.results[8+step]);
+            out->SetChunkPostID(res.results[7+step]);
+            out->SetPostVersion(res.results[8+step]);
+            out->SetKey(res.results[9+step]);
         }
     }
 
@@ -436,7 +438,7 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
     return true;
 }
 
-//"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, postid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
+//"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
 bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
 {
@@ -448,13 +450,14 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     if(!fi)
         return false;
 
-    std::string filename, filepath, chunkname, chunkdata, postid, key;
+    std::string filename, filepath, chunkname, chunkdata, metapostid, chunkpostid, key;
 
     fi->GetFilename(filename);
     fi->GetFilepath(filepath);
     fi->GetChunkName(chunkname);
     fi->GetSerializedChunkData(chunkdata);
-    fi->GetPostID(postid);
+    fi->GetPostID(metapostid);
+    fi->GetChunkPostID(chunkpostid);
 
     Credentials cred = fi->GetCredentialsCopy();
     cred.GetKey(key);
@@ -464,19 +467,21 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " chunk name : " << chunkname << std::endl;
     std::cout<< " count : " << fi->GetChunkCount() << std::endl;
     std::cout<< " filesize : " << fi->GetFileSize() << std::endl;
-    std::cout<< " id : " << postid << std::endl;
+    std::cout<< " meta id : " << metapostid << std::endl;
+    std::cout<< " chunk id : " << chunkpostid << std::endl;
     std::cout<< " version : " << fi->GetPostVersion() << std::endl;
     std::cout<< " chunkdata : " << chunkdata << std::endl;
     std::cout<< " key : " << key << std::endl;
 
+// TODO :: remove pexc may not be needed anymore
     char pexc[1024];
     snprintf( pexc,
               1024, 
-              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?);",
+              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, metapostid, chunkpostid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?,?);",
               g_infotable.c_str()
             ); 
 
-    std::string query = "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, chunkdata, filesize, postid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?);";
+    std::string query = "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, chunkdata, filesize, metapostid, chunkpostid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?,?);";
 
     std::cout<< " STATEMENT " << pexc << std::endl;
 
@@ -530,21 +535,28 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 7, postid.c_str(), postid.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 7, metapostid.c_str(), metapostid.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK)
             {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 8, fi->GetPostVersion());
+            ret = sqlite3_bind_text(stmt, 8, chunkpostid.c_str(), chunkpostid.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK)
             {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_blob(stmt, 9, key.c_str(), key.size(), SQLITE_TRANSIENT);
+            ret = sqlite3_bind_int(stmt, 9, fi->GetPostVersion());
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_bind_blob(stmt, 10, key.c_str(), key.size(), SQLITE_TRANSIENT);
             if(ret != SQLITE_OK)
             {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
@@ -586,18 +598,34 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
 
 bool Manifest::InsertFilePostID(const std::string& filename, const std::string &id)
 {
-    std::cout<<" HERE " << std::endl;
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "UPDATE \"%s\" SET postid=\"%s\" WHERE filename=\"%s\";",
+              "UPDATE \"%s\" SET metapostid=\"%s\" WHERE filename=\"%s\";",
               g_infotable.c_str(),
               id.c_str(),
               filename.c_str()
             ); 
 
     std::cout << "INSERT POST ID : " << pexc << std::endl;
+
+    return PerformQuery(pexc);
+}
+
+bool Manifest::InsertFileChunkPostID(const std::string &filename, const std::string &id)
+{
+    char pexc[1024];
+
+    snprintf( pexc,
+              1024, 
+              "UPDATE \"%s\" SET chunkpostid=\"%s\" WHERE filename=\"%s\";",
+              g_infotable.c_str(),
+              id.c_str(),
+              filename.c_str()
+            ); 
+
+    std::cout << "INSERT CHUNK POST ID : " << pexc << std::endl;
 
     return PerformQuery(pexc);
 }

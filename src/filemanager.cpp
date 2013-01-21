@@ -458,9 +458,9 @@ ret::eCode FileManager::IndexFile( const std::string &filepath,
     return status;
 }
 
-ret::eCode FileManager::RemoveFile(const std::string &filename)
+int FileManager::RemoveFile(const std::string &filename)
 {
-    ret::eCode status = ret::A_OK;
+    int status = ret::A_OK;
 
     if(!m_Manifest.RemoveFileInfo(filename))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
@@ -508,6 +508,21 @@ void FileManager::GenerateCryptoPath(FileInfo* pFi, std::string &outpath)
 void FileManager::SetFilePostId(const std::string &filename, const std::string& postid)
 {
     m_Manifest.InsertFilePostID(filename, postid);
+}
+
+void FileManager::SetFileChunkPostId(const std::string &filename, const std::string& postid)
+{
+    m_Manifest.InsertFileChunkPostID(filename, postid);
+}
+
+void FileManager::GetFilePostId(const std::string& filename, std::string& out)
+{
+
+}
+
+void FileManager::GetFileChunkPostId(const std::string& filename, std::string& out)
+{
+
 }
 
 
@@ -814,6 +829,7 @@ bool FileManager::FileExists(std::string& filepath)
 
 FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
+    // TODO :: refactor fileinfo factory to do searches for preloaded files, before creating a new file.
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
     if(!pFi)

@@ -48,75 +48,45 @@ namespace conops
     static int PostFile( const std::string& url, 
                          const std::string& filepath, 
                          const std::string& TempDirectory,
-                         FileManager* fm,
                          ConnectionManager* cm,
                          FileInfo* fi,
                          Post* post,
-                         AccessToken& at )
+                         AccessToken& at,
+                         Response& responseOut )
     {
-        if(!fm)
-            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
         // Multipart post
-
         std::string postBuffer;
         JsonSerializer::SerializeObject(post, postBuffer);
 
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPost( url, 
                                                              NULL,
                                                              postBuffer, 
                                                              &paths, 
-                                                             response, 
+                                                             responseOut, 
                                                              at.GetMacAlgorithm(), 
                                                              at.GetAccessToken(), 
                                                              at.GetMacKey(), 
                                                              true);
         
-        std::cout<<"CODE : " << response.code << std::endl;
-        std::cout<<"RESPONSE : " << response.body << std::endl;
+        std::cout<<"CODE : " << responseOut.code << std::endl;
+        std::cout<<"RESPONSE : " << responseOut.body << std::endl;
 
-        AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response.body);
-
-        int status = ret::A_OK;
-        std::string postid;
-        p.GetID(postid);
-        if(!postid.empty())
-        {
-            fi->SetPostID(postid); 
-            fi->SetPostVersion(0); // temporary for now, change later
-            std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-            std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
-
-            {
-                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-                std::string filename;
-                fi->GetFilename(filename);
-                fm->SetFilePostId(filename, postid);
-                fm->Unlock();
-            }
-
-        }
-
-        return status;
+        return ret::A_OK;
     }    
 
     static int PutFile( const std::string& url, 
                         const std::string& filepath, 
                         const std::string& TempDirectory,
-                        FileManager* fm,
                         ConnectionManager* cm,
                         FileInfo* fi,
                         Post* post,
-                        AccessToken& at )
+                        AccessToken& at,
+                        Response& responseOut)
     {    
-        if(!fm)
-            return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         std::string postBuffer;
         JsonSerializer::SerializeObject(post, postBuffer);
@@ -124,34 +94,17 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-        Response response;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                             NULL,
                                                             postBuffer, 
                                                             &paths, 
-                                                            response, 
+                                                            responseOut, 
                                                             at.GetMacAlgorithm(), 
                                                             at.GetAccessToken(), 
                                                             at.GetMacKey(), 
                                                             true);
      
-        std::cout<<"CODE : " << response.code << std::endl;
-        std::cout<<"RESPONSE : " << response.body << std::endl;
-
-        AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response.body);
-
-        std::string postid;
-        p.GetID(postid);
-        if(!postid.empty())
-        {
-           fi->SetPostID(postid); 
-           fi->SetPostVersion(p.GetVersion()); // temporary for now, change later
-           std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-           std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
-        }
-
         return ret::A_OK;
     }    
 
@@ -162,18 +115,36 @@ namespace conops
                          Response& responseOut)
     {
 
-        ConnectionManager::GetInstance()->HttpPutWithAuth( url,
-                                                    pParams,
-                                                    body,
-                                                    responseOut,
-                                                    at.GetMacAlgorithm(), 
-                                                    at.GetAccessToken(), 
-                                                    at.GetMacKey(), 
-                                                    true);
+        ConnectionManager::GetInstance()->HttpPostWithAuth( url,
+                                                           pParams,
+                                                           body,
+                                                           responseOut,
+                                                           at.GetMacAlgorithm(), 
+                                                           at.GetAccessToken(), 
+                                                           at.GetMacKey(), 
+                                                           true);
 
         return ret::A_OK;
     }
-   
+
+    static int HttpPut( const std::string& url,
+                         const UrlParams* pParams,
+                         const std::string& body,
+                         AccessToken& at,
+                         Response& responseOut)
+    {
+
+        ConnectionManager::GetInstance()->HttpPutWithAuth( url,
+                                                           pParams,
+                                                           body,
+                                                           responseOut,
+                                                           at.GetMacAlgorithm(), 
+                                                           at.GetAccessToken(), 
+                                                           at.GetMacKey(), 
+                                                           true);
+
+        return ret::A_OK;
+    }
     static int HttpGet( const std::string& url,
                         const UrlParams* pParams,
                         const AccessToken& at,

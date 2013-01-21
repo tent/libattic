@@ -424,7 +424,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+
 
 void PULLFUN(int a, void* b)
 {
@@ -465,7 +465,7 @@ TEST(PULL, AFILE)
 
 /*
  */
-
+/*
 
 static void FOOFUN(int a, void* b)
 {

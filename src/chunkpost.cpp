@@ -1,31 +1,90 @@
 
 #include "chunkpost.h"
 
+#include "constants.h"
+#include "errorcodes.h"
+#include "chunkinfo.h"
+
 ChunkPost::ChunkPost()
 {
-    m_pChunkList = NULL;
 
+    SetPostType(cnst::g_szChunkStorePostType);
 }
 
 ChunkPost::~ChunkPost()
 {
-    if(m_pChunkList)
+
+}
+
+// TODO :: rethink how chunk info objects are handled as a whole,
+//         there are going to be alot of copies with this strategy
+int ChunkPost::SetChunkInfoList(std::vector<ChunkInfo*>* pList)
+{
+    int status = ret::A_OK;
+    if(pList)
     {
-        // DO NOT delete anything, this is taken care of elsewhere
-        m_pChunkList->clear();
-        m_pChunkList = NULL;
+        std::vector<ChunkInfo*>::iterator itr = pList->begin();
+        for(;itr != pList->end(); itr++)
+        {
+            if(*itr)
+            {
+                // copy
+                m_ChunkList.push_back((**itr));
+            }
+        }
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
     }
 
+    return status;
 }
 
 void ChunkPost::Serialize(Json::Value& root)
 {
+    if(m_ChunkList.size() > 0)
+    {
+        std::vector<std::string> serializedList;
+        std::vector<ChunkInfo>::iterator itr = m_ChunkList.begin();
 
+        std::string val;
+        for(;itr != m_ChunkList.end(); itr++)
+        {
+            val.clear();
+            JsonSerializer::SerializeObject(&(*itr), val);
+            serializedList.push_back(val);
+        }
+
+        Json::Value chunkval;
+        JsonSerializer::SerializeVector(chunkval, serializedList);
+
+        root["chunks"] = chunkval;
+    }
+
+    Post::Serialize(root);
 }
 
 void ChunkPost::Deserialize(Json::Value& root)
 {
+    Post::Deserialize(root);
 
+    std::vector<std::string> serializedList;
+
+    JsonSerializer::DeserializeIntoVector(root["chunks"], serializedList);
+
+    if(serializedList.size() > 0)
+    {
+        std::vector<std::string>::iterator itr = serializedList.begin();
+
+        for(;itr != serializedList.end(); itr++)
+        {
+            ChunkInfo ci;
+            JsonSerializer::DeserializeObject(&ci, (*itr));
+            m_ChunkList.push_back(ci); // copy
+        }
+    }
 }
 
 

@@ -5,11 +5,10 @@
 
 #include "filemanager.h"
 #include "connectionmanager.h"
-
+#include "chunkinfo.h"
 #include "errorcodes.h"
 #include "utils.h"
 #include "constants.h"
-
 #include "conoperations.h"
 
 PushTask::PushTask( TentApp* pApp, 
@@ -63,6 +62,7 @@ int PushTask::PushFile(const std::string& filepath)
     if(!GetFileManager())
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
+    // Index File
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
@@ -102,11 +102,53 @@ int PushTask::PushFile(const std::string& filepath)
             return status;
     }
 
+    if(status == ret::A_OK)
+    {
+        // Create Chunk Post
+        int trycount = 0;
+        for(status = SendChunkPost(fi, filepath, filename); status != ret::A_OK; trycount++)
+        {
+            status = SendChunkPost(fi, filepath, filename);
+            std::cout<<" RETRYING .................................." << std::endl;
+            if(trycount > 2)
+                break;
+        }
+    }
+
+    if(status == ret::A_OK)
+    {
+        // Send Attic Post
+        int trycount = 0;
+        for(status = SendAtticPost(fi, filepath, filename); status != ret::A_OK; trycount++)
+        {
+            status = SendAtticPost(fi, filepath, filename);
+            std::cout<<" RETRYING .................................." << std::endl;
+            if(trycount > 2)
+                break;
+        }
+    }
+
+    std::cout << "finishing up " << std::endl;
+
+    return status;
+}
+
+
+int PushTask::SendChunkPost( FileInfo* fi, 
+                             const std::string& filepath, 
+                             const std::string& filename )
+
+{
+    int status = ret::A_OK;
+    // Create Chunk Post
     if(!fi)
         std::cout<<"invalid file info"<<std::endl;
-    // Check for existing post
-    std::string postid;
-    fi->GetPostID(postid);
+
+    std::string chunkPostId;
+    fi->GetChunkPostID(chunkPostId);
+
+    // Get ChunkInfo List
+    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -114,19 +156,13 @@ int PushTask::PushFile(const std::string& filepath)
     GetEntity(posturl);
     posturl += "/tent/posts";
 
-    if(postid.empty())
+    bool post = true;
+    Response response;
+    if(chunkPostId.empty())
     {
-        // New Post
-        std::cout<< " POST URL : " << posturl << std::endl;
-
-        unsigned int size = utils::CheckFilesize(filepath);
-        AtticPost p;
-        CreateAtticPost(p,
-                        false,
-                        filepath,
-                        filename,
-                        size);
-
+        ChunkPost p;
+        InitChunkPost(p, pList);
+        // Post
         std::string tempdir;
         GetTempDirectory(tempdir);
 
@@ -134,27 +170,26 @@ int PushTask::PushFile(const std::string& filepath)
         status = conops::PostFile( posturl, 
                                    filepath, 
                                    tempdir, 
-                                   GetFileManager(), 
                                    GetConnectionManager(), 
                                    fi,
                                    &p,
-                                   *at);
+                                   *at,
+                                   response);
     }
     else
     {
+        // Put
+        post = false;
         // Modify Post
         posturl += "/";
-        posturl += postid;
+        posturl += chunkPostId;
 
         std::cout<< " PUT URL : " << posturl << std::endl;
         
         unsigned int size = utils::CheckFilesize(filepath);
-        AtticPost p;
-        CreateAtticPost(p,
-                        false,
-                        filepath,
-                        filename,
-                        size);
+
+        ChunkPost p;
+        InitChunkPost(p, pList);
 
         std::string tempdir;
         GetTempDirectory(tempdir);
@@ -163,28 +198,231 @@ int PushTask::PushFile(const std::string& filepath)
         status = conops::PutFile( posturl, 
                                   filepath, 
                                   tempdir, 
-                                  GetFileManager(), 
                                   GetConnectionManager(), 
                                   fi,
                                   &p,
-                                  *at);
+                                  *at, response);
+    }
+
+    // Handle Response
+    if(response.code == 200)
+    {
+        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
+
+        ChunkPost p;
+        JsonSerializer::DeserializeObject(&p, response.body);
+
+        std::string postid;
+        p.GetID(postid);
+
+        if(!postid.empty())
+        {
+            FileManager* fm = GetFileManager();
+            
+            fi->SetChunkPostID(postid); 
+            fi->SetPostVersion(0); // temporary for now, change later
+            std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
+            std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+
+            if(post)
+            {
+                std::string filename;
+                fi->GetFilename(filename);
+
+                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+                fm->SetFileChunkPostId(filename, postid);
+                fm->Unlock();
+            }
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_NON_200;
     }
 
     return status;
 }
 
-int PushTask::CreateAtticPost( AtticPost& post,
+int PushTask::SendAtticPost( FileInfo* fi, 
+                             const std::string& filepath, 
+                             const std::string& filename )
+{
+    int status = ret::A_OK;
+    // Create Attic Post
+    if(!fi)
+        std::cout<<"invalid file info"<<std::endl;
+    // Check for existing post
+    std::string postid;
+    fi->GetPostID(postid);
+
+    // Get ChunkInfo List
+    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
+
+    // Construct post url
+    // TODO :: abstract this common functionality somewhere else, utils?
+    std::string posturl;
+    GetEntity(posturl);
+    posturl += "/tent/posts";
+
+    bool post = true;
+    Response response;
+    if(postid.empty())
+    {
+        // New Post
+        std::cout<< " POST URL : " << posturl << std::endl;
+
+        unsigned int size = utils::CheckFilesize(filepath);
+        AtticPost p;
+        InitAtticPost(p,
+                      false,
+                      filepath,
+                      filename,
+                      size,
+                      pList);
+
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(&p, postBuffer);
+
+        AccessToken* at = GetAccessToken();
+
+        status = conops::HttpPost( posturl,
+                                   NULL,
+                                   postBuffer,
+                                   *at,
+                                   response );
+    }
+    else
+    {
+        post = false;
+        // Modify Post
+        posturl += "/";
+        posturl += postid;
+
+        std::cout<< " PUT URL : " << posturl << std::endl;
+        
+        unsigned int size = utils::CheckFilesize(filepath);
+        AtticPost p;
+        InitAtticPost(p,
+                      false,
+                      filepath,
+                      filename,
+                      size,
+                      pList);
+
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(&p, postBuffer);
+
+        AccessToken* at = GetAccessToken();
+        status = conops::HttpPut( posturl,
+                                   NULL,
+                                   postBuffer,
+                                   *at,
+                                   response );
+   }
+
+    // Handle Response
+    if(response.code == 200)
+    {
+        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
+
+        AtticPost p;
+        JsonSerializer::DeserializeObject(&p, response.body);
+
+        std::string postid;
+        p.GetID(postid);
+
+        if(!postid.empty())
+        {
+            FileManager* fm = GetFileManager();
+            fi->SetPostID(postid); 
+            if(post)
+            {
+                std::string filename;
+                fi->SetPostVersion(0); // temporary for now, change later
+                fi->GetFilename(filename);
+
+                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+                fm->SetFilePostId(filename, postid);
+                fm->Unlock();
+            }
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+
+int PushTask::InitAtticPost( AtticPost& post,
                                bool pub,
                                const std::string& filepath,
                                const std::string& filename, 
-                               unsigned int size)
+                               unsigned int size,
+                               std::vector<ChunkInfo*>* pList)
 {
-    post.SetPermission(std::string("public"), pub);
-    post.AtticPostSetFilepath(filepath);
-    post.AtticPostSetFilename(filename);
-    post.AtticPostSetSize(size);
+    int status = ret::A_OK;
 
-    return ret::A_OK;
+    if(pList)
+    {
+        post.SetPermission(std::string("public"), pub);
+        post.AtticPostSetFilepath(filepath);
+        post.AtticPostSetFilename(filename);
+        post.AtticPostSetSize(size);
+        
+        std::vector<ChunkInfo*>::iterator itr = pList->begin();
+
+        std::string identifier, postids;
+        for(;itr != pList->end(); itr++)
+        {
+            identifier.clear();
+            postids.clear();
+
+            if(*itr)
+            {
+                (*itr)->GetChecksum(identifier);
+                post.PushBackChunkIdentifier(identifier);
+            }
+        }
+
+        FileManager* fm = GetFileManager();
+        while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        FileInfo* fi = fm->GetFileInfo(filename);
+        fm->Unlock();
+
+        std::string chunkpostid;
+        if(fi)
+        {
+            fi->GetChunkPostID(chunkpostid);
+            post.PushBackChunkPostId(chunkpostid);
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
 }
 
+
+int PushTask::InitChunkPost(ChunkPost& post, std::vector<ChunkInfo*>* pList)
+{
+    int status = ret::A_OK;
+    if(pList)
+    {
+        post.SetChunkInfoList(pList);
+        
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
 

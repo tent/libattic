@@ -19,10 +19,10 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    void SetChunkInfoList(std::vector<ChunkInfo*>* pList) { m_pChunkList = pList; }
+    int SetChunkInfoList(std::vector<ChunkInfo*>* pList);
 
 private:
-    std::vector<ChunkInfo*>*    m_pChunkList;
+    std::vector<ChunkInfo>  m_ChunkList;
 
 };
 
