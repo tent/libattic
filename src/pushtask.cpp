@@ -284,6 +284,8 @@ int PushTask::SendAtticPost( FileInfo* fi,
         std::string postBuffer;
         JsonSerializer::SerializeObject(&p, postBuffer);
 
+        std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
+
         AccessToken* at = GetAccessToken();
 
         status = conops::HttpPost( posturl,
@@ -312,6 +314,8 @@ int PushTask::SendAtticPost( FileInfo* fi,
 
         std::string postBuffer;
         JsonSerializer::SerializeObject(&p, postBuffer);
+
+        std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
 
         AccessToken* at = GetAccessToken();
         status = conops::HttpPut( posturl,
