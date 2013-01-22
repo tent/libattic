@@ -41,6 +41,8 @@ class Manifest
     bool CreateTables();
     bool CreateInfoTable();
     bool CreateMetaTable();
+    bool CreateFolderTable();
+
 
     bool PerformQuery(const char* pQuery) const;
     bool PerformSelect(const char* pSelect, SelectResult &out) const;
@@ -57,6 +59,14 @@ class Manifest
     // MetaTable
     unsigned int QueryForVersion() const;
     void QueryForMetaPostID(std::string &out) const;
+
+    // FolderTable
+    bool InsertFolderData( const std::string &name, 
+                           const std::string &path,
+                           const std::string &children,
+                           const std::string &postid);
+
+    bool RemoveFolderData(const std::string& path);
 
     bool InsertVersionNumber(unsigned int version) const;
     bool InsertPostID(const std::string &postID) const;

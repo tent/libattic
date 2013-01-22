@@ -19,13 +19,13 @@ class PushTask : public TentTask
                                      unsigned int size,
                                      std::string& out);
 
-    int InitChunkPost(ChunkPost& post, std::vector<ChunkInfo*>* pList);
+    int InitChunkPost(ChunkPost& post, FileInfo::ChunkMap* pList);
     int InitAtticPost(AtticPost& post,
                         bool pub,
                         const std::string& filepath,
                         const std::string& filename, 
                         unsigned int size,
-                        std::vector<ChunkInfo*>* pList);
+                        FileInfo::ChunkMap* pList);
 
     int PushFile( const std::string& filepath );
 

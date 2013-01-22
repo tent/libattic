@@ -5,10 +5,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "post.h"
 
 class ChunkInfo;
+
 
 class ChunkPost : public Post
 {
@@ -19,7 +21,7 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    int SetChunkInfoList(std::vector<ChunkInfo*>* pList);
+    int SetChunkInfoList(std::map<std::string, ChunkInfo*>* pList);
 
 private:
     std::vector<ChunkInfo>  m_ChunkList;

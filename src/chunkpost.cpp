@@ -7,7 +7,6 @@
 
 ChunkPost::ChunkPost()
 {
-
     SetPostType(cnst::g_szChunkStorePostType);
 }
 
@@ -18,18 +17,18 @@ ChunkPost::~ChunkPost()
 
 // TODO :: rethink how chunk info objects are handled as a whole,
 //         there are going to be alot of copies with this strategy
-int ChunkPost::SetChunkInfoList(std::vector<ChunkInfo*>* pList)
+int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo*>* pList)
 {
     int status = ret::A_OK;
     if(pList)
     {
-        std::vector<ChunkInfo*>::iterator itr = pList->begin();
+        std::map<std::string, ChunkInfo*>::iterator itr = pList->begin();
         for(;itr != pList->end(); itr++)
         {
-            if(*itr)
+            if(itr->second)
             {
                 // copy
-                m_ChunkList.push_back((**itr));
+                m_ChunkList.push_back((*itr->second));
             }
         }
 

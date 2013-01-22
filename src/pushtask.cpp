@@ -148,7 +148,8 @@ int PushTask::SendChunkPost( FileInfo* fi,
     fi->GetChunkPostID(chunkPostId);
 
     // Get ChunkInfo List
-    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
+    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -257,7 +258,7 @@ int PushTask::SendAtticPost( FileInfo* fi,
     fi->GetPostID(postid);
 
     // Get ChunkInfo List
-    std::vector<ChunkInfo*>* pList = fi->GetChunkInfoList();
+    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -366,7 +367,7 @@ int PushTask::InitAtticPost( AtticPost& post,
                                const std::string& filepath,
                                const std::string& filename, 
                                unsigned int size,
-                               std::vector<ChunkInfo*>* pList)
+                               FileInfo::ChunkMap* pList)
 {
     int status = ret::A_OK;
 
@@ -377,7 +378,7 @@ int PushTask::InitAtticPost( AtticPost& post,
         post.AtticPostSetFilename(filename);
         post.AtticPostSetSize(size);
         
-        std::vector<ChunkInfo*>::iterator itr = pList->begin();
+        FileInfo::ChunkMap::iterator itr = pList->begin();
 
         std::string identifier, postids;
         for(;itr != pList->end(); itr++)
@@ -385,9 +386,9 @@ int PushTask::InitAtticPost( AtticPost& post,
             identifier.clear();
             postids.clear();
 
-            if(*itr)
+            if(itr->second)
             {
-                (*itr)->GetChecksum(identifier);
+                itr->second->GetChecksum(identifier);
                 post.PushBackChunkIdentifier(identifier);
             }
         }
@@ -413,14 +414,12 @@ int PushTask::InitAtticPost( AtticPost& post,
 }
 
 
-int PushTask::InitChunkPost(ChunkPost& post, std::vector<ChunkInfo*>* pList)
+int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap* pList)
 {
     int status = ret::A_OK;
     if(pList)
     {
         post.SetChunkInfoList(pList);
-        
-
     }
     else
     {

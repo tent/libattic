@@ -1,9 +1,7 @@
-
 #include "manifest.h"
 
-#include <string.h>
 #include <stdlib.h>
-
+#include <string.h>
 #include <iostream>
 #include <vector>
 
@@ -12,6 +10,7 @@
 
 
 static const std::string g_infotable("infotable");
+static const std::string g_foldertable("foldertable");
 static const std::string g_metatable("metatable");
 
 Manifest::Manifest()
@@ -101,7 +100,6 @@ void Manifest::CloseSqliteDb()
         sqlite3_close(m_pDb);
         m_pDb = 0;
     }
-
 }
 
 bool Manifest::CreateTables()
@@ -118,6 +116,12 @@ bool Manifest::CreateTables()
     if(!CreateMetaTable())
     {
         std::cout<<" Failed to create metatable..." << std::endl;
+        return false;
+    }
+
+    if(!CreateFolderTable())
+    {
+        std::cout<<" Failed to create foldertable..." << std::endl;
         return false;
     }
 
@@ -157,6 +161,15 @@ bool Manifest::CreateMetaTable()
     return PerformQuery(pexc);
 }
 
+bool Manifest::CreateFolderTable()
+{
+    std::string pexc;
+    pexc += "CREATE TABLE IF NOT EXISTS ";
+    pexc += g_foldertable;
+    pexc += " (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
+
+    return PerformQuery(pexc.c_str());
+}
 
 bool Manifest::PerformQuery(const char* pQuery) const
 {
@@ -473,17 +486,11 @@ bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
     std::cout<< " chunkdata : " << chunkdata << std::endl;
     std::cout<< " key : " << key << std::endl;
 
-// TODO :: remove pexc may not be needed anymore
-    char pexc[1024];
-    snprintf( pexc,
-              1024, 
-              "INSERT OR REPLACE INTO \"%s\" (filename, filepath, chunkname, chunkcount, chunkdata, filesize, metapostid, chunkpostid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?,?);",
-              g_infotable.c_str()
-            ); 
+    std::string query;
+    query += "INSERT OR REPLACE INTO ";
+    query += g_infotable;
+    query += " (filename, filepath, chunkname, chunkcount, chunkdata, filesize, metapostid, chunkpostid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?,?);";
 
-    std::string query = "INSERT OR REPLACE INTO infotable (filename, filepath, chunkname, chunkcount, chunkdata, filesize, metapostid, chunkpostid, postversion, key) VALUES (?,?,?,?,?,?,?,?,?,?);";
-
-    std::cout<< " STATEMENT " << pexc << std::endl;
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
@@ -629,6 +636,93 @@ bool Manifest::InsertFileChunkPostID(const std::string &filename, const std::str
 
     return PerformQuery(pexc);
 }
+
+//" (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
+// FolderTable
+bool Manifest::InsertFolderData( const std::string &name, 
+                                 const std::string &path,
+                                 const std::string &children,
+                                 const std::string &postid)
+{
+    std::string query;
+    query += "INSERT OR REPLACE INTO ";
+    query += g_foldertable;
+    query += " (name, path, children, postid) VALUES (?,?,?,?);";
+
+    // Prepare statement
+    sqlite3_stmt* stmt = NULL;
+    int ret = sqlite3_prepare_v2(m_pDb, query.c_str(), -1, &stmt, 0);
+
+    if(ret == SQLITE_OK)
+    {
+        if(stmt)
+        {
+            ret = sqlite3_bind_text(stmt, 1, name.c_str(), name.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_bind_text(stmt, 2, path.c_str(), path.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_bind_text(stmt, 3, children.c_str(), children.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_bind_text(stmt, 4, postid.c_str(), postid.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_step(stmt);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+
+            ret = sqlite3_finalize(stmt);
+            if(ret != SQLITE_OK)
+            {
+                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                return false;
+            }
+        }
+        else
+        {
+            std::cout<< "Invalid statement" << std::endl;
+            printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+            return false;
+        }
+
+    }
+    else
+    {
+        std::cout<< "failed to prepare statement " << std::endl;
+        printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+        return false;
+    }
+
+    return true;
+}
+
+bool Manifest::RemoveFolderData(const std::string& path)
+{
+
+    return false;
+}
+
 
 bool Manifest::InsertCredentialsToDb(const FileInfo* fi)
 {

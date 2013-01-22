@@ -17,19 +17,20 @@ FileInfo::~FileInfo()
 {
     if(m_Chunks.size() > 0)
     {
-        std::vector<ChunkInfo*>::iterator itr = m_Chunks.begin();
+        ChunkMap::iterator itr = m_Chunks.begin();
 
         for(;itr != m_Chunks.end(); itr++)
         {
-            if(*itr)
+            if(itr->second)
             {
 
-                delete *itr;
-                *itr = NULL;
+                delete itr->second;
+                itr->second = NULL;
                 std::cout<<" DELETING CHUNKINFO " << std::endl;
             }
-
         }
+
+        m_Chunks.clear();
 
     }
 }
@@ -71,16 +72,37 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
     out = name;
 }
 
+int FileInfo::PushChunkBack(ChunkInfo* pChunk)
+{
+    int status = ret::A_OK;
+    if(pChunk)
+    {
+        // Check if entry exists
+        std::string chunkname;
+        pChunk->GetChunkName(chunkname);
+        if(m_Chunks.find(chunkname) == m_Chunks.end())
+        {
+            m_Chunks[chunkname] = pChunk;
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
 void FileInfo::GetSerializedChunkData(std::string& out) const
 {
-    std::vector<ChunkInfo*>::const_iterator itr = m_Chunks.begin();
+    ChunkMap::const_iterator itr = m_Chunks.begin();
     std::vector<std::string> chunkList;
 
     std::string chunk;
     for(;itr != m_Chunks.end(); itr++)
     {
         chunk.clear();
-        JsonSerializer::SerializeObject((*itr), chunk);
+        JsonSerializer::SerializeObject(itr->second, chunk);
         chunkList.push_back(chunk);
     }
 
@@ -120,7 +142,8 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
 
         std::string name;
         ci->GetChunkName(name);
-        m_Chunks.push_back(ci);
+        if(m_Chunks.find(name) == m_Chunks.end())
+            m_Chunks[name] = ci;
     }
 
     return true;

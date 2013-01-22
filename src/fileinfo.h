@@ -4,6 +4,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 #include <vector>
 
 #include "crypto.h"
@@ -14,6 +15,8 @@ class FileInfo
 {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
+    typedef std::map<std::string, ChunkInfo*> ChunkMap;
+
     FileInfo();  
     ~FileInfo(); 
 
@@ -58,8 +61,8 @@ public:
 
     unsigned int GetPostVersion() const { return m_PostVersion ; }
 
-    void PushChunkBack(ChunkInfo* pChunk) { m_Chunks.push_back(pChunk); }
-    std::vector<ChunkInfo*>* GetChunkInfoList() { return &m_Chunks; }
+    int PushChunkBack(ChunkInfo* pChunk);
+    ChunkMap* GetChunkInfoList() { return &m_Chunks; }
     //std::vector<std::string>* GetChunkPostsList() { return &m_ChunkPosts; }
 
     void GetSerializedChunkData(std::string& out) const;
@@ -67,7 +70,9 @@ public:
 
 private:    
     //std::vector<std::string>    m_ChunkPosts;
-    std::vector<ChunkInfo*>     m_Chunks;
+
+    ChunkMap       m_Chunks;
+    //std::vector<ChunkInfo*>     m_Chunks;
     Credentials     m_Credentials;
 
     std::string     m_Filename;   // File within directory

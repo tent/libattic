@@ -208,16 +208,16 @@ int FileManager::CompressChunks(FileInfo* pFi)
 
     if(pFi)
     {
-        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
-        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+        FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
         for(;itr != pInfo->end(); itr++)
         {
 
-            if(*itr)
+            if(itr->second)
             {
                 std::string chunkname;
-                (*itr)->GetChunkName(chunkname);
+                itr->second->GetChunkName(chunkname);
                 
                 std::string comppath;
                 GenerateCompressionPath(chunkname, comppath);
@@ -252,37 +252,35 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
         Credentials cred;
         m_MasterKey.GetMasterKeyCredentials(cred);
         
-        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
-        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+        FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(*itr)
+            if(itr->second)
             {
                 std::string chunkname;
-                (*itr)->GetChunkName(chunkname);
+                itr->second->GetChunkName(chunkname);
                 
                 std::string iv;
                 // Check for existing Iv
-                if((*itr)->HasIv())
+                if(itr->second->HasIv())
                 {
-
-                    (*itr)->GetIv(iv);
-
+                    itr->second->GetIv(iv);
                     std::cout<<" USING EXISTING IV " << iv << std::endl;
                 }
                 else
                 {
                     // Generate unique Iv for chunk
                     m_Crypto.GenerateIv(iv);
-                    (*itr)->SetIv(iv);
+                    itr->second->SetIv(iv);
                 }
 
                 status = cred.SetIv(iv);
 
                 std::string hash;
                 m_Crypto.GenerateHash(iv, hash);
-                (*itr)->SetCipherTextSum(hash);
+                itr->second->SetCipherTextSum(hash);
 
                 if(status != ret::A_OK)
                     break;
@@ -561,19 +559,19 @@ int FileManager::DecryptChunks(FileInfo* pFi)
         cred.GetKey(key);
         std::cout<<" THIS KEY : " << key << std::endl;
         
-        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
-        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+        FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(*itr)
+            if(itr->second)
             {
                 std::string chunkname;
-                (*itr)->GetChunkName(chunkname);
+                itr->second->GetChunkName(chunkname);
 
                 // Set given iv for chunk
                 std::string iv;
-                (*itr)->GetIv(iv);
+                itr->second->GetIv(iv);
 
                 std::cout<<" THIS IV : " << iv << std::endl;
 
@@ -615,15 +613,15 @@ int FileManager::DecompressChunks(FileInfo* pFi)
 
     if(pFi)
     {
-        std::vector<ChunkInfo*>* pInfo = pFi->GetChunkInfoList();
-        std::vector<ChunkInfo*>::iterator itr = pInfo->begin();
+        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+        FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(*itr)
+            if(itr->second)
             {
                 std::string chunkname;
-                (*itr)->GetChunkName(chunkname);
+                itr->second->GetChunkName(chunkname);
                 
                 std::string comppath;
                 GenerateCompressionPath(chunkname, comppath);
