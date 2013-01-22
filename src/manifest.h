@@ -60,15 +60,7 @@ class Manifest
     unsigned int QueryForVersion() const;
     void QueryForMetaPostID(std::string &out) const;
 
-    // FolderTable
-    bool InsertFolderData( const std::string &name, 
-                           const std::string &path,
-                           const std::string &children,
-                           const std::string &postid);
-
-    bool RemoveFolderData(const std::string& path);
-
-    bool InsertVersionNumber(unsigned int version) const;
+        bool InsertVersionNumber(unsigned int version) const;
     bool InsertPostID(const std::string &postID) const;
 
     //////////////////////////////////////////////////////
@@ -78,7 +70,7 @@ public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
     // TODO pull this back to private
-    bool QueryForFile(const std::string &filename, FileInfo* out);
+
 
     Manifest();
     ~Manifest();
@@ -91,9 +83,23 @@ public:
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
     bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
+    bool QueryForFile(const std::string &filename, FileInfo* out);
 
     bool RemoveFileInfo(const std::string &filename);
     bool IsFileInManifest(const std::string &filename);
+
+    // FolderTable
+    bool InsertFolderData( const std::string &name, 
+                           const std::string &path,
+                           const std::string &children,
+                           const std::string &postid);
+
+    bool RemoveFolderData(const std::string& folderpath);
+    bool QueryForFolderData( const std::string& folderpath,
+                             std::string &nameOut,
+                             std::string &pathOut,
+                             std::string &childrenOut,
+                             std::string &postidOut);
 
     unsigned int GetEntryCount()              { return m_EntryCount; }
     unsigned int GetVersionNumber() const     { return QueryForVersion(); }//return m_VersionNumber; }

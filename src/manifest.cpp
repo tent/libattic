@@ -705,7 +705,6 @@ bool Manifest::InsertFolderData( const std::string &name,
             printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
             return false;
         }
-
     }
     else
     {
@@ -717,12 +716,55 @@ bool Manifest::InsertFolderData( const std::string &name,
     return true;
 }
 
-bool Manifest::RemoveFolderData(const std::string& path)
+bool Manifest::RemoveFolderData(const std::string& folderpath)
 {
 
     return false;
 }
 
+bool Manifest::QueryForFolderData( const std::string& folderpath,
+                                   std::string &nameOut,
+                                   std::string &pathOut,
+                                   std::string &childrenOut,
+                                   std::string &postidOut)
+{
+    std::string query;
+    query += "SELECT * FROM ";
+    query += g_foldertable;
+    query += " WHERE filename=\"";
+    query += folderpath;
+    query += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(query.c_str(), res))
+        return false;
+
+    std::cout << " Row count : " << res.nRow << std::endl;
+    std::cout << " Col count : " << res.nCol << std::endl;
+
+    int step = 0;
+    for(int i=0; i<res.nRow+1; i++)
+    {
+        step = i*res.nCol;
+        std::cout<< " step : " << step << std::endl;
+
+        for(int j=0; j<res.nCol; j++)
+        {
+            std::cout << " Results : " << res.results[j+step] << std::endl;
+        }
+
+        if(step > 0)
+        {
+            nameOut = res.results[0+step];
+            pathOut = res.results[1+step];
+            childrenOut = res.results[2+step];
+            postidOut = res.results[3+step];
+        }
+    }
+
+    sqlite3_free_table(res.results);
+    return false;
+}
 
 bool Manifest::InsertCredentialsToDb(const FileInfo* fi)
 {

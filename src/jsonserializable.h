@@ -8,7 +8,6 @@
 
 class JsonSerializable
 {
-
 public:
     JsonSerializable() {};
     virtual ~JsonSerializable(){};
