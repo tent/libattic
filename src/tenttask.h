@@ -11,6 +11,8 @@
 #include "filemanager.h"
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
+#include "taskarbiter.h"
+#include "taskfactory.h"
 
 class TentTask : public Task
 {
@@ -18,8 +20,9 @@ class TentTask : public Task
 public:
     TentTask( TentApp* pApp, 
               FileManager* pFm, 
-              ConnectionManager* pCon, 
               CredentialsManager* pCm,
+              TaskArbiter* pTa,
+              TaskFactory* pTf,
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,
@@ -28,10 +31,11 @@ public:
               const std::string& configdir,
               void (*callback)(int, void*))
     {
-        m_pTentApp = pApp;
-        m_pFileManager = pFm;
-        m_pConnectionManager = pCon; 
-        m_pCredentialsManager = pCm;
+        m_pTentApp              = pApp;
+        m_pFileManager          = pFm;
+        m_pCredentialsManager   = pCm;
+        m_pTaskArbiter          = pTa;
+        m_pTaskFactory          = pTf;
 
         m_At = at;
 
@@ -56,7 +60,11 @@ public:
 
     virtual ~TentTask()
     {
-
+        m_pTentApp              = NULL;
+        m_pFileManager          = NULL;
+        m_pCredentialsManager   = NULL;
+        m_pTaskArbiter          = NULL;
+        m_pTaskFactory          = NULL;
     }
 
     /*
@@ -71,15 +79,18 @@ public:
     void GetWorkingDirectory(std::string &out)  { out = m_WorkingDirectory; }
     void GetConfigDirectory(std::string &out)   { out = m_ConfigDirectory; }
 
-    TentApp* GetTentApp()                       { return m_pTentApp; }
-    FileManager* GetFileManager()               { return m_pFileManager; } 
-    ConnectionManager* GetConnectionManager()   { return m_pConnectionManager; } 
+    TentApp*            GetTentApp()            { return m_pTentApp; }
+    FileManager*        GetFileManager()        { return m_pFileManager; } 
     CredentialsManager* GetCredentialsManager() { return m_pCredentialsManager; } 
+    TaskArbiter*        GetTaskArbiter()        { return m_pTaskArbiter; } 
+    TaskFactory*        GetTaskFactory()        { return m_pTaskFactory; }
 
     void SetTentApp(TentApp* pApp)                        { m_pTentApp = pApp; }
     void SetFileManager(FileManager* pFm)                 { m_pFileManager = pFm; }
-    void SetConnectionManager(ConnectionManager* pCon)    { m_pConnectionManager = pCon; }
     void SetCredentialsManager(CredentialsManager* pCm)   { m_pCredentialsManager = pCm; }
+    void SetTaskArbiter(TaskArbiter* pTa)                 { m_pTaskArbiter = pTa; }
+    void SetTaskFactory(TaskFactory* pTf)                 { m_pTaskFactory = pTf; }
+
     void SetAccessToken(const AccessToken& at)                  { m_At = at; }
     void SetEntity(const std::string& entity)                   { m_Entity = entity; }
     void SetFilepath(const std::string& filepath)               { m_Filepath = filepath; }
@@ -91,10 +102,11 @@ public:
 
     void Reset()
     {
-        m_pTentApp = NULL;
-        m_pFileManager = NULL;
-        m_pConnectionManager = NULL;
-        m_pCredentialsManager = NULL;
+        m_pTentApp              = NULL;
+        m_pFileManager          = NULL;
+        m_pCredentialsManager   = NULL;
+        m_pTaskArbiter          = NULL;
+        m_pTaskFactory          = NULL;
 
         m_At.Reset();
 
@@ -126,8 +138,9 @@ private:
 
     TentApp*             m_pTentApp; 
     FileManager*         m_pFileManager;
-    ConnectionManager*   m_pConnectionManager;
     CredentialsManager*  m_pCredentialsManager;
+    TaskArbiter*         m_pTaskArbiter;
+    TaskFactory*         m_pTaskFactory;
 
     void (*mCallback)(int, void*);
 };

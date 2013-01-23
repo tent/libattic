@@ -12,8 +12,9 @@
 
 PullTask::PullTask( TentApp* pApp, 
                     FileManager* pFm, 
-                    ConnectionManager* pCon, 
                     CredentialsManager* pCm,
+                    TaskArbiter* pTa,
+                    TaskFactory* pTf,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
@@ -24,8 +25,9 @@ PullTask::PullTask( TentApp* pApp,
                     :
                     TentTask( pApp,
                               pFm,
-                              pCon,
                               pCm,
+                              pTa,
+                              pTf,
                               at,
                               entity,
                               filepath,
@@ -63,9 +65,6 @@ int PullTask::PullFile(const std::string& filepath)
 
     if(!GetFileManager())                                                                          
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
-
-    if(!GetConnectionManager())
-        return ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
 
     std::cout<<"FILE NAME : " << filename << std::endl;                                          
 

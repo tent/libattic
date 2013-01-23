@@ -19,7 +19,7 @@ class PushTask : public TentTask
                                      unsigned int size,
                                      std::string& out);
 
-    int InitChunkPost(ChunkPost& post, FileInfo::ChunkMap* pList);
+    int InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List);
     int InitAtticPost(AtticPost& post,
                         bool pub,
                         const std::string& filepath,
@@ -40,8 +40,9 @@ class PushTask : public TentTask
 public:
     PushTask( TentApp* pApp, 
               FileManager* pFm, 
-              ConnectionManager* pCon, 
               CredentialsManager* pCm,
+              TaskArbiter* pTa,
+              TaskFactory* pTf,
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,

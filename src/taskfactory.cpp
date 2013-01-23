@@ -3,14 +3,15 @@
 
 #include "tenttask.h"
 #include "pulltask.h"
+#include "pullalltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "syncmanifesttask.h"
 #include "syncposttask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
 #include "connectionmanager.h"
+#include "taskarbiter.h"
 #include "tentapp.h"
 
 TaskFactory::TaskFactory()
@@ -70,18 +71,19 @@ int TaskFactory::Shutdown()
     return ret::A_OK;
 }
 
-Task* TaskFactory::CreateTentTask( TaskType type,                                
-                                   TentApp* pApp,                                
-                                   FileManager* pFm,                             
-                                   ConnectionManager* pCon,                      
-                                   CredentialsManager* pCm,                      
-                                   const AccessToken& at,                        
-                                   const std::string& entity,                    
-                                   const std::string& filepath,                  
-                                   const std::string& tempdir,                   
-                                   const std::string& workingdir,                
-                                   const std::string& configdir,                 
-                                   void (*callback)(int, void*))
+Task* TaskFactory::GetTentTask( TaskType type,                                
+                                TentApp* pApp,                                
+                                FileManager* pFm,                             
+                                CredentialsManager* pCm,                      
+                                TaskArbiter* pTa,
+                                TaskFactory* pTf,
+                                const AccessToken& at,                        
+                                const std::string& entity,                    
+                                const std::string& filepath,                  
+                                const std::string& tempdir,                   
+                                const std::string& workingdir,                
+                                const std::string& configdir,                 
+                                void (*callback)(int, void*))
 {
 
     std::cout<< " Creating tent task ... " << std::endl;
@@ -91,8 +93,44 @@ Task* TaskFactory::CreateTentTask( TaskType type,
     t = CreateNewTentTask( type,
                            pApp,      
                            pFm,       
-                           pCon,
                            pCm,       
+                           pTa,
+                           pTf,
+                           at,
+                           entity,    
+                           filepath,  
+                           tempdir,   
+                           workingdir,
+                           configdir, 
+                           callback); 
+
+    if(t)
+        m_ActiveTasks.push_back(t);
+    
+    return t;
+}
+
+Task* TaskFactory::SyncGetTentTask( TaskType type,                
+                                    TentApp* pApp,                
+                                    FileManager* pFm,             
+                                    CredentialsManager* pCm,      
+                                    TaskArbiter* pTa,
+                                    TaskFactory* pTf,
+                                    const AccessToken& at,        
+                                    const std::string& entity,    
+                                    const std::string& filepath,  
+                                    const std::string& tempdir,   
+                                    const std::string& workingdir,
+                                    const std::string& configdir, 
+                                    void (*callback)(int, void*))
+{
+    Task* t = NULL;
+    t = CreateNewTentTask( type,
+                           pApp,      
+                           pFm,       
+                           pCm,
+                           pTa,
+                           pTf,
                            at,
                            entity,    
                            filepath,  
@@ -103,17 +141,21 @@ Task* TaskFactory::CreateTentTask( TaskType type,
 
     if(t)
     {
+        Lock();
         m_ActiveTasks.push_back(t);
+        Unlock();
     }
     
     return t;
 }
 
+
 Task* TaskFactory::CreateNewTentTask( TaskType type,                  
                                       TentApp* pApp,                  
                                       FileManager* pFm,               
-                                      ConnectionManager* pCon,        
                                       CredentialsManager* pCm,        
+                                      TaskArbiter* pTa,
+                                      TaskFactory* pTf,
                                       const AccessToken& at,          
                                       const std::string& entity,      
                                       const std::string& filepath,    
@@ -130,8 +172,9 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
         {
             t = new PushTask( pApp,                            
                               pFm,                    
-                              pCon,
                               pCm,                    
+                              pTa,
+                              pTf,
                               at,
                               entity,                          
                               filepath,                        
@@ -143,62 +186,50 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
         }
     case PULL:
         {
-            t = new PullTask( pApp,                            
-                              pFm,                    
-                              pCon,
-                              pCm,                    
+            t = new PullTask( pApp,                             
+                              pFm,                     
+                              pCm,          
+                              pTa,                     
+                              pTf,
                               at,
-                              entity,                          
-                              filepath,                        
-                              tempdir,                   
-                              workingdir,                
-                              configdir,                 
-                              callback);        
+                              entity,                           
+                              filepath,                         
+                              tempdir,                    
+                              workingdir,                 
+                              configdir,                  
+                              callback);         
             break;
         }
     case DELETE:
         {
-            t = new DeleteTask( pApp,                            
-                                pFm,                    
-                                pCon,
-                                pCm,                    
+            t = new DeleteTask( pApp,                                  
+                                pFm,                          
+                                pCm,          
+                                pTa,                          
+                                pTf,
                                 at,
-                                entity,                          
-                                filepath,                        
-                                tempdir,                   
-                                workingdir,                
-                                configdir,                 
-                                callback);       
-            break;
-        }
-    case SYNCMANIFEST:
-        {
-            t = new SyncManifestTask( pApp,                    
-                                      pFm,                     
-                                      pCon,                    
-                                      pCm,                     
-                                      at,                      
-                                      entity,                  
-                                      filepath,                
-                                      tempdir,                 
-                                      workingdir,              
-                                      configdir,               
-                                      callback);               
+                                entity,                                
+                                filepath,                              
+                                tempdir,                         
+                                workingdir,                      
+                                configdir,                       
+                                callback);             
             break;
         }
     case SYNCPOSTS:
         {
-            t = new SyncPostsTask( pApp,                    
-                                   pFm,                     
-                                   pCon,                    
-                                   pCm,                     
-                                   at,                      
-                                   entity,                  
-                                   filepath,                
-                                   tempdir,                 
-                                   workingdir,              
-                                   configdir,               
-                                   callback);               
+            t = new SyncPostsTask( pApp,                  
+                                   pFm,                   
+                                   pCm,                   
+                                   pTa,                   
+                                   pTf,
+                                   at,                    
+                                   entity,                
+                                   filepath,              
+                                   tempdir,               
+                                   workingdir,            
+                                   configdir,             
+                                   callback);             
             break;
         }
     default:

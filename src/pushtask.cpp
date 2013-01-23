@@ -13,8 +13,9 @@
 
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
-                    ConnectionManager* pCon, 
                     CredentialsManager* pCm,
+                    TaskArbiter* pTa,
+                    TaskFactory* pTf,
                     const AccessToken& at,
                     const std::string& entity,
                     const std::string& filepath,
@@ -25,8 +26,9 @@ PushTask::PushTask( TentApp* pApp,
                     :
                     TentTask ( pApp,
                                pFm,
-                               pCon,
                                pCm,
+                               pTa,
+                               pTf,
                                at,
                                entity,
                                filepath,
@@ -162,7 +164,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
     if(chunkPostId.empty())
     {
         ChunkPost p;
-        InitChunkPost(p, pList);
+        InitChunkPost(p, *pList);
         // Post
         std::string tempdir;
         GetTempDirectory(tempdir);
@@ -171,7 +173,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
         status = conops::PostFile( posturl, 
                                    filepath, 
                                    tempdir, 
-                                   GetConnectionManager(), 
+                                   ConnectionManager::GetInstance(), 
                                    fi,
                                    &p,
                                    *at,
@@ -190,7 +192,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
         unsigned int size = utils::CheckFilesize(filepath);
 
         ChunkPost p;
-        InitChunkPost(p, pList);
+        InitChunkPost(p, *pList);
 
         std::string tempdir;
         GetTempDirectory(tempdir);
@@ -199,7 +201,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
         status = conops::PutFile( posturl, 
                                   filepath, 
                                   tempdir, 
-                                  GetConnectionManager(), 
+                                  ConnectionManager::GetInstance(), 
                                   fi,
                                   &p,
                                   *at, response);
@@ -386,11 +388,8 @@ int PushTask::InitAtticPost( AtticPost& post,
             identifier.clear();
             postids.clear();
 
-            if(itr->second)
-            {
-                itr->second->GetChecksum(identifier);
-                post.PushBackChunkIdentifier(identifier);
-            }
+            itr->second.GetChecksum(identifier);
+            post.PushBackChunkIdentifier(identifier);
         }
 
         FileManager* fm = GetFileManager();
@@ -414,17 +413,11 @@ int PushTask::InitAtticPost( AtticPost& post,
 }
 
 
-int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap* pList)
+int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List)
 {
     int status = ret::A_OK;
-    if(pList)
-    {
-        post.SetChunkInfoList(pList);
-    }
-    else
-    {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
+
+    post.SetChunkInfoList(List);
 
     return status;
 }

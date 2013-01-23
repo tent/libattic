@@ -15,6 +15,7 @@ class FileManager;
 class ConnectionManager;
 class CredentialsManager;
 class Credentials;
+class TaskArbiter;
 
 class TaskFactory : public MutexClass
 {                                                                       
@@ -24,7 +25,6 @@ public:
         PUSH=0,                                                         
         PULL,                                                           
         DELETE,                                                         
-        SYNCMANIFEST,
         SYNCPOSTS,
         ENCRYPT,
         DECRYPT
@@ -34,8 +34,9 @@ public:
     Task* CreateNewTentTask( TaskType type,                  
                              TentApp* pApp,                  
                              FileManager* pFm,               
-                             ConnectionManager* pCon,        
                              CredentialsManager* pCm,        
+                             TaskArbiter* pTa,
+                             TaskFactory* pTf,
                              const AccessToken& at,          
                              const std::string& entity,      
                              const std::string& filepath,    
@@ -51,18 +52,33 @@ public:
     int Initialize();
     int Shutdown();
 
-    Task* CreateTentTask( TaskType type,                                
-                          TentApp* pApp,                                
-                          FileManager* pFm,                             
-                          ConnectionManager* pCon,                      
-                          CredentialsManager* pCm,                      
-                          const AccessToken& at,                        
-                          const std::string& entity,                    
-                          const std::string& filepath,                  
-                          const std::string& tempdir,                   
-                          const std::string& workingdir,                
-                          const std::string& configdir,                 
-                          void (*callback)(int, void*));                
+    Task* SyncGetTentTask( TaskType type,                
+                           TentApp* pApp,                
+                           FileManager* pFm,             
+                           CredentialsManager* pCm,      
+                           TaskArbiter* pTa,
+                           TaskFactory* pTf,
+                           const AccessToken& at,        
+                           const std::string& entity,    
+                           const std::string& filepath,  
+                           const std::string& tempdir,   
+                           const std::string& workingdir,
+                           const std::string& configdir, 
+                           void (*callback)(int, void*));
+
+    Task* GetTentTask( TaskType type,                                
+                       TentApp* pApp,                                
+                       FileManager* pFm,                             
+                       CredentialsManager* pCm,                      
+                       TaskArbiter* pTa,
+                       TaskFactory* pTf,
+                       const AccessToken& at,                        
+                       const std::string& entity,                    
+                       const std::string& filepath,                  
+                       const std::string& tempdir,                   
+                       const std::string& workingdir,                
+                       const std::string& configdir,                 
+                       void (*callback)(int, void*));                
 
 private:
     typedef std::deque<Task*> TaskPool;

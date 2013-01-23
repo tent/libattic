@@ -12,16 +12,17 @@ class SyncPostsTask : public TentTask
     int SyncAtticPosts();
 public:
     SyncPostsTask( TentApp* pApp, 
-              FileManager* pFm, 
-              ConnectionManager* pCon, 
-              CredentialsManager* pCm,
-              const AccessToken& at,
-              const std::string& entity,
-              const std::string& filepath,
-              const std::string& tempdir, 
-              const std::string& workingdir,
-              const std::string& configdir,
-              void (*callback)(int, void*));
+                   FileManager* pFm, 
+                   CredentialsManager* pCm,
+                   TaskArbiter* pTa,
+                   TaskFactory* pTf,
+                   const AccessToken& at,
+                   const std::string& entity,
+                   const std::string& filepath,
+                   const std::string& tempdir, 
+                   const std::string& workingdir,
+                   const std::string& configdir,
+                   void (*callback)(int, void*));
 
     ~SyncPostsTask();
 

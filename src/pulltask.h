@@ -20,8 +20,9 @@ class PullTask: public TentTask
 public:
     PullTask( TentApp* pApp, 
               FileManager* pFm, 
-              ConnectionManager* pCon, 
               CredentialsManager* pCm,
+              TaskArbiter* pTa,
+              TaskFactory* pTf,
               const AccessToken& at,
               const std::string& entity,
               const std::string& filepath,

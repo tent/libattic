@@ -5,11 +5,13 @@
 
 #include <pthread.h>
 
+#include "mutexclass.h"
+
 class Task;
 class TaskQueue;
 class ThreadPool;
 
-class TaskArbiter
+class TaskArbiter : public MutexClass
 {
 public:
     TaskArbiter();
