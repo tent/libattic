@@ -8,14 +8,14 @@
 #include <vector>
 
 #include "crypto.h"
+#include "chunkinfo.h"
 
-class ChunkInfo;
 
 class FileInfo
 {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
-    typedef std::map<std::string, ChunkInfo*> ChunkMap;
+    typedef std::map<std::string, ChunkInfo> ChunkMap;
 
     FileInfo();  
     ~FileInfo(); 
@@ -61,7 +61,7 @@ public:
 
     unsigned int GetPostVersion() const { return m_PostVersion ; }
 
-    int PushChunkBack(ChunkInfo* pChunk);
+    int PushChunkBack(ChunkInfo& Chunk);
     ChunkMap* GetChunkInfoList() { return &m_Chunks; }
     //std::vector<std::string>* GetChunkPostsList() { return &m_ChunkPosts; }
 

@@ -5,7 +5,6 @@
 #include <vector>
 #include <stdio.h>
 
-#include "chunkinfo.h"
 #include "utils.h"
 
 FileInfo::FileInfo()
@@ -15,24 +14,7 @@ FileInfo::FileInfo()
 
 FileInfo::~FileInfo()
 {
-    if(m_Chunks.size() > 0)
-    {
-        ChunkMap::iterator itr = m_Chunks.begin();
 
-        for(;itr != m_Chunks.end(); itr++)
-        {
-            if(itr->second)
-            {
-
-                delete itr->second;
-                itr->second = NULL;
-                std::cout<<" DELETING CHUNKINFO " << std::endl;
-            }
-        }
-
-        m_Chunks.clear();
-
-    }
 }
 
 bool FileInfo::InitializeFile(const std::string &filepath)
@@ -72,22 +54,20 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
     out = name;
 }
 
-int FileInfo::PushChunkBack(ChunkInfo* pChunk)
+int FileInfo::PushChunkBack(ChunkInfo& Chunk)
 {
     int status = ret::A_OK;
-    if(pChunk)
+
+    // Check if entry exists
+    std::string chunkname;
+    Chunk.GetChunkName(chunkname);
+    if(m_Chunks.find(chunkname) == m_Chunks.end())
     {
-        // Check if entry exists
-        std::string chunkname;
-        pChunk->GetChunkName(chunkname);
-        if(m_Chunks.find(chunkname) == m_Chunks.end())
-        {
-            m_Chunks[chunkname] = pChunk;
-        }
+        m_Chunks[chunkname] = Chunk;
     }
     else
     {
-        status = ret::A_FAIL_INVALID_PTR;
+        status = ret::A_FAIL_DUPLICATE_ENTRY;
     }
 
     return status;
@@ -101,8 +81,9 @@ void FileInfo::GetSerializedChunkData(std::string& out) const
     std::string chunk;
     for(;itr != m_Chunks.end(); itr++)
     {
+        ChunkInfo ci = itr->second;
         chunk.clear();
-        JsonSerializer::SerializeObject(itr->second, chunk);
+        JsonSerializer::SerializeObject(&ci, chunk);
         chunkList.push_back(chunk);
     }
 
@@ -143,7 +124,11 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
         std::string name;
         ci->GetChunkName(name);
         if(m_Chunks.find(name) == m_Chunks.end())
-            m_Chunks[name] = ci;
+        {
+            m_Chunks[name] = *ci;
+        }
+
+        delete ci;
     }
 
     return true;
