@@ -13,8 +13,9 @@ class DeleteTask : public TentTask
 public:
     DeleteTask( TentApp* pApp, 
                 FileManager* pFm, 
-                ConnectionManager* pCon, 
                 CredentialsManager* pCm,
+                TaskArbiter* pTa,
+                TaskFactory* pTf,
                 const AccessToken& at,
                 const std::string& entity,
                 const std::string& filepath,
