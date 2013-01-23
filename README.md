@@ -1,20 +1,26 @@
 # Attic
 
-This Tent app syncs the contents of a folder across multiple devices and
-operating systems. All files are encrypted individually with unique keys and can
-be shared publicly or with specific users. 
+Attic is a Tent app that syncs the contents of a folder across multiple devices
+and operating systems. All files are encrypted individually.
 
-Each user has a master encryption key that is used to encrypt encryption keys
-for each of the files. The master key is derived from the user's passphrase with
-[scrypt](http://www.tarsnap.com/scrypt.html), with the salt stored in a private
-Tent profile info section.
+## Master Key
+
+Each user has a randomly generated *master key* that is used to encrypt *file
+keys*. The *master key* is encrypted with AES-256-CFB using the *user key* and
+stored in the Tent profile section for Attic.
+
+## User Key
+
+The *user key* is derived from a user-supplied password using
+[scrypt](http://www.tarsnap.com/scrypt.html), with a salt stored in the Tent
+profile section for Attic.
 
 ## Process
 
 1. File is created/modified.
 2. File is broken into chunks.
-3. File is compressed.
-4. File is encrypted.
+3. Chunks are compressed.
+4. Chunks are encrypted.
 5. Tent posts are created with chunks as attachments.
 6. Details about the file are added to the metadata posts.
 
@@ -51,34 +57,33 @@ Chunks are compressed with zlib.
 
 ### Encryption
 
-Each file is encrypted with a randomly generated symmetric key. This allows
-a single file (and its key) to be shared with another user without compromising
-other files.
+Each file has a randomly generated *file key*. This allows a single file (and
+its key) to be shared with another user without compromising other files.
 
-Each chunk is encrypted with the file key and a randomly generated IV. The IV
-*must* be unique for each chunk of a file.
+Each chunk is symmetrically encrypted using the *file key* and a randomly
+generated IV. The IV **must** be unique for each chunk of a file.
 
-Files are encrypted with
+Chunks are encrypted with
 [AES-256](http://en.wikipedia.org/wiki/Advanced_Encryption_Standard) using the
 [CFB](http://en.wikipedia.org/wiki/Block_cipher_modes_of_operation#Cipher_feedback_.28CFB.29) block cipher mode.
 
 ### Authentication
 
-Each file has a randomly generated authentication key used to authenticate file
+Each file has a randomly generated *authentication key* used to authenticate file
 chunks. There are two authenticators, the plaintext authenticator and the
 ciphertext authenticator.
 
 #### Plaintext Authenticator
 
-The plaintext authenticator is a HMAC-SHA256 of the chunk before it has been
-compressed. This MAC uniquely identifies the chunk, and is used as its
+The plaintext authenticator is a HMAC-SHA256 of the chunk plaintext before it
+has been compressed. This MAC uniquely identifies the chunk, and is used as its
 attachment filename and in the chunklist for the file.
 
 #### Ciphertext authenticator
 
-The ciphertext authenticator is a HMAC-SHA256 of the IV used for the chunk and
-the ciphertext. This MAC is used to make sure that the encrypted chunk has not
-been tampered with.
+The ciphertext authenticator is a HMAC-SHA256 of the IV used for the chunk
+concatenated with the the ciphertext. This MAC is used to make sure that the
+encrypted chunk has not been tampered with.
 
 ### Upload
 
@@ -105,13 +110,13 @@ chunk_posts | Required | Array | An array of the identifiers of the posts contai
 
 This post has one field, `chunks`, an array of objects; one for each chunk attached to the post with three fields:
 
-`plaintext_mac`: The plaintext verifier, hex encoded.
-`ciphertext_mac`: The ciphertext verifier, hex encoded.
-`iv`: The IV used to encrypt the chunk.
+- `plaintext_mac`: The plaintext authenticator, hex encoded.
+- `ciphertext_mac`: The ciphertext authenticator, hex encoded.
+- `iv`: The base64 encoded IV used to encrypt the chunk.
 
-Each chunk is an attachment, the filename is the hex encoded plaintext verifier.
-The content-type should be set to `application/octet-stream`. Each post should
-be capped at 100 chunks.
+Each chunk is an attachment, the filename is the hex encoded plaintext
+authenticator. The content-type should be set to `application/octet-stream`.
+Each post should be capped at 100 chunks.
 
 #### Folder post
 
@@ -123,6 +128,14 @@ two fields:
 
 `id`: The post id of the object.
 `type: Either `file` or `folder`.
+
+#### Profile section
+
+`https://cupcake.io/types/profile/attic/v0.1.0`
+
+- `master_key`: The base64 encoded encrypted *master key* used by the entity.
+- `user_key_salt`: The base64 encoded salt for the *user key*.
+- `root_folder`: The identifier of the root folder post.
 
 
 ## Update/Sync
