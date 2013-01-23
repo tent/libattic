@@ -451,9 +451,65 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
     return true;
 }
 
+int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
+{
+    int status = ret::A_OK;
+
+    std::string pexc;
+    pexc += "SELECT * FROM ";
+    pexc += g_infotable;
+    pexc += ";";
+
+    SelectResult res;
+    
+    if(PerformSelect(pexc.c_str(), res))
+    {
+
+        std::cout << " Row count : " << res.nRow << std::endl;
+        std::cout << " Col count : " << res.nCol << std::endl;
+
+        int step = 0;
+        for(int i=0; i<res.nRow+1; i++)
+        {
+            step = i*res.nCol;
+            std::cout<< " step : " << step << std::endl;
+
+            for(int j=0; j<res.nCol; j++)
+            {
+                std::cout << " Results : " << res.results[j+step] << std::endl;
+            }
+
+            if(step > 0)
+            {
+                FileInfo fi;
+                fi.SetFilename(res.results[0+step]);
+                fi.SetFilepath(res.results[1+step]);
+                fi.SetChunkName(res.results[2+step]);
+                fi.SetChunkCount(res.results[3+step]);
+                fi.LoadSerializedChunkData(res.results[4+step]);
+                fi.SetFileSize(res.results[5+step]);
+                fi.SetPostID(res.results[6+step]);
+                fi.SetChunkPostID(res.results[7+step]);
+                fi.SetPostVersion(res.results[8+step]);
+                fi.SetKey(res.results[9+step]);
+
+                out.push_back(fi);
+            }
+        }
+
+        sqlite3_free_table(res.results);
+    }
+    else
+    {
+        status = ret::A_FAIL_TO_QUERY_MANIFEST;
+    }
+
+    return status;
+}
+
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
-bool Manifest::InsertFileInfoToDb(const FileInfo* fi)
+bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
 {
     if(!m_pDb)
     {
@@ -639,11 +695,11 @@ bool Manifest::InsertFileChunkPostID(const std::string &filename, const std::str
 
 //" (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
 // FolderTable
-bool Manifest::InsertFolderData( const std::string &name, 
-                                 const std::string &path,
-                                 const std::string &children,
-                                 const std::string &postid)
+
+int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
 {
+    std::string name, path, children, postid;
+
     std::string query;
     query += "INSERT OR REPLACE INTO ";
     query += g_foldertable;
@@ -804,11 +860,14 @@ bool Manifest::InsertFileInfo(FileInfo* fi)
     //        in memory upon use? Should we load them in?, should
     //        we set perhaps a half life?
 
-    bool status = InsertFileInfoToDb(fi);
+    // Insert into Info Table
+    bool status = InsertFileDataToInfoTable(fi);
     if(status)
     {
         SetIsDirty(true);
     }
+
+
 
     return status;
 }

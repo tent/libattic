@@ -214,22 +214,19 @@ int FileManager::CompressChunks(FileInfo* pFi)
         for(;itr != pInfo->end(); itr++)
         {
 
-            if(itr->second)
-            {
-                std::string chunkname;
-                itr->second->GetChunkName(chunkname);
-                
-                std::string comppath;
-                GenerateCompressionPath(chunkname, comppath);
+            std::string chunkname;
+            itr->second.GetChunkName(chunkname);
+            
+            std::string comppath;
+            GenerateCompressionPath(chunkname, comppath);
 
-                std::string filepath;
-                filepath += m_TempDirectory + "/" + chunkname;
+            std::string filepath;
+            filepath += m_TempDirectory + "/" + chunkname;
 
-                status = m_Compressor.CompressFile(filepath, comppath, 1);
+            status = m_Compressor.CompressFile(filepath, comppath, 1);
 
-                if(status != ret::A_OK)
-                    break;
-            }
+            if(status != ret::A_OK)
+                break;
 
             std::cout<< " file compressed " << std::endl;
         }
@@ -257,45 +254,43 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(itr->second)
-            {
-                std::string chunkname;
-                itr->second->GetChunkName(chunkname);
+            std::string chunkname;
+            itr->second.GetChunkName(chunkname);
                 
-                std::string iv;
-                // Check for existing Iv
-                if(itr->second->HasIv())
-                {
-                    itr->second->GetIv(iv);
-                    std::cout<<" USING EXISTING IV " << iv << std::endl;
-                }
-                else
-                {
-                    // Generate unique Iv for chunk
-                    m_Crypto.GenerateIv(iv);
-                    itr->second->SetIv(iv);
-                }
-
-                status = cred.SetIv(iv);
-
-                std::string hash;
-                m_Crypto.GenerateHash(iv, hash);
-                itr->second->SetCipherTextSum(hash);
-
-                if(status != ret::A_OK)
-                    break;
-
-                std::string comppath;
-                GenerateCompressionPath(chunkname, comppath);
-
-                std::string encpath;
-                GenerateEncryptionPath(chunkname, encpath);
-
-                status = m_Crypto.EncryptFile(comppath, encpath, cred);
-
-                if(status != ret::A_OK)
-                    break;
+            std::string iv;
+            // Check for existing Iv
+            if(itr->second.HasIv())
+            {
+                itr->second.GetIv(iv);
+                std::cout<<" USING EXISTING IV " << iv << std::endl;
             }
+            else
+            {
+                // Generate unique Iv for chunk
+                m_Crypto.GenerateIv(iv);
+                itr->second.SetIv(iv);
+            }
+
+            status = cred.SetIv(iv);
+
+            std::string hash;
+            m_Crypto.GenerateHash(iv, hash);
+            itr->second.SetCipherTextSum(hash);
+
+            if(status != ret::A_OK)
+                break;
+
+            std::string comppath;
+            GenerateCompressionPath(chunkname, comppath);
+
+            std::string encpath;
+            GenerateEncryptionPath(chunkname, encpath);
+
+            status = m_Crypto.EncryptFile(comppath, encpath, cred);
+
+            if(status != ret::A_OK)
+                break;
+            
         }
     }
     else
@@ -564,36 +559,33 @@ int FileManager::DecryptChunks(FileInfo* pFi)
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(itr->second)
+            std::string chunkname;
+            itr->second.GetChunkName(chunkname);
+
+            // Set given iv for chunk
+            std::string iv;
+            itr->second.GetIv(iv);
+
+            std::cout<<" THIS IV : " << iv << std::endl;
+
+            status = cred.SetIv(iv);
+            if(status != ret::A_OK)
+                break;
+
+            // going from enc to cmp
+            std::string encpath;
+            GenerateEncryptionPath(chunkname, encpath);
+
+            std::cout<<" enc path : " << encpath << std::endl;
+
+            std::string comppath;
+            GenerateCompressionPath(chunkname, comppath);
+
+            status = m_Crypto.DecryptFile(encpath, comppath, cred);
+            if(status != ret::A_OK)
             {
-                std::string chunkname;
-                itr->second->GetChunkName(chunkname);
-
-                // Set given iv for chunk
-                std::string iv;
-                itr->second->GetIv(iv);
-
-                std::cout<<" THIS IV : " << iv << std::endl;
-
-                status = cred.SetIv(iv);
-                if(status != ret::A_OK)
-                    break;
-
-                // going from enc to cmp
-                std::string encpath;
-                GenerateEncryptionPath(chunkname, encpath);
-
-                std::cout<<" enc path : " << encpath << std::endl;
-
-                std::string comppath;
-                GenerateCompressionPath(chunkname, comppath);
-
-                status = m_Crypto.DecryptFile(encpath, comppath, cred);
-                if(status != ret::A_OK)
-                {
-                    std::cout<<" Failed to decrypt file code : " << status << std::endl;
-                    break;
-                }
+                std::cout<<" Failed to decrypt file code : " << status << std::endl;
+                break;
             }
         }
 
@@ -618,22 +610,19 @@ int FileManager::DecompressChunks(FileInfo* pFi)
 
         for(;itr != pInfo->end(); itr++)
         {
-            if(itr->second)
-            {
-                std::string chunkname;
-                itr->second->GetChunkName(chunkname);
-                
-                std::string comppath;
-                GenerateCompressionPath(chunkname, comppath);
+            std::string chunkname;
+            itr->second.GetChunkName(chunkname);
+            
+            std::string comppath;
+            GenerateCompressionPath(chunkname, comppath);
 
-                std::string chunkpath;
-                chunkpath += m_TempDirectory + "/" + chunkname;
+            std::string chunkpath;
+            chunkpath += m_TempDirectory + "/" + chunkname;
 
-                status = m_Compressor.DecompressFile(comppath, chunkpath);
+            status = m_Compressor.DecompressFile(comppath, chunkpath);
 
-                if(status != ret::A_OK)
-                    break;
-            }
+            if(status != ret::A_OK)
+                break;
         }
     }
     else
@@ -846,3 +835,9 @@ FileInfo* FileManager::GetFileInfo(const std::string &filename)
         return NULL;
     return pFi;
 }
+
+int FileManager::GetAllFileInfo(std::vector<FileInfo>& out)
+{
+    return m_Manifest.QueryAllFiles(out);
+}
+

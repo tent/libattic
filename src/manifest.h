@@ -10,6 +10,7 @@
 #pragma once
 
 #include <fstream>
+#include <vector>
 #include <string>
 #include <map>
 
@@ -48,7 +49,7 @@ class Manifest
     bool PerformSelect(const char* pSelect, SelectResult &out) const;
 
     // InfoTable
-    bool InsertFileInfoToDb(const FileInfo* fi);
+    bool InsertFileDataToInfoTable(const FileInfo* fi);
     bool InsertCredentialsToDb(const FileInfo* fi);
 
     bool QueryForFileExistence(const std::string& filename);
@@ -60,17 +61,12 @@ class Manifest
     unsigned int QueryForVersion() const;
     void QueryForMetaPostID(std::string &out) const;
 
-        bool InsertVersionNumber(unsigned int version) const;
+    bool InsertVersionNumber(unsigned int version) const;
     bool InsertPostID(const std::string &postID) const;
 
-    //////////////////////////////////////////////////////
-
-    void SetIsDirty(bool dirty) { m_Dirty = dirty; } 
+        void SetIsDirty(bool dirty) { m_Dirty = dirty; }  // Deprecated
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
-
-    // TODO pull this back to private
-
 
     Manifest();
     ~Manifest();
@@ -83,18 +79,19 @@ public:
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
     bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
+
     bool QueryForFile(const std::string &filename, FileInfo* out);
+    int QueryAllFiles(std::vector<FileInfo>& out);
 
     bool RemoveFileInfo(const std::string &filename);
     bool IsFileInManifest(const std::string &filename);
 
-    // FolderTable
-    bool InsertFolderData( const std::string &name, 
-                           const std::string &path,
-                           const std::string &children,
-                           const std::string &postid);
-
+    
+    // Folder Table
+    int InsertFolderDataToFolderTable(const FileInfo* fi);
     bool RemoveFolderData(const std::string& folderpath);
+
+
     bool QueryForFolderData( const std::string& folderpath,
                              std::string &nameOut,
                              std::string &pathOut,

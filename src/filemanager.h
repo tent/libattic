@@ -76,6 +76,7 @@ public:
     bool FileExists(std::string& filepath);               // File exists on disc
 
     FileInfo* GetFileInfo(const std::string &filename);
+    int GetAllFileInfo(std::vector<FileInfo>& out);
 
     FileInfo* CreateFileInfo( const std::string &filename,
                               const std::string &filepath,
@@ -99,6 +100,8 @@ public:
 
 
     void InsertToManifest (FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
+
+
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
     //void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }// Depricated
