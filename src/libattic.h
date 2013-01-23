@@ -3,6 +3,9 @@
 #pragma once
 
 
+extern "C"
+{
+
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
                         const char* szUrl, 
@@ -84,6 +87,7 @@ int DeleteAllPosts();
 // TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
 class FileManager;
 FileManager* GetFileManager();
+}
 
 #endif
 
