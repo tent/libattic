@@ -3,7 +3,8 @@
 #define MUTEXCLASS_H_
 #pragma once
 
-#include<pthread.h>
+#include <unistd.h>
+#include <pthread.h>
 
 class MutexClass                                                                                  
 {                                                                                                 
@@ -17,6 +18,22 @@ public:
     {                                                                                             
         pthread_mutex_destroy(&m_Mutex);                                                          
     }                                                                                             
+
+    int Lock(int breakcount = -1)
+    {
+        int count = 0;
+        while(TryLock())
+        { 
+            sleep(0); 
+            if(breakcount > -1)
+            {
+                if(count > breakcount)
+                    return 1;
+                count++;
+            }
+        }  
+        return 0;
+    }
 
     int TryLock()                                                                                 
     {                                                                                             
