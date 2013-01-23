@@ -2,11 +2,9 @@
 #include "taskfactory.h"
 
 #include "tenttask.h"
-#include "cryptotask.h"
 #include "pulltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "encrypttask.h"
 #include "syncmanifesttask.h"
 #include "syncposttask.h"
 
@@ -87,6 +85,43 @@ Task* TaskFactory::CreateTentTask( TaskType type,
 {
 
     std::cout<< " Creating tent task ... " << std::endl;
+    std::cout<< " TASK TYPE : " << type << std::endl;
+
+    Task* t = NULL;
+    t = CreateNewTentTask( type,
+                           pApp,      
+                           pFm,       
+                           pCon,
+                           pCm,       
+                           at,
+                           entity,    
+                           filepath,  
+                           tempdir,   
+                           workingdir,
+                           configdir, 
+                           callback); 
+
+    if(t)
+    {
+        m_ActiveTasks.push_back(t);
+    }
+    
+    return t;
+}
+
+Task* TaskFactory::CreateNewTentTask( TaskType type,                  
+                                      TentApp* pApp,                  
+                                      FileManager* pFm,               
+                                      ConnectionManager* pCon,        
+                                      CredentialsManager* pCm,        
+                                      const AccessToken& at,          
+                                      const std::string& entity,      
+                                      const std::string& filepath,    
+                                      const std::string& tempdir,     
+                                      const std::string& workingdir,  
+                                      const std::string& configdir,   
+                                      void (*callback)(int, void*))
+{
 
     Task* t = NULL;
     switch(type)
@@ -172,39 +207,8 @@ Task* TaskFactory::CreateTentTask( TaskType type,
         }
     }
 
-    if(t)
-    {
-        m_ActiveTasks.push_back(t);
-    }
-    
+
     return t;
-}
-
-Task* TaskFactory::CreateCryptoTask( TaskType type,
-                                     const std::string& filepath,
-                                     const std::string& outpath,
-                                     const Credentials* pCred,
-                                     bool generate)
-{
-
-    switch(type)
-    {
-    case ENCRYPT:
-        {
-
-            break;
-        }
-    case DECRYPT:
-        {
-
-            break;
-        }
-    default:
-        {
-
-        }
-    }
-
 }
 
 void TaskFactory::TaskFinished(int code, Task* pTask)

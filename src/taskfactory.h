@@ -31,6 +31,19 @@ public:
     };                                                                  
 
     void TaskFinished(int code, Task* pTask);
+    Task* CreateNewTentTask( TaskType type,                  
+                             TentApp* pApp,                  
+                             FileManager* pFm,               
+                             ConnectionManager* pCon,        
+                             CredentialsManager* pCm,        
+                             const AccessToken& at,          
+                             const std::string& entity,      
+                             const std::string& filepath,    
+                             const std::string& tempdir,     
+                             const std::string& workingdir,  
+                             const std::string& configdir,   
+                             void (*callback)(int, void*));  
+
 public:                                                                 
     TaskFactory();                                                      
     ~TaskFactory();                                                     
@@ -50,12 +63,6 @@ public:
                           const std::string& workingdir,                
                           const std::string& configdir,                 
                           void (*callback)(int, void*));                
-
-    Task* CreateCryptoTask( TaskType type,
-                            const std::string& filepath,
-                            const std::string& outpath,
-                            const Credentials* pCred = NULL,
-                            bool generate=true);
 
 private:
     typedef std::deque<Task*> TaskPool;
