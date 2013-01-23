@@ -1028,6 +1028,12 @@ int LoadEntity()
     return status;
 }
 
+int GetPhraseStatus()
+{
+
+    return ret::A_OK;
+}
+
 int SaveEntity()
 {
 
