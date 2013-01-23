@@ -60,7 +60,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*));
 int DeleteFile(const char* szFileName, void (*callback)(int, void*));
 
 // Pull All files in manifest
-int PullAllFiles();
+int PullAllFiles(void (*callback)(int, void*));
 
 // Sync attic metadata
 int SyncAtticMetaData(void (*callback)(int, void*));

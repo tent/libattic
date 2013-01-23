@@ -71,7 +71,8 @@ public:
     virtual void RunTask() {}
     */
 
-    AccessToken* GetAccessToken() { return &m_At; }
+    AccessToken* GetAccessToken()       { return &m_At; }
+    AccessToken  GetAccessTokenCopy()   { return m_At; }
     
     void GetEntity(std::string &out)            { out = m_Entity; }
     void GetFilepath(std::string &out)          { out = m_Filepath; }

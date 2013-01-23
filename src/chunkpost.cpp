@@ -17,25 +17,15 @@ ChunkPost::~ChunkPost()
 
 // TODO :: rethink how chunk info objects are handled as a whole,
 //         there are going to be alot of copies with this strategy
-int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo*>* pList)
+int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List)
 {
     int status = ret::A_OK;
-    if(pList)
-    {
-        std::map<std::string, ChunkInfo*>::iterator itr = pList->begin();
-        for(;itr != pList->end(); itr++)
-        {
-            if(itr->second)
-            {
-                // copy
-                m_ChunkList.push_back((*itr->second));
-            }
-        }
 
-    }
-    else
+    std::map<std::string, ChunkInfo>::iterator itr = List.begin();
+    for(;itr != List.end(); itr++)
     {
-        status = ret::A_FAIL_INVALID_PTR;
+        // copy
+        m_ChunkList.push_back(itr->second);
     }
 
     return status;

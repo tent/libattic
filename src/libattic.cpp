@@ -22,7 +22,6 @@
 #include "pushtask.h"
 #include "deletetask.h"
 #include "syncposttask.h"
-#include "syncmanifesttask.h"
 
 #include "constants.h"
 #include "credentials.h"
@@ -427,7 +426,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
 int LoadAccessToken()
 {
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     int status = g_pCredManager->LoadAccessToken();
     g_pCredManager->Unlock();
 
@@ -477,16 +476,16 @@ int LoadAppFromFile()
 int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
     AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    while(g_TaskFactory.TryLock()) { sleep(0); };
-    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::PUSH,
+    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PUSH,
                                             g_pApp, 
                                             g_pFileManager, 
-                                            ConnectionManager::GetInstance(),
                                             g_pCredManager,
+                                            &g_Arb,
+                                            &g_TaskFactory,
                                             at,
                                             g_EntityUrl,
                                             szFilePath,
@@ -495,7 +494,6 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                             g_ConfigDirectory,
                                             callback);
     g_Arb.SpinOffTask(t);
-    g_TaskFactory.Unlock();
 
     return ret::A_OK;
 }
@@ -503,16 +501,16 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
     AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    while(g_TaskFactory.TryLock()) { sleep(0); };
-    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::PULL,
+    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PULL,
                                             g_pApp, 
                                             g_pFileManager, 
-                                            ConnectionManager::GetInstance(),
                                             g_pCredManager,
+                                            &g_Arb,
+                                            &g_TaskFactory,
                                             at,
                                             g_EntityUrl,
                                             szFilePath,
@@ -521,7 +519,33 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                             g_ConfigDirectory,
                                             callback);
     g_Arb.SpinOffTask(t);
-    g_TaskFactory.Unlock();
+
+    std::cout<<"Returning...."<<std::endl;
+
+    return ret::A_OK;
+}
+
+int PullAllFiles(void (*callback)(int, void*))
+{
+    AccessToken at;
+    g_pCredManager->Lock();
+    g_pCredManager->GetAccessTokenCopy(at);
+    g_pCredManager->Unlock();
+
+    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PULLALL,
+                                             g_pApp, 
+                                             g_pFileManager, 
+                                             g_pCredManager,
+                                             &g_Arb,
+                                             &g_TaskFactory,
+                                             at,
+                                             g_EntityUrl,
+                                             "",
+                                             g_TempDirectory,
+                                             g_WorkingDirectory,
+                                             g_ConfigDirectory,
+                                             callback);
+    g_Arb.SpinOffTask(t);
 
     std::cout<<"Returning...."<<std::endl;
 
@@ -531,25 +555,24 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 {
     AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    while(g_TaskFactory.TryLock()) { sleep(0); };
-    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::DELETE,
-                                            g_pApp, 
-                                            g_pFileManager, 
-                                            ConnectionManager::GetInstance(),
-                                            g_pCredManager,
-                                            at,
-                                            g_EntityUrl,
-                                            szFileName,
-                                            g_TempDirectory,
-                                            g_WorkingDirectory,
-                                            g_ConfigDirectory,
-                                            callback);
+    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::DELETE,
+                                             g_pApp, 
+                                             g_pFileManager, 
+                                             g_pCredManager,
+                                             &g_Arb,
+                                             &g_TaskFactory,
+                                             at,
+                                             g_EntityUrl,
+                                             szFileName,
+                                             g_TempDirectory,
+                                             g_WorkingDirectory,
+                                             g_ConfigDirectory,
+                                             callback);
     g_Arb.SpinOffTask(t);
-    g_TaskFactory.Unlock();
 
     return ret::A_OK;
 }
@@ -561,21 +584,8 @@ int SyncAtticMetaData( void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    while(g_TaskFactory.TryLock()) { sleep(0); };
-    Task* t = g_TaskFactory.CreateTentTask( TaskFactory::SYNCMANIFEST,
-                                            g_pApp, 
-                                            g_pFileManager, 
-                                            ConnectionManager::GetInstance(),
-                                            g_pCredManager,
-                                            at,
-                                            g_EntityUrl,
-                                            "",
-                                            g_TempDirectory,
-                                            g_WorkingDirectory,
-                                            g_ConfigDirectory,
-                                            callback);
-    g_Arb.SpinOffTask(t);
-    g_TaskFactory.Unlock();
+    // Depricated, point to method below
+
 
     return ret::A_OK;
 }
@@ -587,54 +597,25 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    // TODO :: fix this...
-    SyncPostsTask* t = new SyncPostsTask( g_pApp, 
-                                          g_pFileManager, 
-                                          ConnectionManager::GetInstance(),
-                                          g_pCredManager,
-                                          at,
-                                          g_EntityUrl,
-                                          "",
-                                          g_TempDirectory,
-                                          g_WorkingDirectory,
-                                          g_ConfigDirectory,
-                                          callback);
-    g_Arb.SpinOffTask(t);
+    // TODO :: this ...
+    //      - Pull all metadata posts
+    //      - construct relevant file info data 
+    //      - insert into manifest
+    //      - now it can be pulled, do that somewhere else, for this
+    //        just pull metadata posts and compare (insert) with what's
+    //        in the manifest
 
     return ret::A_OK;
 }
 
 int DeleteAllPosts()
 {
+    // Completely nuke all posts associated with the account
 
     return ret::A_OK;
 }
 
-int PullAllFiles()
-{
-    // DEPRICATED
-    /*
-    if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
 
-    if(!g_pFileManager)
-        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-    Manifest::EntriesMap* pEntryMap = g_pFileManager->GetManifestEntries();
-    Manifest::EntriesMap::iterator itr = pEntryMap->begin();
-
-    std::string filepath = g_WorkingDirectory;
-    utils::CheckUrlAndAppendTrailingSlash(filepath);
-
-    for(;itr != pEntryMap->end(); itr++)
-    {
-        std::string fn = itr->first;
-        PullFile((filepath + fn).c_str(), NULL);
-    }
-    
-    */
-    return ret::A_OK;
-}
 
 int ChangePassphrase(const char* szOld, const char* szNew)
 {

@@ -60,7 +60,7 @@ int PullTask::PullFile(const std::string& filepath)
     std::string filename;                                                                        
     utils::ExtractFileName(filepath, filename);                                                  
 
-    if(!GetTentApp())                                                                                  
+    if(!GetTentApp())
         return ret::A_FAIL_INVALID_APP_INSTANCE;                                             
 
     if(!GetFileManager())                                                                          

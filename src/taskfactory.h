@@ -23,7 +23,8 @@ public:
     enum TaskType                                                       
     {                                                                   
         PUSH=0,                                                         
-        PULL,                                                           
+        PULL,
+        PULLALL,
         DELETE,                                                         
         SYNCPOSTS,
         ENCRYPT,

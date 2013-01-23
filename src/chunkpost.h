@@ -21,7 +21,7 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    int SetChunkInfoList(std::map<std::string, ChunkInfo*>* pList);
+    int SetChunkInfoList(std::map<std::string, ChunkInfo>& pList);
 
 private:
     std::vector<ChunkInfo>  m_ChunkList;

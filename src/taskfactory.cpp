@@ -200,6 +200,22 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                               callback);         
             break;
         }
+    case PULLALL:
+        {
+            t = new PullAllTask( pApp,                             
+                                 pFm,                     
+                                 pCm,          
+                                 pTa,                     
+                                 pTf,
+                                 at,
+                                 entity,                           
+                                 filepath,                         
+                                 tempdir,                    
+                                 workingdir,                 
+                                 configdir,                  
+                                 callback);   
+            break;
+        }
     case DELETE:
         {
             t = new DeleteTask( pApp,                                  

@@ -77,7 +77,10 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
         // Create Chunk info
         ChunkInfo* ci = new ChunkInfo(name, hashOut);
         // Push back into fileinfo
-        fi->PushChunkBack(ci);
+        fi->PushChunkBack(*ci);
+
+        delete ci;
+        ci = NULL;
         
         count++;
     }

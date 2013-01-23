@@ -31,7 +31,12 @@
 
 #include "rollsum.h"
 
-/*
+void PULLALL(int a, void* b)
+{
+    std::cout<<" PULL ALL CALLBACK HIT BRAH : " << a << std::endl;
+
+}
+
 TEST(TESTINIT, CREDENTIALS)
 {
     InitLibAttic( "./data",
@@ -40,9 +45,25 @@ TEST(TESTINIT, CREDENTIALS)
                   "https://manuel.tent.is");
 
     EnterPassphrase("password");
+    int status = PullAllFiles(&PULLALL);
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
     ShutdownLibAttic();
 }
+
 /*
+ *
 */
 
 /*
@@ -426,7 +447,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-
+/*
 
 void PULLFUN(int a, void* b)
 {
@@ -469,6 +490,7 @@ TEST(PULL, AFILE)
  */
 /*
 
+
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -487,6 +509,8 @@ TEST(PUSH, AFILE)
 //    status = PushFile("./data/oa3.pdf", &FOOFUN);
 
     int status = PushFile("./data/oa5.pdf", &FOOFUN);
+    status = PushFile("./data/ogli.pdf", &FOOFUN);
+    status = PushFile("./data/rm2.pdf", &FOOFUN);
 
     for(;;)
     {
