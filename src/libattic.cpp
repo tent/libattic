@@ -696,43 +696,47 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
         std::string out;
 
         Crypto crypto;
-        crypto.DecryptString(mk, enc, out);
+        status = crypto.DecryptString(mk, enc, out);
 
-        if(out.size() >= 8)
+        if(status == ret::A_OK)
         {
-            // Check sentinel bytes
-            std::string sentone, senttwo;
-            sentone = out.substr(0, 4);
-            senttwo = out.substr(4, 4);
-            
-            if(sentone == senttwo)
+            if(out.size() >= 8)
             {
-                // extract actual key apart from sentinel bytes
-                std::string keyActual;
-                keyActual = out.substr(8);
+                // Check sentinel bytes
+                std::string sentone, senttwo;
+                sentone = out.substr(0, 4);
+                senttwo = out.substr(4, 4);
+                
+                if(sentone == senttwo)
+                {
+                    // extract actual key apart from sentinel bytes
+                    std::string keyActual;
+                    keyActual = out.substr(8);
 
-                // Shove this somewhere
-                MasterKey masterKey;
-                masterKey.SetMasterKey(keyActual);
+                    // Shove this somewhere
+                    MasterKey masterKey;
+                    masterKey.SetMasterKey(keyActual);
 
-                // Insert Into Credentials Manager
-                while(g_pCredManager->TryLock()) { sleep(0); }
-                g_pCredManager->SetMasterKey(masterKey);
-                g_pCredManager->Unlock();
+                    // Insert Into Credentials Manager
+                    while(g_pCredManager->TryLock()) { sleep(0); }
+                    g_pCredManager->SetMasterKey(masterKey);
+                    g_pCredManager->Unlock();
 
-                g_Pt.SetPhraseKey(phraseKey);
-                SavePhraseToken(g_Pt);
-                g_bEnteredPassphrase = true;
+                    g_Pt.SetPhraseKey(phraseKey);
+                    SavePhraseToken(g_Pt);
+                    g_bEnteredPassphrase = true;
+                }
+                else
+                {
+                    status = ret::A_FAIL_SENTINEL_MISMATCH;
+                }
             }
             else
             {
-                status = ret::A_FAIL_SENTINEL_MISMATCH;
+                status = ret::A_FAIL_OTHER;
             }
         }
-        else
-        {
-            status = ret::A_FAIL_DECRYPT;
-        }
+        
     }
     else
     {
@@ -755,30 +759,31 @@ int EnterPassphrase(const char* szPass)
     // Get Information from entity
     int status = ret::A_OK;
 
+    /*
     std::string phrasekey, dirtykey;
     g_Pt.GetPhraseKey(phrasekey);
     g_Pt.GetDirtyKey(dirtykey);
+    */
 
-    std::cout<<" DURTY KEY : " << dirtykey << std::endl;
-    
-    std::string iv, salt;
-    g_Pt.GetIv(iv);
+    std::string salt;
+    //g_Pt.GetIv(iv);
     g_Pt.GetSalt(salt);
 
     std::string phraseKey;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     // Enter passphrase to generate key.
     status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey);
     // Create random master key
     g_pCredManager->Unlock();
 
-    std::cout<< " PASS : " << szPass << std::endl;
-    std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
-    std::cout<< " IV : " << iv << std::endl;
-    
+
     if(status == ret::A_OK)
     {
-        status = DecryptMasterKey(phraseKey, iv);
+        std::cout<< " PASS : " << szPass << std::endl;
+        std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
+        std::cout<< " salt : " << salt << std::endl;
+
+        status = DecryptMasterKey(phraseKey, salt);
         if(status == ret::A_OK)
         {
             // Reload phrase token
@@ -788,18 +793,20 @@ int EnterPassphrase(const char* szPass)
             if(status == ret::A_OK)
                 status = SetFileManagerMasterKey();
         }
+        std::cout<<" DECRYPT STATUS : " << status << std::endl;
+
     }
 
     return status;
 }
 
-int GenerateMasterKey(const std::string& masterkey, MasterKey& out)
+int ConstructMasterKey(const std::string& masterkey, MasterKey& out)
 {
     int status = ret::A_OK;
 
     g_pCredManager->Lock();
     // Enter passphrase to generate key.
-    g_pCredManager->RegisterPassphrase(pass, g_Pt); // This generates a random salt
+    g_pCredManager->RegisterPassphrase(masterkey, g_Pt); // This generates a random salt
                                                     // Sets Phrase key
     g_pCredManager->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
     g_pCredManager->SetMasterKey(out);
@@ -808,13 +815,68 @@ int GenerateMasterKey(const std::string& masterkey, MasterKey& out)
     return status;
 }
 
-int EncryptKeyWithPassphrase(const std::string& key, const std::string& phrasekey, std::string& out)
+int EncryptKeyWithPassphrase( const std::string& key, 
+                              const std::string& phrasekey, 
+                              const std::string& salt,
+                              std::string& keyOut)
 {
     int status = ret::A_OK;
 
+    Crypto crypto;
+
+    // encryption credentials
+    Credentials enc;
+    enc.SetKey(phrasekey);
+    enc.SetIv(salt);
+
+    // Encrypt MasterKey with passphrase key
+    std::string out;
+    crypto.EncryptString(key, enc, keyOut);
     
     return status;
 } 
+
+int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::string& salt)
+{
+    int status = ret::A_OK;
+
+    // Create Profile post for 
+    AtticProfileInfo* pAtticProf = new AtticProfileInfo();
+    // MasterKey with sentinel and Salt
+    pAtticProf->SetMasterKey(encryptedKey);
+    pAtticProf->SetSalt(salt);
+
+    // Save and post
+    std::string output;
+    JsonSerializer::SerializeObject(pAtticProf, output);
+
+    std::string url;
+    g_Entity.GetFrontProfileUrl(url);
+
+    AccessToken at;
+    g_pCredManager->Lock();
+    g_pCredManager->GetAccessTokenCopy(at);
+    g_pCredManager->Unlock();
+
+    // TODO :: add the type as url params and just pass the attic profile type
+    // UrlParams params
+    std::string hold(cnst::g_szAtticProfileType);
+    char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
+    url.append("/");
+    url.append(pPm);
+
+    Response resp;
+    conops::HttpPut(url, NULL, output, at, resp);
+
+    std::cout<<" URL : " << url << std::endl;
+    std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
+
+    if(resp.code != 200)
+        return ret::A_FAIL_NON_200;
+
+    return status;
+}
 
 int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey)
 {
@@ -823,14 +885,21 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     // generate random iv and salt
     // Inward facing method
     // Register a new passphrase.
-    MasterKey mk;
+
+    /*
     std::string gptphrasekey, gptdirtykey;
     g_Pt.GetPhraseKey(gptphrasekey);
     g_Pt.GetDirtyKey(gptdirtykey);
     std::cout<<" Phrase key : " << gptphrasekey << std::endl;
     std::cout<<" Dirty key : " << gptdirtykey << std::endl;
+    */
 
-    status = GenerateMasterKey(masterkey, mk);
+    MasterKey mk;
+    status = ConstructMasterKey(masterkey, mk); // also generates salt, inserts into 
+                                                // phrase token
+
+    std::string genmk; mk.GetMasterKey(genmk);
+    std::cout<<" GENERATED MASTER KEY : " << genmk << std::endl;
 
     if(status == ret::A_OK)
     {
@@ -838,16 +907,42 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
         mk.InsertSentinelIntoMasterKey();
         
         // Get Salt
-        std::string ptsalt;
-        g_Pt.GetSalt(ptsalt);  // Phrase Token
+        std::string salt;
+        g_Pt.GetSalt(salt);  // Phrase Token
+
 
         // Get Dirty Master Key (un-encrypted master key with sentinel values)
         std::string dirtykey;
         mk.GetMasterKeyWithSentinel(dirtykey);
         g_Pt.SetDirtyKey(dirtykey); // Set Phrase Token
 
+        std::cout<<" MASTER KEY WITH SENTENEL : " << dirtykey << std::endl;
+        
+        // Enter passphrase to generate key.
 
+        std::string phraseKey;
+        status = g_pCredManager->EnterPassphrase(pass, salt, phraseKey);
+        if(status == ret::A_OK)
+        {
+            std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
+            std::cout<<" Salt : " << salt << std::endl;
+            g_Pt.SetPhraseKey(phraseKey);
 
+            // Setup passphrase cred to encrypt master key
+            std::string encryptedkey;
+            status = EncryptKeyWithPassphrase( dirtykey, 
+                                               phraseKey, 
+                                               salt, 
+                                               encryptedkey);
+
+            if(status == ret::A_OK)
+            {
+                status = RegisterPassphraseProfilePost( encryptedkey, 
+                                                        salt);
+                if(status == ret::A_OK)
+                    SavePhraseToken(g_Pt);
+            }
+        }
     }
     else
     {
@@ -870,7 +965,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     std::cout<<" DIRTY DIRTY KEY : " << dirtykey << std::endl;
     // Create Sentinel bytes
 
-    */
+
     // Setup passphrase cred to encrypt master key
     std::string passphrase;
     g_Pt.GetPhraseKey(passphrase); // Phrase Token
@@ -891,6 +986,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     std::string out;
     crypto.EncryptString(dirtykey, enc, out);
 
+
     std::string dectest;
     crypto.DecryptString(out, enc, dectest);
     std::cout<<" ENCRYPTED MASTER KEY : " << out << std::endl;
@@ -901,48 +997,10 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     std::cout<<" enc iv : " << iv << std::endl;
 
     std::cout<< cb64::base64_encode(reinterpret_cast<const unsigned char*>(out.c_str()), out.size()) << std::endl;
-    std::string salt;
-    g_Pt.GetSalt(salt);
-    // Create Profile post for 
-    AtticProfileInfo* pAtticProf = new AtticProfileInfo();
-    // MasterKey with sentinel and Salt
-    pAtticProf->SetMasterKey(out);
-    pAtticProf->SetSalt(salt);
-    pAtticProf->SetIv(iv);
+    */
 
-    // Save and post
-    std::string output;
-    JsonSerializer::SerializeObject(pAtticProf, output);
-
-    std::string url;
-    g_Entity.GetFrontProfileUrl(url);
-
-    AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
-
-    // TODO :: add the type as url params and just pass the attic profile type
-    // UrlParams params
-    std::string hold("https://cupcake.io/types/info/attic/v0.1.0");
-    char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
-    url.append("/");
-    url.append(pPm);
-
-    Response resp;
-    conops::HttpPut(url, NULL, output, at, resp);
-
-    std::cout<<" URL : " << url << std::endl;
-    std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-
-    if(resp.code != 200)
-        return ret::A_FAIL_NON_200;
-
-    g_bEnteredPassphrase = true;
-    SavePhraseToken(g_Pt);
-    return ret::A_OK;
-
+    
+    return status; 
 }
 
 int RegisterPassphrase(const char* szPass, bool override)

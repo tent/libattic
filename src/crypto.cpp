@@ -505,3 +505,10 @@ int Crypto::CheckSalt(std::string& salt)
     return status;
 }
 
+int Crypto::GenerateSalt(std::string& out)
+{
+    int status = ret::A_OK;
+    utils::GenerateRandomString(out, SALT_SIZE);
+    return status;
+}
+

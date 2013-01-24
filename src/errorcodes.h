@@ -46,7 +46,8 @@ namespace ret
         A_FAIL_ATTEMPT_TO_REINIT,
         A_FAIL_DUPLICATE_ENTRY,
         A_FAIL_RUNNING_SINGLE_INSTANCE,
-        A_FAIL_CREATE_THREAD
+        A_FAIL_CREATE_THREAD,
+        A_FAIL_OTHER // to be used sparingly as a placeholder please
     };
 
 };

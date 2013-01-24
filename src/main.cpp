@@ -119,7 +119,8 @@ TEST(REGISTER, PASSPHRASE)
 
 
     EnterPassphrase("password");
-/*    
+
+/*
     {
         std::cout<<" REGISTERING PASSPHRASE " << std::endl;
         status = RegisterPassphrase("password", true);
@@ -133,7 +134,8 @@ TEST(REGISTER, PASSPHRASE)
            std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
         }
     }
- */
+ 
+*/    
 
   ShutdownLibAttic();
 

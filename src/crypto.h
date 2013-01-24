@@ -63,6 +63,7 @@ public:
     void SetStride(unsigned int uStride) { m_Stride = uStride; }
 
     int CheckSalt(std::string& salt);
+    int GenerateSalt(std::string& out);
 
     int GenerateKeyFromPassphrase( const std::string &pass, 
                                    std::string &salt,

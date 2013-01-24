@@ -128,7 +128,7 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     int status = ret::A_OK;
     // Generate Salt
     std::string salt;
-    utils::GenerateRandomString(salt, SALT_SIZE);
+    status = m_Crypto.GenerateSalt(salt);
     status = m_Crypto.CheckSalt(salt);
 
     if(status == ret::A_OK)
