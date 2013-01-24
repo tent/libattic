@@ -70,7 +70,7 @@ namespace conops
                                                              at.GetMacAlgorithm(), 
                                                              at.GetAccessToken(), 
                                                              at.GetMacKey(), 
-                                                             true);
+                                                             false);
         
         std::cout<<"CODE : " << responseOut.code << std::endl;
         std::cout<<"RESPONSE : " << responseOut.body << std::endl;
@@ -103,7 +103,7 @@ namespace conops
                                                             at.GetMacAlgorithm(), 
                                                             at.GetAccessToken(), 
                                                             at.GetMacKey(), 
-                                                            true);
+                                                            false);
      
         return ret::A_OK;
     }    
@@ -122,7 +122,7 @@ namespace conops
                                                            at.GetMacAlgorithm(), 
                                                            at.GetAccessToken(), 
                                                            at.GetMacKey(), 
-                                                           true);
+                                                           false);
 
         return ret::A_OK;
     }
@@ -141,7 +141,7 @@ namespace conops
                                                            at.GetMacAlgorithm(), 
                                                            at.GetAccessToken(), 
                                                            at.GetMacKey(), 
-                                                           true);
+                                                           false);
 
         return ret::A_OK;
     }

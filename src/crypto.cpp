@@ -497,12 +497,6 @@ int Crypto::CheckSalt(std::string& salt)
 {
     int status = ret::A_OK;
 
-    if(salt.empty())
-    {
-        // Generate salt
-        utils::GenerateRandomString(salt, SALT_SIZE);
-    }
-
     // Check for correct size
     if(salt.size() != SALT_SIZE)
     {

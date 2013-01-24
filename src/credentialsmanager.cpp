@@ -125,20 +125,24 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     if(pass.empty())
         return ret::A_FAIL_EMPTY_PASSPHRASE;
 
+    int status = ret::A_OK;
     // Generate Salt
     std::string salt;
-    m_Crypto.CheckSalt(salt);
+    utils::GenerateRandomString(salt, SALT_SIZE);
+    status = m_Crypto.CheckSalt(salt);
 
-    ptOut.SetSalt(salt);
+    if(status == ret::A_OK)
+    {
+        ptOut.SetSalt(salt);
 
-    // Generate Passphrase Key 
-    Credentials cred;
-    m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
-    
-    // Set the key generated from phrase
-    ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
-
-    return ret::A_OK;
+        // Generate Passphrase Key 
+        Credentials cred;
+        m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
+        
+        // Set the key generated from phrase
+        ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
+    }
+    return status;
 }
 
 int CredentialsManager::EnterPassphrase( const std::string& pass, 

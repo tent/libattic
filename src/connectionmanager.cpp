@@ -109,7 +109,7 @@ void ConnectionManager::EncodeAndAppendUrlParams( CURL* pCurl,
         //char *pPm = curl_easy_escape(pCurl, params.c_str() , params.size());
         //url.append(pPm);
         url.append(params);
-        std::cout << " URL APPEND : " << url << std::endl;
+        //std::cout << " URL APPEND : " << url << std::endl;
     }
 }
 
@@ -206,7 +206,7 @@ int ConnectionManager::HttpGet( const std::string &url,
 
     if(res != CURLE_OK)
     {
-        std::cout<<"ERRR"<<std::endl;
+        //std::cout<<"ERRR"<<std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
 
@@ -250,8 +250,8 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
 
     headers = curl_slist_append(headers, authheader.c_str());
 
-    std::cout << " GETTING URL " << url << std::endl;
-    std::cout << " URLPATH : " <<urlPath << std::endl;
+    //std::cout << " GETTING URL " << url << std::endl;
+    //std::cout << " URLPATH : " <<urlPath << std::endl;
     curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
     //curl_easy_setopt(pCurl, CURLOPT_NOBODY, 1);
     
@@ -322,7 +322,7 @@ int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
 
     if(res != CURLE_OK)
     {
-        std::cout<<"ERRR"<<std::endl;
+        ////std::cout<<"ERRR"<<std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
     fclose(fp);
@@ -352,11 +352,11 @@ int ConnectionManager::HttpPost( const std::string& url,
     if(verbose)
         curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
 
-    std::cout<<"here1"<<std::endl;
+    ////std::cout<<"here1"<<std::endl;
     std::string urlPath = url;
     EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
-    std::cout<<"here1"<<std::endl;
+    //std::cout<<"here1"<<std::endl;
     curl_slist *headers = 0; // Init to null, always
     headers = curl_slist_append( headers, 
                                  "Accept: application/vnd.tent.v0+json" );
@@ -381,23 +381,23 @@ int ConnectionManager::HttpPost( const std::string& url,
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
-    std::cout<<"here1"<<std::endl;
+    //std::cout<<"here1"<<std::endl;
     if(!pCurl)
-        std::cout<<"wtf"<<std::endl;
+        //std::cout<<"wtf"<<std::endl;
 
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)
     {
-        std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        //std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
  
-    std::cout<<"here1"<<std::endl;
+    //std::cout<<"here1"<<std::endl;
     responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
 
-    std::cout<<"here1"<<std::endl;
+    //std::cout<<"here1"<<std::endl;
     return ret::A_OK;
 }
 
@@ -466,7 +466,7 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
     // Go through file 
     for(; itr != filepaths->end(); itr++) 
     {
-        std::cout<<"Adding attachment ... " << std::endl;
+        //std::cout<<"Adding attachment ... " << std::endl;
         
         AddAttachmentToForm( *itr, 
                              fp,
@@ -640,7 +640,7 @@ int ConnectionManager::HttpMultipartPost( const std::string &url,
     
     for(; itr != filepaths->end(); itr++) 
     {
-                std::cout<<"Adding attachment ... " << std::endl;
+                //std::cout<<"Adding attachment ... " << std::endl;
         AddAttachmentToForm( *itr, 
                              fp,
                              lp,
@@ -825,7 +825,7 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
 
     if(res != CURLE_OK)
     {
-        std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        //std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
 
@@ -860,7 +860,7 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
 
     ////////////////////////////////
-    std::cout<<" OUT LEN : " << body.size() << std::endl;
+    //std::cout<<" OUT LEN : " << body.size() << std::endl;
     char szLen[256];
     memset(szLen, '\0', sizeof(char)*256);                                              
     snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
@@ -907,7 +907,7 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
 
     if(res != CURLE_OK)
     {
-        std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
+        //std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
 
@@ -928,7 +928,7 @@ void ConnectionManager::AddBodyToForm( const std::string &body,
     *list = curl_slist_append( *list, 
                               "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"");
 
-    std::cout<< "BODY : " << body << std::endl;
+    //std::cout<< "BODY : " << body << std::endl;
     char szLen[256];
     memset(szLen, '\0', sizeof(char)*256);                                              
     snprintf(szLen, (sizeof(char)*256),  "%lu", body.size());     
@@ -980,14 +980,14 @@ void ConnectionManager::AddAttachmentToForm( const std::string &path,
     std::string cl("Content-Length: ");
     cl.append(szBuffer);
 
-    std::cout<< "CL : " << cl <<std::endl;
-    std::cout<< "USIZE : " << uSize << std::endl;
+    //std::cout<< "CL : " << cl <<std::endl;
+    //std::cout<< "USIZE : " << uSize << std::endl;
         
     *list = curl_slist_append(*list,  cl.c_str());
     *list = curl_slist_append(*list, "Content-Type: application/octet-stream");
 
-    std::cout << " name : " << name << std::endl;
-    std::cout << " path : " << path << std::endl;
+    //std::cout << " name : " << name << std::endl;
+    //std::cout << " path : " << path << std::endl;
 
     curl_formadd( &*post, 
                   &*last, 
@@ -1065,8 +1065,8 @@ void ConnectionManager::BuildAuthHeader( const std::string &url,
     out.append("\"");
     
 
-   // std::cout << "REQUEST_STRING : " << requestString << std::endl;
-   // std::cout << "AUTH_HEADER : " << out << std::endl;
+   // //std::cout << "REQUEST_STRING : " << requestString << std::endl;
+   // //std::cout << "AUTH_HEADER : " << out << std::endl;
 }
 
 void ConnectionManager::GenerateNonce(std::string &out)
@@ -1090,11 +1090,11 @@ void ConnectionManager::SignRequest( const std::string &request,
 
     try
     {
-  //      std::cout<< "Key : " << key << std::endl;
+  //      //std::cout<< "Key : " << key << std::endl;
         unsigned char szReqBuffer[request.size()];
         memcpy(szReqBuffer, key.c_str(), strlen(key.c_str())+1);
 
- //       std::cout<< " BUFFER : " << szReqBuffer << std::endl;
+ //       //std::cout<< " BUFFER : " << szReqBuffer << std::endl;
         //CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, request.size());
 
         CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(key.c_str())+1);
@@ -1127,8 +1127,8 @@ void ConnectionManager::SignRequest( const std::string &request,
                 ); // StringSource
 
 
-//    std::cout << "hmac: " << encoded << std::endl; 
-//    std::cout << "mac : " << mac << std::endl;
+//    //std::cout << "hmac: " << encoded << std::endl; 
+//    //std::cout << "mac : " << mac << std::endl;
 
     // trim
     size_t found = som.find(std::string("="));
@@ -1163,8 +1163,8 @@ void ConnectionManager::GenerateHmacSha256(std::string &out)
                   new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
                 ); // StringSource
 
-    std::cout << "key: " << encoded << std::endl;
-    std::cout << "plain text: " << plain << std::endl;
+    //std::cout << "key: " << encoded << std::endl;
+    //std::cout << "plain text: " << plain << std::endl;
 
     /*********************************\
     \*********************************/
@@ -1197,7 +1197,7 @@ void ConnectionManager::GenerateHmacSha256(std::string &out)
                   new CryptoPP::HexEncoder(new CryptoPP::StringSink(encoded)) // HexEncoder
                 ); // StringSource
 
-    std::cout << "hmac: " << encoded << std::endl; 
+    //std::cout << "hmac: " << encoded << std::endl; 
 
     out.clear();
     out = encoded;
@@ -1218,13 +1218,13 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 
 static size_t WriteOutToString(void *ptr, size_t size, size_t nmemb, std::string *s)
 {
-    std::cout<<"Write out to string ... "<< std::endl;
+    //std::cout<<"Write out to string ... "<< std::endl;
     unsigned int start_size = s->size();
 
-    std::cout<<"SIZE : " << size << std::endl;
-    std::cout<<"NMEMB : " << nmemb << std::endl;
+    //std::cout<<"SIZE : " << size << std::endl;
+    //std::cout<<"NMEMB : " << nmemb << std::endl;
     s->append((char*)ptr, size*nmemb);
-    std::cout<<"CURRENT SIZE : " << s->size() << std::endl;
+    //std::cout<<"CURRENT SIZE : " << s->size() << std::endl;
 
     // Must return the value it wrote out this time;
     return (s->size() - start_size);

@@ -88,7 +88,6 @@ void* ThreadFunc(void* arg)
     }    
 
     std::cout << " thread exiting ... " << std::endl;
-
     g_ThreadCount--;                                                                 
     pthread_exit(NULL);                                                              
 }
@@ -126,6 +125,7 @@ int ThreadPool::Initialize()
 int ThreadPool::Shutdown()
 {
     std::cout<<" sending exit signals " << std::endl;
+    std::cout<<" thread count : " << m_ThreadData.size() << std::endl;
     for(unsigned int i=0; i<m_ThreadData.size(); i++)
     {
         while(m_ThreadData[i]->TryLock()) { sleep(0); }

@@ -31,6 +31,23 @@
 
 #include "rollsum.h"
 
+/*
+TEST(TEST, NUKE)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    EnterPassphrase("password");
+ 
+    //DeleteAllPosts();
+
+    ShutdownLibAttic();
+}
+/*
+*/
+/*
 void PULLALL(int a, void* b)
 {
     std::cout<<" PULL ALL CALLBACK HIT BRAH : " << a << std::endl;
@@ -91,7 +108,8 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
-/*
+
+
 TEST(REGISTER, PASSPHRASE)
 {
     int status = InitLibAttic( "./data",
@@ -100,20 +118,24 @@ TEST(REGISTER, PASSPHRASE)
                   "https://manuel.tent.is");
 
 
-    //EnterPassphrase("password");
-    if(status == ret::A_OK)
+    EnterPassphrase("password");
+/*    
     {
-        //RegisterPassphrase("password");
-    //    EnterPassphrase("password");
+        std::cout<<" REGISTERING PASSPHRASE " << std::endl;
+        status = RegisterPassphrase("password", true);
+        
+        std::cout<< " REGISTER STATUS : " << status << std::endl;
+        for(;;)
+        {
+           sleep(10);
+           if(!g_ThreadCount)
+               break;
+           std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+        }
     }
-    else
-    {
-        std::cout<<" could not properly init "<< std::endl;
-        std::cout<<" status : " << status << std::endl;
+ */
 
-    }
-
-    ShutdownLibAttic();
+  ShutdownLibAttic();
 
 }
 /*
@@ -503,14 +525,20 @@ TEST(PUSH, AFILE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    EnterPassphrase("password");
-       //status = PushFile("./data/oa1.pdf", &FOOFUN);
-//    status = PushFile("./data/oa2.pdf", &FOOFUN);
-//    status = PushFile("./data/oa3.pdf", &FOOFUN);
+    std::cout<<" attempting to enter passphrase " << std::endl;
+    int status =  EnterPassphrase("password");
+    std::cout <<" enter passphrase status : " << status << std::endl;
 
-    int status = PushFile("./data/oa5.pdf", &FOOFUN);
-    status = PushFile("./data/ogli.pdf", &FOOFUN);
-    status = PushFile("./data/rm2.pdf", &FOOFUN);
+    if(status == 0)
+    {
+        status = PushFile("./data/oa5.pdf", &FOOFUN);
+        status = PushFile("./data/ogli.pdf", &FOOFUN);
+        status = PushFile("./data/rm2.pdf", &FOOFUN);
+    }
+    else
+    {
+        std::cout<<"Enter passphrase fail " << std::endl;
+    }
 
     for(;;)
     {
