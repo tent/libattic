@@ -68,7 +68,6 @@ static bool g_bEnteredPassphrase = false;
 // Local utility functions
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
 static int PutFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
-static ret::eCode DeletePost(const std::string& szPostID); // Depricated
 
 // inward faceing functions
 int SetWorkingDirectory(const char* szDir);
@@ -610,7 +609,29 @@ int SyncAtticPostsMetaData(void (*callback)(int, void*))
 
 int DeleteAllPosts()
 {
+    AccessToken at;
+    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->GetAccessTokenCopy(at);
+    g_pCredManager->Unlock();
+
     // Completely nuke all posts associated with the account
+    std::string url("https://manuel.tent.is/tent/posts");
+
+                                                      //const UrlParams* pParams,
+    Response response;
+    UrlParams params;
+    params.AddValue("type", cnst::g_szAtticPostType);
+    ConnectionManager::GetInstance()->HttpGetWithAuth( url,
+                                                     &params,
+                                                     response,
+                                                     at.GetMacAlgorithm(),
+                                                     at.GetAccessToken(),
+                                                     at.GetMacKey(),
+                                                     true);
+
+    std::cout<<" RESPONSE : " << response.code << std::endl;
+    std::cout<<" BODY : " << response.body << std::endl;
+   
 
     return ret::A_OK;
 }
@@ -823,7 +844,10 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     url.append(pPm);
 
     Response resp;
-    conops::HttpPost(url, NULL, output, at, resp);
+    conops::HttpPut(url, NULL, output, at, resp);
+
+    std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
 
     if(resp.code != 200)
         return ret::A_FAIL_NON_200;
@@ -858,8 +882,8 @@ int RegisterPassphrase(const char* szPass, bool override)
         g_pCredManager->Unlock();
 
         status = RegisterPassphraseWithAttic(szPass, mk);
-
     }
+
     return status;
 }
 
