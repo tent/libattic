@@ -126,4 +126,13 @@ void Entity::Deserialize(Json::Value& root)
     m_pActiveProfile = GetFrontProfile();
 }
 
-
+bool Entity::HasAtticProfileMasterKey() 
+{ 
+    if(m_pActiveProfile)
+    {
+        AtticProfileInfo* pi = m_pActiveProfile->GetAtticInfo();
+        if(pi)
+            return pi->HasMasterKey();
+    }
+    return false;
+}

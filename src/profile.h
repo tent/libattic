@@ -25,6 +25,8 @@ public:
     void SetSalt(const std::string& salt) { m_Salt = salt; }
     void SetMasterKey(const std::string& mk) { m_MasterKey = mk; }
     void SetIv(const std::string& iv) { m_Iv = iv; }
+
+    bool HasMasterKey() { return !m_MasterKey.empty(); }
     
 private:
     Permissions m_Permissions;  // `json:"permissions"`

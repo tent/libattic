@@ -42,6 +42,8 @@ public:
 
     bool HasAtticProfile() { if(m_pActiveProfile && m_pActiveProfile->GetAtticInfo()) return true ; return false; }
 
+    bool HasAtticProfileMasterKey();
+
 private:
     ProfileList     m_Profiles;
     UrlList         m_ProfileUrls;
