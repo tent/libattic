@@ -848,7 +848,7 @@ int RegisterPassphrase(const char* szPass, bool override)
 
     int status = ret::A_FAIL_REGISTER_PASSPHRASE;
 
-    if(g_Entity.HasAtticProfileMasterKey() || override)
+    if(!g_Entity.HasAtticProfileMasterKey() || override)
     {
         // Register a new passphrase.
         std::string mk;
