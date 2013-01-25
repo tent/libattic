@@ -20,7 +20,8 @@ void* ThreadFunc(void* arg)
         if(pTd)
         {                                                                            
             std::cout<<" attempting to aquire task queue " << std::endl;
-            while(pTd->TryLock()) { sleep(0); }
+
+            pTd->Lock();
             TaskQueue* pTq = pTd->GetTaskQueue();
             pthread_t handle = pTd->GetThreadHandle();
             pTd->Unlock();
@@ -64,16 +65,12 @@ void* ThreadFunc(void* arg)
                 }                                                                    
                 else                                                                 
                 {                                                                    
-                    // Grab a task -- TODO :: maybe grab several? ;)                 
-                    //std::cout<<"Thread : " << handle << " Attempting to aquire task ... " << std::endl;
-                    //while(pTq->TryLock()) { sleep(0); }                        
-                    pTask = pTq->PopFront();                                
-                    //pTq->Unlock();                                              
+                    pTask = pTq->SyncPopFront();                                
 
                     if(!pTask && (State != ThreadState::IDLE))                       
                     {                                                                
                         std::cout <<"Thread : " << handle << " Didn't aquire a task, idling ... " << std::endl;
-                        while(pTd->TryLock()) { sleep(0); }                    
+                        pTd->Lock();                    
                         pTd->GetThreadState()->SetStateIdle();                                   
                         pTd->Unlock();                                          
                     } 

@@ -55,7 +55,7 @@ int TaskArbiter::Shutdown()
 // its probably joinable)
 void TaskArbiter::SpinOffTask(Task* pTask)
 {
-    m_pTaskQueue->PushBack(pTask);
+    m_pTaskQueue->SyncPushBack(pTask);
 }
 
 

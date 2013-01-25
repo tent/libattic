@@ -16,14 +16,14 @@ public:
 
     ~TaskQueue(){}                                                                 
 
-    void PushBack(Task* pTask) 
+    void SyncPushBack(Task* pTask) 
     { 
         while(TryLock()) { sleep(0); }
         if(pTask) m_TaskQueue.push_back(pTask);
         Unlock();
     }
 
-    Task* PopFront()                                                           
+    Task* SyncPopFront()                                                           
     {                                                                              
         while(TryLock()) { sleep(0); }
         Task* pTask = NULL;                                                        

@@ -48,7 +48,6 @@ TEST(TEST, NUKE)
 /*
 */
 
-
 void PULLALL(int a, void* b)
 {
     std::cout<<" PULL ALL CALLBACK HIT BRAH : " << a << std::endl;
@@ -67,7 +66,7 @@ TEST(TESTINIT, CREDENTIALS)
 
     for(;;)
     {
-       sleep(30);
+       sleep(10);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
@@ -235,107 +234,25 @@ TEST(INIT, TEST)
     ShutdownLibAttic();
 
 }
-*/
-/*
-void SYNCCALL(int a, void* p)
-{
-    std::cout<< " CALLBACK SYNC : " << a << std::endl;
-}
 
-TEST(SYNC, TEST)
-{
-    InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "https://manuel.tent.is");
-
-    // Sync meta data store
-    int status = SyncAtticMetaData(&SYNCCALL);
-
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-   
-
-    ShutdownLibAttic();
-}
 /*
  */
 /*
-TEST(SQLITE, TEST)
-{
-    InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "https://manuel.tent.is");
 
-    int status = LoadAppFromFile();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    TestQuery();
-
-    ShutdownLibAttic();
-}
-/*
-*/
-/*
 void FOOCALL(int a, void* p)
 {
     std::cout<< " CALLBACK FOOCAL : " << a << std::endl;
 }
 TEST(DELETE, AFILE)
 {
-    SetConfigDirectory("./config");
-    SetWorkingDirectory("./data");
-    SetTempDirectory("./data/temp");
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
 
-    int status = LoadAppFromFile();
+    EnterPassphrase("password");
 
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    status = SetEntityUrl("https://manuel.tent.is");
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-
-    // Load Access Token
-    status = LoadAccessToken();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-   
-    // Initialize Filemanager
-    status = InitializeFileManager();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-    ///////////////////////
-    //do stuff here
-
-    status = DeleteFile("oa3.pdf", &FOOCALL);
+    int status = DeleteFile("oa5.pdf", &FOOCALL);
 
     for(;;)
     {
@@ -349,11 +266,10 @@ TEST(DELETE, AFILE)
     {
         std::cout<<"FAILED : " << status << std::endl;
     }
+
+    ShutdownLibAttic();
+
     ASSERT_EQ(status, ret::A_OK);
-
-
-    ShutdownFileManager();
-    ShutdownAppInstance();
 }
 /*
  */
