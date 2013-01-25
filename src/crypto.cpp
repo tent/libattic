@@ -484,13 +484,13 @@ bool Crypto::ScryptEncode( const std::string &input,
 
     if(pInput)
     {
-        delete pInput;
+        delete[] pInput;
         pInput = NULL;
     }
 
     if(pSalt)
     {
-        delete pSalt;
+        delete[] pSalt;
         pSalt = NULL;
     }
 

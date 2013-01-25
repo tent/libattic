@@ -8,6 +8,7 @@
 
 #include "errorcodes.h"
 #include "utils.h"
+#include "conoperations.h"
 
 
 PullTask::PullTask( TentApp* pApp, 
@@ -46,8 +47,7 @@ PullTask::~PullTask()
 
 void PullTask::RunTask()
 {
-    std::cout<<" RUNNING TASK " << std::endl;
-
+    std::cout<<" Running pull task " << std::endl;
     std::string filepath;
     GetFilepath(filepath);
     int status = PullFile(filepath);
@@ -60,31 +60,21 @@ int PullTask::PullFile(const std::string& filepath)
     std::string filename;                                                                        
     utils::ExtractFileName(filepath, filename);                                                  
 
-    if(!GetTentApp())
-        return ret::A_FAIL_INVALID_APP_INSTANCE;                                             
-
     if(!GetFileManager())                                                                          
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
-    std::cout<<"FILE NAME : " << filename << std::endl;                                          
-
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
+    GetFileManager()->Lock();
     FileInfo* fi = GetFileManager()->GetFileInfo(filename);                                        
     GetFileManager()->Unlock();
 
-    std::cout<<"HERE"<<std::endl;                                                                
-
     if(!fi)                                                                                      
     {                                                                                            
-        std::cout<<"NULL FILE INFO"<<std::endl;                                                  
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
     }                                                                                            
-
 
     // Construct Post URL                                                                        
     std::string postpath;// = m_Entity;                                                             
     GetEntity(postpath);
-
     postpath.append("/tent/posts/");                                                             
 
     std::string postid;                                                                          
@@ -92,28 +82,36 @@ int PullTask::PullFile(const std::string& filepath)
     fi->GetChunkPostID(postid);
     postpath += postid;                                                                          
 
+    int status = ret::A_OK;
     Response response;                                                                        
-    GetChunkPost(fi, response);
+    status = GetChunkPost(fi, response);
 
-    if(response.code == 200)
+    if(status == ret::A_OK)
     {
-        // Deserialize response into post                                                            
-        Post resp;                                                                                   
-        JsonSerializer::DeserializeObject(&resp, response.body);                                          
+        /*
+        std::cout<<" Chunk post response : " << response.code << std::endl;
+        std::cout<<" Chunk post body : " << response.body << std::endl;
+        */
 
-        GetAttachmentsFromPost(postpath, resp);
+        if(response.code == 200)
+        {
+            // Deserialize response into post
+            Post resp;
+            JsonSerializer::DeserializeObject(&resp, response.body);
+            GetAttachmentsFromPost(postpath, resp);
 
-        // Construct File                                                                        
-        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);}
-        GetFileManager()->ConstructFileNew(filename);
-        GetFileManager()->Unlock();
+            // Construct File                                                                        
+            GetFileManager()->Lock();
+            GetFileManager()->ConstructFileNew(filename);
+            GetFileManager()->Unlock();
+        }
+        else
+        {
+            status = ret::A_FAIL_NON_200;
+        }
     }
-    else
-    {
-        return ret::A_FAIL_NON_200;
-    }
 
-    return ret::A_OK;  
+    return status;
 }
 
 int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
@@ -123,34 +121,33 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
     if(fi)
     {
         // Construct Post URL                                                                        
-        std::string postpath;// = m_Entity;                                                             
+        std::string postpath;// = m_Entity;
         GetEntity(postpath);
-
         postpath.append("/tent/posts/");                                                             
 
-        std::string postid;                                                                          
-        //fi->GetPostID(postid);                                                                       
+        std::string postid;                                                            
+        //fi->GetPostID(postid);
         fi->GetChunkPostID(postid);
         postpath += postid;                                                                          
 
-        std::cout<<" POST ID : " << postid << std::endl;
-
+        std::cout<<" Post path : " << postpath << std::endl;
         // Get Post                                                                                  
         AccessToken* at = GetAccessToken();
-        ConnectionManager::GetInstance()->HttpGetWithAuth ( postpath,                                
-                                                            NULL,                                    
-                                                            responseOut,                                
-                                                            at->GetMacAlgorithm(),                  
-                                                            at->GetAccessToken(),                   
-                                                            at->GetMacKey(),                        
-                                                            true);                                   
+        if(at)
+        {
+            status = conops::HttpGet(postpath, NULL, *at, responseOut);
 
-
-        std::cout << "CODE : " << responseOut.code << std::endl;
-        std::cout << "RESPONSE : " << responseOut.body << std::endl;                                         
-
-        if(responseOut.code != 200)
-            status = ret::A_FAIL_NON_200;
+            //std::cout<<" response out : " << responseOut.body << std::endl;
+            if(status == ret::A_OK)
+            {
+                if(responseOut.code != 200)
+                    status = ret::A_FAIL_NON_200;
+            }
+        }
+        else
+        {
+            status = ret::A_FAIL_INVALID_PTR;
+        }
     }
     else
     {
@@ -166,11 +163,8 @@ int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
 
     // Construct list of attachments                                                             
     Post::AttachmentVec* av = post.GetAttachments();                                             
-
-    std::cout<< " VEC COUNT : " << av->size() << std::endl;
     Post::AttachmentVec::iterator itr = av->begin();                                             
-
-    std::string attachmentpath, outpath;                                                                         
+    std::string attachmentpath, outpath;
 
     for(;itr != av->end(); itr++)                                                            
     {                                                                                        
@@ -179,7 +173,6 @@ int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
         attachmentpath += postpath;                                                          
         attachmentpath.append("/attachments/");                                              
         attachmentpath += (*itr)->Name;                                                      
-        std::cout<< attachmentpath << std::endl;                                             
 
         outpath.clear();                                                                     
         GetTempDirectory(outpath);
@@ -187,33 +180,29 @@ int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
         utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
         outpath += (*itr)->Name;                                                             
 
-        std::cout<<" NAME : " <<  (*itr)->Name << std::endl;
-
         // Request attachment                                                                
         GetFileAndWriteOut(attachmentpath, outpath);                                         
     }                                                                                        
-
     
     return status;
 }
 
 int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &filepath)           
 {                                                                                            
-    // file path preferably to a chunked file.                                               
-    if(!GetTentApp())                                                                              
-        return ret::A_FAIL_INVALID_APP_INSTANCE;                                         
+    int status = ret::A_OK;
 
     Response response;
     AccessToken* at = GetAccessToken();
-    ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                     
-                                                                    NULL,                    
-                                                                    response,
-                                                                    filepath,                
-                                                                    at->GetMacAlgorithm(),  
-                                                                    at->GetAccessToken(),   
-                                                                    at->GetMacKey(),
-                                                                    true);                   
 
-    return ret::A_OK;                                                                        
+    if(at)
+    {
+        status = conops::HttpGetAttachmentAndWriteOut(url, NULL, *at, filepath, response);
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;                                                                        
 }                                                                                            
 

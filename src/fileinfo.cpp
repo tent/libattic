@@ -28,9 +28,6 @@ bool FileInfo::InitializeFile(const std::string &filepath)
     // Check file size
     m_FileSize = utils::CheckFilesize(filepath);
 
-
-    std::cout<<" Init filepath : " << m_Filepath << std::endl;
-
     if(!m_FileSize)
         return false;
 
@@ -120,7 +117,6 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
 
     for(;itr != chunkList.end(); itr++)
     {
-        std::cout<<*itr<<std::endl;
         ChunkInfo* ci = new ChunkInfo();
         JsonSerializer::DeserializeObject(ci, *itr);
 

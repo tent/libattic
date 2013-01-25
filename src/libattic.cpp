@@ -117,34 +117,26 @@ int InitLibAttic( const char* szWorkingDirectory,
     // Essential
     int status = SetEntityUrl(szEntityURL);
     if(status != ret::A_OK)
-    {
         std::cout<<"seu FAILED : " << status << std::endl;
-    }
 
     status = liba::InitializeFileManager( &g_pFileManager,
                                           cnst::g_szManifestName,
                                           g_ConfigDirectory,
                                           g_TempDirectory );
     if(status != ret::A_OK)
-    {
-            std::cout<<"fm FAILED : " << status << std::endl;
-    }
+        std::cout<<"fm FAILED : " << status << std::endl;
 
     status = liba::InitializeCredentialsManager( &g_pCredManager,
                                                  g_ConfigDirectory);
-
     if(!g_pCredManager)
         std::cout<<"failed to create cred manager " << std::endl;
+
     if(status != ret::A_OK)
-    {
-            std::cout<<"cm FAILED : " << status << std::endl;
-    }
+        std::cout<<"cm FAILED : " << status << std::endl;
 
     status = liba::InitializeEntityManager( &g_pEntityManager );
     if(status != ret::A_OK)
-    {
         std::cout<<"em FAILED : " << status << std::endl;
-    }
 
     // Non-essential
     LoadAppFromFile();
@@ -152,38 +144,27 @@ int InitLibAttic( const char* szWorkingDirectory,
     
     status = g_Arb.Initialize(threadCount);
     if(status != ret::A_OK)
-    {
         std::cout<<"arb FAILED : " << status << std::endl;
-    }
 
     status = g_TaskFactory.Initialize();
     if(status != ret::A_OK)
-    {
         std::cout<<"Task Factory FAILED : " << status << std::endl;
-    }
-
-    std::cout<<"initialization success"<<std::endl;
 
     // Load Entity Authentication  - ORDER MATTERS
     LoadEntity();
     
     status = LoadPhraseToken();
     if(status != ret::A_OK)
-    {
         std::cout<<"Load Phrase FAILED : " << status << std::endl;
-    }
 
     status = LoadMasterKey();
     if(status != ret::A_OK)
-    {
         std::cout<<"Load Master Key FAILED : " << status << std::endl;
-    }
     else
-    {
         status = SetFileManagerMasterKey();
-    }
 
     
+    std::cout<<"initialization success"<<std::endl;
     return status;
 }
 
@@ -191,11 +172,11 @@ int SetFileManagerMasterKey()
 {
     // If loaded Set master key in filemanager
     MasterKey mk;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     g_pCredManager->GetMasterKeyCopy(mk);
     g_pCredManager->Unlock();
 
-    while(g_pFileManager->TryLock()) { sleep(0); }
+    g_pFileManager->Lock();
     g_pFileManager->SetMasterKey(mk);
     g_pFileManager->Unlock();
     
@@ -209,41 +190,27 @@ int ShutdownLibAttic()
     // Shutdown threading first, ALWAYS
     status = g_Arb.Shutdown();
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
-
-    }
-
 
     status = g_TaskFactory.Shutdown();
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
-    }
 
     status = liba::ShutdownFileManager(g_pFileManager);
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
-    }
 
     status = liba::ShutdownCredentialsManager(g_pCredManager);
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown credentials manager" << std::endl;
-    }
     
     status = liba::ShutdownAppInstance(g_pApp);
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
-    }
 
     status = liba::ShutdownEntityManager(g_pEntityManager);
     if(status != ret::A_OK)
-    {
         std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
-    }
 
     return status;
 }
@@ -643,6 +610,10 @@ int DeleteAllPosts()
 
 int ChangePassphrase(const char* szOld, const char* szNew)
 {
+    // TODO :: this should be a task
+    //         pull all files
+    //         decrypt them with the old key
+    //         re-encrypt them with the new key
     int status = ret::A_OK;
 
     status = EnterPassphrase(szOld);
@@ -728,7 +699,7 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
                             masterKey.SetMasterKey(keyActual);
 
                             // Insert Into Credentials Manager
-                            while(g_pCredManager->TryLock()) { sleep(0); }
+                            g_pCredManager->Lock();
                             g_pCredManager->SetMasterKey(masterKey);
                             g_pCredManager->Unlock();
 
@@ -816,7 +787,7 @@ int ConstructMasterKey(const std::string& masterkey, MasterKey& out)
     g_pCredManager->Lock();
     // Enter passphrase to generate key.
     g_pCredManager->RegisterPassphrase(masterkey, g_Pt); // This generates a random salt
-                                                    // Sets Phrase key
+                                                         // Sets Phrase key
     g_pCredManager->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
     g_pCredManager->SetMasterKey(out);
     g_pCredManager->Unlock();
@@ -960,58 +931,7 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
     {
         status = ret::A_FAIL_INVALID_MASTERKEY;
     }
-
-    /*
-    std::cout<< " SET MASTER KEY : " << masterkey << std::endl;
-    std::string h64mk = cb64::base64_encode(reinterpret_cast<const unsigned char*>(masterkey.c_str()), masterkey.size());
-
-    std::cout<<" h64mk : " << h64mk << std::endl;
-    std::cout<<"decode : " << cb64::base64_decode(h64mk) << std::endl;
-
-    
-        std::string dirtykey;
-    //mk.GetMasterKey(key);
-    mk.GetMasterKeyWithSentinel(dirtykey);
-    g_Pt.SetDirtyKey(dirtykey); // Phrase Token
-
-    std::cout<<" DIRTY DIRTY KEY : " << dirtykey << std::endl;
-    // Create Sentinel bytes
-
-
-    // Setup passphrase cred to encrypt master key
-    std::string passphrase;
-    g_Pt.GetPhraseKey(passphrase); // Phrase Token
-    std::cout<< " PHRASE KEY : " << passphrase << std::endl;
-
-    Crypto crypto;
-    // Generate iv
-    std::string iv;
-    crypto.GenerateIv(iv);
-
-    Credentials enc;
-    enc.SetKey(passphrase);
-    enc.SetIv(iv);
-
-    g_Pt.SetIv(iv); // Phrase Token
-
-    // Encrypt MasterKey with passphrase key
-    std::string out;
-    crypto.EncryptString(dirtykey, enc, out);
-
-
-    std::string dectest;
-    crypto.DecryptString(out, enc, dectest);
-    std::cout<<" ENCRYPTED MASTER KEY : " << out << std::endl;
-
-    std::cout<<" DECRYPTION TEST : " << dectest << std::endl;
-
-    std::cout<<" enc passphrase : " << passphrase << std::endl;
-    std::cout<<" enc iv : " << iv << std::endl;
-
-    std::cout<< cb64::base64_encode(reinterpret_cast<const unsigned char*>(out.c_str()), out.size()) << std::endl;
-    */
-
-    
+       
     return status; 
 }
 
@@ -1046,10 +966,9 @@ int RegisterPassphrase(const char* szPass, bool override)
 
 int LoadPhraseToken()
 {
-    std::cout<< " Loading Phrase Token ... " << std::endl;
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
-    std::cout<<" PT PATH : " << ptpath << std::endl;
+
     int status = g_Pt.LoadFromFile(ptpath);
     if(status != ret::A_OK)
     {
@@ -1059,11 +978,9 @@ int LoadPhraseToken()
         Profile* prof = g_Entity.GetFrontProfile();
         if(prof)
         {
-            std::cout<<" profile ... " << std::endl;
             AtticProfileInfo* atpi = prof->GetAtticInfo();
             if(atpi)
             {
-                std::cout<<" attic profile " << std::endl;
                 std::string salt;
                 atpi->GetSalt(salt);
                 g_Pt.SetSalt(salt);
@@ -1074,7 +991,6 @@ int LoadPhraseToken()
 
                 std::string key;
                 atpi->GetMasterKey(key);
-                std::cout<<"Getting master key ... : " << key << std::endl;
                 g_Pt.SetDirtyKey(key);
 
                 // Save token to file
@@ -1092,19 +1008,15 @@ int LoadPhraseToken()
     }
     else 
     {
-        std::cout<<" Loading succeeded ... " << std::endl;
         if(g_Pt.IsPhraseKeyEmpty())
             g_bEnteredPassphrase = false;
         else
             g_bEnteredPassphrase = true;
     }
 
-        std::string pk, dk;
-        g_Pt.GetDirtyKey(dk);
-        g_Pt.GetPhraseKey(pk);
-        std::cout<<" PHRASE KEY : " << pk << std::endl;
-        std::cout<<" DIRTY KEY : " << dk << std::endl;
-    std::cout<<" Loading phrase token status : " << status << std::endl;
+    std::string pk, dk;
+    g_Pt.GetDirtyKey(dk);
+    g_Pt.GetPhraseKey(pk);
     return status; 
 }
 
@@ -1165,33 +1077,26 @@ void GetEntityFilepath(std::string& out)
 
 int LoadEntity(bool override)
 {
-
-    std::cout<<" loading entity " << std::endl;
     std::string entpath;
     GetEntityFilepath(entpath);
-    std::cout<<" entity filepath " << entpath << std::endl;
     int status = g_Entity.LoadFromFile(entpath);
-
-    std::cout<<"LOAD ENTITY FROM FILE STATUS : " << status << std::endl;
  
     if(status != ret::A_OK || override)
     {
-        std::cout<<"discovering...."<<std::endl;
+        if(override)
+            g_Entity.ResetEntity();
+
         // Load Entity
         AccessToken at;
-        while(g_pCredManager->TryLock()) { sleep(0); }
+        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        // TODO :: Load from file, otherwise discover
-        std::cout<< " ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
 
-        // TODO :: write entity out to file
-        g_Entity.WriteToFile(entpath);
-
+        if(status == ret::A_OK)
+            g_Entity.WriteToFile(entpath);
     }
-
     return status;
 }
 
@@ -1210,7 +1115,6 @@ int SaveEntity()
 int SaveChanges()
 {
     // Use this method to force a system wide save
-    
     if(!g_pApp)
         return ret::A_FAIL_INVALID_APP_INSTANCE;
     

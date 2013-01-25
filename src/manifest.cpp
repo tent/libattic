@@ -246,8 +246,6 @@ bool Manifest::QueryForFileExistence(const std::string& filename)
               filename.c_str()
             );
      
-    std::cout<< " EXECING : " << pexc << std::endl;
-    
     SelectResult res;
     if(PerformSelect(pexc,res))
     {
@@ -269,8 +267,6 @@ void Manifest::QueryForMetaPostID(std::string &out) const
               "post" 
             );
      
-    std::cout<< " EXECING : " << pexc << std::endl;
-
     SelectResult res;
     if(!PerformSelect(pexc, res))
     {
@@ -322,8 +318,6 @@ unsigned int Manifest::QueryForVersion() const
               "version" 
             );
      
-    std::cout<< " EXECING : " << pexc << std::endl;
-
     SelectResult res;
     unsigned int version = 1;
     if(!PerformSelect(pexc, res))
@@ -411,24 +405,24 @@ bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
               filename.c_str()
             );
      
-    std::cout<< " EXECING : " << pexc << std::endl;
-
     SelectResult res;
     if(!PerformSelect(pexc, res))
         return false;
 
+    /*
     std::cout << " Row count : " << res.nRow << std::endl;
     std::cout << " Col count : " << res.nCol << std::endl;
+    */
 
     int step = 0;
     for(int i=0; i<res.nRow+1; i++)
     {
         step = i*res.nCol;
-        std::cout<< " step : " << step << std::endl;
+     //   std::cout<< " step : " << step << std::endl;
 
         for(int j=0; j<res.nCol; j++)
         {
-            std::cout << " Results : " << res.results[j+step] << std::endl;
+    //        std::cout << " Results : " << res.results[j+step] << std::endl;
         }
 
         if(step > 0)
@@ -465,19 +459,21 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
     if(PerformSelect(pexc.c_str(), res))
     {
 
+        /*
         std::cout << " Row count : " << res.nRow << std::endl;
         std::cout << " Col count : " << res.nCol << std::endl;
+        */
 
         int step = 0;
         for(int i=0; i<res.nRow+1; i++)
         {
             step = i*res.nCol;
-            std::cout<< " step : " << step << std::endl;
-
+            /*
             for(int j=0; j<res.nCol; j++)
             {
                 std::cout << " Results : " << res.results[j+step] << std::endl;
             }
+            */
 
             if(step > 0)
             {
@@ -671,8 +667,6 @@ bool Manifest::InsertFilePostID(const std::string& filename, const std::string &
               filename.c_str()
             ); 
 
-    std::cout << "INSERT POST ID : " << pexc << std::endl;
-
     return PerformQuery(pexc);
 }
 
@@ -688,7 +682,6 @@ bool Manifest::InsertFileChunkPostID(const std::string &filename, const std::str
               filename.c_str()
             ); 
 
-    std::cout << "INSERT CHUNK POST ID : " << pexc << std::endl;
 
     return PerformQuery(pexc);
 }
@@ -795,19 +788,22 @@ bool Manifest::QueryForFolderData( const std::string& folderpath,
     if(!PerformSelect(query.c_str(), res))
         return false;
 
+    /*
     std::cout << " Row count : " << res.nRow << std::endl;
     std::cout << " Col count : " << res.nCol << std::endl;
+    */
 
     int step = 0;
     for(int i=0; i<res.nRow+1; i++)
     {
         step = i*res.nCol;
-        std::cout<< " step : " << step << std::endl;
 
+        /*
         for(int j=0; j<res.nCol; j++)
         {
             std::cout << " Results : " << res.results[j+step] << std::endl;
         }
+        */
 
         if(step > 0)
         {
@@ -833,8 +829,6 @@ bool Manifest::InsertCredentialsToDb(const FileInfo* fi)
 
 bool Manifest::RemoveFileFromDb(const std::string &filename)
 {
-    // TODO :: this
-    std::cout<<" HERE " << std::endl;
     char pexc[1024];
 
     snprintf( pexc,
@@ -844,7 +838,6 @@ bool Manifest::RemoveFileFromDb(const std::string &filename)
               filename.c_str()
             ); 
 
-    std::cout << "DELETE : " << pexc << std::endl;
     return PerformQuery(pexc);
 }
 

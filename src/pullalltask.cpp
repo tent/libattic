@@ -53,7 +53,6 @@ PullAllTask::~PullAllTask()
 void PullAllTask::RunTask()
 {
     int status = ret::A_OK;
-    std::cout<<"HAAAAAAAAAAAAAAAARE"<<std::endl;
 
     if(!g_pCurrent)
     {
@@ -81,10 +80,10 @@ void PullAllTask::RunTask()
             std::vector<FileInfo>::iterator itr = filelist.begin();
             for(;itr != filelist.end(); itr++)
             {
-
-                std::cout<<" PULLING FILE : " << fp << std::endl;
                 fp.clear();
                 (*itr).GetFilepath(fp);
+
+                std::cout<<" PULLING FILE : " << fp << std::endl;
                 Task* t = tf->SyncGetTentTask( TaskFactory::PULL,
                                                GetTentApp(), 
                                                pFm, 

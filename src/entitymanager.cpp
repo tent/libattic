@@ -42,8 +42,6 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
     utils::CheckUrlAndAppendTrailingSlash(profpath);
     profpath += "profile";
 
-    std::cout<<" discovering ... : " << profpath << std::endl;
-
     Response response;
     conops::HttpGet( profpath, 
                      NULL,
@@ -60,12 +58,11 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
         std::string str;
         for(int i = 0; i< tags.size() ; i++)
         {
-            std::cout<< "\t" << tags[i] << std::endl;
+            //std::cout<< "\t" << tags[i] << std::endl;
             size_t found = tags[i].find(cnst::g_szProfileRel);
 
             if(found != std::string::npos)
             {
-                std::cout<< " FOUND : " << i << std::endl;
                 // Extract Profile url
                 size_t b = tags[i].find("https");
                 size_t e = tags[i].find("\"", b+1);
@@ -73,7 +70,6 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
 
                 str.clear();
                 str = tags[i].substr(b, diff);
-                std::cout<<" SUBSTR : " << str << std::endl;
 
                 entOut.PushBackProfileUrl(str);
 
@@ -113,8 +109,10 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
                              at,
                              response);
 
+            /*
             std::cout<< " resp : " << response.body << std::endl;
             std::cout<< " code : " << response.code << std::endl;
+            */
  
             if(response.code == 200)
             {

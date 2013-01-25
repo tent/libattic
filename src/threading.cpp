@@ -26,8 +26,8 @@ void* ThreadFunc(void* arg)
             pTd->Unlock();
 
             Task* pTask = NULL;                                                  
-
             std::cout<<"Thread : " << handle <<" running til done..."<< std::endl;
+
             for(;;)                                                                  
             {                                                                        
                 if(!pTd)

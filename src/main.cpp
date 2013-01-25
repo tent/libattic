@@ -67,7 +67,7 @@ TEST(TESTINIT, CREDENTIALS)
 
     for(;;)
     {
-       sleep(10);
+       sleep(30);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
@@ -474,7 +474,6 @@ TEST(PULL, ALL)
 /*
 */
 /*
-
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -514,7 +513,6 @@ TEST(PULL, AFILE)
 
 /*
  */
-
 /*
 static void FOOFUN(int a, void* b)
 {
@@ -535,8 +533,8 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
         status = PushFile("./data/oa5.pdf", &FOOFUN);
-    //    status = PushFile("./data/oa6.pdf", &FOOFUN);
-    //    status = PushFile("./data/oa7.pdf", &FOOFUN);
+        status = PushFile("./data/ogli.pdf", &FOOFUN);
+        status = PushFile("./data/qspn.pdf", &FOOFUN);
     }
     else
     {

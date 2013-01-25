@@ -145,6 +145,7 @@ namespace conops
 
         return ret::A_OK;
     }
+
     static int HttpGet( const std::string& url,
                         const UrlParams* pParams,
                         const AccessToken& at,
@@ -159,6 +160,26 @@ namespace conops
                                                            false);
         return ret::A_OK;
     }
+
+    static int HttpGetAttachmentAndWriteOut( const std::string& url,
+                                             const UrlParams* pParams,
+                                             const AccessToken& at,
+                                             const std::string& filepath,
+                                             Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
+                                                                        pParams,                   
+                                                                        responseOut,               
+                                                                        filepath,               
+                                                                        at.GetMacAlgorithm(),  
+                                                                        at.GetAccessToken(),   
+                                                                        at.GetMacKey(),        
+                                                                        false);                  
+
+
+        return ret::A_OK;
+    } 
+
 
 
 };

@@ -330,9 +330,6 @@ int FileManager::IndexFileNew( const std::string& filepath,
         bool reindex = true;
         if(!pFi)
         {
-
-            std::cout << " NEW FILE " << std::endl;
-            std::cout << " file path : " << filepath << std::endl;
             pFi = CreateFileInfo();
             pFi->InitializeFile(filepath);
             reindex = false;
@@ -340,29 +337,22 @@ int FileManager::IndexFileNew( const std::string& filepath,
 
         std::string tp;
         pFi->GetFilepath(tp);
-        std::cout<<"GEt FILEPATH : " << tp << std::endl;
  
         // Chunk File
         status = ChunkFile(pFi);
         if(status != ret::A_OK)
             return status;
 
-        std::cout<<" file chunked ... " << std::endl;
-
         // Compress Chunks
         status = CompressChunks(pFi);
         if(status != ret::A_OK)
             return status;
 
-        std::cout<<" chunks compressed ... " << std::endl;
 
         // Encrypt Chunks
         status = EncryptCompressedChunks(pFi);
         if(status != ret::A_OK)
             return status;
-
-        std::cout<<" chunks encrypted ... " << std::endl;
-
 
         // Shove keys into a sqlite entry (and FileInfo?)
 
@@ -373,96 +363,8 @@ int FileManager::IndexFileNew( const std::string& filepath,
 
         std::string jsontest;
         pFi->GetSerializedChunkData(jsontest);
-        std::cout<<" SERIALIZED DATA : \n"<< jsontest << std::endl;
         pFi->LoadSerializedChunkData(jsontest);
     }
-
-    return status;
-}
-
-
-ret::eCode FileManager::IndexFile( const std::string &filepath, 
-                                   const bool insert,
-                                   FileInfo* pFi)
-{
-    // TODO :: Handle re-indexing, a file was edited, or the temporary folder was deleted
-    std::cout << "Indexing file ... " << std::endl;
-
-    if(!m_MasterKey.IsEmpty())
-        return ret::A_FAIL_INVALID_MASTERKEY;
-
-    ret::eCode status = ret::A_OK;
-    // Create an entry
-    //  Get File info
-    bool reindex = true;
-    if(!pFi)
-    {
-        std::cout << " NEW FILE " << std::endl;
-        pFi = CreateFileInfo();
-        pFi->InitializeFile(filepath);
-        reindex = false;
-    }
-
-    // Compress
-    // Generate Compression filepath
-    std::string comppath;
-
-    GenerateCompressionPath(pFi, comppath);
-
-    status = m_Compressor.CompressFile(filepath, comppath, 1);
-    if(status != ret::A_OK)
-        return status;
-
-    std::cout<< " file compressed " << std::endl;
-
-    // Encrypt
-    // Generate Crypto filepath
-    std::string cryptpath;
-    GenerateCryptoPath(pFi, cryptpath);
-
-    Credentials cred;
-    if(!reindex)
-    {
-        m_MasterKey.GetMasterKeyCredentials(cred);
-
-        // Set random iv
-        std::string iv;
-        m_Crypto.GenerateIv(iv);
-        cred.SetIv(iv);
-        // Generate Credentials
-        //cred = m_Crypto.GenerateCredentials();
-        
-        pFi->SetCredentials(cred);
-    }
-    else
-    {
-        // Use existing Credentials
-        cred = pFi->GetCredentialsCopy();
-    }
-
-    status = m_Crypto.EncryptFile(comppath, cryptpath, cred);
-    if(status != ret::A_OK)
-        return status;
-
-    std::cout<< " file encrypted " << std::endl;
-
-    // Shove keys into a sqlite entry (and FileInfo?)
-
-    // ChunkFile
-    std::string cn;
-    pFi->GetChunkName(cn);
-    std::cout<<" <--------------------- CHUNK NAME : " << cn << std::endl;
-    // Generate Chunk Directory 
-    status = m_Chunker.ChunkFile(pFi, cryptpath, m_TempDirectory);
-    if(status != ret::A_OK)
-        return status;
-
-    std::cout<< " file chunked " << std::endl;
-    // Check if manifest is loaded
-    // Write manifest entry
-
-    if(insert)
-        m_Manifest.InsertFileInfo(pFi);
 
     return status;
 }
@@ -846,7 +748,6 @@ FileInfo* FileManager::GetFileInfo(const std::string &filename)
 
     if(!pFi)
         std::cout<<"INVALID"<<std::endl;
-    std::cout<<"427"<<std::endl;
     if(!pFi->IsValid())
         return NULL;
     return pFi;

@@ -62,11 +62,6 @@ public:
                      const bool insert,
                      FileInfo* pFi = NULL);
 
-  
-    ret::eCode IndexFile( const std::string &filepath, 
-                          const bool insert, 
-                          FileInfo* pFi = NULL);
-
     int RemoveFile(const std::string &filename);
 
     int ConstructFileNew(const std::string& filename);

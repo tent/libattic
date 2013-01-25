@@ -12,6 +12,17 @@ Entity::Entity()
 
 Entity::~Entity()
 {
+    DeleteProfiles();
+}
+
+void Entity::ResetEntity()
+{
+    DeleteProfiles();
+    m_ProfileUrls.clear();
+}
+
+void Entity::DeleteProfiles()
+{
     ProfileList::iterator itr = m_Profiles.begin();
 
     while(itr != m_Profiles.end())
@@ -67,9 +78,9 @@ int Entity::LoadFromFile(const std::string& filepath)
         std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
         */
     
-    std::string loaded(pBuf);                                                                     
+    std::string loaded(pBuf);
     
-    if(pBuf)                                                                                      
+    if(pBuf)
     {                                                                                             
         delete[] pBuf;                                                                            
         pBuf = 0;                                                                                 

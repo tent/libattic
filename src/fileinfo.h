@@ -47,7 +47,7 @@ public:
     void SetIv(const std::string &iv) { memcpy(&m_Credentials.m_Iv, iv.c_str(), m_Credentials.GetIvSize() ); }
 
     void GetFilename(std::string &out) const    { out = m_Filename; }
-    void GetFilepath(std::string &out) const    { out = m_Filepath; std::cout<<" MFILEPATH : " << m_Filepath<< std::endl; }
+    void GetFilepath(std::string &out) const    { out = m_Filepath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
     void GetChunkPostID(std::string &out) const { out = m_ChunkPostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }

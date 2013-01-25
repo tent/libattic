@@ -11,6 +11,7 @@
 
 class Entity : public JsonSerializable
 {
+    void DeleteProfiles();
 public:
     typedef std::vector<Profile*> ProfileList;
     typedef std::vector<std::string> UrlList;
@@ -43,6 +44,8 @@ public:
     bool HasAtticProfile() { if(m_pActiveProfile && m_pActiveProfile->GetAtticInfo()) return true ; return false; }
 
     bool HasAtticProfileMasterKey();
+
+    void ResetEntity();
 
 private:
     ProfileList     m_Profiles;
