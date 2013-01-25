@@ -41,16 +41,26 @@ public:
     void SetChunkPostID(const std::string &szID)    { m_ChunkPostID = szID; }
 
     void SetPostVersion(const std::string& version)      { m_PostVersion = atoi(version.c_str()); }
-    void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; }
+    void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; } // Depricated 
 
-    void SetKey(const std::string &key) { memcpy(&m_Credentials.m_Key, key.c_str(), m_Credentials.GetKeySize() ); }
-    void SetIv(const std::string &iv) { memcpy(&m_Credentials.m_Iv, iv.c_str(), m_Credentials.GetIvSize() ); }
+    void SetEncryptedFileKey(const std::string& key) { m_EncryptedFileKey = key; }
+
+    void SetKey(const std::string &key)  // Depricated
+    { 
+        memcpy(&m_Credentials.m_Key, key.c_str(), m_Credentials.GetKeySize() );
+    }
+
+    void SetIv(const std::string &iv)  // Depricated
+    { 
+        memcpy(&m_Credentials.m_Iv, iv.c_str(), m_Credentials.GetIvSize() ); 
+    }
 
     void GetFilename(std::string &out) const    { out = m_Filename; }
     void GetFilepath(std::string &out) const    { out = m_Filepath; }
     void GetPostID(std::string &out) const      { out = m_PostID; }
     void GetChunkPostID(std::string &out) const { out = m_ChunkPostID; }
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
+    void GetEncryptedFileKey(std::string& out) const { out = m_EncryptedFileKey; }
 
     void GetKey(std::string &out) const { out.append((const char*)m_Credentials.m_Key, m_Credentials.GetKeySize()); }
     void GetIv(std::string &out) const  { out.append((const char*)m_Credentials.m_Iv, m_Credentials.GetIvSize()); }
@@ -69,11 +79,10 @@ public:
     bool LoadSerializedChunkData(const std::string& data);
 
 private:    
-    //std::vector<std::string>    m_ChunkPosts;
-
     ChunkMap       m_Chunks;
-    //std::vector<ChunkInfo*>     m_Chunks;
-    Credentials     m_Credentials;
+    Credentials     m_Credentials; // File Specific credentials
+
+    std::string     m_EncryptedFileKey;  // Key used to encrypt file, itself encrypted via master key
 
     std::string     m_Filename;   // File within directory
     std::string     m_Filepath;   // Directory

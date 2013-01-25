@@ -1,7 +1,7 @@
 
 #include "crypto.h"
 
-#include <iostream>
+//#include <iostream>
 #include <fstream>
 
 #include <hex.h>         
@@ -97,10 +97,6 @@ int Crypto::EncryptString( const std::string& data,
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
-        std::cout<< "Using key : " << cred.m_Key << std::endl;
-        std::cout<< "Using iv : " << cred.m_Iv << std::endl;
-
-
         CryptoPP::StringSource( data,
                                 true,
                                 new CryptoPP::AuthenticatedEncryptionFilter( e,
@@ -111,16 +107,10 @@ int Crypto::EncryptString( const std::string& data,
 
        // Write out cipher to ofstream
        out = cipher;
-       /*
-       std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
-       std::cout << " KEY : " << cred.m_Key << std::endl;
-       std::cout << " IV : " << cred.m_Iv << std::endl;
-       */
-
     }
     catch (CryptoPP::Exception &e)
     {
-            std::cerr << e.what() << "\n";
+            //std::cerr << e.what() << "\n";
             return ret::A_FAIL_ENCRYPT;
     }
 
@@ -135,10 +125,6 @@ int Crypto::DecryptString( const std::string& cipher,
     {                                                                                       
         CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
         d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
-
-        std::cout<< "Decrypting Using key : " << cred.m_Key << std::endl;
-        std::cout<< "Decrypting Using iv : " << cred.m_Iv << std::endl;
-
 
         // Recovered Plain Data                                                             
         std::string rpdata;                                                                 
@@ -164,7 +150,7 @@ int Crypto::DecryptString( const std::string& cipher,
     }
     catch (CryptoPP::Exception &e)                               
     {                                                            
-        std::cerr << e.what() << "\n";                           
+        //std::cerr << e.what() << "\n";                           
         return ret::A_FAIL_DECRYPT;
     }                                                            
 
@@ -204,7 +190,7 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
 
         if(!EncryptData(pBuffer, readCount, cred, ofs))
         {
-            std::cerr<<"FAILED TO ENCRYPT DATA\n";
+            //std::cerr<<"FAILED TO ENCRYPT DATA\n";
             ifs.close();
             ofs.close();
             if(pBuffer)
@@ -216,7 +202,6 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
         }
         totalread += readCount;
     }
-    std::cout<<"TOTAL READ : " << totalread << std::endl;
 
     if(pBuffer)
     {
@@ -262,9 +247,6 @@ bool Crypto::EncryptData( const char* pData,
 
        // Write out cipher to ofstream
        ofs.write(cipher.c_str(), cipher.size());
-       std::cout<< "CIPHER SIZE : " << cipher.size() << std::endl;
-       std::cout << " KEY : " << cred.m_Key << std::endl;
-       std::cout << " IV : " << cred.m_Iv << std::endl;
 
        /*
        std::string holdkey;
@@ -276,7 +258,7 @@ bool Crypto::EncryptData( const char* pData,
     }
     catch (CryptoPP::Exception &e)
     {
-            std::cerr << e.what() << "\n";
+            //std::cerr << e.what() << "\n";
             return false;
     }
 
@@ -315,7 +297,7 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
         // call decrypt data to write out to file (pass output stream)
         if(!DecryptData(pBuffer, readCount, cred, ofs))
         {
-            std::cerr<<"FAILED TO DECRYPT DATA\n";
+            //std::cerr<<"FAILED TO DECRYPT DATA\n";
             ifs.close();
             ofs.close();
             if(pBuffer)
@@ -388,7 +370,7 @@ bool Crypto::DecryptData( const char* pData,
     }
     catch (CryptoPP::Exception &e)                               
     {                                                            
-        std::cerr << e.what() << "\n";                           
+        //std::cerr << e.what() << "\n";                           
         return false;
     }                                                            
 

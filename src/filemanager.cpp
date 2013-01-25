@@ -248,10 +248,27 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
 
     if(pFi)
     {
-        // Generate Credentials
+        std::cout<<" HERE ITS BROKEN HERE FIX ME" << std::endl;
+        return 100; 
+        // Get Master Key Credentials
+        Credentials masterCred;
+        m_MasterKey.GetMasterKeyCredentials(masterCred);
+
+        std::string fileKey;
+        pFi->GetEncryptedFileKey(fileKey);
+
         Credentials cred;
-        m_MasterKey.GetMasterKeyCredentials(cred);
-        
+        if(fileKey.empty())
+        {
+            // Generate Credentials
+
+        }
+        else
+        {
+            // Decrypt and set as key
+        }
+
+
         FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
         FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
@@ -289,6 +306,7 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
             std::string encpath;
             GenerateEncryptionPath(chunkname, encpath);
 
+             
             status = m_Crypto.EncryptFile(comppath, encpath, cred);
 
             if(status != ret::A_OK)

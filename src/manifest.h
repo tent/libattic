@@ -76,6 +76,7 @@ public:
 
     bool CreateEmptyManifest();
 
+    // File Info
     bool InsertFileInfo(FileInfo* fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
     bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
