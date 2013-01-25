@@ -24,8 +24,8 @@ public:
     int SetIv(const std::string& iv); 
 
     // TODO :: make this private
-    byte m_Key[CryptoPP::AES::MAX_KEYLENGTH];
-    byte m_Iv[CryptoPP::AES::BLOCKSIZE]; // TODO :: this is probably going to be removed in the future.
+    byte m_Key[CryptoPP::AES::MAX_KEYLENGTH+1];
+    byte m_Iv[CryptoPP::AES::BLOCKSIZE+1]; // TODO :: this is probably going to be removed in the future.
 };
 
 

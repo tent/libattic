@@ -26,11 +26,6 @@ class Crypto
                       const Credentials &cred, 
                       std::ofstream &ofs);
 
-    bool ScryptEncode( const std::string &input, 
-                       const std::string &salt,
-                       std::string &out, 
-                       unsigned int size);
-
 
 public:
     Crypto(unsigned int uStride = 400000);
@@ -72,7 +67,12 @@ public:
     bool GenerateHash( const std::string& source, 
                        std::string& hashOut);
   
-    
+    bool ScryptEncode( const std::string &input, 
+                       const std::string &salt,
+                       std::string &out, 
+                       unsigned int size);
+
+   
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation
     unsigned int                    m_Stride; // Size of stride used when encrypting

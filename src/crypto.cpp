@@ -97,6 +97,10 @@ int Crypto::EncryptString( const std::string& data,
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
+        std::cout<< "Using key : " << cred.m_Key << std::endl;
+        std::cout<< "Using iv : " << cred.m_Iv << std::endl;
+
+
         CryptoPP::StringSource( data,
                                 true,
                                 new CryptoPP::AuthenticatedEncryptionFilter( e,
@@ -131,6 +135,10 @@ int Crypto::DecryptString( const std::string& cipher,
     {                                                                                       
         CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
         d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+
+        std::cout<< "Decrypting Using key : " << cred.m_Key << std::endl;
+        std::cout<< "Decrypting Using iv : " << cred.m_Iv << std::endl;
+
 
         // Recovered Plain Data                                                             
         std::string rpdata;                                                                 
@@ -416,13 +424,20 @@ int Crypto::GenerateKeyFromPassphrase( const std::string& pass,
 
     if(status == ret::A_OK)
     {
+        std::cout<< " Incoming salt : " << salt << std::endl;
+        std::cout<< " salt size : " << salt.size() << std::endl;
+
         ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH);
         //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
 
         // Copy into credentials // Char to to byte (unsigned char) conversion
         // just allow it.
+        std::cout<<" Out key size : " << outKey.size() << std::endl;
+        std::cout<< " block size : " << CryptoPP::AES::BLOCKSIZE << std::endl;
         memcpy(out.m_Key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
-        //memcpy(out.iv, outIv.c_str(), CryptoPP::AES::BLOCKSIZE);
+        memcpy(out.m_Iv, salt.c_str(), salt.size());
+
+        std::cout<<" salt size after : " << salt.size() << std::endl;
 
         std::cout << "Cred key : \n" << out.m_Key << std::endl;
         //std::cout << "Cred iv : \n" << out.iv << std::endl;
@@ -455,13 +470,21 @@ bool Crypto::ScryptEncode( const std::string &input,
     char* pData = new char[size];
     memcpy(pData, input.c_str(), size);
 
+    std::cout<< " SIZE : " << size << std::endl;
+    std::cout<< " INPUT SIZE : " << input.size() << std::endl;
+    
+    byte* pInput = new byte[input.size()];
+    memcpy(pInput, reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
  //   std::cout<< "Data Buffer : \n" << pData << std::endl;
 
-    uint8_t* buf = reinterpret_cast<uint8_t*>(pData);
+    //uint8_t* buf = reinterpret_cast<uint8_t*>(pData);
 
-    std::cout << crypto_scrypt( (uint8_t*)input.c_str(),
+    byte* pSalt = new byte[salt.size()];
+    memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
+
+    std::cout << crypto_scrypt( pInput,
                                 input.size(),
-                                (uint8_t*)salt.c_str(),
+                                pSalt,
                                 salt.size(),
                                 N,
                                 r,

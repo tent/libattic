@@ -3,7 +3,8 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-
+#include <cbase64.h>
+ 
 #include "utils.h"
 #include "chunker.h"
 #include "manifest.h"
@@ -47,7 +48,7 @@ TEST(TEST, NUKE)
 }
 /*
 */
-/*
+
 void PULLALL(int a, void* b)
 {
     std::cout<<" PULL ALL CALLBACK HIT BRAH : " << a << std::endl;
@@ -109,6 +110,7 @@ TEST(NEWINDEX, AFILE)
 /*
 */
 
+/*
 
 TEST(REGISTER, PASSPHRASE)
 {
@@ -120,7 +122,6 @@ TEST(REGISTER, PASSPHRASE)
 
     EnterPassphrase("password");
 
-/*
     {
         std::cout<<" REGISTERING PASSPHRASE " << std::endl;
         status = RegisterPassphrase("password", true);
@@ -134,12 +135,13 @@ TEST(REGISTER, PASSPHRASE)
            std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
         }
     }
+
  
-*/    
 
   ShutdownLibAttic();
-
 }
+
+    */
 /*
 */
 
@@ -512,7 +514,8 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
+ /*
+
 
 
 static void FOOFUN(int a, void* b)
@@ -534,9 +537,9 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
         status = PushFile("./data/oa5.pdf", &FOOFUN);
-        status = PushFile("./data/ogli.pdf", &FOOFUN);
-        status = PushFile("./data/rm2.pdf", &FOOFUN);
-    }
+        status = PushFile("./data/oa6.pdf", &FOOFUN);
+        status = PushFile("./data/oa7.pdf", &FOOFUN);
+        }
     else
     {
         std::cout<<"Enter passphrase fail " << std::endl;
@@ -1001,15 +1004,11 @@ int crypto_scrypt( const uint8_t *,
                    uint8_t *, 
                    size_t);
 }
+/*
+*/
 
-TEST(SCRYPT, ENCRYPT)
-{
-    Crypto cp;
-    Credentials cred;
-    cp.GenerateKeyIvFromPassphrase( "manuel",
-                                    "passwordhuh",
-                                    cred);
-}
+
+
 /*
 */
 /*
@@ -1195,6 +1194,111 @@ TEST(COMPRESS, ENCRYPT)
     */
 
     // TODO :: De-Chunk a file
+
+// REAL TESTS
+TEST(SCRYPT, ENTER_PASSPHRASE)
+{
+    
+    Crypto cp;
+    Credentials cred, cred1;
+
+    std::string pw("password");
+    std::string iv;
+    cp.GenerateSalt(iv); 
+
+/*
+    std::cout<< " Original Pass : " << pw << std::endl;
+    std::cout<< " Original iv : " << iv << std::endl;
+    std::cout<< " IV size : " << iv.size() << std::endl;
+    */
+
+    int status = cp.GenerateKeyFromPassphrase( pw,
+                                               iv,
+                                               cred);
+    
+    ASSERT_EQ(status, 0);
+/*
+    std::cout<<" key 0 : " << cred.m_Key << std::endl;
+    std::cout<<" iv 0 : " << cred.m_Iv << std::endl;
+    std::cout<<" strlen : " << strlen(reinterpret_cast<const char*>(cred.m_Iv )) << std::endl;
+
+    std::string hexkey0 = cb64::base64_encode(cred.m_Key, cred.GetKeySize());
+    std::string hexiv0 = cb64::base64_encode(cred.m_Iv, cred.GetIvSize());
+
+    std::cout<< " hex key 0 : " << hexkey0 << std::endl;
+    std::cout<< " hex iv 0 : " << hexiv0 << std::endl;
+*/
+
+    status = cp.GenerateKeyFromPassphrase( pw ,
+                                  iv,
+                                  cred1);
+
+    ASSERT_EQ(status, 0);
+/*
+    std::cout<<" key 1 : " << cred1.m_Key << std::endl;
+    std::cout<<" iv 1 : " << std::string(reinterpret_cast<const char*>(cred1.m_Iv)) << std::endl;
+    std::cout<<" strlen : " << strlen(reinterpret_cast<const char*>(cred1.m_Iv )) << std::endl;
+
+    std::string hexkey1 = cb64::base64_encode(cred1.m_Key, cred1.GetKeySize());
+    std::string hexiv1 = cb64::base64_encode(cred1.m_Iv, cred1.GetIvSize());
+
+    std::cout<< " hex key 1 : " << hexkey1 << std::endl;
+    std::cout<< " hex iv 1 : " << hexiv1 << std::endl;
+*/
+
+    int res =  strcmp(reinterpret_cast<const char*>(cred.m_Key), reinterpret_cast<const char*>(cred1.m_Key));
+    ASSERT_EQ(res, 0); 
+
+    res =  strcmp(reinterpret_cast<const char*>(cred.m_Iv), reinterpret_cast<const char*>(cred1.m_Iv));
+    ASSERT_EQ(res, 0);
+}
+
+TEST(SCRYPT, ENCODE)
+{
+    std::string input("thisistestinput");
+    std::string iv;
+
+    Crypto cp;
+    cp.GenerateSalt(iv); 
+
+/*
+    std::cout<< " Input : " << input << std::endl;
+    std::cout<< " Iv : " << iv << std::endl;
+    */
+
+    std::string out, out1;
+    cp.ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
+
+    cp.ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
+
+/*
+    std::cout<< "Output 0 : " << out << std::endl;
+    std::cout<< "Output 1 : " << out1 << std::endl;
+*/
+
+    int res =  strcmp(out.c_str(), out1.c_str());
+    ASSERT_EQ(res, 0);
+}
+
+TEST(REINTERPREST, CAST)
+{
+    byte bkey[CryptoPP::AES::MAX_KEYLENGTH];
+    byte bkey1[CryptoPP::AES::MAX_KEYLENGTH];
+    
+    std::string key("whatkjdfjsdkajfsk");
+
+    memcpy(bkey, reinterpret_cast<const unsigned char*>(key.c_str()), CryptoPP::AES::MAX_KEYLENGTH);
+    memcpy(bkey1, reinterpret_cast<const unsigned char*>(key.c_str()), CryptoPP::AES::MAX_KEYLENGTH);
+
+/*
+    std::cout<< " Byte key : " << bkey << std::endl;
+    std::cout<< " Byte key 1 : " << bkey1 << std::endl;
+*/
+
+    int res =  strcmp(reinterpret_cast<const char*>(bkey), reinterpret_cast<const char*>(bkey1));
+    ASSERT_EQ(res, 0);
+}
+
 int main (int argc, char* argv[])
 {
     // Init gtestframework
