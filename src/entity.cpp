@@ -32,7 +32,7 @@ Entity::~Entity()
 int Entity::WriteToFile(const std::string& filepath)
 {
     std::ofstream ofs;
-    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary | std::ios::trunc);
 
     if(!ofs.is_open())
         return ret::A_FAIL_OPEN;

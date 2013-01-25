@@ -31,7 +31,6 @@
 #include "threading.h"
 
 #include "rollsum.h"
-
 /*
 TEST(TEST, NUKE)
 {
@@ -40,7 +39,7 @@ TEST(TEST, NUKE)
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    EnterPassphrase("password");
+//    EnterPassphrase("password");
  
     //DeleteAllPosts();
 
@@ -48,6 +47,7 @@ TEST(TEST, NUKE)
 }
 /*
 */
+
 
 void PULLALL(int a, void* b)
 {
@@ -514,10 +514,8 @@ TEST(PULL, AFILE)
 
 /*
  */
- /*
 
-
-
+/*
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -537,9 +535,9 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
         status = PushFile("./data/oa5.pdf", &FOOFUN);
-        status = PushFile("./data/oa6.pdf", &FOOFUN);
-        status = PushFile("./data/oa7.pdf", &FOOFUN);
-        }
+    //    status = PushFile("./data/oa6.pdf", &FOOFUN);
+    //    status = PushFile("./data/oa7.pdf", &FOOFUN);
+    }
     else
     {
         std::cout<<"Enter passphrase fail " << std::endl;

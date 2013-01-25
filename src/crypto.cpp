@@ -463,21 +463,14 @@ bool Crypto::ScryptEncode( const std::string &input,
 
     //uint8_t dk[64]; // Derived key
     uint8_t dk[size]; // Derived key
-    
-//    std::cout<< " INPUT : " << input << std::endl;
-//    std::cout<< " SIZE : " << size << std::endl;
 
-    char* pData = new char[size];
-    memcpy(pData, input.c_str(), size);
-
+   /* 
     std::cout<< " SIZE : " << size << std::endl;
     std::cout<< " INPUT SIZE : " << input.size() << std::endl;
+    */
     
     byte* pInput = new byte[input.size()];
     memcpy(pInput, reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
- //   std::cout<< "Data Buffer : \n" << pData << std::endl;
-
-    //uint8_t* buf = reinterpret_cast<uint8_t*>(pData);
 
     byte* pSalt = new byte[salt.size()];
     memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
@@ -507,10 +500,16 @@ bool Crypto::ScryptEncode( const std::string &input,
     
     out.append( reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
 
-    if(pData)
+    if(pInput)
     {
-        delete pData;
+        delete pInput;
         pData = NULL;
+    }
+
+    if(pSalt)
+    {
+        delete pSalt;
+        pSalt = NULL;
     }
 
     return true;

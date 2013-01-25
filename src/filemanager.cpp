@@ -191,6 +191,9 @@ int FileManager::ChunkFile(FileInfo* pFi)
         std::string filepath;
         pFi->GetFilepath(filepath);
 
+
+        std::cout<<" CHunkFile Filepath : " << filepath << std::endl;
+
         // Generate Chunk Directory 
         status = m_Chunker.ChunkFile(pFi, filepath, m_TempDirectory);
     }
@@ -315,8 +318,10 @@ int FileManager::IndexFileNew( const std::string& filepath,
     int status = ret::A_OK;
 
     if(!m_MasterKey.IsEmpty())
+    {
         status = ret::A_FAIL_INVALID_MASTERKEY;
-      std::cout<< " file chunked " << std::endl;
+        std::cout<<" EMPTY master key ... " <<std::endl;
+    }
    
     if(status == ret::A_OK)
     {
@@ -325,26 +330,38 @@ int FileManager::IndexFileNew( const std::string& filepath,
         bool reindex = true;
         if(!pFi)
         {
+
             std::cout << " NEW FILE " << std::endl;
+            std::cout << " file path : " << filepath << std::endl;
             pFi = CreateFileInfo();
             pFi->InitializeFile(filepath);
             reindex = false;
         }
+
+        std::string tp;
+        pFi->GetFilepath(tp);
+        std::cout<<"GEt FILEPATH : " << tp << std::endl;
  
         // Chunk File
         status = ChunkFile(pFi);
         if(status != ret::A_OK)
             return status;
 
+        std::cout<<" file chunked ... " << std::endl;
+
         // Compress Chunks
         status = CompressChunks(pFi);
         if(status != ret::A_OK)
             return status;
 
+        std::cout<<" chunks compressed ... " << std::endl;
+
         // Encrypt Chunks
         status = EncryptCompressedChunks(pFi);
         if(status != ret::A_OK)
             return status;
+
+        std::cout<<" chunks encrypted ... " << std::endl;
 
 
         // Shove keys into a sqlite entry (and FileInfo?)
@@ -353,7 +370,6 @@ int FileManager::IndexFileNew( const std::string& filepath,
         // Write manifest entry
         if(insert)
             m_Manifest.InsertFileInfo(pFi);
-
 
         std::string jsontest;
         pFi->GetSerializedChunkData(jsontest);

@@ -47,6 +47,7 @@ PushTask::~PushTask()
 
 void PushTask::RunTask()
 {
+    std::cout<<" TASK IS RUNNING " << std::endl;
     // Run the task
     std::string filepath;
     GetFilepath(filepath);
@@ -85,7 +86,11 @@ int PushTask::PushFile(const std::string& filepath)
         GetFileManager()->Unlock();
 
         if(status != ret::A_OK)
+        {
+            std::cout<<" failed to index : " << status << std::endl;
+            std::cout<<" filepath : " << filepath << std::endl;
             return status;
+        }
 
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         fi = GetFileManager()->GetFileInfo(filename);
@@ -243,6 +248,9 @@ int PushTask::SendChunkPost( FileInfo* fi,
     {
         status = ret::A_FAIL_NON_200;
     }
+
+    std::cout<< " RESPONSE : " << response.code << std::endl;
+    std::cout<< " BODY : " << response.body << std::endl;
 
     return status;
 }

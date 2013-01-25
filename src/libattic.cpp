@@ -173,7 +173,6 @@ int InitLibAttic( const char* szWorkingDirectory,
         std::cout<<"Load Phrase FAILED : " << status << std::endl;
     }
 
-/*
     status = LoadMasterKey();
     if(status != ret::A_OK)
     {
@@ -184,7 +183,7 @@ int InitLibAttic( const char* szWorkingDirectory,
         status = SetFileManagerMasterKey();
     }
 
-    */
+    
     return status;
 }
 
@@ -1166,9 +1165,14 @@ void GetEntityFilepath(std::string& out)
 
 int LoadEntity(bool override)
 {
+
+    std::cout<<" loading entity " << std::endl;
     std::string entpath;
     GetEntityFilepath(entpath);
+    std::cout<<" entity filepath " << entpath << std::endl;
     int status = g_Entity.LoadFromFile(entpath);
+
+    std::cout<<"LOAD ENTITY FROM FILE STATUS : " << status << std::endl;
  
     if(status != ret::A_OK || override)
     {
