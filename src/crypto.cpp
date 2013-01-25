@@ -288,11 +288,7 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
                                 const Credentials &cred)
 {
 
-    std::cout << " KEY : " << reinterpret_cast<const char*>(cred.m_Key) << std::endl;
-    std::cout << " IV : " << reinterpret_cast<const char*>(cred.m_Iv) << std::endl;
-
     // szFilePath, is the path to the encrypted data.
-
     // create ifstream (read in)
     std::ifstream ifs;
     ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
@@ -421,26 +417,12 @@ int Crypto::GenerateKeyFromPassphrase( const std::string& pass,
 
     // Check salt for size and correctness
     status = CheckSalt(salt);
-
     if(status == ret::A_OK)
     {
-        std::cout<< " Incoming salt : " << salt << std::endl;
-        std::cout<< " salt size : " << salt.size() << std::endl;
-
         ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH);
         //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
-
-        // Copy into credentials // Char to to byte (unsigned char) conversion
-        // just allow it.
-        std::cout<<" Out key size : " << outKey.size() << std::endl;
-        std::cout<< " block size : " << CryptoPP::AES::BLOCKSIZE << std::endl;
         memcpy(out.m_Key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
         memcpy(out.m_Iv, salt.c_str(), salt.size());
-
-        std::cout<<" salt size after : " << salt.size() << std::endl;
-
-        std::cout << "Cred key : \n" << out.m_Key << std::endl;
-        //std::cout << "Cred iv : \n" << out.iv << std::endl;
     }
 
     return status;
@@ -475,7 +457,7 @@ bool Crypto::ScryptEncode( const std::string &input,
     byte* pSalt = new byte[salt.size()];
     memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
 
-    std::cout << crypto_scrypt( pInput,
+    /*std::cout << */crypto_scrypt( pInput,
                                 input.size(),
                                 pSalt,
                                 salt.size(),
@@ -483,7 +465,7 @@ bool Crypto::ScryptEncode( const std::string &input,
                                 r,
                                 p,
                                 dk,
-                                size) << std::endl;
+                                size); /*<< std::endl;*/
     
 
     /*
@@ -503,7 +485,7 @@ bool Crypto::ScryptEncode( const std::string &input,
     if(pInput)
     {
         delete pInput;
-        pData = NULL;
+        pInput = NULL;
     }
 
     if(pSalt)
