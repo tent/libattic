@@ -65,7 +65,6 @@ public:
     int RemoveFile(const std::string &filename);
 
     int ConstructFileNew(const std::string& filename);
-    ret::eCode ConstructFile(std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
     bool FileExists(std::string& filepath);               // File exists on disc
