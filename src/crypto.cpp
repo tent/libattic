@@ -96,16 +96,13 @@ int Crypto::EncryptStringCFB( const std::string& data,
         CryptoPP::StringSource( data,  // Plaintext
                                 true, 
                                 new CryptoPP::StreamTransformationFilter( e,
-                                    new CryptoPP::StringSink(cipher)
+                                    new CryptoPP::StringSink(out)
                                 ) // StreamTransformationFilter      
                     ); // StringSource
-
-       // Write out cipher to ofstream
-       out = cipher;
     }
     catch (CryptoPP::Exception &e)
     {
-        return ret::A_FAIL_ENCRYPT;
+        status = ret::A_FAIL_ENCRYPT;
     }
 
     return status;

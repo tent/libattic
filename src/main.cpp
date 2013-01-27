@@ -1125,6 +1125,22 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.IvEmpty(), false);
 }
 
+TEST(CRYPTO, ENCRYPTIONCFB)
+{
+    Crypto cp;
+    Credentials cred = cp.GenerateCredentials();
+
+    std::string plaintext("this is my plain text");
+
+    std::string cyphertext;
+    cp.EncryptStringCFB(plaintext, cred, cyphertext);
+
+    std::string decryptedtext;
+    cp.DecryptStringCFB(cyphertext, cred, decryptedtext);
+
+    ASSERT_EQ(plaintext, decryptedtext);
+}
+
 TEST(CRYPTO, CREDENCRYPTION)
 {
     Crypto cp;
@@ -1134,15 +1150,12 @@ TEST(CRYPTO, CREDENCRYPTION)
     std::string iv;
     cp.GenerateSalt(iv);
 
-
-    std::cout<<" HERE " << std::endl;
     // Genterate key from passphrase
     int status = cp.GenerateKeyFromPassphrase( phrase,
                                                iv,
                                                masterkey);
     ASSERT_EQ(status, 0);
 
-    std::cout<<" HERE " << std::endl;
     Credentials cred; // Credentials to encrypt
     cred = cp.GenerateCredentials();
 
