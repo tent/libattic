@@ -108,7 +108,7 @@ int Crypto::EncryptStringCFB( const std::string& data,
     return status;
 }
 
-int Crypto::DecryptStringCFB( const std::string& data,
+int Crypto::DecryptStringCFB( const std::string& cipher,
                               const Credentials& cred,
                               std::string& out)
 {
@@ -119,7 +119,7 @@ int Crypto::DecryptStringCFB( const std::string& data,
         CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption d;        
         d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
-        CryptoPP::StringSource( data, 
+        CryptoPP::StringSource( cipher, 
                                 true, 
                                 new CryptoPP::StreamTransformationFilter( d,
                                     new CryptoPP::StringSink( out )
@@ -134,40 +134,35 @@ int Crypto::DecryptStringCFB( const std::string& data,
     return status;
 }
 
-int Crypto::EncryptString( const std::string& data,
-                           const Credentials& cred,
-                           std::string& out)
+int Crypto::EncryptStringGCM( const std::string& data,
+                              const Credentials& cred,
+                              std::string& out)
 {
+    int status = ret::A_OK;
     try
     {
-        std::string cipher;
-
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
         e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
 
         CryptoPP::StringSource( data,
                                 true,
                                 new CryptoPP::AuthenticatedEncryptionFilter( e,
-                                new CryptoPP::StringSink(cipher),
+                                new CryptoPP::StringSink(out),
                                 false,
                                 TAG_SIZE)
                               );
-
-       // Write out cipher to ofstream
-       out = cipher;
     }
     catch (CryptoPP::Exception &e)
     {
-            //std::cerr << e.what() << "\n";
-            return ret::A_FAIL_ENCRYPT;
+        status = ret::A_FAIL_ENCRYPT;
     }
 
-    return ret::A_OK;
+    return status;
 }
 
-int Crypto::DecryptString( const std::string& cipher,
-                           const Credentials& cred,
-                           std::string& out)
+int Crypto::DecryptStringGCM( const std::string& cipher,
+                              const Credentials& cred,
+                              std::string& out)
 {
     try                                                                                 
     {                                                                                       
@@ -238,7 +233,6 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
 
         if(!EncryptData(pBuffer, readCount, cred, ofs))
         {
-            //std::cerr<<"FAILED TO ENCRYPT DATA\n";
             ifs.close();
             ofs.close();
             if(pBuffer)
@@ -265,6 +259,7 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
     return ret::A_OK;
 }
 
+// Depricated
 bool Crypto::EncryptData( const char* pData, 
                           unsigned int size, 
                           const Credentials& cred, 
@@ -313,6 +308,7 @@ bool Crypto::EncryptData( const char* pData,
     return true;
 }
 
+// Depricated
 ret::eCode Crypto::DecryptFile( const std::string &szFilePath, 
                                 const std::string &szOutputPath, 
                                 const Credentials &cred)

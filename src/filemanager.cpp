@@ -275,7 +275,7 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
 
             std::cout<<" cred status set key : "<< status << std::endl;
 
-            status = m_Crypto.EncryptString(fKey, encCred, encKey);
+            status = m_Crypto.EncryptStringCFB(fKey, encCred, encKey);
  
             // Set Credentials
             pFi->SetEncryptedKey(encKey); // ENCRYPTED key
@@ -299,7 +299,7 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
             encCred.SetIv(fIv);
 
             std::string decKey;
-            status = m_Crypto.DecryptString(fKey, encCred, decKey);
+            status = m_Crypto.DecryptStringCFB(fKey, encCred, decKey);
 
             std::cout<<" STATUS : " << status << std::endl;
 
@@ -567,7 +567,7 @@ int FileManager::DecryptChunks(FileInfo* pFi)
         cred.SetIv(fileIv);
 
         std::string fileKey;
-        status = m_Crypto.DecryptString(encKey, cred, fileKey);
+        status = m_Crypto.DecryptStringCFB(encKey, cred, fileKey);
 
         std::cout<<" STATUS : " << status << std::endl;
         std::cout<<" FILE KEY : " << fileKey << std::endl;

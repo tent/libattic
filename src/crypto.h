@@ -13,14 +13,18 @@
 #include "errorcodes.h"
 #include "credentials.h"
 
+// TODO :: remove depricated methods
+
 class Crypto
 {
                       
+    // Depricated
     bool EncryptData( const char* pData, 
                       unsigned int size, 
                       const Credentials &cred, 
                       std::ofstream &ofs);
 
+    // Depricated
     bool DecryptData( const char* pData, 
                       unsigned int size, 
                       const Credentials &cred, 
@@ -48,17 +52,17 @@ public:
                           const Credentials& cred,
                           std::string& out);
 
-    int DecryptStringCFB( const std::string& data,
+    int DecryptStringCFB( const std::string& cipher,
                           const Credentials& cred,
                           std::string& out);
 
-    int EncryptString( const std::string& data,
-                       const Credentials& cred,
-                       std::string& out);
+    int EncryptStringGCM( const std::string& data,
+                          const Credentials& cred,
+                          std::string& out);
 
-    int DecryptString( const std::string& cipher,
-                       const Credentials& cred,
-                       std::string& out);
+    int DecryptStringGCM( const std::string& cipher,
+                          const Credentials& cred,
+                          std::string& out);
 
 
     unsigned int GetStride() { return m_Stride; }

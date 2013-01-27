@@ -1141,7 +1141,7 @@ TEST(CRYPTO, ENCRYPTIONCFB)
     ASSERT_EQ(plaintext, decryptedtext);
 }
 
-TEST(CRYPTO, CREDENCRYPTION)
+TEST(CRYPTO, CREDENCRYPTIONGCM)
 {
     Crypto cp;
     Credentials masterkey;
@@ -1174,7 +1174,7 @@ TEST(CRYPTO, CREDENCRYPTION)
     intercred.SetIv(fileiv);
 
     std::string enckey;
-    status = cp.EncryptString(key, intercred, enckey);
+    status = cp.EncryptStringGCM(key, intercred, enckey);
     ASSERT_EQ(status, 0);
 
     // Generate key again for good measure
@@ -1192,7 +1192,7 @@ TEST(CRYPTO, CREDENCRYPTION)
     intercred1.SetIv(fileiv);
 
     std::string deckey;
-    status = cp.DecryptString(enckey, intercred1, deckey);
+    status = cp.DecryptStringGCM(enckey, intercred1, deckey);
     ASSERT_EQ(status, 0);
 
     ASSERT_EQ(key, deckey);
