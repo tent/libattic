@@ -21,6 +21,8 @@ public:
     void AtticPostSetFilepath(const std::string &path) { m_Path = path; }            
     void AtticPostSetMIME(const std::string &type) { m_MimeType = type; }
     void AtticPostSetSize(const int size) { m_Size = size; }                         
+    void AtticPostSetKeyData(const std::string& data) { m_KeyData = data; }
+    void AtticPostSetIvData(const std::string& data) { m_IvData = data; }
 
     void PushBackChunkPostId(const std::string& postId) { m_ChunkPosts.push_back(postId); }
     void PushBackChunkIdentifier(const std::string& id) { m_ChunkIds.push_back(id); }
@@ -33,6 +35,8 @@ private:
     std::string m_Name; // Name of file
     std::string m_Path; // Relative file path within attic folder 
     std::string m_MimeType; // MIME Type (optional, if applicable)
+    std::string m_KeyData;
+    std::string m_IvData;
     int m_Size; // Size of file, TODO:: checksum 
 };
 

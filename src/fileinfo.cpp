@@ -133,4 +133,10 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
     return true;
 }
 
+bool FileInfo::HasEncryptedKey()
+{
+    if(m_EncryptedKey.empty())
+        return false;
+    return true;
+}
 

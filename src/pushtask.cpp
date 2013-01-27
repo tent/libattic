@@ -366,6 +366,10 @@ int PushTask::SendAtticPost( FileInfo* fi,
     }
     else
     {
+        std::cout<<" HANDLING FAILED RESPONSE : " << response.code << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
+
+
         status = ret::A_FAIL_NON_200;
     }
 
@@ -373,11 +377,11 @@ int PushTask::SendAtticPost( FileInfo* fi,
 }
 
 int PushTask::InitAtticPost( AtticPost& post,
-                               bool pub,
-                               const std::string& filepath,
-                               const std::string& filename, 
-                               unsigned int size,
-                               FileInfo::ChunkMap* pList)
+                             bool pub,
+                             const std::string& filepath,
+                             const std::string& filename, 
+                             unsigned int size,
+                             FileInfo::ChunkMap* pList)
 {
     int status = ret::A_OK;
 
@@ -401,13 +405,20 @@ int PushTask::InitAtticPost( AtticPost& post,
         }
 
         FileManager* fm = GetFileManager();
-        while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
+        fm->Lock(); 
         FileInfo* fi = fm->GetFileInfo(filename);
         fm->Unlock();
 
         std::string chunkpostid;
         if(fi)
         {
+            std::string encKey, iv;
+            fi->GetEncryptedKey(encKey);
+            fi->GetIv(iv);
+
+            post.AtticPostSetKeyData(encKey);
+            post.AtticPostSetIvData(iv);
+
             fi->GetChunkPostID(chunkpostid);
             post.PushBackChunkPostId(chunkpostid);
         }

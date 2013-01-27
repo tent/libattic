@@ -33,15 +33,14 @@ void AtticPost::Serialize(Json::Value& root)
     JsonSerializer::SerializeJsonValue(chunkposts, chunkval);
     SetContent("chunk_posts", chunkval);
 
-    //root["chunk_posts"] = chunkposts;
-
     Json::Value chunkids;
     JsonSerializer::SerializeVector(chunkids, m_ChunkIds);
     std::string idval;
     JsonSerializer::SerializeJsonValue(chunkids, idval);
     SetContent("chunk_ids", idval);
 
-    //root["chunk_ids"] = chunkids;
+    SetContent("kdata", m_KeyData);
+    SetContent("vdata", m_IvData);
 
     Post::Serialize(root);
 }
@@ -69,6 +68,9 @@ void AtticPost::Deserialize(Json::Value& root)
 
     JsonSerializer::DeserializeIntoVector(cp, m_ChunkPosts);
     JsonSerializer::DeserializeIntoVector(ci, m_ChunkIds);
+
+    GetContent("kdata", m_KeyData);
+    GetContent("vdata", m_IvData);
 }
 
 

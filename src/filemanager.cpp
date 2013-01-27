@@ -82,14 +82,14 @@ bool FileManager::ReadInEntry(std::string &e)
         return false;
 
     FileInfo* pFi = CreateFileInfo ( split[0],
-                                    split[1],
-                                    split[2],
-                                    split[3],
-                                    split[4],
-                                    split[5],
-                                    split[6],
-                                    split[7],
-                                    split[8]);
+                                     split[1],
+                                     split[2],
+                                     split[3],
+                                     split[4],
+                                     split[5],
+                                     split[6],
+                                     split[7],
+                                     split[8]);
 
     
     m_Manifest.InsertFileInfo(pFi);
@@ -111,14 +111,14 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     char* pIv = reinterpret_cast<char*>(iv);
 
     FileInfo* pFi = CreateFileInfo( filename,
-                                   filepath,
-                                   chunkName,
-                                   chunkCount,
-                                   fileSize,
-                                   postId,
-                                   postVersion,
-                                   std::string(pKey),
-                                   std::string(pIv)
+                                    filepath,
+                                    chunkName,
+                                    chunkCount,
+                                    fileSize,
+                                    postId,
+                                    postVersion,
+                                    std::string(pKey),
+                                    std::string(pIv)
                                  );
    return pFi;
 }
@@ -151,7 +151,7 @@ FileInfo* FileManager::CreateFileInfo( const std::string &filename,
     // Post Version
     pFi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
     // Key 
-    pFi->SetKey(key);
+    pFi->SetEncryptedKey(key);
     // Iv
     pFi->SetIv(iv);
 
@@ -248,70 +248,128 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
 
     if(pFi)
     {
-        std::cout<<" HERE ITS BROKEN HERE FIX ME" << std::endl;
-        return 100; 
         // Get Master Key Credentials
         Credentials masterCred;
         m_MasterKey.GetMasterKeyCredentials(masterCred);
 
-        std::string fileKey;
-        pFi->GetEncryptedFileKey(fileKey);
+        std::string masterKey;
+        masterCred.GetKey(masterKey);
 
-        Credentials cred;
-        if(fileKey.empty())
+        std::cout<<" MASTER KEY : " << masterKey << std::endl;
+        std::cout<<" MASTER KEY size : " << masterKey.size() << std::endl;
+
+        Credentials fileCred;
+        if(!pFi->HasEncryptedKey())
         {
             // Generate Credentials
+            fileCred = m_Crypto.GenerateCredentials();
 
+            // Encrypt Key
+            std::string fKey, fIv, encKey;
+            fileCred.GetKey(fKey);
+            fileCred.GetIv(fIv);
+
+            Credentials encCred; // Encryption credentials
+            status = encCred.SetKey(masterKey);
+            encCred.SetIv(fIv);
+
+            std::cout<<" cred status set key : "<< status << std::endl;
+
+            status = m_Crypto.EncryptString(fKey, encCred, encKey);
+ 
+            // Set Credentials
+            pFi->SetEncryptedKey(encKey); // ENCRYPTED key
+            pFi->SetIv(fIv); // NON encrypted, iv           
+
+            std::cout<< " ENCRYPTED KEY : " << encKey << std::endl;
+            std::cout<< " IV : " << fIv << std::endl;
         }
         else
         {
-            // Decrypt and set as key
+            fileCred = pFi->GetCredentialsCopy();
+
+            // Decrypt key
+            std::string fKey, fIv;
+            fileCred.GetKey(fKey);
+            fileCred.GetIv(fIv); // File (key) specific iv
+
+            Credentials encCred; // Encryption credentials
+
+            encCred.SetKey(masterKey);
+            encCred.SetIv(fIv);
+
+            std::string decKey;
+            status = m_Crypto.DecryptString(fKey, encCred, decKey);
+
+            std::cout<<" STATUS : " << status << std::endl;
+
+            // Set Decrypted Key
+            fileCred.SetKey(decKey);
         }
 
-
-        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
-        FileInfo::ChunkMap::iterator itr = pInfo->begin();
-
-        for(;itr != pInfo->end(); itr++)
+        
+        // If credentials pass
+        if(status == ret::A_OK)
         {
-            std::string chunkname;
-            itr->second.GetChunkName(chunkname);
+            // Get UNENCRYPTED file key
+            std::string fileKey;
+            fileCred.GetKey(fileKey);
+
+            std::cout<< " UNENCRYPTED FILE KEY : " << fileKey << std::endl;
+
+            Credentials chunkCred;
+            chunkCred.SetKey(fileKey);
+
+            FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+            FileInfo::ChunkMap::iterator itr = pInfo->begin();
+
+            for(;itr != pInfo->end(); itr++)
+            {
+                std::string chunkname;
+                itr->second.GetChunkName(chunkname);
+                    
+                std::string iv;
+                // Check for existing Iv
+                if(itr->second.HasIv())
+                {
+                    itr->second.GetIv(iv);
+                    std::cout<<" USING EXISTING IV " << iv << std::endl;
+                }
+                else
+                {
+                    // Generate unique Iv for chunk
+                    m_Crypto.GenerateIv(iv);
+                    itr->second.SetIv(iv);
+                }
+
+                // Set chunk specific iv
+                status = chunkCred.SetIv(iv);
+
+                std::string hash;
+                m_Crypto.GenerateHash(iv, hash);
+                itr->second.SetCipherTextSum(hash);
+
+                if(status != ret::A_OK)
+                    break;
+
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
+
+                std::string encpath;
+                GenerateEncryptionPath(chunkname, encpath);
+                 
+                status = m_Crypto.EncryptFile(comppath, encpath, chunkCred);
                 
-            std::string iv;
-            // Check for existing Iv
-            if(itr->second.HasIv())
-            {
-                itr->second.GetIv(iv);
-                std::cout<<" USING EXISTING IV " << iv << std::endl;
+                std::string kkkk, ivv;
+                pFi->GetEncryptedKey(kkkk);
+                pFi->GetIv(ivv);
+                std::cout<<" ENCRYPTED KEYYY : " << kkkk << std::endl;
+                std::cout<<" IV : " << ivv << std::endl;
+
+                if(status != ret::A_OK)
+                    break;
+                
             }
-            else
-            {
-                // Generate unique Iv for chunk
-                m_Crypto.GenerateIv(iv);
-                itr->second.SetIv(iv);
-            }
-
-            status = cred.SetIv(iv);
-
-            std::string hash;
-            m_Crypto.GenerateHash(iv, hash);
-            itr->second.SetCipherTextSum(hash);
-
-            if(status != ret::A_OK)
-                break;
-
-            std::string comppath;
-            GenerateCompressionPath(chunkname, comppath);
-
-            std::string encpath;
-            GenerateEncryptionPath(chunkname, encpath);
-
-             
-            status = m_Crypto.EncryptFile(comppath, encpath, cred);
-
-            if(status != ret::A_OK)
-                break;
-            
         }
     }
     else
@@ -377,7 +435,14 @@ int FileManager::IndexFileNew( const std::string& filepath,
         // Check if manifest is loaded
         // Write manifest entry
         if(insert)
+        {
+            // Encrypt File key
+            std::string fileKey;
+            pFi->GetEncryptedKey(fileKey);
+            std::cout<<" FIIIIIIIILE KEY : " << fileKey << std::endl;
+
             m_Manifest.InsertFileInfo(pFi);
+        }
 
         std::string jsontest;
         pFi->GetSerializedChunkData(jsontest);
@@ -482,46 +547,75 @@ int FileManager::DecryptChunks(FileInfo* pFi)
 
     if(pFi)
     {
+        // Get MasterKey
+        std::string masterKey;
+        m_MasterKey.GetMasterKey(masterKey);
+
         // Get Credentials
+
+        // Get Encrypted File Credentials
+        std::string encKey, fileIv;
+        pFi->GetEncryptedKey(encKey);
+        pFi->GetIv(fileIv);
+
+        std::cout<<" MASTER KEY : " << masterKey << std::endl;
+        std::cout<<" ENCRYPTED KEEEEEEEY : " << encKey << std::endl;
+        std::cout<<" FILE IV : " << fileIv << std::endl;
+
         Credentials cred;
-        m_MasterKey.GetMasterKeyCredentials(cred);
+        cred.SetKey(masterKey);
+        cred.SetIv(fileIv);
 
-        std::string key;
-        cred.GetKey(key);
-        std::cout<<" THIS KEY : " << key << std::endl;
-        
-        FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
-        FileInfo::ChunkMap::iterator itr = pInfo->begin();
+        std::string fileKey;
+        status = m_Crypto.DecryptString(encKey, cred, fileKey);
 
-        for(;itr != pInfo->end(); itr++)
+        std::cout<<" STATUS : " << status << std::endl;
+        std::cout<<" FILE KEY : " << fileKey << std::endl;
+
+        // TODO :: Finish this, left in a bad state possibly, test
+        if(status == ret::A_OK)
         {
-            std::string chunkname;
-            itr->second.GetChunkName(chunkname);
+            Credentials chunkCred;
+            chunkCred.SetKey(fileKey);
 
-            // Set given iv for chunk
-            std::string iv;
-            itr->second.GetIv(iv);
+            // Decrypt Key
+            std::string key;
+            cred.GetKey(key);
+            std::cout<<" THIS KEY : " << key << std::endl;
+            
+            FileInfo::ChunkMap* pInfo = pFi->GetChunkInfoList();
+            FileInfo::ChunkMap::iterator itr = pInfo->begin();
 
-            std::cout<<" THIS IV : " << iv << std::endl;
-
-            status = cred.SetIv(iv);
-            if(status != ret::A_OK)
-                break;
-
-            // going from enc to cmp
-            std::string encpath;
-            GenerateEncryptionPath(chunkname, encpath);
-
-            std::cout<<" enc path : " << encpath << std::endl;
-
-            std::string comppath;
-            GenerateCompressionPath(chunkname, comppath);
-
-            status = m_Crypto.DecryptFile(encpath, comppath, cred);
-            if(status != ret::A_OK)
+            for(;itr != pInfo->end(); itr++)
             {
-                std::cout<<" Failed to decrypt file code : " << status << std::endl;
-                break;
+                std::string chunkname;
+                itr->second.GetChunkName(chunkname);
+
+                // Set given iv for chunk
+                std::string iv;
+                itr->second.GetIv(iv);
+
+                std::cout<<" THIS IV : " << iv << std::endl;
+
+                status = chunkCred.SetIv(iv);
+                if(status != ret::A_OK)
+                    break;
+
+                // going from enc to cmp
+                std::string encpath;
+                GenerateEncryptionPath(chunkname, encpath);
+
+                std::cout<<" enc path : " << encpath << std::endl;
+
+                std::string comppath;
+                GenerateCompressionPath(chunkname, comppath);
+
+                status = m_Crypto.DecryptFile(encpath, comppath, chunkCred);
+                if(status != ret::A_OK)
+                {
+                    std::cout<<" Failed to decrypt file code : " << status << std::endl;
+                    break;
+                }
             }
         }
 

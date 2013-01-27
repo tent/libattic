@@ -390,6 +390,7 @@ TEST(PULL, ALL)
 /*
 */
 /*
+
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -403,7 +404,8 @@ TEST(PULL, AFILE)
                   "https://manuel.tent.is");
 
     EnterPassphrase("password");
-    int status = PullFile("./data/oa5.pdf", &PULLFUN);
+    //int status = PullFile("./data/oa5.pdf", &PULLFUN);
+    int status = PullFile("./data/cb.pdf", &PULLFUN);
 
     for(;;)
     {
@@ -429,7 +431,6 @@ TEST(PULL, AFILE)
 
 /*
  */
-/*
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -448,9 +449,9 @@ TEST(PUSH, AFILE)
 
     if(status == 0)
     {
-        status = PushFile("./data/oa5.pdf", &FOOFUN);
-        status = PushFile("./data/ogli.pdf", &FOOFUN);
-        status = PushFile("./data/qspn.pdf", &FOOFUN);
+//        status = PushFile("./data/oa5.pdf", &FOOFUN);
+        status = PushFile("./data/cb.pdf", &FOOFUN);
+//        status = PushFile("./data/qspn.pdf", &FOOFUN);
     }
     else
     {
@@ -1108,6 +1109,20 @@ TEST(COMPRESS, ENCRYPT)
     // TODO :: De-Chunk a file
 
 // REAL TESTS
+
+TEST(CREDENTIALS, ISEMPTY)
+{
+    Credentials cred;
+
+    ASSERT_EQ(cred.KeyEmpty(), true);
+    ASSERT_EQ(cred.IvEmpty(), true);
+
+    Crypto cp;
+    cred = cp.GenerateCredentials();
+
+    ASSERT_EQ(cred.KeyEmpty(), false);
+    ASSERT_EQ(cred.IvEmpty(), false);
+}
 
 TEST(CRYPTO, CREDENCRYPTION)
 {
