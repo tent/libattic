@@ -44,6 +44,14 @@ public:
                             const std::string& szOutputPath, 
                             const Credentials& cred);
 
+    int EncryptStringCFB( const std::string& data,
+                          const Credentials& cred,
+                          std::string& out);
+
+    int DecryptStringCFB( const std::string& data,
+                          const Credentials& cred,
+                          std::string& out);
+
     int EncryptString( const std::string& data,
                        const Credentials& cred,
                        std::string& out);

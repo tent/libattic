@@ -2,6 +2,7 @@
 #include "atticpost.h"
 
 #include <stdio.h>
+#include <cbase64.h>
 
 #include "constants.h"
 
@@ -39,8 +40,15 @@ void AtticPost::Serialize(Json::Value& root)
     JsonSerializer::SerializeJsonValue(chunkids, idval);
     SetContent("chunk_ids", idval);
 
-    SetContent("kdata", m_KeyData);
-    SetContent("vdata", m_IvData);
+    SetContent( "kdata", 
+                cb64::base64_encode( reinterpret_cast<const unsigned char*>(m_KeyData.c_str()), 
+                                     m_KeyData.size())
+              );
+
+    SetContent( "vdata",
+                cb64::base64_encode( reinterpret_cast<const unsigned char*>(m_IvData.c_str()),
+                                     m_IvData.size())
+              );
 
     Post::Serialize(root);
 }
@@ -70,7 +78,9 @@ void AtticPost::Deserialize(Json::Value& root)
     JsonSerializer::DeserializeIntoVector(ci, m_ChunkIds);
 
     GetContent("kdata", m_KeyData);
+    m_KeyData = cb64::base64_decode(m_KeyData);
     GetContent("vdata", m_IvData);
+    m_IvData = cb64::base64_decode(m_IvData);
 }
 
 

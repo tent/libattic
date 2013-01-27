@@ -8,6 +8,7 @@
 #include <filters.h>     
 #include <gcm.h>         
 
+#include <modes.h>
 #include <sha.h>
 #include <base64.h>
 
@@ -34,18 +35,22 @@ Credentials Crypto::GenerateCredentials()
     // be used, then stored (if needed), and fall 
     // out of scope as quickly as possible
     Credentials cred;
-    memset(cred.m_Key, 0, cred.GetKeySize());
-    memset(cred.m_Iv, 0, cred.GetIvSize());
-
-    // Generate a random key
-    CryptoPP::SecByteBlock key(CryptoPP::AES::MAX_KEYLENGTH);
-    m_Rnd.GenerateBlock( cred.m_Key, cred.GetKeySize());
-
-    // // Generate a random IV
-    m_Rnd.GenerateBlock(cred.m_Iv, cred.GetIvSize()); 
-
+    GenerateCredentials(cred);
     return cred;
 }
+
+void Crypto::GenerateCredentials(Credentials& cred)
+{
+    byte key[CryptoPP::AES::MAX_KEYLENGTH+1];
+    byte iv[CryptoPP::AES::BLOCKSIZE+1]; 
+
+    m_Rnd.GenerateBlock( key, cred.GetKeySize()); // Generate a random key
+    m_Rnd.GenerateBlock( iv, cred.GetIvSize()); // Generate a random IV
+
+    cred.SetKey(key, CryptoPP::AES::MAX_KEYLENGTH);
+    cred.SetIv(iv, CryptoPP::AES::BLOCKSIZE);
+}
+
 
 void Crypto::GenerateIv(std::string& out)
 {
@@ -56,18 +61,7 @@ void Crypto::GenerateIv(std::string& out)
     out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
 }
 
-void Crypto::GenerateCredentials(Credentials& cred)
-{
-    memset(cred.m_Key, 0, cred.GetKeySize());
-    memset(cred.m_Iv, 0, cred.GetIvSize());
 
-    // Generate a random key
-    CryptoPP::SecByteBlock key(CryptoPP::AES::MAX_KEYLENGTH);
-    m_Rnd.GenerateBlock( cred.m_Key, cred.GetKeySize());
-
-    // // Generate a random IV
-    m_Rnd.GenerateBlock(cred.m_Iv, cred.GetIvSize()); 
-}
 
 bool Crypto::GenerateHash( const std::string& source, 
                            std::string& hashOut)
@@ -84,6 +78,63 @@ bool Crypto::GenerateHash( const std::string& source,
                              );
 
     return true;
+}
+
+int Crypto::EncryptStringCFB( const std::string& data,
+                              const Credentials& cred,
+                              std::string& out)
+{
+    int status = ret::A_OK;
+
+    try
+    {
+        std::string cipher;
+
+        CryptoPP::CFB_Mode<CryptoPP::AES>::Encryption e;
+        e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+
+        CryptoPP::StringSource( data,  // Plaintext
+                                true, 
+                                new CryptoPP::StreamTransformationFilter( e,
+                                    new CryptoPP::StringSink(cipher)
+                                ) // StreamTransformationFilter      
+                    ); // StringSource
+
+       // Write out cipher to ofstream
+       out = cipher;
+    }
+    catch (CryptoPP::Exception &e)
+    {
+        return ret::A_FAIL_ENCRYPT;
+    }
+
+    return status;
+}
+
+int Crypto::DecryptStringCFB( const std::string& data,
+                              const Credentials& cred,
+                              std::string& out)
+{
+    int status = ret::A_OK;
+
+    try                                                                                 
+    {                                                                                       
+        CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption d;        
+        d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+
+        CryptoPP::StringSource( data, 
+                                true, 
+                                new CryptoPP::StreamTransformationFilter( d,
+                                    new CryptoPP::StringSink( out )
+                                         ) // StreamTransformationFilter
+                               ); // StringSource
+    }
+    catch (CryptoPP::Exception &e)                               
+    {                                                            
+        status = ret::A_FAIL_DECRYPT;
+    }                                                            
+
+    return status;
 }
 
 int Crypto::EncryptString( const std::string& data,

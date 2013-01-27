@@ -431,6 +431,7 @@ TEST(PULL, AFILE)
 
 /*
  */
+/*
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -1133,12 +1134,15 @@ TEST(CRYPTO, CREDENCRYPTION)
     std::string iv;
     cp.GenerateSalt(iv);
 
+
+    std::cout<<" HERE " << std::endl;
     // Genterate key from passphrase
     int status = cp.GenerateKeyFromPassphrase( phrase,
                                                iv,
                                                masterkey);
     ASSERT_EQ(status, 0);
 
+    std::cout<<" HERE " << std::endl;
     Credentials cred; // Credentials to encrypt
     cred = cp.GenerateCredentials();
 
@@ -1200,14 +1204,8 @@ TEST(SCRYPT, ENTER_PASSPHRASE)
                                   cred1);
 
     ASSERT_EQ(status, 0);
-
-    int res =  strcmp( reinterpret_cast<const char*>(cred.m_Key), 
-                       reinterpret_cast<const char*>(cred1.m_Key));
-    ASSERT_EQ(res, 0); 
-
-    res =  strcmp( reinterpret_cast<const char*>(cred.m_Iv), 
-                   reinterpret_cast<const char*>(cred1.m_Iv));
-    ASSERT_EQ(res, 0);
+    ASSERT_EQ(cred.GetKey(), cred1.GetKey());
+    ASSERT_EQ(cred.GetIv(), cred1.GetIv());
 }
 
 TEST(SCRYPT, ENCODE)

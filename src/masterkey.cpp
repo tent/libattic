@@ -20,8 +20,8 @@ void MasterKey::Serialize(Json::Value& root)
     root["expires"] = (int)m_Expires;
 
     // Credentials
-    root["key"] = m_Cred.m_Key;
-    root["iv" ] = m_Cred.m_Iv;    // This is obsolete, probably won't exist in the future
+    root["key"] = m_Cred.GetKey();
+    root["iv" ] = m_Cred.GetIv();    // This is obsolete, probably won't exist in the future
 }
 
 void MasterKey::Deserialize(Json::Value& root)
@@ -33,14 +33,10 @@ void MasterKey::Deserialize(Json::Value& root)
     std::string iv = root.get("iv", "").asString();
 
     if(!key.empty())
-    {
-        memcpy(m_Cred.m_Key, key.c_str(), key.size());
-    }
+        m_Cred.SetKey(key);
 
     if(!iv.empty())
-    {
-        memcpy(m_Cred.m_Iv, iv.c_str(), iv.size());
-    }
+        m_Cred.SetIv(iv);
 }
 
 void MasterKey::WriteToFile(const std::string& filepath)
