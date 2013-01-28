@@ -1125,6 +1125,25 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.IvEmpty(), false);
 }
 
+TEST(CRYPTO, HMAC)
+{
+    int status = ret::A_OK;
+    Crypto cp;
+    Credentials cred = cp.GenerateCredentials();
+
+    std::string plaintext("this is my plain text");
+
+    std::string macout, hmacout;
+    status = cp.GenerateHMACForString( plaintext, cred, macout, hmacout);
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<" mac out : " << macout << std::endl;
+    std::cout<<" hmac out : " << hmacout << std::endl;
+
+    status = cp.VerifyHMACForString( plaintext, cred, macout);
+    ASSERT_EQ(status, ret::A_OK);
+}
+
 TEST(CRYPTO, ENCRYPTIONCFB)
 {
     Crypto cp;

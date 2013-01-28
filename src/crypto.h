@@ -1,5 +1,3 @@
-
-
 #ifndef CRYPTO_H_
 #define CRYPTO_H_
 #pragma once
@@ -64,6 +62,16 @@ public:
                           const Credentials& cred,
                           std::string& out);
 
+    int GenerateHMACForString( const std::string& input,
+                               const Credentials& cred,
+                               std::string& macOut,
+                               std::string& hmacOut);
+
+    int VerifyHMACForString( const std::string& input,
+                             const Credentials& cred,
+                             const std::string& mac);
+
+
 
     unsigned int GetStride() { return m_Stride; }
 
@@ -88,7 +96,6 @@ public:
 private: 
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for key generation
     unsigned int                    m_Stride; // Size of stride used when encrypting
-
 };
 
 

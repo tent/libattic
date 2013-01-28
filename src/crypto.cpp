@@ -1,4 +1,3 @@
-
 #include "crypto.h"
 
 //#include <iostream>
@@ -11,6 +10,7 @@
 #include <modes.h>
 #include <sha.h>
 #include <base64.h>
+#include <hmac.h>
 
 #include "utils.h"
 
@@ -541,4 +541,71 @@ int Crypto::GenerateSalt(std::string& out)
     utils::GenerateRandomString(out, SALT_SIZE);
     return status;
 }
+
+int Crypto::GenerateHMACForString( const std::string& input,
+                                   const Credentials& cred,
+                                   std::string& macOut,
+                                   std::string& hmacOut)
+{
+    int status = ret::A_OK;
+    try
+    {
+        CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+
+        CryptoPP::StringSource( input,
+                                true,
+                                new CryptoPP::HashFilter( hmac,
+                                    new CryptoPP::StringSink(macOut)
+                                    )
+                              );
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        std::cout << e.what() << std::endl;
+        status = ret::A_FAIL_HMAC;
+    }
+
+    if(status == ret::A_OK)
+    {
+        // Encode to hex
+        CryptoPP::StringSource( macOut, 
+                      true,
+                      new CryptoPP::HexEncoder(
+                         new CryptoPP::StringSink(hmacOut)
+                         ) // HexEncoder
+                     ); // StringSource
+    }
+
+    return status;
+}
+
+int Crypto::VerifyHMACForString( const std::string& input,
+                                 const Credentials& cred,
+                                 const std::string& mac)
+
+{
+    int status = ret::A_OK;
+
+    try
+    {
+        CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+
+        const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
+    
+        CryptoPP::StringSource( input + mac, 
+                                true, 
+                                new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
+                               ); // StringSource
+
+    }
+    catch(const CryptoPP::Exception& e)
+    {
+        std::cout << e.what() << std::endl;
+        status = ret::A_FAIL_HMAC_VERIFY;
+    }
+
+    return status;
+}
+
+
 
