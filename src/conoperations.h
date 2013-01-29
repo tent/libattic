@@ -181,6 +181,23 @@ namespace conops
     } 
 
 
+    static int HttpDelete( const std::string& url,
+                           const UrlParams* pParams,
+                           const AccessToken& at,
+                           Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpDelete( url,
+                                                      pParams,
+                                                      responseOut,
+                                                      at.GetMacAlgorithm(),
+                                                      at.GetAccessToken(),
+                                                      at.GetMacKey(),
+                                                      false);
+
+        return ret::A_OK;
+    }
+
+
 
 };
 
