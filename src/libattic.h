@@ -60,26 +60,15 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*));
 int DeleteFile(const char* szFileName, void (*callback)(int, void*));
 
 // Pull All files in manifest
-int PullAllFiles(void (*callback)(int, void*));
+int PullAllFiles(void (*callback)(int, void*)); // Pull into lib, don't expose
 
-// Sync attic metadata
-int SyncAtticMetaData(void (*callback)(int, void*));
-
-// Sync with attic posts
-int SyncAtticPostsMetaData(void (*callback)(int, void*));
+int SyncFiles(void (*callback)(int, void*));
 
 int SetEntityUrl(const char* szUrl);
 
 const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();
-
-int GetAtticPostCount();
-int SyncAtticPosts();
-
-int SaveChanges();
-
-int TestQuery();
 
 // Utility function
 int DeleteAllPosts();

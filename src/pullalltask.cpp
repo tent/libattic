@@ -84,7 +84,7 @@ void PullAllTask::RunTask()
                 (*itr).GetFilepath(fp);
 
                 std::cout<<" PULLING FILE : " << fp << std::endl;
-                Task* t = tf->SyncGetTentTask( TaskFactory::PULL,
+                Task* t = tf->SynchronousGetTentTask( TaskFactory::PULL,
                                                GetTentApp(), 
                                                pFm, 
                                                GetCredentialsManager(),

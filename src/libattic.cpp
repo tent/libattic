@@ -92,14 +92,6 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
 
 //TODO TESTING METHODS REMOVE
 FileManager* GetFileManager() { return g_pFileManager; }
-int TestQuery()
-{
-   // EntityManager em;
-    
-    //g_Entity = em.Discover(g_EntityUrl);
-    //em.Discover("https://manuel.tent.is/profile");
-
-}
 
 //////// API start
 int InitLibAttic( const char* szWorkingDirectory, 
@@ -449,7 +441,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PUSH,
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PUSH,
                                             g_pApp, 
                                             g_pFileManager, 
                                             g_pCredManager,
@@ -474,7 +466,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PULL,
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULL,
                                             g_pApp, 
                                             g_pFileManager, 
                                             g_pCredManager,
@@ -501,7 +493,7 @@ int PullAllFiles(void (*callback)(int, void*))
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::PULLALL,
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULLALL,
                                              g_pApp, 
                                              g_pFileManager, 
                                              g_pCredManager,
@@ -516,7 +508,12 @@ int PullAllFiles(void (*callback)(int, void*))
                                              callback);
     g_Arb.SpinOffTask(t);
 
-    std::cout<<"Returning...."<<std::endl;
+    return ret::A_OK;
+}
+
+int SyncFiles(void (*callback)(int, void*))
+{
+    // TODO :: this
 
     return ret::A_OK;
 }
@@ -528,7 +525,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SyncGetTentTask( TaskFactory::DELETE,
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETE,
                                              g_pApp, 
                                              g_pFileManager, 
                                              g_pCredManager,
@@ -542,37 +539,6 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                              g_ConfigDirectory,
                                              callback);
     g_Arb.SpinOffTask(t);
-
-    return ret::A_OK;
-}
-
-int SyncAtticMetaData( void (*callback)(int, void*) )
-{
-    AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
-
-    // Depricated, point to method below
-
-
-    return ret::A_OK;
-}
-
-int SyncAtticPostsMetaData(void (*callback)(int, void*))
-{
-    AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
-
-    // TODO :: this ...
-    //      - Pull all metadata posts
-    //      - construct relevant file info data 
-    //      - insert into manifest
-    //      - now it can be pulled, do that somewhere else, for this
-    //        just pull metadata posts and compare (insert) with what's
-    //        in the manifest
 
     return ret::A_OK;
 }
@@ -1111,20 +1077,6 @@ int SaveEntity()
 {
 
     return ret::A_OK;
-}
-
-int SaveChanges()
-{
-    // Use this method to force a system wide save
-    if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
-    
-    if(!g_pFileManager)
-        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-    ret::eCode status = ret::A_OK;
-
-    return status;
 }
 
 int SetWorkingDirectory(const char* szDir)

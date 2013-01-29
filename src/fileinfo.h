@@ -1,4 +1,3 @@
-
 #ifndef FILEINFO_H_
 #define FILEINFO_H_
 #pragma once
@@ -9,7 +8,6 @@
 
 #include "crypto.h"
 #include "chunkinfo.h"
-
 
 class FileInfo
 {

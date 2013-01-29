@@ -110,7 +110,7 @@ Task* TaskFactory::GetTentTask( TaskType type,
     return t;
 }
 
-Task* TaskFactory::SyncGetTentTask( TaskType type,                
+Task* TaskFactory::SynchronousGetTentTask( TaskType type,                
                                     TentApp* pApp,                
                                     FileManager* pFm,             
                                     CredentialsManager* pCm,      

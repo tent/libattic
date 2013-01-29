@@ -290,7 +290,6 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
         if(status == ret::A_OK)
         {
             // Get UNENCRYPTED file key
-
             std::cout<< " UNENCRYPTED FILE KEY : " << fileKey << std::endl;
 
             Credentials chunkCred;

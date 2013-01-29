@@ -53,7 +53,10 @@ public:
     int Initialize();
     int Shutdown();
 
-    Task* SyncGetTentTask( TaskType type,                
+    // Synchronous versions of methods take care of locking themselves,
+    // this method locks and unlocks before completing, making it blocking.
+    
+    Task* SynchronousGetTentTask( TaskType type,                
                            TentApp* pApp,                
                            FileManager* pFm,             
                            CredentialsManager* pCm,      
