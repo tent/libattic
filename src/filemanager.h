@@ -44,6 +44,14 @@ class FileManager : public MutexClass
     int DechunkFile(FileInfo* pFi);
 
     int CheckManifestForFile(const std::string& filename, FileInfo* pFi);
+
+    int GenerateHMACForChunks(FileInfo* pFi);
+    int GenerateHMACForEncryptedChunks(FileInfo* pFi);
+
+    int VerifyHMACForChunks(FileInfo* pFi);
+    int VerifyHMACForEncryptedChunks(FileInfo* pFi);
+
+    int GetDecryptedFileKey(FileInfo* pFi, std::string& keyOut);
    
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
