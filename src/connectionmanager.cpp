@@ -381,10 +381,6 @@ int ConnectionManager::HttpPost( const std::string& url,
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
-    //std::cout<<"here1"<<std::endl;
-    if(!pCurl)
-        //std::cout<<"wtf"<<std::endl;
-
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)
