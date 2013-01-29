@@ -26,7 +26,7 @@ public:
         PULL,
         PULLALL,
         DELETE,                                                         
-        SYNCPOSTS,
+        SYNC,
         ENCRYPT,
         DECRYPT
     };                                                                  

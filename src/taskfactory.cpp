@@ -6,7 +6,7 @@
 #include "pullalltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "syncposttask.h"
+#include "synctask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -232,20 +232,20 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                 callback);             
             break;
         }
-    case SYNCPOSTS:
+    case SYNC:
         {
-            t = new SyncPostsTask( pApp,                  
-                                   pFm,                   
-                                   pCm,                   
-                                   pTa,                   
-                                   pTf,
-                                   at,                    
-                                   entity,                
-                                   filepath,              
-                                   tempdir,               
-                                   workingdir,            
-                                   configdir,             
-                                   callback);             
+            t = new SyncTask( pApp,                  
+                              pFm,                   
+                              pCm,                   
+                              pTa,                   
+                              pTf,
+                              at,                    
+                              entity,                
+                              filepath,              
+                              tempdir,               
+                              workingdir,            
+                              configdir,             
+                              callback);             
             break;
         }
     default:
