@@ -70,9 +70,9 @@ public:
                      const bool insert,
                      FileInfo* pFi = NULL);
 
-    int RemoveFile(const std::string &filename);
-
     int ConstructFileNew(const std::string& filename);
+
+    int RemoveFile(const std::string &filename);
 
     bool FindFileInManifest(const std::string &filename);   // File exists in manifest
     bool FileExists(std::string& filepath);               // File exists on disc
@@ -102,8 +102,6 @@ public:
 
 
     void InsertToManifest (FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
-
-
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
     //void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }// Depricated

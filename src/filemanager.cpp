@@ -273,7 +273,6 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
             encCred.SetIv(fIv);
 
             std::cout<<" cred status set key : "<< status << std::endl;
-
             status = m_Crypto.EncryptStringCFB(fKey, encCred, encKey);
  
             // Set Credentials
@@ -283,36 +282,14 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
             std::cout<< " ENCRYPTED KEY : " << encKey << std::endl;
             std::cout<< " IV : " << fIv << std::endl;
         }
-        else
-        {
-            fileCred = pFi->GetCredentialsCopy();
 
-            // Decrypt key
-            std::string fKey, fIv;
-            fileCred.GetKey(fKey);
-            fileCred.GetIv(fIv); // File (key) specific iv
+        std::string fileKey;
+        status = GetDecryptedFileKey(pFi, fileKey);
 
-            Credentials encCred; // Encryption credentials
-
-            encCred.SetKey(masterKey);
-            encCred.SetIv(fIv);
-
-            std::string decKey;
-            status = m_Crypto.DecryptStringCFB(fKey, encCred, decKey);
-
-            std::cout<<" STATUS : " << status << std::endl;
-
-            // Set Decrypted Key
-            fileCred.SetKey(decKey);
-        }
-
-        
         // If credentials pass
         if(status == ret::A_OK)
         {
             // Get UNENCRYPTED file key
-            std::string fileKey;
-            fileCred.GetKey(fileKey);
 
             std::cout<< " UNENCRYPTED FILE KEY : " << fileKey << std::endl;
 
@@ -654,7 +631,8 @@ int FileManager::IndexFileNew( const std::string& filepath,
                                const bool insert,
                                FileInfo* pFi)
 {
-    if(!pFi) return ret::A_FAIL_INVALID_PTR;
+    // FileInfo ptr check down further, don't add please.
+    
     // Chunk
     // Compress
     // Encrpyt
@@ -846,7 +824,7 @@ int FileManager::DecryptChunks(FileInfo* pFi)
         cred.SetIv(fileIv);
 
         std::string fileKey;
-        status = m_Crypto.DecryptStringCFB(encKey, cred, fileKey);
+        status = GetDecryptedFileKey(pFi, fileKey);
 
         std::cout<<" STATUS : " << status << std::endl;
         std::cout<<" FILE KEY : " << fileKey << std::endl;

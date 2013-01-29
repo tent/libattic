@@ -46,12 +46,12 @@ namespace ret
         A_FAIL_ATTEMPT_TO_REINIT,
         A_FAIL_DUPLICATE_ENTRY,
         A_FAIL_RUNNING_SINGLE_INSTANCE,
-        A_FAIL_CREATE_THREAD,
+        A_FAIL_CREATE_THREAD, // 40
         A_FAIL_NO_CREDENTIALS,
         A_FAIL_INVALID_PTR, // to be used sparingly as a placeholder please
         A_FAIL_ATTEMPT_DOUBLE_FREE, 
         A_FAIL_HEX_ENCODE,
-        A_FAIL_HEX_DECODE,
+        A_FAIL_HEX_DECODE, // 45
         A_FAIL_INVALID_FILE_KEY,
         A_FAIL_OTHER     
     };

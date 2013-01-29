@@ -108,8 +108,9 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
-
 /*
+
+
 
 TEST(REGISTER, PASSPHRASE)
 {
@@ -139,8 +140,8 @@ TEST(REGISTER, PASSPHRASE)
 
   ShutdownLibAttic();
 }
+*/
 
-    */
 /*
 */
 
@@ -389,7 +390,6 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
 
 void PULLFUN(int a, void* b)
 {
@@ -432,6 +432,7 @@ TEST(PULL, AFILE)
 /*
  */
 /*
+ *
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -1133,12 +1134,9 @@ TEST(CRYPTO, HMAC)
 
     std::string plaintext("this is my plain text");
 
-    std::string macout, hmacout;
-    status = cp.GenerateHMACForString( plaintext, cred, macout, hmacout);
+    std::string macout;
+    status = cp.GenerateHMACForString( plaintext, cred, macout);
     ASSERT_EQ(status, ret::A_OK);
-
-    std::cout<<" mac out : " << macout << std::endl;
-    std::cout<<" hmac out : " << hmacout << std::endl;
 
     status = cp.VerifyHMACForString( plaintext, cred, macout);
     ASSERT_EQ(status, ret::A_OK);

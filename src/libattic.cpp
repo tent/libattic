@@ -1041,6 +1041,7 @@ int PhraseStatus()
 
 int LoadMasterKey()
 {
+    std::cout<<" Loading master key ... " << std::endl;
     int status = ret::A_OK;
     // Check for valid phrase token
     if(g_Pt.IsPhraseKeyEmpty())

@@ -1,4 +1,3 @@
-
 #ifndef CHUNKPOST_H_
 #define CHUNKPOST_H_
 #pragma once
@@ -10,7 +9,6 @@
 #include "post.h"
 
 class ChunkInfo;
-
 
 class ChunkPost : public Post
 {
