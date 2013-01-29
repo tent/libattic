@@ -31,6 +31,16 @@
 #include "threading.h"
 
 #include "rollsum.h"
+
+void SYNCCB(int a, void* b)
+{
+    std::cout<<" SYNC CALLBACK HIT BRAH : " << a << std::endl;
+
+}
+TEST(TEST, SYNC)
+{
+
+}
 /*
 TEST(TEST, NUKE)
 {
@@ -390,6 +400,7 @@ TEST(PULL, ALL)
 }
 /*
 */
+/*
 
 void PULLFUN(int a, void* b)
 {
