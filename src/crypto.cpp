@@ -201,25 +201,26 @@ int Crypto::DecryptStringGCM( const std::string& cipher,
     return ret::A_OK;
 }
                        
-ret::eCode Crypto::EncryptFile( const std::string &szFilepath, 
-                                const std::string &szOutputPath, 
+ret::eCode Crypto::EncryptFile( const std::string &filepath, 
+                                const std::string &outputPath, 
                                 const Credentials &cred)
 {
     // create ifstream (read in)
     std::ifstream ifs;
     // open file
-    ifs.open(szFilepath.c_str(), std::ifstream::in | std::ifstream::binary);
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
         return ret::A_FAIL_OPEN;
 
     // create ofstream (write out)
     std::ofstream ofs;
-    ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
+    ofs.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
         return ret::A_FAIL_OPEN;
 
+    // Get Sizeof file
     char* pBuffer = new char[m_Stride];
     // begin reading
     
@@ -244,6 +245,8 @@ ret::eCode Crypto::EncryptFile( const std::string &szFilepath,
         }
         totalread += readCount;
     }
+
+    // Generate mac for file
 
     if(pBuffer)
     {
@@ -310,7 +313,7 @@ bool Crypto::EncryptData( const char* pData,
 
 // Depricated
 ret::eCode Crypto::DecryptFile( const std::string &szFilePath, 
-                                const std::string &szOutputPath, 
+                                const std::string &outputPath, 
                                 const Credentials &cred)
 {
 
@@ -324,7 +327,7 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
 
     // create ofstream (write out)
     std::ofstream ofs;
-    ofs.open(szOutputPath.c_str(), std::ofstream::out | std::ofstream::binary);
+    ofs.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
         return ret::A_FAIL_OPEN;
@@ -544,18 +547,17 @@ int Crypto::GenerateSalt(std::string& out)
 
 int Crypto::GenerateHMACForString( const std::string& input,
                                    const Credentials& cred,
-                                   std::string& macOut,
-                                   std::string& hmacOut)
+                                   std::string& macOut)
 {
     int status = ret::A_OK;
+    std::string mac;
     try
     {
         CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
-
         CryptoPP::StringSource( input,
                                 true,
                                 new CryptoPP::HashFilter( hmac,
-                                    new CryptoPP::StringSink(macOut)
+                                    new CryptoPP::StringSink(mac)
                                     )
                               );
     }
@@ -567,13 +569,23 @@ int Crypto::GenerateHMACForString( const std::string& input,
 
     if(status == ret::A_OK)
     {
+        std::string hexencoded;
         // Encode to hex
-        CryptoPP::StringSource( macOut, 
+        CryptoPP::StringSource( mac, 
                       true,
                       new CryptoPP::HexEncoder(
-                         new CryptoPP::StringSink(hmacOut)
+                         new CryptoPP::StringSink(hexencoded)
                          ) // HexEncoder
                      ); // StringSource
+
+        if(!hexencoded.empty())
+        {
+            macOut = hexencoded;
+        }
+        else
+        {
+            status = ret::A_FAIL_HEX_ENCODE;
+        }
     }
 
     return status;
@@ -588,15 +600,32 @@ int Crypto::VerifyHMACForString( const std::string& input,
 
     try
     {
-        CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+        // Decode hmac
+        std::string decoded;
+        CryptoPP::StringSource ss( mac,
+                                   true,
+                                   new CryptoPP::HexDecoder(
+                                        new CryptoPP::StringSink(decoded)
+                            ) // HexDecoder
+        ); // StringSource
 
-        const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
-    
-        CryptoPP::StringSource( input + mac, 
-                                true, 
-                                new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
-                               ); // StringSource
+        if(!decoded.empty())
+        {
 
+            CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+
+            const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
+        
+            CryptoPP::StringSource( input + decoded, 
+                                    true, 
+                                    new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
+                                   ); // StringSource
+
+        }
+        else
+        {
+            status = ret::A_FAIL_HEX_DECODE;
+        }
     }
     catch(const CryptoPP::Exception& e)
     {
@@ -607,5 +636,74 @@ int Crypto::VerifyHMACForString( const std::string& input,
     return status;
 }
 
+
+int Crypto::GenerateHMACForFile( const std::string& filepath,
+                                 const Credentials& cred,
+                                 std::string& macOut)
+{
+    int status = ret::A_OK;
+
+    std::ifstream ifs;
+    // open file
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(ifs.is_open())
+    {
+        unsigned int filesize = utils::CheckFilesize(filepath);
+        char* pBuffer = new char[filesize];
+    
+        memset(pBuffer, 0, (sizeof(char)*filesize));
+        // read into buffer
+        ifs.read(pBuffer, filesize);
+        unsigned int readCount = ifs.gcount();
+
+        ifs.close();
+
+        status = GenerateHMACForString( std::string(pBuffer), 
+                                        cred,
+                                        macOut);
+    }
+    else
+    {
+        status = ret::A_FAIL_OPEN;
+    }
+
+
+    return status;
+}
+
+int Crypto::VerifyHMACForFile( const std::string& filepath,
+                               const Credentials& cred,
+                               const std::string& mac)
+{
+    int status = ret::A_OK;
+
+    std::ifstream ifs;
+    // open file
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
+
+    if(ifs.is_open())
+    {
+        unsigned int filesize = utils::CheckFilesize(filepath);
+        char* pBuffer = new char[filesize];
+    
+        memset(pBuffer, 0, (sizeof(char)*filesize));
+        // read into buffer
+        ifs.read(pBuffer, filesize);
+        unsigned int readCount = ifs.gcount();
+
+        ifs.close();
+
+        status = VerifyHMACForString( std::string(pBuffer), 
+                                      cred,
+                                      mac);
+    }
+    else
+    {
+        status = ret::A_FAIL_OPEN;
+    }
+
+    return status;
+}
 
 

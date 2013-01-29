@@ -38,12 +38,12 @@ public:
 
     Credentials GenerateCredentials(); 
 
-    ret::eCode EncryptFile( const std::string& szFilepath, 
-                            const std::string& szOutputPath, 
+    ret::eCode EncryptFile( const std::string& filepath, 
+                            const std::string& outputPath, 
                             const Credentials& cred);
 
-    ret::eCode DecryptFile( const std::string& szFilepath, 
-                            const std::string& szOutputPath, 
+    ret::eCode DecryptFile( const std::string& filepath, 
+                            const std::string& outputPath, 
                             const Credentials& cred);
 
     int EncryptStringCFB( const std::string& data,
@@ -62,10 +62,17 @@ public:
                           const Credentials& cred,
                           std::string& out);
 
+    int GenerateHMACForFile( const std::string& filepath,
+                             const Credentials& cred,
+                             std::string& macOut);
+    
+    int VerifyHMACForFile( const std::string& filepath,
+                           const Credentials& cred,
+                           const std::string& mac);
+
     int GenerateHMACForString( const std::string& input,
                                const Credentials& cred,
-                               std::string& macOut,
-                               std::string& hmacOut);
+                               std::string& macOut);
 
     int VerifyHMACForString( const std::string& input,
                              const Credentials& cred,
