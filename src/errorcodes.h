@@ -52,6 +52,7 @@ namespace ret
         A_FAIL_ATTEMPT_DOUBLE_FREE, 
         A_FAIL_HEX_ENCODE,
         A_FAIL_HEX_DECODE,
+        A_FAIL_INVALID_FILE_KEY,
         A_FAIL_OTHER     
     };
 
