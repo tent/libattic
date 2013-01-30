@@ -8,6 +8,7 @@
 #include "tentapp.h"
 #include "task.h"
 
+#include "entity.h"
 #include "filemanager.h"
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
@@ -24,7 +25,7 @@ public:
               TaskArbiter* pTa,
               TaskFactory* pTf,
               const AccessToken& at,
-              const std::string& entity,
+              const Entity& entity,
               const std::string& filepath,
               const std::string& tempdir, 
               const std::string& workingdir,
@@ -74,11 +75,12 @@ public:
     AccessToken* GetAccessToken()       { return &m_At; }
     AccessToken  GetAccessTokenCopy()   { return m_At; }
     
-    void GetEntity(std::string &out)            { out = m_Entity; }
-    void GetFilepath(std::string &out)          { out = m_Filepath; }
-    void GetTempDirectory(std::string &out)     { out = m_TempDirectory; } 
-    void GetWorkingDirectory(std::string &out)  { out = m_WorkingDirectory; }
-    void GetConfigDirectory(std::string &out)   { out = m_ConfigDirectory; }
+    void GetEntityUrl(std::string& out)         { m_Entity.GetEntityUrl(out); }
+    void GetEntity(Entity& out)                 { out = m_Entity; }
+    void GetFilepath(std::string& out)          { out = m_Filepath; }
+    void GetTempDirectory(std::string& out)     { out = m_TempDirectory; } 
+    void GetWorkingDirectory(std::string& out)  { out = m_WorkingDirectory; }
+    void GetConfigDirectory(std::string& out)   { out = m_ConfigDirectory; }
 
     TentApp*            GetTentApp()            { return m_pTentApp; }
     FileManager*        GetFileManager()        { return m_pFileManager; } 
@@ -93,7 +95,7 @@ public:
     void SetTaskFactory(TaskFactory* pTf)                 { m_pTaskFactory = pTf; }
 
     void SetAccessToken(const AccessToken& at)                  { m_At = at; }
-    void SetEntity(const std::string& entity)                   { m_Entity = entity; }
+    void SetEntity(const Entity& entity)                        { m_Entity = entity; }
     void SetFilepath(const std::string& filepath)               { m_Filepath = filepath; }
     void SetTempDirectory(const std::string& tempdir)           { m_TempDirectory = tempdir; }
     void SetWorkingDirectory(const std::string& workingdir)     { m_WorkingDirectory = workingdir; }
@@ -110,8 +112,8 @@ public:
         m_pTaskFactory          = NULL;
 
         m_At.Reset();
+        m_Entity.Reset();
 
-        m_Entity.clear();
         m_Filepath.clear();
         m_TempDirectory.clear();
         m_WorkingDirectory.clear();
@@ -130,14 +132,15 @@ protected:
 
 private:
     AccessToken          m_At;
+    Entity               m_Entity;
 
-    std::string          m_Entity;
     std::string          m_Filepath;
     std::string          m_TempDirectory;
     std::string          m_WorkingDirectory;
     std::string          m_ConfigDirectory;
 
-    TentApp*             m_pTentApp; 
+    // Shared ptrs,
+    TentApp*             m_pTentApp;  // TODO :: take a look at if this is actually being used
     FileManager*         m_pFileManager;
     CredentialsManager*  m_pCredentialsManager;
     TaskArbiter*         m_pTaskArbiter;

@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <cbase64.h>
 
+#include "fileinfo.h"
 #include "constants.h"
+#include "errorcodes.h"
 
 AtticPost::AtticPost()
 {
@@ -82,5 +84,4 @@ void AtticPost::Deserialize(Json::Value& root)
     GetContent("vdata", m_IvData);
     m_IvData = cb64::base64_decode(m_IvData);
 }
-
 

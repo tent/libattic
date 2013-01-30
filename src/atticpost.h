@@ -8,6 +8,8 @@
 
 #include "post.h"
 
+class FileInfo;
+
 class AtticPost : public Post
 {
 public:
@@ -24,8 +26,16 @@ public:
     void AtticPostSetKeyData(const std::string& data) { m_KeyData = data; }
     void AtticPostSetIvData(const std::string& data) { m_IvData = data; }
 
+    void GetAtticPostFilename(std::string& name) const { name = m_Name; }
+    void GetAtticPostFilepath(std::string& path) const { path = m_Path; }
+    int GetAtticPostSize() const { return m_Size; }
+    void GetAtticPostKeyData(std::string& key) const { key = m_KeyData; }
+    void GetAtticPostIvData(std::string& iv) const { iv = m_IvData; }
+
     void PushBackChunkPostId(const std::string& postId) { m_ChunkPosts.push_back(postId); }
     void PushBackChunkIdentifier(const std::string& id) { m_ChunkIds.push_back(id); }
+
+    std::vector<std::string>* GetChunkPosts() { return &m_ChunkPosts; }
 
 private:
     std::vector<std::string> m_ChunkPosts;

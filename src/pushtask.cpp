@@ -17,7 +17,7 @@ PushTask::PushTask( TentApp* pApp,
                     TaskArbiter* pTa,
                     TaskFactory* pTf,
                     const AccessToken& at,
-                    const std::string& entity,
+                    const Entity& entity,
                     const std::string& filepath,
                     const std::string& tempdir,
                     const std::string& workingdir,
@@ -161,7 +161,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
     std::string posturl;
-    GetEntity(posturl);
+    GetEntityUrl(posturl);
     posturl += "/tent/posts";
 
     bool post = true;
@@ -273,7 +273,7 @@ int PushTask::SendAtticPost( FileInfo* fi,
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
     std::string posturl;
-    GetEntity(posturl);
+    GetEntityUrl(posturl);
     posturl += "/tent/posts";
 
     bool post = true;

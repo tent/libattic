@@ -21,7 +21,7 @@
 #include "pulltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "syncposttask.h"
+#include "synctask.h"
 
 #include "constants.h"
 #include "credentials.h"
@@ -100,62 +100,71 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
+    int status = ret::A_OK;
     // Init sequence ORDER MATTERS
     utils::SeedRand();
     SetConfigDirectory(szConfigDirectory);
     SetWorkingDirectory(szWorkingDirectory);
     SetTempDirectory(szTempDirectory);
 
-    // Essential
-    int status = SetEntityUrl(szEntityURL);
-    if(status != ret::A_OK)
-        std::cout<<"seu FAILED : " << status << std::endl;
+    status = LoadAppFromFile();
+    if(status == ret::A_OK)
+    {
+        // Essential
+        status = SetEntityUrl(szEntityURL);
 
-    status = liba::InitializeFileManager( &g_pFileManager,
-                                          cnst::g_szManifestName,
-                                          g_ConfigDirectory,
-                                          g_TempDirectory );
-    if(status != ret::A_OK)
-        std::cout<<"fm FAILED : " << status << std::endl;
+        if(status != ret::A_OK)
+            std::cout<<"seu FAILED : " << status << std::endl;
 
-    status = liba::InitializeCredentialsManager( &g_pCredManager,
-                                                 g_ConfigDirectory);
-    if(!g_pCredManager)
-        std::cout<<"failed to create cred manager " << std::endl;
+        status = liba::InitializeFileManager( &g_pFileManager,
+                                              cnst::g_szManifestName,
+                                              g_ConfigDirectory,
+                                              g_TempDirectory );
+        if(status != ret::A_OK)
+            std::cout<<"fm FAILED : " << status << std::endl;
 
-    if(status != ret::A_OK)
-        std::cout<<"cm FAILED : " << status << std::endl;
+        status = liba::InitializeCredentialsManager( &g_pCredManager,
+                                                     g_ConfigDirectory);
+        if(!g_pCredManager)
+            std::cout<<"failed to create cred manager " << std::endl;
 
-    status = liba::InitializeEntityManager( &g_pEntityManager );
-    if(status != ret::A_OK)
-        std::cout<<"em FAILED : " << status << std::endl;
+        if(status != ret::A_OK)
+            std::cout<<"cm FAILED : " << status << std::endl;
 
-    // Non-essential
-    LoadAppFromFile();
-    LoadAccessToken();
-    
-    status = g_Arb.Initialize(threadCount);
-    if(status != ret::A_OK)
-        std::cout<<"arb FAILED : " << status << std::endl;
+        status = liba::InitializeEntityManager( &g_pEntityManager );
+        if(status != ret::A_OK)
+            std::cout<<"em FAILED : " << status << std::endl;
 
-    status = g_TaskFactory.Initialize();
-    if(status != ret::A_OK)
-        std::cout<<"Task Factory FAILED : " << status << std::endl;
+        // Non-essential
+        LoadAccessToken();
+        
+        status = g_Arb.Initialize(threadCount);
+        if(status != ret::A_OK)
+            std::cout<<"arb FAILED : " << status << std::endl;
 
-    // Load Entity Authentication  - ORDER MATTERS
-    LoadEntity();
-    
-    status = LoadPhraseToken();
-    if(status != ret::A_OK)
-        std::cout<<"Load Phrase FAILED : " << status << std::endl;
 
-    status = LoadMasterKey();
-    if(status != ret::A_OK)
-        std::cout<<"Load Master Key FAILED : " << status << std::endl;
+        status = g_TaskFactory.Initialize();
+        if(status != ret::A_OK)
+            std::cout<<"Task Factory FAILED : " << status << std::endl;
+
+        // Load Entity Authentication  - ORDER MATTERS
+        LoadEntity();
+        
+        status = LoadPhraseToken();
+        if(status != ret::A_OK)
+            std::cout<<"Load Phrase FAILED : " << status << std::endl;
+
+        status = LoadMasterKey();
+        if(status != ret::A_OK)
+            std::cout<<"Load Master Key FAILED : " << status << std::endl;
+        else
+            status = SetFileManagerMasterKey();
+    }
     else
-        status = SetFileManagerMasterKey();
+    {
+        status = ret::A_FAIL_LOAD_APP_DATA;
+    }
 
-    
     std::cout<<"initialization success"<<std::endl;
     return status;
 }
@@ -265,14 +274,16 @@ int RegisterApp(const char* szPostPath)
     std::cout << " JSON : " << serialized << std::endl;
     
     Response response;
-
-    pCm->HttpPost( path, 
+    std::cout<<" path : " << path << std::endl;
+    int status = pCm->HttpPost( path, 
                    NULL,
                    serialized,
-                   response);
+                   response,
+                   true);
 
     std::cout<< " CODE : " << response.code << std::endl;
     std::cout<< " RESPONSE " << response.body << std::endl;
+    std::cout<< " POST STATUS : " << status << std::endl;
 
     // Deserialize new data into app
     if(!JsonSerializer::DeserializeObject(g_pApp, response.body))
@@ -417,6 +428,8 @@ int SaveAppToFile()
 
 int LoadAppFromFile()
 {
+    int status = ret::A_OK;
+
     if(!g_pApp)
         g_pApp = new TentApp();                                                
 
@@ -425,13 +438,16 @@ int LoadAppFromFile()
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
     szSavePath.append(cnst::g_szAppDataName);
 
-    g_pApp->LoadFromFile(szSavePath);
+    status = g_pApp->LoadFromFile(szSavePath);
 
-    std::string buffer;
-    JsonSerializer::SerializeObject(g_pApp, buffer);
-    //std::cout<<" BUFFER : " << buffer << std::endl;
+    if(status == ret::A_OK)
+    {
+        std::string buffer;
+        JsonSerializer::SerializeObject(g_pApp, buffer);
+        //std::cout<<" BUFFER : " << buffer << std::endl;
+    }
 
-    return ret::A_OK;
+    return status;
 }
 
 int PushFile(const char* szFilePath, void (*callback)(int, void*) )
@@ -448,7 +464,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                             &g_Arb,
                                             &g_TaskFactory,
                                             at,
-                                            g_EntityUrl,
+                                            g_Entity,
                                             szFilePath,
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -473,7 +489,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                             &g_Arb,
                                             &g_TaskFactory,
                                             at,
-                                            g_EntityUrl,
+                                            g_Entity,
                                             szFilePath,
                                             g_TempDirectory,
                                             g_WorkingDirectory,
@@ -500,7 +516,7 @@ int PullAllFiles(void (*callback)(int, void*))
                                              &g_Arb,
                                              &g_TaskFactory,
                                              at,
-                                             g_EntityUrl,
+                                             g_Entity,
                                              "",
                                              g_TempDirectory,
                                              g_WorkingDirectory,
@@ -513,7 +529,27 @@ int PullAllFiles(void (*callback)(int, void*))
 
 int SyncFiles(void (*callback)(int, void*))
 {
-    // TODO :: this
+    
+    AccessToken at;
+    g_pCredManager->Lock();
+    g_pCredManager->GetAccessTokenCopy(at);
+    g_pCredManager->Unlock();
+
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::SYNC,
+                                                    g_pApp, 
+                                                    g_pFileManager, 
+                                                    g_pCredManager,
+                                                    &g_Arb,
+                                                    &g_TaskFactory,
+                                                    at,
+                                                    g_Entity,
+                                                    "",
+                                                    g_TempDirectory,
+                                                    g_WorkingDirectory,
+                                                    g_ConfigDirectory,
+                                                    callback);
+    g_Arb.SpinOffTask(t);
+
 
     return ret::A_OK;
 }
@@ -532,7 +568,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                              &g_Arb,
                                              &g_TaskFactory,
                                              at,
-                                             g_EntityUrl,
+                                             g_Entity,
                                              szFileName,
                                              g_TempDirectory,
                                              g_WorkingDirectory,
@@ -545,6 +581,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
 
 int DeleteAllPosts()
 {
+    // TODO :: this
     AccessToken at;
     while(g_pCredManager->TryLock()) { sleep(0); }
     g_pCredManager->GetAccessTokenCopy(at);
@@ -1051,7 +1088,7 @@ int LoadEntity(bool override)
     if(status != ret::A_OK || override)
     {
         if(override)
-            g_Entity.ResetEntity();
+            g_Entity.Reset();
 
         // Load Entity
         AccessToken at;
@@ -1115,6 +1152,10 @@ int SetEntityUrl(const char* szUrl)
         return ret::A_FAIL_INVALID_CSTR;
 
     g_EntityUrl.append(szUrl);
+    g_Entity.SetEntityUrl(szUrl);
+    std::string test;
+    g_Entity.GetEntityUrl(test);
+    std::cout<< " url : " << test << std::endl;
 
     return ret::A_OK;
 }

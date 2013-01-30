@@ -13,7 +13,7 @@ DeleteTask::DeleteTask( TentApp* pApp,
                         TaskArbiter* pTa,
                         TaskFactory* pTf,
                         const AccessToken& at,
-                        const std::string& entity,
+                        const Entity& entity,
                         const std::string& filepath,
                         const std::string& tempdir, 
                         const std::string& workingdir,
@@ -94,7 +94,7 @@ int DeleteTask::DeletePost(const std::string& szPostID)
 {
     // Modify Post
     std::string posturl; 
-    GetEntity(posturl);
+    GetEntityUrl(posturl);
     posturl += "/tent/posts/";
     posturl += szPostID;
 

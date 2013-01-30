@@ -8,6 +8,8 @@ class SyncTask : public TentTask
 {
     int SyncMetaData();
     int GetAtticPostCount();
+    int GetFilePosts();
+    int GetChunkPosts();
 public:
     SyncTask( TentApp* pApp,
               FileManager* pFm,
@@ -15,7 +17,7 @@ public:
               TaskArbiter* pTa,
               TaskFactory* pTf,
               const AccessToken& at,
-              const std::string& entity,
+              const Entity& entity,
               const std::string& filepath,
               const std::string& tempdir,
               const std::string& workingdir,

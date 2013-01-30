@@ -97,7 +97,7 @@ namespace postutils
             std::string postid;
             post->GetID(postid);
 
-            fiOut->SetPostID(postid);
+            fiOut.SetPostID(postid);
         }
         else
         {

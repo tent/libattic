@@ -2,6 +2,7 @@
 
 #include <cbase64.h>
 #include "constants.h"
+#include "errorcodes.h"
 
 AtticProfileInfo::AtticProfileInfo()
 {
@@ -174,3 +175,27 @@ void Profile::Deserialize(Json::Value& root)
         m_pBasicInfo = new BasicProfileInfo();
     JsonSerializer::DeserializeObject(m_pBasicInfo, root[cnst::g_szBasicProfileType]);
 }
+
+int Profile::GetApiRoot(std::string& out)
+{
+    int status = ret::A_OK;
+
+    if(m_pCoreInfo)
+    {
+        CoreProfileInfo::ServerList* serverList = m_pCoreInfo->GetServerList();
+        CoreProfileInfo::ServerList::iterator itr = serverList->begin();
+        for(;itr != serverList->end(); itr++)
+        {
+            out = (*itr);
+            break; // TODO :: this will always get the top most server root
+        }
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+

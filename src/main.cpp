@@ -32,6 +32,77 @@
 
 #include "rollsum.h"
 
+/*
+TEST(LIBATTIC, STARTAPPINST)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    char* p[] = { "https://manuel.tent.is" };
+    char* s[] = { "read_posts", 
+                  "write_posts",
+                  "import_posts",
+                  "read_profile",
+                  "write_profile",
+                  "read_followers",
+                  "write_followers",
+                  "read_followings",
+                  "write_followings",
+                  "read_groups",
+                  "write_groups",
+                  "read_permissions",
+                  "write_permissions",
+                  "read_apps",
+                  "write_apps",
+                  "follow_ui",
+                  "read_secrets",
+                  "write_secrets"};
+
+
+    int status = StartupAppInstance("libattic", "This is an app", "www.tent.is", "", p,1, s, 18);
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Startup app instance FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RegisterApp("https://manuel.tent.is/tent/apps");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"register app FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
+
+    status = SaveAppToFile();
+
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = ShutdownLibAttic();
+    if(status != ret::A_OK)
+    {
+        std::cout<<"FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+}
+/*
+*/
+
+
 void SYNCCB(int a, void* b)
 {
     std::cout<<" SYNC CALLBACK HIT BRAH : " << a << std::endl;
@@ -39,8 +110,28 @@ void SYNCCB(int a, void* b)
 }
 TEST(TEST, SYNC)
 {
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
 
+    std::cout<<"syncing..."<<std::endl;
+    SyncFiles(SYNCCB);
+    std::cout<<"done calling ... " << std::endl;
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic();
 }
+
+/*
+ */
 /*
 TEST(TEST, NUKE)
 {
@@ -53,8 +144,18 @@ TEST(TEST, NUKE)
  
     //DeleteAllPosts();
 
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+
     ShutdownLibAttic();
 }
+
 /*
 */
 /*
@@ -652,71 +753,6 @@ TEST(LIBATTIC, CODEUSAGE)
 }
 /*  
 */
-/*
-TEST(LIBATTIC, STARTAPPINST)
-{
-    SetConfigDirectory("./config");
-
-    SetWorkingDirectory("./data");
-    char* p[] = { "https://manuel.tent.is" };
-    char* s[] = { "read_posts", 
-                  "write_posts",
-                  "import_posts",
-                  "read_profile",
-                  "write_profile",
-                  "read_followers",
-                  "write_followers",
-                  "read_followings",
-                  "write_followings",
-                  "read_groups",
-                  "write_groups",
-                  "read_permissions",
-                  "write_permissions",
-                  "read_apps",
-                  "write_apps",
-                  "follow_ui",
-                  "read_secrets",
-                  "write_secrets"};
-
-
-    int status = StartupAppInstance("libattic", "This is an app", "www.tent.is", "", p,1, s, 18);
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = RegisterApp("https://manuel.tent.is/tent/apps");
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
-
-    status = SaveAppToFile();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = ShutdownAppInstance();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-}
 /*
 */
 /*

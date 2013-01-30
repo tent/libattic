@@ -53,6 +53,7 @@ namespace ret
         A_FAIL_HEX_ENCODE,
         A_FAIL_HEX_DECODE, // 45
         A_FAIL_INVALID_FILE_KEY,
+        A_FAIL_LOAD_APP_DATA,
         A_FAIL_OTHER     
     };
 

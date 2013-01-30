@@ -346,6 +346,8 @@ int ConnectionManager::HttpPost( const std::string& url,
     postd.readptr = body.c_str(); // serialized json (should be)
     postd.sizeleft = body.size();
 
+    
+
 
     CURLcode res; 
 
@@ -383,7 +385,7 @@ int ConnectionManager::HttpPost( const std::string& url,
     
     //std::cout<<"here1"<<std::endl;
     if(!pCurl)
-        //std::cout<<"wtf"<<std::endl;
+        std::cout<<"wtf"<<std::endl;
 
     res = curl_easy_perform(pCurl);
 

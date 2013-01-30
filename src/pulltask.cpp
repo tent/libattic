@@ -17,7 +17,7 @@ PullTask::PullTask( TentApp* pApp,
                     TaskArbiter* pTa,
                     TaskFactory* pTf,
                     const AccessToken& at,
-                    const std::string& entity,
+                    const Entity& entity,
                     const std::string& filepath,
                     const std::string& tempdir,
                     const std::string& workingdir,
@@ -74,7 +74,7 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Construct Post URL                                                                        
     std::string postpath;// = m_Entity;                                                             
-    GetEntity(postpath);
+    GetEntityUrl(postpath);
     postpath.append("/tent/posts/");                                                             
 
     std::string postid;                                                                          
@@ -122,7 +122,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
     {
         // Construct Post URL                                                                        
         std::string postpath;// = m_Entity;
-        GetEntity(postpath);
+        GetEntityUrl(postpath);
         postpath.append("/tent/posts/");                                                             
 
         std::string postid;                                                            

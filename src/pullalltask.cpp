@@ -21,7 +21,7 @@ PullAllTask::PullAllTask( TentApp* pApp,
                           TaskArbiter* pTa,
                           TaskFactory* pTf,
                           const AccessToken& at,
-                          const std::string& entity,
+                          const Entity& entity,
                           const std::string& filepath,
                           const std::string& tempdir, 
                           const std::string& workingdir,
@@ -71,10 +71,13 @@ void PullAllTask::RunTask()
             TaskFactory* tf = GetTaskFactory();
             TaskArbiter* ta = GetTaskArbiter();
             std::string entityurl, tempdir, workingdir, configdir;
-            GetEntity(entityurl);
+            GetEntityUrl(entityurl);
             GetTempDirectory(tempdir);
             GetWorkingDirectory(workingdir);
             GetConfigDirectory(configdir);
+
+            Entity entity;
+            GetEntity(entity);
 
             std::string fp;
             std::vector<FileInfo>::iterator itr = filelist.begin();
@@ -91,7 +94,7 @@ void PullAllTask::RunTask()
                                                GetTaskArbiter(),
                                                GetTaskFactory(),
                                                GetAccessTokenCopy(),
-                                               entityurl,
+                                               entity,
                                                fp,               
                                                tempdir,          
                                                workingdir,       

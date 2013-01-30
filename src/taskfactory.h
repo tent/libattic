@@ -8,6 +8,7 @@
 
 #include "accesstoken.h"
 #include "mutexclass.h"
+#include "entity.h"
 
 class Task;
 class TentApp;
@@ -39,7 +40,7 @@ public:
                              TaskArbiter* pTa,
                              TaskFactory* pTf,
                              const AccessToken& at,          
-                             const std::string& entity,      
+                             const Entity& entity,      
                              const std::string& filepath,    
                              const std::string& tempdir,     
                              const std::string& workingdir,  
@@ -63,7 +64,7 @@ public:
                            TaskArbiter* pTa,
                            TaskFactory* pTf,
                            const AccessToken& at,        
-                           const std::string& entity,    
+                           const Entity& entity,    
                            const std::string& filepath,  
                            const std::string& tempdir,   
                            const std::string& workingdir,
@@ -77,7 +78,7 @@ public:
                        TaskArbiter* pTa,
                        TaskFactory* pTf,
                        const AccessToken& at,                        
-                       const std::string& entity,                    
+                       const Entity& entity,                    
                        const std::string& filepath,                  
                        const std::string& tempdir,                   
                        const std::string& workingdir,                
