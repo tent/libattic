@@ -1,5 +1,8 @@
 #include "synctask.h"
 
+#include <vector>
+
+#include "pullalltask.h"
 #include "atticpost.h"                  
 #include "urlparams.h"                  
 #include "constants.h"                  
@@ -7,6 +10,16 @@
 #include "conoperations.h"
 #include "postutils.h"
 #include "utils.h"                      
+
+static SyncTask* g_pCurrent = NULL;
+
+void SyncCallBack(int a, void* b)
+{
+    if(g_pCurrent)
+    {
+        g_pCurrent->SyncCb(a,b);
+    }
+}
 
 SyncTask::SyncTask( TentApp* pApp,
               FileManager* pFm,
@@ -49,7 +62,23 @@ void SyncTask::RunTask()
     
     if(status == ret::A_OK)
     {
+        std::cout<<" Spinning off pull task " << std::endl;
         // Run a pull all files afterwards
+        status = SpinOffPullAllTask();
+        /*
+        if(status == ret::A_OK)
+        {
+            //wait
+            for(;;)
+            {
+                if(m_CallbackCount <= m_CallbackHit)
+                {
+                    break;
+                }
+                sleep(0);
+            }
+        }
+        */
     }
 
     Callback(status, NULL);
@@ -80,59 +109,97 @@ int SyncTask::SyncMetaData()
                          *at,
                          response); 
 
-        std::cout<< " CODE : " << response.code << std::endl;                              
-        std::cout<< " RESPONSE : " << response.body << std::endl;                          
+        std::cout<< " CODE : " << response.code << std::endl;
+        //std::cout<< " RESPONSE : " << response.body << std::endl;                          
 
         if(response.code == 200)
         {
             // Parse Response
             Json::Value root;                               
             Json::Reader reader;                            
+
+            Entity entity;
+            GetEntity(entity);
                                                                
             if(reader.parse(response.body, root))          
-            {
-                    Json::ValueIterator itr = root.begin();         
-                    int count = 0;                                  
-                    for(;itr != root.end(); itr++)                  
-                    {                                               
-                        AtticPost p;
-                        p.Deserialize(*itr);                                             
-                        count++;
+            {  
+                std::vector<FileInfo> fileInfoList;
 
-                        std::string name;
-                        p.GetAtticPostFilename(name);
-                        std::cout<< " Filename : " << name << std::endl;
+                Json::ValueIterator itr = root.begin();         
+                int count = 0;                                  
+                for(;itr != root.end(); itr++)                  
+                {                                               
+                    AtticPost p;
+                    p.Deserialize(*itr);                                             
+                    count++;
 
-                        FileInfo fi;
-                        postutils::DeserializeAtticPostIntoFileInfo(p, fi);
-                        std::string path;
-                        fi.GetFilepath(path);
-                        std::cout<< " filepath : " << path << std::endl;
+                    std::string name;
+                    p.GetAtticPostFilename(name);
+                    std::cout<< " Filename : " << name << std::endl;
 
-                        // Get Chunk info
-                        std::vector<std::string>* pChunkPosts;
-                        pChunkPosts = p.GetChunkPosts();
+                    FileInfo fi;
+                    postutils::DeserializeAtticPostIntoFileInfo(p, fi);
+                    std::string path;
+                    fi.GetFilepath(path);
+                    std::cout<< " filepath : " << path << std::endl;
 
-                        if(pChunkPosts)
+                    // Get Chunk info
+                    std::vector<std::string> chunkPosts;
+                    chunkPosts = *p.GetChunkPosts();
+
+                    if(chunkPosts.size())
+                    {
+                        std::cout<<" chunk post : " << *itr << std::endl;
+                        std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
+                        std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
+
+                        std::string chunkposturl;
+                        entity.GetApiRoot(chunkposturl);
+                        chunkposturl += "/posts/";
+
+                        std::vector<std::string>::iterator itr = chunkPosts.begin();
+                        std::string postid;
+                        for(;itr != chunkPosts.end(); itr++)
                         {
-                            std::vector<std::string>::iterator itr = pChunkPosts->begin();
+                            fi.SetChunkPostID(*itr);
+                            postid.clear();
+                            postid = *itr;
+                            chunkposturl += postid;
 
-                            for(;itr != pChunkPosts->end(); itr++)
+                            response.clear();
+                            conops::HttpGet( chunkposturl, 
+                                             &params,
+                                             *at,
+                                             response); 
+
+                            std::cout<< " CODE : " << response.code << std::endl;
+                            //std::cout<< " RESP : " << response.body << std::endl;
+
+                            if(response.code == 200)
                             {
-                                std::cout<<" chunk post : " << *itr << std::endl;
-                                // Pull chunk post
-                                std::string url;
-                                GetEntityUrl(url);
-                                url += "/tent/posts";  // TODO :: make provider agnostic
+                                ChunkPost cp;
+                                JsonSerializer::DeserializeObject(&cp, response.body);
+                                if(cp.GetChunkSize())
+                                {
+                                    std::cout<<" THIS ChunkPost : " << cp.GetChunkSize() << std::endl;
+                                    std::vector<ChunkInfo>* ciList = cp.GetChunkList();
+                                    std::vector<ChunkInfo>::iterator itr = ciList->begin();
 
+                                    for(;itr != ciList->end(); itr++)
+                                    {
+                                        fi.PushChunkBack(*itr);
+                                    }
+
+                                }
+
+                                std::cout<<" CHUNK COUNT : " << fi.GetChunkCount() << std::endl;
+                                fileInfoList.push_back(fi);
+                                InsertFileInfoToManager(fileInfoList);
 
                             }
-
                         }
-  
-  
-
                     }
+                }
             }
             else
             {
@@ -151,6 +218,25 @@ int SyncTask::SyncMetaData()
     }
     
                    
+    return status;
+}
+
+int SyncTask::InsertFileInfoToManager(const std::vector<FileInfo>& filist)
+{
+    std::cout<<" Inserting .... " << std::endl;
+    int status = ret::A_OK;
+    FileManager* fm = GetFileManager();
+
+    std::vector<FileInfo>::const_iterator itr = filist.begin();
+
+    fm->Lock();
+    for(;itr != filist.end(); itr++)
+    {
+        fm->InsertToManifest(&*itr);
+    }
+
+    fm->Unlock();
+
     return status;
 }
 
@@ -185,3 +271,44 @@ int SyncTask::GetAtticPostCount()
 
     return count;
 }    
+
+int SyncTask::SpinOffPullAllTask()
+{
+    int status = ret::A_OK;
+    TaskFactory* tf = GetTaskFactory();
+    TaskArbiter* ta = GetTaskArbiter();
+    std::string entityurl, tempdir, workingdir, configdir;
+    GetEntityUrl(entityurl);
+    GetTempDirectory(tempdir);
+    GetWorkingDirectory(workingdir);
+    GetConfigDirectory(configdir);
+
+    Entity entity;
+    GetEntity(entity);
+
+
+    Task* t = tf->SynchronousGetTentTask( TaskFactory::PULLALL,
+                                            GetTentApp(), 
+                                            GetFileManager(), 
+                                            GetCredentialsManager(),
+                                            GetTaskArbiter(),
+                                            GetTaskFactory(),
+                                            GetAccessTokenCopy(),
+                                            entity,
+                                            "",               
+                                            tempdir,          
+                                            workingdir,       
+                                            configdir,        
+                                            &SyncCallBack);      
+    
+    ta->SpinOffTask(t);
+    m_CallbackCount++;
+
+    return status;
+}
+
+void SyncTask::SyncCb(int a, void* b)
+{
+    m_CallbackHit++;
+}
+
