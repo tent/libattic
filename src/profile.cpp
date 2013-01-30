@@ -116,6 +116,30 @@ Profile::Profile()
     m_pBasicInfo = NULL;
 }
 
+Profile::Profile(const Profile& rhs)
+{
+    m_pAtticInfo = new AtticProfileInfo();
+    m_pCoreInfo = new CoreProfileInfo();
+    m_pBasicInfo = new BasicProfileInfo();
+
+    *m_pAtticInfo = *(rhs.m_pAtticInfo);
+    *m_pCoreInfo = *(rhs.m_pCoreInfo);
+    *m_pBasicInfo = *(rhs.m_pBasicInfo);
+}
+
+Profile Profile::operator=(const Profile& rhs)
+{
+    m_pAtticInfo = new AtticProfileInfo();
+    m_pCoreInfo = new CoreProfileInfo();
+    m_pBasicInfo = new BasicProfileInfo();
+
+    *m_pAtticInfo = *(rhs.m_pAtticInfo);
+    *m_pCoreInfo = *(rhs.m_pCoreInfo);
+    *m_pBasicInfo = *(rhs.m_pBasicInfo);
+
+    return *this;
+}
+
 Profile::~Profile()
 {
     if(m_pAtticInfo)

@@ -87,6 +87,8 @@ class Profile : public JsonSerializable
 {
 public:
     Profile();
+    Profile(const Profile& rhs);
+    Profile operator=(const Profile& rhs);
     ~Profile();
 
     void Serialize(Json::Value& root);
