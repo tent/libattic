@@ -21,6 +21,9 @@ public:
 
     int SetChunkInfoList(std::map<std::string, ChunkInfo>& pList);
 
+    int GetChunkSize() { m_ChunkList.size(); }
+    std::vector<ChunkInfo>* GetChunkList() { return &m_ChunkList; }
+
 private:
     std::vector<ChunkInfo>  m_ChunkList;
 

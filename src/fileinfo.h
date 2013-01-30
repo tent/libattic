@@ -67,6 +67,7 @@ public:
 
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
+    bool LoadSerializedChunkPost(const std::string& data);
 
     bool HasEncryptedKey();
 

@@ -142,7 +142,6 @@ int InitLibAttic( const char* szWorkingDirectory,
         if(status != ret::A_OK)
             std::cout<<"arb FAILED : " << status << std::endl;
 
-
         status = g_TaskFactory.Initialize();
         if(status != ret::A_OK)
             std::cout<<"Task Factory FAILED : " << status << std::endl;
@@ -456,6 +455,10 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     g_pCredManager->Lock();
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
+
+    std::string url;
+    g_Entity.GetEntityUrl(url);
+    std::cout<<" ENTITY URL &&&&&&&&&&&&&&&&& : " << std::endl;
 
     Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PUSH,
                                             g_pApp, 

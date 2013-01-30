@@ -172,13 +172,13 @@ int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
         attachmentpath.clear();                                                              
         attachmentpath += postpath;                                                          
         attachmentpath.append("/attachments/");                                              
-        attachmentpath += (*itr)->Name;                                                      
+        attachmentpath += (*itr).Name;                                                      
 
         outpath.clear();                                                                     
         GetTempDirectory(outpath);
 
         utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
-        outpath += (*itr)->Name;                                                             
+        outpath += (*itr).Name;                                                             
 
         // Request attachment                                                                
         GetFileAndWriteOut(attachmentpath, outpath);                                         

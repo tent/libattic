@@ -863,7 +863,7 @@ bool Manifest::RemoveFileFromDb(const std::string &filename)
     return PerformQuery(pexc);
 }
 
-bool Manifest::InsertFileInfo(FileInfo* fi)
+bool Manifest::InsertFileInfo(const FileInfo* fi)
 {
     if(!fi)
         return false;

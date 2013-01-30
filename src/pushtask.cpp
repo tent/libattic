@@ -75,7 +75,6 @@ int PushTask::PushFile(const std::string& filepath)
     FileInfo* fi = GetFileManager()->GetFileInfo(filename);
     GetFileManager()->Unlock();
 
-
     int status = ret::A_OK;
     if(!fi)
     {

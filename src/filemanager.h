@@ -101,7 +101,7 @@ public:
                               unsigned char *iv); // byte
 
 
-    void InsertToManifest (FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
+    void InsertToManifest (const FileInfo* pFi) { if(pFi) m_Manifest.InsertFileInfo(pFi); }
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
     //void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }// Depricated

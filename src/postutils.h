@@ -4,7 +4,9 @@
 
 #include <string>
 
+#include "jsonserializable.h"
 #include "atticpost.h"
+#include "chunkpost.h"
 
 namespace postutils
 {
@@ -107,7 +109,31 @@ namespace postutils
         return status;
     }
 
+    static int ExtractChunkPostsFromResponse(const Response& response, std::vector<ChunkPost>* out)
+    {
+        int status = ret::A_OK;
 
+        if(out)
+        {
+            Json::Value val;
+            std::string input = response.body;
+            JsonSerializer::DeserializeJsonValue(val, input);
+
+            Json::ValueIterator itr = val.begin();
+            for(;itr != val.end(); itr++)
+            {
+                ChunkPost post;
+                JsonSerializer::DeserializeObject(&post, *itr);
+                out->push_back(post);
+            }
+        }
+        else
+        {
+            status = ret::A_FAIL_INVALID_PTR;
+        }
+
+        return status;
+    }
 };
 
 #endif
