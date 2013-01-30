@@ -87,6 +87,7 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
             std::string apiroot;
             pProf->GetApiRoot(apiroot);
             entOut.SetApiRoot(apiroot);
+            entOut.SetEntityUrl(entityurl);
         }
         else
         {
@@ -137,6 +138,6 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
 
         Entity::ProfileList* pProfList = ent.GetProfileList();
         if(pProfList)
-            ent.SetActiveProfile(*pProfList->begin());
+            ent.SetActiveProfile(&*pProfList->begin());
    }
 }
