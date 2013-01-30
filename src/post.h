@@ -76,12 +76,12 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void GetID(std::string& out)        { out = m_ID; }
-    void GetPostType(std::string& out)  { out = m_Type; }
+    void GetID(std::string& out) const       { out = m_ID; }
+    void GetPostType(std::string& out) const  { out = m_Type; }
     void GetContent(const std::string& key, std::string& out);
     unsigned int GetAttachmentCount()   { return m_Attachments.size(); }
     AttachmentVec* GetAttachments()     { return &m_Attachments; }
-    unsigned int GetVersion()           { return m_Version; }
+    unsigned int GetVersion() const           { return m_Version; }
 
     void SetID(const std::string &id)           { m_ID = id; }
     void setEntity(const std::string &entity)   { m_Entity = entity; }
