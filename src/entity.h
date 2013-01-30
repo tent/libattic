@@ -45,7 +45,7 @@ public:
 
     bool HasAtticProfileMasterKey();
 
-    void ResetEntity();
+    void Reset();
 
 private:
     ProfileList     m_Profiles;

@@ -15,10 +15,12 @@ Entity::~Entity()
     DeleteProfiles();
 }
 
-void Entity::ResetEntity()
+void Entity::Reset()
 {
     DeleteProfiles();
     m_ProfileUrls.clear();
+    m_EntityUrl.clear();
+    m_ApiRoot.clear();
 }
 
 void Entity::DeleteProfiles()
