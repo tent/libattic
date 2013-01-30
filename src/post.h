@@ -1,6 +1,3 @@
-
-
-
 #ifndef POST_H_
 #define POST_H_
 #pragma once
@@ -20,7 +17,7 @@ struct Attachment : public JsonSerializable
     std::string Category;  // `json:"category"`
     std::string Name;      // `json:"name"`
     unsigned int Size;     // `json:"size"`
-    char* pData;
+//    char* pData;
 
     void AssignKeyValue(const std::string &key, const Json::Value &val)
     {
@@ -65,10 +62,8 @@ struct Attachment : public JsonSerializable
 
 class Post : public JsonSerializable
 {
-
-
 public:
-    typedef std::vector<Attachment*> AttachmentVec;
+    typedef std::vector<Attachment> AttachmentVec;
 
     Post();
     ~Post();
@@ -76,12 +71,12 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void GetID(std::string& out) const       { out = m_ID; }
-    void GetPostType(std::string& out) const  { out = m_Type; }
+    void GetID(std::string& out) const          { out = m_ID; }
+    void GetPostType(std::string& out) const    { out = m_Type; }
     void GetContent(const std::string& key, std::string& out);
-    unsigned int GetAttachmentCount()   { return m_Attachments.size(); }
-    AttachmentVec* GetAttachments()     { return &m_Attachments; }
-    unsigned int GetVersion() const           { return m_Version; }
+    unsigned int GetAttachmentCount()           { return m_Attachments.size(); }
+    AttachmentVec* GetAttachments()             { return &m_Attachments; }
+    unsigned int GetVersion() const             { return m_Version; }
 
     void SetID(const std::string &id)           { m_ID = id; }
     void setEntity(const std::string &entity)   { m_Entity = entity; }
@@ -90,7 +85,7 @@ public:
     void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
     void SetPermission(const std::string &permission, bool Val) { m_Permissions[permission] = Val; }
 
-    void PushBackAttachment(Attachment* pAtch) { m_Attachments.push_back(pAtch); }
+    void PushBackAttachment(Attachment& pAtch) { m_Attachments.push_back(pAtch); }
 
 private:
     std::string                         m_ID;
