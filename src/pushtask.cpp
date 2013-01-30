@@ -161,8 +161,10 @@ int PushTask::SendChunkPost( FileInfo* fi,
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
     std::string posturl;
-    GetEntityUrl(posturl);
-    posturl += "/tent/posts";
+    Entity entity;
+    GetEntity(entity);
+    entity.GetApiRoot(posturl);
+    posturl += "/posts";
 
     bool post = true;
     Response response;
@@ -231,7 +233,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
             fi->SetChunkPostID(postid); 
             fi->SetPostVersion(0); // temporary for now, change later
             std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-            std::cout << " Name : " << (*p.GetAttachments())[0]->Name << std::endl;
+            std::cout << " Name : " << (*p.GetAttachments())[0].Name << std::endl;
 
             if(post)
             {
@@ -272,9 +274,12 @@ int PushTask::SendAtticPost( FileInfo* fi,
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
+
+    Entity entity;
+    GetEntity(entity);
     std::string posturl;
-    GetEntityUrl(posturl);
-    posturl += "/tent/posts";
+    entity.GetApiRoot(posturl);
+    posturl += "/posts";
 
     bool post = true;
     Response response;
