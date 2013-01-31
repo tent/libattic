@@ -6,6 +6,7 @@
 #include "pullalltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
+#include "deleteallpoststask.h"
 #include "synctask.h"
 
 #include "filemanager.h"
@@ -230,6 +231,23 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                 workingdir,                      
                                 configdir,                       
                                 callback);             
+            break;
+        }
+    case DELETEALLPOSTS:
+        {
+            t = new DeleteAllPostsTask( pApp,                                  
+                                pFm,                          
+                                pCm,          
+                                pTa,                          
+                                pTf,
+                                at,
+                                entity,                                
+                                filepath,                              
+                                tempdir,                         
+                                workingdir,                      
+                                configdir,                       
+                                callback);     
+
             break;
         }
     case SYNC:

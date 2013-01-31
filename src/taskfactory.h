@@ -27,6 +27,7 @@ public:
         PULL,
         PULLALL,
         DELETE,                                                         
+        DELETEALLPOSTS,
         SYNC,
         ENCRYPT,
         DECRYPT
