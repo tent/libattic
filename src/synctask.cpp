@@ -53,35 +53,67 @@ SyncTask::~SyncTask()
 {
 }
 
+void SyncTask::OnStart()
+{ 
+
+} 
+
+void SyncTask::OnPaused()
+{ 
+
+} 
+
+void SyncTask::OnFinished() 
+{ 
+    int status = ret::A_OK;
+
+    g_pCurrent = NULL;
+
+    if(m_CallbackCount > m_CallbackHit)
+        status = ret::A_FAIL_TIMED_OUT;
+
+    Callback(status, NULL);
+}
+
 void SyncTask::RunTask()
 {
     int status = ret::A_OK;
 
-    // Sync meta data posts and populate the manifest
-    status = SyncMetaData(); 
-    
-    if(status == ret::A_OK)
+    if(!g_pCurrent)
     {
-        std::cout<<" Spinning off pull task " << std::endl;
-        // Run a pull all files afterwards
-        status = SpinOffPullAllTask();
-        /*
+        g_pCurrent = this;
+
+
+        // Sync meta data posts and populate the manifest
+        status = SyncMetaData(); 
+        
         if(status == ret::A_OK)
         {
-            //wait
-            for(;;)
+            std::cout<<" Spinning off pull task " << std::endl;
+            // Run a pull all files afterwards
+            status = SpinOffPullAllTask();
+            /*
+            if(status == ret::A_OK)
             {
-                if(m_CallbackCount <= m_CallbackHit)
+                //wait
+                for(;;)
                 {
-                    break;
+                    if(m_CallbackCount <= m_CallbackHit)
+                    {
+                        break;
+                    }
+                    sleep(0);
                 }
-                sleep(0);
             }
+            */
         }
-        */
     }
-
-    Callback(status, NULL);
+    else
+    {
+        //status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
+        //Callback(status, NULL);
+        SetFinishedState();
+    }
 }
 
 int SyncTask::SyncMetaData()
@@ -91,10 +123,13 @@ int SyncTask::SyncMetaData()
     int postcount = GetAtticPostCount();
                                                                                                   
     if(postcount > 0)
-    {
+    { 
+        Entity entity;
+        GetEntity(entity);
+             
         std::string url;                                                                   
-        GetEntityUrl(url);                                                                    
-        url += "/tent/posts";  // TODO :: make provider agnostic
+        entity.GetApiRoot(url);
+        url += "/posts";
 
         std::cout<<" URL : " << url << std::endl;
 
@@ -118,9 +153,7 @@ int SyncTask::SyncMetaData()
             Json::Value root;                               
             Json::Reader reader;                            
 
-            Entity entity;
-            GetEntity(entity);
-                                                               
+                                                              
             if(reader.parse(response.body, root))          
             {  
                 std::vector<FileInfo> fileInfoList;
@@ -310,5 +343,9 @@ int SyncTask::SpinOffPullAllTask()
 void SyncTask::SyncCb(int a, void* b)
 {
     m_CallbackHit++;
+    if(m_CallbackCount <= m_CallbackHit)
+    {
+        SetFinishedState();
+    }
 }
 

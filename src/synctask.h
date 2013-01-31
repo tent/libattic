@@ -29,9 +29,9 @@ public:
 
     ~SyncTask();
 
-    virtual void OnStart() { } 
-    virtual void OnPaused() { } 
-    virtual void OnFinished() { }
+    virtual void OnStart(); 
+    virtual void OnPaused(); 
+    virtual void OnFinished();
 
     void RunTask();
 

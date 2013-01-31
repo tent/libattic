@@ -582,32 +582,27 @@ int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
     return ret::A_OK;
 }
 
-int DeleteAllPosts()
+int DeleteAllPosts(void (*callback)(int, void*))
 {
-    // TODO :: this
     AccessToken at;
-    while(g_pCredManager->TryLock()) { sleep(0); }
+    g_pCredManager->Lock();
     g_pCredManager->GetAccessTokenCopy(at);
     g_pCredManager->Unlock();
 
-    // Completely nuke all posts associated with the account
-    std::string url("https://manuel.tent.is/tent/posts");
-
-                                                      //const UrlParams* pParams,
-    Response response;
-    UrlParams params;
-    params.AddValue("type", cnst::g_szAtticPostType);
-    ConnectionManager::GetInstance()->HttpGetWithAuth( url,
-                                                     &params,
-                                                     response,
-                                                     at.GetMacAlgorithm(),
-                                                     at.GetAccessToken(),
-                                                     at.GetMacKey(),
-                                                     true);
-
-    std::cout<<" RESPONSE : " << response.code << std::endl;
-    std::cout<<" BODY : " << response.body << std::endl;
-   
+    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETEALLPOSTS,
+                                             g_pApp, 
+                                             g_pFileManager, 
+                                             g_pCredManager,
+                                             &g_Arb,
+                                             &g_TaskFactory,
+                                             at,
+                                             g_Entity,
+                                             "",
+                                             g_TempDirectory,
+                                             g_WorkingDirectory,
+                                             g_ConfigDirectory,
+                                             callback);
+    g_Arb.SpinOffTask(t);
 
     return ret::A_OK;
 }

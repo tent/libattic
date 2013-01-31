@@ -33,6 +33,35 @@
 #include "rollsum.h"
 
 /*
+void DELETEALLCB(int a, void* b)
+{
+    std::cout<<" DELETEALLPOSTS CALLBACK HIT BRAH : " << a << std::endl;
+
+}
+TEST(TEST, DELETEALLPOSTS)
+{
+    InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    std::cout<<"deleting all posts..."<<std::endl;
+    DeleteAllPosts(DELETEALLCB);
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic();
+}
+/*
+ */
+/*
+ 
 TEST(LIBATTIC, STARTAPPINST)
 {
     InitLibAttic( "./data",
@@ -102,7 +131,7 @@ TEST(LIBATTIC, STARTAPPINST)
 /*
 */
 
-/*
+
 void SYNCCB(int a, void* b)
 {
     std::cout<<" SYNC CALLBACK HIT BRAH : " << a << std::endl;
@@ -544,6 +573,8 @@ TEST(PULL, AFILE)
 /*
  */
 
+
+/*
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;

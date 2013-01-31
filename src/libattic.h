@@ -71,7 +71,7 @@ const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
 // Utility function <- vince, make a temporary button of some sort for this, to nuke your account
-int DeleteAllPosts();
+int DeleteAllPosts(void (*callback)(int, void*));
 
 // TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
 class FileManager;
