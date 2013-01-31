@@ -288,6 +288,7 @@ int RegisterApp(const char* szPostPath)
     if(!JsonSerializer::DeserializeObject(g_pApp, response.body))
         return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
 
+    SaveAppToFile();
     return ret::A_OK;
 }
 
@@ -611,6 +612,10 @@ int DeleteAllPosts(void (*callback)(int, void*))
 
 int ChangePassphrase(const char* szOld, const char* szNew)
 {
+  if(!g_pApp)
+        return ret::A_FAIL_INVALID_APP_INSTANCE;
+
+
     // TODO :: this should be a task
     //         pull all files
     //         decrypt them with the old key
@@ -938,6 +943,9 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
 
 int RegisterPassphrase(const char* szPass, bool override)
 {
+    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
+
+
     // TODO :: probably should check if a passphrase already exists
     // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
     //          - at the begining of the master key append 4 random bytes repeated twice,
