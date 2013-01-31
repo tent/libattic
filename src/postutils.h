@@ -70,14 +70,16 @@ namespace postutils
         int status = ret::A_OK;
         
         // Attic Post specific
-        std::string name, path, key, iv;
+        std::string name, path, chunkname, key, iv;
         post.GetAtticPostFilename(name);
         post.GetAtticPostFilepath(path);
+        post.GetAtticPostChunkName(chunkname);
         post.GetAtticPostKeyData(key);
         post.GetAtticPostIvData(iv);
 
         fiOut.SetFilename(name);
         fiOut.SetFilepath(path);
+        fiOut.SetChunkName(chunkname);
         fiOut.SetEncryptedKey(key);
         fiOut.SetIv(iv);
 
