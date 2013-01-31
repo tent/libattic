@@ -557,7 +557,7 @@ int SyncFiles(void (*callback)(int, void*))
     return ret::A_OK;
 }
 
-int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
+int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
 {
     AccessToken at;
     g_pCredManager->Lock();
@@ -572,7 +572,7 @@ int DeleteFile(const char* szFileName, void (*callback)(int, void*) )
                                              &g_TaskFactory,
                                              at,
                                              g_Entity,
-                                             szFileName,
+                                             szFilepath,
                                              g_TempDirectory,
                                              g_WorkingDirectory,
                                              g_ConfigDirectory,
