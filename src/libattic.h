@@ -70,7 +70,7 @@ const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
-// Utility function
+// Utility function <- vince, make a temporary button of some sort for this, to nuke your account
 int DeleteAllPosts();
 
 // TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
