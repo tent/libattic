@@ -130,7 +130,7 @@ TEST(LIBATTIC, STARTAPPINST)
 }
 /*
 */
-
+/*
 
 void SYNCCB(int a, void* b)
 {
@@ -249,8 +249,6 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
-/*
-
 
 
 TEST(REGISTER, PASSPHRASE)
@@ -261,7 +259,7 @@ TEST(REGISTER, PASSPHRASE)
                   "https://manuel.tent.is");
 
 
-    EnterPassphrase("password");
+//    EnterPassphrase("password");
 
     {
         std::cout<<" REGISTERING PASSPHRASE " << std::endl;
@@ -281,7 +279,6 @@ TEST(REGISTER, PASSPHRASE)
 
   ShutdownLibAttic();
 }
-*/
 
 /*
 */
