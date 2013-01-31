@@ -26,6 +26,10 @@ public:
 
     void RunTask();
 
+    virtual void OnStart() { } 
+    virtual void OnPaused() { } 
+    virtual void OnFinished() { }
+
     void PullAllCb(int a, void* b);
 
 private:

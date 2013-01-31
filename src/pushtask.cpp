@@ -53,8 +53,10 @@ void PushTask::RunTask()
     GetFilepath(filepath);
 
     int status = PushFile(filepath);
+    
     // Callback
     Callback(status, NULL);
+    SetFinishedState();
 }
 
 int PushTask::PushFile(const std::string& filepath)

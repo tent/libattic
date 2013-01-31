@@ -53,6 +53,7 @@ void PullTask::RunTask()
     int status = PullFile(filepath);
 
     Callback(status, NULL);
+    SetFinishedState();
 }
 
 int PullTask::PullFile(const std::string& filepath)

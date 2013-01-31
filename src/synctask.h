@@ -29,6 +29,10 @@ public:
 
     ~SyncTask();
 
+    virtual void OnStart() { } 
+    virtual void OnPaused() { } 
+    virtual void OnFinished() { }
+
     void RunTask();
 
     void SyncCb(int a, void* b);

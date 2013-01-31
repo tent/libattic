@@ -56,6 +56,7 @@ void DeleteTask::RunTask()
 
     // Callback
     Callback(status, NULL);
+    SetFinishedState();
 }
 
 

@@ -53,6 +53,10 @@ public:
 
     ~PushTask();
 
+    virtual void OnStart() { } 
+    virtual void OnPaused() { } 
+    virtual void OnFinished() { }
+
     void RunTask();
 
 private:

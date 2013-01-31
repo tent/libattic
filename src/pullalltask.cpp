@@ -128,6 +128,7 @@ void PullAllTask::RunTask()
     }
                                        
     Callback(status, NULL);
+    SetFinishedState();
 }                                      
 
 void PullAllTask::PullAllCb(int a, void* b)
