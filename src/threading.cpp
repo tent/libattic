@@ -67,7 +67,7 @@ void* ThreadFunc(void* arg)
                         pTask = (*itr);
                         if(pTask)
                         {
-                            std::cout<<" switching " << std::endl;
+//                            std::cout<<" switching " << std::endl;
                             switch(pTask->GetTaskState())
                             {
                                 case Task::IDLE:
@@ -87,7 +87,7 @@ void* ThreadFunc(void* arg)
                                     }
                                 case Task::PAUSED:
                                     {
-                                        std::cout<< " task paused " << std::endl;
+ //                                       std::cout<< " task paused " << std::endl;
                                         pTask->OnPaused();
                                         break;
                                     }
