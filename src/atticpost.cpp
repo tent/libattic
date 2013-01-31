@@ -29,6 +29,7 @@ void AtticPost::Serialize(Json::Value& root)
     char buf[256];
     snprintf(buf, 256, "%d", m_Size);
     SetContent("size", buf);
+    SetContent("chunk_name", m_ChunkName);
     
     Json::Value chunkposts;
     JsonSerializer::SerializeVector(chunkposts, m_ChunkPosts);
@@ -69,6 +70,7 @@ void AtticPost::Deserialize(Json::Value& root)
     m_Size = atoi(size.c_str());
 
     std::string chunkval, idval;
+    GetContent("chunk_name", m_ChunkName);
     GetContent("chunk_posts", chunkval);
     GetContent("chunk_ids", idval);
 
