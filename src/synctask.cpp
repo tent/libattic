@@ -145,14 +145,13 @@ int SyncTask::SyncMetaData()
                          response); 
 
         std::cout<< " CODE : " << response.code << std::endl;
-        //std::cout<< " RESPONSE : " << response.body << std::endl;                          
+        std::cout<< " RESPONSE : " << response.body << std::endl;                          
 
         if(response.code == 200)
         {
             // Parse Response
             Json::Value root;                               
             Json::Reader reader;                            
-
                                                               
             if(reader.parse(response.body, root))          
             {  
@@ -232,6 +231,12 @@ int SyncTask::SyncMetaData()
                             }
                         }
                     }
+                    else
+                    {
+                        std::cout<<" no chunks ... : " << chunkPosts.size() << std::endl;
+                    }
+
+
                 }
             }
             else

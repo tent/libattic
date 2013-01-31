@@ -156,6 +156,8 @@ int PushTask::SendChunkPost( FileInfo* fi,
     // Get ChunkInfo List
     FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
 
+    std::cout<<" CHUNK LIST SIZE : " << pList->size() << std::endl;
+
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -227,13 +229,12 @@ int PushTask::SendChunkPost( FileInfo* fi,
 
         if(!postid.empty())
         {
-            FileManager* fm = GetFileManager();
-            
             fi->SetChunkPostID(postid); 
             fi->SetPostVersion(0); // temporary for now, change later
             std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
             std::cout << " Name : " << (*p.GetAttachments())[0].Name << std::endl;
 
+            FileManager* fm = GetFileManager();
             if(post)
             {
                 fm->Lock();
@@ -267,6 +268,8 @@ int PushTask::SendAtticPost( FileInfo* fi,
 
     // Get ChunkInfo List
     FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+
+    std::cout<<" CHUUUUUUUUUNK LIST SIZE : " << pList->size() << std::endl;
 
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
@@ -414,7 +417,7 @@ int PushTask::InitAtticPost( AtticPost& post,
 
         FileManager* fm = GetFileManager();
         fm->Lock(); 
-        FileInfo* fi = fm->GetFileInfo(filename);
+        FileInfo* fi = fm->GetFileInfo(filepath);
         fm->Unlock();
 
         std::string chunkpostid;

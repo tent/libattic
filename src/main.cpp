@@ -130,7 +130,7 @@ TEST(LIBATTIC, STARTAPPINST)
 }
 /*
 */
-/*
+
 
 void SYNCCB(int a, void* b)
 {
@@ -188,6 +188,7 @@ TEST(TEST, NUKE)
 /*
 */
 /*
+
 void PULLALL(int a, void* b)
 {
     std::cout<<" PULL ALL CALLBACK HIT BRAH : " << a << std::endl;
@@ -530,7 +531,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-
+/*
 
 void PULLFUN(int a, void* b)
 {
@@ -571,10 +572,8 @@ TEST(PULL, AFILE)
 }
 
 /*
- */
-
+ **/
 /*
-
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -594,8 +593,8 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
 //        status = PushFile("./data/oa5.pdf", &FOOFUN);
-        status = PushFile("./data/cb.pdf", &FOOFUN);
-//        status = PushFile("./data/qspn.pdf", &FOOFUN);
+//        status = PushFile("./data/cb.pdf", &FOOFUN);
+        status = PushFile("./data/qspn.pdf", &FOOFUN);
     }
     else
     {
@@ -604,7 +603,7 @@ TEST(PUSH, AFILE)
 
     for(;;)
     {
-       sleep(10);
+       sleep(30);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;

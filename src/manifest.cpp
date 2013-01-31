@@ -694,6 +694,18 @@ bool Manifest::InsertFilePostID(const std::string& filepath, const std::string &
 
 bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::string &id)
 {
+    std::string pexc;
+    pexc += "UPDATE ";
+    pexc += g_infotable.c_str();
+    pexc += " SET chunkpostid=\"";
+    pexc += id.c_str();
+    pexc += "\" WHERE filepath=\"";
+    pexc += filepath.c_str();
+    pexc += "\";";
+
+    std::cout<<" PEXC : " << pexc << std::endl;
+
+    /*
     char pexc[1024];
 
     snprintf( pexc,
@@ -703,9 +715,10 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
               id.c_str(),
               filepath.c_str()
             ); 
+            */
 
 
-    return PerformQuery(pexc);
+    return PerformQuery(pexc.c_str());
 }
 
 //" (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
