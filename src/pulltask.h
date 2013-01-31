@@ -37,7 +37,6 @@ public:
     virtual void OnPaused() { } 
     virtual void OnFinished() { }
 
-
     void RunTask();
 
 private:

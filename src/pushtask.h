@@ -24,6 +24,7 @@ class PushTask : public TentTask
                         bool pub,
                         const std::string& filepath,
                         const std::string& filename, 
+                        const std::string& chunkname,
                         unsigned int size,
                         FileInfo::ChunkMap* pList);
 

@@ -41,7 +41,7 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
     }
 
     unsigned int count = 0;
-    std::cout<< "Filepath " << filepath <<std::endl;
+    //std::cout<< "Filepath " << filepath <<std::endl;
     m_ifStream.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if (!m_ifStream.is_open())
@@ -97,12 +97,10 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
     return ret::A_OK;
 }
 #include <cstring>
-#include <cerrno>
 ret::eCode Chunker::DeChunkFile( FileInfo *fi, 
                                  const std::string &outboundPath, 
                                  const std::string &chunkDir)
 {
-    std::cout<<" Dechunking file " << std::endl;
     if(!fi)
         return ret::A_FAIL_INVALID_PTR;
     // Create output path
@@ -116,17 +114,16 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
     // Open stream for output file
     if(m_ofStream.is_open())
     {
-        std::cout << " closing " << std::endl;
         m_ofStream.close();
     }
 
-    std::cout<<" attempting to open outbound path : " << outboundPath << std::endl;
+    //std::cout<<" attempting to open outbound path : " << outboundPath << std::endl;
     m_ofStream.open(outboundPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!m_ofStream.is_open())
     {
         // strerror, <- STANDARD DEF, NON STANDARD IMPLEMENTATION, MAY NOT WORK
-        std::cout << " ERROR : " << std::strerror(errno) << std::endl;
+        //std::cout << " ERROR : " << std::strerror(errno) << std::endl;
         return ret::A_FAIL_OPEN;
     }
 
@@ -180,6 +177,7 @@ bool Chunker::VerifyAllChunkExistence( const std::string &chunkName,
                                        const std::string &chunkDir, 
                                        unsigned int uCount)
 {
+    //std::cout<< "CHUNK COUNT : " << uCount << std::endl;
     std::string path;
     for(unsigned int i=0; i<uCount; i++)
     {
@@ -190,6 +188,8 @@ bool Chunker::VerifyAllChunkExistence( const std::string &chunkName,
         snprintf(szBuffer, (sizeof(char)*256), "%d", i);
 
         path = chunkDir + "/" + chunkName + "_" + szBuffer;
+
+        //std::cout<<" PATH : " << path << std::endl;
         if(!utils::CheckFilesize(path))
             return false;
     }

@@ -282,6 +282,9 @@ int PushTask::SendAtticPost( FileInfo* fi,
     entity.GetApiRoot(posturl);
     posturl += "/posts";
 
+    std::string chunkname;
+    fi->GetChunkName(chunkname);
+
     bool post = true;
     Response response;
     if(postid.empty())
@@ -289,12 +292,13 @@ int PushTask::SendAtticPost( FileInfo* fi,
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
 
-        unsigned int size = utils::CheckFilesize(filepath);
+                unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         InitAtticPost(p,
                       false,
                       filepath,
                       filename,
+                      chunkname,
                       size,
                       pList);
 
@@ -326,6 +330,7 @@ int PushTask::SendAtticPost( FileInfo* fi,
                       false,
                       filepath,
                       filename,
+                      chunkname,
                       size,
                       pList);
 
@@ -386,6 +391,7 @@ int PushTask::InitAtticPost( AtticPost& post,
                              bool pub,
                              const std::string& filepath,
                              const std::string& filename, 
+                             const std::string& chunkname,
                              unsigned int size,
                              FileInfo::ChunkMap* pList)
 {
@@ -397,6 +403,7 @@ int PushTask::InitAtticPost( AtticPost& post,
         post.AtticPostSetFilepath(filepath);
         post.AtticPostSetFilename(filename);
         post.AtticPostSetSize(size);
+        post.AtticPostSetChunkName(chunkname);
         
         FileInfo::ChunkMap::iterator itr = pList->begin();
 
