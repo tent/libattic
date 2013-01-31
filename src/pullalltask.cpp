@@ -4,13 +4,16 @@
 
 #include "filemanager.h"
 
-static PullAllTask* g_pCurrent = NULL;
+namespace pullall 
+{
+    static PullAllTask* g_pCurrent = NULL;
+}
 
 void PullAllCallBack(int a, void* b)
 {
-    if(g_pCurrent)
+    if(pullall::g_pCurrent)
     {
-        g_pCurrent->PullAllCb(a, b);
+        pullall::g_pCurrent->PullAllCb(a, b);
     }
 
 }
@@ -50,13 +53,34 @@ PullAllTask::~PullAllTask()
 
 }
 
+void PullAllTask::OnStart() 
+{ 
+    std::cout<<" ON START " << std::endl;
+
+} 
+void PullAllTask::OnPaused() 
+{ 
+    //std::cout<<" ON PAUSED " << std::endl;
+
+}
+
+void PullAllTask::OnFinished() 
+{ 
+    int status = ret::A_OK;
+    std::cout<< " ON FINISHED " << std::endl;
+    pullall::g_pCurrent = NULL;
+
+    Callback(status, NULL);
+    SetFinishedState();
+}
+
 void PullAllTask::RunTask()
 {
     int status = ret::A_OK;
 
-    if(!g_pCurrent)
+    if(!pullall::g_pCurrent)
     {
-        g_pCurrent = this;
+        pullall::g_pCurrent = this;
 
         // Get Number of Files
         FileManager* pFm = GetFileManager();
@@ -105,7 +129,9 @@ void PullAllTask::RunTask()
                 m_CallbackCount++;
             }
 
+            /*
             //wait
+           
             for(;;)
             {
                 if(m_CallbackCount <= m_CallbackHit)
@@ -114,21 +140,31 @@ void PullAllTask::RunTask()
                 }
 
             }
+            */
+            SetPausedState();
         }
         else
         {
             status = ret::A_FAIL_INVALID_PTR;
         }
 
-        g_pCurrent = NULL;
+     //   pullall::g_pCurrent = NULL;
     }
     else
     {
         status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
     }
                                        
+    /*
     Callback(status, NULL);
     SetFinishedState();
+    */
+
+    if(status != ret::A_OK)
+    {
+        Callback(status, NULL);
+        SetFinishedState();
+    }
 }                                      
 
 void PullAllTask::PullAllCb(int a, void* b)
