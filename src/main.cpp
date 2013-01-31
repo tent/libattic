@@ -130,7 +130,7 @@ TEST(LIBATTIC, STARTAPPINST)
 }
 /*
 */
-
+/*
 
 void SYNCCB(int a, void* b)
 {
@@ -530,7 +530,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+
 
 void PULLFUN(int a, void* b)
 {
@@ -573,8 +573,8 @@ TEST(PULL, AFILE)
 /*
  */
 
-
 /*
+
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;

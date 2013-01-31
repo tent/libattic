@@ -131,24 +131,24 @@ bool Manifest::CreateTables()
 
 bool Manifest::CreateInfoTable()
 {
-    /*
     std::string pexc;
     pexc += "CREATE TABLE IF NOT EXISTS ";
     pexc += g_infotable;
     pexc += " (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT,";
     pexc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
-    pexc += " postversion INT, encryptedkey BLOB, iv BLOB, PRIMARY KEY(filename ASC));";
+    pexc += " postversion INT, encryptedkey BLOB, iv BLOB, PRIMARY KEY(filepath ASC));";
 
 
     std::cout<< pexc << std::endl;
-    */
 
+    /*
     char pexc[1024];
     snprintf( pexc,
               1024,
               "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, encryptedkey BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
               g_infotable.c_str()
             );
+            */
     /*
     snprintf( pexc,
               1024,
@@ -157,7 +157,7 @@ bool Manifest::CreateInfoTable()
             );
             */
 
-    return PerformQuery(pexc);
+    return PerformQuery(pexc.c_str());
 }
 
 bool Manifest::CreateMetaTable()
@@ -247,15 +247,15 @@ bool Manifest::PerformSelect(const char* pSelect, SelectResult &out) const
 }
 
 
-bool Manifest::QueryForFileExistence(const std::string& filename)
+bool Manifest::QueryForFileExistence(const std::string& filepath)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "SELECT * FROM %s WHERE filename=\"%s\";",
+              "SELECT * FROM %s WHERE filepath=\"%s\";",
               g_infotable.c_str(),
-              filename.c_str()
+              filepath.c_str()
             );
      
     SelectResult res;
@@ -406,15 +406,15 @@ bool Manifest::InsertPostID(const std::string &postID) const
     return PerformQuery(pexc);
 }
 
-bool Manifest::QueryForFile(const std::string &filename, FileInfo* out)
+bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "SELECT * FROM %s WHERE filename=\"%s\";",
+              "SELECT * FROM %s WHERE filepath=\"%s\";",
               g_infotable.c_str(),
-              filename.c_str()
+              filepath.c_str()
             );
      
     SelectResult res;
@@ -677,31 +677,31 @@ bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
 }
 
 
-bool Manifest::InsertFilePostID(const std::string& filename, const std::string &id)
+bool Manifest::InsertFilePostID(const std::string& filepath, const std::string &id)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "UPDATE \"%s\" SET metapostid=\"%s\" WHERE filename=\"%s\";",
+              "UPDATE \"%s\" SET metapostid=\"%s\" WHERE filepath=\"%s\";",
               g_infotable.c_str(),
               id.c_str(),
-              filename.c_str()
+              filepath.c_str()
             ); 
 
     return PerformQuery(pexc);
 }
 
-bool Manifest::InsertFileChunkPostID(const std::string &filename, const std::string &id)
+bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::string &id)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "UPDATE \"%s\" SET chunkpostid=\"%s\" WHERE filename=\"%s\";",
+              "UPDATE \"%s\" SET chunkpostid=\"%s\" WHERE filepath=\"%s\";",
               g_infotable.c_str(),
               id.c_str(),
-              filename.c_str()
+              filepath.c_str()
             ); 
 
 
@@ -802,7 +802,7 @@ bool Manifest::QueryForFolderData( const std::string& folderpath,
     std::string query;
     query += "SELECT * FROM ";
     query += g_foldertable;
-    query += " WHERE filename=\"";
+    query += " WHERE folderpath=\"";
     query += folderpath;
     query += "\";";
 
@@ -849,15 +849,15 @@ bool Manifest::InsertCredentialsToDb(const FileInfo* fi)
     return false; // should be true
 }
 
-bool Manifest::RemoveFileFromDb(const std::string &filename)
+bool Manifest::RemoveFileFromDb(const std::string &filepath)
 {
     char pexc[1024];
 
     snprintf( pexc,
               1024, 
-              "DELETE FROM \"%s\"  WHERE filename=\"%s\";",
+              "DELETE FROM \"%s\"  WHERE filepath=\"%s\";",
               g_infotable.c_str(),
-              filename.c_str()
+              filepath.c_str()
             ); 
 
     return PerformQuery(pexc);
@@ -887,9 +887,9 @@ bool Manifest::InsertFileInfo(const FileInfo* fi)
     return status;
 }
 
-bool Manifest::RemoveFileInfo(const std::string &filename)
+bool Manifest::RemoveFileInfo(const std::string &filepath)
 {
-    bool status = RemoveFileFromDb(filename);
+    bool status = RemoveFileFromDb(filepath);
     if(status)
     {
         SetIsDirty(true);
@@ -899,9 +899,9 @@ bool Manifest::RemoveFileInfo(const std::string &filename)
 }
 
 
-bool Manifest::IsFileInManifest(const std::string &filename)
+bool Manifest::IsFileInManifest(const std::string &filepath)
 {
-    return QueryForFileExistence(filename);
+    return QueryForFileExistence(filepath);
 }
 
 void Manifest::CompareAndMergeDb(sqlite3* pDb)

@@ -71,10 +71,8 @@ int PushTask::PushFile(const std::string& filepath)
     std::string filename;
     utils::ExtractFileName(filepath, filename);
 
-    std::cout << " Getting file info ... " << std::endl;
-
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
-    FileInfo* fi = GetFileManager()->GetFileInfo(filename);
+    GetFileManager()->Lock();
+    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);
     GetFileManager()->Unlock();
 
     int status = ret::A_OK;
@@ -94,7 +92,7 @@ int PushTask::PushFile(const std::string& filepath)
         }
 
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        fi = GetFileManager()->GetFileInfo(filename);
+        fi = GetFileManager()->GetFileInfo(filepath);
         GetFileManager()->Unlock();
     }
     else
@@ -238,11 +236,8 @@ int PushTask::SendChunkPost( FileInfo* fi,
 
             if(post)
             {
-                std::string filename;
-                fi->GetFilename(filename);
-
-                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-                fm->SetFileChunkPostId(filename, postid);
+                fm->Lock();
+                fm->SetFileChunkPostId(filepath, postid);
                 fm->Unlock();
             }
         }
@@ -365,12 +360,12 @@ int PushTask::SendAtticPost( FileInfo* fi,
             fi->SetPostID(postid); 
             if(post)
             {
-                std::string filename;
+                std::string filepath;
                 fi->SetPostVersion(0); // temporary for now, change later
-                fi->GetFilename(filename);
+                fi->GetFilepath(filepath);
 
                 while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-                fm->SetFilePostId(filename, postid);
+                fm->SetFilePostId(filepath, postid);
                 fm->Unlock();
             }
         }

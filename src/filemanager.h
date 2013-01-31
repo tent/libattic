@@ -70,11 +70,11 @@ public:
                      const bool insert,
                      FileInfo* pFi = NULL);
 
-    int ConstructFileNew(const std::string& filename);
+    int ConstructFileNew(const std::string& filepath);
 
-    int RemoveFile(const std::string &filename);
+    int RemoveFile(const std::string &filepath);
 
-    bool FindFileInManifest(const std::string &filename);   // File exists in manifest
+    bool FindFileInManifest(const std::string &filepath);   // File exists in manifest
     bool FileExists(std::string& filepath);               // File exists on disc
 
     FileInfo* GetFileInfo(const std::string &filename);
@@ -119,8 +119,8 @@ public:
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
-    void SetFilePostId(const std::string &filename, const std::string& postid);
-    void SetFileChunkPostId(const std::string &filename, const std::string& postid);
+    void SetFilePostId(const std::string &filepath, const std::string& postid);
+    void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
     void SetMasterKey(const MasterKey& mk)                      { m_MasterKey = mk; } 
 
 private:

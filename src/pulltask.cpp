@@ -1,4 +1,3 @@
-
 #include "pulltask.h"
 
 #include <iostream>
@@ -58,14 +57,14 @@ void PullTask::RunTask()
 
 int PullTask::PullFile(const std::string& filepath)
 {                                                                                                
-    std::string filename;                                                                        
-    utils::ExtractFileName(filepath, filename);                                                  
+    //std::string filename;                                                                        
+    //utils::ExtractFileName(filepath, filename);                                                  
 
     if(!GetFileManager())                                                                          
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
     GetFileManager()->Lock();
-    FileInfo* fi = GetFileManager()->GetFileInfo(filename);                                        
+    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
     GetFileManager()->Unlock();
 
     if(!fi)                                                                                      
@@ -103,7 +102,7 @@ int PullTask::PullFile(const std::string& filepath)
 
             // Construct File                                                                        
             GetFileManager()->Lock();
-            GetFileManager()->ConstructFileNew(filename);
+            GetFileManager()->ConstructFileNew(filepath);
             GetFileManager()->Unlock();
         }
         else

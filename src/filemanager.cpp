@@ -695,8 +695,6 @@ int FileManager::IndexFileNew( const std::string& filepath,
             // Encrypt File key
             std::string fileKey;
             pFi->GetEncryptedKey(fileKey);
-            std::cout<<" FIIIIIIIILE KEY : " << fileKey << std::endl;
-
             m_Manifest.InsertFileInfo(pFi);
         }
 
@@ -708,11 +706,11 @@ int FileManager::IndexFileNew( const std::string& filepath,
     return status;
 }
 
-int FileManager::RemoveFile(const std::string &filename)
+int FileManager::RemoveFile(const std::string &filepath)
 {
     int status = ret::A_OK;
 
-    if(!m_Manifest.RemoveFileInfo(filename))
+    if(!m_Manifest.RemoveFileInfo(filepath))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
 
     return status;
@@ -755,14 +753,14 @@ void FileManager::GenerateCryptoPath(FileInfo* pFi, std::string &outpath)
     }
 }
 
-void FileManager::SetFilePostId(const std::string &filename, const std::string& postid)
+void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
 {
-    m_Manifest.InsertFilePostID(filename, postid);
+    m_Manifest.InsertFilePostID(filepath, postid);
 }
 
-void FileManager::SetFileChunkPostId(const std::string &filename, const std::string& postid)
+void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid)
 {
-    m_Manifest.InsertFileChunkPostID(filename, postid);
+    m_Manifest.InsertFileChunkPostID(filepath, postid);
 }
 
 void FileManager::GetFilePostId(const std::string& filename, std::string& out)
@@ -948,7 +946,7 @@ int FileManager::DechunkFile(FileInfo* pFi)
     return status;
 }
 
-int FileManager::ConstructFileNew(const std::string& filename)
+int FileManager::ConstructFileNew(const std::string& filepath)
 {
     // TODO :: this assumes that the fileinfo AND chunkinfo will be successfully created
     //         the chunk info data must be in the fileinfo, so before this, OUTSIDE of this,
@@ -959,7 +957,7 @@ int FileManager::ConstructFileNew(const std::string& filename)
     // Retrieve File Info from manifest
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
 
-    status = CheckManifestForFile(filename, pFi);
+    status = CheckManifestForFile(filepath, pFi);
 
     std::cout<< " how : " << status << std::endl;
 
