@@ -6,6 +6,11 @@
 extern "C"
 {
 
+/* App Registration interface :
+ *      This should be done before using the lib, to generate app credentials
+ *      and autorize the application for use with the given tent server
+ */
+
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
                         const char* szUrl, 
@@ -15,6 +20,10 @@ int StartupAppInstance( const char* szAppName,
                         char* scopes[], 
                         unsigned int scopeCount);
 
+// Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
+int RegisterApp(const char* szPostPath);
+
+// Api begin
 
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
@@ -29,9 +38,6 @@ int EnterPassphrase(const char* szPass);
 int RegisterPassphrase(const char* szPass, bool override = false);
 int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
-
-// Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
-int RegisterApp(const char* szPostPath);
 
 // Pass the api root of the entity (ex "https://test.tent.is/tent/")
 // * Must Register app successfully before proceeding to this step

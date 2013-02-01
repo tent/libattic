@@ -40,13 +40,22 @@ void DELETEALLCB(int a, void* b)
 }
 TEST(TEST, DELETEALLPOSTS)
 {
-    InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "https://manuel.tent.is");
+    int status = InitLibAttic( "./data",
+                               "./config",
+                               "./data/temp",
+                               "https://manuel.tent.is");
 
+    std::cout<< "Init status : " << status << std::endl;
     std::cout<<"deleting all posts..."<<std::endl;
-    DeleteAllPosts(DELETEALLCB);
+
+    status = DeleteAllPosts(DELETEALLCB);
+    std::cout<<" status : " << status << std::endl;
+    if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
+    {
+        status = EnterPassphrase("password");
+        std::cout<<" Enter passphrase : " << status << std::endl;
+    }
+
 
     for(;;)
     {
@@ -130,7 +139,7 @@ TEST(LIBATTIC, STARTAPPINST)
 }
 /*
 */
-/*
+
 
 void SYNCCB(int a, void* b)
 {
@@ -249,7 +258,7 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
-
+/*
 
 TEST(REGISTER, PASSPHRASE)
 {
@@ -571,6 +580,7 @@ TEST(PULL, AFILE)
 /*
  **/
 /*
+
 static void FOOFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -578,20 +588,21 @@ static void FOOFUN(int a, void* b)
 
 TEST(PUSH, AFILE)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
-
-    std::cout<<" attempting to enter passphrase " << std::endl;
-    int status =  EnterPassphrase("password");
-    std::cout <<" enter passphrase status : " << status << std::endl;
 
     if(status == 0)
     {
 //        status = PushFile("./data/oa5.pdf", &FOOFUN);
 //        status = PushFile("./data/cb.pdf", &FOOFUN);
         status = PushFile("./data/qspn.pdf", &FOOFUN);
+        if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
+        {
+            status =  EnterPassphrase("password");
+            std::cout<<" Entered passphrase status : " << status << std::endl;
+        }
     }
     else
     {

@@ -64,7 +64,9 @@ static std::string g_EntityUrl;
 static std::string g_AuthorizationURL;
 static PhraseToken  g_Pt;
 static Entity g_Entity;
+
 static bool g_bEnteredPassphrase = false;
+static bool g_bLibInitialized = false;
 
 // Local utility functions
 static int PostFile(const char* szUrl, const char* szFilePath, FileInfo* fi); // Depricated
@@ -89,6 +91,9 @@ void GetEntityFilepath(std::string& out);
 int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey);
 
 int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
+
+int IsLibInitialized(bool checkPassphrase = true);
+
 
 //TODO TESTING METHODS REMOVE
 FileManager* GetFileManager() { return g_pFileManager; }
@@ -153,11 +158,12 @@ int InitLibAttic( const char* szWorkingDirectory,
         if(status != ret::A_OK)
             std::cout<<"Load Phrase FAILED : " << status << std::endl;
 
-        status = LoadMasterKey();
-        if(status != ret::A_OK)
-            std::cout<<"Load Master Key FAILED : " << status << std::endl;
-        else
+        // Try to load a master key if we have one
+        if(LoadMasterKey() == ret::A_OK) // don't set it equal to status, because if this fails
+        {                              // it's really not that important, we can have the user
+                                       // go ahead and enter it.
             status = SetFileManagerMasterKey();
+        }
     }
     else
     {
@@ -165,6 +171,9 @@ int InitLibAttic( const char* szWorkingDirectory,
     }
 
     std::cout<<"initialization success"<<std::endl;
+
+    if(status == ret::A_OK)
+        g_bLibInitialized = true;
     return status;
 }
 
@@ -256,11 +265,8 @@ int StartupAppInstance( const char* szAppName,
 
 int RegisterApp(const char* szPostPath)
 {
-    if(!szPostPath)
-        return ret::A_FAIL_INVALID_PTR;
-
-    if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!szPostPath) return ret::A_FAIL_INVALID_PTR;
+    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     std::string path(szPostPath);
     ConnectionManager* pCm = ConnectionManager::GetInstance();
@@ -278,7 +284,7 @@ int RegisterApp(const char* szPostPath)
                    NULL,
                    serialized,
                    response,
-                   true);
+                   false);
 
     std::cout<< " CODE : " << response.code << std::endl;
     std::cout<< " RESPONSE " << response.body << std::endl;
@@ -416,8 +422,7 @@ int LoadAccessToken()
 
 int SaveAppToFile()
 {
-    if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     std::string szSavePath(g_ConfigDirectory);
     utils::CheckUrlAndAppendTrailingSlash(szSavePath);
@@ -452,191 +457,215 @@ int LoadAppFromFile()
 
 int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+    int status = IsLibInitialized();
 
-    std::string url;
-    g_Entity.GetEntityUrl(url);
-    std::cout<<" ENTITY URL &&&&&&&&&&&&&&&&& : " << std::endl;
+    if(status == ret::A_OK)
+    {
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PUSH,
-                                            g_pApp, 
-                                            g_pFileManager, 
-                                            g_pCredManager,
-                                            &g_Arb,
-                                            &g_TaskFactory,
-                                            at,
-                                            g_Entity,
-                                            szFilePath,
-                                            g_TempDirectory,
-                                            g_WorkingDirectory,
-                                            g_ConfigDirectory,
-                                            callback);
-    g_Arb.SpinOffTask(t);
+        std::string url;
+        g_Entity.GetEntityUrl(url);
 
-    return ret::A_OK;
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PUSH,
+                                                g_pApp, 
+                                                g_pFileManager, 
+                                                g_pCredManager,
+                                                &g_Arb,
+                                                &g_TaskFactory,
+                                                at,
+                                                g_Entity,
+                                                szFilePath,
+                                                g_TempDirectory,
+                                                g_WorkingDirectory,
+                                                g_ConfigDirectory,
+                                                callback);
+        g_Arb.SpinOffTask(t);
+    }
+
+    return status;
 }
 
 int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+    int status = IsLibInitialized();
 
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULL,
-                                            g_pApp, 
-                                            g_pFileManager, 
-                                            g_pCredManager,
-                                            &g_Arb,
-                                            &g_TaskFactory,
-                                            at,
-                                            g_Entity,
-                                            szFilePath,
-                                            g_TempDirectory,
-                                            g_WorkingDirectory,
-                                            g_ConfigDirectory,
-                                            callback);
-    g_Arb.SpinOffTask(t);
+    if(status == ret::A_OK)
+    {
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    std::cout<<"Returning...."<<std::endl;
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULL,
+                                                g_pApp, 
+                                                g_pFileManager, 
+                                                g_pCredManager,
+                                                &g_Arb,
+                                                &g_TaskFactory,
+                                                at,
+                                                g_Entity,
+                                                szFilePath,
+                                                g_TempDirectory,
+                                                g_WorkingDirectory,
+                                                g_ConfigDirectory,
+                                                callback);
+        g_Arb.SpinOffTask(t);
+    }
 
     return ret::A_OK;
 }
 
 int PullAllFiles(void (*callback)(int, void*))
 {
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+    int status = IsLibInitialized();
 
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULLALL,
-                                             g_pApp, 
-                                             g_pFileManager, 
-                                             g_pCredManager,
-                                             &g_Arb,
-                                             &g_TaskFactory,
-                                             at,
-                                             g_Entity,
-                                             "",
-                                             g_TempDirectory,
-                                             g_WorkingDirectory,
-                                             g_ConfigDirectory,
-                                             callback);
-    g_Arb.SpinOffTask(t);
+    if(status == ret::A_OK)
+    {
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    return ret::A_OK;
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULLALL,
+                                                 g_pApp, 
+                                                 g_pFileManager, 
+                                                 g_pCredManager,
+                                                 &g_Arb,
+                                                 &g_TaskFactory,
+                                                 at,
+                                                 g_Entity,
+                                                 "",
+                                                 g_TempDirectory,
+                                                 g_WorkingDirectory,
+                                                 g_ConfigDirectory,
+                                                 callback);
+        g_Arb.SpinOffTask(t);
+    }
+
+    return status;
 }
 
 int SyncFiles(void (*callback)(int, void*))
 {
+    int status = IsLibInitialized();
+
+    if(status == ret::A_OK)
+    {
     
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::SYNC,
-                                                    g_pApp, 
-                                                    g_pFileManager, 
-                                                    g_pCredManager,
-                                                    &g_Arb,
-                                                    &g_TaskFactory,
-                                                    at,
-                                                    g_Entity,
-                                                    "",
-                                                    g_TempDirectory,
-                                                    g_WorkingDirectory,
-                                                    g_ConfigDirectory,
-                                                    callback);
-    g_Arb.SpinOffTask(t);
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::SYNC,
+                                                        g_pApp, 
+                                                        g_pFileManager, 
+                                                        g_pCredManager,
+                                                        &g_Arb,
+                                                        &g_TaskFactory,
+                                                        at,
+                                                        g_Entity,
+                                                        "",
+                                                        g_TempDirectory,
+                                                        g_WorkingDirectory,
+                                                        g_ConfigDirectory,
+                                                        callback);
+        g_Arb.SpinOffTask(t);
+    }
 
-
-    return ret::A_OK;
+    return status;
 }
 
 int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
 {
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+    int status = IsLibInitialized();
 
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETE,
-                                             g_pApp, 
-                                             g_pFileManager, 
-                                             g_pCredManager,
-                                             &g_Arb,
-                                             &g_TaskFactory,
-                                             at,
-                                             g_Entity,
-                                             szFilepath,
-                                             g_TempDirectory,
-                                             g_WorkingDirectory,
-                                             g_ConfigDirectory,
-                                             callback);
-    g_Arb.SpinOffTask(t);
+    if(status == ret::A_OK)
+    {
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
 
-    return ret::A_OK;
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETE,
+                                                 g_pApp, 
+                                                 g_pFileManager, 
+                                                 g_pCredManager,
+                                                 &g_Arb,
+                                                 &g_TaskFactory,
+                                                 at,
+                                                 g_Entity,
+                                                 szFilepath,
+                                                 g_TempDirectory,
+                                                 g_WorkingDirectory,
+                                                 g_ConfigDirectory,
+                                                 callback);
+        g_Arb.SpinOffTask(t);
+    }
+
+    return status;
 }
 
 int DeleteAllPosts(void (*callback)(int, void*))
 {
-    AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
-
-    Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETEALLPOSTS,
-                                             g_pApp, 
-                                             g_pFileManager, 
-                                             g_pCredManager,
-                                             &g_Arb,
-                                             &g_TaskFactory,
-                                             at,
-                                             g_Entity,
-                                             "",
-                                             g_TempDirectory,
-                                             g_WorkingDirectory,
-                                             g_ConfigDirectory,
-                                             callback);
-    g_Arb.SpinOffTask(t);
-
-    return ret::A_OK;
-}
-
-
-
-int ChangePassphrase(const char* szOld, const char* szNew)
-{
-  if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
-
-
-    // TODO :: this should be a task
-    //         pull all files
-    //         decrypt them with the old key
-    //         re-encrypt them with the new key
-    int status = ret::A_OK;
-
-    status = EnterPassphrase(szOld);
+    int status = IsLibInitialized();
 
     if(status == ret::A_OK)
     {
-        // Get the master key
-        MasterKey mk;
-        while(g_pCredManager->TryLock()) { sleep(0); }
-        g_pCredManager->GetMasterKeyCopy(mk);
+        AccessToken at;
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-            // Register new passphrase with attic
-        std::string key;
-        mk.GetMasterKey(key);
+        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETEALLPOSTS,
+                                                 g_pApp, 
+                                                 g_pFileManager, 
+                                                 g_pCredManager,
+                                                 &g_Arb,
+                                                 &g_TaskFactory,
+                                                 at,
+                                                 g_Entity,
+                                                 "",
+                                                 g_TempDirectory,
+                                                 g_WorkingDirectory,
+                                                 g_ConfigDirectory,
+                                                 callback);
+        g_Arb.SpinOffTask(t);
+    }
 
-        status = RegisterPassphraseWithAttic(szNew, key);
+    return status;
+}
+
+int ChangePassphrase(const char* szOld, const char* szNew)
+{
+    int status = IsLibInitialized(false);
+
+    if(status == ret::A_OK)
+    {
+        // TODO :: make this a task
+        // TODO :: this should be a task
+        //         pull all files
+        //         decrypt them with the old key
+        //         re-encrypt them with the new key
+        status = EnterPassphrase(szOld);
+
+        if(status == ret::A_OK)
+        {
+            // Get the master key
+            MasterKey mk;
+            while(g_pCredManager->TryLock()) { sleep(0); }
+            g_pCredManager->GetMasterKeyCopy(mk);
+            g_pCredManager->Unlock();
+
+                // Register new passphrase with attic
+            std::string key;
+            mk.GetMasterKey(key);
+
+            status = RegisterPassphraseWithAttic(szNew, key);
+        }
     }
 
     return status;
@@ -741,46 +770,50 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
 // Master Key
 int EnterPassphrase(const char* szPass)
 {
-    // Enter the passphrase and generate phrase token
-    // TODO :: when entering the passphrase always check against the master key with sentinel
-    //         if the first 8 bytes don't match (4 bytes == next 4 bytes) then the user entered
-    //         the wrong passphrase.
-    //         so put a check for that everytime the user enteres the passphrase
-    
-    // Check for correct passphrase
-    // Get Information from entity
-    int status = ret::A_OK;
-
-    // Force download entity
-    LoadEntity(true);
-
-    std::string salt;
-    g_Pt.GetSalt(salt);
-
-    std::string phraseKey;
-
-    g_pCredManager->Lock();
-    status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
-    g_pCredManager->Unlock();
+    int status = IsLibInitialized(false);
 
     if(status == ret::A_OK)
     {
-        std::cout<< " PASS : " << szPass << std::endl;
-        std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
-        std::cout<< " salt : " << salt << std::endl;
+        // Enter the passphrase and generate phrase token
+        // TODO :: when entering the passphrase always check against the master key with sentinel
+        //         if the first 8 bytes don't match (4 bytes == next 4 bytes) then the user entered
+        //         the wrong passphrase.
+        //         so put a check for that everytime the user enteres the passphrase
+        
+        // Check for correct passphrase
+        // Get Information from entity
 
-        status = DecryptMasterKey(phraseKey, salt);
+        // Force download entity
+        LoadEntity(true);
+
+        std::string salt;
+        g_Pt.GetSalt(salt);
+
+        std::string phraseKey;
+
+        g_pCredManager->Lock();
+        status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
+        g_pCredManager->Unlock();
+
         if(status == ret::A_OK)
         {
-            // Reload phrase token
-            //LoadPhraseToken();
-            // Load Master Key
-            status = LoadMasterKey();
-            if(status == ret::A_OK)
-                status = SetFileManagerMasterKey();
-        }
-        std::cout<<" DECRYPT STATUS : " << status << std::endl;
+            std::cout<< " PASS : " << szPass << std::endl;
+            std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
+            std::cout<< " salt : " << salt << std::endl;
 
+            status = DecryptMasterKey(phraseKey, salt);
+            if(status == ret::A_OK)
+            {
+                // Reload phrase token
+                //LoadPhraseToken();
+                // Load Master Key
+                status = LoadMasterKey();
+                if(status == ret::A_OK)
+                    status = SetFileManagerMasterKey();
+            }
+            std::cout<<" DECRYPT STATUS : " << status << std::endl;
+
+        }
     }
 
     return status;
@@ -943,30 +976,33 @@ int RegisterPassphraseWithAttic(const std::string& pass, const std::string& mast
 
 int RegisterPassphrase(const char* szPass, bool override)
 {
-    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
+    int status = IsLibInitialized(false);
 
-    // TODO :: probably should check if a passphrase already exists
-    // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
-    //          - at the begining of the master key append 4 random bytes repeated twice,
-    //          - check the first 4 against the latter 4 and if they are the same you entered
-    //            the passphrase in correctly.
-    //          - obviously skip the first 8 bytes when getting the master key
-    //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
-
-    std::cout<<" Registering Passphrase ... " << std::endl;
-
-    int status = ret::A_FAIL_REGISTER_PASSPHRASE;
-
-    if(!g_Entity.HasAtticProfileMasterKey() || override)
+    if(status == ret::A_OK)
     {
-        // Register a new passphrase.
-        std::string mk;
-        while(g_pCredManager->TryLock()) { sleep(0); }
-        // Enter passphrase to generate key.
-        g_pCredManager->GenerateMasterKey(mk); // Generate random master key
-        g_pCredManager->Unlock();
 
-        status = RegisterPassphraseWithAttic(szPass, mk);
+        // TODO :: probably should check if a passphrase already exists
+        // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
+        //          - at the begining of the master key append 4 random bytes repeated twice,
+        //          - check the first 4 against the latter 4 and if they are the same you entered
+        //            the passphrase in correctly.
+        //          - obviously skip the first 8 bytes when getting the master key
+        //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
+
+        std::cout<<" Registering Passphrase ... " << std::endl;
+        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+
+        if(!g_Entity.HasAtticProfileMasterKey() || override)
+        {
+            // Register a new passphrase.
+            std::string mk;
+            while(g_pCredManager->TryLock()) { sleep(0); }
+            // Enter passphrase to generate key.
+            g_pCredManager->GenerateMasterKey(mk); // Generate random master key
+            g_pCredManager->Unlock();
+
+            status = RegisterPassphraseWithAttic(szPass, mk);
+        }
     }
 
     return status;
@@ -1163,6 +1199,24 @@ int SetEntityUrl(const char* szUrl)
     std::cout<< " url : " << test << std::endl;
 
     return ret::A_OK;
+}
+
+int IsLibInitialized(bool checkPassphrase)
+{
+    int status = ret::A_OK;
+
+    if(checkPassphrase && g_Pt.IsPhraseKeyEmpty())
+    {
+        g_bEnteredPassphrase = false;
+        status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
+    }
+
+    if(!g_pApp) status = ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!g_pCredManager) status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    if(!g_pFileManager) status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE; 
+    if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
+
+    return status;
 }
 
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
