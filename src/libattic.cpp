@@ -268,34 +268,28 @@ int RegisterApp(const char* szPostPath)
     if(!szPostPath) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
-    std::string path(szPostPath);
-    ConnectionManager* pCm = ConnectionManager::GetInstance();
-
-    // serialize app;
+    int status = ret::A_OK;
     std::string serialized;
-    if(!JsonSerializer::SerializeObject(g_pApp, serialized))
-        return ret::A_FAIL_TO_SERIALIZE_OBJECT;
-
-    std::cout << " JSON : " << serialized << std::endl;
-    
-    Response response;
-    std::cout<<" path : " << path << std::endl;
-    int status = pCm->HttpPost( path, 
-                   NULL,
-                   serialized,
-                   response,
-                   false);
-
-    std::cout<< " CODE : " << response.code << std::endl;
-    std::cout<< " RESPONSE " << response.body << std::endl;
-    std::cout<< " POST STATUS : " << status << std::endl;
-
-    // Deserialize new data into app
-    if(!JsonSerializer::DeserializeObject(g_pApp, response.body))
-        return ret::A_FAIL_TO_DESERIALIZE_OBJECT;
-
-    SaveAppToFile();
-    return ret::A_OK;
+    if(JsonSerializer::SerializeObject(g_pApp, serialized))
+    {
+        std::string path(szPostPath);
+        Response response;
+        status = ConnectionManager::GetInstance()->HttpPost( path, 
+                                                             NULL,
+                                                             serialized,
+                                                             response,
+                                                             false);
+        // Deserialize new data into app
+        if(JsonSerializer::DeserializeObject(g_pApp, response.body))
+            SaveAppToFile();
+        else
+            status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
+    }
+    else
+    {
+        status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
+    }
+    return status;
 }
 
 int RequestAppAuthorizationURL(const char* szApiRoot)
@@ -342,8 +336,6 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     std::string params;
     val.SerializeToString(params);
 
-    std::cout<<"PARAMS : " << params << std::endl;
-
     // TODO:: encode these parameters
 
     g_AuthorizationURL.append(params);
@@ -359,6 +351,7 @@ const char* GetAuthorizationURL()
 
 int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 {
+
     if(!szCode)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -392,6 +385,7 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
 
     std::cout<< " CODE : " << response.code << std::endl;
     std::cout<< " RESPONSE : " << response.body << std::endl;
+
 
     while(g_pCredManager->TryLock()) { sleep(0); }
     // deserialize auth token

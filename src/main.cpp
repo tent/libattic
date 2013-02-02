@@ -25,12 +25,22 @@
 #include "tentapp.h"
 
 #include "libattic.h"
-
 #include "url.h"
-
 #include "threading.h"
-
 #include "rollsum.h"
+
+TEST(TEST, INIT)
+{
+    int status = InitLibAttic( "./data",
+                  "./config",
+                  "./data/temp",
+                  "https://manuel.tent.is");
+
+    std::cout<<" init status : " << status << std::endl;
+
+    status = ShutdownLibAttic();
+    std::cout<<" Shutdown status : " << status << std::endl;
+}
 
 /*
 void DELETEALLCB(int a, void* b)
@@ -139,7 +149,7 @@ TEST(LIBATTIC, STARTAPPINST)
 }
 /*
 */
-
+/*
 
 void SYNCCB(int a, void* b)
 {
@@ -148,14 +158,22 @@ void SYNCCB(int a, void* b)
 }
 TEST(TEST, SYNC)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
 
-    std::cout<<"syncing..."<<std::endl;
-    SyncFiles(SYNCCB);
-    std::cout<<"done calling ... " << std::endl;
+    if(status == ret::A_OK)
+    {
+        std::cout<<"syncing..."<<std::endl;
+        status = SyncFiles(SYNCCB);
+        std::cout<<"done calling ... " << std::endl;
+
+        if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
+        {
+            EnterPassphrase("password");
+        }
+    }
 
     for(;;)
     {
@@ -165,7 +183,8 @@ TEST(TEST, SYNC)
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
 
-    ShutdownLibAttic();
+    status = ShutdownLibAttic();
+    std::cout<<" Shutdown status : " << status << std::endl;
 }
 
 /*
@@ -596,7 +615,7 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
 //        status = PushFile("./data/oa5.pdf", &FOOFUN);
-//        status = PushFile("./data/cb.pdf", &FOOFUN);
+        status = PushFile("./data/cb.pdf", &FOOFUN);
         status = PushFile("./data/qspn.pdf", &FOOFUN);
         if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
         {
@@ -611,7 +630,7 @@ TEST(PUSH, AFILE)
 
     for(;;)
     {
-       sleep(30);
+       sleep(10);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;

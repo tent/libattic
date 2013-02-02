@@ -132,8 +132,12 @@ void* ThreadFunc(void* arg)
                     } 
                     else
                     {
+
                         if(pTask)
+                        {
+                            std::cout <<"Thread : " << handle << " Got new task : " << std::endl;
                             LocalTaskQueue.push_back(pTask);
+                        }
                     }
 
                 }
