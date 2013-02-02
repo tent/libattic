@@ -7,6 +7,7 @@
 
 #include "utils.h"
 
+#include "constants.h"
 #include "entitymanager.h"
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
@@ -174,6 +175,27 @@ namespace liba
 
         return status;
     }
+
+    int DeserializeIntoAccessToken(const std::string& body, AccessToken& out)
+    {
+        int status = ret::A_OK;
+    
+        if(!JsonSerializer::DeserializeObject(&out, body))
+            status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
+
+        return status;
+    }
+
+    int WriteOutAccessToken(const AccessToken& at, const std::string& outDir)
+    {
+        int status = ret::A_OK;
+        std::string path = outDir;
+        utils::CheckUrlAndAppendTrailingSlash(path);      
+        path.append(cnst::g_szAuthTokenName);
+        return status;
+    }
+
+
 }
 
 #endif

@@ -349,7 +349,9 @@ const char* GetAuthorizationURL()
 }
 
 
-int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
+int RequestUserAuthorizationDetails( const char* szApiRoot, 
+                                     const char* szCode, 
+                                     const char* szConfigDirectory)
 {
 
     if(!szCode)
@@ -366,12 +368,12 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     path.append(g_pApp->GetAppID());
     path.append("/authorizations");
 
-    std::cout<< " PATH : " << path << std::endl;
     // serialize RedirectCode
     std::string serialized;
     if(!JsonSerializer::SerializeObject(&rcode, serialized))
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
+    int status = ret::A_OK;
     Response response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
     pCm->HttpPostWithAuth( path, 
@@ -386,14 +388,14 @@ int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode)
     std::cout<< " CODE : " << response.code << std::endl;
     std::cout<< " RESPONSE : " << response.body << std::endl;
 
+    AccessToken at;
+    status = liba::DeserializeIntoAccessToken(response.body, at);
+    if(status == ret::A_OK)
+    {
+        status = liba::WriteOutAccessToken(at, szConfigDirectory);
+    }
 
-    while(g_pCredManager->TryLock()) { sleep(0); }
-    // deserialize auth token
-    g_pCredManager->DeserializeIntoAccessToken(response.body);
-    g_pCredManager->WriteOutAccessToken();
-    g_pCredManager->Unlock();
-
-    return ret::A_OK;
+    return status;
 }
 
 int LoadAccessToken()

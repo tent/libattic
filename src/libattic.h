@@ -23,6 +23,15 @@ int StartupAppInstance( const char* szAppName,
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szPostPath);
 
+// Pass the api root of the entity (ex "https://test.tent.is/tent/")
+// * Must Register app successfully before proceeding to this step
+int RequestAppAuthorizationURL(const char* szApiRoot);
+
+int RequestUserAuthorizationDetails( const char* szApiRoot, 
+                                     const char* szCode,
+                                     const char* szConfigDirectory); // Config Directory
+
+
 // Api begin
 
 int InitLibAttic( const char* szWorkingDirectory, 
@@ -39,13 +48,7 @@ int RegisterPassphrase(const char* szPass, bool override = false);
 int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
 
-// Pass the api root of the entity (ex "https://test.tent.is/tent/")
-// * Must Register app successfully before proceeding to this step
-int RequestAppAuthorizationURL(const char* szApiRoot);
-
 const char* GetAuthorizationURL();
-
-int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode);
 
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)
