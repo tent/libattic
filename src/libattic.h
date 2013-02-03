@@ -9,6 +9,11 @@ extern "C"
 /* App Registration interface :
  *      This should be done before using the lib, to generate app credentials
  *      and autorize the application for use with the given tent server
+ *      There is an order to this.
+ *      - StartupAppInstance
+ *      - RegisterApp
+ *      - RequestAppAuthorizationURL
+ *      - RequestAppAuthorizationDetails
  */
 
 int StartupAppInstance( const char* szAppName, 
@@ -33,7 +38,6 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
 
 
 // Api begin
-
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
@@ -75,6 +79,10 @@ int SyncFiles(void (*callback)(int, void*));
 
 int SetEntityUrl(const char* szUrl);
 
+// Status Methods
+int GetCurrentTasks(void (*callback)(char* pArr, int count));
+
+// Utility
 const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();

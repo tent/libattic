@@ -72,6 +72,7 @@ int TaskFactory::Shutdown()
     return ret::A_OK;
 }
 
+/*
 Task* TaskFactory::GetTentTask( TaskType type,                                
                                 TentApp* pApp,                                
                                 FileManager* pFm,                             
@@ -110,6 +111,7 @@ Task* TaskFactory::GetTentTask( TaskType type,
     
     return t;
 }
+*/
 
 Task* TaskFactory::SynchronousGetTentTask( TaskType type,                
                                     TentApp* pApp,                

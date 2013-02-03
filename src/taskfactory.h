@@ -1,4 +1,3 @@
-
 #ifndef TASKFACTORY_H_
 #define TASKFACTORY_H_
 #pragma once
@@ -33,6 +32,7 @@ public:
         DECRYPT
     };                                                                  
 
+private:
     void TaskFinished(int code, Task* pTask);
     Task* CreateNewTentTask( TaskType type,                  
                              TentApp* pApp,                  
@@ -57,7 +57,6 @@ public:
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
-    
     Task* SynchronousGetTentTask( TaskType type,                
                            TentApp* pApp,                
                            FileManager* pFm,             
@@ -72,6 +71,7 @@ public:
                            const std::string& configdir, 
                            void (*callback)(int, void*));
 
+/*
     Task* GetTentTask( TaskType type,                                
                        TentApp* pApp,                                
                        FileManager* pFm,                             
@@ -85,6 +85,7 @@ public:
                        const std::string& workingdir,                
                        const std::string& configdir,                 
                        void (*callback)(int, void*));                
+    */
 
 private:
     typedef std::deque<Task*> TaskPool;
@@ -92,7 +93,6 @@ private:
 
     TaskMap     m_TaskPool;
     TaskPool    m_ActiveTasks;
-
 };                                                                      
 
 

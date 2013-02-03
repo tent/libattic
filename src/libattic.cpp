@@ -354,6 +354,7 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
                                      const char* szConfigDirectory)
 {
 
+    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
     if(!szCode)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -632,6 +633,19 @@ int DeleteAllPosts(void (*callback)(int, void*))
         g_Arb.SpinOffTask(t);
     }
 
+    return status;
+}
+
+int GetCurrentTasks(void (*callback)(char* pArr, int count))
+{
+    int status = IsLibInitialized();
+
+    if(status == ret::A_OK)
+    {
+
+
+    }
+ 
     return status;
 }
 
