@@ -29,22 +29,14 @@
 #include "threading.h"
 #include "rollsum.h"
 
-
+/*
 TEST(TEST, INIT)
 {
-    /*
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
-                  */
 
-    std::cout<<" GET GET GET" << std::endl;
-    std::string t;
-    t += GetEntityApiRoot("https://manuel.tent.is");
-    std::cout<<" MY ENTITY URL : " << t  << std::endl;
-    std::cout<<" 2GET GET GET" << std::endl;
-/*
     for(;;)
     {
        sleep(10);
@@ -55,7 +47,6 @@ TEST(TEST, INIT)
 
     status = ShutdownLibAttic();
     std::cout<<" Shutdown status : " << status << std::endl;
-    */
 }
 
 /*
@@ -105,7 +96,7 @@ TEST(LIBATTIC, STARTAPPINST)
                   "./data/temp",
                   "https://manuel.tent.is");
                   */
-/*
+
     char* p[] = { "https://manuel.tent.is" };
     char* s[] = { "read_posts", 
                   "write_posts",
@@ -134,22 +125,21 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RegisterApp("https://manuel.tent.is/tent/apps", "./config");
+    status = RegisterApp("https://manuel.tent.is", "./config");
     if(status != ret::A_OK)
     {
         std::cout<<"register app FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
+    status = RequestAppAuthorizationURL("https://manuel.tent.is");
     if(status != ret::A_OK)
     {
         std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
     }
     std::cout<< GetAuthorizationURL() << std::endl;
     ASSERT_EQ(status, ret::A_OK);
-    */
-   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
+   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
 }
 /*
 */

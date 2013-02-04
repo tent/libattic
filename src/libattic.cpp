@@ -263,22 +263,27 @@ int StartupAppInstance( const char* szAppName,
     return ret::A_OK;
 }
 
-int RegisterApp(const char* szPostPath, const char* szConfigDirectory)
+int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 {
+
     if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
-    if(!szPostPath) return ret::A_FAIL_INVALID_PTR;
+    if(!szEntityUrl) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     g_ConfigDirectory.clear();
     g_ConfigDirectory += (szConfigDirectory);
 
+    std::string postpath;
+    postpath += GetEntityApiRoot(szEntityUrl);
+    utils::CheckUrlAndAppendTrailingSlash(postpath);
+    postpath += "apps";
+
     int status = ret::A_OK;
     std::string serialized;
     if(JsonSerializer::SerializeObject(g_pApp, serialized))
     {
-        std::string path(szPostPath);
         Response response;
-        status = ConnectionManager::GetInstance()->HttpPost( path, 
+        status = ConnectionManager::GetInstance()->HttpPost( postpath, 
                                                              NULL,
                                                              serialized,
                                                              response,

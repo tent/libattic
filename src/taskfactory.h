@@ -9,6 +9,7 @@
 #include "mutexclass.h"
 #include "entity.h"
 #include "task.h"
+#include "taskpool.h"
 
 class TentApp;
 class FileManager;
