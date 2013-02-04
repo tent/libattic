@@ -26,7 +26,8 @@ DeleteAllPostsTask::DeleteAllPostsTask( TentApp* pApp,
                                         const std::string& configdir,
                                         void (*callback)(int, void*))
                                         :
-                                        TentTask( pApp,
+                                        TentTask( Task::DELETEALLPOSTS,
+                                                  pApp,
                                                   pFm,
                                                   pCm,
                                                   pTa,

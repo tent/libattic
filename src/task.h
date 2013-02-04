@@ -18,7 +18,8 @@ public:
 
     enum TaskType                                                       
     {                                                                   
-        PUSH=0,                                                         
+        UNKNOWN=0,
+        PUSH,
         PULL,
         PULLALL,
         DELETE,                                                         
@@ -28,9 +29,10 @@ public:
         DECRYPT
     };
 protected:
-    Task()
+    Task(TaskType type = UNKNOWN)
     {
         m_State = IDLE;
+        m_Type = type;
     }                                                  
 public:                                                       
     virtual ~Task(){}
@@ -40,8 +42,10 @@ public:
     virtual void OnPaused() = 0;
     virtual void OnFinished() = 0;
 
-    int GetTaskState() { return m_State; }
-    void GetTaskState(TaskState state) { m_State = state; }
+    TaskState GetTaskState() const { return m_State; }
+    TaskType GetTaskType() const { return m_Type; }
+    //void GetTaskState(TaskState state) { m_State = state; }
+
 
     virtual void SetIdleState() { m_State = IDLE; }
     virtual void SetRunningState() { m_State = RUNNING; }
@@ -49,6 +53,7 @@ public:
     virtual void SetFinishedState() { m_State = FINISHED; }
 
 private:
+    TaskType    m_Type;
     TaskState   m_State;
 };                                                            
 

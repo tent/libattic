@@ -21,7 +21,8 @@ DeleteTask::DeleteTask( TentApp* pApp,
                         const std::string& configdir,
                         void (*callback)(int, void*))
                         :
-                        TentTask( pApp,
+                        TentTask( Task::DELETE,
+                                  pApp,
                                   pFm,
                                   pCm,
                                   pTa,

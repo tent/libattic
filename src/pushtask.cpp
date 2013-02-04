@@ -24,7 +24,8 @@ PushTask::PushTask( TentApp* pApp,
                     const std::string& configdir,
                     void (*callback)(int, void*))
                     :
-                    TentTask ( pApp,
+                    TentTask ( Task::PUSH,
+                               pApp,
                                pFm,
                                pCm,
                                pTa,

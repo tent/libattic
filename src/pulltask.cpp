@@ -23,7 +23,8 @@ PullTask::PullTask( TentApp* pApp,
                     const std::string& configdir,
                     void (*callback)(int, void*))
                     :
-                    TentTask( pApp,
+                    TentTask( Task::PULL,
+                              pApp,
                               pFm,
                               pCm,
                               pTa,
