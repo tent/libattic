@@ -186,12 +186,14 @@ namespace liba
         return status;
     }
 
-    int WriteOutAccessToken(const AccessToken& at, const std::string& outDir)
+    int WriteOutAccessToken(AccessToken& at, const std::string& outDir)
     {
         int status = ret::A_OK;
         std::string path = outDir;
         utils::CheckUrlAndAppendTrailingSlash(path);      
         path.append(cnst::g_szAuthTokenName);
+        std::cout<<" OUT PATH : " << path << std::endl;
+        status = at.SaveToFile(path);
         return status;
     }
 

@@ -84,11 +84,13 @@ TEST(TEST, DELETEALLPOSTS)
  
 TEST(LIBATTIC, STARTAPPINST)
 {
+    /*
     InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
-
+                  */
+/*
     char* p[] = { "https://manuel.tent.is" };
     char* s[] = { "read_posts", 
                   "write_posts",
@@ -124,29 +126,15 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    //status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
+    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
     if(status != ret::A_OK)
     {
         std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
     }
+    std::cout<< GetAuthorizationURL() << std::endl;
     ASSERT_EQ(status, ret::A_OK);
-
-    //std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
-
-//    status = SaveAppToFile();
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
- //   status = ShutdownLibAttic();
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
+    */
+    ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
 }
 /*
 */

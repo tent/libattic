@@ -358,9 +358,13 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
                                      const char* szConfigDirectory)
 {
 
+    SetConfigDirectory(szConfigDirectory);
+    LoadAppFromFile();
+
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
     if(!szCode)
         return ret::A_FAIL_INVALID_CSTR;
+
 
     // Build redirect code
     RedirectCode rcode;
@@ -381,6 +385,7 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
     int status = ret::A_OK;
     Response response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
+    std::cout<< "PATH : " << path << std::endl;
     pCm->HttpPostWithAuth( path, 
                            NULL,
                            serialized, 
@@ -388,18 +393,27 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
                            g_pApp->GetMacAlgorithm(), 
                            g_pApp->GetMacKeyID(), 
                            g_pApp->GetMacKey(), 
-                           false);
+                           true);
 
     std::cout<< " CODE : " << response.code << std::endl;
     std::cout<< " RESPONSE : " << response.body << std::endl;
 
-    AccessToken at;
-    status = liba::DeserializeIntoAccessToken(response.body, at);
-    if(status == ret::A_OK)
+    if(response.code == 200)
     {
-        status = liba::WriteOutAccessToken(at, szConfigDirectory);
+        AccessToken at;
+        status = liba::DeserializeIntoAccessToken(response.body, at);
+        if(status == ret::A_OK)
+        {
+            std::cout<<" writing out to : " << g_ConfigDirectory << std::endl;
+            status = liba::WriteOutAccessToken(at, g_ConfigDirectory);
+        }
+    }
+    else
+    {
+        status = ret::A_FAIL_NON_200;
     }
 
+    std::cout<<" status : " << status << std::endl;
     return status;
 }
 
