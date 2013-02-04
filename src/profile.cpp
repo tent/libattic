@@ -2,6 +2,7 @@
 
 #include <cbase64.h>
 #include "constants.h"
+#include "errorcodes.h"
 
 AtticProfileInfo::AtticProfileInfo()
 {
@@ -115,6 +116,30 @@ Profile::Profile()
     m_pBasicInfo = NULL;
 }
 
+Profile::Profile(const Profile& rhs)
+{
+    m_pAtticInfo = new AtticProfileInfo();
+    m_pCoreInfo = new CoreProfileInfo();
+    m_pBasicInfo = new BasicProfileInfo();
+
+    *m_pAtticInfo = *(rhs.m_pAtticInfo);
+    *m_pCoreInfo = *(rhs.m_pCoreInfo);
+    *m_pBasicInfo = *(rhs.m_pBasicInfo);
+}
+
+Profile Profile::operator=(const Profile& rhs)
+{
+    m_pAtticInfo = new AtticProfileInfo();
+    m_pCoreInfo = new CoreProfileInfo();
+    m_pBasicInfo = new BasicProfileInfo();
+
+    *m_pAtticInfo = *(rhs.m_pAtticInfo);
+    *m_pCoreInfo = *(rhs.m_pCoreInfo);
+    *m_pBasicInfo = *(rhs.m_pBasicInfo);
+
+    return *this;
+}
+
 Profile::~Profile()
 {
     if(m_pAtticInfo)
@@ -174,3 +199,27 @@ void Profile::Deserialize(Json::Value& root)
         m_pBasicInfo = new BasicProfileInfo();
     JsonSerializer::DeserializeObject(m_pBasicInfo, root[cnst::g_szBasicProfileType]);
 }
+
+int Profile::GetApiRoot(std::string& out)
+{
+    int status = ret::A_OK;
+
+    if(m_pCoreInfo)
+    {
+        CoreProfileInfo::ServerList* serverList = m_pCoreInfo->GetServerList();
+        CoreProfileInfo::ServerList::iterator itr = serverList->begin();
+        for(;itr != serverList->end(); itr++)
+        {
+            out = (*itr);
+            break; // TODO :: this will always get the top most server root
+        }
+
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+

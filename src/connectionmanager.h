@@ -15,6 +15,12 @@ struct Response
 {
     int code;
     std::string body;
+
+    void clear()
+    {
+        code = -1;
+        body.clear();
+    }
 };
 
 class UrlParams;

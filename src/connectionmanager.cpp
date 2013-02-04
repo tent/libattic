@@ -346,6 +346,8 @@ int ConnectionManager::HttpPost( const std::string& url,
     postd.readptr = body.c_str(); // serialized json (should be)
     postd.sizeleft = body.size();
 
+    if(!pCurl)
+        return ret::A_FAIL_INVALID_PTR;
 
     CURLcode res; 
 
@@ -381,6 +383,8 @@ int ConnectionManager::HttpPost( const std::string& url,
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString); 
     curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
     
+
+
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)

@@ -209,53 +209,64 @@ versions and share files with other users.
 ## Library Interaction Abstract
 
 ### Core API
-ALL DEPRICATED, look at libattic.h for actual implementation.
 
- - **StartupAttic()**
-    - This method will essentially take care of all necessary start up functionality of the attic.
-    - This includes:
-        -  Initially requesting the latest metadata and sqlite files.
-        -  Continuing any previously interrupted uploads.
-    - This returns a pointer to manager
- - **ShutdownAttic(terminate=false)**
-    - This will shutdown the lib
-        - it will attempt to finish whatever it was doing before cleanup
-        - if terminate is true it will break out of the process and end it all.
- - **SyncFile(wstring& filepath)**
-    - Pass in a filepath to a file (preferably absolute)
-    - wide string (utf-16)
-    - The lib will queue it for processing
-        - processing includes
-            - syncing metadata
-            - compressing the file
-            - chunking
-            - encrypting
-        - and then send it off to the tent server
-    - This will return a handle to the file's particular processing information
-        - Which can be used to check the status of a particular file.
- - **CancelSync(filehandle)**
-    - This will terminate the process and a cleanup function will be called
- - **PauseSyncing()**
-    - This will pause the entire syncing process
-    - No files will be processed.
-    - Files can still be inserted into the queue
- - **UnpauseSyncing()**
-    - Syncing resumes
- - **GetFileStatus(filehandle)**
-    - returns a struct filled with information pertaining to an actual file.
- - **GetAtticStatus()**
-    - returns a structed filled with infomration pertaining to attic itself
-    - number in queue
-    - current operation
- - **ForceSync()**
-    - Forces the sync process, retrieving necessary metadata
- - **Authenticate(entityuri)**
-    - begins the process to retrieve authentication credentials
-    - returns url the user needs to go to to complete app authentication
- - **TradeInCode(code)**
-    - finish the O-auth process, trade in code for auth keys
- - **SetPassphrase(phrase)**
-    - set's the user's passphrase that all encryption keys are based on
- - **ChangePassphrase(newphrase)**
-    - changes encryption keys
-    - updates all metadata accordingly
+
+int StartupAppInstance( const char* szAppName,
+                        const char* szAppDescription,
+                        const char* szUrl,
+                        const char* szIcon,
+                        char* redirectUris[],
+                        unsigned int uriCount,
+                        char* scopes[],
+                        unsigned int scopeCount);
+
+
+int InitLibAttic( const char* szWorkingDirectory,
+                  const char* szConfigDirectory,
+                  const char* szTempDirectory,
+                  const char* szEntityURL,
+                  unsigned int threadCount = 2);
+
+int ShutdownLibAttic();
+
+// Master Key
+int EnterPassphrase(const char* szPass);
+int RegisterPassphrase(const char* szPass, bool override = false);
+int ChangePassphrase(const char* szOld, const char* szNew);
+int GetPhraseStatus();
+
+// Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
+int RegisterApp(const char* szPostPath);
+
+// Pass the api root of the entity (ex "https://test.tent.is/tent/")
+// * Must Register app successfully before proceeding to this step
+int RequestAppAuthorizationURL(const char* szApiRoot);
+
+const char* GetAuthorizationURL();
+
+int RequestUserAuthorizationDetails(const char* szApiRoot, const char* szCode);
+
+// Save the app in json to a file (Just a utility you probably don't
+// want to use this in production)
+int SaveAppToFile();
+
+// Load the app in json from a file (Just a utility you probably don't
+// want to use this in production)
+int LoadAppFromFile();
+int LoadAccessToken();
+
+// Pushfile to tent
+int PushFile(const char* szFilePath, void (*callback)(int, void*));
+
+// Pullfile from tent
+int PullFile(const char* szFilePath, void (*callback)(int, void*));
+
+// Delete a file
+int DeleteFile(const char* szFileName, void (*callback)(int, void*));
+
+// Pull All files in manifest
+int PullAllFiles(void (*callback)(int, void*)); // Pull into lib, don't expose
+
+int SyncFiles(void (*callback)(int, void*));
+
+

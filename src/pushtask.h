@@ -24,6 +24,7 @@ class PushTask : public TentTask
                         bool pub,
                         const std::string& filepath,
                         const std::string& filename, 
+                        const std::string& chunkname,
                         unsigned int size,
                         FileInfo::ChunkMap* pList);
 
@@ -44,7 +45,7 @@ public:
               TaskArbiter* pTa,
               TaskFactory* pTf,
               const AccessToken& at,
-              const std::string& entity,
+              const Entity& entity,
               const std::string& filepath,
               const std::string& tempdir, 
               const std::string& workingdir,
@@ -52,6 +53,10 @@ public:
               void (*callback)(int, void*));
 
     ~PushTask();
+
+    virtual void OnStart() { } 
+    virtual void OnPaused() { } 
+    virtual void OnFinished() { }
 
     void RunTask();
 

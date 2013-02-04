@@ -37,6 +37,8 @@ int EntityManager::Shutdown()
 
 int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
 {
+    int status = ret::A_OK;
+
     // Check entity url
     std::string profpath = entityurl;
     utils::CheckUrlAndAppendTrailingSlash(profpath);
@@ -72,25 +74,33 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
                 str = tags[i].substr(b, diff);
 
                 entOut.PushBackProfileUrl(str);
-
-                /*
-                Response resp;
-                conops::HttpGet( str, 
-                                 NULL,
-                                 at,
-                                 resp);
-    
-            //    std::cout<< " resp : " << resp.body << std::endl;
-                std::cout<< " code : " << resp.code << std::endl;
-                */
             }
         }
 
         // Grab entity api root etc
         RetrieveEntityProfiles(entOut, at);
+        
+        // Set Api root
+        Profile* pProf = entOut.GetActiveProfile();
+        if(pProf)
+        {
+            std::string apiroot;
+            pProf->GetApiRoot(apiroot);
+            entOut.SetApiRoot(apiroot);
+            entOut.SetEntityUrl(entityurl);
+        }
+        else
+        {
+            status = ret::A_FAIL_INVALID_PTR;
+        }
+
+    }
+    else
+    {
+        status = ret::A_FAIL_NON_200;
     }
 
-    ret::A_OK;
+    return status; 
 }
 
 void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
@@ -125,5 +135,9 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
             }
             itr++;
         }
-    }
+
+        Entity::ProfileList* pProfList = ent.GetProfileList();
+        if(pProfList)
+            ent.SetActiveProfile(&*pProfList->begin());
+   }
 }

@@ -5,6 +5,7 @@
 
 #include "errorcodes.h"
 #include "utils.h"
+#include "conoperations.h"
 
 
 DeleteTask::DeleteTask( TentApp* pApp, 
@@ -13,14 +14,15 @@ DeleteTask::DeleteTask( TentApp* pApp,
                         TaskArbiter* pTa,
                         TaskFactory* pTf,
                         const AccessToken& at,
-                        const std::string& entity,
+                        const Entity& entity,
                         const std::string& filepath,
                         const std::string& tempdir, 
                         const std::string& workingdir,
                         const std::string& configdir,
                         void (*callback)(int, void*))
                         :
-                        TentTask( pApp,
+                        TentTask( Task::DELETE,
+                                  pApp,
                                   pFm,
                                   pCm,
                                   pTa,
@@ -56,6 +58,7 @@ void DeleteTask::RunTask()
 
     // Callback
     Callback(status, NULL);
+    SetFinishedState();
 }
 
 
@@ -93,23 +96,22 @@ int DeleteTask::DeleteFile(const std::string& filename)
 int DeleteTask::DeletePost(const std::string& szPostID)
 {
     // Modify Post
+    Entity entity;
+    GetEntity(entity);
+
     std::string posturl; 
-    GetEntity(posturl);
-    posturl += "/tent/posts/";
+    entity.GetApiRoot(posturl);
+    posturl += "/posts/";
     posturl += szPostID;
 
     std::cout<< " DELETE URL : " << posturl << std::endl;
-
     AccessToken* at = GetAccessToken();
 
     Response response;
-    ConnectionManager::GetInstance()->HttpDelete( posturl,
-                                                  NULL,
-                                                  response,
-                                                  at->GetMacAlgorithm(),
-                                                  at->GetAccessToken(),
-                                                  at->GetMacKey(),
-                                                  true);
+    conops::HttpDelete( posturl,
+                        NULL,
+                        *at,
+                        response);
 
     std::cout<<"Code : " << response.code << std::endl;
     std::cout<<"RESPONSE : " << response.body << std::endl;

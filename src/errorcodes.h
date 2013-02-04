@@ -11,13 +11,13 @@ namespace ret
         A_FAIL_OPEN,
         A_FAIL_ENCRYPT,
         A_FAIL_DECRYPT,
-        A_FAIL_COMPRESS,    // 5
+        A_FAIL_HMAC, // 5
+        A_FAIL_HMAC_VERIFY,
+        A_FAIL_COMPRESS,   
         A_FAIL_DECOMPRESS,
-        A_FAIL_INVALID_PTR,
         A_FAIL_VERIFY_CHUNKS,
-        A_FAIL_WRITE_CHUNK,
-        A_FAIL_ATTEMPT_DOUBLE_FREE,  // 10
-        A_FAIL_TO_SERIALIZE_OBJECT,
+        A_FAIL_WRITE_CHUNK, // 10 
+        A_FAIL_TO_SERIALIZE_OBJECT, 
         A_FAIL_TO_DESERIALIZE_OBJECT,
         A_FAIL_INVALID_CSTR,
         A_FAIL_TO_LOAD_FILE,
@@ -46,8 +46,18 @@ namespace ret
         A_FAIL_ATTEMPT_TO_REINIT,
         A_FAIL_DUPLICATE_ENTRY,
         A_FAIL_RUNNING_SINGLE_INSTANCE,
-        A_FAIL_CREATE_THREAD,
-        A_FAIL_OTHER // to be used sparingly as a placeholder please
+        A_FAIL_CREATE_THREAD, // 40
+        A_FAIL_NO_CREDENTIALS,
+        A_FAIL_INVALID_PTR, // to be used sparingly as a placeholder please
+        A_FAIL_ATTEMPT_DOUBLE_FREE, 
+        A_FAIL_HEX_ENCODE,
+        A_FAIL_HEX_DECODE, // 45
+        A_FAIL_INVALID_FILE_KEY,
+        A_FAIL_LOAD_APP_DATA,
+        A_FAIL_TIMED_OUT,
+        A_FAIL_LIB_INIT,
+        A_FAIL_EMPTY_STRING,
+        A_FAIL_OTHER     
     };
 
 };

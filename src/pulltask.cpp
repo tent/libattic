@@ -1,4 +1,3 @@
-
 #include "pulltask.h"
 
 #include <iostream>
@@ -17,14 +16,15 @@ PullTask::PullTask( TentApp* pApp,
                     TaskArbiter* pTa,
                     TaskFactory* pTf,
                     const AccessToken& at,
-                    const std::string& entity,
+                    const Entity& entity,
                     const std::string& filepath,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
                     void (*callback)(int, void*))
                     :
-                    TentTask( pApp,
+                    TentTask( Task::PULL,
+                              pApp,
                               pFm,
                               pCm,
                               pTa,
@@ -53,18 +53,19 @@ void PullTask::RunTask()
     int status = PullFile(filepath);
 
     Callback(status, NULL);
+    SetFinishedState();
 }
 
 int PullTask::PullFile(const std::string& filepath)
 {                                                                                                
-    std::string filename;                                                                        
-    utils::ExtractFileName(filepath, filename);                                                  
+    //std::string filename;                                                                        
+    //utils::ExtractFileName(filepath, filename);                                                  
 
     if(!GetFileManager())                                                                          
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
     GetFileManager()->Lock();
-    FileInfo* fi = GetFileManager()->GetFileInfo(filename);                                        
+    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
     GetFileManager()->Unlock();
 
     if(!fi)                                                                                      
@@ -74,7 +75,7 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Construct Post URL                                                                        
     std::string postpath;// = m_Entity;                                                             
-    GetEntity(postpath);
+    GetEntityUrl(postpath);
     postpath.append("/tent/posts/");                                                             
 
     std::string postid;                                                                          
@@ -102,7 +103,7 @@ int PullTask::PullFile(const std::string& filepath)
 
             // Construct File                                                                        
             GetFileManager()->Lock();
-            GetFileManager()->ConstructFileNew(filename);
+            GetFileManager()->ConstructFileNew(filepath);
             GetFileManager()->Unlock();
         }
         else
@@ -122,7 +123,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
     {
         // Construct Post URL                                                                        
         std::string postpath;// = m_Entity;
-        GetEntity(postpath);
+        GetEntityUrl(postpath);
         postpath.append("/tent/posts/");                                                             
 
         std::string postid;                                                            
@@ -172,13 +173,13 @@ int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
         attachmentpath.clear();                                                              
         attachmentpath += postpath;                                                          
         attachmentpath.append("/attachments/");                                              
-        attachmentpath += (*itr)->Name;                                                      
+        attachmentpath += (*itr).Name;                                                      
 
         outpath.clear();                                                                     
         GetTempDirectory(outpath);
 
         utils::CheckUrlAndAppendTrailingSlash(outpath);                                             
-        outpath += (*itr)->Name;                                                             
+        outpath += (*itr).Name;                                                             
 
         // Request attachment                                                                
         GetFileAndWriteOut(attachmentpath, outpath);                                         

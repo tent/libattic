@@ -6,7 +6,8 @@
 #include "pullalltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "syncposttask.h"
+#include "deleteallpoststask.h"
+#include "synctask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -36,6 +37,7 @@ int TaskFactory::Shutdown()
 {
     std::cout<<" Shutting down task factory " << std::endl;
 
+    /*
     TaskMap::iterator itr = m_TaskPool.begin();
 
     for(;itr != m_TaskPool.end(); itr++)
@@ -66,11 +68,13 @@ int TaskFactory::Shutdown()
 
         m_ActiveTasks.pop_front();
     }
+    */
 
 
     return ret::A_OK;
 }
 
+/*
 Task* TaskFactory::GetTentTask( TaskType type,                                
                                 TentApp* pApp,                                
                                 FileManager* pFm,                             
@@ -78,7 +82,7 @@ Task* TaskFactory::GetTentTask( TaskType type,
                                 TaskArbiter* pTa,
                                 TaskFactory* pTf,
                                 const AccessToken& at,                        
-                                const std::string& entity,                    
+                                const Entity& entity,                    
                                 const std::string& filepath,                  
                                 const std::string& tempdir,                   
                                 const std::string& workingdir,                
@@ -109,21 +113,25 @@ Task* TaskFactory::GetTentTask( TaskType type,
     
     return t;
 }
+*/
 
-Task* TaskFactory::SyncGetTentTask( TaskType type,                
+Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,                
                                     TentApp* pApp,                
                                     FileManager* pFm,             
                                     CredentialsManager* pCm,      
                                     TaskArbiter* pTa,
                                     TaskFactory* pTf,
                                     const AccessToken& at,        
-                                    const std::string& entity,    
+                                    const Entity& entity,    
                                     const std::string& filepath,  
                                     const std::string& tempdir,   
                                     const std::string& workingdir,
                                     const std::string& configdir, 
                                     void (*callback)(int, void*))
 {
+    // Check Inactive Task Pool
+    // 
+    // Otherwise create a new task
     Task* t = NULL;
     t = CreateNewTentTask( type,
                            pApp,      
@@ -142,22 +150,23 @@ Task* TaskFactory::SyncGetTentTask( TaskType type,
     if(t)
     {
         Lock();
-        m_ActiveTasks.push_back(t);
+        m_ActiveTaskPool.PushBack(t);
+        //m_TaskPool[t->GetTaskType()].push_back(t);
+        //m_ActiveTasks.push_back(t);
         Unlock();
     }
     
     return t;
 }
 
-
-Task* TaskFactory::CreateNewTentTask( TaskType type,                  
+Task* TaskFactory::CreateNewTentTask( Task::TaskType type,                  
                                       TentApp* pApp,                  
                                       FileManager* pFm,               
                                       CredentialsManager* pCm,        
                                       TaskArbiter* pTa,
                                       TaskFactory* pTf,
                                       const AccessToken& at,          
-                                      const std::string& entity,      
+                                      const Entity& entity,      
                                       const std::string& filepath,    
                                       const std::string& tempdir,     
                                       const std::string& workingdir,  
@@ -168,7 +177,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
     Task* t = NULL;
     switch(type)
     {
-    case PUSH:
+        case Task::PUSH:
         {
             t = new PushTask( pApp,                            
                               pFm,                    
@@ -184,7 +193,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                               callback);                         
             break;
         }
-    case PULL:
+        case Task::PULL:
         {
             t = new PullTask( pApp,                             
                               pFm,                     
@@ -200,7 +209,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                               callback);         
             break;
         }
-    case PULLALL:
+        case Task::PULLALL:
         {
             t = new PullAllTask( pApp,                             
                                  pFm,                     
@@ -216,7 +225,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                  callback);   
             break;
         }
-    case DELETE:
+        case Task::DELETE:
         {
             t = new DeleteTask( pApp,                                  
                                 pFm,                          
@@ -232,20 +241,37 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                 callback);             
             break;
         }
-    case SYNCPOSTS:
+        case Task::DELETEALLPOSTS:
         {
-            t = new SyncPostsTask( pApp,                  
-                                   pFm,                   
-                                   pCm,                   
-                                   pTa,                   
-                                   pTf,
-                                   at,                    
-                                   entity,                
-                                   filepath,              
-                                   tempdir,               
-                                   workingdir,            
-                                   configdir,             
-                                   callback);             
+            t = new DeleteAllPostsTask( pApp,                                  
+                                pFm,                          
+                                pCm,          
+                                pTa,                          
+                                pTf,
+                                at,
+                                entity,                                
+                                filepath,                              
+                                tempdir,                         
+                                workingdir,                      
+                                configdir,                       
+                                callback);     
+
+            break;
+        }
+        case Task::SYNC:
+        {
+            t = new SyncTask( pApp,                  
+                              pFm,                   
+                              pCm,                   
+                              pTa,                   
+                              pTf,
+                              at,                    
+                              entity,                
+                              filepath,              
+                              tempdir,               
+                              workingdir,            
+                              configdir,             
+                              callback);             
             break;
         }
     default:
@@ -256,6 +282,15 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
 
 
     return t;
+}
+
+int TaskFactory::RemoveActiveTask(Task* pTask)
+{
+    int status = ret::A_OK;
+    // Remove from active list
+
+
+    return status;
 }
 
 void TaskFactory::TaskFinished(int code, Task* pTask)

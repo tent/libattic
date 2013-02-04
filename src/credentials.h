@@ -5,23 +5,39 @@
 
 #include <string>
 #include <stdio.h>
-
 #include <aes.h>
 
-class Credentials
+#include "jsonserializable.h"
+
+class Credentials : public JsonSerializable
 {
 public:
     Credentials();
     ~Credentials();
 
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
+
+    void GetSerializedCredentials(std::string& out);
+
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
 
-    void GetKey(std::string& out) { out.append(reinterpret_cast<char*>(m_Key), GetKeySize()); }
-    void GetIv(std::string& out) { out.append(reinterpret_cast<char*>(m_Iv), GetIvSize()); }
+    void GetKey(std::string& out) const;
+    std::string GetKey() const;
+
+    void GetIv(std::string& out) const;
+    std::string GetIv() const;
+    
 
     int SetKey(const std::string& key);
+    int SetKey(const byte* pKey, const unsigned int length);
+
     int SetIv(const std::string& iv); 
+    int SetIv(const byte* pIv, const unsigned int length);
+
+    bool KeyEmpty();
+    bool IvEmpty();
 
     // TODO :: make this private
     byte m_Key[CryptoPP::AES::MAX_KEYLENGTH+1];

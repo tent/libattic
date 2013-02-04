@@ -40,20 +40,28 @@ private:
 class CoreProfileInfo : public JsonSerializable
 {
 public:
+    typedef std::vector<std::string> ServerList;
+    typedef std::vector<std::string> LicenseList;
+
     CoreProfileInfo();
     ~CoreProfileInfo();
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
 
-private:
-    typedef std::vector<std::string> ServerList;
-    typedef std::vector<std::string> LicenseList;
+    ServerList* GetServerList() { return &m_Servers; }
+    void GetServerList(ServerList& out) const { out = m_Servers; }
 
+    LicenseList* GetLicenseList() { return &m_Licenses; }
+    void GetLicenseList(LicenseList& out) const { out = m_Licenses; }
+
+
+private:
+    
     Permissions m_Permissions; // `json:"permissions"
     std::string m_Entity;     //`json:"entity"`   //The canonical entity identitifier.
-    ServerList  m_Licenses;   //`json:"licenses"` //The licenses the entity publishes content under.
-    LicenseList m_Servers;    //`json:"servers"`  //The canonical API roots that can be used to interact with the entity.
+    LicenseList  m_Licenses;   //`json:"licenses"` //The licenses the entity publishes content under.
+    ServerList m_Servers;    //`json:"servers"`  //The canonical API roots that can be used to interact with the entity.
 };
 
 class BasicProfileInfo : public JsonSerializable
@@ -79,6 +87,8 @@ class Profile : public JsonSerializable
 {
 public:
     Profile();
+    Profile(const Profile& rhs);
+    Profile operator=(const Profile& rhs);
     ~Profile();
 
     void Serialize(Json::Value& root);
@@ -91,6 +101,8 @@ public:
     void SetAtticInfo(AtticProfileInfo* pInfo) { m_pAtticInfo = pInfo; }
     void SetCoreProfileInfo(CoreProfileInfo* pInfo) { m_pCoreInfo = pInfo; }
     void SetBasicProfileInfo(BasicProfileInfo* pInfo) { m_pBasicInfo = pInfo; }
+
+    int GetApiRoot(std::string& out);
 
 private:
     AtticProfileInfo*    m_pAtticInfo;

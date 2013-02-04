@@ -12,31 +12,18 @@ Entity::Entity()
 
 Entity::~Entity()
 {
-    DeleteProfiles();
 }
 
-void Entity::ResetEntity()
+void Entity::Reset()
 {
     DeleteProfiles();
     m_ProfileUrls.clear();
+    m_EntityUrl.clear();
+    m_ApiRoot.clear();
 }
 
 void Entity::DeleteProfiles()
 {
-    ProfileList::iterator itr = m_Profiles.begin();
-
-    while(itr != m_Profiles.end())
-    {
-        if(*itr)
-        {
-            // TODO :: step through this and make sure
-            //         it does what you think it does
-            delete (*itr);
-            (*itr) = NULL;
-        }
-        itr++;
-    }
-
     m_Profiles.clear();
 }
  
@@ -107,7 +94,7 @@ void Entity::Serialize(Json::Value& root)
     for(;itr != m_Profiles.end(); itr++)
     {
         buffer.clear();
-        JsonSerializer::SerializeObject(*itr, buffer);
+        JsonSerializer::SerializeObject(&*itr, buffer);
         profiles.push_back(buffer);
     }
 
@@ -128,8 +115,8 @@ void Entity::Deserialize(Json::Value& root)
     std::vector<std::string>::iterator itr = profiles.begin();
     for(;itr != profiles.end(); itr++)
     {
-        Profile* p = new Profile();
-        JsonSerializer::DeserializeObject(p, *itr);
+        Profile p;
+        JsonSerializer::DeserializeObject(&p, *itr);
         m_Profiles.push_back(p);
     }
 

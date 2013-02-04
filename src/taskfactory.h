@@ -1,4 +1,3 @@
-
 #ifndef TASKFACTORY_H_
 #define TASKFACTORY_H_
 #pragma once
@@ -8,8 +7,9 @@
 
 #include "accesstoken.h"
 #include "mutexclass.h"
+#include "entity.h"
+#include "task.h"
 
-class Task;
 class TentApp;
 class FileManager;
 class ConnectionManager;
@@ -19,27 +19,17 @@ class TaskArbiter;
 
 class TaskFactory : public MutexClass
 {                                                                       
-public:                                                                 
-    enum TaskType                                                       
-    {                                                                   
-        PUSH=0,                                                         
-        PULL,
-        PULLALL,
-        DELETE,                                                         
-        SYNCPOSTS,
-        ENCRYPT,
-        DECRYPT
-    };                                                                  
-
+private:
     void TaskFinished(int code, Task* pTask);
-    Task* CreateNewTentTask( TaskType type,                  
+
+    Task* CreateNewTentTask( Task::TaskType type,                  
                              TentApp* pApp,                  
                              FileManager* pFm,               
                              CredentialsManager* pCm,        
                              TaskArbiter* pTa,
                              TaskFactory* pTf,
                              const AccessToken& at,          
-                             const std::string& entity,      
+                             const Entity& entity,      
                              const std::string& filepath,    
                              const std::string& tempdir,     
                              const std::string& workingdir,  
@@ -53,20 +43,25 @@ public:
     int Initialize();
     int Shutdown();
 
-    Task* SyncGetTentTask( TaskType type,                
+    // Synchronous versions of methods take care of locking themselves,
+    // this method locks and unlocks before completing, making it blocking.
+    Task* SynchronousGetTentTask( Task::TaskType type,                
                            TentApp* pApp,                
                            FileManager* pFm,             
                            CredentialsManager* pCm,      
                            TaskArbiter* pTa,
                            TaskFactory* pTf,
                            const AccessToken& at,        
-                           const std::string& entity,    
+                           const Entity& entity,    
                            const std::string& filepath,  
                            const std::string& tempdir,   
                            const std::string& workingdir,
                            const std::string& configdir, 
                            void (*callback)(int, void*));
 
+    int RemoveActiveTask(Task* pTask);
+
+/*
     Task* GetTentTask( TaskType type,                                
                        TentApp* pApp,                                
                        FileManager* pFm,                             
@@ -74,22 +69,18 @@ public:
                        TaskArbiter* pTa,
                        TaskFactory* pTf,
                        const AccessToken& at,                        
-                       const std::string& entity,                    
+                       const Entity& entity,                    
                        const std::string& filepath,                  
                        const std::string& tempdir,                   
                        const std::string& workingdir,                
                        const std::string& configdir,                 
                        void (*callback)(int, void*));                
+    */
 
 private:
-    typedef std::deque<Task*> TaskPool;
-    typedef std::map<TaskType, TaskPool> TaskMap;
-
-    TaskMap     m_TaskPool;
-    TaskPool    m_ActiveTasks;
-
+    TaskPool    m_ActiveTaskPool;
+    TaskPool    m_InactiveTaskPool;
 };                                                                      
-
 
 #endif
 

@@ -2,8 +2,11 @@
 #include "atticpost.h"
 
 #include <stdio.h>
+#include <cbase64.h>
 
+#include "fileinfo.h"
 #include "constants.h"
+#include "errorcodes.h"
 
 AtticPost::AtticPost()
 {
@@ -26,6 +29,7 @@ void AtticPost::Serialize(Json::Value& root)
     char buf[256];
     snprintf(buf, 256, "%d", m_Size);
     SetContent("size", buf);
+    SetContent("chunk_name", m_ChunkName);
     
     Json::Value chunkposts;
     JsonSerializer::SerializeVector(chunkposts, m_ChunkPosts);
@@ -33,15 +37,21 @@ void AtticPost::Serialize(Json::Value& root)
     JsonSerializer::SerializeJsonValue(chunkposts, chunkval);
     SetContent("chunk_posts", chunkval);
 
-    //root["chunk_posts"] = chunkposts;
-
     Json::Value chunkids;
     JsonSerializer::SerializeVector(chunkids, m_ChunkIds);
     std::string idval;
     JsonSerializer::SerializeJsonValue(chunkids, idval);
     SetContent("chunk_ids", idval);
 
-    //root["chunk_ids"] = chunkids;
+    SetContent( "kdata", 
+                cb64::base64_encode( reinterpret_cast<const unsigned char*>(m_KeyData.c_str()), 
+                                     m_KeyData.size())
+              );
+
+    SetContent( "vdata",
+                cb64::base64_encode( reinterpret_cast<const unsigned char*>(m_IvData.c_str()),
+                                     m_IvData.size())
+              );
 
     Post::Serialize(root);
 }
@@ -60,6 +70,7 @@ void AtticPost::Deserialize(Json::Value& root)
     m_Size = atoi(size.c_str());
 
     std::string chunkval, idval;
+    GetContent("chunk_name", m_ChunkName);
     GetContent("chunk_posts", chunkval);
     GetContent("chunk_ids", idval);
 
@@ -69,6 +80,10 @@ void AtticPost::Deserialize(Json::Value& root)
 
     JsonSerializer::DeserializeIntoVector(cp, m_ChunkPosts);
     JsonSerializer::DeserializeIntoVector(ci, m_ChunkIds);
-}
 
+    GetContent("kdata", m_KeyData);
+    m_KeyData = cb64::base64_decode(m_KeyData);
+    GetContent("vdata", m_IvData);
+    m_IvData = cb64::base64_decode(m_IvData);
+}
 

@@ -14,19 +14,29 @@ Post::~Post()
 {
     if(m_Attachments.size() > 0)
     {
+        std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
 
         AttachmentVec::iterator itr = m_Attachments.begin();
 
         Attachment* pAtch=0;
         for(;itr != m_Attachments.end();)
         {
-            pAtch = *itr;
+            //pAtch = *itr;
             itr++;
-            delete pAtch;
-            pAtch = 0;
+            /*
+            if(pAtch)
+            {
+                std::cout<<"Name : " << pAtch->Name << std::endl;
+                std::cout<<"deleting ... " << std::endl;
+                delete pAtch;
+                pAtch = NULL;
+            }
+            */
         }
 
         m_Attachments.clear();
+        std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
+
 
     }
 }
@@ -134,7 +144,8 @@ void Post::Deserialize(Json::Value& root)
 
         for(; itr != atch.end(); itr++)                   
         {                                                
-            Attachment* pAtch = new Attachment;
+            //Attachment* pAtch = new Attachment;
+            Attachment pAtch;
             Json::Value aobj(Json::objectValue);
             aobj = (*itr);
 
@@ -146,7 +157,7 @@ void Post::Deserialize(Json::Value& root)
 
                     for(; ii != aobj.end(); ii++)
                     {
-                        pAtch->AssignKeyValue(ii.key().asString(), (*ii));
+                        pAtch.AssignKeyValue(ii.key().asString(), (*ii));
                     }
                     //pAtch->AssignKeyValue(itr.key(), *itr);
                 }

@@ -64,6 +64,7 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk)
     if(m_Chunks.find(chunkname) == m_Chunks.end())
     {
         m_Chunks[chunkname] = Chunk;
+        m_ChunkCount = m_Chunks.size();
     }
     else
     {
@@ -133,4 +134,16 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
     return true;
 }
 
+bool FileInfo::LoadSerializedChunkPost(const std::string& data)
+{
+
+    return true;
+}
+
+bool FileInfo::HasEncryptedKey()
+{
+    if(m_EncryptedKey.empty())
+        return false;
+    return true;
+}
 
