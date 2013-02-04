@@ -19,7 +19,8 @@ class TentTask : public Task
 {
 
 public:
-    TentTask( TentApp* pApp, 
+    TentTask( Task::TaskType type,
+              TentApp* pApp, 
               FileManager* pFm, 
               CredentialsManager* pCm,
               TaskArbiter* pTa,
@@ -31,6 +32,8 @@ public:
               const std::string& workingdir,
               const std::string& configdir,
               void (*callback)(int, void*))
+              : 
+              Task(type)
     {
         m_pTentApp              = pApp;
         m_pFileManager          = pFm;
