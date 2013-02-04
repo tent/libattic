@@ -37,6 +37,7 @@ int TaskFactory::Shutdown()
 {
     std::cout<<" Shutting down task factory " << std::endl;
 
+    /*
     TaskMap::iterator itr = m_TaskPool.begin();
 
     for(;itr != m_TaskPool.end(); itr++)
@@ -67,6 +68,7 @@ int TaskFactory::Shutdown()
 
         m_ActiveTasks.pop_front();
     }
+    */
 
 
     return ret::A_OK;
@@ -127,6 +129,9 @@ Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,
                                     const std::string& configdir, 
                                     void (*callback)(int, void*))
 {
+    // Check Inactive Task Pool
+    // 
+    // Otherwise create a new task
     Task* t = NULL;
     t = CreateNewTentTask( type,
                            pApp,      
@@ -145,13 +150,14 @@ Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,
     if(t)
     {
         Lock();
-        m_ActiveTasks.push_back(t);
+        m_ActiveTaskPool.PushBack(t);
+        //m_TaskPool[t->GetTaskType()].push_back(t);
+        //m_ActiveTasks.push_back(t);
         Unlock();
     }
     
     return t;
 }
-
 
 Task* TaskFactory::CreateNewTentTask( Task::TaskType type,                  
                                       TentApp* pApp,                  
@@ -276,6 +282,15 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
 
 
     return t;
+}
+
+int TaskFactory::RemoveActiveTask(Task* pTask)
+{
+    int status = ret::A_OK;
+    // Remove from active list
+
+
+    return status;
 }
 
 void TaskFactory::TaskFinished(int code, Task* pTask)
