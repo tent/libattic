@@ -38,6 +38,8 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
 
 const char* GetAuthorizationURL();
 
+const char* GetEntityApiRoot(const char* szEntityUrl);
+
 // Api begin
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,

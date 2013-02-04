@@ -1250,6 +1250,16 @@ int IsLibInitialized(bool checkPassphrase)
     return status;
 }
 
+const char* GetEntityApiRoot(const char* szEntityUrl)
+{
+    Entity out;
+    conops::Discover(szEntityUrl, out);
+
+    std::string apiroot;
+    out.GetApiRoot(apiroot);
+
+    return apiroot.c_str();
+}
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
