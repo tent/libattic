@@ -80,7 +80,7 @@ TEST(TEST, DELETEALLPOSTS)
 }
 /*
  */
-/*
+
  
 TEST(LIBATTIC, STARTAPPINST)
 {
@@ -117,23 +117,23 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RegisterApp("https://manuel.tent.is/tent/apps");
+    status = RegisterApp("https://manuel.tent.is/tent/apps", "./config");
     if(status != ret::A_OK)
     {
         std::cout<<"register app FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
+    //status = RequestAppAuthorizationURL("https://manuel.tent.is/tent/");
     if(status != ret::A_OK)
     {
         std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
+    //std::cout<<"URL : " << GetAuthorizationURL() << std::endl;
 
-    status = SaveAppToFile();
+//    status = SaveAppToFile();
 
     if(status != ret::A_OK)
     {
@@ -141,7 +141,7 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = ShutdownLibAttic();
+ //   status = ShutdownLibAttic();
     if(status != ret::A_OK)
     {
         std::cout<<"FAILED : " << status << std::endl;
@@ -599,6 +599,7 @@ TEST(PULL, AFILE)
 
 /*
  **/
+/*
 
 static void FOOFUN(int a, void* b)
 {

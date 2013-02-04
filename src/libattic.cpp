@@ -263,10 +263,14 @@ int StartupAppInstance( const char* szAppName,
     return ret::A_OK;
 }
 
-int RegisterApp(const char* szPostPath)
+int RegisterApp(const char* szPostPath, const char* szConfigDirectory)
 {
+    if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
     if(!szPostPath) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
+
+    g_ConfigDirectory.clear();
+    g_ConfigDirectory += (szConfigDirectory);
 
     int status = ret::A_OK;
     std::string serialized;
@@ -1224,7 +1228,7 @@ int IsLibInitialized(bool checkPassphrase)
     if(!g_pApp) status = ret::A_FAIL_INVALID_APP_INSTANCE;
     if(!g_pCredManager) status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     if(!g_pFileManager) status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE; 
-    if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
+    //if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
 
     return status;
 }
