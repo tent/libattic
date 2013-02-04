@@ -1176,6 +1176,7 @@ int SetWorkingDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
+    g_WorkingDirectory.clear();
     g_WorkingDirectory.append(szDir);
 
     return ret::A_OK;
@@ -1186,6 +1187,7 @@ int SetConfigDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
+    g_ConfigDirectory.clear();
     g_ConfigDirectory.append(szDir);
 
     return ret::A_OK;
@@ -1196,6 +1198,7 @@ int SetTempDirectory(const char* szDir)
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
+    g_TempDirectory.clear();
     g_TempDirectory.append(szDir);
 
     return ret::A_OK;
