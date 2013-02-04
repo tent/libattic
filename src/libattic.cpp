@@ -1224,7 +1224,7 @@ int IsLibInitialized(bool checkPassphrase)
     if(!g_pApp) status = ret::A_FAIL_INVALID_APP_INSTANCE;
     if(!g_pCredManager) status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     if(!g_pFileManager) status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE; 
-    if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
+    //if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
 
     return status;
 }
@@ -1232,4 +1232,3 @@ int IsLibInitialized(bool checkPassphrase)
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
-
