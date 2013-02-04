@@ -113,7 +113,7 @@ Task* TaskFactory::GetTentTask( TaskType type,
 }
 */
 
-Task* TaskFactory::SynchronousGetTentTask( TaskType type,                
+Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,                
                                     TentApp* pApp,                
                                     FileManager* pFm,             
                                     CredentialsManager* pCm,      
@@ -153,7 +153,7 @@ Task* TaskFactory::SynchronousGetTentTask( TaskType type,
 }
 
 
-Task* TaskFactory::CreateNewTentTask( TaskType type,                  
+Task* TaskFactory::CreateNewTentTask( Task::TaskType type,                  
                                       TentApp* pApp,                  
                                       FileManager* pFm,               
                                       CredentialsManager* pCm,        
@@ -171,7 +171,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
     Task* t = NULL;
     switch(type)
     {
-    case PUSH:
+        case Task::PUSH:
         {
             t = new PushTask( pApp,                            
                               pFm,                    
@@ -187,7 +187,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                               callback);                         
             break;
         }
-    case PULL:
+        case Task::PULL:
         {
             t = new PullTask( pApp,                             
                               pFm,                     
@@ -203,7 +203,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                               callback);         
             break;
         }
-    case PULLALL:
+        case Task::PULLALL:
         {
             t = new PullAllTask( pApp,                             
                                  pFm,                     
@@ -219,7 +219,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                  callback);   
             break;
         }
-    case DELETE:
+        case Task::DELETE:
         {
             t = new DeleteTask( pApp,                                  
                                 pFm,                          
@@ -235,7 +235,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
                                 callback);             
             break;
         }
-    case DELETEALLPOSTS:
+        case Task::DELETEALLPOSTS:
         {
             t = new DeleteAllPostsTask( pApp,                                  
                                 pFm,                          
@@ -252,7 +252,7 @@ Task* TaskFactory::CreateNewTentTask( TaskType type,
 
             break;
         }
-    case SYNC:
+        case Task::SYNC:
         {
             t = new SyncTask( pApp,                  
                               pFm,                   

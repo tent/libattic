@@ -8,8 +8,8 @@
 #include "accesstoken.h"
 #include "mutexclass.h"
 #include "entity.h"
+#include "task.h"
 
-class Task;
 class TentApp;
 class FileManager;
 class ConnectionManager;
@@ -19,22 +19,9 @@ class TaskArbiter;
 
 class TaskFactory : public MutexClass
 {                                                                       
-public:                                                                 
-    enum TaskType                                                       
-    {                                                                   
-        PUSH=0,                                                         
-        PULL,
-        PULLALL,
-        DELETE,                                                         
-        DELETEALLPOSTS,
-        SYNC,
-        ENCRYPT,
-        DECRYPT
-    };                                                                  
-
 private:
     void TaskFinished(int code, Task* pTask);
-    Task* CreateNewTentTask( TaskType type,                  
+    Task* CreateNewTentTask( Task::TaskType type,                  
                              TentApp* pApp,                  
                              FileManager* pFm,               
                              CredentialsManager* pCm,        
@@ -57,7 +44,7 @@ public:
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
-    Task* SynchronousGetTentTask( TaskType type,                
+    Task* SynchronousGetTentTask( Task::TaskType type,                
                            TentApp* pApp,                
                            FileManager* pFm,             
                            CredentialsManager* pCm,      
@@ -89,7 +76,7 @@ public:
 
 private:
     typedef std::deque<Task*> TaskPool;
-    typedef std::map<TaskType, TaskPool> TaskMap;
+    typedef std::map<Task::TaskType, TaskPool> TaskMap;
 
     TaskMap     m_TaskPool;
     TaskPool    m_ActiveTasks;

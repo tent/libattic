@@ -466,7 +466,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
         std::string url;
         g_Entity.GetEntityUrl(url);
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PUSH,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::PUSH,
                                                 g_pApp, 
                                                 g_pFileManager, 
                                                 g_pCredManager,
@@ -496,7 +496,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULL,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::PULL,
                                                 g_pApp, 
                                                 g_pFileManager, 
                                                 g_pCredManager,
@@ -526,7 +526,7 @@ int PullAllFiles(void (*callback)(int, void*))
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::PULLALL,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::PULLALL,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,
@@ -557,7 +557,7 @@ int SyncFiles(void (*callback)(int, void*))
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::SYNC,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::SYNC,
                                                         g_pApp, 
                                                         g_pFileManager, 
                                                         g_pCredManager,
@@ -587,7 +587,7 @@ int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETE,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::DELETE,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,
@@ -617,7 +617,7 @@ int DeleteAllPosts(void (*callback)(int, void*))
         g_pCredManager->GetAccessTokenCopy(at);
         g_pCredManager->Unlock();
 
-        Task* t = g_TaskFactory.SynchronousGetTentTask( TaskFactory::DELETEALLPOSTS,
+        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::DELETEALLPOSTS,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,

@@ -16,6 +16,17 @@ public:
         FINISHED
     };
 
+    enum TaskType                                                       
+    {                                                                   
+        PUSH=0,                                                         
+        PULL,
+        PULLALL,
+        DELETE,                                                         
+        DELETEALLPOSTS,
+        SYNC,
+        ENCRYPT,
+        DECRYPT
+    };
 protected:
     Task()
     {
