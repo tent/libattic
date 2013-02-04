@@ -29,6 +29,7 @@
 #include "threading.h"
 #include "rollsum.h"
 
+/*
 TEST(TEST, INIT)
 {
     int status = InitLibAttic( "./data",
@@ -598,7 +599,6 @@ TEST(PULL, AFILE)
 
 /*
  **/
-/*
 
 static void FOOFUN(int a, void* b)
 {
@@ -616,7 +616,7 @@ TEST(PUSH, AFILE)
     {
 //        status = PushFile("./data/oa5.pdf", &FOOFUN);
         status = PushFile("./data/cb.pdf", &FOOFUN);
-        status = PushFile("./data/qspn.pdf", &FOOFUN);
+//        status = PushFile("./data/qspn.pdf", &FOOFUN);
         if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
         {
             status =  EnterPassphrase("password");
