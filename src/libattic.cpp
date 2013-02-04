@@ -1232,4 +1232,3 @@ int IsLibInitialized(bool checkPassphrase)
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
-
