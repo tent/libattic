@@ -56,6 +56,7 @@ namespace ret
         A_FAIL_LOAD_APP_DATA,
         A_FAIL_TIMED_OUT,
         A_FAIL_LIB_INIT,
+        A_FAIL_EMPTY_STRING,
         A_FAIL_OTHER     
     };
 

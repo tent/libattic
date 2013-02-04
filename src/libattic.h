@@ -30,9 +30,9 @@ int RegisterApp(const char* szPostPath, const char* szConfigDirectory);
 
 // Pass the api root of the entity (ex "https://test.tent.is/tent/")
 // * Must Register app successfully before proceeding to this step
-int RequestAppAuthorizationURL(const char* szApiRoot);
+int RequestAppAuthorizationURL(const char* szEntityUrl);
 
-int RequestUserAuthorizationDetails( const char* szApiRoot, 
+int RequestUserAuthorizationDetails( const char* szEntityUrl, 
                                      const char* szCode,
                                      const char* szConfigDirectory); // Config Directory
 

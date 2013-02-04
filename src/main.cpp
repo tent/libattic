@@ -29,18 +29,33 @@
 #include "threading.h"
 #include "rollsum.h"
 
-/*
+
 TEST(TEST, INIT)
 {
+    /*
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
+                  */
 
-    std::cout<<" init status : " << status << std::endl;
+    std::cout<<" GET GET GET" << std::endl;
+    std::string t;
+    t += GetEntityApiRoot("https://manuel.tent.is");
+    std::cout<<" MY ENTITY URL : " << t  << std::endl;
+    std::cout<<" 2GET GET GET" << std::endl;
+/*
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
 
     status = ShutdownLibAttic();
     std::cout<<" Shutdown status : " << status << std::endl;
+    */
 }
 
 /*
@@ -134,7 +149,7 @@ TEST(LIBATTIC, STARTAPPINST)
     std::cout<< GetAuthorizationURL() << std::endl;
     ASSERT_EQ(status, ret::A_OK);
     */
-    ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
+   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
 }
 /*
 */
@@ -266,8 +281,8 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
-/*
 
+/**
 TEST(REGISTER, PASSPHRASE)
 {
     int status = InitLibAttic( "./data",
@@ -276,11 +291,11 @@ TEST(REGISTER, PASSPHRASE)
                   "https://manuel.tent.is");
 
 
-//    EnterPassphrase("password");
+    EnterPassphrase("password");
 
     {
-        std::cout<<" REGISTERING PASSPHRASE " << std::endl;
-        status = RegisterPassphrase("password", true);
+//        std::cout<<" REGISTERING PASSPHRASE " << std::endl;
+//        status = RegisterPassphrase("password", true);
         
         std::cout<< " REGISTER STATUS : " << status << std::endl;
         for(;;)
@@ -291,6 +306,7 @@ TEST(REGISTER, PASSPHRASE)
            std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
         }
     }
+
 
  
 

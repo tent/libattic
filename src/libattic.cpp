@@ -296,10 +296,17 @@ int RegisterApp(const char* szPostPath, const char* szConfigDirectory)
     return status;
 }
 
-int RequestAppAuthorizationURL(const char* szApiRoot)
+int RequestAppAuthorizationURL(const char* szEntityUrl)
 {
     if(!g_pApp)
         return ret::A_FAIL_INVALID_APP_INSTANCE;
+
+    std::string apiroot;
+    apiroot = GetEntityApiRoot(szEntityUrl);
+
+    if(apiroot.empty())
+        return ret::A_FAIL_EMPTY_STRING;
+
 
     UrlParams val;
     val.AddValue(std::string("client_id"), g_pApp->GetAppID());
@@ -331,7 +338,7 @@ int RequestAppAuthorizationURL(const char* szApiRoot)
     //val.AddValue("tent_post_types", "https://tent.io/types/posts/status/v0.1.0");
 
     g_AuthorizationURL.clear();
-    g_AuthorizationURL.append(szApiRoot);
+    g_AuthorizationURL.append(apiroot);
 
     utils::CheckUrlAndAppendTrailingSlash(g_AuthorizationURL);
 
@@ -353,7 +360,7 @@ const char* GetAuthorizationURL()
 }
 
 
-int RequestUserAuthorizationDetails( const char* szApiRoot, 
+int RequestUserAuthorizationDetails( const char* szEntityUrl,
                                      const char* szCode, 
                                      const char* szConfigDirectory)
 {
@@ -365,13 +372,19 @@ int RequestUserAuthorizationDetails( const char* szApiRoot,
     if(!szCode)
         return ret::A_FAIL_INVALID_CSTR;
 
+    std::string apiroot;
+    apiroot = GetEntityApiRoot(szEntityUrl);
+
+    if(apiroot.empty())
+        return ret::A_FAIL_EMPTY_STRING;
+
 
     // Build redirect code
     RedirectCode rcode;
     rcode.SetCode(std::string(szCode));
     rcode.SetTokenType(std::string("mac"));
 
-    std::string path(szApiRoot);
+    std::string path(apiroot);
     utils::CheckUrlAndAppendTrailingSlash(path);
     path.append("apps/");
     path.append(g_pApp->GetAppID());
