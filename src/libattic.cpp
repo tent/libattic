@@ -265,7 +265,6 @@ int StartupAppInstance( const char* szAppName,
 
 int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 {
-
     if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
     if(!szEntityUrl) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
@@ -288,6 +287,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
                                                              serialized,
                                                              response,
                                                              false);
+
         // Deserialize new data into app
         if(JsonSerializer::DeserializeObject(g_pApp, response.body))
             SaveAppToFile();
@@ -1271,10 +1271,18 @@ int IsLibInitialized(bool checkPassphrase)
 const char* GetEntityApiRoot(const char* szEntityUrl)
 {
     Entity out;
-    conops::Discover(szEntityUrl, out);
 
-    std::string apiroot;
-    out.GetApiRoot(apiroot);
+        std::string apiroot;
+    int status = conops::Discover(szEntityUrl, out);
+    if(status == ret::A_OK)
+    {
+
+        out.GetApiRoot(apiroot);
+    }
+    else
+    {
+        std::cout<<" ERR : " << status << std::endl;
+    }
 
     return apiroot.c_str();
 }

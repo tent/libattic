@@ -201,10 +201,13 @@ namespace conops
     static void RetrieveEntityProfiles(Entity& ent)
     {
         unsigned int profcount = ent.GetProfileCount();
+        std::cout<<" PROF COUNT : " << profcount << std::endl;
         if(profcount)
         {
             const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
             Entity::UrlList::const_iterator itr = ProfUrlList->begin();
+
+            std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
 
             while(itr != ProfUrlList->end())
             {
@@ -244,28 +247,85 @@ namespace conops
        }
     }
 
-    static int Discover(const std::string& entityurl, Entity& entOut)
+    static int HeadRequestEntity(const std::string& entityurl, Entity& entOut)
     {
         int status = ret::A_OK;
 
-        // Check entity url
-        std::string profpath = entityurl;
-        utils::CheckUrlAndAppendTrailingSlash(profpath);
-        profpath += "profile";
-
         Response response;
-        ConnectionManager::GetInstance()->HttpGet( profpath,
-                                                   NULL,
-                                                   response,
-                                                   true); 
-        std::cout<<" body : " << response.body << std::endl;
+        ConnectionManager::GetInstance()->HttpHead( entityurl,
+                                                    NULL,
+                                                    response,
+                                                    true); 
+
         if(response.code == 200)
         {
+            std::cout<<" RESPONSE : " << response.body << std::endl;
 
+            utils::split s;
+            utils::SplitString(response.body, '\n', s);
+
+            std::cout<<" SIZE : " << s.size() << std::endl;
+
+            utils::split::iterator itr = s.begin();
+            for(;itr != s.end(); itr++)
+            {
+                size_t pos = (*itr).find("Link");
+                std::cout<< " POS : " << pos << std::endl;
+                
+                if(pos != (size_t)-1)
+                {
+                    pos = (*itr).find("<");
+
+                    if(pos != (size_t)-1)
+                    {
+                        size_t end = (*itr).find(">", pos+1);
+                        size_t diff = (end - (pos+1));
+                        std::string str = (*itr).substr(pos+1, diff);
+
+                        std::cout<<" DIFF : " << str << std::endl;
+
+                        std::string url;
+                        if(str.find(entityurl) == (size_t)-1)
+                        {
+                            std::string eurl = entityurl;
+                            utils::CheckUrlAndRemoveTrailingSlash(eurl);
+                            url += eurl + str;
+                        }
+                        else
+                            url = str;
+
+                        std::cout<<" URL : " << url << std::endl;
+                        entOut.PushBackProfileUrl(url);
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            status = ret::A_FAIL_NON_200;
+        }
+
+        return status;
+    }
+
+    static int GetRequestEntity(const std::string& entityurl, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        Response response;
+        ConnectionManager::GetInstance()->HttpGet( entityurl,
+                                                    NULL,
+                                                    response,
+                                                    true); 
+
+        if(response.code == 200)
+        {
             // Parse out all link tags
             utils::taglist tags;
             utils::FindAndExtractAllTags("link", response.body, tags);
 
+            std::cout<<" TAG SIZE : " << tags.size() << std::endl;
             std::string str;
             for(int i = 0; i< tags.size() ; i++)
             {
@@ -286,6 +346,7 @@ namespace conops
                 }
             }
 
+            /*
             // Grab entity api root etc
             RetrieveEntityProfiles(entOut);
             
@@ -302,11 +363,46 @@ namespace conops
             {
                 status = ret::A_FAIL_INVALID_PTR;
             }
+            */
 
         }
         else
         {
             status = ret::A_FAIL_NON_200;
+        }
+
+        return status;
+
+    }
+
+    static int Discover(const std::string& entityurl, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        status = HeadRequestEntity(entityurl,entOut);
+        if(status != ret::A_OK)
+        {
+            status = GetRequestEntity(entityurl, entOut);
+        }
+
+        if(status == ret::A_OK)
+        {
+            // Grab entity api root etc
+            RetrieveEntityProfiles(entOut);
+            
+            // Set Api root
+            Profile* pProf = entOut.GetActiveProfile();
+            if(pProf)
+            {
+                std::string apiroot;
+                pProf->GetApiRoot(apiroot);
+                entOut.SetApiRoot(apiroot);
+                entOut.SetEntityUrl(entityurl);
+            }
+            else
+            {
+                status = ret::A_FAIL_INVALID_PTR;
+            }
         }
 
         return status; 

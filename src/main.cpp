@@ -29,14 +29,25 @@
 #include "threading.h"
 #include "rollsum.h"
 
-/*
+
 TEST(TEST, INIT)
 {
+
+    /*
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
+                  */
 
+    int status =0;
+    std::cout<<" GET GET GET" << std::endl;
+    std::string t;
+    t += GetEntityApiRoot("https://polar-springs-6638.herokuapp.com/");
+    
+    //t += GetEntityApiRoot("https://manuel.tent.is");
+    std::cout<<" MY ENTITY URL : " << t  << std::endl;
+    std::cout<<" 2GET GET GET" << std::endl;
     for(;;)
     {
        sleep(10);
@@ -48,7 +59,8 @@ TEST(TEST, INIT)
     status = ShutdownLibAttic();
     std::cout<<" Shutdown status : " << status << std::endl;
 }
-
+/*
+*/
 /*
 void DELETEALLCB(int a, void* b)
 {
@@ -88,15 +100,15 @@ TEST(TEST, DELETEALLPOSTS)
  */
 
  
-TEST(LIBATTIC, STARTAPPINST)
-{
+//TEST(LIBATTIC, STARTAPPINST)
+//{
     /*
     InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
                   */
-
+/*
     char* p[] = { "https://manuel.tent.is" };
     char* s[] = { "read_posts", 
                   "write_posts",
@@ -139,7 +151,8 @@ TEST(LIBATTIC, STARTAPPINST)
     }
     std::cout<< GetAuthorizationURL() << std::endl;
     ASSERT_EQ(status, ret::A_OK);
-   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
+    
+   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
 }
 /*
 */

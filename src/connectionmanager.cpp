@@ -176,6 +176,52 @@ int ConnectionManager::GetResponseCode(CURL* pCurl)
     return responsecode; 
 }
 
+int ConnectionManager::HttpHead( const std::string &url, 
+                                const UrlParams* pParams,
+                                Response& responseOut, 
+                                bool verbose)
+{
+
+    CURL* pCurl = curl_easy_init();
+    CURLcode res; 
+
+    if(verbose)
+        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
+
+    curl_slist *headers = 0; // Init to null, always
+    headers = curl_slist_append(headers, "Accept: application/vnd.tent.v0+json" );
+    headers = curl_slist_append(headers, "Content-Type: application/vnd.tent.v0+json");
+    headers = curl_slist_append(headers, "Connection: close");
+
+    std::string urlPath = url;
+    EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+    curl_easy_setopt(pCurl, CURLOPT_HEADER, true); // header will be at output
+    curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "HEAD"); 
+    curl_easy_setopt(pCurl, CURLOPT_FORBID_REUSE, true);
+
+
+    curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+    curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+    curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body);
+
+    // Write out headers 
+    curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+
+    res = curl_easy_perform(pCurl);
+
+    if(res != CURLE_OK)
+    {
+        //std::cout<<"ERRR"<<std::endl;
+        return ret::A_FAIL_CURL_PERF;
+    }
+
+    responseOut.code = GetResponseCode(pCurl);
+    curl_easy_cleanup(pCurl);
+
+    return ret::A_OK;
+}
+
 int ConnectionManager::HttpGet( const std::string &url, 
                                 const UrlParams* pParams,
                                 Response& responseOut, 
@@ -260,8 +306,7 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
 
     // Write out headers 
     curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
-
-
+  
     res = curl_easy_perform(pCurl);
 
     if(res != CURLE_OK)

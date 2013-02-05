@@ -71,6 +71,11 @@ public:
     // 
     static ConnectionManager* GetInstance();
 
+    int HttpHead( const std::string &url, 
+                  const UrlParams* pParams,
+                  Response& responseOut, 
+                  bool verbose);
+
     int HttpGet( const std::string &url, 
                  const UrlParams* pParams, 
                  Response& responseOut,

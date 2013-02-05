@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <time.h>
 #include <stdlib.h>
@@ -128,6 +129,20 @@ namespace utils
             url.append("/");                            
     }
 
+    static void CheckUrlAndRemoveTrailingSlash(std::string &url)
+    {
+        if(url.empty())                                 
+            return;                                          
+
+        if(url[url.size()-1] == '/')               
+        {
+            size_t end = (url.size()-1)-0;
+            std::string hold = url.substr(0, end);
+            url.clear();
+            url += hold;
+        }
+    }
+
     static void GenerateRandomString(std::string& out, unsigned int len = 10)
     {
         static const char alph[] = { "0123456789"
@@ -175,6 +190,19 @@ namespace utils
             // Look for the next tag
             found = content.find(btag, pos);
         }
+    } 
+
+    static void ExtractFromHeader( const std::string& delim,
+                                   const std::string& content,
+                                   std::vector<std::string>& out)
+    {
+        std::cout<<" incoming : " << content << std::endl;
+
+        size_t found = content.find(delim);
+
+        std::cout<<" found : " << found << std::endl;
+
+
     } 
 }
 
