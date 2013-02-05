@@ -135,31 +135,13 @@ add_library(attic STATIC ${libattic_SOURCE})
 # copy libs to lib folder
 execute_process(COMMAND cp ${crypto_lib} ./lib)
 execute_process(COMMAND cp ${jsoncpp_lib} ./lib)
+execute_process(COMMAND cp ./src/libattic.h ./lib)
+
+add_custom_command(TARGET attic 
+                   POST_BUILD
+                   WORKING_DIRECTORY ./lib
+                   COMMAND python makelib.py)
  
-# archiver commands -- commands
-file(GLOB libs "./lib/*.a")
-foreach(lib ${libs})
-    message(STATUS "EXTRACTING : [${lib}]" )
-    execute_process(WORKING_DIRECTORY ./lib
-                    COMMAND ar -x ${lib}
-                    RESULT_VARIABLE ret_var)
-
-    message(STATUS "DELETING : [${lib}]" )
-    execute_process(WORKING_DIRECTORY ./lib
-                    COMMAND rm ${lib}
-                    RESULT_VARIABLE ret_var)
-endforeach()
-
-file(GLOB objects "./lib/*.o")
-foreach(obj ${objects})
-    execute_process(WORKING_DIRECTORY ./lib
-                    COMMAND ar -rv libattic.a ${obj}
-                    RESULT_VARIABLE ret_var)
-    execute_process(WORKING_DIRECTORY ./lib
-                    COMMAND rm ${obj}
-                    RESULT_VARIABLE ret_var)
-endforeach()
-
 ###############################################################################
 # To compile the test executable
 #add_executable(attic ${libattic_SOURCE})
