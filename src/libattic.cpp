@@ -192,7 +192,7 @@ int SetFileManagerMasterKey()
     return ret::A_OK;
 }
 
-int ShutdownLibAttic()
+int ShutdownLibAttic(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -221,6 +221,7 @@ int ShutdownLibAttic()
     if(status != ret::A_OK)
         std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
 
+    callback(status, NULL);
     return status;
 }
 
