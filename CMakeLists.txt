@@ -45,6 +45,10 @@ else()
                     COMMAND rm libgtest_main.a 
                     RESULT_VARIABLE ret_var)
 
+    execute_process(WORKING_DIRECTORY ./third_party/googletest
+                    COMMAND make clean
+                    RESULT_VARIABLE ret_var)
+
     file(GLOB_RECURSE gtest_lib "./third_party/googletest/*.a")
 endif(gtest_lib)
 
@@ -64,15 +68,9 @@ else()
                    RESULT_VARIABLE ret_var)
 
     execute_process(WORKING_DIRECTORY ./third_party/c5
-                    COMMAND mkdir lib
-                    RESULT_VARIABLE ret_var)
-
-    execute_process(WORKING_DIRECTORY ./third_party/c5
-                    COMMAND cp libcryptopp.a ./lib)
-               
-    execute_process(WORKING_DIRECTORY ./third_party/c5
                    COMMAND make clean
                    RESULT_VARIABLE ret_var)
+
     file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
 endif(crypto_lib)
 
@@ -145,8 +143,7 @@ foreach(lib ${libs})
     execute_process(WORKING_DIRECTORY ./lib
                     COMMAND ar -x ${lib}
                     RESULT_VARIABLE ret_var)
-endforeach()
-foreach(lib ${libs})
+
     message(STATUS "DELETING : [${lib}]" )
     execute_process(WORKING_DIRECTORY ./lib
                     COMMAND rm ${lib}
