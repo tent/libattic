@@ -47,7 +47,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount = 2);
 
-int ShutdownLibAttic();
+int ShutdownLibAttic(void (*callback)(int, void*));
 
 // Master Key
 int EnterPassphrase(const char* szPass);
