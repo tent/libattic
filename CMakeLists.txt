@@ -68,8 +68,12 @@ else()
                    RESULT_VARIABLE ret_var)
 
     execute_process(WORKING_DIRECTORY ./third_party/c5
-                   COMMAND make clean
+                   COMMAND mv libcryptopp.a ./lib
                    RESULT_VARIABLE ret_var)
+
+    execute_process(WORKING_DIRECTORY ./third_party/c5
+                    COMMAND make clean
+                    RESULT_VARIABLE ret_var)
 
     file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
 endif(crypto_lib)
@@ -130,24 +134,24 @@ set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ${jsoncpp_lib})
 
 ###############################################################################
 # To compile a static lib
-add_library(attic STATIC ${libattic_SOURCE})
+#add_library(attic STATIC ${libattic_SOURCE})
 
 # copy libs to lib folder
 execute_process(COMMAND cp ${crypto_lib} ./lib)
 execute_process(COMMAND cp ${jsoncpp_lib} ./lib)
 execute_process(COMMAND cp ./src/libattic.h ./lib)
 
-add_custom_command(TARGET attic 
-                   POST_BUILD
-                   WORKING_DIRECTORY ./lib
-                   COMMAND python makelib.py)
+#add_custom_command(TARGET attic 
+#                   POST_BUILD
+#                   WORKING_DIRECTORY ./lib
+#                   COMMAND python makelib.py)
  
 ###############################################################################
 # To compile the test executable
-#add_executable(attic ${libattic_SOURCE})
+add_executable(attic ${libattic_SOURCE})
 
 #link libs
-#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 
