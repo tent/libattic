@@ -5,6 +5,8 @@
 
 import os
 
+print("testing")
+
 os.chdir(".")
 
 liblist = []
@@ -18,9 +20,10 @@ for files in os.listdir("."):
         print("cmd : " + cmd)
         os.system(cmd)
             
-
 #pack everything to a new lib
-cmd = "ar -rv libfinal.a *.o"
+cmd = "ar -rv libfinal *.o"
 os.system(cmd)
 os.system("rm -rf *.o")
+os.system("rm -rf *.a")
+os.system("mv libfinal libattic.a")
 
