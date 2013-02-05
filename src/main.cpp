@@ -28,8 +28,9 @@
 #include "url.h"
 #include "threading.h"
 #include "rollsum.h"
+#include "log.h"
 
-
+/*
 TEST(TEST, INIT)
 {
 
@@ -39,7 +40,7 @@ TEST(TEST, INIT)
                   "./data/temp",
                   "https://manuel.tent.is");
                   */
-
+/*
     int status =0;
     std::cout<<" GET GET GET" << std::endl;
     std::string t;
@@ -1222,6 +1223,15 @@ TEST(COMPRESS, ENCRYPT)
     // TODO :: De-Chunk a file
 
 // REAL TESTS
+TEST(LOG, LOGGING)
+{
+    Log logger;
+    std::ostringstream os;
+
+    os << "testing this ";
+
+    std::cout<< os.str() << std::endl;
+}
 
 TEST(CREDENTIALS, ISEMPTY)
 {
