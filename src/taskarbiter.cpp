@@ -6,6 +6,7 @@
 #include "threading.h"
 
 TaskArbiter* TaskArbiter::m_pInstance = 0;
+bool TaskArbiter::m_bInitialized = false;
 
 TaskArbiter::TaskArbiter()
 {
@@ -38,6 +39,7 @@ int TaskArbiter::Initialize(unsigned int poolSize)
         m_pPool->Initialize();
         m_pPool->SetTaskQueue(m_pTaskQueue);
         m_pPool->ExtendPool(poolSize);
+        m_bInitialized = true;
     }
     else
     {
@@ -74,9 +76,16 @@ TaskArbiter* TaskArbiter::GetInstance()
 // Spin off detached thread, (not explicitly detached,
 // but treated as such, in all actuallity on most platforms
 // its probably joinable)
-void TaskArbiter::SpinOffTask(Task* pTask)
+int TaskArbiter::SpinOffTask(Task* pTask)
 {
-    m_pTaskQueue->SyncPushBack(pTask);
+    int status = ret::A_OK;
+
+    if(m_bInitialized)
+        m_pTaskQueue->SyncPushBack(pTask);
+    else
+        status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
+
+    return status;
 }
 
 

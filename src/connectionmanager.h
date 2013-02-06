@@ -61,7 +61,7 @@ public:
                       const std::string &key, 
                       std::string &out);
 
-    void Initialize();
+    int Initialize();
     int Shutdown();
 
     // Note * the reason for the singleton, is that libcurl is not threadsafe

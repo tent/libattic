@@ -80,9 +80,10 @@ ConnectionManager* ConnectionManager::GetInstance()
     return m_pInstance;
 }
 
-void ConnectionManager::Initialize()
+int ConnectionManager::Initialize()
 {
     utils::SeedRand();
+    return ret::A_OK;
 }
 
 int ConnectionManager::Shutdown()
@@ -565,9 +566,10 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
         curl_multi_perform(multi_handle, &still_running);
 
         /* lets start the fetch */
+        /*
         do {
                 struct timeval timeout;
-                int rc; /* select() return code */ 
+                int rc; // select() return code 
              
                 fd_set fdread;
                 fd_set fdwrite;
@@ -580,7 +582,7 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
                 FD_ZERO(&fdwrite);
                 FD_ZERO(&fdexcep);
                                                            
-                /* set a suitable timeout to play around with */ 
+                // set a suitable timeout to play around with
                 timeout.tv_sec = 1;
                 timeout.tv_usec = 0;
                        
@@ -593,37 +595,60 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
                         timeout.tv_usec = (curl_timeo % 1000) * 1000;
                  }
                                                                                                                                   
-                /* get file descriptors from the transfers */ 
+                // get file descriptors from the transfers 
                 curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
 
-                /* In a real-world program you OF COURSE check the return code of the
-                function calls.  On success, the value of maxfd is guaranteed to be
-                greater or equal than -1.  We call select(maxfd + 1, ...), specially in
-                case of (maxfd == -1), we call select(0, ...), which is basically equal
-                to sleep. */ 
+                // In a real-world program you OF COURSE check the return code of the
+                // function calls.  On success, the value of maxfd is guaranteed to be
+                // greater or equal than -1.  We call select(maxfd + 1, ...), specially in
+                // case of (maxfd == -1), we call select(0, ...), which is basically equal
+                // to sleep. 
 
                 rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
 
                 switch(rc) {
                 case -1:
-                /* select error */ 
+                // select error 
                 break;
                 case 0:
                 default:
-                /* timeout or readable/writable sockets */ 
-                printf("perform!\n");
+                // timeout or readable/writable sockets 
+//                printf("perform!\n");
                 curl_multi_perform(multi_handle, &still_running);
-                printf("running: %d!\n", still_running);
+//                printf("running: %d!\n", still_running);
+
+                double speed_upload, total_time;
+                // now extract transfer info 
+                curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
+                curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
+
+                std::cout<<" speed : " << speed_upload << std::endl;
+                std::cout<<" time : " << total_time << std::endl;
+                printf("Speed: %.3f bytes/sec during %.3f seconds\n", speed_upload, total_time);
+
                 break;
                 }
             } while(still_running);
 
-/*
+            */
+
         do {
-                while(::curl_multi_perform(multi_handle, &still_running) ==
+            while(::curl_multi_perform(multi_handle, &still_running) ==
                                 CURLM_CALL_MULTI_PERFORM);
+
+            /*
+            double speed_upload, total_time;
+            // now extract transfer info 
+            curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
+            curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
+
+            std::cout<<" speed : " << speed_upload << std::endl;
+            std::cout<<" time : " << total_time << std::endl;
+            printf("Speed: %.3f bytes/sec during %.3f seconds\n", speed_upload, total_time);
+            */
+
         } while (still_running);
-*/
+
 
         responseOut.code = GetResponseCode(pCurl);
         curl_multi_cleanup(multi_handle);
@@ -638,6 +663,7 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
     }
 
     curl_easy_cleanup(pCurl);
+    pCurl = NULL;
 
     return ret::A_OK;
 }
@@ -874,6 +900,14 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
         return ret::A_FAIL_CURL_PERF;
     }
 
+    double speed_upload, total_time;
+    /* now extract transfer info */
+    curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
+    curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
+
+    std::cout<<" speed : " << speed_upload << std::endl;
+    std::cout<<" time : " << total_time;
+
     responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);
 
@@ -955,6 +989,14 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
         //std::cout<<"Post failed... " << curl_easy_strerror(res) << std::endl;
         return ret::A_FAIL_CURL_PERF;
     }
+
+    double speed_upload, total_time;
+    /* now extract transfer info */
+    curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
+    curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
+
+    std::cout<<" speed : " << speed_upload << std::endl;
+    std::cout<<" time : " << total_time;
 
     responseOut.code = GetResponseCode(pCurl);
     curl_easy_cleanup(pCurl);

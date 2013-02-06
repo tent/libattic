@@ -25,9 +25,10 @@ public:
 
     static TaskArbiter* GetInstance();
 
-    void SpinOffTask(Task* pTask); // Spin off detached thread
+    int SpinOffTask(Task* pTask); // Spin off detached thread
 
 private:
+    static bool            m_bInitialized;
     static TaskArbiter*    m_pInstance;
     TaskQueue*             m_pTaskQueue;
     ThreadPool*            m_pPool;

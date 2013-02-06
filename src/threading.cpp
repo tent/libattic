@@ -188,22 +188,19 @@ int ThreadPool::Initialize()
 
 int ThreadPool::Shutdown()
 {
-    std::cout<<" sending exit signals " << std::endl;
-    std::cout<<" thread count : " << m_ThreadData.size() << std::endl;
-
-
     while(m_ThreadData.size() != m_ThreadCount)
     {
-        log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
+        //log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
         //TODO:: hack, find a better way.
         sleep(1);
         static unsigned int shutdowncount = 0;
         if(shutdowncount == 10)
+        {
+            log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
             break;
+        }
         shutdowncount++;
-        
     }
-
 
     for(unsigned int i=0; i<m_ThreadData.size(); i++)
     {

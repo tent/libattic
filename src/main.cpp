@@ -30,7 +30,7 @@
 #include "rollsum.h"
 #include "log.h"
 
-
+/*
 TEST(TEST, INIT)
 {
 
@@ -50,7 +50,7 @@ TEST(TEST, INIT)
         std::cout << e.what() << std::endl;
 
     }
-/*
+
     int status =0;
     std::cout<<" GET GET GET" << std::endl;
     std::string t;
@@ -69,7 +69,6 @@ TEST(TEST, INIT)
 
     status = ShutdownLibAttic();
     std::cout<<" Shutdown status : " << status << std::endl;
-    */
 }
 /*
 */
@@ -619,7 +618,7 @@ TEST(PULL, AFILE)
 
 /*
  **/
-/*
+
 
 
 static void FOOFUN(int a, void* b)
@@ -632,6 +631,7 @@ TEST(PUSH, AFILE)
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
+                  "./config/log",
                   "https://manuel.tent.is");
 
     if(status == 0)
