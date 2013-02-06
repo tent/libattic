@@ -1225,12 +1225,12 @@ TEST(COMPRESS, ENCRYPT)
 // REAL TESTS
 TEST(LOG, LOGGING)
 {
-    Log logger;
-    std::ostringstream os;
+    log::InitializeLogging("./config");
+    Logger logger;
 
-    os << "testing this ";
-
-    std::cout<< os.str() << std::endl;
+    logger.Log(Logger::INFO, "this is a test");
+    logger.PrintBuffer();
+    log::ShutdownLogging();
 }
 
 TEST(CREDENTIALS, ISEMPTY)
