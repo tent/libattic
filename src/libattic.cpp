@@ -103,6 +103,7 @@ FileManager* GetFileManager() { return g_pFileManager; }
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
+                  const char* szLogDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
@@ -115,7 +116,8 @@ int InitLibAttic( const char* szWorkingDirectory,
     SetTempDirectory(szTempDirectory);
 
     // Initialize logging
-    log::InitializeLogging(g_ConfigDirectory);
+    log::InitializeLogging(szLogDirectory);
+    log::Log(Logger::DEBUG, "Init");
 
     status = LoadAppFromFile();
     if(status == ret::A_OK)

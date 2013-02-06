@@ -37,11 +37,13 @@ TEST(TEST, INIT)
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
+                  "./config/log",
                   "https://manuel.tent.is");
 
+    GetDate();
     try
     {
-    status = ShutdownLibAttic(NULL);
+        status = ShutdownLibAttic(NULL);
     }
     catch(std::exception& e)
     {

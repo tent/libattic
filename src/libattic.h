@@ -44,6 +44,7 @@ const char* GetEntityApiRoot(const char* szEntityUrl);
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
+                  const char* szLogDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount = 2);
 
