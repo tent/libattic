@@ -12,6 +12,7 @@
 #include "connectionmanager.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
+#include "taskarbiter.h"
 //#include "entity.h"
 
 // Inward facing utility methods used at libattic interface level
@@ -80,6 +81,20 @@ namespace liba
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
         }
 
+        return status;
+    }
+
+    int InitializeTaskArbiter(const unsigned int threadCount)
+    {
+        int status = ret::A_OK;
+        status = TaskArbiter::GetInstance()->Initialize(threadCount);
+        return status;
+    }
+
+    int ShutdownTaskArbiter()
+    {
+        int status = ret::A_OK;
+        status = TaskArbiter::GetInstance()->Shutdown();
         return status;
     }
 
