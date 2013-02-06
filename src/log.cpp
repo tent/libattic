@@ -21,13 +21,33 @@ void SyncBuffer::Startup(const std::string& directory)
         std::string filepath;
         filepath = directory;
         utils::CheckUrlAndAppendTrailingSlash(filepath);
-        filepath += TimeNowNoFormat() + "_log";
+        filepath += GetDate() + "_log";
 
-        m_Ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::app);
-
-        if(m_Ofs.is_open())
+        std::string hold = filepath;
+        static int namecount = 0;
+        for(;;)
         {
-            m_Filepath = filepath;
+            if(utils::CheckFilesize(hold) < 4000000)
+            {
+                m_Ofs.open(hold.c_str(), std::ofstream::out | std::ofstream::app);
+                if(m_Ofs.is_open())
+                {
+                    m_Filepath = filepath;
+                    // Check size
+
+                }
+                break;
+            }
+            else
+            {
+                hold = filepath;
+                char buf[100]={'\0'};
+                sprintf(buf, "%d", namecount);
+                hold.append(buf);
+                namecount++;
+                //std::cout<<" filepath : " << filepath << std::endl;
+            }
+
         }
     }
 }

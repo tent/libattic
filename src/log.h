@@ -152,8 +152,35 @@ inline std::string TimeNowNoFormat()
     }
 
     return buf;
-
 }
+
+#include <ctime>
+#include <string.h>
+inline std::string GetDate()
+{
+    std::string date;
+    time_t t = time(0);   // get time now
+    struct tm * now = localtime( & t );
+
+    char buf[256] = {'\0'};
+    sprintf(buf, "%d", (now->tm_year + 1900));
+    date += buf;
+
+    date += '-';
+    memset(buf, '\0', 256);
+    sprintf(buf, "%d", (now->tm_mon + 1));
+    date += buf;
+    
+    date += '-';
+    memset(buf, '\0', 256);
+    sprintf(buf, "%d", (now->tm_mday));
+    date += buf;
+
+    return date;
+}
+
+
+
 
 #endif
 
