@@ -1226,10 +1226,22 @@ TEST(COMPRESS, ENCRYPT)
 TEST(LOG, LOGGING)
 {
     log::InitializeLogging("./config");
-    Logger logger;
+    Logger logger, logger2;
 
     logger.Log(Logger::INFO, "this is a test");
-    logger.PrintBuffer();
+//    logger.PrintBuffer();
+
+    std::string filepath;
+    log::GetCurrentLogFilepath(filepath);
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ifstream::in);
+
+    ASSERT_EQ(ifs.is_open(), true);
+
+    if(ifs.is_open())
+        ifs.close();
+
     log::ShutdownLogging();
 }
 

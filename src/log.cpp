@@ -24,6 +24,11 @@ void SyncBuffer::Startup(const std::string& directory)
         filepath += TimeNowNoFormat() + "_log";
 
         m_Ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::app);
+
+        if(m_Ofs.is_open())
+        {
+            m_Filepath = filepath;
+        }
     }
 }
 
@@ -77,7 +82,7 @@ std::string Logger::ToString(Logger::LogLevel level)
     return buffer[0];
 }
 
-void Logger::Log(Logger::LogLevel level, const std::string& input)
+void Logger::Log(const Logger::LogLevel level, const std::string& input)
 {
     os << TimeNow();
     os << " - " << ToString(level) << " : " << input << std::endl;

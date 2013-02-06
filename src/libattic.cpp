@@ -29,6 +29,7 @@
 #include "conoperations.h"
 
 #include "libatticutils.h"
+#include "log.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -105,6 +106,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
+
     int status = ret::A_OK;
     // Init sequence ORDER MATTERS
     utils::SeedRand();
@@ -112,51 +114,54 @@ int InitLibAttic( const char* szWorkingDirectory,
     SetWorkingDirectory(szWorkingDirectory);
     SetTempDirectory(szTempDirectory);
 
+    // Initialize logging
+    log::InitializeLogging(g_ConfigDirectory);
+
     status = LoadAppFromFile();
     if(status == ret::A_OK)
     {
         // Essential
         status = SetEntityUrl(szEntityURL);
 
-        if(status != ret::A_OK)
-            std::cout<<"seu FAILED : " << status << std::endl;
+        if(status != ret::A_OK) 
+            log::Log(Logger::ERROR, "Failed to set entity url");
 
         status = liba::InitializeFileManager( &g_pFileManager,
                                               cnst::g_szManifestName,
                                               g_ConfigDirectory,
                                               g_TempDirectory );
-        if(status != ret::A_OK)
-            std::cout<<"fm FAILED : " << status << std::endl;
+        if(status != ret::A_OK) 
+            log::Log(Logger::ERROR, "Failed to initialize filemanager");
 
         status = liba::InitializeCredentialsManager( &g_pCredManager,
                                                      g_ConfigDirectory);
         if(!g_pCredManager)
-            std::cout<<"failed to create cred manager " << std::endl;
+            log::Log(Logger::ERROR, "Failed to initialize credential manager");
 
         if(status != ret::A_OK)
-            std::cout<<"cm FAILED : " << status << std::endl;
+            log::Log(Logger::ERROR, "Failed to initialize credential manager");
 
         status = liba::InitializeEntityManager( &g_pEntityManager );
         if(status != ret::A_OK)
-            std::cout<<"em FAILED : " << status << std::endl;
+            log::Log(Logger::ERROR, "Failed to initialize entity manager");
 
         // Non-essential
         LoadAccessToken();
         
         status = g_Arb.Initialize(threadCount);
         if(status != ret::A_OK)
-            std::cout<<"arb FAILED : " << status << std::endl;
+            log::Log(Logger::ERROR, "Failed to initialize task arbiter");
 
         status = g_TaskFactory.Initialize();
         if(status != ret::A_OK)
-            std::cout<<"Task Factory FAILED : " << status << std::endl;
+            log::Log(Logger::ERROR, "Failed to initialize task factor");
 
         // Load Entity Authentication  - ORDER MATTERS
         LoadEntity();
         
         status = LoadPhraseToken();
         if(status != ret::A_OK)
-            std::cout<<"Load Phrase FAILED : " << status << std::endl;
+            log::Log(Logger::ERROR, "Failed to load phrase token");
 
         // Try to load a master key if we have one
         if(LoadMasterKey() == ret::A_OK) // don't set it equal to status, because if this fails
@@ -168,9 +173,8 @@ int InitLibAttic( const char* szWorkingDirectory,
     else
     {
         status = ret::A_FAIL_LOAD_APP_DATA;
+        log::Log(Logger::ERROR, "Failed to load app data");
     }
-
-    std::cout<<"initialization success"<<std::endl;
 
     if(status == ret::A_OK)
         g_bLibInitialized = true;
@@ -199,29 +203,31 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     // Shutdown threading first, ALWAYS
     status = g_Arb.Shutdown();
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown task arbiter " << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown task arbiter ");
 
     status = g_TaskFactory.Shutdown();
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown task factory " << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown task factory ");
 
     status = liba::ShutdownFileManager(g_pFileManager);
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown filemanger" << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown filemanger");
 
     status = liba::ShutdownCredentialsManager(g_pCredManager);
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown credentials manager" << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown credentials manager");
     
     status = liba::ShutdownAppInstance(g_pApp);
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown app instance" << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown app instance");
 
     status = liba::ShutdownEntityManager(g_pEntityManager);
     if(status != ret::A_OK)
-        std::cout<<"FAILED : " << status << " failed to shutdown entity manager" << std::endl;
+        log::Log(Logger::ERROR, " failed to shutdown entity manager");
 
     callback(status, NULL);
+
+    log::ShutdownLogging();
     return status;
 }
 
@@ -404,7 +410,7 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
     int status = ret::A_OK;
     Response response;
     ConnectionManager* pCm = ConnectionManager::GetInstance();
-    std::cout<< "PATH : " << path << std::endl;
+
     pCm->HttpPostWithAuth( path, 
                            NULL,
                            serialized, 
@@ -414,8 +420,8 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
                            g_pApp->GetMacKey(), 
                            true);
 
-    std::cout<< " CODE : " << response.code << std::endl;
-    std::cout<< " RESPONSE : " << response.body << std::endl;
+    //std::cout<< " CODE : " << response.code << std::endl;
+    //std::cout<< " RESPONSE : " << response.body << std::endl;
 
     if(response.code == 200)
     {
@@ -423,7 +429,6 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
         status = liba::DeserializeIntoAccessToken(response.body, at);
         if(status == ret::A_OK)
         {
-            std::cout<<" writing out to : " << g_ConfigDirectory << std::endl;
             status = liba::WriteOutAccessToken(at, g_ConfigDirectory);
         }
     }
@@ -432,7 +437,6 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
         status = ret::A_FAIL_NON_200;
     }
 
-    std::cout<<" status : " << status << std::endl;
     return status;
 }
 
@@ -844,9 +848,11 @@ int EnterPassphrase(const char* szPass)
 
         if(status == ret::A_OK)
         {
+            /*
             std::cout<< " PASS : " << szPass << std::endl;
             std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
             std::cout<< " salt : " << salt << std::endl;
+            */
 
             status = DecryptMasterKey(phraseKey, salt);
             if(status == ret::A_OK)
@@ -858,7 +864,7 @@ int EnterPassphrase(const char* szPass)
                 if(status == ret::A_OK)
                     status = SetFileManagerMasterKey();
             }
-            std::cout<<" DECRYPT STATUS : " << status << std::endl;
+            //std::cout<<" DECRYPT STATUS : " << status << std::endl;
 
         }
     }
@@ -895,8 +901,8 @@ int EncryptKeyWithPassphrase( const std::string& key,
     enc.SetKey(phrasekey);
     enc.SetIv(salt);
 
-    std::cout<< "Encrypting key with passphrase key : " << phrasekey << std::endl;
-    std::cout<< "Using iv : " << salt << std::endl;
+    //std::cout<< "Encrypting key with passphrase key : " << phrasekey << std::endl;
+    //std::cout<< "Using iv : " << salt << std::endl;
     // Encrypt MasterKey with passphrase key
     std::string out;
     crypto.EncryptStringCFB(key, enc, keyOut);
@@ -904,6 +910,7 @@ int EncryptKeyWithPassphrase( const std::string& key,
     return status;
 } 
 
+// TODO :: this can be abstracted somewhere
 int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::string& salt)
 {
     int status = ret::A_OK;
@@ -922,26 +929,36 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
     g_Entity.GetFrontProfileUrl(url);
 
     AccessToken at;
-    g_pCredManager->Lock();
-    g_pCredManager->GetAccessTokenCopy(at);
-    g_pCredManager->Unlock();
+    if(g_pCredManager)
+    {
+        g_pCredManager->Lock();
+        g_pCredManager->GetAccessTokenCopy(at);
+        g_pCredManager->Unlock();
+    }
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
 
-    // TODO :: add the type as url params and just pass the attic profile type
-    // UrlParams params
-    std::string hold(cnst::g_szAtticProfileType);
-    char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
-    url.append("/");
-    url.append(pPm);
+    if(status == ret::A_OK)
+    {
+        // TODO :: add the type as url params and just pass the attic profile type
+        // UrlParams params
+        std::string hold(cnst::g_szAtticProfileType);
+        char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
+        url.append("/");
+        url.append(pPm);
 
-    Response resp;
-    conops::HttpPut(url, NULL, output, at, resp);
+        Response resp;
+        conops::HttpPut(url, NULL, output, at, resp);
 
-    std::cout<<" URL : " << url << std::endl;
-    std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-
-    if(resp.code != 200)
-        return ret::A_FAIL_NON_200;
+        //std::cout<<" URL : " << url << std::endl;
+        //std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
+        //std::cout<<" BODY : " << resp.body << std::endl;
+        
+        if(resp.code != 200)
+            status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }

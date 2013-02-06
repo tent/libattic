@@ -9,6 +9,8 @@
 
 #include "mutexclass.h"
 
+#include <iostream>
+
 class SyncBuffer : MutexClass
 {
     SyncBuffer();
@@ -23,6 +25,14 @@ public:
     static SyncBuffer* GetInstance();
 
     void PushToBuffer(std::ostringstream& os);
+
+    void GetFilepath(std::string& out) 
+    { 
+        std::cout<<" here" << std::endl;
+        Lock();
+        out = m_Filepath;
+        Unlock();
+    }
 
 private:
     static SyncBuffer* m_pInstance;
@@ -52,7 +62,19 @@ public:
     Logger();
     ~Logger();
 
-    void Log(Logger::LogLevel level, const std::string& input);
+    void Log(const Logger::LogLevel level, const std::string& input);
+    void GetLogFilepath(std::string& out)
+    {
+        std::cout<<"232"<<std::endl;
+        if(m_pSyncBuffer)
+        {
+            std::cout<<"232"<<std::endl;
+            m_pSyncBuffer->GetFilepath(out);
+            std::cout<<"232"<<std::endl;
+        }
+
+    }
+
     void PrintBuffer();
 
 private:
@@ -70,6 +92,25 @@ namespace log
     static void ShutdownLogging()
     {
         SyncBuffer::GetInstance()->Shutdown();
+    }
+
+    static void Log(const Logger::LogLevel level, const std::string& input) // One off
+    {
+
+        Logger logger;
+        logger.Log(level, input);
+    }
+
+    static void GetCurrentLogFilepath(std::string& out)
+    {
+        std::cout<<" CUrrent logs?" << std::endl;
+        Logger logger;
+
+        std::cout<<" CUrrent logs?" << std::endl;
+        logger.GetLogFilepath(out);
+
+        std::cout<<" CUrrent logs?" << std::endl;
+
     }
 }
 
