@@ -127,7 +127,9 @@ Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,
                                     const std::string& tempdir,   
                                     const std::string& workingdir,
                                     const std::string& configdir, 
-                                    void (*callback)(int, void*))
+                                    void (*callback)(int, void*),
+                                    TaskFactoryDelegate* delegate)
+
 {
     // Check Inactive Task Pool
     // 
@@ -149,11 +151,17 @@ Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,
 
     if(t)
     {
+        if(delegate)
+            delegate->OnTaskCreate(t);
+
         Lock();
         m_ActiveTaskPool.PushBack(t);
         //m_TaskPool[t->GetTaskType()].push_back(t);
         //m_ActiveTasks.push_back(t);
         Unlock();
+
+        if(delegate)
+            delegate->OnTaskInsert(t);
     }
     
     return t;

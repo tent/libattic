@@ -18,6 +18,17 @@ class CredentialsManager;
 class Credentials;
 class TaskArbiter;
 
+
+class TaskFactoryDelegate
+{
+public:
+    TaskFactoryDelegate() {}
+    ~TaskFactoryDelegate() {}
+
+    virtual void OnTaskCreate(Task* t) = 0;
+    virtual void OnTaskInsert(Task* t) = 0;
+};
+
 class TaskFactory : public MutexClass
 {                                                                       
 private:
@@ -58,7 +69,8 @@ public:
                            const std::string& tempdir,   
                            const std::string& workingdir,
                            const std::string& configdir, 
-                           void (*callback)(int, void*));
+                           void (*callback)(int, void*),
+                           TaskFactoryDelegate* delegate = NULL);
 
     int RemoveActiveTask(Task* pTask);
 
