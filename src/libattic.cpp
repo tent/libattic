@@ -31,6 +31,8 @@
 #include "libatticutils.h"
 #include "log.h"
 
+#include "uploadmanager.h"
+
 #include <cbase64.h>
 // TODO :: 
 // Things to wrap with mutexes
@@ -51,8 +53,9 @@ static TentApp*             g_pApp = NULL;
 static FileManager*         g_pFileManager = NULL;
 static CredentialsManager*  g_pCredManager = NULL;
 static EntityManager*       g_pEntityManager = NULL;
+static UploadManager*       g_pUploadManager = NULL;
 
-static TaskArbiter g_Arb;
+//static TaskArbiter g_Arb;
 static TaskFactory g_TaskFactory;
 
 // Directories
@@ -132,31 +135,24 @@ int InitLibAttic( const char* szWorkingDirectory,
                                               cnst::g_szManifestName,
                                               g_ConfigDirectory,
                                               g_TempDirectory );
-        if(status != ret::A_OK) 
-            log::Log(Logger::ERROR, "Failed to initialize filemanager");
 
         status = liba::InitializeCredentialsManager( &g_pCredManager,
                                                      g_ConfigDirectory);
-        if(!g_pCredManager)
-            log::Log(Logger::ERROR, "Failed to initialize credential manager");
-
-        if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize credential manager");
 
         status = liba::InitializeEntityManager( &g_pEntityManager );
-        if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize entity manager");
-
         // Non-essential
+        std::cout<<"here"<<std::endl;
         LoadAccessToken();
         
-        status = g_Arb.Initialize(threadCount);
-        if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize task arbiter");
+        std::cout<<"here"<<std::endl;
+        status = liba::InitializeTaskArbiter(threadCount);
 
         status = g_TaskFactory.Initialize();
         if(status != ret::A_OK)
             log::Log(Logger::ERROR, "Failed to initialize task factor");
+
+        std::cout<<"here"<<std::endl;
+        status = liba::InitializeConnectionManager();
 
         // Load Entity Authentication  - ORDER MATTERS
         LoadEntity();
@@ -171,6 +167,20 @@ int InitLibAttic( const char* szWorkingDirectory,
                                        // go ahead and enter it.
             status = SetFileManagerMasterKey();
         }
+
+        AccessToken at;
+        g_pCredManager->GetAccessTokenCopy(at);
+        status = liba::InitializeUploadManager( &g_pUploadManager,
+                                                g_pApp,
+                                                g_pFileManager,
+                                                g_pCredManager,
+                                                at,
+                                                g_Entity,
+                                                g_TempDirectory,
+                                                g_WorkingDirectory,
+                                                g_ConfigDirectory);
+
+
     }
     else
     {
@@ -187,9 +197,7 @@ int SetFileManagerMasterKey()
 {
     // If loaded Set master key in filemanager
     MasterKey mk;
-    g_pCredManager->Lock();
     g_pCredManager->GetMasterKeyCopy(mk);
-    g_pCredManager->Unlock();
 
     g_pFileManager->Lock();
     g_pFileManager->SetMasterKey(mk);
@@ -203,29 +211,18 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     int status = ret::A_OK;
 
     // Shutdown threading first, ALWAYS
-    status = g_Arb.Shutdown();
-    if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown task arbiter ");
-
+    status = liba::ShutdownTaskArbiter();
+    
     status = g_TaskFactory.Shutdown();
     if(status != ret::A_OK)
         log::Log(Logger::ERROR, " failed to shutdown task factory ");
 
     status = liba::ShutdownFileManager(g_pFileManager);
-    if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown filemanger");
-
     status = liba::ShutdownCredentialsManager(g_pCredManager);
-    if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown credentials manager");
-    
-    status = liba::ShutdownAppInstance(g_pApp);
-    if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown app instance");
-
     status = liba::ShutdownEntityManager(g_pEntityManager);
-    if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown entity manager");
+    status = liba::ShutdownAppInstance(g_pApp);
+    status = liba::ShutdownConnectionManager();
+    status = liba::ShutdownUploadManager(&g_pUploadManager);
 
     g_pApp = NULL;
     g_pFileManager = NULL;
@@ -450,17 +447,12 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 
 int LoadAccessToken()
 {
-    g_pCredManager->Lock();
     int status = g_pCredManager->LoadAccessToken();
-    g_pCredManager->Unlock();
 
     if(status == ret::A_OK)
     {
         AccessToken at;
-
-        while(g_pCredManager->TryLock()) { sleep(0); }
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
     }
     
     return status; 
@@ -508,9 +500,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     if(status == ret::A_OK)
     {
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         std::string url;
         g_Entity.GetEntityUrl(url);
@@ -519,7 +509,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                                 g_pApp, 
                                                 g_pFileManager, 
                                                 g_pCredManager,
-                                                &g_Arb,
+                                                TaskArbiter::GetInstance(),
                                                 &g_TaskFactory,
                                                 at,
                                                 g_Entity,
@@ -528,7 +518,8 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                                 g_WorkingDirectory,
                                                 g_ConfigDirectory,
                                                 callback);
-        g_Arb.SpinOffTask(t);
+
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return status;
@@ -541,15 +532,13 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     if(status == ret::A_OK)
     {
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         Task* t = g_TaskFactory.SynchronousGetTentTask( Task::PULL,
                                                 g_pApp, 
                                                 g_pFileManager, 
                                                 g_pCredManager,
-                                                &g_Arb,
+                                                TaskArbiter::GetInstance(),
                                                 &g_TaskFactory,
                                                 at,
                                                 g_Entity,
@@ -558,7 +547,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                                 g_WorkingDirectory,
                                                 g_ConfigDirectory,
                                                 callback);
-        g_Arb.SpinOffTask(t);
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return ret::A_OK;
@@ -571,15 +560,13 @@ int PullAllFiles(void (*callback)(int, void*))
     if(status == ret::A_OK)
     {
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         Task* t = g_TaskFactory.SynchronousGetTentTask( Task::PULLALL,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,
-                                                 &g_Arb,
+                                                 TaskArbiter::GetInstance(),
                                                  &g_TaskFactory,
                                                  at,
                                                  g_Entity,
@@ -588,7 +575,7 @@ int PullAllFiles(void (*callback)(int, void*))
                                                  g_WorkingDirectory,
                                                  g_ConfigDirectory,
                                                  callback);
-        g_Arb.SpinOffTask(t);
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return status;
@@ -600,17 +587,14 @@ int SyncFiles(void (*callback)(int, void*))
 
     if(status == ret::A_OK)
     {
-    
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         Task* t = g_TaskFactory.SynchronousGetTentTask( Task::SYNC,
                                                         g_pApp, 
                                                         g_pFileManager, 
                                                         g_pCredManager,
-                                                        &g_Arb,
+                                                        TaskArbiter::GetInstance(),
                                                         &g_TaskFactory,
                                                         at,
                                                         g_Entity,
@@ -619,7 +603,7 @@ int SyncFiles(void (*callback)(int, void*))
                                                         g_WorkingDirectory,
                                                         g_ConfigDirectory,
                                                         callback);
-        g_Arb.SpinOffTask(t);
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return status;
@@ -632,15 +616,13 @@ int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
     if(status == ret::A_OK)
     {
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         Task* t = g_TaskFactory.SynchronousGetTentTask( Task::DELETE,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,
-                                                 &g_Arb,
+                                                 TaskArbiter::GetInstance(),
                                                  &g_TaskFactory,
                                                  at,
                                                  g_Entity,
@@ -649,7 +631,7 @@ int DeleteFile(const char* szFilepath, void (*callback)(int, void*) )
                                                  g_WorkingDirectory,
                                                  g_ConfigDirectory,
                                                  callback);
-        g_Arb.SpinOffTask(t);
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return status;
@@ -662,15 +644,13 @@ int DeleteAllPosts(void (*callback)(int, void*))
     if(status == ret::A_OK)
     {
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         Task* t = g_TaskFactory.SynchronousGetTentTask( Task::DELETEALLPOSTS,
                                                  g_pApp, 
                                                  g_pFileManager, 
                                                  g_pCredManager,
-                                                 &g_Arb,
+                                                 TaskArbiter::GetInstance(),
                                                  &g_TaskFactory,
                                                  at,
                                                  g_Entity,
@@ -679,7 +659,7 @@ int DeleteAllPosts(void (*callback)(int, void*))
                                                  g_WorkingDirectory,
                                                  g_ConfigDirectory,
                                                  callback);
-        g_Arb.SpinOffTask(t);
+        TaskArbiter::GetInstance()->SpinOffTask(t);
     }
 
     return status;
@@ -715,9 +695,7 @@ int ChangePassphrase(const char* szOld, const char* szNew)
         {
             // Get the master key
             MasterKey mk;
-            while(g_pCredManager->TryLock()) { sleep(0); }
             g_pCredManager->GetMasterKeyCopy(mk);
-            g_pCredManager->Unlock();
 
                 // Register new passphrase with attic
             std::string key;
@@ -793,9 +771,7 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
                             masterKey.SetMasterKey(keyActual);
 
                             // Insert Into Credentials Manager
-                            g_pCredManager->Lock();
                             g_pCredManager->SetMasterKey(masterKey);
-                            g_pCredManager->Unlock();
 
                             g_Pt.SetPhraseKey(phraseKey);
                             SavePhraseToken(g_Pt);
@@ -850,9 +826,7 @@ int EnterPassphrase(const char* szPass)
 
         std::string phraseKey;
 
-        g_pCredManager->Lock();
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
-        g_pCredManager->Unlock();
 
         if(status == ret::A_OK)
         {
@@ -884,13 +858,11 @@ int ConstructMasterKey(const std::string& masterkey, MasterKey& out)
 {
     int status = ret::A_OK;
 
-    g_pCredManager->Lock();
     // Enter passphrase to generate key.
     g_pCredManager->RegisterPassphrase(masterkey, g_Pt); // This generates a random salt
                                                          // Sets Phrase key
     g_pCredManager->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
     g_pCredManager->SetMasterKey(out);
-    g_pCredManager->Unlock();
 
     return status;
 }
@@ -939,9 +911,7 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
     AccessToken at;
     if(g_pCredManager)
     {
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
     }
     else
     {
@@ -1068,10 +1038,8 @@ int RegisterPassphrase(const char* szPass, bool override)
         {
             // Register a new passphrase.
             std::string mk;
-            while(g_pCredManager->TryLock()) { sleep(0); }
             // Enter passphrase to generate key.
             g_pCredManager->GenerateMasterKey(mk); // Generate random master key
-            g_pCredManager->Unlock();
 
             status = RegisterPassphraseWithAttic(szPass, mk);
         }
@@ -1205,9 +1173,7 @@ int LoadEntity(bool override)
 
         // Load Entity
         AccessToken at;
-        g_pCredManager->Lock();
         g_pCredManager->GetAccessTokenCopy(at);
-        g_pCredManager->Unlock();
 
         status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
 

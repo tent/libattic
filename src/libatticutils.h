@@ -13,6 +13,8 @@
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "taskarbiter.h"
+#include "uploadmanager.h"
+#include "log.h"
 //#include "entity.h"
 
 // Inward facing utility methods used at libattic interface level
@@ -42,9 +44,10 @@ namespace liba
                 }
         }
         else
-        {
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-        }
+
+        if(status != ret::A_OK) 
+            log::Log(Logger::ERROR, "Failed to initialize filemanager");
 
         return status;
     }
@@ -61,9 +64,10 @@ namespace liba
             status = (*pCm)->Initialize();
         }
         else
-        {
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-        }
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "Failed to initialize credential manager");
 
         return status;
     }
@@ -77,9 +81,43 @@ namespace liba
             status = (*pEm)->Initialize();
         }
         else
-        {
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "Failed to initialize entity manager");
+
+        return status;
+    }
+
+    int InitializeUploadManager( UploadManager** pUm,
+                                 TentApp* pApp,
+                                 FileManager* pFm,
+                                 CredentialsManager* pCm,
+                                 const AccessToken& at,
+                                 const Entity& entity,
+                                 const std::string& tempdir,
+                                 const std::string& workingdir,
+                                 const std::string& configdir)
+    {
+        int status = ret::A_OK;
+        if(!(*pUm))
+        {
+            (*pUm) = new UploadManager(pApp,
+                                        pFm,
+                                        pCm,
+                                        at,
+                                        entity,
+                                        tempdir,
+                                        workingdir,
+                                        configdir);
+
+            status = (*pUm)->Initialize();
         }
+        else
+            status = ret::A_FAIL_ATTEMPT_TO_REINIT;
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "Failed to initialize Upload Manager");
 
         return status;
     }
@@ -88,13 +126,30 @@ namespace liba
     {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Initialize(threadCount);
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "Failed to initialize task arbiter");
+
         return status;
     }
+
+    int InitializeConnectionManager()
+    {
+        int status = ret::A_OK;
+        status = ConnectionManager::GetInstance()->Initialize();
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, " failed to shutdown connection manager");
+
+        return status;
+    }
+
 
     int ShutdownTaskArbiter()
     {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "failed to shutdown task arbiter");
+
         return status;
     }
 
@@ -109,9 +164,10 @@ namespace liba
             pFm = NULL;
         }
         else
-        {
             status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-        }
+
+        if(status != ret::A_OK)
+           log::Log(Logger::ERROR, " failed to shutdown filemanger");
 
         return status;
     }
@@ -129,9 +185,10 @@ namespace liba
             pCm = NULL;
         }
         else
-        {
             status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-        }
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, " failed to shutdown credentials manager");
 
         return status;
     }
@@ -149,9 +206,10 @@ namespace liba
             pEm = NULL;
         }
         else
-        {
             status = ret::A_FAIL_INVALID_ENTITYMANAGER_INSTANCE;
-        }
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, " failed to shutdown entity manager");
 
         return status;
     }
@@ -165,28 +223,35 @@ namespace liba
             pApp = NULL;
         }
         else
-        {
             status = ret::A_FAIL_INVALID_APP_INSTANCE;
-        }
-        
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, " failed to shutdown app instance");
+
         return status;
     }
 
-    int ShutdownConnectionManager(ConnectionManager* pCm)
+    int ShutdownConnectionManager()
     {
-
         int status = ret::A_OK;
-        if(pCm)
-        {
-            status = pCm->Shutdown();
-            // No need to delete, connection manager takes care of this
-            // TODO :: reconsider the use of a singleton with the connection manager,
-            // inconsistent design
-        }
+        status = ConnectionManager::GetInstance()->Shutdown();
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, " failed to shutdown connection manager instance");
+
+        return status;
+    }
+
+    int ShutdownUploadManager( UploadManager** pUm)
+    {
+        int status = ret::A_OK;
+        if(!(*pUm))
+            status = (*pUm)->Shutdown();
         else
-        {
-            status = ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
-        }
+            status = ret::A_FAIL_INVALID_UPLOADMANAGER_INSTANCE;
+
+        if(status != ret::A_OK)
+            log::Log(Logger::ERROR, "Failed to Shutdown Upload Manager");
 
         return status;
     }
