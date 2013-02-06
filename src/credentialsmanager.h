@@ -12,6 +12,10 @@
 #include "phrasetoken.h"
 #include "crypto.h"
 
+
+// TODO :: the necessity of this whole class needs to be re-thought,
+//          alot of generic methods are here that can be abstracted to 
+//          a more functiona namespace, reducing locks.
 class CredentialsManager : public MutexClass
 {
     int GenerateMasterKey();
@@ -56,12 +60,39 @@ public:
     //int EnterUserNameAndPassword(const std::string& user, const std::string& pass);
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
-    void GetMasterKeyCopy(MasterKey& key)       { key = m_MasterKey; }
-    void GetAccessTokenCopy(AccessToken& tk)    { tk = m_AccessToken; }
+    void GetMasterKeyCopy(MasterKey& key)       
+    { 
+        Lock();
+        key = m_MasterKey; 
+        Unlock();
+    }
+    void GetAccessTokenCopy(AccessToken& tk)    
+    { 
+        Lock(); 
+        tk = m_AccessToken; 
+        Unlock();
+    }
 
-    void SetConfigDirectory(const std::string& dir) { m_ConfigDirectory = dir; }
-    void SetAccessToken(const AccessToken& at)      { m_AccessToken = at; }
-    void SetMasterKey(const MasterKey& mk)          { m_MasterKey = mk; }
+    void SetConfigDirectory(const std::string& dir) 
+    {
+        Lock();
+        m_ConfigDirectory = dir; 
+        Unlock();
+    }
+
+    void SetAccessToken(const AccessToken& at)      
+    { 
+        Lock(); 
+        m_AccessToken = at; 
+        Unlock();
+    }
+
+    void SetMasterKey(const MasterKey& mk)          
+    { 
+        Lock();
+        m_MasterKey = mk; 
+        Unlock();
+    }
 
 private:
     Crypto          m_Crypto;
