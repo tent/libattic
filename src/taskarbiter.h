@@ -13,19 +13,24 @@ class ThreadPool;
 
 class TaskArbiter : public MutexClass
 {
-public:
+
     TaskArbiter();
+    TaskArbiter(const TaskArbiter& rhs) {}
+    TaskArbiter operator=(const TaskArbiter& rhs) { return *this; }
+public:
     ~TaskArbiter();
 
     int Initialize(unsigned int poolSize);
     int Shutdown();
 
+    static TaskArbiter* GetInstance();
+
     void SpinOffTask(Task* pTask); // Spin off detached thread
 
 private:
+    static TaskArbiter*    m_pInstance;
     TaskQueue*             m_pTaskQueue;
     ThreadPool*            m_pPool;
-
 };
 
 

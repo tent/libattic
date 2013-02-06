@@ -5,11 +5,12 @@
 #include "pulltask.h"
 #include "threading.h"
 
+TaskArbiter* TaskArbiter::m_pInstance = 0;
+
 TaskArbiter::TaskArbiter()
 {
     m_pTaskQueue = NULL;
     m_pTaskQueue = new TaskQueue();
-
     m_pPool = new ThreadPool();
 }
 
@@ -30,24 +31,44 @@ TaskArbiter::~TaskArbiter()
 
 int TaskArbiter::Initialize(unsigned int poolSize)
 {
+    int status = ret::A_OK;
+    Lock();
     if(m_pPool)
     {
         m_pPool->Initialize();
         m_pPool->SetTaskQueue(m_pTaskQueue);
         m_pPool->ExtendPool(poolSize);
     }
-
-    return ret::A_OK;
+    else
+    {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+    Unlock();
+    return status; 
 }
 
 int TaskArbiter::Shutdown()
 {
+    int status = ret::A_OK;
+    Lock();
     if(m_pPool)
+        status = m_pPool->Shutdown();
+    Unlock();
+
+    if(m_pInstance)
     {
-        m_pPool->Shutdown();
+        delete m_pInstance;
+        m_pInstance = NULL;
     }
 
-    return ret::A_OK;
+    return status;
+}
+
+TaskArbiter* TaskArbiter::GetInstance()
+{
+    if(!m_pInstance)
+        m_pInstance = new TaskArbiter();
+    return m_pInstance;
 }
 
 // Spin off detached thread, (not explicitly detached,
