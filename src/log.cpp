@@ -34,7 +34,6 @@ void SyncBuffer::Startup(const std::string& directory)
 
 void SyncBuffer::Shutdown()
 {
-    Lock();
     if(m_Ofs.is_open())
         m_Ofs.close();
 
@@ -43,7 +42,6 @@ void SyncBuffer::Shutdown()
         delete m_pInstance;
         m_pInstance = NULL;
     }
-    Unlock();
 }
 
 SyncBuffer* SyncBuffer::GetInstance()

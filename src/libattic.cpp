@@ -225,7 +225,13 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     if(status != ret::A_OK)
         log::Log(Logger::ERROR, " failed to shutdown entity manager");
 
-    callback(status, NULL);
+    g_pApp = NULL;
+    g_pFileManager = NULL;
+    g_pCredManager = NULL;
+    g_pEntityManager = NULL;
+
+    if(callback)
+        callback(status, NULL);
 
     log::ShutdownLogging();
     return status;

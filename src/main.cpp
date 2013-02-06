@@ -30,21 +30,29 @@
 #include "rollsum.h"
 #include "log.h"
 
-/*
+
 TEST(TEST, INIT)
 {
 
-    /*
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
                   "https://manuel.tent.is");
-                  */
+
+    try
+    {
+    status = ShutdownLibAttic(NULL);
+    }
+    catch(std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+
+    }
 /*
     int status =0;
     std::cout<<" GET GET GET" << std::endl;
     std::string t;
-    t += GetEntityApiRoot("https://polar-springs-6638.herokuapp.com/");
+//    t += GetEntityApiRoot("https://polar-springs-6638.herokuapp.com/");
     
     //t += GetEntityApiRoot("https://manuel.tent.is");
     std::cout<<" MY ENTITY URL : " << t  << std::endl;
@@ -59,6 +67,7 @@ TEST(TEST, INIT)
 
     status = ShutdownLibAttic();
     std::cout<<" Shutdown status : " << status << std::endl;
+    */
 }
 /*
 */
@@ -567,6 +576,7 @@ TEST(PULL, ALL)
 */
 /*
 
+
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -601,13 +611,14 @@ TEST(PULL, AFILE)
     // Shutdown
 
     std::cout<<"shutting down"<< std::endl;
-    ShutdownLibAttic();
+    ShutdownLibAttic(NULL);
 
 }
 
 /*
  **/
 /*
+
 
 static void FOOFUN(int a, void* b)
 {
@@ -652,8 +663,7 @@ TEST(PUSH, AFILE)
     ASSERT_EQ(status, ret::A_OK);
     std::cout<< " SHUTTING DOWN " << std::endl;
     // Shutdown
-    ShutdownLibAttic();
-
+    ShutdownLibAttic(NULL);
 }
 /*
  */
@@ -1223,6 +1233,7 @@ TEST(COMPRESS, ENCRYPT)
     // TODO :: De-Chunk a file
 
 // REAL TESTS
+/*
 TEST(LOG, LOGGING)
 {
     log::InitializeLogging("./config");
@@ -1244,6 +1255,7 @@ TEST(LOG, LOGGING)
 
     log::ShutdownLogging();
 }
+*/
 
 TEST(CREDENTIALS, ISEMPTY)
 {

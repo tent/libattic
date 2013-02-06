@@ -304,18 +304,9 @@ int FileManager::EncryptCompressedChunks(FileInfo* pFi)
                 itr->second.GetChunkName(chunkname);
                     
                 std::string iv;
-                // Check for existing Iv
-                if(itr->second.HasIv())
-                {
-                    itr->second.GetIv(iv);
-                    std::cout<<" USING EXISTING IV " << iv << std::endl;
-                }
-                else
-                {
-                    // Generate unique Iv for chunk
-                    m_Crypto.GenerateIv(iv);
-                    itr->second.SetIv(iv);
-                }
+                // Generate unique Iv for chunk, every time
+                m_Crypto.GenerateIv(iv);
+                itr->second.SetIv(iv);
 
                 // Set chunk specific iv
                 status = chunkCred.SetIv(iv);

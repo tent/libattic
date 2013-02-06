@@ -8,6 +8,8 @@
 #include "task.h"
 #include "taskqueue.h"
 
+#include "log.h"
+
 
 void* ThreadFunc(void* arg)
 {
@@ -188,6 +190,21 @@ int ThreadPool::Shutdown()
 {
     std::cout<<" sending exit signals " << std::endl;
     std::cout<<" thread count : " << m_ThreadData.size() << std::endl;
+
+
+    while(m_ThreadData.size() != m_ThreadCount)
+    {
+        log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
+        //TODO:: hack, find a better way.
+        sleep(1);
+        static unsigned int shutdowncount = 0;
+        if(shutdowncount == 10)
+            break;
+        shutdowncount++;
+        
+    }
+
+
     for(unsigned int i=0; i<m_ThreadData.size(); i++)
     {
         while(m_ThreadData[i]->TryLock()) { sleep(0); }
