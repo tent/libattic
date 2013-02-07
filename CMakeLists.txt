@@ -17,18 +17,12 @@ set(CMAKE_CXX_FLAGS "-g -Wall -v")
 # Build dependencies
 # Build gtest libs
 
-message(STATUS "******************** BUILDING JSONCPP ********************" )
-file(GLOB_RECURSE jsoncpp_lib "./third_party/jsoncpp/libs/*.a")
-if(jsoncpp_lib)
-    message(STATUS "found jsoncpp :  [${jsoncpp_lib}]")
-else()
-    execute_process(WORKING_DIRECTORY ./third_party/jsoncpp
-                   COMMAND scons platform=linux-gcc)
-                   #RESULT_VARIABLE ret_var)
-    file(GLOB_RECURSE jsoncpp_lib "./third_party/jsoncpp/libs/*.a")
-endif(jsoncpp_lib)
+project(libattic)
+add_subdirectory("./vendor/jsoncpp")
+add_subdirectory("./vendor/c5")
 
-message(STATUS " JSONCPP LIB LOCATION : [${jsoncpp_lib}]")
+message(STATUS "******************** BUILDING JSONCPP ********************" )
+
 
 message(STATUS "******************** BUILDING GOOGLE TEST ********************" )
 file(GLOB_RECURSE gtest_lib "./third_party/googletest/lib/*.a")
@@ -63,32 +57,8 @@ endif(gtest_lib)
 message(STATUS " GOOGLE TEST LIB : [${gtest_lib}]")
 
 message(STATUS "******************** BUILDING CRYPTO ********************")
-file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
-if(crypto_lib)
-    message(STATUS "found Cryptolib [${crypto_lib}].")
-else()
-    file(MAKE_DIRECTORY ./third_party/c5/lib)
 
-    execute_process(WORKING_DIRECTORY ./third_party/c5
-                   COMMAND make clean
-                   RESULT_VARIABLE ret_var)
-
-    execute_process(WORKING_DIRECTORY ./third_party/c5
-                   COMMAND make static
-                   RESULT_VARIABLE ret_var)
-
-    execute_process(WORKING_DIRECTORY ./third_party/c5
-                   COMMAND mv libcryptopp.a ./lib
-                   RESULT_VARIABLE ret_var)
-
-    execute_process(WORKING_DIRECTORY ./third_party/c5
-                    COMMAND make clean
-                    RESULT_VARIABLE ret_var)
-
-    file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
-endif(crypto_lib)
-
-message(STATUS "CRYPTOLIB : [${crypto_lib}].")
+#message(STATUS "CRYPTOLIB : [${crypto_lib}].")
 
 # Set additional include directories
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
@@ -105,7 +75,7 @@ set (EXECUTABLE_OUTPUT_PATH ./bin)
 file(MAKE_DIRECTORY ./lib)
 set(LIBRARY_OUTPUT_PATH ./lib)
 
-project(libattic)
+
 
 file(GLOB_RECURSE libattic_SOURCE 
     "src/*.cpp"
@@ -134,34 +104,37 @@ include_directories(${libattic_INCLUDE_DIRS})
 add_library(imp_gtest STATIC IMPORTED)
 set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ${gtest_lib})
 
+message(STATUS "found : [${CRYPTOPP_LIBRARIES}]")
+
+message(STATUS "found : [${JsonCpp_LIBRARIES}]")
 # Add crpytopp lib to statically link
 add_library(imp_cryptpp STATIC IMPORTED)
-set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION ${crypto_lib})
+set_property(TARGET imp_cryptpp PROPERTY IMPORTED_LOCATION $ENV{CRYPTOPP_LIBRARIES})
 
 # Add jsoncpp
 add_library(imp_jsoncpp STATIC IMPORTED)
-set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION ${jsoncpp_lib})
+set_property(TARGET imp_jsoncpp PROPERTY IMPORTED_LOCATION $ENV{JsonCpp_LIBRARIES})
 
 ###############################################################################
 # To compile a static lib
-add_library(attic STATIC ${libattic_SOURCE})
+#add_library(attic STATIC ${libattic_SOURCE})
 
 # copy libs to lib folder
-execute_process(COMMAND cp ${crypto_lib} ./lib)
-execute_process(COMMAND cp ${jsoncpp_lib} ./lib)
-execute_process(COMMAND cp ./src/libattic.h ./lib)
+#execute_process(COMMAND cp ${crypto_lib} ./lib)
+#execute_process(COMMAND cp ${jsoncpp_lib} ./lib)
+#execute_process(COMMAND cp ./src/libattic.h ./lib)
 
-add_custom_command(TARGET attic 
-                   POST_BUILD
-                   WORKING_DIRECTORY ./lib
-                   COMMAND python makelib.py)
+#add_custom_command(TARGET attic 
+#                   POST_BUILD
+#                   WORKING_DIRECTORY ./lib
+#                   COMMAND python makelib.py)
  
 ###############################################################################
 # To compile the test executable
-#add_executable(attic ${libattic_SOURCE})
+add_executable(attic ${libattic_SOURCE})
 
 #link libs
-#target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
+target_link_libraries(attic curl imp_gtest imp_cryptpp imp_jsoncpp pthread)
 
 
 

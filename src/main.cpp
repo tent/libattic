@@ -575,7 +575,7 @@ TEST(PULL, ALL)
 }
 /*
 */
-/*
+
 
 
 void PULLFUN(int a, void* b)
@@ -585,14 +585,15 @@ void PULLFUN(int a, void* b)
 }
 TEST(PULL, AFILE)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
+                  "./config/log",
                   "https://manuel.tent.is");
 
     EnterPassphrase("password");
     //int status = PullFile("./data/oa5.pdf", &PULLFUN);
-    int status = PullFile("./data/cb.pdf", &PULLFUN);
+    status = PullFile("./data/cb.pdf", &PULLFUN);
 
     for(;;)
     {
@@ -618,6 +619,7 @@ TEST(PULL, AFILE)
 
 /*
  **/
+/*
 
 
 

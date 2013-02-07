@@ -499,6 +499,9 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 
     if(status == ret::A_OK)
     {
+
+        g_pUploadManager->UploadFile(szFilePath, callback);
+/*
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
@@ -520,6 +523,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                                 callback);
 
         TaskArbiter::GetInstance()->SpinOffTask(t);
+        */
     }
 
     return status;
@@ -531,6 +535,8 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 
     if(status == ret::A_OK)
     {
+        g_pUploadManager->DownloadFile(szFilePath, callback);
+/*
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
@@ -548,6 +554,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                                 g_ConfigDirectory,
                                                 callback);
         TaskArbiter::GetInstance()->SpinOffTask(t);
+        */
     }
 
     return ret::A_OK;

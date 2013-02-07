@@ -32,10 +32,10 @@ CMAKE_COMMAND = /usr/bin/cmake
 RM = /usr/bin/cmake -E remove -f
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/manuel/Projects/gt/tent/libattic/third_party/c5
+CMAKE_SOURCE_DIR = /home/manuel/Projects/gt/tent/libattic/vendor/c5
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/manuel/Projects/gt/tent/libattic/third_party/c5
+CMAKE_BINARY_DIR = /home/manuel/Projects/gt/tent/libattic/vendor/c5
 
 # Include any dependencies generated for this target.
 include CMakeFiles/crypttest.dir/depend.make
@@ -48,17 +48,17 @@ include CMakeFiles/crypttest.dir/flags.make
 
 CMakeFiles/crypttest.dir/bench.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/bench.cpp.o: bench.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/bench.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/bench.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/bench.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench.cpp
 
 CMakeFiles/crypttest.dir/bench.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/bench.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench.cpp > CMakeFiles/crypttest.dir/bench.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench.cpp > CMakeFiles/crypttest.dir/bench.cpp.i
 
 CMakeFiles/crypttest.dir/bench.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/bench.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench.cpp -o CMakeFiles/crypttest.dir/bench.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench.cpp -o CMakeFiles/crypttest.dir/bench.cpp.s
 
 CMakeFiles/crypttest.dir/bench.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/bench.cpp.o.requires
@@ -71,17 +71,17 @@ CMakeFiles/crypttest.dir/bench.cpp.o.provides.build: CMakeFiles/crypttest.dir/be
 
 CMakeFiles/crypttest.dir/bench2.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/bench2.cpp.o: bench2.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_2)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_2)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/bench2.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/bench2.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench2.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/bench2.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench2.cpp
 
 CMakeFiles/crypttest.dir/bench2.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/bench2.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench2.cpp > CMakeFiles/crypttest.dir/bench2.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench2.cpp > CMakeFiles/crypttest.dir/bench2.cpp.i
 
 CMakeFiles/crypttest.dir/bench2.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/bench2.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/bench2.cpp -o CMakeFiles/crypttest.dir/bench2.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/bench2.cpp -o CMakeFiles/crypttest.dir/bench2.cpp.s
 
 CMakeFiles/crypttest.dir/bench2.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/bench2.cpp.o.requires
@@ -94,17 +94,17 @@ CMakeFiles/crypttest.dir/bench2.cpp.o.provides.build: CMakeFiles/crypttest.dir/b
 
 CMakeFiles/crypttest.dir/test.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/test.cpp.o: test.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_3)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_3)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/test.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/test.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/test.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/test.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/test.cpp
 
 CMakeFiles/crypttest.dir/test.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/test.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/test.cpp > CMakeFiles/crypttest.dir/test.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/test.cpp > CMakeFiles/crypttest.dir/test.cpp.i
 
 CMakeFiles/crypttest.dir/test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/test.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/test.cpp -o CMakeFiles/crypttest.dir/test.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/test.cpp -o CMakeFiles/crypttest.dir/test.cpp.s
 
 CMakeFiles/crypttest.dir/test.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/test.cpp.o.requires
@@ -117,17 +117,17 @@ CMakeFiles/crypttest.dir/test.cpp.o.provides.build: CMakeFiles/crypttest.dir/tes
 
 CMakeFiles/crypttest.dir/validat1.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/validat1.cpp.o: validat1.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_4)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_4)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/validat1.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat1.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat1.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat1.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat1.cpp
 
 CMakeFiles/crypttest.dir/validat1.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/validat1.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat1.cpp > CMakeFiles/crypttest.dir/validat1.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat1.cpp > CMakeFiles/crypttest.dir/validat1.cpp.i
 
 CMakeFiles/crypttest.dir/validat1.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/validat1.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat1.cpp -o CMakeFiles/crypttest.dir/validat1.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat1.cpp -o CMakeFiles/crypttest.dir/validat1.cpp.s
 
 CMakeFiles/crypttest.dir/validat1.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/validat1.cpp.o.requires
@@ -140,17 +140,17 @@ CMakeFiles/crypttest.dir/validat1.cpp.o.provides.build: CMakeFiles/crypttest.dir
 
 CMakeFiles/crypttest.dir/validat2.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/validat2.cpp.o: validat2.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_5)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_5)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/validat2.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat2.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat2.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat2.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat2.cpp
 
 CMakeFiles/crypttest.dir/validat2.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/validat2.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat2.cpp > CMakeFiles/crypttest.dir/validat2.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat2.cpp > CMakeFiles/crypttest.dir/validat2.cpp.i
 
 CMakeFiles/crypttest.dir/validat2.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/validat2.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat2.cpp -o CMakeFiles/crypttest.dir/validat2.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat2.cpp -o CMakeFiles/crypttest.dir/validat2.cpp.s
 
 CMakeFiles/crypttest.dir/validat2.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/validat2.cpp.o.requires
@@ -163,17 +163,17 @@ CMakeFiles/crypttest.dir/validat2.cpp.o.provides.build: CMakeFiles/crypttest.dir
 
 CMakeFiles/crypttest.dir/validat3.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/validat3.cpp.o: validat3.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_6)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_6)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/validat3.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat3.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat3.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/validat3.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat3.cpp
 
 CMakeFiles/crypttest.dir/validat3.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/validat3.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat3.cpp > CMakeFiles/crypttest.dir/validat3.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat3.cpp > CMakeFiles/crypttest.dir/validat3.cpp.i
 
 CMakeFiles/crypttest.dir/validat3.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/validat3.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/validat3.cpp -o CMakeFiles/crypttest.dir/validat3.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/validat3.cpp -o CMakeFiles/crypttest.dir/validat3.cpp.s
 
 CMakeFiles/crypttest.dir/validat3.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/validat3.cpp.o.requires
@@ -186,17 +186,17 @@ CMakeFiles/crypttest.dir/validat3.cpp.o.provides.build: CMakeFiles/crypttest.dir
 
 CMakeFiles/crypttest.dir/adhoc.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/adhoc.cpp.o: adhoc.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_7)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_7)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/adhoc.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/adhoc.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/adhoc.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/adhoc.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/adhoc.cpp
 
 CMakeFiles/crypttest.dir/adhoc.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/adhoc.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/adhoc.cpp > CMakeFiles/crypttest.dir/adhoc.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/adhoc.cpp > CMakeFiles/crypttest.dir/adhoc.cpp.i
 
 CMakeFiles/crypttest.dir/adhoc.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/adhoc.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/adhoc.cpp -o CMakeFiles/crypttest.dir/adhoc.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/adhoc.cpp -o CMakeFiles/crypttest.dir/adhoc.cpp.s
 
 CMakeFiles/crypttest.dir/adhoc.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/adhoc.cpp.o.requires
@@ -209,17 +209,17 @@ CMakeFiles/crypttest.dir/adhoc.cpp.o.provides.build: CMakeFiles/crypttest.dir/ad
 
 CMakeFiles/crypttest.dir/datatest.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/datatest.cpp.o: datatest.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_8)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_8)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/datatest.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/datatest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/datatest.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/datatest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/datatest.cpp
 
 CMakeFiles/crypttest.dir/datatest.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/datatest.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/datatest.cpp > CMakeFiles/crypttest.dir/datatest.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/datatest.cpp > CMakeFiles/crypttest.dir/datatest.cpp.i
 
 CMakeFiles/crypttest.dir/datatest.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/datatest.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/datatest.cpp -o CMakeFiles/crypttest.dir/datatest.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/datatest.cpp -o CMakeFiles/crypttest.dir/datatest.cpp.s
 
 CMakeFiles/crypttest.dir/datatest.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/datatest.cpp.o.requires
@@ -232,17 +232,17 @@ CMakeFiles/crypttest.dir/datatest.cpp.o.provides.build: CMakeFiles/crypttest.dir
 
 CMakeFiles/crypttest.dir/regtest.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/regtest.cpp.o: regtest.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_9)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_9)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/regtest.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/regtest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/regtest.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/regtest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/regtest.cpp
 
 CMakeFiles/crypttest.dir/regtest.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/regtest.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/regtest.cpp > CMakeFiles/crypttest.dir/regtest.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/regtest.cpp > CMakeFiles/crypttest.dir/regtest.cpp.i
 
 CMakeFiles/crypttest.dir/regtest.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/regtest.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/regtest.cpp -o CMakeFiles/crypttest.dir/regtest.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/regtest.cpp -o CMakeFiles/crypttest.dir/regtest.cpp.s
 
 CMakeFiles/crypttest.dir/regtest.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/regtest.cpp.o.requires
@@ -255,17 +255,17 @@ CMakeFiles/crypttest.dir/regtest.cpp.o.provides.build: CMakeFiles/crypttest.dir/
 
 CMakeFiles/crypttest.dir/fipsalgt.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/fipsalgt.cpp.o: fipsalgt.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_10)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_10)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/fipsalgt.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/fipsalgt.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipsalgt.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/fipsalgt.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipsalgt.cpp
 
 CMakeFiles/crypttest.dir/fipsalgt.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/fipsalgt.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipsalgt.cpp > CMakeFiles/crypttest.dir/fipsalgt.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipsalgt.cpp > CMakeFiles/crypttest.dir/fipsalgt.cpp.i
 
 CMakeFiles/crypttest.dir/fipsalgt.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/fipsalgt.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipsalgt.cpp -o CMakeFiles/crypttest.dir/fipsalgt.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipsalgt.cpp -o CMakeFiles/crypttest.dir/fipsalgt.cpp.s
 
 CMakeFiles/crypttest.dir/fipsalgt.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/fipsalgt.cpp.o.requires
@@ -278,17 +278,17 @@ CMakeFiles/crypttest.dir/fipsalgt.cpp.o.provides.build: CMakeFiles/crypttest.dir
 
 CMakeFiles/crypttest.dir/fipstest.cpp.o: CMakeFiles/crypttest.dir/flags.make
 CMakeFiles/crypttest.dir/fipstest.cpp.o: fipstest.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles $(CMAKE_PROGRESS_11)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles $(CMAKE_PROGRESS_11)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/crypttest.dir/fipstest.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/fipstest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipstest.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/crypttest.dir/fipstest.cpp.o -c /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipstest.cpp
 
 CMakeFiles/crypttest.dir/fipstest.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/crypttest.dir/fipstest.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipstest.cpp > CMakeFiles/crypttest.dir/fipstest.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipstest.cpp > CMakeFiles/crypttest.dir/fipstest.cpp.i
 
 CMakeFiles/crypttest.dir/fipstest.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/crypttest.dir/fipstest.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/third_party/c5/fipstest.cpp -o CMakeFiles/crypttest.dir/fipstest.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/manuel/Projects/gt/tent/libattic/vendor/c5/fipstest.cpp -o CMakeFiles/crypttest.dir/fipstest.cpp.s
 
 CMakeFiles/crypttest.dir/fipstest.cpp.o.requires:
 .PHONY : CMakeFiles/crypttest.dir/fipstest.cpp.o.requires
@@ -334,8 +334,8 @@ crypttest: CMakeFiles/crypttest.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable crypttest"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/crypttest.dir/link.txt --verbose=$(VERBOSE)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold "Copying cryptopp test data"
-	/usr/bin/cmake -E copy_directory /home/manuel/Projects/gt/tent/libattic/third_party/c5/TestData /./TestData
-	/usr/bin/cmake -E copy_directory /home/manuel/Projects/gt/tent/libattic/third_party/c5/TestVectors /./TestVectors
+	/usr/bin/cmake -E copy_directory /home/manuel/Projects/gt/tent/libattic/vendor/c5/TestData /./TestData
+	/usr/bin/cmake -E copy_directory /home/manuel/Projects/gt/tent/libattic/vendor/c5/TestVectors /./TestVectors
 
 # Rule to build all files generated by this target.
 CMakeFiles/crypttest.dir/build: crypttest
@@ -359,6 +359,6 @@ CMakeFiles/crypttest.dir/clean:
 .PHONY : CMakeFiles/crypttest.dir/clean
 
 CMakeFiles/crypttest.dir/depend:
-	cd /home/manuel/Projects/gt/tent/libattic/third_party/c5 && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/manuel/Projects/gt/tent/libattic/third_party/c5 /home/manuel/Projects/gt/tent/libattic/third_party/c5 /home/manuel/Projects/gt/tent/libattic/third_party/c5 /home/manuel/Projects/gt/tent/libattic/third_party/c5 /home/manuel/Projects/gt/tent/libattic/third_party/c5/CMakeFiles/crypttest.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/manuel/Projects/gt/tent/libattic/vendor/c5 && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/manuel/Projects/gt/tent/libattic/vendor/c5 /home/manuel/Projects/gt/tent/libattic/vendor/c5 /home/manuel/Projects/gt/tent/libattic/vendor/c5 /home/manuel/Projects/gt/tent/libattic/vendor/c5 /home/manuel/Projects/gt/tent/libattic/vendor/c5/CMakeFiles/crypttest.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/crypttest.dir/depend
 

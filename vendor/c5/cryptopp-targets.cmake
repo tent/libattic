@@ -19,7 +19,7 @@ ADD_LIBRARY(cryptlib STATIC IMPORTED)
 SET_PROPERTY(TARGET cryptlib APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 SET_TARGET_PROPERTIES(cryptlib PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/home/manuel/Projects/gt/tent/libattic/third_party/c5/libcryptlib.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/manuel/Projects/gt/tent/libattic/vendor/c5/libcryptlib.a"
   )
 
 # Commands beyond this point should not need to know the version.
