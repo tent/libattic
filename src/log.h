@@ -82,7 +82,7 @@ private:
     std::ostringstream os;
 };
 
-namespace log
+namespace alog
 {
     static void InitializeLogging(const std::string& directory)
     {

@@ -190,13 +190,13 @@ int ThreadPool::Shutdown()
 {
     while(m_ThreadData.size() != m_ThreadCount)
     {
-        //log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
+        //alog::Log(Logger::ERROR, "Thread data does not match count, timing out...");
         //TODO:: hack, find a better way.
         sleep(1);
         static unsigned int shutdowncount = 0;
         if(shutdowncount == 10)
         {
-            log::Log(Logger::ERROR, "Thread data does not match count, timing out...");
+            alog::Log(Logger::ERROR, "Thread data does not match count, timing out...");
             break;
         }
         shutdowncount++;

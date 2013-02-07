@@ -119,8 +119,8 @@ int InitLibAttic( const char* szWorkingDirectory,
     SetTempDirectory(szTempDirectory);
 
     // Initialize logging
-    log::InitializeLogging(szLogDirectory);
-    log::Log(Logger::DEBUG, "Init");
+    alog::InitializeLogging(szLogDirectory);
+    alog::Log(Logger::DEBUG, "Init");
 
     status = LoadAppFromFile();
     if(status == ret::A_OK)
@@ -129,7 +129,7 @@ int InitLibAttic( const char* szWorkingDirectory,
         status = SetEntityUrl(szEntityURL);
 
         if(status != ret::A_OK) 
-            log::Log(Logger::ERROR, "Failed to set entity url");
+            alog::Log(Logger::ERROR, "Failed to set entity url");
 
         status = liba::InitializeFileManager( &g_pFileManager,
                                               cnst::g_szManifestName,
@@ -149,7 +149,7 @@ int InitLibAttic( const char* szWorkingDirectory,
 
         status = g_TaskFactory.Initialize();
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize task factor");
+            alog::Log(Logger::ERROR, "Failed to initialize task factor");
 
         std::cout<<"here"<<std::endl;
         status = liba::InitializeConnectionManager();
@@ -159,7 +159,7 @@ int InitLibAttic( const char* szWorkingDirectory,
         
         status = LoadPhraseToken();
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to load phrase token");
+            alog::Log(Logger::ERROR, "Failed to load phrase token");
 
         // Try to load a master key if we have one
         if(LoadMasterKey() == ret::A_OK) // don't set it equal to status, because if this fails
@@ -185,7 +185,7 @@ int InitLibAttic( const char* szWorkingDirectory,
     else
     {
         status = ret::A_FAIL_LOAD_APP_DATA;
-        log::Log(Logger::ERROR, "Failed to load app data");
+        alog::Log(Logger::ERROR, "Failed to load app data");
     }
 
     if(status == ret::A_OK)
@@ -215,7 +215,7 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     
     status = g_TaskFactory.Shutdown();
     if(status != ret::A_OK)
-        log::Log(Logger::ERROR, " failed to shutdown task factory ");
+        alog::Log(Logger::ERROR, " failed to shutdown task factory ");
 
     status = liba::ShutdownFileManager(g_pFileManager);
     status = liba::ShutdownCredentialsManager(g_pCredManager);
@@ -232,7 +232,7 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     if(callback)
         callback(status, NULL);
 
-    log::ShutdownLogging();
+    alog::ShutdownLogging();
     return status;
 }
 

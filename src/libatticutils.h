@@ -47,7 +47,7 @@ namespace liba
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
 
         if(status != ret::A_OK) 
-            log::Log(Logger::ERROR, "Failed to initialize filemanager");
+            alog::Log(Logger::ERROR, "Failed to initialize filemanager");
 
         return status;
     }
@@ -67,7 +67,7 @@ namespace liba
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize credential manager");
+            alog::Log(Logger::ERROR, "Failed to initialize credential manager");
 
         return status;
     }
@@ -84,7 +84,7 @@ namespace liba
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize entity manager");
+            alog::Log(Logger::ERROR, "Failed to initialize entity manager");
 
         return status;
     }
@@ -117,7 +117,7 @@ namespace liba
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize Upload Manager");
+            alog::Log(Logger::ERROR, "Failed to initialize Upload Manager");
 
         return status;
     }
@@ -127,7 +127,7 @@ namespace liba
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Initialize(threadCount);
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to initialize task arbiter");
+            alog::Log(Logger::ERROR, "Failed to initialize task arbiter");
 
         return status;
     }
@@ -137,7 +137,7 @@ namespace liba
         int status = ret::A_OK;
         status = ConnectionManager::GetInstance()->Initialize();
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, " failed to shutdown connection manager");
+            alog::Log(Logger::ERROR, " failed to shutdown connection manager");
 
         return status;
     }
@@ -148,7 +148,7 @@ namespace liba
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "failed to shutdown task arbiter");
+            alog::Log(Logger::ERROR, "failed to shutdown task arbiter");
 
         return status;
     }
@@ -167,7 +167,7 @@ namespace liba
             status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
         if(status != ret::A_OK)
-           log::Log(Logger::ERROR, " failed to shutdown filemanger");
+           alog::Log(Logger::ERROR, " failed to shutdown filemanger");
 
         return status;
     }
@@ -188,7 +188,7 @@ namespace liba
             status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, " failed to shutdown credentials manager");
+            alog::Log(Logger::ERROR, " failed to shutdown credentials manager");
 
         return status;
     }
@@ -209,7 +209,7 @@ namespace liba
             status = ret::A_FAIL_INVALID_ENTITYMANAGER_INSTANCE;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, " failed to shutdown entity manager");
+            alog::Log(Logger::ERROR, " failed to shutdown entity manager");
 
         return status;
     }
@@ -226,7 +226,7 @@ namespace liba
             status = ret::A_FAIL_INVALID_APP_INSTANCE;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, " failed to shutdown app instance");
+            alog::Log(Logger::ERROR, " failed to shutdown app instance");
 
         return status;
     }
@@ -237,7 +237,7 @@ namespace liba
         status = ConnectionManager::GetInstance()->Shutdown();
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, " failed to shutdown connection manager instance");
+            alog::Log(Logger::ERROR, " failed to shutdown connection manager instance");
 
         return status;
     }
@@ -251,7 +251,7 @@ namespace liba
             status = ret::A_FAIL_INVALID_UPLOADMANAGER_INSTANCE;
 
         if(status != ret::A_OK)
-            log::Log(Logger::ERROR, "Failed to Shutdown Upload Manager");
+            alog::Log(Logger::ERROR, "Failed to Shutdown Upload Manager");
 
         return status;
     }
