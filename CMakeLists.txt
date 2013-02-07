@@ -28,11 +28,15 @@ else()
     file(GLOB_RECURSE jsoncpp_lib "./third_party/jsoncpp/libs/*.a")
 endif(jsoncpp_lib)
 
+message(STATUS " JSONCPP LIB LOCATION : [${jsoncpp_lib}]")
+
 message(STATUS "******************** BUILDING GOOGLE TEST ********************" )
-file(GLOB_RECURSE gtest_lib "./third_party/googletest/*.a")
+file(GLOB_RECURSE gtest_lib "./third_party/googletest/lib/*.a")
 if(gtest_lib)
     message(STATUS "found Google test lib [${gtest_lib}].")
 else()
+    file(MAKE_DIRECTORY ./third_party/googletest/lib)
+
     execute_process(WORKING_DIRECTORY ./third_party/googletest
                     COMMAND cmake .
                     RESULT_VARIABLE ret_var)
@@ -46,19 +50,25 @@ else()
                     RESULT_VARIABLE ret_var)
 
     execute_process(WORKING_DIRECTORY ./third_party/googletest
+                    COMMAND mv libgtest.a ./lib
+                    RESULT_VARIABLE ret_var)
+
+    execute_process(WORKING_DIRECTORY ./third_party/googletest
                     COMMAND make clean
                     RESULT_VARIABLE ret_var)
 
     file(GLOB_RECURSE gtest_lib "./third_party/googletest/*.a")
 endif(gtest_lib)
 
-message(STATUS " FOUND GOOGLE TEST LIB : [${gtest_lib}].")
+message(STATUS " GOOGLE TEST LIB : [${gtest_lib}]")
 
 message(STATUS "******************** BUILDING CRYPTO ********************")
 file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
 if(crypto_lib)
     message(STATUS "found Cryptolib [${crypto_lib}].")
 else()
+    file(MAKE_DIRECTORY ./third_party/c5/lib)
+
     execute_process(WORKING_DIRECTORY ./third_party/c5
                    COMMAND make clean
                    RESULT_VARIABLE ret_var)
@@ -78,7 +88,7 @@ else()
     file(GLOB_RECURSE crypto_lib "./third_party/c5/lib/*.a")
 endif(crypto_lib)
 
-message(STATUS "FOUND Cryptolib [${crypto_lib}].")
+message(STATUS "CRYPTOLIB : [${crypto_lib}].")
 
 # Set additional include directories
 INCLUDE_DIRECTORIES(./third_party/googletest/include)
