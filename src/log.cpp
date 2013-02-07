@@ -103,7 +103,7 @@ std::string Logger::ToString(Logger::LogLevel level)
 void Logger::Log(const Logger::LogLevel level, const std::string& input)
 {
     os << TimeNow();
-    os << " - " << ToString(level) << " : " << input << std::endl;
+    os << " - " << ToString(level) << " : " << input ;
     if(m_pSyncBuffer)
         m_pSyncBuffer->PushToBuffer(os);
 }

@@ -141,22 +141,21 @@ int InitLibAttic( const char* szWorkingDirectory,
 
         status = liba::InitializeEntityManager( &g_pEntityManager );
         // Non-essential
-        std::cout<<"here"<<std::endl;
         LoadAccessToken();
         
-        std::cout<<"here"<<std::endl;
         status = liba::InitializeTaskArbiter(threadCount);
 
         status = g_TaskFactory.Initialize();
         if(status != ret::A_OK)
             alog::Log(Logger::ERROR, "Failed to initialize task factor");
 
-        std::cout<<"here"<<std::endl;
         status = liba::InitializeConnectionManager();
 
         // Load Entity Authentication  - ORDER MATTERS
-        LoadEntity();
-        
+        status = LoadEntity();
+         if(status != ret::A_OK)
+            alog::Log(Logger::ERROR, "Failed to load Entity");
+
         status = LoadPhraseToken();
         if(status != ret::A_OK)
             alog::Log(Logger::ERROR, "Failed to load phrase token");
@@ -499,6 +498,9 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 
     if(status == ret::A_OK)
     {
+
+        g_pUploadManager->UploadFile(szFilePath, callback);
+/*
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
@@ -520,6 +522,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
                                                 callback);
 
         TaskArbiter::GetInstance()->SpinOffTask(t);
+        */
     }
 
     return status;
@@ -531,6 +534,8 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 
     if(status == ret::A_OK)
     {
+        g_pUploadManager->DownloadFile(szFilePath, callback);
+/*
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
@@ -548,6 +553,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
                                                 g_ConfigDirectory,
                                                 callback);
         TaskArbiter::GetInstance()->SpinOffTask(t);
+        */
     }
 
     return ret::A_OK;
@@ -907,6 +913,9 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
 
     std::string url;
     g_Entity.GetFrontProfileUrl(url);
+    
+
+
 
     AccessToken at;
     if(g_pCredManager)
@@ -930,12 +939,17 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
         Response resp;
         conops::HttpPut(url, NULL, output, at, resp);
 
-        //std::cout<<" URL : " << url << std::endl;
-        //std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
-        //std::cout<<" BODY : " << resp.body << std::endl;
+        std::cout<<" URL : " << url << std::endl;
+        std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
+        std::cout<<" BODY : " << resp.body << std::endl;
         
         if(resp.code != 200)
+        {
             status = ret::A_FAIL_NON_200;
+            alog::Log(Logger::DEBUG, "RegisterPassphraseProfilePost : \n" +
+                      resp.CodeAsString() +
+                      resp.body);
+        }
     }
 
     return status;
@@ -1179,6 +1193,8 @@ int LoadEntity(bool override)
 
         if(status == ret::A_OK)
             g_Entity.WriteToFile(entpath);
+        else
+            alog::Log(Logger::DEBUG, "LoadEntity failed discovery : " + g_EntityUrl);
     }
     return status;
 }

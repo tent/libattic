@@ -2,6 +2,7 @@
 #define ERROR_CODES_H_
 #pragma once
 
+#include <stdio.h>
 namespace ret
 {
     enum eCode
@@ -62,6 +63,14 @@ namespace ret
         A_FAIL_OTHER     
     };
 
+    static std::string ErrorToString(int code)
+    {
+        char buf[256] = {'\0'};
+        sprintf(buf, "%d", code);
+        std::string codestr;
+        codestr.append(buf);
+        return codestr;
+    }
 };
 
 #endif

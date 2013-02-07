@@ -30,6 +30,138 @@
 #include "rollsum.h"
 #include "log.h"
 
+
+// Globals
+
+std::string g_Entity;
+
+/*
+TEST(APP_REGISTRATION, STARTAPPINST)
+{
+
+    char* buf = new char[g_Entity.size()+1];
+    memset(buf, '\0', g_Entity.size()+1);
+    memcpy(buf, g_Entity.c_str(), g_Entity.size());
+
+    char* p[] = { buf };
+    char* s[] = { "read_posts", 
+                  "write_posts",
+                  "import_posts",
+                  "read_profile",
+                  "write_profile",
+                  "read_followers",
+                  "write_followers",
+                  "read_followings",
+                  "write_followings",
+                  "read_groups",
+                  "write_groups",
+                  "read_permissions",
+                  "write_permissions",
+                  "read_apps",
+                  "write_apps",
+                  "follow_ui",
+                  "read_secrets",
+                  "write_secrets"};
+
+
+    int status = StartupAppInstance( "libattic", 
+                                     "LibAttic Test Suite", 
+                                     "www.tent.is", 
+                                     "", 
+                                     p,
+                                     1, 
+                                     s, 
+                                     18);
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Startup app instance FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RegisterApp(g_Entity.c_str(), "./config");
+    if(status != ret::A_OK)
+    {
+        std::cout<<"register app FAILED : " << status << std::endl;
+    }
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = RequestAppAuthorizationURL(g_Entity.c_str());
+    if(status != ret::A_OK)
+    {
+        std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
+    }
+    std::cout<< GetAuthorizationURL() << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+    
+    if(buf)
+    {
+        delete buf;
+        buf =NULL;
+    }
+}
+*/
+
+TEST(APP_REGISTRATION, REQUEST_AUTH_DETAILS)
+{
+    if(g_Entity.empty()) return;
+//    ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), "5876e8da078db951cc56ac72b6d8f9d3", "./config"), ret::A_OK);
+}
+
+TEST(PASSPHRASE, REGISTER)
+{
+    if(g_Entity.empty()) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/log",
+                  g_Entity.c_str());
+   
+    if(status == ret::A_OK)
+    {
+        status = RegisterPassphrase("password", true);
+   
+        std::cout<< " REGISTER STATUS : " << status << std::endl;
+        for(;;)
+        {
+            sleep(10);
+            if(!g_ThreadCount)
+                break;
+            std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+        }
+    }
+    else
+        std::cout<<" FAILED TO INIT : " << status << std::endl;
+
+    ShutdownLibAttic(NULL);
+}
+
+/*
+TEST(PASSPHRASE, ENTER)
+{
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/log",
+                  g_Entity.c_str());
+
+
+    status = EnterPassphrase("password");
+    std::cout<<" Enter passphrase status : " << status << std::endl;
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+}
+*/
+
 /*
 TEST(TEST, INIT)
 {
@@ -111,60 +243,7 @@ TEST(TEST, DELETEALLPOSTS)
  */
 
  
-//TEST(LIBATTIC, STARTAPPINST)
-//{
-    /*
-    InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "https://manuel.tent.is");
-                  */
-/*
-    char* p[] = { "https://manuel.tent.is" };
-    char* s[] = { "read_posts", 
-                  "write_posts",
-                  "import_posts",
-                  "read_profile",
-                  "write_profile",
-                  "read_followers",
-                  "write_followers",
-                  "read_followings",
-                  "write_followings",
-                  "read_groups",
-                  "write_groups",
-                  "read_permissions",
-                  "write_permissions",
-                  "read_apps",
-                  "write_apps",
-                  "follow_ui",
-                  "read_secrets",
-                  "write_secrets"};
 
-
-    int status = StartupAppInstance("libattic", "This is an app", "www.tent.is", "", p,1, s, 18);
-    if(status != ret::A_OK)
-    {
-        std::cout<<"Startup app instance FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = RegisterApp("https://manuel.tent.is", "./config");
-    if(status != ret::A_OK)
-    {
-        std::cout<<"register app FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-
-    status = RequestAppAuthorizationURL("https://manuel.tent.is");
-    if(status != ret::A_OK)
-    {
-        std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
-    }
-    std::cout<< GetAuthorizationURL() << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
-    
-   // ASSERT_EQ(RequestUserAuthorizationDetails("https://manuel.tent.is/tent/", "908ce7babfaafc6eb370cdec269c411f", "./config"), ret::A_OK);
-}
 /*
 */
 /*
@@ -295,21 +374,22 @@ TEST(NEWINDEX, AFILE)
 }
 /*
 */
+/*
 
-/**
 TEST(REGISTER, PASSPHRASE)
 {
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
+                  "./config/log",
                   "https://manuel.tent.is");
 
 
-    EnterPassphrase("password");
+    status = EnterPassphrase("password");
 
     {
-//        std::cout<<" REGISTERING PASSPHRASE " << std::endl;
-//        status = RegisterPassphrase("password", true);
+        //std::cout<<" REGISTERING PASSPHRASE " << std::endl;
+        //status = RegisterPassphrase("password", true);
         
         std::cout<< " REGISTER STATUS : " << status << std::endl;
         for(;;)
@@ -321,10 +401,7 @@ TEST(REGISTER, PASSPHRASE)
         }
     }
 
-
- 
-
-  ShutdownLibAttic();
+  ShutdownLibAttic(NULL);
 }
 
 /*
@@ -575,9 +652,9 @@ TEST(PULL, ALL)
 }
 /*
 */
+
+
 /*
-
-
 void PULLFUN(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
@@ -585,14 +662,15 @@ void PULLFUN(int a, void* b)
 }
 TEST(PULL, AFILE)
 {
-    InitLibAttic( "./data",
+    int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
+                  "./config/log",
                   "https://manuel.tent.is");
 
     EnterPassphrase("password");
     //int status = PullFile("./data/oa5.pdf", &PULLFUN);
-    int status = PullFile("./data/cb.pdf", &PULLFUN);
+    status = PullFile("./data/cb.pdf", &PULLFUN);
 
     for(;;)
     {
@@ -618,6 +696,7 @@ TEST(PULL, AFILE)
 
 /*
  **/
+/*
 
 
 
@@ -1423,9 +1502,21 @@ TEST(REINTERPREST, CAST)
 
 int main (int argc, char* argv[])
 {
-    // Init gtestframework
-    testing::InitGoogleTest(&argc, argv);
+    // Extract commandline info
+    int status = 0;
+    if(argc > 1)
+    {
+        // extract entity
+        std::cout<<argv[1] << std::endl;
+        g_Entity = argv[1];
+        // Init gtestframework
+        testing::InitGoogleTest(&argc, argv);
 
-    // run all tests
-    return RUN_ALL_TESTS();
+        // run all tests
+        status = RUN_ALL_TESTS();
+
+    }
+
+
+    return status;
 }

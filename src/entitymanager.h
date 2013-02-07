@@ -9,6 +9,13 @@
 #include "mutexclass.h"
 #include "accesstoken.h"
 
+
+//TODO:: entity manager is probably not needed, 
+//       look into abstracting any of this functionality to entity itself
+//       and then just have one top level entity. Entity manager can come back sort of
+//       as a quick switcher if a user wants to manage multiple entities, but for now
+//       that's just complicating things.
+
 class Entity;
 
 class EntityManager : public MutexClass

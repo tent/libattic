@@ -8,6 +8,7 @@
 #include "errorcodes.h"
 #include "conoperations.h"
 
+#include "log.h"
 
 EntityManager::EntityManager()
 {
@@ -38,45 +39,10 @@ int EntityManager::Shutdown()
 int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
 {
     int status = ret::A_OK;
+    status = conops::Discover(entityurl, entOut);
 
-    // Check entity url
-    std::string profpath = entityurl;
-    utils::CheckUrlAndAppendTrailingSlash(profpath);
-    profpath += "profile";
-
-    Response response;
-    conops::HttpGet( profpath, 
-                     NULL,
-                     at,
-                     response );
-
-    if(response.code == 200)
+    if(status == ret::A_OK)
     {
-
-        // Parse out all link tags
-        utils::taglist tags;
-        utils::FindAndExtractAllTags("link", response.body, tags);
-
-        std::string str;
-        for(int i = 0; i< tags.size() ; i++)
-        {
-            //std::cout<< "\t" << tags[i] << std::endl;
-            size_t found = tags[i].find(cnst::g_szProfileRel);
-
-            if(found != std::string::npos)
-            {
-                // Extract Profile url
-                size_t b = tags[i].find("https");
-                size_t e = tags[i].find("\"", b+1);
-                size_t diff = e - b;
-
-                str.clear();
-                str = tags[i].substr(b, diff);
-
-                entOut.PushBackProfileUrl(str);
-            }
-        }
-
         // Grab entity api root etc
         RetrieveEntityProfiles(entOut, at);
         
@@ -93,11 +59,11 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
         {
             status = ret::A_FAIL_INVALID_PTR;
         }
-
     }
     else
     {
-        status = ret::A_FAIL_NON_200;
+        alog::Log(Logger::ERROR, std::string("entitymanager->discover") +
+                  std::string("ERROR : ") + ret::ErrorToString(status));
     }
 
     return status; 

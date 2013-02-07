@@ -132,6 +132,22 @@ namespace liba
         return status;
     }
 
+    int InitializeTaskFactory( TaskFactory** pTf)
+    {
+        int status = ret::A_OK;
+        if(!(*pTf))
+        {
+            (*pTf) = new TaskFactory();
+            status = (*pTf)->Initialize();
+        }
+        else
+            status = ret::A_FAIL_ATTEMPT_TO_REINIT;
+
+        if(status != ret::A_OK)
+            alog::Log(Logger::ERROR, "Failed to initialize TaskFactory");
+        return status;
+    }
+
     int InitializeConnectionManager()
     {
         int status = ret::A_OK;
@@ -149,6 +165,25 @@ namespace liba
         status = TaskArbiter::GetInstance()->Shutdown();
         if(status != ret::A_OK)
             alog::Log(Logger::ERROR, "failed to shutdown task arbiter");
+
+        return status;
+    }
+
+    int ShutdownTaskFactory( TaskFactory* pTf )
+    {
+        int status = ret::A_OK;
+        // Blind shutdown
+        if(pTf)
+        {
+            pTf->Shutdown();
+            delete pTf;
+            pTf = NULL;
+        }
+        else
+            status = ret::A_FAIL_INVALID_PTR;
+
+        if(status != ret::A_OK)
+           alog::Log(Logger::ERROR, " failed to shutdown task factory");
 
         return status;
     }
