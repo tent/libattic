@@ -30,7 +30,6 @@ public:
     int Initialize();
     int Shutdown();
 
-
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
@@ -39,7 +38,6 @@ public:
     int DownloadAllFiles(const std::string& filepath, void (*callback)(int, void*));
     int SyncFiles(const std::string& filepath, void (*callback)(int, void*));
     int DeleteFile(const std::string& filepath, void (*callback)(int, void*));
-
 
 private:
     TaskFactory             m_TaskFactory; // Local to upload manager
