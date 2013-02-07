@@ -1,3 +1,0 @@
-[submodule "vendor/jsoncpp"]
-	path = vendor/jsoncpp
-	url = git://github.com/TubeTK/jsoncpp-cmake.git

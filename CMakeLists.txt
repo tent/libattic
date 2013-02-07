@@ -93,7 +93,7 @@ include_directories(${libattic_INCLUDE_DIRS})
 add_library(imp_gtest STATIC IMPORTED)
 set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ${gtest_lib})
 
-add_library(attic STATIC ${libattic_SOURCE})
+add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
 
 #link libs
-target_link_libraries(attic curl imp_gtest cryptlib json pthread)
+target_link_libraries(attic curl imp_gtest pthread)

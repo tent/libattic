@@ -102,7 +102,7 @@ if (CRYPTOPP_BUILD_SHARED_LIBS)
 endif (CRYPTOPP_BUILD_SHARED_LIBS)
 
 if (CRYPTOPP_BUILD_STATIC_LIBS)
-  add_library (cryptlib STATIC ${PROJECT_CPP_LIB} ${PROJECT_H} ${PROJECT_PCH})
+  add_library (cryptlib OBJECT ${PROJECT_CPP_LIB} ${PROJECT_H} ${PROJECT_PCH})
 endif (CRYPTOPP_BUILD_STATIC_LIBS)
 
 if (CRYPTOPP_BUILD_TESTS)
@@ -202,18 +202,6 @@ IF (WIN32)
   endif (TARGET cryptlib)
 endif (WIN32)
 
-if (_CRYPTOPP_INSTALL_TARGETS)
-  set_target_properties (${_CRYPTOPP_INSTALL_TARGETS} PROPERTIES PUBLIC_HEADER
-    "${PROJECT_H}")
-
-  install (TARGETS ${_CRYPTOPP_INSTALL_TARGETS}
-    EXPORT cryptopp-targets
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    PUBLIC_HEADER DESTINATION include/cryptopp)
-endif (_CRYPTOPP_INSTALL_TARGETS)
-
 if (TARGET crypttest)
   enable_testing ()
   # Run validation tests
@@ -270,13 +258,3 @@ configure_file (cryptopp-config-build.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/cryptopp-config-build.cmake @ONLY)
 configure_file (cryptopp-config-version.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/cryptopp-config-version.cmake @ONLY)
-
-export (TARGETS ${_CRYPTOPP_INSTALL_TARGETS} FILE
-  ${CMAKE_CURRENT_BINARY_DIR}/cryptopp-targets.cmake)
-export (PACKAGE CryptoPP)
-
-install (EXPORT cryptopp-targets DESTINATION . COMPONENT Development)
-install (FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptopp-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptopp-config-version.cmake
-    DESTINATION . COMPONENT Development)
