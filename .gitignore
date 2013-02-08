@@ -2,11 +2,16 @@
 /bin
 /CMakeFiles
 .svn
+/vendor/cryptopp/CMakeFiles
+/vendor/googletest/CMakeFiles
+/vendor/jsoncpp/CMakeFiles
+/vendor/jsoncpp/InstallFiles
+/vendor/jsoncpp/JsonCppConfig.cmake
+/vendor/jsoncpp/cmake/CMakeFiles
+/vendor/jsoncpp/include/CMakeFiles
+/vendor/jsoncpp/src/CMakeFiles
+/vendor/jsoncpp/src/lib_json/CMakeFiles
 
-third_party/googletest/CMakeFiles
-third_party/jsoncpp/test
-third_party/jsoncpp/bin
-/third_party/jsoncpp/buildscons
 
 # Build files
 CMakeCache.txt
