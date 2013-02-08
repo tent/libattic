@@ -35,9 +35,13 @@
 
 std::string g_Entity;
 
-/*
+bool g_bRegApp = false;
 TEST(APP_REGISTRATION, STARTAPPINST)
 {
+    if(g_Entity.empty()) return;
+    if(!g_bRegApp) return;
+
+    std::cout<<" got here " << std::endl;
 
     char* buf = new char[g_Entity.size()+1];
     memset(buf, '\0', g_Entity.size()+1);
@@ -99,17 +103,22 @@ TEST(APP_REGISTRATION, STARTAPPINST)
         buf =NULL;
     }
 }
-*/
 
+std::string g_AuthCode;
+bool g_bReqAuthDetails = false;
 TEST(APP_REGISTRATION, REQUEST_AUTH_DETAILS)
 {
     if(g_Entity.empty()) return;
-//    ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), "5876e8da078db951cc56ac72b6d8f9d3", "./config"), ret::A_OK);
+    if(!g_bReqAuthDetails) return;
+    
+    ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), g_AuthCode.c_str(), "./config"), ret::A_OK);
 }
 
+bool g_bPassphrase = false;
 TEST(PASSPHRASE, REGISTER)
 {
     if(g_Entity.empty()) return;
+    if(!g_bPassphrase) return;
 
     int status = InitLibAttic( 
                   "./data",
@@ -121,6 +130,8 @@ TEST(PASSPHRASE, REGISTER)
     if(status == ret::A_OK)
     {
         status = RegisterPassphrase("password", true);
+
+        ASSERT_EQ(status, ret::A_OK);
    
         std::cout<< " REGISTER STATUS : " << status << std::endl;
         for(;;)
@@ -137,9 +148,12 @@ TEST(PASSPHRASE, REGISTER)
     ShutdownLibAttic(NULL);
 }
 
-/*
+bool g_bEnterPass = false;
 TEST(PASSPHRASE, ENTER)
 {
+    if(g_Entity.empty()) return;
+    if(!g_bEnterPass) return;
+
     int status = InitLibAttic( 
                   "./data",
                   "./config",
@@ -150,6 +164,8 @@ TEST(PASSPHRASE, ENTER)
 
     status = EnterPassphrase("password");
     std::cout<<" Enter passphrase status : " << status << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+
     for(;;)
     {
        sleep(10);
@@ -160,7 +176,7 @@ TEST(PASSPHRASE, ENTER)
 
     ShutdownLibAttic(NULL);
 }
-*/
+
 
 /*
 TEST(TEST, INIT)
@@ -1502,19 +1518,116 @@ TEST(REINTERPREST, CAST)
 
 int main (int argc, char* argv[])
 {
-    // Extract commandline info
     int status = 0;
+
     if(argc > 1)
     {
-        // extract entity
-        std::cout<<argv[1] << std::endl;
-        g_Entity = argv[1];
+        int optcount = 7;
+        char* options[] = {
+            "REGISTERAPP",
+            "REQUESTAUTHCODE",
+            "REGISTERPASS",
+            "ENTERPASS",
+            "PULL",
+            "PUSH",
+            "SYNC"
+            };
+
+        enum ecmd
+        {
+            REGISTERAPP=0,
+            REQUESTAUTHCODE,
+            REGISTERPASS,
+            ENTERPASS,
+            PULL,
+            PUSH,
+            SYNC
+        };
+
+        if(!strcmp(argv[1], "--help"))
+        {
+            std::cout<<" Usage : ./attic <OPTION> {<OPTION ARG>} <ENTITY>" << std::endl;
+            std::cout<<" Options : "<< std::endl;
+            for(int i=0; i<optcount; i++)
+            {
+                std::cout << "\t" << options[i] << std::endl;
+            }
+            return 0;
+        }
+
         // Init gtestframework
         testing::InitGoogleTest(&argc, argv);
+        if(argc > 2)
+        {
+            // Extract entity
+            g_Entity = argv[argc-1];
 
-        // run all tests
+
+            int opt=-1;
+            // Extract command
+            for(int i=0; i < optcount; i++)
+            {
+                if(!strcmp(options[i], argv[1]))
+                {
+                    opt = i;
+                    break;
+                }
+            }
+
+            std::cout<<" OPT : " << opt << std::endl;
+
+            if(opt!=-1)
+            {
+                switch(opt)
+                {
+                    case REGISTERAPP:
+                    {
+                        std::cout<<" SET TRUE  " << std::endl;
+                        g_bRegApp = true;
+                        break;
+                    }
+                    case REQUESTAUTHCODE:
+                    {
+                        if(argc > 3)
+                        {
+                            g_AuthCode = argv[2];
+                            g_bReqAuthDetails = true;
+                        }
+                        else
+                            std::cout<<" Invalid params, ./attic REQUESTAUTHCODE <code> <entity> " << std::endl;
+                        break;
+                    }
+                    case REGISTERPASS:
+                    {
+                        g_bPassphrase = true;
+                        break;
+                    }
+                    case ENTERPASS:
+                    {
+                        g_bEnterPass = true;
+                        break;
+                    }
+                    case PULL:
+                    {
+                        break;
+                    }
+                    case PUSH:
+                    {
+                        break;
+                    }
+                    case SYNC:
+                    {
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+            }
+        }
+        
+        // All tests are setup, run them
         status = RUN_ALL_TESTS();
-
     }
 
 
