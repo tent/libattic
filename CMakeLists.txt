@@ -48,6 +48,7 @@ if(ATTIC_STATIC_LIB)
     set(LIBRARY_OUTPUT_PATH lib)
 endif(ATTIC_STATIC_LIB)
 
+
 file(GLOB_RECURSE libattic_SOURCE
     "src/*.cpp"
     "src/*.c"
@@ -56,7 +57,8 @@ file(GLOB_RECURSE libattic_SOURCE
     "vendor/base64/*.cpp")
 
 if(ATTIC_STATIC_LIB)
-    list(REMOVE_ITEM libattic_SOURCE main.cpp)
+    file(GLOB MAIN_CPP "src/main.cpp")
+    LIST(REMOVE_ITEM libattic_SOURCE ${MAIN_CPP})
 endif(ATTIC_STATIC_LIB)
 
 file(GLOB_RECURSE libattic_HEADERS
