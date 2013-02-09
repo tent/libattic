@@ -216,9 +216,48 @@ TEST(PUSH, AFILE)
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
 
-    std::cout<< " SHUTTING DOWN " << std::endl;
-    // Shutdown
     ShutdownLibAttic(NULL);
+}
+
+bool g_bPull = false;
+void PULLCB(int a, void* b)
+{
+    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
+
+}
+TEST(PULL, AFILE)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bPull) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/log",
+                  g_Entity.c_str());
+
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = EnterPassphrase("password");
+    ASSERT_EQ(status, ret::A_OK);
+
+    if(status == ret::A_OK)
+    {
+        status = PullFile("./data/oglisv.pdf", &PULLCB);
+        ASSERT_EQ(status, ret::A_OK);
+    }
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+
 }
 /*
 */
@@ -673,44 +712,7 @@ TEST(PULL, ALL)
 
 
 /*
-void PULLFUN(int a, void* b)
-{
-    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
 
-}
-TEST(PULL, AFILE)
-{
-    int status = InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "./config/log",
-                  "https://manuel.tent.is");
-
-    EnterPassphrase("password");
-    //int status = PullFile("./data/oa5.pdf", &PULLFUN);
-    status = PullFile("./data/cb.pdf", &PULLFUN);
-
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-   
-
-    ///////////////////////////////////////////////////////////////////////
-    // Shutdown
-
-    std::cout<<"shutting down"<< std::endl;
-    ShutdownLibAttic(NULL);
-
-}
 
 /*
  **/
@@ -1566,6 +1568,7 @@ int main (int argc, char* argv[])
                     }
                     case PULL:
                     {
+                        g_bPull = true;
                         break;
                     }
                     case PUSH:

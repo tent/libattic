@@ -47,7 +47,6 @@ PullTask::~PullTask()
 
 void PullTask::RunTask()
 {
-    std::cout<<" Running pull task " << std::endl;
     std::string filepath;
     GetFilepath(filepath);
     int status = PullFile(filepath);
@@ -74,14 +73,16 @@ int PullTask::PullFile(const std::string& filepath)
     }                                                                                            
 
     // Construct Post URL                                                                        
-    std::string postpath;// = m_Entity;                                                             
-    GetEntityUrl(postpath);
-    postpath.append("/tent/posts/");                                                             
+    std::string posturl;
+    Entity entity;
+    GetEntity(entity);
+    entity.GetApiRoot(posturl);
+    posturl += "/posts";
 
     std::string postid;                                                                          
     //fi->GetPostID(postid);                                                                       
     fi->GetChunkPostID(postid);
-    postpath += postid;                                                                          
+    posturl += "/" + postid;                                                                          
 
     int status = ret::A_OK;
     Response response;                                                                        
@@ -99,7 +100,7 @@ int PullTask::PullFile(const std::string& filepath)
             // Deserialize response into post
             Post resp;
             JsonSerializer::DeserializeObject(&resp, response.body);
-            GetAttachmentsFromPost(postpath, resp);
+            GetAttachmentsFromPost(posturl, resp);
 
             // Construct File                                                                        
             GetFileManager()->Lock();
@@ -122,21 +123,23 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
     if(fi)
     {
         // Construct Post URL                                                                        
-        std::string postpath;// = m_Entity;
-        GetEntityUrl(postpath);
-        postpath.append("/tent/posts/");                                                             
+        std::string posturl;
+        Entity entity;
+        GetEntity(entity);
+        entity.GetApiRoot(posturl);
+        posturl += "/posts";
 
         std::string postid;                                                            
         //fi->GetPostID(postid);
         fi->GetChunkPostID(postid);
-        postpath += postid;                                                                          
+        posturl += "/" + postid;                                                                          
 
-        std::cout<<" Post path : " << postpath << std::endl;
+        std::cout<<" Post path : " << posturl << std::endl;
         // Get Post                                                                                  
         AccessToken* at = GetAccessToken();
         if(at)
         {
-            status = conops::HttpGet(postpath, NULL, *at, responseOut);
+            status = conops::HttpGet(posturl, NULL, *at, responseOut);
 
             //std::cout<<" response out : " << responseOut.body << std::endl;
             if(status == ret::A_OK)
