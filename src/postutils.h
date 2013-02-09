@@ -24,7 +24,7 @@ namespace postutils
             unsigned int size = pFi->GetFileSize();
 
             // Set Basic attic post info
-            postOut.SetPermission(std::string("public"), isPublic);
+            postOut.SetPublic(isPublic);
             postOut.AtticPostSetFilepath(filepath);
             postOut.AtticPostSetFilename(filename);
             postOut.AtticPostSetSize(size);

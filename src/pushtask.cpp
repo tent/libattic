@@ -223,7 +223,10 @@ int PushTask::SendChunkPost( FileInfo* fi,
         std::cout<<" BODY : " << response.body << std::endl;
 
         ChunkPost p;
+        std::cout<<" here .... " <<std::endl;
         JsonSerializer::DeserializeObject(&p, response.body);
+
+        std::cout<<" here .... " <<std::endl;
 
         std::string postid;
         p.GetID(postid);
@@ -398,7 +401,7 @@ int PushTask::InitAtticPost( AtticPost& post,
 
     if(pList)
     {
-        post.SetPermission(std::string("public"), pub);
+        post.SetPublic(pub);
         post.AtticPostSetFilepath(filepath);
         post.AtticPostSetFilename(filename);
         post.AtticPostSetSize(size);

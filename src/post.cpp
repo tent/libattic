@@ -105,12 +105,14 @@ void Post::Serialize(Json::Value& root)
         root["views"] = views;
     }
 
-    if(m_Permissions.size() > 0)
-    {
-        Json::Value permissions(Json::objectValue); // We want scopes to be an object {}// vs []
-        JsonSerializer::SerializeMapIntoObject(permissions, m_Permissions);
-        root["permissions"] = permissions;
-    }
+    /*
+    Json::Value permissions(Json::objectValue); // We want scopes to be an object {}// vs []
+    JsonSerializer::SerializeMapIntoObject(permissions, m_Permissions);
+    root["permissions"] = permissions;
+    */
+    Json::Value perm;
+    JsonSerializer::SerializeObject(&m_Permissions, perm);
+    root["permissions"] = perm;
 
     //root["version"] = m_Version;
     
@@ -177,7 +179,8 @@ void Post::Deserialize(Json::Value& root)
     }
 
     JsonSerializer::DeserializeObjectValueIntoMap(root["views"], m_Views);
-    JsonSerializer::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
+    //JsonSerializer::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
+    JsonSerializer::DeserializeObject(&m_Permissions,root["permissions"]);
 }
 
 

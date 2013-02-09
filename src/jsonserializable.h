@@ -6,6 +6,7 @@
 #include <string>
 #include <json/json.h>
 
+#include <iostream>
 class JsonSerializable
 {
 public:
@@ -174,6 +175,7 @@ public:
         }
     }
 
+
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m)
     {
         if(val.isObject())
@@ -182,7 +184,7 @@ public:
             Json::ValueIterator itr = val.begin();
 
             for(; itr != val.end(); itr++)                                                                      
-            {
+            {   
                 m[itr.key().asString()] = (*itr).asBool();
             }
 

@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "jsonserializable.h"
+#include "permissions.h"
 
 class TentApp;
 
@@ -84,7 +85,9 @@ public:
     void SetPublishedAt(unsigned int uUnixTime) { m_PublishedAt = uUnixTime; }
     void SetPostType(const std::string &type)   { m_Type = type; }
     void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
-    void SetPermission(const std::string &permission, bool Val) { m_Permissions[permission] = Val; }
+
+    void SetPublic(const bool pub) { m_Permissions.SetIsPublic(pub); }
+    //void SetPermission(const std::string &permission, bool Val) { m_Permissions[permission] = Val; }
 
     void PushBackAttachment(Attachment& pAtch) { m_Attachments.push_back(pAtch); }
 
@@ -104,7 +107,8 @@ private:
 
     TentApp*                            m_TentApp;
     std::map<std::string, std::string>  m_Views;
-    std::map<std::string, bool>         m_Permissions;
+    //std::map<std::string, bool>         m_Permissions;
+    Permissions m_Permissions;
 
     unsigned int                        m_Version;
 

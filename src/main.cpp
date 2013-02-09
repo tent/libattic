@@ -177,36 +177,37 @@ TEST(PASSPHRASE, ENTER)
     ShutdownLibAttic(NULL);
 }
 
+bool g_bPush = false;
 
-/*
-TEST(TEST, INIT)
+static void PUSHCB(int a, void* b)
 {
+    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
+}
 
-    int status = InitLibAttic( "./data",
+TEST(PUSH, AFILE)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bPush) return;
+    
+    int status = InitLibAttic( 
+                  "./data",
                   "./config",
                   "./data/temp",
                   "./config/log",
-                  "https://manuel.tent.is");
-
-    GetDate();
-    try
-    {
-        status = ShutdownLibAttic(NULL);
-    }
-    catch(std::exception& e)
-    {
-        std::cout << e.what() << std::endl;
-
-    }
-
-    int status =0;
-    std::cout<<" GET GET GET" << std::endl;
-    std::string t;
-//    t += GetEntityApiRoot("https://polar-springs-6638.herokuapp.com/");
+                  g_Entity.c_str());
     
-    //t += GetEntityApiRoot("https://manuel.tent.is");
-    std::cout<<" MY ENTITY URL : " << t  << std::endl;
-    std::cout<<" 2GET GET GET" << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+    status = EnterPassphrase("password");
+
+    ASSERT_EQ(status, ret::A_OK);
+
+    if(status == 0)
+    {
+        status = PushFile("./data/oglisv.pdf", &PUSHCB);
+
+        ASSERT_EQ(status, ret::A_OK);
+    }
+
     for(;;)
     {
        sleep(10);
@@ -215,8 +216,9 @@ TEST(TEST, INIT)
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
 
-    status = ShutdownLibAttic();
-    std::cout<<" Shutdown status : " << status << std::endl;
+    std::cout<< " SHUTTING DOWN " << std::endl;
+    // Shutdown
+    ShutdownLibAttic(NULL);
 }
 /*
 */
@@ -716,52 +718,7 @@ TEST(PULL, AFILE)
 
 
 
-static void FOOFUN(int a, void* b)
-{
-    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
-}
 
-TEST(PUSH, AFILE)
-{
-    int status = InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "./config/log",
-                  "https://manuel.tent.is");
-
-    if(status == 0)
-    {
-//        status = PushFile("./data/oa5.pdf", &FOOFUN);
-        status = PushFile("./data/cb.pdf", &FOOFUN);
-//        status = PushFile("./data/qspn.pdf", &FOOFUN);
-        if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
-        {
-            status =  EnterPassphrase("password");
-            std::cout<<" Entered passphrase status : " << status << std::endl;
-        }
-    }
-    else
-    {
-        std::cout<<"Enter passphrase fail " << std::endl;
-    }
-
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
-
-    if(status != ret::A_OK)
-    {
-        std::cout<<"FAILED : " << status << std::endl;
-    }
-    ASSERT_EQ(status, ret::A_OK);
-    std::cout<< " SHUTTING DOWN " << std::endl;
-    // Shutdown
-    ShutdownLibAttic(NULL);
-}
 /*
  */
 /*  
@@ -1613,6 +1570,7 @@ int main (int argc, char* argv[])
                     }
                     case PUSH:
                     {
+                        g_bPush = true;
                         break;
                     }
                     case SYNC:
