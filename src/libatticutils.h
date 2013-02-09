@@ -272,7 +272,7 @@ namespace liba
         status = ConnectionManager::GetInstance()->Shutdown();
 
         if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, " failed to shutdown connection manager instance");
+            alog::Log(Logger::ERROR, "Failed to Shutdown Connection Manager", status);
 
         return status;
     }
@@ -280,13 +280,13 @@ namespace liba
     int ShutdownUploadManager( UploadManager** pUm)
     {
         int status = ret::A_OK;
-        if(!(*pUm))
+        if((*pUm))
             status = (*pUm)->Shutdown();
         else
             status = ret::A_FAIL_INVALID_UPLOADMANAGER_INSTANCE;
 
         if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to Shutdown Upload Manager");
+            alog::Log(Logger::ERROR, "Failed to Shutdown Upload Manager", status);
 
         return status;
     }
