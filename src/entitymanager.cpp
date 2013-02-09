@@ -39,7 +39,7 @@ int EntityManager::Shutdown()
 int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
 {
     int status = ret::A_OK;
-    status = conops::Discover(entityurl, entOut);
+    status = conops::DiscoverWithAuth(entityurl, at, entOut);
 
     if(status == ret::A_OK)
     {

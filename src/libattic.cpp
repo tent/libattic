@@ -748,14 +748,19 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
 
         std::string encmk; // Encrypted Master Key
         status = GetMasterKeyFromProfile(encmk);
+
+std::cout<<" HERE !!!!!!!!!!! status : "<< status <<std::endl;
         if(status == ret::A_OK)
         {
+            std::cout<<" master key : " << encmk << std::endl;
             if(!encmk.empty())
             {
                 // Attempt to Decrypt Master Key
                 std::string out;
                 Crypto crypto;
                 status = crypto.DecryptStringCFB(encmk, cred, out);
+
+std::cout<<" HERE !!!!!!!!!!! status : "<< status <<std::endl;
 
                 if(status == ret::A_OK)
                 {
@@ -834,6 +839,7 @@ int EnterPassphrase(const char* szPass)
 
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
+std::cout<<" HERE ^^^^^^^^^^^^^^^^^ status : " << status <<std::endl;
         if(status == ret::A_OK)
         {
             /*
@@ -843,6 +849,8 @@ int EnterPassphrase(const char* szPass)
             */
 
             status = DecryptMasterKey(phraseKey, salt);
+
+std::cout<<" HERE ^^^^^^^^^^^^^^^^^ status : "<< status <<std::endl;
             if(status == ret::A_OK)
             {
                 // Reload phrase token
@@ -851,8 +859,12 @@ int EnterPassphrase(const char* szPass)
                 status = LoadMasterKey();
                 if(status == ret::A_OK)
                     status = SetFileManagerMasterKey();
+
+                std::cout<<" HERE ^^^^^^^^^^^^^^^^^ status : "<< status <<std::endl;
             }
             //std::cout<<" DECRYPT STATUS : " << status << std::endl;
+
+
 
         }
     }

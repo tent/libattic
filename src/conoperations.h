@@ -12,6 +12,110 @@
 
 namespace conops
 {
+    //////////// Basic connection operations
+    static int HttpPost( const std::string& url,
+                         const UrlParams* pParams,
+                         const std::string& body,
+                         AccessToken& at,
+                         Response& responseOut)
+    {
+
+        ConnectionManager::GetInstance()->HttpPostWithAuth( url,
+                                                           pParams,
+                                                           body,
+                                                           responseOut,
+                                                           at.GetMacAlgorithm(), 
+                                                           at.GetAccessToken(), 
+                                                           at.GetMacKey(), 
+                                                           false);
+
+        return ret::A_OK;
+    }
+
+    static int HttpPut( const std::string& url,
+                         const UrlParams* pParams,
+                         const std::string& body,
+                         AccessToken& at,
+                         Response& responseOut)
+    {
+
+        ConnectionManager::GetInstance()->HttpPutWithAuth( url,
+                                                           pParams,
+                                                           body,
+                                                           responseOut,
+                                                           at.GetMacAlgorithm(), 
+                                                           at.GetAccessToken(), 
+                                                           at.GetMacKey(), 
+                                                           false);
+
+        return ret::A_OK;
+    }
+
+    static int HttpGet( const std::string& url,
+                        const UrlParams* pParams,
+                        const AccessToken& at,
+                        Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpGetWithAuth( url,                               
+                                                           pParams,
+                                                           responseOut,
+                                                           at.GetMacAlgorithm(),          
+                                                           at.GetAccessToken(),           
+                                                           at.GetMacKey(),
+                                                           false);
+        return ret::A_OK;
+    }
+
+    static int HttpGetAttachmentAndWriteOut( const std::string& url,
+                                             const UrlParams* pParams,
+                                             const AccessToken& at,
+                                             const std::string& filepath,
+                                             Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
+                                                                        pParams,                   
+                                                                        responseOut,               
+                                                                        filepath,               
+                                                                        at.GetMacAlgorithm(),  
+                                                                        at.GetAccessToken(),   
+                                                                        at.GetMacKey(),        
+                                                                        false);                  
+
+
+        return ret::A_OK;
+    } 
+
+
+    static int HttpDelete( const std::string& url,
+                           const UrlParams* pParams,
+                           const AccessToken& at,
+                           Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpDelete( url,
+                                                      pParams,
+                                                      responseOut,
+                                                      at.GetMacAlgorithm(),
+                                                      at.GetAccessToken(),
+                                                      at.GetMacKey(),
+                                                      false);
+
+        return ret::A_OK;
+    }
+
+    static int HttpHead( const std::string& url, 
+                         const UrlParams* pParams,
+                         Response& responseOut)
+    {
+        int status = ret::A_OK;
+
+        ConnectionManager::GetInstance()->HttpHead( url,
+                                                    pParams,
+                                                    responseOut,
+                                                    true); 
+        return status;
+    }
+
+
     static int AssembleChunkPaths( const std::string& dir, 
                                    const FileInfo* fi, 
                                    std::list<std::string>& out)
@@ -109,95 +213,6 @@ namespace conops
         return ret::A_OK;
     }    
 
-    static int HttpPost( const std::string& url,
-                         const UrlParams* pParams,
-                         const std::string& body,
-                         AccessToken& at,
-                         Response& responseOut)
-    {
-
-        ConnectionManager::GetInstance()->HttpPostWithAuth( url,
-                                                           pParams,
-                                                           body,
-                                                           responseOut,
-                                                           at.GetMacAlgorithm(), 
-                                                           at.GetAccessToken(), 
-                                                           at.GetMacKey(), 
-                                                           false);
-
-        return ret::A_OK;
-    }
-
-    static int HttpPut( const std::string& url,
-                         const UrlParams* pParams,
-                         const std::string& body,
-                         AccessToken& at,
-                         Response& responseOut)
-    {
-
-        ConnectionManager::GetInstance()->HttpPutWithAuth( url,
-                                                           pParams,
-                                                           body,
-                                                           responseOut,
-                                                           at.GetMacAlgorithm(), 
-                                                           at.GetAccessToken(), 
-                                                           at.GetMacKey(), 
-                                                           false);
-
-        return ret::A_OK;
-    }
-
-    static int HttpGet( const std::string& url,
-                        const UrlParams* pParams,
-                        const AccessToken& at,
-                        Response& responseOut)
-    {
-        ConnectionManager::GetInstance()->HttpGetWithAuth( url,                               
-                                                           pParams,
-                                                           responseOut,
-                                                           at.GetMacAlgorithm(),          
-                                                           at.GetAccessToken(),           
-                                                           at.GetMacKey(),
-                                                           false);
-        return ret::A_OK;
-    }
-
-    static int HttpGetAttachmentAndWriteOut( const std::string& url,
-                                             const UrlParams* pParams,
-                                             const AccessToken& at,
-                                             const std::string& filepath,
-                                             Response& responseOut)
-    {
-        ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
-                                                                        pParams,                   
-                                                                        responseOut,               
-                                                                        filepath,               
-                                                                        at.GetMacAlgorithm(),  
-                                                                        at.GetAccessToken(),   
-                                                                        at.GetMacKey(),        
-                                                                        false);                  
-
-
-        return ret::A_OK;
-    } 
-
-
-    static int HttpDelete( const std::string& url,
-                           const UrlParams* pParams,
-                           const AccessToken& at,
-                           Response& responseOut)
-    {
-        ConnectionManager::GetInstance()->HttpDelete( url,
-                                                      pParams,
-                                                      responseOut,
-                                                      at.GetMacAlgorithm(),
-                                                      at.GetAccessToken(),
-                                                      at.GetMacKey(),
-                                                      false);
-
-        return ret::A_OK;
-    }
-
     static void RetrieveEntityProfiles(Entity& ent)
     {
         unsigned int profcount = ent.GetProfileCount();
@@ -247,15 +262,53 @@ namespace conops
        }
     }
 
-    static int HeadRequestEntity(const std::string& entityurl, Entity& entOut)
+    static void RetrieveEntityProfiles(const AccessToken& at, Entity& ent)
+    {
+        unsigned int profcount = ent.GetProfileCount();
+        std::cout<<" PROF COUNT : " << profcount << std::endl;
+        if(profcount)
+        {
+            const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
+            Entity::UrlList::const_iterator itr = ProfUrlList->begin();
+
+            std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
+
+            while(itr != ProfUrlList->end())
+            {
+                Response response;
+
+                HttpGet( *itr, 
+                         NULL,
+                         at,
+                         response);
+
+                std::cout<< " resp : " << response.body << std::endl;
+                std::cout<< " code : " << response.code << std::endl;
+                
+     
+                if(response.code == 200)
+                {
+                    // Deserialize into Profile Object
+                    Profile* pProf = new Profile();
+                    JsonSerializer::DeserializeObject(pProf, response.body);
+                    
+                    // Push back into entity
+                    ent.PushBackProfile(pProf);
+                }
+                itr++;
+            }
+
+            Entity::ProfileList* pProfList = ent.GetProfileList();
+            if(pProfList)
+                ent.SetActiveProfile(&*pProfList->begin());
+       }
+    }
+
+    static int ExtractProfile( const std::string& entityurl, 
+                               Response& response, 
+                               Entity& entOut)
     {
         int status = ret::A_OK;
-
-        Response response;
-        ConnectionManager::GetInstance()->HttpHead( entityurl,
-                                                    NULL,
-                                                    response,
-                                                    true); 
 
         if(response.code == 200)
         {
@@ -299,13 +352,47 @@ namespace conops
                     }
                 }
             }
-
         }
         else
         {
             status = ret::A_FAIL_NON_200;
         }
 
+        return status;
+    }
+
+    
+
+    static int HeadRequestEntity(const std::string& entityurl, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        Response response;
+        HttpHead( entityurl, NULL, response);
+    
+        status = ExtractProfile(entityurl, response, entOut);
+        return status;
+    }
+
+    static int HeadRequestEntityWithAuth( const std::string& entityurl, 
+                                          const AccessToken& at, 
+                                          Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        Response response;
+        std::cout<<" ENTITY URL : " << entityurl << std::endl;
+        std::cout<< at.GetMacAlgorithm() << " " << at.GetAccessToken() << std::endl;
+        ConnectionManager::GetInstance()->HttpHeadWithAuth( entityurl,
+                                                    NULL,
+                                                    response,
+                                                    at.GetMacAlgorithm(), 
+                                                    at.GetAccessToken(), 
+                                                    at.GetMacKey(),
+                                                    true); 
+
+
+        status = ExtractProfile(entityurl, response, entOut);
         return status;
     }
 
@@ -375,19 +462,11 @@ namespace conops
 
     }
 
-    static int Discover(const std::string& entityurl, Entity& entOut)
+    static int InitEntity(const std::string& entityurl, Entity& entOut)
     {
         int status = ret::A_OK;
 
-        status = HeadRequestEntity(entityurl,entOut);
-        if(status != ret::A_OK)
-        {
-            status = GetRequestEntity(entityurl, entOut);
-        }
-
-        if(status == ret::A_OK)
-        {
-            // Grab entity api root etc
+        // Grab entity api root etc
             RetrieveEntityProfiles(entOut);
             
             // Set Api root
@@ -403,10 +482,69 @@ namespace conops
             {
                 status = ret::A_FAIL_INVALID_PTR;
             }
-        }
+
+        return status;
+    }
+
+    static int InitEntity(const std::string& entityurl, const AccessToken& at, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        // Grab entity api root etc
+            RetrieveEntityProfiles(at, entOut);
+            
+            // Set Api root
+            Profile* pProf = entOut.GetActiveProfile();
+            if(pProf)
+            {
+                std::string apiroot;
+                pProf->GetApiRoot(apiroot);
+                entOut.SetApiRoot(apiroot);
+                entOut.SetEntityUrl(entityurl);
+            }
+            else
+            {
+                status = ret::A_FAIL_INVALID_PTR;
+            }
+
+        return status;
+    }
+
+
+    static int Discover(const std::string& entityurl, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+        status = HeadRequestEntity(entityurl,entOut);
+        if(status != ret::A_OK)
+            status = GetRequestEntity(entityurl, entOut);
+
+        if(status == ret::A_OK)
+            status = InitEntity(entityurl, entOut);
 
         return status; 
     }
+
+    static int DiscoverWithAuth(const std::string& entityurl, const AccessToken& at, Entity& entOut)
+    {
+        int status = ret::A_OK;
+
+
+        status = HeadRequestEntity(entityurl,entOut);
+        //status = HeadRequestEntityWithAuth( entityurl,
+         //                                   at,
+          //                                  entOut);
+        if(status != ret::A_OK)
+            status = GetRequestEntity(entityurl, entOut);
+
+        if(status == ret::A_OK)
+            status = InitEntity(entityurl, at, entOut);
+
+        return status;
+    }
+
+
+
 
 
 };

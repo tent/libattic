@@ -85,6 +85,16 @@ public:
                   Response& responseOut, 
                   bool verbose);
 
+    int HttpHeadWithAuth( const std::string &url, 
+                          const UrlParams* pParams,
+                          Response& responseOut, 
+                          const std::string &macalgorithm, 
+                          const std::string &macid, 
+                          const std::string &mackey, 
+                          bool verbose = false);
+
+
+
     int HttpGet( const std::string &url, 
                  const UrlParams* pParams, 
                  Response& responseOut,
