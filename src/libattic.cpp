@@ -11,6 +11,7 @@
 
 #include "utils.h"
 #include "errorcodes.h"
+#include "apputils.h"
 #include "tentapp.h"
 #include "jsonserializable.h"
 #include "urlparams.h"
@@ -244,34 +245,26 @@ int StartupAppInstance( const char* szAppName,
                         char* scopes[], 
                         unsigned int scopeCount)
 {
+    int status = ret::A_OK;
+
     g_pApp = new TentApp();                                                
 
-    if(szAppName)
-        g_pApp->SetAppName(std::string(szAppName));                    
-    if(szAppDescription)
-        g_pApp->SetAppDescription(std::string(szAppDescription));   
-    if(szIcon)
-        g_pApp->SetAppIcon(std::string(szIcon));
-    if(szUrl)
-        g_pApp->SetAppURL(std::string(szUrl));        
+    std::vector<std::string> uris;
+    for(unsigned int i=0; i < uriCount; i++)
+        uris.push_back(redirectUris[i]);
 
-    if(redirectUris)
-    {
-        for(unsigned int i=0; i < uriCount; i++)
-        {
-            g_pApp->SetRedirectURI(std::string(redirectUris[i]));
-        }
-    }
+    std::vector<std::string> scopesVec;
+    for(unsigned int i=0;i<scopeCount; i++)
+        scopesVec.push_back(scopes[i]);
 
-    if(scopes)
-    {
-        for(unsigned int i=0;i<scopeCount; i++)
-        {
-            g_pApp->SetScope(std::string(scopes[i]));
-        }
-    }
-    
-    return ret::A_OK;
+    status = app::StartupAppInstance( *g_pApp,
+                                      szAppName,
+                                      szAppDescription,
+                                      szUrl,
+                                      szIcon,
+                                      uris,
+                                      scopesVec);
+    return status;
 }
 
 int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)

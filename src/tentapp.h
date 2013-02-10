@@ -69,9 +69,12 @@ class TentApp : public JsonSerializable
     void SetMacKeyID(const std::string &szID)                   { m_MacKeyID = szID; }
     void SetMacKey(const std::string &szKey)                    { m_MacKey = szKey; }
 
-    void SetScope(const std::string &szScope)           { m_Scopes.push_back(szScope); }
-    void SetRedirectURI(const std::string &szURI)       { m_RedirectURIs.push_back(szURI); }
-    void SetAuthorization(const std::string &szAuth)    { m_Authorizations.push_back(szAuth); }
+    void SetScopes(const std::vector<std::string>& scopes) { m_Scopes = scopes; }
+    void PushBackScope(const std::string &szScope)      { m_Scopes.push_back(szScope); }
+    void SetRedirectUris(const std::vector<std::string>& uris) { m_RedirectURIs = uris; }
+    void PushBackRedirectUri(const std::string &szURI)  { m_RedirectURIs.push_back(szURI); }
+    void SetAuthorizations(const std::vector<std::string>& auth) { m_Authorizations = auth; }
+    void PushBackAuthorization(const std::string &szAuth) { m_Authorizations.push_back(szAuth); }
 
 private:
     std::vector<std::string> m_Scopes;
