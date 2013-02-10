@@ -181,4 +181,27 @@ int UploadManager::SyncFiles(void (*callback)(int, void*))
     return status;
 }
 
+int UploadManager::DeleteAllPosts(void (*callback)(int, void*))
+{
+    int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::DELETEALLPOSTS,
+                                                    m_pApp,
+                                                    m_pFileManager,
+                                                    m_pCredentialsManager,
+                                                    TaskArbiter::GetInstance(),
+                                                    &m_TaskFactory,
+                                                    m_AccessToken,
+                                                    m_Entity,
+                                                    "",
+                                                    m_TempDir,
+                                                    m_WorkingDir,
+                                                    m_ConfigDir,
+                                                    callback,
+                                                    this);
+
+
+    return status;
+}
+
 

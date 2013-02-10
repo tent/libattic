@@ -57,7 +57,6 @@ static EntityManager*       g_pEntityManager = NULL;
 static UploadManager*       g_pUploadManager = NULL;
 
 //static TaskArbiter g_Arb;
-static TaskFactory g_TaskFactory;
 
 // Directories
 static std::string g_WorkingDirectory;
@@ -146,10 +145,6 @@ int InitLibAttic( const char* szWorkingDirectory,
         
         status = liba::InitializeTaskArbiter(threadCount);
 
-        status = g_TaskFactory.Initialize();
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize task factor");
-
         status = liba::InitializeConnectionManager();
 
         // Load Entity Authentication  - ORDER MATTERS
@@ -212,11 +207,6 @@ int ShutdownLibAttic(void (*callback)(int, void*))
 
     // Shutdown threading first, ALWAYS
     status = liba::ShutdownTaskArbiter();
-    
-    status = g_TaskFactory.Shutdown();
-    if(status != ret::A_OK)
-        alog::Log(Logger::ERROR, " failed to shutdown task factory ");
-
     status = liba::ShutdownFileManager(g_pFileManager);
     status = liba::ShutdownCredentialsManager(g_pCredManager);
     status = liba::ShutdownEntityManager(g_pEntityManager);
@@ -540,25 +530,7 @@ int DeleteAllPosts(void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-    {
-        AccessToken at;
-        g_pCredManager->GetAccessTokenCopy(at);
-
-        Task* t = g_TaskFactory.SynchronousGetTentTask( Task::DELETEALLPOSTS,
-                                                 g_pApp, 
-                                                 g_pFileManager, 
-                                                 g_pCredManager,
-                                                 TaskArbiter::GetInstance(),
-                                                 &g_TaskFactory,
-                                                 at,
-                                                 g_Entity,
-                                                 "",
-                                                 g_TempDirectory,
-                                                 g_WorkingDirectory,
-                                                 g_ConfigDirectory,
-                                                 callback);
-        TaskArbiter::GetInstance()->SpinOffTask(t);
-    }
+        status = g_pUploadManager->DeleteAllPosts(callback);
 
     return status;
 }
@@ -605,7 +577,6 @@ int ChangePassphrase(const char* szOld, const char* szNew)
 
     return status;
 }
-
 
 int GetMasterKeyFromProfile(std::string& out)
 {
