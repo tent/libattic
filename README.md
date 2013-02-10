@@ -1,3 +1,6 @@
+# Build Notes
+1. CMake 2.8.10 or greater required, for use of objects
+
 # Attic
 
 Attic is a Tent app that syncs the contents of a folder across multiple devices
