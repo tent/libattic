@@ -17,6 +17,8 @@ class PullTask: public TentTask
     int GetAttachmentsFromPost(const std::string postpath, Post& post);
     int GetMetaPost();
 
+    void ConstructPostUrl(std::string& out);
+
 public:
     PullTask( TentApp* pApp, 
               FileManager* pFm, 

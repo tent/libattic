@@ -35,8 +35,8 @@ public:
 
     int UploadFile(const std::string& filepath, void (*callback)(int, void*));
     int DownloadFile(const std::string& filepath, void (*callback)(int, void*));
-    int DownloadAllFiles(const std::string& filepath, void (*callback)(int, void*));
-    int SyncFiles(const std::string& filepath, void (*callback)(int, void*));
+    int DownloadAllFiles(void (*callback)(int, void*));
+    int SyncFiles(void (*callback)(int, void*));
     int DeleteFile(const std::string& filepath, void (*callback)(int, void*));
 
 private:

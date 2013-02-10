@@ -74,13 +74,9 @@ int PullTask::PullFile(const std::string& filepath)
 
     // Construct Post URL                                                                        
     std::string posturl;
-    Entity entity;
-    GetEntity(entity);
-    entity.GetApiRoot(posturl);
-    posturl += "/posts";
+    ConstructPostUrl(posturl);
 
     std::string postid;                                                                          
-    //fi->GetPostID(postid);                                                                       
     fi->GetChunkPostID(postid);
     posturl += "/" + postid;                                                                          
 
@@ -124,13 +120,9 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
     {
         // Construct Post URL                                                                        
         std::string posturl;
-        Entity entity;
-        GetEntity(entity);
-        entity.GetApiRoot(posturl);
-        posturl += "/posts";
+        ConstructPostUrl(posturl);
 
         std::string postid;                                                            
-        //fi->GetPostID(postid);
         fi->GetChunkPostID(postid);
         posturl += "/" + postid;                                                                          
 
@@ -209,4 +201,12 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
 
     return status;                                                                        
 }                                                                                            
+
+void PullTask::ConstructPostUrl(std::string& out)
+{
+    Entity entity;
+    GetEntity(entity);
+    entity.GetApiRoot(out);
+    out += "/posts";
+}
 

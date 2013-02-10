@@ -110,23 +110,73 @@ int UploadManager::DownloadFile(const std::string& filepath, void (*callback)(in
     return status;
 }
 
-int UploadManager::DownloadAllFiles(const std::string& filepath, void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    return status;
-}
-
-int UploadManager::SyncFiles(const std::string& filepath, void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    return status;
-}
-
 int UploadManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*))
 {
     int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::DELETE,
+                                                    m_pApp,
+                                                    m_pFileManager,
+                                                    m_pCredentialsManager,
+                                                    TaskArbiter::GetInstance(),
+                                                    &m_TaskFactory,
+                                                    m_AccessToken,
+                                                    m_Entity,
+                                                    filepath,
+                                                    m_TempDir,
+                                                    m_WorkingDir,
+                                                    m_ConfigDir,
+                                                    callback,
+                                                    this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+
+    return status;
+}
+
+int UploadManager::DownloadAllFiles(void (*callback)(int, void*))
+{
+    int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::PULLALL,
+                                                    m_pApp,
+                                                    m_pFileManager,
+                                                    m_pCredentialsManager,
+                                                    TaskArbiter::GetInstance(),
+                                                    &m_TaskFactory,
+                                                    m_AccessToken,
+                                                    m_Entity,
+                                                    "",
+                                                    m_TempDir,
+                                                    m_WorkingDir,
+                                                    m_ConfigDir,
+                                                    callback,
+                                                    this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+    return status;
+}
+
+int UploadManager::SyncFiles(void (*callback)(int, void*))
+{
+    int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::SYNC,
+                                                    m_pApp,
+                                                    m_pFileManager,
+                                                    m_pCredentialsManager,
+                                                    TaskArbiter::GetInstance(),
+                                                    &m_TaskFactory,
+                                                    m_AccessToken,
+                                                    m_Entity,
+                                                    "",
+                                                    m_TempDir,
+                                                    m_WorkingDir,
+                                                    m_ConfigDir,
+                                                    callback,
+                                                    this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
 
     return status;
 }

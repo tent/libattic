@@ -74,7 +74,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*));
 int PullFile(const char* szFilePath, void (*callback)(int, void*));
 
 // Delete a file
-int DeleteFile(const char* szFilepath, void (*callback)(int, void*));
+int DeleteFile(const char* szFilePath, void (*callback)(int, void*));
 
 // Pull All files in manifest
 int PullAllFiles(void (*callback)(int, void*)); // Pull into lib, don't expose

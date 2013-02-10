@@ -96,9 +96,19 @@ namespace alog
 
     static void Log(const Logger::LogLevel level, const std::string& input) // One off
     {
-
         Logger logger;
         logger.Log(level, input);
+    }
+
+    static void Log(const Logger::LogLevel level, const std::string& input, const int errCode)
+    {
+        char buf[256] = {'\0'};
+        sprintf(buf, "%d", errCode);
+        std::string msg;
+        msg += input;
+        msg += " | code : ";
+        msg += buf;
+        Log(level, msg);
     }
 
     static void GetCurrentLogFilepath(std::string& out)
