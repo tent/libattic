@@ -1,19 +1,19 @@
-#include "uploadmanager.h"
+#include "taskmanager.h"
 
 #include "taskarbiter.h"
 #include "tentapp.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
 
-UploadManager::UploadManager( TentApp* pApp, 
-                              FileManager* pFm, 
-                              CredentialsManager* pCm,
-                              const AccessToken& at,
-                              const Entity& entity,
-                              const std::string& tempdir, 
-                              const std::string& workingdir,
-                              const std::string& configdir
-                            )
+TaskManager::TaskManager( TentApp* pApp, 
+                          FileManager* pFm, 
+                          CredentialsManager* pCm,
+                          const AccessToken& at,
+                          const Entity& entity,
+                          const std::string& tempdir, 
+                          const std::string& workingdir,
+                          const std::string& configdir
+                        )
 {
     m_pApp = pApp;
     m_pFileManager = pFm;
@@ -27,12 +27,12 @@ UploadManager::UploadManager( TentApp* pApp,
     m_ConfigDir = configdir;
 }
 
-UploadManager::~UploadManager()
+TaskManager::~TaskManager()
 {
 
 }
 
-int UploadManager::Initialize()
+int TaskManager::Initialize()
 {
     int status = ret::A_OK;
     status = m_TaskFactory.Initialize();
@@ -40,7 +40,7 @@ int UploadManager::Initialize()
     return status;
 }
 
-int UploadManager::Shutdown()
+int TaskManager::Shutdown()
 {
     int status = ret::A_OK;
     status = m_TaskFactory.Shutdown();
@@ -48,7 +48,7 @@ int UploadManager::Shutdown()
     return status;
 }
 
-void UploadManager::OnTaskCreate(Task* t)
+void TaskManager::OnTaskCreate(Task* t)
 {
     std::cout<<" On Task Create " << std::endl;
     // Get Task type
@@ -56,7 +56,7 @@ void UploadManager::OnTaskCreate(Task* t)
     // extract curl instance ptr
 }
 
-void UploadManager::OnTaskInsert(Task* t)
+void TaskManager::OnTaskInsert(Task* t)
 {
     std::cout<<" On Task Insert " << std::endl;
 
@@ -64,7 +64,7 @@ void UploadManager::OnTaskInsert(Task* t)
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
 }
 
-int UploadManager::UploadFile(const std::string& filepath, void (*callback)(int, void*))
+int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -87,7 +87,7 @@ int UploadManager::UploadFile(const std::string& filepath, void (*callback)(int,
     return status;
 }
 
-int UploadManager::DownloadFile(const std::string& filepath, void (*callback)(int, void*))
+int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int, void*))
 {
     int status = ret::A_OK;
  
@@ -110,7 +110,7 @@ int UploadManager::DownloadFile(const std::string& filepath, void (*callback)(in
     return status;
 }
 
-int UploadManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*))
+int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -134,7 +134,7 @@ int UploadManager::DeleteFile(const std::string& filepath, void (*callback)(int,
     return status;
 }
 
-int UploadManager::DownloadAllFiles(void (*callback)(int, void*))
+int TaskManager::DownloadAllFiles(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -157,7 +157,7 @@ int UploadManager::DownloadAllFiles(void (*callback)(int, void*))
     return status;
 }
 
-int UploadManager::SyncFiles(void (*callback)(int, void*))
+int TaskManager::SyncFiles(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -181,7 +181,7 @@ int UploadManager::SyncFiles(void (*callback)(int, void*))
     return status;
 }
 
-int UploadManager::DeleteAllPosts(void (*callback)(int, void*))
+int TaskManager::DeleteAllPosts(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
@@ -200,8 +200,15 @@ int UploadManager::DeleteAllPosts(void (*callback)(int, void*))
                                                     callback,
                                                     this);
 
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
 
     return status;
 }
 
+int TaskManager::QueryManifest(const int stride, void(*callback)(char**, int, int))
+{
+    int status = ret::A_OK;
+
+    return status;
+}
 

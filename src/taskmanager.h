@@ -1,5 +1,5 @@
-#ifndef UPLOADMANAGER_H_
-#define UPLOADMANAGER_H_
+#ifndef TASKMANAGER_H_
+#define TASKMANAGER_H_
 #pragma once
 
 #include <string>
@@ -12,20 +12,20 @@ class TentApp;
 class FileManager;
 class CredentialsManager;
 
-class UploadManager : public TaskFactoryDelegate
+class TaskManager : public TaskFactoryDelegate
 {
 public:
-    UploadManager( TentApp* pApp, 
-                   FileManager* pFm, 
-                   CredentialsManager* pCm,
-                   const AccessToken& at,
-                   const Entity& entity,
-                   const std::string& tempdir, 
-                   const std::string& workingdir,
-                   const std::string& configdir
-                 );
+    TaskManager( TentApp* pApp, 
+                 FileManager* pFm, 
+                 CredentialsManager* pCm,
+                 const AccessToken& at,
+                 const Entity& entity,
+                 const std::string& tempdir, 
+                 const std::string& workingdir,
+                 const std::string& configdir
+               );
 
-    ~UploadManager();
+    ~TaskManager();
 
     int Initialize();
     int Shutdown();
@@ -33,12 +33,17 @@ public:
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
+    // Sync Tasks
     int UploadFile(const std::string& filepath, void (*callback)(int, void*));
     int DownloadFile(const std::string& filepath, void (*callback)(int, void*));
     int DownloadAllFiles(void (*callback)(int, void*));
     int SyncFiles(void (*callback)(int, void*));
     int DeleteFile(const std::string& filepath, void (*callback)(int, void*));
     int DeleteAllPosts(void (*callback)(int, void*));
+
+    // Utility Tasks
+    int QueryManifest(const int stride, void(*callback)(char**, int, int));
+
 
 private:
     TaskFactory             m_TaskFactory; // Local to upload manager
