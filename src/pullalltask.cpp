@@ -112,19 +112,19 @@ void PullAllTask::RunTask()
                 (*itr).GetFilepath(fp);
 
                 std::cout<<" PULLING FILE : " << fp << std::endl;
-                Task* t = tf->SynchronousGetTentTask( Task::PULL,
-                                               GetTentApp(), 
-                                               pFm, 
-                                               GetCredentialsManager(),
-                                               GetTaskArbiter(),
-                                               GetTaskFactory(),
-                                               GetAccessTokenCopy(),
-                                               entity,
-                                               fp,               
-                                               tempdir,          
-                                               workingdir,       
-                                               configdir,        
-                                               &PullAllCallBack);                
+                Task* t = tf->GetTentTask( Task::PULL,
+                                           GetTentApp(), 
+                                           pFm, 
+                                           GetCredentialsManager(),
+                                           GetTaskArbiter(),
+                                           GetTaskFactory(),
+                                           GetAccessTokenCopy(),
+                                           entity,
+                                           fp,               
+                                           tempdir,          
+                                           workingdir,       
+                                           configdir,        
+                                           &PullAllCallBack);                
 
                 ta->SpinOffTask(t);
                 m_CallbackCount++;

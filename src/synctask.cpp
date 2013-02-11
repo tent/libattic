@@ -326,19 +326,19 @@ int SyncTask::SpinOffPullAllTask()
     GetEntity(entity);
 
 
-    Task* t = tf->SynchronousGetTentTask( Task::PULLALL,
-                                          GetTentApp(), 
-                                          GetFileManager(), 
-                                          GetCredentialsManager(),
-                                          GetTaskArbiter(),
-                                          GetTaskFactory(),
-                                          GetAccessTokenCopy(),
-                                          entity,
-                                          "",               
-                                          tempdir,          
-                                          workingdir,       
-                                          configdir,        
-                                          &SyncCallBack);      
+    Task* t = tf->GetTentTask( Task::PULLALL,
+                               GetTentApp(), 
+                               GetFileManager(), 
+                               GetCredentialsManager(),
+                               GetTaskArbiter(),
+                               GetTaskFactory(),
+                               GetAccessTokenCopy(),
+                               entity,
+                               "",               
+                               tempdir,          
+                               workingdir,       
+                               configdir,        
+                               &SyncCallBack);      
     
     ta->SpinOffTask(t);
     m_CallbackCount++;

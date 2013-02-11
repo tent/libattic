@@ -68,7 +68,7 @@ int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, v
 {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::PUSH,
+    Task* t = m_TaskFactory.GetTentTask( Task::PUSH,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
@@ -91,7 +91,7 @@ int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int,
 {
     int status = ret::A_OK;
  
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::PULL,
+    Task* t = m_TaskFactory.GetTentTask( Task::PULL,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
@@ -114,7 +114,7 @@ int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, v
 {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::DELETE,
+    Task* t = m_TaskFactory.GetTentTask( Task::DELETE,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
@@ -138,7 +138,7 @@ int TaskManager::DownloadAllFiles(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::PULLALL,
+    Task* t = m_TaskFactory.GetTentTask( Task::PULLALL,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
@@ -161,7 +161,7 @@ int TaskManager::SyncFiles(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::SYNC,
+    Task* t = m_TaskFactory.GetTentTask( Task::SYNC,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
@@ -185,7 +185,7 @@ int TaskManager::DeleteAllPosts(void (*callback)(int, void*))
 {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.SynchronousGetTentTask( Task::DELETEALLPOSTS,
+    Task* t = m_TaskFactory.GetTentTask( Task::DELETEALLPOSTS,
                                                     m_pApp,
                                                     m_pFileManager,
                                                     m_pCredentialsManager,
