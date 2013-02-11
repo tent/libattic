@@ -8,12 +8,15 @@
 #include "deletetask.h"
 #include "deleteallpoststask.h"
 #include "synctask.h"
+#include "queryfilestask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
 #include "connectionmanager.h"
 #include "taskarbiter.h"
 #include "tentapp.h"
+
+#include "log.h"
 
 TaskFactory::TaskFactory()
 {
@@ -74,61 +77,36 @@ int TaskFactory::Shutdown()
     return ret::A_OK;
 }
 
-/*
-Task* TaskFactory::GetTentTask( TaskType type,                                
-                                TentApp* pApp,                                
-                                FileManager* pFm,                             
-                                CredentialsManager* pCm,                      
+void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
+{
+    if(t)
+    {
+        if(delegate)
+            delegate->OnTaskCreate(t);
+
+        Lock();
+        m_ActiveTaskPool.PushBack(t);
+        Unlock();
+
+        if(delegate)
+            delegate->OnTaskInsert(t);
+    }
+}
+
+Task* TaskFactory::GetTentTask( Task::TaskType type,                
+                                TentApp* pApp,                
+                                FileManager* pFm,             
+                                CredentialsManager* pCm,      
                                 TaskArbiter* pTa,
                                 TaskFactory* pTf,
-                                const AccessToken& at,                        
-                                const Entity& entity,                    
-                                const std::string& filepath,                  
-                                const std::string& tempdir,                   
-                                const std::string& workingdir,                
-                                const std::string& configdir,                 
-                                void (*callback)(int, void*))
-{
-
-    std::cout<< " Creating tent task ... " << std::endl;
-    std::cout<< " TASK TYPE : " << type << std::endl;
-
-    Task* t = NULL;
-    t = CreateNewTentTask( type,
-                           pApp,      
-                           pFm,       
-                           pCm,       
-                           pTa,
-                           pTf,
-                           at,
-                           entity,    
-                           filepath,  
-                           tempdir,   
-                           workingdir,
-                           configdir, 
-                           callback); 
-
-    if(t)
-        m_ActiveTasks.push_back(t);
-    
-    return t;
-}
-*/
-
-Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,                
-                                    TentApp* pApp,                
-                                    FileManager* pFm,             
-                                    CredentialsManager* pCm,      
-                                    TaskArbiter* pTa,
-                                    TaskFactory* pTf,
-                                    const AccessToken& at,        
-                                    const Entity& entity,    
-                                    const std::string& filepath,  
-                                    const std::string& tempdir,   
-                                    const std::string& workingdir,
-                                    const std::string& configdir, 
-                                    void (*callback)(int, void*),
-                                    TaskFactoryDelegate* delegate)
+                                const AccessToken& at,        
+                                const Entity& entity,    
+                                const std::string& filepath,  
+                                const std::string& tempdir,   
+                                const std::string& workingdir,
+                                const std::string& configdir, 
+                                void (*callback)(int, void*),
+                                TaskFactoryDelegate* delegate)
 
 {
     // Check Inactive Task Pool
@@ -149,21 +127,49 @@ Task* TaskFactory::SynchronousGetTentTask( Task::TaskType type,
                            configdir, 
                            callback); 
 
-    if(t)
-    {
-        if(delegate)
-            delegate->OnTaskCreate(t);
-
-        Lock();
-        m_ActiveTaskPool.PushBack(t);
-        //m_TaskPool[t->GetTaskType()].push_back(t);
-        //m_ActiveTasks.push_back(t);
-        Unlock();
-
-        if(delegate)
-            delegate->OnTaskInsert(t);
-    }
+    PushBackTask(t, delegate);
     
+    return t;
+}
+
+
+Task* TaskFactory::GetManifestTask( Task::TaskType type,
+                                    FileManager* pFm,
+                                    void (*callback)(int, char**, int, int),
+                                    TaskFactoryDelegate* delegate)
+{
+    Task* t = NULL;
+
+    t = CreateNewManifestTask( type,
+                               pFm,
+                               callback);
+
+    PushBackTask(t, delegate);
+
+    return t;
+}
+
+Task* TaskFactory::CreateNewManifestTask( Task::TaskType type,
+                                          FileManager* pFm,
+                                          void (*callback)(int, char**, int, int))
+{
+    Task* t = NULL;
+    switch(type)
+    {
+        case Task::QUERYMANIFEST:
+        {
+            t = new QueryFilesTask( type,
+                                    pFm,
+                                    callback);
+            break;
+        }
+        default:
+        {
+            LogUnknownTaskType(type);
+            break;
+        }
+    }
+
     return t;
 }
 
@@ -282,14 +288,24 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               callback);             
             break;
         }
-    default:
+        default:
         {
-
+            LogUnknownTaskType(type);
         }
     }
 
 
     return t;
+}
+
+void TaskFactory::LogUnknownTaskType(Task::TaskType type)
+{
+    char buf[256] = {'\0'};
+    sprintf(buf, "%d", type);
+    std::string a = "Unknown task type : ";
+    a.append(buf);
+
+    alog::Log(Logger::ERROR, a);
 }
 
 int TaskFactory::RemoveActiveTask(Task* pTask)

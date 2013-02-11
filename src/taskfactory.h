@@ -48,6 +48,12 @@ private:
                              const std::string& configdir,   
                              void (*callback)(int, void*));  
 
+    Task* CreateNewManifestTask( Task::TaskType type,
+                                 FileManager* pFm,
+                                 void (*callback)(int, char**, int, int));
+
+    void PushBackTask(Task* t, TaskFactoryDelegate* delegate);
+    void LogUnknownTaskType(Task::TaskType type);
 public:                                                                 
     TaskFactory();                                                      
     ~TaskFactory();                                                     
@@ -57,38 +63,27 @@ public:
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
-    Task* SynchronousGetTentTask( Task::TaskType type,                
-                           TentApp* pApp,                
-                           FileManager* pFm,             
-                           CredentialsManager* pCm,      
-                           TaskArbiter* pTa,
-                           TaskFactory* pTf,
-                           const AccessToken& at,        
-                           const Entity& entity,    
-                           const std::string& filepath,  
-                           const std::string& tempdir,   
-                           const std::string& workingdir,
-                           const std::string& configdir, 
-                           void (*callback)(int, void*),
+    Task* GetTentTask( Task::TaskType type,                
+                       TentApp* pApp,                
+                       FileManager* pFm,             
+                       CredentialsManager* pCm,      
+                       TaskArbiter* pTa,
+                       TaskFactory* pTf,
+                       const AccessToken& at,        
+                       const Entity& entity,    
+                       const std::string& filepath,  
+                       const std::string& tempdir,   
+                       const std::string& workingdir,
+                       const std::string& configdir, 
+                       void (*callback)(int, void*),
+                       TaskFactoryDelegate* delegate = NULL);
+
+    Task* GetManifestTask( Task::TaskType type,
+                           FileManager* pFm,
+                           void (*callback)(int, char**, int, int),
                            TaskFactoryDelegate* delegate = NULL);
 
     int RemoveActiveTask(Task* pTask);
-
-/*
-    Task* GetTentTask( TaskType type,                                
-                       TentApp* pApp,                                
-                       FileManager* pFm,                             
-                       CredentialsManager* pCm,                      
-                       TaskArbiter* pTa,
-                       TaskFactory* pTf,
-                       const AccessToken& at,                        
-                       const Entity& entity,                    
-                       const std::string& filepath,                  
-                       const std::string& tempdir,                   
-                       const std::string& workingdir,                
-                       const std::string& configdir,                 
-                       void (*callback)(int, void*));                
-    */
 
 private:
     TaskPool    m_ActiveTaskPool;
