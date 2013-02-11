@@ -32,7 +32,7 @@
 #include "libatticutils.h"
 #include "log.h"
 
-#include "uploadmanager.h"
+#include "taskmanager.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -54,7 +54,7 @@ static TentApp*             g_pApp = NULL;
 static FileManager*         g_pFileManager = NULL;
 static CredentialsManager*  g_pCredManager = NULL;
 static EntityManager*       g_pEntityManager = NULL;
-static UploadManager*       g_pUploadManager = NULL;
+static TaskManager*       g_pTaskManager = NULL;
 
 //static TaskArbiter g_Arb;
 
@@ -165,7 +165,7 @@ int InitLibAttic( const char* szWorkingDirectory,
 
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
-        status = liba::InitializeUploadManager( &g_pUploadManager,
+        status = liba::InitializeTaskManager( &g_pTaskManager,
                                                 g_pApp,
                                                 g_pFileManager,
                                                 g_pCredManager,
@@ -212,7 +212,7 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     status = liba::ShutdownEntityManager(g_pEntityManager);
     status = liba::ShutdownAppInstance(g_pApp);
     status = liba::ShutdownConnectionManager();
-    status = liba::ShutdownUploadManager(&g_pUploadManager);
+    status = liba::ShutdownTaskManager(&g_pTaskManager);
 
     g_pApp = NULL;
     g_pFileManager = NULL;
@@ -480,7 +480,7 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->UploadFile(szFilePath, callback);
+        status = g_pTaskManager->UploadFile(szFilePath, callback);
 
     return status;
 }
@@ -490,7 +490,7 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->DownloadFile(szFilePath, callback);
+        status = g_pTaskManager->DownloadFile(szFilePath, callback);
 
     return ret::A_OK;
 }
@@ -500,7 +500,7 @@ int PullAllFiles(void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->DownloadAllFiles(callback);
+        status = g_pTaskManager->DownloadAllFiles(callback);
 
     return status;
 }
@@ -510,7 +510,7 @@ int SyncFiles(void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->SyncFiles(callback);
+        status = g_pTaskManager->SyncFiles(callback);
 
     return status;
 }
@@ -520,7 +520,7 @@ int DeleteFile(const char* szFilePath, void (*callback)(int, void*) )
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->DeleteFile(szFilePath, callback);
+        status = g_pTaskManager->DeleteFile(szFilePath, callback);
 
     return status;
 }
@@ -530,7 +530,7 @@ int DeleteAllPosts(void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pUploadManager->DeleteAllPosts(callback);
+        status = g_pTaskManager->DeleteAllPosts(callback);
 
     return status;
 }
@@ -1154,3 +1154,33 @@ const char* GetEntityApiRoot(const char* szEntityUrl)
 const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
+
+
+int GetFileList(int nStride, void(*callback)(char**, int, int))
+{
+    int status = ret::A_OK;
+
+    std::cout<<" GET FILE LIST " << std::endl;
+    std::vector<FileInfo> vec;
+    g_pFileManager->GetAllFileInfo(vec);
+
+    std::cout<<" files : " << vec.size() << std::endl;
+
+    for(unsigned int i=0; i<vec.size(); i++)
+    {
+        std::string h;
+        vec[i].GetFilepath(h);
+        std::cout<<h<<std::endl;
+    }
+
+    return status;
+}
+
+int FreeFileList(char** pList)
+{
+    if(pList)
+    {
+        delete[] pList;
+        pList = NULL;
+    }
+}

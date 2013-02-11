@@ -13,7 +13,7 @@
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "taskarbiter.h"
-#include "uploadmanager.h"
+#include "taskmanager.h"
 #include "log.h"
 //#include "entity.h"
 
@@ -89,7 +89,7 @@ namespace liba
         return status;
     }
 
-    int InitializeUploadManager( UploadManager** pUm,
+    int InitializeTaskManager( TaskManager** pUm,
                                  TentApp* pApp,
                                  FileManager* pFm,
                                  CredentialsManager* pCm,
@@ -102,7 +102,7 @@ namespace liba
         int status = ret::A_OK;
         if(!(*pUm))
         {
-            (*pUm) = new UploadManager(pApp,
+            (*pUm) = new TaskManager(pApp,
                                         pFm,
                                         pCm,
                                         at,
@@ -277,7 +277,7 @@ namespace liba
         return status;
     }
 
-    int ShutdownUploadManager( UploadManager** pUm)
+    int ShutdownTaskManager( TaskManager** pUm)
     {
         int status = ret::A_OK;
         if((*pUm))
