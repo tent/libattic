@@ -18,6 +18,7 @@ public:
 
     enum TaskType                                                       
     {                                                                   
+        // TentTask
         UNKNOWN=0,
         PUSH,
         PULL,
@@ -26,7 +27,9 @@ public:
         DELETEALLPOSTS,
         SYNC,
         ENCRYPT,
-        DECRYPT
+        DECRYPT,
+        // ManifestTask
+        QUERYMANIFEST
     };
 protected:
     Task(TaskType type = UNKNOWN)

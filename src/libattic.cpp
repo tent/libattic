@@ -1155,31 +1155,32 @@ const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
 
-
-int GetFileList(int nStride, void(*callback)(char**, int, int))
+int GetFileList(void(*callback)(int, char**, int, int))
 {
-    int status = ret::A_OK;
+    int status = IsLibInitialized();
 
-    std::cout<<" GET FILE LIST " << std::endl;
-    std::vector<FileInfo> vec;
-    g_pFileManager->GetAllFileInfo(vec);
+    if(status == ret::A_OK)
+        status = g_pTaskManager->QueryManifest(callback);
 
-    std::cout<<" files : " << vec.size() << std::endl;
-
-    for(unsigned int i=0; i<vec.size(); i++)
-    {
-        std::string h;
-        vec[i].GetFilepath(h);
-        std::cout<<h<<std::endl;
-    }
 
     return status;
 }
 
-int FreeFileList(char** pList)
+int FreeFileList(char** pList, int stride)
 {
     if(pList)
     {
+        char* p = *pList;
+        int count = 0;
+        for(int i=0; i< stride; i++)
+        {
+            if(pList[i])
+            {
+                delete[] pList[i];
+                pList[i] = NULL;
+            }
+
+        }
         delete[] pList;
         pList = NULL;
     }

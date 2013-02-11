@@ -3,13 +3,15 @@
 #pragma once
 
 #include "manifesttask.h"
+#include "fileinfo.h"
 
 class QueryFilesTask : public ManifestTask
 {
+    int CreateCStringListsAndCallBack(std::vector<FileInfo>& vec);
 public:
     QueryFilesTask( Task::TaskType type,                    
-                  FileManager* pFm,                       
-                  void (*callback)(int, char**, int, int));
+                    FileManager* pFm,                       
+                    void (*callback)(int, char**, int, int));
 
     ~QueryFilesTask();
 
@@ -18,8 +20,8 @@ public:
     virtual void OnFinished() { }
 
     void RunTask();
-
 private:
+    int m_Stride;
 
 
 };

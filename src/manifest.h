@@ -44,7 +44,6 @@ class Manifest
     bool CreateMetaTable();
     bool CreateFolderTable();
 
-
     bool PerformQuery(const char* pQuery) const;
     bool PerformSelect(const char* pSelect, SelectResult &out) const;
 
@@ -64,7 +63,7 @@ class Manifest
     bool InsertVersionNumber(unsigned int version) const;
     bool InsertPostID(const std::string &postID) const;
 
-        void SetIsDirty(bool dirty) { m_Dirty = dirty; }  // Deprecated
+    void SetIsDirty(bool dirty) { m_Dirty = dirty; }  // Deprecated
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
@@ -87,7 +86,6 @@ public:
     bool RemoveFileInfo(const std::string &filename);
     bool IsFileInManifest(const std::string &filename);
 
-    
     // Folder Table
     int InsertFolderDataToFolderTable(const FileInfo* fi);
     bool RemoveFolderData(const std::string& folderpath);

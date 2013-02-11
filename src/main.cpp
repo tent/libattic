@@ -32,7 +32,6 @@
 
 
 // Globals
-
 std::string g_Entity;
 
 bool g_bRegApp = false;
@@ -124,7 +123,7 @@ TEST(PASSPHRASE, REGISTER)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/log",
+                  "./config/logs",
                   g_Entity.c_str());
    
     if(status == ret::A_OK)
@@ -158,7 +157,7 @@ TEST(PASSPHRASE, ENTER)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/log",
+                  "./config/logs",
                   g_Entity.c_str());
 
 
@@ -193,7 +192,7 @@ TEST(PUSH, AFILE)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/log",
+                  "./config/logs",
                   g_Entity.c_str());
     
     ASSERT_EQ(status, ret::A_OK);
@@ -234,7 +233,7 @@ TEST(PULL, AFILE)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/log",
+                  "./config/logs",
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
@@ -258,6 +257,42 @@ TEST(PULL, AFILE)
 
     ShutdownLibAttic(NULL);
 
+}
+
+bool g_bManifest = false;
+void Filecb(int code, char** pList, int stride, int totes)
+{
+    std::cout<<" CODE " << code << std::endl;
+    std::cout<<" totes : " << totes << std::endl;
+    for(int i=0; i<stride; i++)
+        std::cout<< pList[i] << std::endl;
+
+    FreeFileList(pList, stride);
+}
+
+TEST(MANIFEST, QUERY_ALL_FILES)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bManifest) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+    ASSERT_EQ(status, ret::A_OK);
+    GetFileList(Filecb);
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
 }
 /*
 */
@@ -438,7 +473,7 @@ TEST(REGISTER, PASSPHRASE)
     int status = InitLibAttic( "./data",
                   "./config",
                   "./data/temp",
-                  "./config/log",
+                  "./config/logs",
                   "https://manuel.tent.is");
 
 
@@ -1481,7 +1516,7 @@ int main (int argc, char* argv[])
 
     if(argc > 1)
     {
-        int optcount = 7;
+        int optcount = 8;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -1489,7 +1524,8 @@ int main (int argc, char* argv[])
             "ENTERPASS",
             "PULL",
             "PUSH",
-            "SYNC"
+            "SYNC",
+            "QUERYMANIFEST"
             };
 
         enum ecmd
@@ -1500,7 +1536,8 @@ int main (int argc, char* argv[])
             ENTERPASS,
             PULL,
             PUSH,
-            SYNC
+            SYNC,
+            QUERYMANIFEST
         };
 
         if(!strcmp(argv[1], "--help"))
@@ -1578,6 +1615,11 @@ int main (int argc, char* argv[])
                     }
                     case SYNC:
                     {
+                        break;
+                    }
+                    case QUERYMANIFEST:
+                    {
+                        g_bManifest = true;
                         break;
                     }
                     default:

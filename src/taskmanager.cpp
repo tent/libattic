@@ -205,10 +205,16 @@ int TaskManager::DeleteAllPosts(void (*callback)(int, void*))
     return status;
 }
 
-int TaskManager::QueryManifest(const int stride, void(*callback)(char**, int, int))
+int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
 {
     int status = ret::A_OK;
 
+    Task* t = m_TaskFactory.GetManifestTask( Task::QUERYMANIFEST,
+                                             m_pFileManager,
+                                             callback,
+                                             this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
 }
 

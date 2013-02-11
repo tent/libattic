@@ -15,7 +15,7 @@ public:
                    Task(type)
     {
         m_pFileManager = pFm;
-        mCallback(callback);
+        mCallback = callback;
     }
 
     ~ManifestTask()
@@ -25,9 +25,11 @@ public:
 
     virtual void Reset()
     {
-        m_FileManager = NULL;
+        m_pFileManager = NULL;
         mCallback = NULL;
     }
+
+    FileManager* GetFileManager() { return m_pFileManager; }
 
 protected:
     void Callback(int code, char** pCharArr, int stride, int total)

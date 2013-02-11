@@ -42,7 +42,7 @@ public:
     int DeleteAllPosts(void (*callback)(int, void*));
 
     // Utility Tasks
-    int QueryManifest(const int stride, void(*callback)(char**, int, int));
+    int QueryManifest(void(*callback)(int, char**, int, int));
 
 
 private:

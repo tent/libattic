@@ -91,6 +91,15 @@ const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
+// request list of files in manifest,
+// stride is the number of entries requested per callback
+// returns an array of arrays, number in the current array, total entries in manifest
+// callback will be called until total number is recieved
+int GetFileList(void(*callback)(int, char**, int, int));
+
+// Once finished with the file list, pass back here for memory cleanup
+int FreeFileList(char** pList, int stride);
+
 // Utility function <- vince, make a temporary button of some sort for this, to nuke your account
 int DeleteAllPosts(void (*callback)(int, void*));
 
