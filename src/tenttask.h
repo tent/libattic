@@ -1,4 +1,3 @@
-
 #ifndef TENTTASK_H_
 #define TENTTASK_H_
 #pragma once
@@ -17,7 +16,6 @@
 
 class TentTask : public Task
 {
-
 public:
     TentTask( Task::TaskType type,
               TentApp* pApp, 
@@ -128,7 +126,6 @@ public:
 protected:
     void Callback(int code, void* p)
     {
-        std::cout<<" Callback " << std::endl;
         if(mCallback)
             mCallback(code, p); 
     }
