@@ -207,12 +207,24 @@ int ShutdownLibAttic(void (*callback)(int, void*))
 
     // Shutdown threading first, ALWAYS
     status = liba::ShutdownTaskArbiter();
-    status = liba::ShutdownFileManager(g_pFileManager);
-    status = liba::ShutdownCredentialsManager(g_pCredManager);
-    status = liba::ShutdownEntityManager(g_pEntityManager);
-    status = liba::ShutdownAppInstance(g_pApp);
+    status = liba::ShutdownFileManager(&g_pFileManager);
+    status = liba::ShutdownCredentialsManager(&g_pCredManager);
+    status = liba::ShutdownEntityManager(&g_pEntityManager);
+    status = liba::ShutdownAppInstance(&g_pApp);
     status = liba::ShutdownConnectionManager();
     status = liba::ShutdownTaskManager(&g_pTaskManager);
+
+    if(g_pTaskManager)
+        std::cout<<" DIDNT NULL " << std::endl;
+    if(g_pFileManager)
+        std::cout<<" DIDNT NULL " << std::endl;
+    if(g_pCredManager)
+        std::cout<<" DIDNT NULL " << std::endl;
+    if(g_pEntityManager)
+        std::cout<<" DIDNT NULL " << std::endl;
+    if(g_pApp)
+        std::cout<<" DIDNT NULL " << std::endl;
+
 
     g_pApp = NULL;
     g_pFileManager = NULL;
@@ -647,6 +659,7 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
                         else
                         {
                             status = ret::A_FAIL_SENTINEL_MISMATCH;
+                            alog::Log(Logger::ERROR, " Failed to decrypt master key : ", status);
                         }
                     }
                     else

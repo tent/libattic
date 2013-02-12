@@ -188,15 +188,15 @@ namespace liba
         return status;
     }
 
-    int ShutdownFileManager( FileManager* pFm )
+    int ShutdownFileManager( FileManager** pFm )
     {
         int status = ret::A_OK;
         // Blind shutdown
-        if(pFm)
+        if((*pFm))
         {
-            pFm->ShutdownFileManager();
-            delete pFm;
-            pFm = NULL;
+            (*pFm)->ShutdownFileManager();
+            delete (*pFm);
+            (*pFm) = NULL;
         }
         else
             status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
@@ -207,17 +207,17 @@ namespace liba
         return status;
     }
 
-    int ShutdownCredentialsManager(CredentialsManager* pCm)
+    int ShutdownCredentialsManager(CredentialsManager** pCm)
     {
         int status = ret::A_OK;
-        if(pCm)
+        if((*pCm))
         {
-            while(pCm->TryLock()) { sleep(0); }
-            status = pCm->Shutdown();
-            pCm->Unlock();
+            while((*pCm)->TryLock()) { sleep(0); }
+            status = (*pCm)->Shutdown();
+            (*pCm)->Unlock();
 
-            delete pCm;
-            pCm = NULL;
+            delete (*pCm);
+            (*pCm) = NULL;
         }
         else
             status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
@@ -228,17 +228,17 @@ namespace liba
         return status;
     }
 
-    int ShutdownEntityManager(EntityManager* pEm)
+    int ShutdownEntityManager(EntityManager** pEm)
     {
         int status = ret::A_OK;
-        if(pEm)
+        if((*pEm))
         {
-            while(pEm->TryLock()) { sleep(0); }
-            status = pEm->Shutdown();
-            pEm->Unlock();
+            while((*pEm)->TryLock()) { sleep(0); }
+            status = (*pEm)->Shutdown();
+            (*pEm)->Unlock();
 
-            delete pEm;
-            pEm = NULL;
+            delete (*pEm);
+            (*pEm) = NULL;
         }
         else
             status = ret::A_FAIL_INVALID_ENTITYMANAGER_INSTANCE;
@@ -249,13 +249,13 @@ namespace liba
         return status;
     }
 
-    int ShutdownAppInstance(TentApp* pApp)
+    int ShutdownAppInstance(TentApp** pApp)
     {
         int status = ret::A_OK;
-        if(pApp)
+        if((*pApp))
         {
-            delete pApp;
-            pApp = NULL;
+            delete (*pApp);
+            (*pApp) = NULL;
         }
         else
             status = ret::A_FAIL_INVALID_APP_INSTANCE;
