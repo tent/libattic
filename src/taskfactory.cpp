@@ -334,3 +334,14 @@ void TaskFactory::TaskFinished(int code, Task* pTask)
     }
 }
 
+int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type)
+{
+    int taskcount = 0;
+
+    m_ActiveTaskPool.Lock();
+    taskcount = m_ActiveTaskPool[type]->size();
+    m_ActiveTaskPool.Unlock();
+
+    return taskcount;
+}
+

@@ -223,6 +223,7 @@ int ShutdownLibAttic(void (*callback)(int, void*))
         callback(status, NULL);
 
     alog::ShutdownLogging();
+    g_bLibInitialized = false;
     return status;
 }
 
@@ -1185,3 +1186,14 @@ int FreeFileList(char** pList, int stride)
         pList = NULL;
     }
 }
+
+int GetActivePushTaskCount()
+{
+    g_pTaskManager->TaskCount(Task::PUSH);
+}
+
+int GetActivePullTaskCount()
+{
+    g_pTaskManager->TaskCount(Task::PULL);
+}
+

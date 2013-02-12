@@ -85,6 +85,9 @@ public:
 
     int RemoveActiveTask(Task* pTask);
 
+    // Information methods
+    int GetNumberOfActiveTasks(const Task::TaskType type);
+
 private:
     TaskPool    m_ActiveTaskPool;
     TaskPool    m_InactiveTaskPool;

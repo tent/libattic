@@ -22,6 +22,10 @@ public:
     void PushBack(Task* pTask);
     Task* Remove(Task* pTask);
         
+    TaskQueue* operator[](const Task::TaskType type)
+    {
+        return &m_TaskMap[type];
+    }
 private:
 
     TaskMap m_TaskMap;

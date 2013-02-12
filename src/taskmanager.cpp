@@ -218,3 +218,7 @@ int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
     return status;
 }
 
+int TaskManager::TaskCount(const Task::TaskType type)
+{
+    return m_TaskFactory.GetNumberOfActiveTasks(type);
+}

@@ -85,16 +85,17 @@ int SetEntityUrl(const char* szUrl);
 
 // Status Methods
 int GetCurrentTasks(void (*callback)(char* pArr, int count));
+int GetActivePushTaskCount();
+int GetActivePullTaskCount();
 
 // Utility
 const char* GetWorkingDirectory();
 const char* GetConfigDirectory();
 const char* GetEntityUrl();
 
-// request list of files in manifest,
-// stride is the number of entries requested per callback
-// returns an array of arrays, number in the current array, total entries in manifest
-// callback will be called until total number is recieved
+// Returns calls back n numbers of times, with filepaths
+// callback
+// - status, array of char*, number in array, total number
 int GetFileList(void(*callback)(int, char**, int, int));
 
 // Once finished with the file list, pass back here for memory cleanup

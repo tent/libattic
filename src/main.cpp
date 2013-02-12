@@ -203,13 +203,20 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
         status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
 
         ASSERT_EQ(status, ret::A_OK);
     }
 
     for(;;)
     {
-       sleep(10);
+       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+
+       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+       //sleep(0);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
@@ -284,6 +291,7 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 
     ASSERT_EQ(status, ret::A_OK);
     GetFileList(Filecb);
+
     for(;;)
     {
        sleep(10);
@@ -294,6 +302,8 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 
     ShutdownLibAttic(NULL);
 }
+
+
 /*
 */
 /*

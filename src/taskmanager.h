@@ -45,6 +45,8 @@ public:
     int QueryManifest(void(*callback)(int, char**, int, int));
 
 
+    // Info tasks
+    int TaskCount(const Task::TaskType);
 private:
     TaskFactory             m_TaskFactory; // Local to upload manager
 
