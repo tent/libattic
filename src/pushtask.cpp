@@ -261,8 +261,6 @@ int PushTask::SendAtticPost( FileInfo* fi,
     // Get ChunkInfo List
     FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
 
-    std::cout<<" CHUUUUUUUUUNK LIST SIZE : " << pList->size() << std::endl;
-
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
 
