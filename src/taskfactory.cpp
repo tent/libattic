@@ -345,3 +345,29 @@ int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type)
     return taskcount;
 }
 
+int TaskFactory::GetActiveTaskUploadSpeed()
+{
+    int speed = 0;
+    
+    m_ActiveTaskPool.Lock();
+    Task* task = m_ActiveTaskPool[Task::PUSH]->front();
+    m_ActiveTaskPool.Unlock();
+
+    if(task->GetTaskType() == Task::PUSH)
+        speed = ((PushTask*)task)->GetUploadSpeed();
+    return speed;
+}
+
+int TaskFactory::GetActiveTaskDownloadSpeed()
+{
+    int speed = 0;
+    
+    m_ActiveTaskPool.Lock();
+    Task* task = m_ActiveTaskPool[Task::PULL]->front();
+    m_ActiveTaskPool.Unlock();
+
+    if(task->GetTaskType() == Task::PULL)
+        speed = ((PushTask*)task)->GetUploadSpeed();
+    return speed;
+}
+

@@ -453,3 +453,10 @@ int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List)
     return status;
 }
 
+int PushTask::GetUploadSpeed()
+{
+    int speed = -1;
+    if(GetConnectionHandle())
+        speed = GetConnectionHandle()->GetUploadSpeed();
+    return speed;
+}

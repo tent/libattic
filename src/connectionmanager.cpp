@@ -949,7 +949,7 @@ int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
             do {
                 while(::curl_multi_perform(multi_handle, &still_running) ==
                                     CURLM_CALL_MULTI_PERFORM);
-                pHandle->GetSpeedInfo();
+                //pHandle->GetSpeedInfo();
             } while (still_running);
 
             responseOut.code = GetResponseCode(pCurl);

@@ -1192,11 +1192,33 @@ int FreeFileList(char** pList, int stride)
 
 int GetActivePushTaskCount()
 {
-    g_pTaskManager->TaskCount(Task::PUSH);
+    int taskcount = -1;
+    if(g_pTaskManager)
+        taskcount = g_pTaskManager->TaskCount(Task::PUSH);
+    return taskcount;
 }
 
 int GetActivePullTaskCount()
 {
-    g_pTaskManager->TaskCount(Task::PULL);
+    int taskcount = -1;
+    if(g_pTaskManager)
+        taskcount = g_pTaskManager->TaskCount(Task::PULL);
+    return taskcount;
 }
 
+int GetActiveUploadSpeed()
+{
+    int speed = -1;
+    if(g_pTaskManager)
+        speed = g_pTaskManager->GetActiveUploadSpeed();
+    return speed; 
+}
+
+int GetActiveDownloadSpeed()
+{
+    int speed = -1;
+    if(g_pTaskManager)
+        g_pTaskManager->GetActiveDownloadSpeed();
+
+    return speed; 
+}

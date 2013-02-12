@@ -212,8 +212,11 @@ TEST(PUSH, AFILE)
 
     for(;;)
     {
+       std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
        std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-       sleep(10);
+       std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
+
+       //sleep(10);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;

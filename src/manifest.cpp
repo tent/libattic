@@ -422,20 +422,24 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
         return false;
 
     
+    /*
     std::cout << " Row count : " << res.nRow << std::endl;
     std::cout << " Col count : " << res.nCol << std::endl;
+    */
     
 
     int step = 0;
     for(int i=0; i<res.nRow+1; i++)
     {
         step = i*res.nCol;
-        std::cout<< " step : " << step << std::endl;
+        //std::cout<< " step : " << step << std::endl;
 
+        /*
         for(int j=0; j<res.nCol; j++)
         {
             std::cout << " Results : " << res.results[j+step] << std::endl;
         }
+        */
 
         if(step > 0)
         {

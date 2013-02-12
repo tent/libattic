@@ -209,4 +209,12 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
     return status;                                                                        
 }                                                                                            
 
+int PullTask::GetDownloadSpeed()
+{
+    int speed = -1;
+    if(GetConnectionHandle())
+        speed = GetConnectionHandle()->GetDownloadSpeed();
+    return speed;
+}
+
 

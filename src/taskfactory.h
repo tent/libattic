@@ -88,6 +88,9 @@ public:
     // Information methods
     int GetNumberOfActiveTasks(const Task::TaskType type);
 
+    int GetActiveTaskUploadSpeed();
+    int GetActiveTaskDownloadSpeed();
+
 private:
     TaskPool    m_ActiveTaskPool;
     TaskPool    m_InactiveTaskPool;

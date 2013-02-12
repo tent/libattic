@@ -87,6 +87,7 @@ int SetEntityUrl(const char* szUrl);
 int GetCurrentTasks(void (*callback)(char* pArr, int count));
 int GetActivePushTaskCount();
 int GetActivePullTaskCount();
+int GetActiveUploadSpeed();
 
 // Utility
 const char* GetWorkingDirectory();

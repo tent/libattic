@@ -223,3 +223,14 @@ int TaskManager::TaskCount(const Task::TaskType type)
 {
     return m_TaskFactory.GetNumberOfActiveTasks(type);
 }
+
+int TaskManager::GetActiveUploadSpeed()
+{
+    return m_TaskFactory.GetActiveTaskUploadSpeed();
+}
+
+int TaskManager::GetActiveDownloadSpeed()
+{
+    return m_TaskFactory.GetActiveTaskDownloadSpeed();
+}
+

@@ -39,6 +39,8 @@ public:
 
     void RunTask();
 
+    int GetDownloadSpeed();
+
 private:
    
 };

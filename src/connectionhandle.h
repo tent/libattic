@@ -38,7 +38,7 @@ public:
         }
     }
 
-    double GetUploadSpeedInfo()
+    double GetUploadSpeed()
     {
         double speed_upload, total_time;
         curl_easy_getinfo(m_pCurlHandle, CURLINFO_SPEED_UPLOAD, &speed_upload);
@@ -46,7 +46,7 @@ public:
         return (speed_upload / total_time);
     }
 
-    double GetDownloadSpeedInfo()
+    double GetDownloadSpeed()
     {
         double speed_download, total_time;
         curl_easy_getinfo(m_pCurlHandle, CURLINFO_SPEED_DOWNLOAD, &speed_download);
