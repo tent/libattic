@@ -54,7 +54,7 @@ static TentApp*             g_pApp = NULL;
 static FileManager*         g_pFileManager = NULL;
 static CredentialsManager*  g_pCredManager = NULL;
 static EntityManager*       g_pEntityManager = NULL;
-static TaskManager*       g_pTaskManager = NULL;
+static TaskManager*         g_pTaskManager = NULL;
 
 //static TaskArbiter g_Arb;
 
@@ -214,22 +214,11 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     status = liba::ShutdownConnectionManager();
     status = liba::ShutdownTaskManager(&g_pTaskManager);
 
-    if(g_pTaskManager)
-        std::cout<<" DIDNT NULL " << std::endl;
-    if(g_pFileManager)
-        std::cout<<" DIDNT NULL " << std::endl;
-    if(g_pCredManager)
-        std::cout<<" DIDNT NULL " << std::endl;
-    if(g_pEntityManager)
-        std::cout<<" DIDNT NULL " << std::endl;
-    if(g_pApp)
-        std::cout<<" DIDNT NULL " << std::endl;
-
-
-    g_pApp = NULL;
     g_pFileManager = NULL;
     g_pCredManager = NULL;
     g_pEntityManager = NULL;
+    g_pApp = NULL;
+    g_pTaskManager = NULL;
 
     if(callback)
         callback(status, NULL);
