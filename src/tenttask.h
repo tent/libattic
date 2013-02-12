@@ -130,6 +130,13 @@ protected:
             mCallback(code, p); 
     }
 
+    void ConstructPostUrl(std::string& out)
+    {
+        Entity entity;
+        GetEntity(entity);
+        entity.GetApiRoot(out);
+        out += "/posts";
+    }
 private:
     AccessToken          m_At;
     Entity               m_Entity;

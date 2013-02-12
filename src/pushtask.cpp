@@ -11,6 +11,8 @@
 #include "constants.h"
 #include "conoperations.h"
 
+#include "log.h"
+
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
                     CredentialsManager* pCm,
@@ -48,7 +50,6 @@ PushTask::~PushTask()
 
 void PushTask::RunTask()
 {
-    std::cout<<" TASK IS RUNNING " << std::endl;
     // Run the task
     std::string filepath;
     GetFilepath(filepath);
@@ -79,16 +80,12 @@ int PushTask::PushFile(const std::string& filepath)
     int status = ret::A_OK;
     if(!fi)
     {
-        std::cout << "INDEXING FILE 0 : " << std::endl;
-
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
         status = GetFileManager()->IndexFileNew(filepath, true, NULL);
         GetFileManager()->Unlock();
 
         if(status != ret::A_OK)
         {
-            std::cout<<" failed to index : " << status << std::endl;
-            std::cout<<" filepath : " << filepath << std::endl;
             return status;
         }
 
@@ -98,7 +95,6 @@ int PushTask::PushFile(const std::string& filepath)
     }
     else
     {
-        std::cout << "INDEXING FILE 1 : " << std::endl;
         // Make sure temporary pieces exist
         // be able to pass in chosen chunkname
         while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
@@ -135,8 +131,6 @@ int PushTask::PushFile(const std::string& filepath)
         }
     }
 
-    std::cout << "finishing up " << std::endl;
-
     return status;
 }
 
@@ -149,7 +143,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
     int status = ret::A_OK;
     // Create Chunk Post
     if(!fi)
-        std::cout<<"invalid file info"<<std::endl;
+        alog::Log(Logger::DEBUG, "PushTask 144 Invalid file info ");
 
     std::string chunkPostId;
     fi->GetChunkPostID(chunkPostId);
@@ -157,16 +151,10 @@ int PushTask::SendChunkPost( FileInfo* fi,
     // Get ChunkInfo List
     FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
 
-    std::cout<<" CHUNK LIST SIZE : " << pList->size() << std::endl;
-
-
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
     std::string posturl;
-    Entity entity;
-    GetEntity(entity);
-    entity.GetApiRoot(posturl);
-    posturl += "/posts";
+    ConstructPostUrl(posturl);
 
     bool post = true;
     Response response;
@@ -278,11 +266,8 @@ int PushTask::SendAtticPost( FileInfo* fi,
     // Construct post url
     // TODO :: abstract this common functionality somewhere else, utils?
 
-    Entity entity;
-    GetEntity(entity);
     std::string posturl;
-    entity.GetApiRoot(posturl);
-    posturl += "/posts";
+    ConstructPostUrl(posturl);
 
     std::string chunkname;
     fi->GetChunkName(chunkname);

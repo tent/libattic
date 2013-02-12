@@ -758,7 +758,6 @@ int ConnectionManager::HttpMultipartPost( const std::string &url,
     curl_httppost   **fp = &formpost;
     curl_httppost   **lp = &lastptr;
 
-
     AddBodyToForm( body,
                    fp,
                    lp,

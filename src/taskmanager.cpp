@@ -69,21 +69,22 @@ int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, v
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetTentTask( Task::PUSH,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    filepath,
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
+                                          m_pApp,
+                                          m_pFileManager,
+                                          m_pCredentialsManager,
+                                          TaskArbiter::GetInstance(),
+                                          &m_TaskFactory,
+                                          m_AccessToken,
+                                          m_Entity,
+                                          filepath,
+                                          m_TempDir,
+                                          m_WorkingDir,
+                                          m_ConfigDir,
+                                          callback,
+                                          this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
+
     return status;
 }
 

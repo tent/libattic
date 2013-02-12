@@ -203,18 +203,13 @@ TEST(PUSH, AFILE)
     if(status == 0)
     {
         status = PushFile("./data/oglisv.pdf", &PUSHCB);
-        std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
+        status = PushFile("./data/oa.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
 
     for(;;)
     {
-       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-
-       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-       std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
        std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
        //sleep(0);
        if(!g_ThreadCount)
@@ -251,6 +246,7 @@ TEST(PULL, AFILE)
     if(status == ret::A_OK)
     {
         status = PullFile("./data/oglisv.pdf", &PULLCB);
+        status = PullFile("./data/oa.pdf", &PUSHCB);
         ASSERT_EQ(status, ret::A_OK);
     }
 

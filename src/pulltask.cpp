@@ -202,11 +202,4 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
     return status;                                                                        
 }                                                                                            
 
-void PullTask::ConstructPostUrl(std::string& out)
-{
-    Entity entity;
-    GetEntity(entity);
-    entity.GetApiRoot(out);
-    out += "/posts";
-}
 
