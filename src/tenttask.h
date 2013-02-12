@@ -14,6 +14,8 @@
 #include "taskarbiter.h"
 #include "taskfactory.h"
 
+#include "connectionhandle.h"
+
 class TentTask : public Task
 {
 public:
@@ -137,7 +139,10 @@ protected:
         entity.GetApiRoot(out);
         out += "/posts";
     }
+
+    ConnectionHandle* GetConnectionHandle() { return &m_ConnectionHandle; }
 private:
+    ConnectionHandle     m_ConnectionHandle;
     AccessToken          m_At;
     Entity               m_Entity;
 

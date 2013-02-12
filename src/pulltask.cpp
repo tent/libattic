@@ -63,6 +63,7 @@ int PullTask::PullFile(const std::string& filepath)
     if(!GetFileManager())                                                                          
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
 
+    std::cout<<" QUERY FILEPATH : " << filepath << std::endl;
     GetFileManager()->Lock();
     FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
     GetFileManager()->Unlock();
@@ -192,7 +193,13 @@ int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &file
 
     if(at)
     {
-        status = conops::HttpGetAttachmentAndWriteOut(url, NULL, *at, filepath, response);
+        //status = conops::HttpGetAttachmentAndWriteOut(url, NULL, *at, filepath, response);
+        status = conops::HttpGetAttachmentAndWriteOut( url, 
+                                                       NULL, 
+                                                       *at, 
+                                                       filepath, 
+                                                       GetConnectionHandle(), 
+                                                       response);
     }
     else
     {

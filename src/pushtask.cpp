@@ -170,11 +170,13 @@ int PushTask::SendChunkPost( FileInfo* fi,
         status = conops::PostFile( posturl, 
                                    filepath, 
                                    tempdir, 
-                                   ConnectionManager::GetInstance(), 
                                    fi,
                                    &p,
                                    *at,
+                                   GetConnectionHandle(),
                                    response);
+
+        std::cout<<" --------------------- " << std::endl;
     }
     else
     {
@@ -195,13 +197,25 @@ int PushTask::SendChunkPost( FileInfo* fi,
         GetTempDirectory(tempdir);
 
         AccessToken* at = GetAccessToken();
+        /*
         status = conops::PutFile( posturl, 
                                   filepath, 
                                   tempdir, 
-                                  ConnectionManager::GetInstance(), 
+                                  ConnectionManager::GetInstance(),
                                   fi,
                                   &p,
                                   *at, response);
+                                  */
+        
+        status = conops::PutFile( posturl, 
+                                  filepath, 
+                                  tempdir, 
+                                  fi,
+                                  &p,
+                                  *at,
+                                  GetConnectionHandle(),
+                                  response);
+
     }
 
     // Handle Response

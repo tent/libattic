@@ -195,15 +195,17 @@ TEST(PUSH, AFILE)
                   "./config/logs",
                   g_Entity.c_str());
     
-    ASSERT_EQ(status, ret::A_OK);
-    status = EnterPassphrase("password");
+    std::cout<<" INIT STATUS : " << status << std::endl;
 
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
     if(status == 0)
     {
         status = PushFile("./data/oglisv.pdf", &PUSHCB);
-        status = PushFile("./data/oa.pdf", &PUSHCB);
+    //    status = PushFile("./data/oa.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -211,7 +213,7 @@ TEST(PUSH, AFILE)
     for(;;)
     {
        std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-       //sleep(0);
+       sleep(10);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
@@ -246,7 +248,7 @@ TEST(PULL, AFILE)
     if(status == ret::A_OK)
     {
         status = PullFile("./data/oglisv.pdf", &PULLCB);
-        status = PullFile("./data/oa.pdf", &PUSHCB);
+        //status = PullFile("./data/oa.pdf", &PUSHCB);
         ASSERT_EQ(status, ret::A_OK);
     }
 

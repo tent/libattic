@@ -1045,7 +1045,8 @@ int LoadEntity(bool override)
     GetEntityFilepath(entpath);
     int status = g_Entity.LoadFromFile(entpath);
  
-    if(status != ret::A_OK || override)
+    
+    if(status != ret::A_OK)// || override)
     {
         if(override)
             g_Entity.Reset();

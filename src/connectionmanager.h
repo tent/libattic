@@ -11,6 +11,8 @@
 
 #include "post.h"
 
+class ConnectionHandle;
+
 struct Response
 {
     int code =0;
@@ -150,6 +152,7 @@ public:
                           bool verbose = false);
 
 
+// Depricated
     int HttpMultipartPost( const std::string &url, 
                            const UrlParams* pParams,
                            const std::string &body, 
@@ -158,6 +161,28 @@ public:
                            const std::string &macalgorithm, 
                            const std::string &macid, 
                            const std::string &mackey, 
+                           bool verbose = false);
+// Depricated
+    int HttpMultipartPut( const std::string &url, 
+                          const UrlParams* pParams,
+                          const std::string &body, 
+                          std::list<std::string>* filepaths, 
+                          Response& responseOut, 
+                          const std::string &macalgorithm, 
+                          const std::string &macid, 
+                          const std::string &mackey, 
+                          bool verbose = false);
+
+    // Methods with connection handle
+    int HttpMultipartPost( const std::string &url, 
+                           const UrlParams* pParams,
+                           const std::string &body, 
+                           std::list<std::string>* filepaths, 
+                           Response& responseOut, 
+                           const std::string &macalgorithm, 
+                           const std::string &macid, 
+                           const std::string &mackey, 
+                           ConnectionHandle* pHandle,
                            bool verbose = false);
 
     int HttpMultipartPut( const std::string &url, 
@@ -168,8 +193,33 @@ public:
                           const std::string &macalgorithm, 
                           const std::string &macid, 
                           const std::string &mackey, 
+                          ConnectionHandle* pHandle,
                           bool verbose = false);
-    
+
+    int HttpMultipartTransaction( const std::string &HeaderType,  // POST or PUT
+                                  const std::string &url, 
+                                  const UrlParams* pParams,
+                                  const std::string &body, 
+                                  std::list<std::string>* filepaths, 
+                                  Response& responseOut, 
+                                  const std::string &macalgorithm, 
+                                  const std::string &macid, 
+                                  const std::string &mackey, 
+                                  ConnectionHandle* pHandle,
+                                  bool verbose = false);
+
+    int HttpGetAttachmentWriteToFile( const std::string &url, 
+                                      const UrlParams* pParams,
+                                      Response& responseOut, 
+                                      const std::string &filepath, 
+                                      const std::string &macalgorithm, 
+                                      const std::string &macid, 
+                                      const std::string &mackey, 
+                                      ConnectionHandle* pHandle,
+                                      bool verbose = false);
+
+
+
 private:
     CryptoPP::AutoSeededRandomPool  m_Rnd; // Random pool used for nonce(iv) generation
     static ConnectionManager *m_pInstance;

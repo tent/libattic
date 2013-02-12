@@ -15,6 +15,8 @@
 #include "utils.h"
 #include "errorcodes.h"
 
+#include "connectionhandle.h"
+
 struct WriteOut
 {
     const char *readptr;
@@ -384,6 +386,73 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
 
     return ret::A_OK;
 }
+int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
+                                                     const UrlParams* pParams,
+                                                     Response& responseOut, 
+                                                     const std::string &filepath, 
+                                                     const std::string &macalgorithm, 
+                                                     const std::string &macid, 
+                                                     const std::string &mackey, 
+                                                     ConnectionHandle* pHandle,
+                                                     bool verbose)
+{
+    int status = ret::A_OK;
+    if(pHandle)
+    {
+        pHandle->Init();
+        CURL* pCurl = pHandle->GetHandle();
+        CURLcode res; 
+
+        // Write out to file
+        FILE *fp;
+        fp = fopen(filepath.c_str(), "wb");
+
+        if(verbose)
+            curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);
+
+        std::string urlPath = url;
+        EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+        curl_slist *headers = 0; // Init to null, always
+        headers = curl_slist_append(headers, "Accept: application/octet-stream" );
+        headers = curl_slist_append(headers, "Connection: close");
+
+        // Build Auth header
+        std::string authheader;
+        BuildAuthHeader( urlPath, 
+                         std::string("GET"), 
+                         macid, 
+                         mackey, 
+                         authheader);
+
+        headers = curl_slist_append(headers, authheader.c_str());
+
+        curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+        curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, fp);
+
+        // Write out headers 
+        curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headers);
+
+        res = curl_easy_perform(pCurl);
+
+        if(res == CURLE_OK)
+        {
+            fclose(fp);
+            responseOut.code = GetResponseCode(pCurl);
+            curl_slist_free_all (headers);
+        }
+        else
+            status = ret::A_FAIL_CURL_PERF;
+        
+        pHandle->Cleanup();
+    }
+    else
+        status = ret::A_FAIL_INVALID_PTR;
+
+    return status;
+}
+
 
 int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
                                                      const UrlParams* pParams,
@@ -730,6 +799,179 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
 
     return ret::A_OK;
 }
+int ConnectionManager::HttpMultipartPost( const std::string &url, 
+                                          const UrlParams* pParams,
+                                          const std::string &body, 
+                                          std::list<std::string>* filepaths, 
+                                          Response& responseOut, 
+                                          const std::string &macalgorithm, 
+                                          const std::string &macid, 
+                                          const std::string &mackey, 
+                                          ConnectionHandle* pHandle,
+                                          bool verbose)
+{
+    int status = HttpMultipartTransaction( "POST",
+                                           url,
+                                           pParams,
+                                           body,
+                                           filepaths,
+                                           responseOut,
+                                           macalgorithm,
+                                           macid,
+                                           mackey,
+                                           pHandle,
+                                           verbose);
+    return status;
+}
+
+int ConnectionManager::HttpMultipartPut( const std::string &url, 
+                                         const UrlParams* pParams,
+                                         const std::string &body, 
+                                         std::list<std::string>* filepaths, 
+                                         Response& responseOut, 
+                                         const std::string &macalgorithm, 
+                                         const std::string &macid, 
+                                         const std::string &mackey, 
+                                         ConnectionHandle* pHandle,
+                                         bool verbose)
+{
+    int status = HttpMultipartTransaction( "PUT",
+                                           url,
+                                           pParams,
+                                           body,
+                                           filepaths,
+                                           responseOut,
+                                           macalgorithm,
+                                           macid,
+                                           mackey,
+                                           pHandle,
+                                           verbose);
+    return status;
+}
+
+static const char szExpectBuf[] = "Expect:";
+
+int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
+                                                 const std::string &url, 
+                                                 const UrlParams* pParams,
+                                                 const std::string &body, 
+                                                 std::list<std::string>* filepaths, 
+                                                 Response& responseOut, 
+                                                 const std::string &macalgorithm, 
+                                                 const std::string &macid, 
+                                                 const std::string &mackey, 
+                                                 ConnectionHandle* pHandle,
+                                                 bool verbose)
+{
+    std::cout<<" URL : " << url << std::endl;
+    int status = ret::A_OK;
+
+    if(pHandle)
+    {
+        if(HeaderType != "POST" && HeaderType != "PUT")
+        {
+            std::cout<<" HEADER TYPE : " << HeaderType << std::endl;
+            return ret::A_OK;
+        }
+
+        // Prepare the data
+        curl_slist      *headerlist=NULL;
+        curl_httppost   *formpost=NULL;
+        curl_httppost   *lastptr=NULL;
+
+        curl_slist *partlist = 0;
+
+        int still_running = 0;
+        AddBodyToForm( body,
+                       &formpost,
+                       &lastptr,
+                       &partlist );
+
+        // Add Attachment(s)
+        std::list<std::string>::iterator itr = filepaths->begin();
+        // Go through file 
+        curl_slist *attachlist = 0;
+        //curl_slist **al = &attachlist;
+        
+        for(; itr != filepaths->end(); itr++) 
+        {
+            AddAttachmentToForm( *itr, 
+                                 &formpost,
+                                 &lastptr,
+                                 &attachlist);
+        }    
+
+        headerlist = curl_slist_append(headerlist, szExpectBuf);
+
+        pHandle->Init();
+        pHandle->InitMulti();
+
+        CURLM *multi_handle = pHandle->GetMultiHandle();
+        CURL* pCurl = pHandle->GetHandle();
+
+        if(pCurl && multi_handle)
+        {
+            if(verbose)
+                curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L);   
+                
+            std::string urlPath = url;
+            EncodeAndAppendUrlParams(pCurl, pParams, urlPath);
+
+            curl_slist *headers=NULL;
+             
+            headerlist = curl_slist_append(headerlist, "Accept: application/vnd.tent.v0+json" );
+            headerlist = curl_slist_append(headerlist, "Content-Type: multipart/form-data");
+            headerlist = curl_slist_append(headerlist, "Connection: close");
+
+            std::string authheader;
+            BuildAuthHeader( urlPath, 
+                             HeaderType,  // POST OR PUT
+                             macid, 
+                             mackey, 
+                             authheader);
+
+            headerlist = curl_slist_append(headerlist, authheader.c_str());
+
+            /* what URL that receives this POST */ 
+            curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
+            curl_easy_setopt(pCurl, CURLOPT_HTTPHEADER, headerlist);
+            curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, HeaderType.c_str()); // POST OR PUT
+            curl_easy_setopt(pCurl, CURLOPT_HTTPPOST, formpost);
+
+            curl_multi_add_handle(multi_handle, pCurl);
+
+            curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, WriteOutToString);
+            curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, &responseOut.body); 
+        
+            curl_multi_perform(multi_handle, &still_running);
+
+            /* lets start the fetch */
+            do {
+                while(::curl_multi_perform(multi_handle, &still_running) ==
+                                    CURLM_CALL_MULTI_PERFORM);
+                pHandle->GetSpeedInfo();
+            } while (still_running);
+
+            responseOut.code = GetResponseCode(pCurl);
+
+            /* then cleanup the formpost chain */ 
+            curl_formfree(formpost);
+                                                               
+            /* free slist */ 
+            curl_slist_free_all (headerlist);
+            curl_slist_free_all (partlist);
+            curl_slist_free_all (attachlist);
+        }
+
+        pHandle->Cleanup();
+    }
+    else
+        status = ret::A_FAIL_INVALID_PTR;
+
+    return status;
+}
+
+
 
 int ConnectionManager::HttpMultipartPost( const std::string &url, 
                                           const UrlParams* pParams,

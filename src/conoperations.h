@@ -85,7 +85,26 @@ namespace conops
         return ret::A_OK;
     } 
 
+    static int HttpGetAttachmentAndWriteOut( const std::string& url,
+                                             const UrlParams* pParams,
+                                             const AccessToken& at,
+                                             const std::string& filepath,
+                                             ConnectionHandle* pHandler,
+                                             Response& responseOut)
+    {
+        ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
+                                                                        pParams,                   
+                                                                        responseOut,               
+                                                                        filepath,               
+                                                                        at.GetMacAlgorithm(),  
+                                                                        at.GetAccessToken(),   
+                                                                        at.GetMacKey(),        
+                                                                        pHandler,
+                                                                        false);                  
 
+
+        return ret::A_OK;
+    }
     static int HttpDelete( const std::string& url,
                            const UrlParams* pParams,
                            const AccessToken& at,
@@ -148,7 +167,69 @@ namespace conops
 
         return ret::A_OK;
     }
+    static int PutFile( const std::string& url, 
+                        const std::string& filepath, 
+                        const std::string& TempDirectory,
+                        FileInfo* fi,
+                        Post* post,
+                        AccessToken& at,
+                        ConnectionHandle* ch,
+                        Response& responseOut)
+    {    
 
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(post, postBuffer);
+
+        std::list<std::string> paths;
+        AssembleChunkPaths(TempDirectory, fi, paths);
+
+        ConnectionManager::GetInstance()->HttpMultipartPut( url, 
+                                                             NULL,
+                                                             postBuffer, 
+                                                             &paths, 
+                                                             responseOut, 
+                                                             at.GetMacAlgorithm(), 
+                                                             at.GetAccessToken(), 
+                                                             at.GetMacKey(), 
+                                                             ch,
+                                                             false); 
+        return ret::A_OK;
+    }
+
+    static int PostFile( const std::string& url, 
+                         const std::string& filepath, 
+                         const std::string& TempDirectory,
+                         FileInfo* fi,
+                         Post* post,
+                         AccessToken& at,
+                         ConnectionHandle* ch,
+                         Response& responseOut )
+    {
+        // Multipart post
+        std::string postBuffer;
+        JsonSerializer::SerializeObject(post, postBuffer);
+
+        std::list<std::string> paths;
+        AssembleChunkPaths(TempDirectory, fi, paths);
+
+        std::cout<<" Sending new post! " << std::endl;
+        std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
+        ConnectionManager::GetInstance()->HttpMultipartPost( url, 
+                                                             NULL,
+                                                             postBuffer, 
+                                                             &paths, 
+                                                             responseOut, 
+                                                             at.GetMacAlgorithm(), 
+                                                             at.GetAccessToken(), 
+                                                             at.GetMacKey(), 
+                                                             ch,
+                                                             false);
+        
+        std::cout<<"CODE : " << responseOut.code << std::endl;
+        std::cout<<"RESPONSE : " << responseOut.body << std::endl;
+
+        return ret::A_OK;
+    }
 
     static int PostFile( const std::string& url, 
                          const std::string& filepath, 
