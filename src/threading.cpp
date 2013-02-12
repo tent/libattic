@@ -188,7 +188,8 @@ int ThreadPool::Initialize()
 
 int ThreadPool::Shutdown()
 {
-    while(m_ThreadData.size() != m_ThreadCount)
+    /*
+    while(m_ThreadCount)
     {
         //alog::Log(Logger::ERROR, "Thread data does not match count, timing out...");
         //TODO:: hack, find a better way.
@@ -201,6 +202,7 @@ int ThreadPool::Shutdown()
         }
         shutdowncount++;
     }
+    */
 
     for(unsigned int i=0; i<m_ThreadData.size(); i++)
     {

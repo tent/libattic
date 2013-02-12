@@ -42,7 +42,6 @@ public:
     ThreadData() {}
     ~ThreadData() {}
 
-
     ThreadState* GetThreadState()   { return &m_State; }
     TaskQueue* GetTaskQueue()       { return m_pTq; }
     pthread_t GetThreadHandle()     { return m_Handle; }   
