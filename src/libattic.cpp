@@ -569,7 +569,7 @@ int ChangePassphrase(const char* szOld, const char* szNew)
             MasterKey mk;
             g_pCredManager->GetMasterKeyCopy(mk);
 
-                // Register new passphrase with attic
+            // Register new passphrase with attic
             std::string key;
             mk.GetMasterKey(key);
 
@@ -1219,6 +1219,5 @@ int GetActiveDownloadSpeed()
     int speed = -1;
     if(g_pTaskManager)
         g_pTaskManager->GetActiveDownloadSpeed();
-
     return speed; 
 }

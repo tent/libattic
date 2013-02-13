@@ -88,6 +88,7 @@ int GetCurrentTasks(void (*callback)(char* pArr, int count));
 int GetActivePushTaskCount();
 int GetActivePullTaskCount();
 int GetActiveUploadSpeed();
+int GetActiveDownloadSpeed();
 
 // Utility
 const char* GetWorkingDirectory();
