@@ -4,8 +4,8 @@
 
 cmake_minimum_required (VERSION 2.8)
 
-option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
-option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
+option (ATTIC_STATIC_LIB "Build Attic Static lib" OFF)
+option (ATTIC_BINARY "Build Attic Binary test executable" ON)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
@@ -36,6 +36,9 @@ INCLUDE_DIRECTORIES(vendor/jsoncpp/include)
 INCLUDE_DIRECTORIES(vendor/sqlite)
 INCLUDE_DIRECTORIES(vendor/scrypt)
 INCLUDE_DIRECTORIES(vendor/base64)
+
+INCLUDE_DIRECTORIES(vendor/cpp-netlib-0.9.4)
+INCLUDE_DIRECTORIES(vendor/boost_1_53_0)
 
 if(ATTIC_BINARY)
     # This is where binary files will go
@@ -80,6 +83,20 @@ include_directories(${libattic_INCLUDE_DIRS})
 #add_library(imp_gtest STATIC IMPORTED)
 #set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ${gtest_lib})
 
+# Add boost libs
+add_library(imp_boost_thread STATIC IMPORTED)
+set_property(TARGET imp_boost_thread PROPERTY IMPORTED_LOCATION /usr/local/lib/libboost_thread.a)
+
+add_library(imp_boost_system STATIC IMPORTED)
+set_property(TARGET imp_boost_system PROPERTY IMPORTED_LOCATION /usr/local/lib/libboost_system.a)
+
+# Add cpp-netlib
+add_library(imp_cppnet_uri STATIC IMPORTED)
+set_property(TARGET imp_cppnet_uri PROPERTY IMPORTED_LOCATION ./vendor/cpp-netlib-0.9.4/libs/network/src/libcppnetlib-uri.a)
+
+add_library(imp_cppnet_client_connections STATIC IMPORTED)
+set_property(TARGET imp_cppnet_client_connections PROPERTY IMPORTED_LOCATION ./vendor/cpp-netlib-0.9.4/libs/network/src/libcppnetlib-client-connections.a)
+
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
     #link lib
@@ -89,6 +106,15 @@ endif(ATTIC_STATIC_LIB)
 if(ATTIC_BINARY)
     add_executable(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json>) 
     #link libs
-    target_link_libraries(attic curl pthread gtest) #pulls gtest from google subdirectory
+    target_link_libraries( attic 
+                           imp_boost_thread
+                           imp_boost_system
+                           imp_cppnet_uri
+                           imp_cppnet_client_connections
+                           curl 
+                           pthread 
+                           ssl
+                           gtest) #pulls gtest from google subdirectory
+
 endif(ATTIC_BINARY)
 
