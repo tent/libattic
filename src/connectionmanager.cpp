@@ -534,6 +534,8 @@ int ConnectionManager::HttpPost( const std::string& url,
                                  bool verbose)
 {
 
+    return netlib::HttpPost(url, NULL, responseOut);
+
     CURL* pCurl = curl_easy_init();
     WriteOut postd; // Post content to be read
     postd.readptr = body.c_str(); // serialized json (should be)

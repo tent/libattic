@@ -20,10 +20,25 @@
 #include "accesstoken.h"
 #include "connectionmanager.h"
 
+using namespace boost::network;
+
 namespace netlib
 {
     // Forward Declarations ******************************************************
+    static int HttpGet( const std::string& url, 
+                        const AccessToken* at, 
+                        Response& out);
+
+    static int HttpPost( const std::string& url, 
+                         const AccessToken* at, 
+                         Response& out);
+
     static void GenerateHmacSha256(std::string &out);
+
+    static void BuildRequest( const std::string& url,
+                              const std::string& requestMethod,
+                              const AccessToken* at,
+                              http::client::request& reqOut);
 
     static void BuildAuthHeader( const std::string &url, 
                                  const std::string &requestMethod, 
@@ -42,38 +57,20 @@ namespace netlib
     // Definitions start ***********************************************************
     static int HttpGet(const std::string& url, const AccessToken* at, Response& out)
     {
-        using namespace boost::network;
-
         int sstatus = ret::A_OK;
 
-        std::string authheader;
-        if(at)
-        {
-            // Build Auth Header
-            BuildAuthHeader( url,
-                             "GET",
-                             at->GetAccessToken(),
-                             at->GetMacKey(),
-                             authheader );
-
-        }
+        http::client::request request;
+        BuildRequest( url,
+                      "GET",
+                      at,
+                      request);
 
         http::client client;
-        http::client::request request(url);
-        request << header("Connection", "close");
-        request << header("Accept:", "application/vnd.tent.v0+json" );
-        request << header("Content-Type:", "application/vnd.tent.v0+json");
-
-        if(!authheader.empty())
-            request << header("Authorization: " , authheader);
-
         http::client::response response = client.get(request);
 
-
         int st = status(response);
-
         std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << "BODY : " << body(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
 
         out.code = status(response);
         out.body = body(response);
@@ -81,7 +78,59 @@ namespace netlib
         return sstatus;
     }
 
-    // Utility Functions
+    static int HttpPost( const std::string& url, 
+                         const AccessToken* at, 
+                         Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        http::client::request request;
+        BuildRequest( url,
+                      "POST",
+                      at,
+                      request);
+
+        http::client client;
+        http::client::response response = client.post(request);
+
+        int st = status(response);
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
+        out.code = status(response);
+        out.body = body(response);
+
+        return sstatus;
+    }
+
+
+    // Utility Functions ***********************************************************
+    static void BuildRequest( const std::string& url,
+                              const std::string& requestMethod,
+                              const AccessToken* at,
+                              http::client::request& reqOut)
+    {
+        reqOut.uri(url);
+        std::string authheader;
+        if(at)
+        {
+            // Build Auth Header
+            BuildAuthHeader( url,
+                             requestMethod,
+                             at->GetAccessToken(),
+                             at->GetMacKey(),
+                             authheader );
+
+        }
+
+        reqOut << header("Connection", "close");
+        reqOut << header("Accept:", "application/vnd.tent.v0+json" );
+        reqOut << header("Content-Type:", "application/vnd.tent.v0+json");
+
+        if(!authheader.empty())
+            reqOut << header("Authorization: " , authheader);
+    }
+
     static void BuildAuthHeader( const std::string &url, 
                                  const std::string &requestMethod, 
                                  const std::string &macid, 
