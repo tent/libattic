@@ -35,6 +35,7 @@ public:
     }
 
 private:
+public:
     std::string m_AccessToken;
     std::string m_MacKey;
     std::string m_MacAlgorithm;

@@ -305,6 +305,35 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 }
 
 
+bool g_bDiscover = false;
+TEST(DISCOVERY, OUTWARD_DISCOVERY)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bDiscover) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+
+    ASSERT_EQ(status, ret::A_OK);
+    std::cout<<" ENTITY API ROOT : " << GetEntityApiRoot(g_Entity.c_str()) << std::endl;
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+
+}
+
 /*
 */
 /*
@@ -1527,7 +1556,7 @@ int main (int argc, char* argv[])
 
     if(argc > 1)
     {
-        int optcount = 8;
+        int optcount = 9;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -1536,7 +1565,8 @@ int main (int argc, char* argv[])
             "PULL",
             "PUSH",
             "SYNC",
-            "QUERYMANIFEST"
+            "QUERYMANIFEST",
+            "DISCOVER"
             };
 
         enum ecmd
@@ -1548,7 +1578,8 @@ int main (int argc, char* argv[])
             PULL,
             PUSH,
             SYNC,
-            QUERYMANIFEST
+            QUERYMANIFEST,
+            DISCOVER
         };
 
         if(!strcmp(argv[1], "--help"))
@@ -1631,6 +1662,11 @@ int main (int argc, char* argv[])
                     case QUERYMANIFEST:
                     {
                         g_bManifest = true;
+                        break;
+                    }
+                    case DISCOVER:
+                    {
+                        g_bDiscover = true;
                         break;
                     }
                     default:

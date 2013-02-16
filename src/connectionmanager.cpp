@@ -287,12 +287,17 @@ int ConnectionManager::HttpHeadWithAuth( const std::string &url,
     return status;
 }
 
+#include "netlib.h"
 
 int ConnectionManager::HttpGet( const std::string &url, 
                                 const UrlParams* pParams,
                                 Response& responseOut, 
                                 bool verbose)
 {
+
+    return netlib::HttpGet(url, NULL, responseOut);
+    
+    /*
 
     CURL* pCurl = curl_easy_init();
     CURLcode res; 
@@ -326,6 +331,7 @@ int ConnectionManager::HttpGet( const std::string &url,
     curl_easy_cleanup(pCurl);
 
     return ret::A_OK;
+    */
 }
 
 int ConnectionManager::HttpGetWithAuth( const std::string& url, 
@@ -336,6 +342,15 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
                                         const std::string& mackey, 
                                         bool verbose)
 {
+
+    std::cout<<" NEW GET WITH AUTH BROS " << std::endl;
+    AccessToken at;
+    at.m_AccessToken = macid;
+    at.m_MacKey = mackey;
+    at.m_MacAlgorithm = macalgorithm;
+
+    return netlib::HttpGet(url, &at, responseOut);
+
 
     CURL* pCurl = curl_easy_init();
     CURLcode res; 
