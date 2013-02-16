@@ -295,7 +295,7 @@ int ConnectionManager::HttpGet( const std::string &url,
                                 bool verbose)
 {
 
-    return netlib::HttpGet(url, NULL, responseOut);
+    return netlib::HttpGet(url, pParams, NULL, responseOut);
     
     /*
 
@@ -349,9 +349,9 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    return netlib::HttpGet(url, &at, responseOut);
+    return netlib::HttpGet(url, pParams, &at, responseOut);
 
-
+/*
     CURL* pCurl = curl_easy_init();
     CURLcode res; 
 
@@ -400,6 +400,7 @@ int ConnectionManager::HttpGetWithAuth( const std::string& url,
     curl_easy_cleanup(pCurl);
 
     return ret::A_OK;
+    */
 }
 int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url, 
                                                      const UrlParams* pParams,
@@ -534,8 +535,10 @@ int ConnectionManager::HttpPost( const std::string& url,
                                  bool verbose)
 {
 
-    return netlib::HttpPost(url, NULL, responseOut);
+    std::cout << "NEW HTTP POST BROS " << std::endl;
+    return netlib::HttpPost(url, pParams, body, NULL, responseOut);
 
+/*
     CURL* pCurl = curl_easy_init();
     WriteOut postd; // Post content to be read
     postd.readptr = body.c_str(); // serialized json (should be)
@@ -594,6 +597,7 @@ int ConnectionManager::HttpPost( const std::string& url,
 
     //std::cout<<"here1"<<std::endl;
     return ret::A_OK;
+    */
 }
 
 int ConnectionManager::HttpMultipartPut( const std::string &url, 
@@ -880,6 +884,15 @@ int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
                                                  ConnectionHandle* pHandle,
                                                  bool verbose)
 {
+    std::cout << "NEW HTTP POST BROS " << std::endl;
+    AccessToken at;
+    at.m_AccessToken = macid;
+    at.m_MacKey = mackey;
+    at.m_MacAlgorithm = macalgorithm;
+
+    return netlib::HttpMultipartPost(url, pParams, &at, responseOut);
+
+
     std::cout<<" URL : " << url << std::endl;
     int status = ret::A_OK;
 
@@ -1170,6 +1183,16 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
                                           bool verbose)
 {
 
+
+    std::cout << "NEW HTTP POST BROS " << std::endl;
+    AccessToken at;
+    at.m_AccessToken = macid;
+    at.m_MacKey = mackey;
+    at.m_MacAlgorithm = macalgorithm;
+
+    return netlib::HttpPost(url, pParams, body, &at, responseOut);
+
+/*
     CURL* pCurl = curl_easy_init();
     WriteOut postd; // Post content to be read
     postd.readptr = body.c_str(); // serialized json (should be)
@@ -1222,7 +1245,6 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     }
 
     double speed_upload, total_time;
-    /* now extract transfer info */
     curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
     curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
 
@@ -1233,6 +1255,7 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     curl_easy_cleanup(pCurl);
 
     return ret::A_OK;
+*/
 
 }
 
@@ -1246,6 +1269,18 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
                                           bool verbose)
 {
 
+
+    std::cout << "NEW HTTP PUT BROS " << std::endl;
+    AccessToken at;
+    at.m_AccessToken = macid;
+    at.m_MacKey = mackey;
+    at.m_MacAlgorithm = macalgorithm;
+
+    return netlib::HttpPut(url, pParams, body, &at, responseOut);
+
+
+
+/*
     CURL* pCurl = curl_easy_init();
     WriteOut postd; // Post content to be read
     postd.readptr = body.c_str(); // serialized json (should be)
@@ -1289,10 +1324,10 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     //curl_easy_setopt(pCurl, CURLOPT_POST, 1L);
     curl_easy_setopt(pCurl, CURLOPT_CUSTOMREQUEST, "PUT");
     // Set Post data 
-    /*
-    curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
-    curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
-    */
+
+    //curl_easy_setopt(pCurl, CURLOPT_READFUNCTION, &read_callback);
+    //curl_easy_setopt(pCurl, CURLOPT_READDATA, &postd);
+    
     curl_easy_setopt(pCurl, CURLOPT_POSTFIELDS, body.c_str());
     //curl_easy_setopt(pCurl, CURLOPT_POSTFIELDSIZE, postd.sizeleft);
 
@@ -1312,7 +1347,6 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     }
 
     double speed_upload, total_time;
-    /* now extract transfer info */
     curl_easy_getinfo(pCurl, CURLINFO_SPEED_UPLOAD, &speed_upload);
     curl_easy_getinfo(pCurl, CURLINFO_TOTAL_TIME, &total_time);
 
@@ -1324,7 +1358,10 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
 
     return ret::A_OK;
 
+*/
+
 }
+
 
 
 void ConnectionManager::AddBodyToForm( const std::string &body,

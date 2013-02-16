@@ -4,12 +4,13 @@
 
 #define BOOST_NETWORK_ENABLE_HTTPS 
 
-#include <boost/network/protocol/http/client.hpp>
 #include <iostream>
 #include <string>
 #include <string.h>
 #include <stdio.h>
- 
+#include <boost/network/uri/encode.hpp>
+#include <boost/network/protocol/http/client.hpp>
+
 #include <hex.h>        // cryptopp
 #include <hmac.h>       // cryptopp
 #include <base64.h>     // cryptopp
@@ -24,14 +25,46 @@ using namespace boost::network;
 
 namespace netlib
 {
+    struct body_handler {
+        explicit body_handler(std::string & body)
+                                : body(body) {}
+
+        BOOST_NETWORK_HTTP_BODY_CALLBACK(operator(), range, error) {
+            std::cout<< " BODY HANDLER HIT BRAH : " << std::endl;
+            body.append(boost::begin(range), boost::end(range));
+
+            std::cout<<" just appended to body? : " << body << std::endl;
+        }
+
+        std::string & body;
+    };
+
+    BOOST_NETWORK_HTTP_BODY_CALLBACK(print_body, range, error) {
+        if (!error){
+            std::cout << "Received " << boost::distance(range) << "bytes." << std::endl;
+            std::string b;
+            b.append(boost::begin(range), boost::end(range));
+            std::cout<<" what i received : " << b << std::endl;
+        }
+        else
+            std::cout << "Error: " << error << std::endl;
+    }
+
     // Forward Declarations ******************************************************
     static int HttpGet( const std::string& url, 
+                        const UrlParams* pParams,
                         const AccessToken* at, 
                         Response& out);
 
     static int HttpPost( const std::string& url, 
+                         const UrlParams* pParams,
                          const AccessToken* at, 
                          Response& out);
+
+    static int HttpPut( const std::string& url, 
+                        const UrlParams* pParams,
+                        const AccessToken* at, 
+                        Response& out);
 
     static void GenerateHmacSha256(std::string &out);
 
@@ -39,6 +72,11 @@ namespace netlib
                               const std::string& requestMethod,
                               const AccessToken* at,
                               http::client::request& reqOut);
+
+    static void BuildMultipartRequest( const std::string& url,
+                                       const std::string& requestMethod,
+                                       const AccessToken* at,
+                                       http::client::request& reqOut);
 
     static void BuildAuthHeader( const std::string &url, 
                                  const std::string &requestMethod, 
@@ -54,10 +92,19 @@ namespace netlib
  
     static void GenerateHmacSha256(std::string &out);
 
+    static void EncodeAndAppendUrlParams(const UrlParams* pParams, std::string& url);
+
+    // TODO move to hpp
     // Definitions start ***********************************************************
-    static int HttpGet(const std::string& url, const AccessToken* at, Response& out)
+    static int HttpGet( const std::string& url, 
+                        const UrlParams* pParams,
+                        const AccessToken* at, 
+                        Response& out)
     {
         int sstatus = ret::A_OK;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
 
         http::client::request request;
         BuildRequest( url,
@@ -79,10 +126,15 @@ namespace netlib
     }
 
     static int HttpPost( const std::string& url, 
+                         const UrlParams* pParams,
+                         const std::string& requestbody,
                          const AccessToken* at, 
                          Response& out)
     {
         int sstatus = ret::A_OK;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
 
         http::client::request request;
         BuildRequest( url,
@@ -91,7 +143,71 @@ namespace netlib
                       request);
 
         http::client client;
-        http::client::response response = client.post(request);
+
+        // No need to set set the content length, that's take care of automatically
+        http::client::response response = client.post(request, requestbody);
+
+        int st = status(response);
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
+        out.code = status(response);
+        out.body = body(response);
+
+        return sstatus;
+    }
+
+    static int HttpMultipartPost( const std::string& url, 
+                                  const UrlParams* pParams,
+                                  const AccessToken* at, 
+                                  Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
+
+        http::client::request request;
+        BuildMultipartRequest( url,
+                               "POST",
+                               at,
+                               request);
+
+        http::client client;
+
+        http::client::response response = client.post(request, http::_body_handler=print_body);
+
+        int st = status(response);
+
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
+        out.code = status(response);
+        out.body = body(response);
+
+        return sstatus;
+    }
+
+    static int HttpPut( const std::string& url, 
+                        const UrlParams* pParams,
+                        const std::string& requestbody,
+                        const AccessToken* at, 
+                        Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
+
+        http::client::request request;
+        BuildRequest( url,
+                      "PUT",
+                      at,
+                      request);
+
+        http::client client;
+        // No need to set set the content length, that's take care of automatically
+        http::client::response response = client.put(request, requestbody);
 
         int st = status(response);
         std::cout << " STATUS : " << status(response) << std::endl;
@@ -105,6 +221,16 @@ namespace netlib
 
 
     // Utility Functions ***********************************************************
+    static void EncodeAndAppendUrlParams(const UrlParams* pParams, std::string& url)
+    {
+        if(pParams)
+        {
+            std::string enc;
+            pParams->SerializeAndEncodeToString(enc);
+            url += enc;
+        }
+    }
+
     static void BuildRequest( const std::string& url,
                               const std::string& requestMethod,
                               const AccessToken* at,
@@ -126,6 +252,32 @@ namespace netlib
         reqOut << header("Connection", "close");
         reqOut << header("Accept:", "application/vnd.tent.v0+json" );
         reqOut << header("Content-Type:", "application/vnd.tent.v0+json");
+
+        if(!authheader.empty())
+            reqOut << header("Authorization: " , authheader);
+    }
+
+    static void BuildMultipartRequest( const std::string& url,
+                                       const std::string& requestMethod,
+                                       const AccessToken* at,
+                                       http::client::request& reqOut)
+    {
+        reqOut.uri(url);
+        std::string authheader;
+        if(at)
+        {
+            // Build Auth Header
+            BuildAuthHeader( url,
+                             requestMethod,
+                             at->GetAccessToken(),
+                             at->GetMacKey(),
+                             authheader );
+
+        }
+
+        reqOut << header("Connection", "close");
+        reqOut << header("Accept:", "application/vnd.tent.v0+json" );
+        reqOut << header("Content-Type:", "multipart/form-data");
 
         if(!authheader.empty())
             reqOut << header("Authorization: " , authheader);
