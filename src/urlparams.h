@@ -20,6 +20,8 @@ public:
     void SerializeToString(std::string &out) const;
     void SerializeAndEncodeToString(CURL* pCurl, std::string &out) const;
 
+    void SerializeAndEncodeToString(std::string &out) const;
+
     static void UrlEncode(const std::string &url);
     static void UrlDecode(const std::string &url, std::string &out);
 
