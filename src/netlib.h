@@ -8,6 +8,7 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
+//#include <boost/mime.hpp>
 #include <boost/network/uri/encode.hpp>
 #include <boost/network/protocol/http/client.hpp>
 
@@ -21,7 +22,13 @@
 #include "accesstoken.h"
 #include "connectionmanager.h"
 
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp> 
+using boost::asio::ip::tcp;
+
+
 using namespace boost::network;
+
 
 namespace netlib
 {
@@ -39,7 +46,9 @@ namespace netlib
         std::string & body;
     };
 
+/*
     BOOST_NETWORK_HTTP_BODY_CALLBACK(print_body, range, error) {
+        std::cout<< "BODY CALLBACK HIT : " << std::endl;
         if (!error){
             std::cout << "Received " << boost::distance(range) << "bytes." << std::endl;
             std::string b;
@@ -49,7 +58,17 @@ namespace netlib
         else
             std::cout << "Error: " << error << std::endl;
     }
+    */
 
+/*
+    struct my_traits {
+        typedef std::string string_type;
+        //  typedef std::pair < std::string, string_type > header_type;
+        typedef std::string body_type;
+    };
+
+    typedef boost::mime::basic_mime<my_traits>  mime_part;
+    */
     // Forward Declarations ******************************************************
     static int HttpGet( const std::string& url, 
                         const UrlParams* pParams,
@@ -157,37 +176,6 @@ namespace netlib
         return sstatus;
     }
 
-    static int HttpMultipartPost( const std::string& url, 
-                                  const UrlParams* pParams,
-                                  const AccessToken* at, 
-                                  Response& out)
-    {
-        int sstatus = ret::A_OK;
-
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
-
-        http::client::request request;
-        BuildMultipartRequest( url,
-                               "POST",
-                               at,
-                               request);
-
-        http::client client;
-
-        http::client::response response = client.post(request, http::_body_handler=print_body);
-
-        int st = status(response);
-
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
-
-        out.code = status(response);
-        out.body = body(response);
-
-        return sstatus;
-    }
-
     static int HttpPut( const std::string& url, 
                         const UrlParams* pParams,
                         const std::string& requestbody,
@@ -210,6 +198,65 @@ namespace netlib
         http::client::response response = client.put(request, requestbody);
 
         int st = status(response);
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
+        out.code = status(response);
+        out.body = body(response);
+
+        return sstatus;
+    }
+
+    static int HttpMultipartRequest( const std::string& requestType, 
+                                     const std::string& url, 
+                                     const UrlParams* pParams,
+                                     const std::string& requestbody,
+                                     const AccessToken* at, 
+                                     Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        if(requestType.empty())
+            return ret::A_FAIL_EMPTY_STRING;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
+
+        http::client::request request;
+        BuildMultipartRequest( url,
+                               requestType,
+                               at,
+                               request);
+
+
+/*
+        boost::shared_ptr<mime_part> part ( new mime_part ( "text", "plain" ));
+        part->set_body ( "This is a test.....\n", 20 );
+        part->append_phrase_to_content_type ( "charset", "usascii" );
+            std::cout << "PART : " << part << std::endl;
+
+        mime_part mp( "multipart", "multiple" );
+        mp.set_body("This is the body of a multipart\n", 32);
+        mp.append_part(part);
+
+        std::ostringstream os;
+        os << mp;
+        std::cout<< mp << std::endl;
+        */
+
+        //request << os.str();
+
+        http::client client;
+        http::client::response response;
+        if(requestType == "POST")
+            //response = client.post(request, requestbody, http::_body_handler=print_body);
+            response = client.post(request, requestbody);
+        else
+            //response = client.put(request, requestbody, http::_body_handler=print_body);
+            response = client.put(request, requestbody);
+
+        int st = status(response);
+
         std::cout << " STATUS : " << status(response) << std::endl;
         std::cout << " BODY : " << body(response) << std::endl;
 
@@ -281,6 +328,422 @@ namespace netlib
 
         if(!authheader.empty())
             reqOut << header("Authorization: " , authheader);
+    }
+
+    static int HttpAsioGet( const std::string& url,
+                             const AccessToken* at)
+                             //Response& resp)
+
+    {
+
+        using namespace boost::asio::ssl;
+        try
+        {
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            host = "manuel.tent.is";
+            path = "/";
+
+            boost::asio::io_service io_service; 
+
+            // Get a list of endpoints corresponding to the server name. 
+            tcp::resolver resolver(io_service); 
+            tcp::resolver::query query(host, "https");   // <-- HTTPS 
+            tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
+            tcp::resolver::iterator end; 
+
+            // Try each endpoint until we successfully establish a connection. 
+            tcp::socket socket(io_service); 
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            while (error && endpoint_iterator != end) 
+            { 
+                socket.close(); 
+                socket.connect(*endpoint_iterator++, error); 
+            } 
+            if (error) 
+                throw boost::system::system_error(error); 
+
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);            // <-- do not verify anything (for non-cdertified ssl keys) 
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);       // <-- setup an ssl socket stream based on the socket we already have connected 
+
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error); // <-- This is left out in the documentation (Overview/SSL): do not forget the handshake 
+            if (error) 
+            throw boost::system::system_error(error); 
+
+            // Form the request. We specify the "Connection: close" header so that the
+            // server will close the socket after transmitting the response. This will
+            // allow us to treat all data up until the EOF as the content.
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "GET " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Connection: close\r\n\r\n";
+
+            // Send the request.
+            //boost::asio::write(socket, request);
+
+            boost::asio::write(ssl_sock, request); // <-- write to the ssl stream 
+            // Read the response status line. The response streambuf will automatically
+            // grow to accommodate the entire line. The growth may be limited by passing
+            // a maximum size to the streambuf constructor.
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+
+            // Check that response is OK.
+            std::istream response_stream(&response);
+            std::string http_version;
+            response_stream >> http_version;
+            unsigned int status_code;
+            response_stream >> status_code;
+            std::string status_message;
+            std::getline(response_stream, status_message);
+
+            if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+            {
+                std::cout << "Invalid response\n";
+                return 1;
+            }
+            if (status_code != 200)
+            {
+                std::cout << "Response returned with status code " << status_code << "\n";
+                return 1;
+            }
+
+            // Read the response headers, which are terminated by a blank line.
+            boost::asio::read_until(ssl_sock, response, "\r\n\r\n");
+
+            // Process the response headers.
+            std::string header;
+            while (std::getline(response_stream, header) && header != "\r")
+                std::cout << header << "\n";
+            std::cout << "\n";
+
+            // Write whatever content we already have to output.
+            if (response.size() > 0)
+                std::cout << &response;
+
+            // Read until EOF, writing data to output as we go.
+            //boost::system::error_code error;
+            while (boost::asio::read(ssl_sock, response,
+                boost::asio::transfer_at_least(1), error))
+            std::cout << &response;
+            //if (error != boost::asio::error::eof)
+            if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+                throw boost::system::system_error(error);
+        }
+        catch (std::exception& e)
+        {
+            std::cout << "Exception: " << e.what() << "\n";
+        }
+
+        return ret::A_OK;
+    }
+
+    static void ExtractHostAndPath(const std::string& url, std::string& host, std::string& path)
+    {
+        std::cout<<" Extracting host and path ... " << std::endl;
+        std::cout<< " from url : " << url << std::endl;
+        unsigned int pos = url.find(".com");
+        std::cout<< " POS : " << pos << std::endl;
+        host = url.substr(0, pos+4);
+        path = url.substr(pos+4);
+
+        // remove the https
+        host = host.substr(8);
+    }
+
+    static int HttpAsioPut( const std::string& url,
+                             const UrlParams* pParams,
+                             const std::string& body,
+                             const AccessToken* at,
+                             Response& resp)
+    {
+        int statuss = ret::A_OK;
+        using namespace boost::asio::ssl;
+        try
+        {
+            std::cout<<"URL : " << url << std::endl;
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            std::cout<<" HOST : " << host << std::endl;
+            std::cout<<" PATH : " << path << std::endl;
+
+            // Define io service
+            boost::asio::io_service io_service; 
+
+            // Get a list of endpoints corresponding to the server name. 
+            tcp::resolver resolver(io_service); 
+            tcp::resolver::query query(host, "https");   // <-- HTTPS 
+            tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
+            tcp::resolver::iterator end; 
+
+            // Try each endpoint until we successfully establish a connection. 
+            tcp::socket socket(io_service); 
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            while (error && endpoint_iterator != end) 
+            { 
+                socket.close(); 
+                socket.connect(*endpoint_iterator++, error); 
+            } 
+            if (error) 
+                throw boost::system::system_error(error); 
+
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, boost::asio::ssl::context::sslv23_client); 
+            //do not verify anything (for non-cdertified ssl keys) 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+            //setup an ssl socket stream based on the socket we already have connected
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
+            //This is left out in the documentation (Overview/SSL): do not forget the handshake
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+
+            if (error) 
+                throw boost::system::system_error(error); 
+
+            std::string authheader;
+
+            if(at) {
+                BuildAuthHeader( url,
+                                 "PUT",
+                                 at->GetAccessToken(),
+                                 at->GetMacKey(),
+                                 authheader );
+            }
+
+            char buf[256] = {'\0'};
+            sprintf(buf, "%lu", body.size());
+
+            // Form the request. We specify the "Connection: close" header so that the
+            // server will close the socket after transmitting the response. This will
+            // allow us to treat all data up until the EOF as the content.
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "PUT " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Length: " << buf << "\r\n";
+            request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
+
+            // Now stream the body
+            request_stream << body;
+            // Send the request.
+            //boost::asio::write(socket, request);
+
+            boost::asio::write(ssl_sock, request); // <-- write to the ssl stream 
+            // Read the response status line. The response streambuf will automatically
+            // grow to accommodate the entire line. The growth may be limited by passing
+            // a maximum size to the streambuf constructor.
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+
+            // Check that response is OK.
+            std::istream response_stream(&response);
+            std::string http_version;
+            response_stream >> http_version;
+            unsigned int status_code;
+            response_stream >> status_code;
+            std::string status_message;
+            std::getline(response_stream, status_message);
+
+            std::cout<<" STATUS CODE : " << status_code << std::endl;
+            resp.code = status_code;
+
+            if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+            {
+                std::cout << "Invalid response\n";
+                return 1;
+            }
+            if (status_code != 200)
+            {
+                std::cout << "Response returned with status code " << status_code << "\n";
+                return 1;
+            }
+
+            // Read the response headers, which are terminated by a blank line.
+            boost::asio::read_until(ssl_sock, response, "\r\n\r\n");
+
+            // Process the response headers.
+            std::string header;
+            while (std::getline(response_stream, header) && header != "\r")
+                std::cout << header << "\n";
+            std::cout << "\n";
+
+            // Write whatever content we already have to output.
+            if (response.size() > 0)
+            {
+                std::ostringstream strbuf;
+                strbuf << &response;
+                resp.body = strbuf.str();
+                //std::cout << &response;
+            }
+
+            // Read until EOF, writing data to output as we go.
+            // boost::system::error_code error;
+            while (boost::asio::read(ssl_sock, response,
+                boost::asio::transfer_at_least(1), error))
+            std::cout << &response;
+            //if (error != boost::asio::error::eof)
+            if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+                throw boost::system::system_error(error);
+        }
+        catch (std::exception& e)
+        {
+            std::cout << "Exception: " << e.what() << "\n";
+        }
+
+        return statuss;
+    }
+
+
+    static int HttpAsioPost( const std::string& url,
+                             const UrlParams* pParams,
+                             const std::string& body,
+                             const AccessToken* at,
+                             Response& resp)
+
+    {
+
+        using namespace boost::asio::ssl;
+        try
+        {
+            std::cout<<"URL : " << url << std::endl;
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            std::cout<<" HOST : " << host << std::endl;
+            std::cout<<" PATH : " << path << std::endl;
+
+            boost::asio::io_service io_service; 
+
+            // Get a list of endpoints corresponding to the server name. 
+            tcp::resolver resolver(io_service); 
+            tcp::resolver::query query(host, "https");   // <-- HTTPS 
+            tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
+            tcp::resolver::iterator end; 
+
+            // Try each endpoint until we successfully establish a connection. 
+            tcp::socket socket(io_service); 
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            while (error && endpoint_iterator != end) { 
+                socket.close(); 
+                socket.connect(*endpoint_iterator++, error); 
+            } 
+            if (error) 
+                throw boost::system::system_error(error); 
+
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);            // <-- do not verify anything (for non-cdertified ssl keys) 
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);       // <-- setup an ssl socket stream based on the socket we already have connected 
+
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error); // <-- This is left out in the documentation (Overview/SSL): do not forget the handshake 
+            if (error) 
+            throw boost::system::system_error(error); 
+
+            std::string authheader;
+
+            if(at) {
+                BuildAuthHeader( url,
+                                 "POST",
+                                 at->GetAccessToken(),
+                                 at->GetMacKey(),
+            }
+
+            std::cout<<" AUTH HEADER : " << authheader << std::endl;
+
+            char buf[256] = {'\0'};
+            sprintf(buf, "%lu", body.size());
+
+            // Form the request. We specify the "Connection: close" header so that the
+            // server will close the socket after transmitting the response. This will
+            // allow us to treat all data up until the EOF as the content.
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "POST " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Length: " << buf << "\r\n";
+            request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
+
+            // write the body to the stream
+            request_stream << body;
+            // Send the request.
+            //boost::asio::write(socket, request);
+
+            // write to the ssl stream 
+            boost::asio::write(ssl_sock, request); 
+            // Read the response status line. The response streambuf will automatically
+            // grow to accommodate the entire line. The growth may be limited by passing
+            // a maximum size to the streambuf constructor.
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+
+            // Check that response is OK.
+            std::istream response_stream(&response);
+            std::string http_version;
+            response_stream >> http_version;
+            unsigned int status_code;
+            response_stream >> status_code;
+            std::string status_message;
+            std::getline(response_stream, status_message);
+
+            std::cout<<" STATUS CODE : " << status_code << std::endl;
+            resp.code = status_code;
+
+            if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+            {
+                std::cout << "Invalid response\n";
+                return 1;
+            }
+            if (status_code != 200)
+            {
+                std::cout << "Response returned with status code " << status_code << "\n";
+                return 1;
+            }
+
+            // Read the response headers, which are terminated by a blank line.
+            boost::asio::read_until(ssl_sock, response, "\r\n\r\n");
+
+            // Process the response headers.
+            std::string header;
+            while (std::getline(response_stream, header) && header != "\r")
+                std::cout << header << "\n";
+            std::cout << "\n";
+
+            // Write whatever content we already have to output.
+            if (response.size() > 0)
+            {
+                std::ostringstream strbuf;
+                strbuf << &response;
+                resp.body = strbuf.str();
+                //std::cout << &response;
+            }
+            // Read until EOF, writing data to output as we go.
+            //boost::system::error_code error;
+            while (boost::asio::read(ssl_sock, response,
+                boost::asio::transfer_at_least(1), error))
+            std::cout << &response;
+            //if (error != boost::asio::error::eof)
+            if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+                throw boost::system::system_error(error);
+        }
+        catch (std::exception& e)
+        {
+            std::cout << "Exception: " << e.what() << "\n";
+        }
+
+        return ret::A_OK;
     }
 
     static void BuildAuthHeader( const std::string &url, 

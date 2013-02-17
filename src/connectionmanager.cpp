@@ -884,13 +884,13 @@ int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
                                                  ConnectionHandle* pHandle,
                                                  bool verbose)
 {
-    std::cout << "NEW HTTP POST BROS " << std::endl;
+    std::cout << "NEW MULTIPART HTTP POST BROS " << std::endl;
     AccessToken at;
     at.m_AccessToken = macid;
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    return netlib::HttpMultipartPost(url, pParams, &at, responseOut);
+    return netlib::HttpMultipartRequest(HeaderType, url, pParams, body, &at, responseOut);
 
 
     std::cout<<" URL : " << url << std::endl;
@@ -1190,7 +1190,9 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    return netlib::HttpPost(url, pParams, body, &at, responseOut);
+    //return netlib::HttpPost(url, pParams, body, &at, responseOut);
+
+    return netlib::HttpAsioPost(url, pParams, body, &at, responseOut);
 
 /*
     CURL* pCurl = curl_easy_init();
@@ -1276,7 +1278,8 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    return netlib::HttpPut(url, pParams, body, &at, responseOut);
+    return netlib::HttpAsioPut(url, pParams, body, &at, responseOut);
+    //return netlib::HttpPut(url, pParams, body, &at, responseOut);
 
 
 

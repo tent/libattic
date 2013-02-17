@@ -30,6 +30,7 @@
 #include "rollsum.h"
 #include "log.h"
 
+#include "netlib.h"
 
 // Globals
 std::string g_Entity;
