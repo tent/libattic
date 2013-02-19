@@ -11,7 +11,7 @@ option (ATTIC_BINARY "Build Attic Binary test executable" ON)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
-set(CMAKE_CXX_FLAGS "-g -Wall -v")
+set(CMAKE_CXX_FLAGS "-g")
 
 # Build dependencies
 # Build gtest libs

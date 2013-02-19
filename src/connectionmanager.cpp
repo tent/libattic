@@ -610,6 +610,16 @@ int ConnectionManager::HttpMultipartPut( const std::string &url,
                                          const std::string &mackey, 
                                          bool verbose)
 {
+
+    std::cout << "NEW HTTP MULTIPART POST BROS " << std::endl;
+    AccessToken at;
+    at.m_AccessToken = macid;
+    at.m_MacKey = mackey;
+    at.m_MacAlgorithm = macalgorithm;
+
+    return netlib::HttpAsioMultipartPost(url, pParams, body, &at, responseOut);
+
+
     // Send Multiple files as attachments
     CURL* pCurl = 0;
     CURLM *multi_handle = 0;
@@ -889,6 +899,8 @@ int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
     at.m_AccessToken = macid;
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
+    return netlib::HttpAsioMultipartPost(url, pParams, body, &at, responseOut);
+
 
     return netlib::HttpMultipartRequest(HeaderType, url, pParams, body, &at, responseOut);
 
