@@ -10,11 +10,12 @@ using boost::asio::ip::tcp;
 
 class MultipartConsumer
 {
+    int SSLHandShake();
 public:
-    MultipartConsumer();
+    MultipartConsumer(boost::asio::ssl::context& ctx);
     ~MultipartConsumer();
 
-    int ConnectToHost();
+    int ConnectToHost(const std::string& url);
     int DisconnectFromHost();
 
     int PushBodyForm(const std::string& body);
@@ -22,10 +23,14 @@ public:
     int SendFooter();
 
 private:
-    boost::asio::ssl::stream<tcp::socket&> m_SSL_Socket;
+    boost::asio::ssl::stream<tcp::socket&> m_pSSL_Socket;
+
     boost::asio::io_service     m_IO_Service;
     tcp::resolver               m_Resolver;
     tcp::socket                 m_Socket;
+
+    std::string                 m_Host;
+    std::string                 m_Path;
 };
 
 #endif

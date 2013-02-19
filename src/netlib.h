@@ -18,6 +18,7 @@
  
 #include "url.h"
 #include "urlparams.h"
+#include "utils.h"
 #include "errorcodes.h"
 #include "accesstoken.h"
 #include "connectionmanager.h"
