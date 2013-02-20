@@ -40,6 +40,7 @@ public:
     int PushAttachmentForm(const std::string& name, const std::string& body);
 
     int PushPartIntoForm(const std::string& buf);
+
     int SendFooter();
 
 private:
