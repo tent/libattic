@@ -61,6 +61,7 @@ namespace ret
         A_FAIL_SUBSYSTEM_NOT_INITIALIZED,
         A_FAIL_EMPTY_STRING,
         A_FAIL_TCP_ENDPOINT_NOT_FOUND,
+        A_FAIL_SSL_HANDSHAKE,
         A_FAIL_OTHER     
     };
 
