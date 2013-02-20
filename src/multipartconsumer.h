@@ -8,16 +8,19 @@
 
 using boost::asio::ip::tcp;
 
+class AccessToken;
+
 class MultipartConsumer
 {
-    void BuildRequestHeader( const std::string& contentLength, 
+    void BuildRequestHeader( const std::string& requestMethod,
+                             const std::string& contentLength, 
                              const AccessToken* pAt,
                              std::ostream& requeststream);
 
     void BuildBodyForm(const std::string& body, std::ostream& bodystream);
 
-    void BuildAttachmentForm( const std::string& body, 
-                              const std::string& name,
+    void BuildAttachmentForm( const std::string& name,
+                              const std::string& body, 
                               std::ostream& attachmentstream);
 
     void BuildFooter(std::ostream& endstream);
@@ -33,6 +36,8 @@ public:
     int PushBodyForm( const std::string& requestMethod, 
                       const AccessToken* at, 
                       const std::string& body);
+
+    int PushAttachmentForm(const std::string& name, const std::string& body);
 
     int PushPartIntoForm(const std::string& buf);
     int SendFooter();

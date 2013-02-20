@@ -1,9 +1,11 @@
 #include "multipartconsumer.h"
 
 #include <iostream>
+#include <cstdio>
 
 #include "log.h"
 #include "errorcodes.h"
+#include "accesstoken.h"
 #include "netlib.h"
 
 MultipartConsumer::MultipartConsumer()
@@ -72,7 +74,7 @@ int MultipartConsumer::DisconnectFromHost()
 void MultipartConsumer::BuildBodyForm(const std::string& body, std::ostream& bodystream)
 {
     char szSize[256] = {'\0'};
-    snprintf(szSize, "%lu", body.size());
+    snprintf(szSize, 256, "%lu", body.size());
 
     bodystream << "\r\n--" << m_Boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"\r\n";
@@ -83,12 +85,12 @@ void MultipartConsumer::BuildBodyForm(const std::string& body, std::ostream& bod
     bodystream << body;
 }
 
-void MultipartConsumer::BuildAttachmentForm( const std::string& body, 
-                                             const std::string& name,
+void MultipartConsumer::BuildAttachmentForm( const std::string& name, 
+                                             const std::string& body,
                                              std::ostream& bodystream)
 {
     char szSize[256] = {'\0'};
-    snprintf(szSize, "%lu", body.size());
+    snprintf(szSize, 256, "%lu", body.size());
 
     bodystream << "\r\n--" << m_Boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"attach\"; filename=\"" << name << "\r\n";
@@ -101,10 +103,11 @@ void MultipartConsumer::BuildAttachmentForm( const std::string& body,
 
 void MultipartConsumer::BuildFooter(std::ostream& endstream)
 {
-    part_stream <<"\r\n--"<< m_Boundary << "--\r\n\r\n";
+    endstream <<"\r\n--"<< m_Boundary << "--\r\n\r\n";
 }
 
-void MultipartConsumer::BuildRequestHeader( const std::string& contentLength, 
+void MultipartConsumer::BuildRequestHeader( const std::string& requestMethod,
+                                            const std::string& contentLength, 
                                             const AccessToken* pAt,
                                             std::ostream& requeststream)
 {
@@ -118,21 +121,22 @@ void MultipartConsumer::BuildRequestHeader( const std::string& contentLength,
                                  authheader);
     }
 
-    requeststream << "POST " << m_Path << " HTTP/1.1\r\n";
+    //requeststream << "POST " << m_Path << " HTTP/1.1\r\n";
+    requeststream << requestMethod << " " << m_Path << " HTTP/1.1\r\n";
     requeststream << "Host: " << m_Host << "\r\n";
     requeststream << "Accept: application/vnd.tent.v0+json\r\n";
     requeststream << "Content-Type: multipart/form-data; boundary="<< m_Boundary << "\r\n";
-    requeststream << "Content-Length: " << buf << "\r\n";
+    requeststream << "Content-Length: " << contentLength << "\r\n";
     requeststream << "Authorization: " << authheader <<"\r\n\r\n";
 }
 
-int MultipartConsumer:PushBodyForm( const std::string& requestMethod, 
+int MultipartConsumer::PushBodyForm( const std::string& requestMethod, 
                                     const AccessToken* at, 
                                     const std::string& body)
 {
     int status = ret::A_OK;
     // TODO::Generate Random Boundary
-    m_Boundary = "Bask33420asdfvkasdf12312"
+    m_Boundary = "Bask33420asdfvkasdf12312";
 
     // Build body form
     boost::asio::streambuf bodypart;
@@ -140,12 +144,12 @@ int MultipartConsumer:PushBodyForm( const std::string& requestMethod,
     BuildBodyForm(body, bodystream);
 
     char szSize[256] = {'\0'};
-    sprintf(szSize, "%lu", bodypart.size());
+    snprintf(szSize, 256, "%lu", bodypart.size());
 
     // Build Request Header
     boost::asio::streambuf request;
     std::ostream requeststream(&request);
-    BuildRequestHeader(szSize, at, requeststream);
+    BuildRequestHeader(requestMethod, szSize, at, requeststream);
     
     // Write request header to socket
     boost::asio::write(m_SSL_Socket, request);
@@ -156,16 +160,27 @@ int MultipartConsumer:PushBodyForm( const std::string& requestMethod,
     return status;
 }
 
-int MultipartConsumer::PushPartIntoForm(const std::string& buf)
+int MultipartConsumer::PushAttachmentForm(const std::string& name, const std::string& body)
 {
     int status = ret::A_OK;
+
+    boost::asio::streambuf attachment;
+    std::ostream attachmentstream(&attachment);
+    BuildAttachmentForm(name, body, attachmentstream);
+
+    boost::asio::write(m_SSL_Socket, attachment);
 
     return status;
 }
 
-int SendFooter()
+int MultipartConsumer::SendFooter()
 {
     int status = ret::A_OK;
+    boost::asio::streambuf footer;
+    std::ostream footerstream(&footer);
+    BuildFooter(footerstream);
+
+    boost::asio::write(m_SSL_Socket, footer);
 
     return status;
 }
