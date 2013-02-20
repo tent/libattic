@@ -6,6 +6,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp> 
 
+#include "response.h"
+
 using boost::asio::ip::tcp;
 
 class AccessToken;
@@ -24,6 +26,8 @@ class MultipartConsumer
                               std::ostream& attachmentstream);
 
     void BuildFooter(std::ostream& endstream);
+
+    int CheckResponse(Response& respOut);
 
     int SSLHandShake();
 public:

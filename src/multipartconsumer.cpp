@@ -185,4 +185,71 @@ int MultipartConsumer::SendFooter()
     return status;
 }
 
+int MultipartConsumer::CheckResponse(Response& respOut)
+{ 
+    boost::system::error_code error = boost::asio::error::host_not_found; 
+    boost::asio::streambuf response;
+    std::istream response_stream(&response);
+
+    // Check that response is OK.
+    boost::asio::read_until(m_SSL_Socket, response, "\r\n");
+
+    unsigned int status_code;
+    std::string http_version;
+    std::string status_message;
+
+    response_stream >> http_version;
+    response_stream >> status_code;
+    std::getline(response_stream, status_message);
+
+    std::cout<<" STATUS CODE : " << status_code << std::endl;
+
+    respOut.code = status_code;
+
+    if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+    {
+        std::cout << "Invalid response\n";
+        return 1;
+    }
+    if (status_code != 200)
+    {
+        std::cout << "Response returned with status code " << status_code << "\n";
+        return 1;
+    }
+
+    // Read the response headers, which are terminated by a blank line.
+    boost::asio::read_until(m_SSL_Socket, response, "\r\n\r\n");
+
+    // Process the response headers.
+    std::string header;
+    while (std::getline(response_stream, header) && header != "\r")
+        std::cout << header << "\n";
+    std::cout << "\n";
+   
+    // Read until EOF, writing data to output as we go.
+    //boost::system::error_code error;
+    while (boost::asio::read( m_SSL_Socket, 
+                              response,
+                              boost::asio::transfer_at_least(1), 
+                              error))
+    {
+  //      std::cout << &response;
+    }
+
+     // Write whatever content we already have to output.
+    if (response.size() > 0)
+    {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        respOut.body = strbuf.str();
+        //std::cout << &response;
+    }
+
+    //if (error != boost::asio::error::eof)
+    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+        throw boost::system::system_error(error);
+
+    return ret::A_OK;
+}
+
 
