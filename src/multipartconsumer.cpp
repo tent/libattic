@@ -6,11 +6,13 @@
 #include "errorcodes.h"
 #include "netlib.h"
 
-MultipartConsumer::MultipartConsumer(boost::asio::ssl::context& ctx)
+MultipartConsumer::MultipartConsumer()
     : m_Resolver(m_IO_Service),
       m_Socket(m_IO_Service),
-      m_pSSL_Socket(m_Socket, ctx)
+      m_Ctx(m_IO_Service, boost::asio::ssl::context::sslv23_client),
+      m_SSL_Socket(m_Socket, m_Ctx)
 {
+
 }
 
 MultipartConsumer::~MultipartConsumer()
@@ -20,7 +22,8 @@ MultipartConsumer::~MultipartConsumer()
 int MultipartConsumer::ConnectToHost(const std::string& url)
 {
     int status = ret::A_OK;
-    netlib::ExtractHostAndPath(url, m_Host, m_Path);
+    m_Url = url;
+    netlib::ExtractHostAndPath(m_Url, m_Host, m_Path);
     
     // Get list of endpoints corresponding to server name
     tcp::resolver::query query(m_Host, "https");
@@ -39,11 +42,8 @@ int MultipartConsumer::ConnectToHost(const std::string& url)
         status = ret::A_FAIL_TCP_ENDPOINT_NOT_FOUND;
     }
 
-    if(status == ret::A_OK){
-        // setup an ssl context
-
-
-    }
+    if(status == ret::A_OK)
+        status = SSLHandShake();
 
     return status;
 }
@@ -51,12 +51,13 @@ int MultipartConsumer::ConnectToHost(const std::string& url)
 int MultipartConsumer::SSLHandShake()
 {
     int status = ret::A_OK;
-    // setup ssl context
-    boost::asio::ssl::context ctx (m_IO_Service, boost::asio::ssl::context::sslv23_client);
-    // do not verify
-    ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
 
-    // Setup new ssl socket
+    boost::system::error_code error = boost::asio::error::host_not_found;
+    m_SSL_Socket.handshake(boost::asio::ssl::stream_base::client, error);
+    if(error){
+        alog::Log(Logger::ERROR, boost::system::system_error(error).what());
+        status = ret::A_FAIL_SSL_HANDSHAKE;
+    }
 
     return status;
 }
@@ -68,9 +69,89 @@ int MultipartConsumer::DisconnectFromHost()
     return status;
 }
 
-int MultipartConsumer::PushBodyForm(const std::string& body)
+void MultipartConsumer::BuildBodyForm(const std::string& body, std::ostream& bodystream)
+{
+    char szSize[256] = {'\0'};
+    snprintf(szSize, "%lu", body.size());
+
+    bodystream << "\r\n--" << m_Boundary << "\r\n";
+    bodystream << "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"\r\n";
+    bodystream << "Content-Length: " << szSize << "\r\n";
+    bodystream << "Content-Type: application/vnd.tent.v0+json\r\n";
+    bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
+
+    bodystream << body;
+}
+
+void MultipartConsumer::BuildAttachmentForm( const std::string& body, 
+                                             const std::string& name,
+                                             std::ostream& bodystream)
+{
+    char szSize[256] = {'\0'};
+    snprintf(szSize, "%lu", body.size());
+
+    bodystream << "\r\n--" << m_Boundary << "\r\n";
+    bodystream << "Content-Disposition: form-data; name=\"attach\"; filename=\"" << name << "\r\n";
+    bodystream << "Content-Length: " << szSize << "\r\n";
+    bodystream << "Content-Type: application/octet-stream\r\n";
+    bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
+
+    bodystream << body;
+}
+
+void MultipartConsumer::BuildFooter(std::ostream& endstream)
+{
+    part_stream <<"\r\n--"<< m_Boundary << "--\r\n\r\n";
+}
+
+void MultipartConsumer::BuildRequestHeader( const std::string& contentLength, 
+                                            const AccessToken* pAt,
+                                            std::ostream& requeststream)
+{
+    std::string authheader;
+    if(pAt)
+    {
+        netlib::BuildAuthHeader( m_Url,
+                                 requestMethod,
+                                 pAt->GetAccessToken(),
+                                 pAt->GetMacKey(),
+                                 authheader);
+    }
+
+    requeststream << "POST " << m_Path << " HTTP/1.1\r\n";
+    requeststream << "Host: " << m_Host << "\r\n";
+    requeststream << "Accept: application/vnd.tent.v0+json\r\n";
+    requeststream << "Content-Type: multipart/form-data; boundary="<< m_Boundary << "\r\n";
+    requeststream << "Content-Length: " << buf << "\r\n";
+    requeststream << "Authorization: " << authheader <<"\r\n\r\n";
+}
+
+int MultipartConsumer:PushBodyForm( const std::string& requestMethod, 
+                                    const AccessToken* at, 
+                                    const std::string& body)
 {
     int status = ret::A_OK;
+    // TODO::Generate Random Boundary
+    m_Boundary = "Bask33420asdfvkasdf12312"
+
+    // Build body form
+    boost::asio::streambuf bodypart;
+    std::ostream bodystream(&bodypart);
+    BuildBodyForm(body, bodystream);
+
+    char szSize[256] = {'\0'};
+    sprintf(szSize, "%lu", bodypart.size());
+
+    // Build Request Header
+    boost::asio::streambuf request;
+    std::ostream requeststream(&request);
+    BuildRequestHeader(szSize, at, requeststream);
+    
+    // Write request header to socket
+    boost::asio::write(m_SSL_Socket, request);
+
+    // Write body part
+    boost::asio::write(m_SSL_Socket, bodypart);
 
     return status;
 }
