@@ -27,8 +27,6 @@ class MultipartConsumer
 
     void BuildFooter(std::ostream& endstream);
 
-    int CheckResponse(Response& respOut);
-
     int SSLHandShake();
 public:
     MultipartConsumer();
@@ -43,13 +41,12 @@ public:
 
     int PushAttachmentForm(const std::string& name, const std::string& body);
 
-    int PushPartIntoForm(const std::string& buf);
-
     int SendFooter();
 
+    int CheckResponse(Response& respOut);
 private:
-    boost::asio::ssl::stream<tcp::socket&> m_SSL_Socket;
-    boost::asio::ssl::context m_Ctx;
+    //boost::asio::ssl::stream<tcp::socket&> m_SSL_Socket;
+    //boost::asio::ssl::context m_Ctx;
 
     boost::asio::io_service     m_IO_Service;
     tcp::resolver               m_Resolver;

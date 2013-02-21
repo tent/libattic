@@ -9,6 +9,9 @@
 #include "filemanager.h"
 #include "atticpost.h"
 #include "constants.h"
+#include "multipartconsumer.h"
+
+#include "netlib.h"
 
 namespace conops
 {
@@ -196,6 +199,8 @@ namespace conops
         return ret::A_OK;
     }
 
+
+
     static int PostFile( const std::string& url, 
                          const std::string& filepath, 
                          const std::string& TempDirectory,
@@ -212,6 +217,11 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
+        netlib::HttpAsioMultipartPost(url, NULL, postBuffer, &at, paths, responseOut);
+
+        return 0;
+
+        /*
         std::cout<<" Sending new post! " << std::endl;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPost( url, 
@@ -227,6 +237,46 @@ namespace conops
         
         std::cout<<"CODE : " << responseOut.code << std::endl;
         std::cout<<"RESPONSE : " << responseOut.body << std::endl;
+        */
+
+        std::cout<<" TESTING MULTIPART CONSUMER " << std::endl;
+        MultipartConsumer mpc;
+
+        std::cout<< " here " << std::endl;
+        mpc.ConnectToHost(url);
+
+        std::cout<< " here " << std::endl;
+        mpc.PushBodyForm("POST", &at, postBuffer);
+
+        std::cout<< " here " << std::endl;
+        std::list<std::string>::iterator itr = paths.begin();
+
+        mpc.CheckResponse(responseOut);
+
+        for(;itr!= paths.end(); itr++)
+        {
+            unsigned int size = utils::CheckFilesize(*itr);
+
+            // Open and load file into memory
+            std::ifstream ifs;
+            ifs.open((*itr).c_str(), std::ifstream::in | std::ifstream::binary);
+
+            char* pBuf = new char[size];
+            ifs.read(pBuf, size);
+            ifs.close();
+
+            std::string strBuf;
+            strBuf.append(pBuf, size);
+
+            delete[] pBuf;
+            pBuf = NULL;
+
+            mpc.PushAttachmentForm("name", strBuf);
+        }
+
+        mpc.SendFooter();
+
+        mpc.CheckResponse(responseOut);
 
         return ret::A_OK;
     }

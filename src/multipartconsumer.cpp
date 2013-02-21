@@ -8,12 +8,15 @@
 #include "accesstoken.h"
 #include "netlib.h"
 
+static boost::asio::io_service g_io_service;
+
 MultipartConsumer::MultipartConsumer()
-    : m_Resolver(m_IO_Service),
-      m_Socket(m_IO_Service),
-      m_Ctx(m_IO_Service, boost::asio::ssl::context::sslv23_client),
-      m_SSL_Socket(m_Socket, m_Ctx)
+    : m_Resolver(g_io_service),
+      m_Socket(g_io_service)
+//      m_Ctx(g_io_service, boost::asio::ssl::context::sslv23_client),
+//      m_SSL_Socket(m_Socket, m_Ctx)
 {
+    std::cout<<" CONSTRUCTOR " << std::endl;
 
 }
 
@@ -53,9 +56,16 @@ int MultipartConsumer::ConnectToHost(const std::string& url)
 int MultipartConsumer::SSLHandShake()
 {
     int status = ret::A_OK;
-
     boost::system::error_code error = boost::asio::error::host_not_found;
-    m_SSL_Socket.handshake(boost::asio::ssl::stream_base::client, error);
+
+    // setup an ssl context 
+    boost::asio::ssl::context ctx( g_io_service, 
+                                   boost::asio::ssl::context::sslv23_client); 
+    ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+    boost::asio::ssl::stream<tcp::socket&> ssl_sock(m_Socket, ctx);
+
+    ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+        
     if(error){
         alog::Log(Logger::ERROR, boost::system::system_error(error).what());
         status = ret::A_FAIL_SSL_HANDSHAKE;
@@ -152,10 +162,12 @@ int MultipartConsumer::PushBodyForm( const std::string& requestMethod,
     BuildRequestHeader(requestMethod, szSize, at, requeststream);
     
     // Write request header to socket
-    boost::asio::write(m_SSL_Socket, request);
+    //boost::asio::write(m_SSL_Socket, request);
+    boost::asio::write(m_Socket, request);
 
     // Write body part
-    boost::asio::write(m_SSL_Socket, bodypart);
+    //boost::asio::write(m_SSL_Socket, bodypart);
+    boost::asio::write(m_Socket, bodypart);
 
     return status;
 }
@@ -168,7 +180,9 @@ int MultipartConsumer::PushAttachmentForm(const std::string& name, const std::st
     std::ostream attachmentstream(&attachment);
     BuildAttachmentForm(name, body, attachmentstream);
 
-    boost::asio::write(m_SSL_Socket, attachment);
+    //boost::asio::write(m_SSL_Socket, attachment);
+    std::cout<<" writing to socket ... " << std::endl;
+    boost::asio::write(m_Socket, attachment);
 
     return status;
 }
@@ -180,7 +194,8 @@ int MultipartConsumer::SendFooter()
     std::ostream footerstream(&footer);
     BuildFooter(footerstream);
 
-    boost::asio::write(m_SSL_Socket, footer);
+    //boost::asio::write(m_SSL_Socket, footer);
+    boost::asio::write(m_Socket, footer);
 
     return status;
 }
@@ -192,7 +207,8 @@ int MultipartConsumer::CheckResponse(Response& respOut)
     std::istream response_stream(&response);
 
     // Check that response is OK.
-    boost::asio::read_until(m_SSL_Socket, response, "\r\n");
+    //boost::asio::read_until(m_SSL_Socket, response, "\r\n");
+    boost::asio::read_until(m_Socket, response, "\r\n");
 
     unsigned int status_code;
     std::string http_version;
@@ -218,7 +234,8 @@ int MultipartConsumer::CheckResponse(Response& respOut)
     }
 
     // Read the response headers, which are terminated by a blank line.
-    boost::asio::read_until(m_SSL_Socket, response, "\r\n\r\n");
+    //boost::asio::read_until(m_SSL_Socket, response, "\r\n\r\n");
+    boost::asio::read_until(m_Socket, response, "\r\n\r\n");
 
     // Process the response headers.
     std::string header;
@@ -226,6 +243,7 @@ int MultipartConsumer::CheckResponse(Response& respOut)
         std::cout << header << "\n";
     std::cout << "\n";
    
+    /*
     // Read until EOF, writing data to output as we go.
     //boost::system::error_code error;
     while (boost::asio::read( m_SSL_Socket, 
@@ -235,7 +253,12 @@ int MultipartConsumer::CheckResponse(Response& respOut)
     {
   //      std::cout << &response;
     }
-
+    */
+    while (boost::asio::read( m_Socket, 
+                              response,
+                              boost::asio::transfer_at_least(1), 
+                              error))
+    {}
      // Write whatever content we already have to output.
     if (response.size() > 0)
     {
