@@ -26,6 +26,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp> 
+#include <boost/foreach.hpp>
 using boost::asio::ip::tcp;
 
 
@@ -147,6 +148,15 @@ namespace netlib
         int st = status(response);
         std::cout << " STATUS : " << status(response) << std::endl;
         std::cout << " BODY : " << body(response) << std::endl;
+
+        typedef http::basic_client<http::tags::http_default_8bit_tcp_resolve,1, 1> http_client;
+        headers_range<http_client::response>::type respheaders = headers(response);
+
+        BOOST_FOREACH(http_client::response::header_type const & header, respheaders) {
+            std::string cookie_value = header.second;
+            std::cout << cookie_value << std::endl;
+        }
+
 
         out.code = status(response);
         out.body = body(response);
@@ -1116,6 +1126,7 @@ namespace netlib
 
         bodystream << "\r\n--" << boundary << "\r\n";
         bodystream << "Content-Disposition: form-data; name=\"attach\"; filename=\"" << name << "\r\n";
+        bodystream << "Content-Length: " << szSize << "\r\n";
         bodystream << "Content-Type: application/octet-stream\r\n";
         bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
 
@@ -1190,7 +1201,6 @@ namespace netlib
             if (error) 
                 throw boost::system::system_error(error); 
 
-            
             // setup an ssl context 
             boost::asio::ssl::context ctx( io_service, 
                                            boost::asio::ssl::context::sslv23_client); 
@@ -1219,6 +1229,8 @@ namespace netlib
             std::ostream partbuf(&one);
             ChunkPart(requestPart, partbuf);
 
+/*
+            // attachment 1
             std::string test = "this is a test buffer";
             boost::asio::streambuf attachmentPart;
             std::ostream attch_stream(&attachmentPart);
@@ -1232,6 +1244,7 @@ namespace netlib
             std::ostream partbuftwo(&two);
             ChunkPart(attachmentPart, partbuftwo);
 
+            // attachment 2
             boost::asio::streambuf attachmentPartTwo;
             std::ostream attch_stream_two(&attachmentPartTwo);
             BuildAttachmentForm( "anothertestattachment",
@@ -1261,8 +1274,10 @@ namespace netlib
 
             return 0;
 
-/*
 
+            */
+            boost::asio::write(ssl_sock, request); 
+            boost::asio::write(ssl_sock, one);
 
             // Read the response status line. The response streambuf will automatically
             // grow to accommodate the entire line. The growth may be limited by passing
@@ -1294,17 +1309,20 @@ namespace netlib
                 std::string filename;
                 utils::ExtractFileName((*itr), filename);
                 
+                /*
                 char num[256]={'\0'};
                 snprintf(num, 256, "%d", count);
                 filename += "_";
                 filename += num;
+                */
 
+                std::cout<<" filename : " << filename << std::endl;
                 // Build attachment
                 boost::asio::streambuf attachment;
                 std::ostream attachmentstream(&attachment);
                 BuildAttachmentForm(filename, strBuf, boundary, attachmentstream);
 
-                if(!count)// == path_count-1)
+                if(count == path_count-1)
                 {
                     std::cout<<" Adding end stream " << std::endl;
 
@@ -1316,7 +1334,6 @@ namespace netlib
                     ChunkEnd(attachment, partendstream);
 
                     std::cout<<" write end to socket " << std::endl;
-
 
                     boost::system::error_code errorcode;
 
@@ -1350,7 +1367,7 @@ namespace netlib
             boost::asio::read_until(ssl_sock, response, "\r\n");
             InterpretResponse(response, ssl_sock, resp);
             
-            */
+
         }
         catch (std::exception& e)
         {

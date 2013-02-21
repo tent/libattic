@@ -894,16 +894,17 @@ int ConnectionManager::HttpMultipartTransaction( const std::string& HeaderType,
                                                  ConnectionHandle* pHandle,
                                                  bool verbose)
 {
+
     std::cout << "NEW MULTIPART HTTP POST BROS " << std::endl;
     AccessToken at;
     at.m_AccessToken = macid;
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
     return netlib::HttpAsioMultipartPost(url, pParams, body, &at, responseOut);
-
-
-    return netlib::HttpMultipartRequest(HeaderType, url, pParams, body, &at, responseOut);
-
+    //return netlib::HttpMultipartRequest(HeaderType, url, pParams, body, &at, responseOut);
+    //
+    /*
+    */
 
     std::cout<<" URL : " << url << std::endl;
     int status = ret::A_OK;
