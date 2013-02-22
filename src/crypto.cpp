@@ -14,8 +14,8 @@
 
 #include "utils.h"
 
-const int TAG_SIZE = 16;
-const int SALT_SIZE = 16;
+//const int TAG_SIZE = 16;
+//const int SALT_SIZE = 16;
 
 Crypto::Crypto(unsigned int uStride)
 {
