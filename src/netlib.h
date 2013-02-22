@@ -1235,10 +1235,6 @@ namespace netlib
         bodystream << "Content-Type: application/vnd.tent.v0+json\r\n";
         bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
         bodystream << body;
-        //bodystream << "\r\n";//\r\n";
-        //bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
-        //
-        //std::cout<<" OUTGOING BODY : " << body << std::endl;
     }
 
     static void BuildAttachmentForm( const std::string& name, 
@@ -1247,9 +1243,6 @@ namespace netlib
                                      unsigned int attachmentnumber,
                                      std::ostream& bodystream)
     {
-        //std::string test_data = "This is my test data it's pretty awful";
-
-
         char szSize[256] = {'\0'};
         snprintf(szSize, 256, "%lu", body.size());
         char szAttachmentCount[256] = {'\0'};
@@ -1265,8 +1258,6 @@ namespace netlib
         bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
 
         bodystream << body;
-
-    //    bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
     }
 
     static void AddEndBoundry(std::ostream& bodystream, std::string& boundary) 
@@ -1278,7 +1269,7 @@ namespace netlib
     {
         std::ostringstream reqbuf;
         reqbuf << &part;
-        std::cout<<" CHUNK PART SIZE : " << reqbuf.str().size() << std::endl;
+
         outstream << std::hex << reqbuf.str().size();
         outstream << "\r\n" << reqbuf.str() << "\r\n";//\r\n0\r\n\r\n";
     }
@@ -1317,17 +1308,6 @@ namespace netlib
 
             // Try each endpoint until we successfully establish a connection. 
             tcp::socket socket(io_service); 
-
-            /*
-            boost::system::error_code errorcode;
-            boost::asio::socket_base::keep_alive option(true);
-
-            do
-            {
-                socket.set_option(option, errorcode);
-                std::cout<<" error code : " << errorcode.message() << std::endl;
-            }while(errorcode);
-            */
             
             boost::system::error_code error = boost::asio::error::host_not_found; 
             while (error && endpoint_iterator != end) { 
@@ -1348,7 +1328,8 @@ namespace netlib
                 throw boost::system::system_error(error); 
 
             std::string boundary;
-            boundary = "Bask33420asdfv";
+            utils::GenerateRandomString(boundary, 20);
+            //boundary = "Bask33420asdfv";
 
             // Build request
             boost::asio::streambuf request;

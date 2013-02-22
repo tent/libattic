@@ -140,6 +140,7 @@ int PushTask::SendChunkPost( FileInfo* fi,
                              const std::string& filename )
 
 {
+    std::cout<<" SEND CHUNK POST : " << std::endl;
     int status = ret::A_OK;
     // Create Chunk Post
     if(!fi)
@@ -233,19 +234,23 @@ int PushTask::SendChunkPost( FileInfo* fi,
         std::string postid;
         p.GetID(postid);
 
-        if(!postid.empty())
-        {
+        if(!postid.empty()) {
             fi->SetChunkPostID(postid); 
             fi->SetPostVersion(0); // temporary for now, change later
             std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-            std::cout << " Name : " << (*p.GetAttachments())[0].Name << std::endl;
 
-            FileManager* fm = GetFileManager();
-            if(post)
-            {
-                fm->Lock();
-                fm->SetFileChunkPostId(filepath, postid);
-                fm->Unlock();
+            if((*p.GetAttachments()).size()) {
+                std::cout << " Name : " << (*p.GetAttachments())[0].Name << std::endl;
+
+                FileManager* fm = GetFileManager();
+                if(post) {
+                    fm->Lock();
+                    fm->SetFileChunkPostId(filepath, postid);
+                    fm->Unlock();
+                }
+            }
+            else {
+                status = ret::A_FAIL_EMPTY_ATTACHMENTS;
             }
         }
     }

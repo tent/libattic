@@ -31,18 +31,34 @@
 #include "log.h"
 
 #include "netlib.h"
+#include "compression.h"
 
 // Globals
 std::string g_Entity;
 
-TEST(TESTSTS, TSTSTST)
+TEST(COMPRESS, COMPRESSSTRING)
+{
+    std::string in("this is my test string it is a pretty decent test string");
+    std::string out;
+
+    std::cout<<" before : " << in << std::endl;
+    compress::CompressString(in, out);
+    std::cout<<" after : " << out << std::endl;
+
+    std::string decomp;
+    compress::DecompressString(out, decomp);
+    std::cout<<" decompressed : " << decomp << std::endl;
+
+}
+
+TEST(NETLIB, EXTRACTHOSTANDPATH)
 {
     std::string url = "https://manuel.tent.is/tent/posts";
     std::string host, path;
 
     netlib::ExtractHostAndPath(url, host, path);
-    std::cout<<" HOST : " << host << std::endl;
-    std::cout<<" PATH : " << path << std::endl;
+    ASSERT_EQ(host, std::string("manuel.tent.is"));
+    ASSERT_EQ(path, std::string("/tent/posts"));
 }
 
 bool g_bRegApp = false;
