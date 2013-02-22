@@ -1070,13 +1070,11 @@ namespace netlib
 
         resp.code = status_code;
 
-        if (!response_stream || http_version.substr(0, 5) != "HTTP/")
-        {
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
             std::cout << "Invalid response\n";
             return 1;
         }
-        if (status_code != 200)
-        {
+        if (status_code != 200) {
             std::cout << "Response returned with status code " << status_code << "\n";
             return 1;
         }
@@ -1085,21 +1083,25 @@ namespace netlib
         boost::asio::read_until(ssl_sock, response, "\r\n\r\n");
 
         // Process the response headers.
+        bool bChunked = false;
         std::string header;
-        while (std::getline(response_stream, header) && header != "\r")
+        while (std::getline(response_stream, header) && header != "\r") {
             std::cout << header << "\n";
+            int pos = header.find("transfer-encoding:");
+            if(pos != std::string::npos){
+                if(header.find("chunked") != std::string::npos)
+                    bChunked = true;
+            }
+        }
         std::cout << "\n";
 
         std::string output_buffer;
         std::cout<<" **************** " << std::endl;
         // Write whatever content we already have to output.
-        if (response.size() > 0)
-        {
+        if (response.size() > 0) {
             std::ostringstream strbuf;
             strbuf << &response;
             output_buffer = strbuf.str();
-            //resp.body = strbuf.str();
-            //std::cout << &response;
         }
 
         std::cout<<" reading til end of file " << std::endl;
@@ -1115,7 +1117,14 @@ namespace netlib
             output_buffer += strbuf.str();
         }
 
+        std::string dechunked;
+        if(bChunked){
+            DeChunkString(output_buffer, dechunked);
+            output_buffer = dechunked;
+        }
+
         std::cout<<" OUTPUT BUFFER : " << output_buffer << std::endl;
+        resp.body = output_buffer;
 
         //if (error != boost::asio::error::eof)
         if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
@@ -1229,19 +1238,28 @@ namespace netlib
         //bodystream << "\r\n";//\r\n";
         //bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
         //
-        std::cout<<" OUTGOING BODY : " << body << std::endl;
+        //std::cout<<" OUTGOING BODY : " << body << std::endl;
     }
 
     static void BuildAttachmentForm( const std::string& name, 
                                      const std::string& body,
                                      const std::string& boundary,
+                                     unsigned int attachmentnumber,
                                      std::ostream& bodystream)
     {
+        //std::string test_data = "This is my test data it's pretty awful";
+
+
         char szSize[256] = {'\0'};
         snprintf(szSize, 256, "%lu", body.size());
+        char szAttachmentCount[256] = {'\0'};
+        snprintf(szAttachmentCount, 256, "%d", attachmentnumber);
+
+        std::cout<<" attachment count : " << szAttachmentCount << std::endl;
+        std::cout<<" filename : " << name << std::endl;
 
         bodystream << "\r\n--" << boundary << "\r\n";
-        bodystream << "Content-Disposition: form-data; name=\"attach\"; filename=\"" << name << "\r\n";
+        bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
         bodystream << "Content-Length: " << szSize << "\r\n";
         bodystream << "Content-Type: application/octet-stream\r\n";
         bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
@@ -1260,6 +1278,7 @@ namespace netlib
     {
         std::ostringstream reqbuf;
         reqbuf << &part;
+        std::cout<<" CHUNK PART SIZE : " << reqbuf.str().size() << std::endl;
         outstream << std::hex << reqbuf.str().size();
         outstream << "\r\n" << reqbuf.str() << "\r\n";//\r\n0\r\n\r\n";
     }
@@ -1272,7 +1291,8 @@ namespace netlib
         outstream << "\r\n" << reqbuf.str() << "\r\n0\r\n\r\n";
     }
 
-    static int HttpAsioMultipartPost( const std::string& url,
+    static int HttpAsioMultipartRequest( const std::string& requestType, // POST, PUT
+                                      const std::string& url,
                                       const UrlParams* pParams,
                                       const std::string& body,
                                       const AccessToken* at,
@@ -1333,7 +1353,8 @@ namespace netlib
             // Build request
             boost::asio::streambuf request;
             std::ostream request_stream(&request);
-            BuildRequestHeader("POST", url, boundary, at, request_stream); 
+            //BuildRequestHeader("POST", url, boundary, at, request_stream); 
+            BuildRequestHeader(requestType, url, boundary, at, request_stream); 
 
             // Build Body Form header
             boost::asio::streambuf requestPart;
@@ -1436,10 +1457,9 @@ namespace netlib
                 // Build attachment
                 boost::asio::streambuf attachment;
                 std::ostream attachmentstream(&attachment);
-                BuildAttachmentForm(filename, strBuf, boundary, attachmentstream);
+                BuildAttachmentForm(filename, strBuf, boundary, count, attachmentstream);
 
-                if(count == path_count-1)
-                {
+                if(count == path_count-1) {
                     std::cout<<" Adding end stream " << std::endl;
 
                     AddEndBoundry(attachmentstream, boundary);
@@ -1462,18 +1482,15 @@ namespace netlib
                     while(errorcode);
                     break;
                 }
-                else
-                {
-
+                else {
                     // Chunk the part
                     boost::asio::streambuf part;
-                    std::ostream parttbuf(&part);
-                    ChunkPart(attachment, partbuf);
-
+                    std::ostream chunkpartbuf(&part);
+                    ChunkPart(attachment, chunkpartbuf);
+                    
                     std::cout<<" write to socket " << std::endl;
                     boost::asio::write(ssl_sock, part); 
                 }
-
 
                 count++;
             }                                                                             

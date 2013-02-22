@@ -186,6 +186,10 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
+        netlib::HttpAsioMultipartRequest("PUT", url, NULL, postBuffer, &at, paths, responseOut);
+        return 0;
+
+/*
         ConnectionManager::GetInstance()->HttpMultipartPut( url, 
                                                              NULL,
                                                              postBuffer, 
@@ -196,6 +200,7 @@ namespace conops
                                                              at.GetMacKey(), 
                                                              ch,
                                                              false); 
+                                                             */
         return ret::A_OK;
     }
 
@@ -217,16 +222,10 @@ namespace conops
         std::list<std::string> paths;
         AssembleChunkPaths(TempDirectory, fi, paths);
 
-
-
-        netlib::HttpAsioMultipartPost(url, NULL, postBuffer, &at, paths, responseOut);
-
+        netlib::HttpAsioMultipartRequest("POST", url, NULL, postBuffer, &at, paths, responseOut);
         return 0;
 
         /*
-
-
-
         std::cout<<" Sending new post! " << std::endl;
         std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
         ConnectionManager::GetInstance()->HttpMultipartPost( url, 
@@ -242,10 +241,9 @@ namespace conops
         
         std::cout<<"CODE : " << responseOut.code << std::endl;
         std::cout<<"RESPONSE : " << responseOut.body << std::endl;
-
         */
-        return ret::A_OK;
 
+        return ret::A_OK;
     }
 
     static int PostFile( const std::string& url, 

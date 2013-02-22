@@ -1206,9 +1206,9 @@ int ConnectionManager::HttpPostWithAuth( const std::string &url,
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    //return netlib::HttpPost(url, pParams, body, &at, responseOut);
+    return netlib::HttpPost(url, pParams, body, &at, responseOut);
 
-    return netlib::HttpAsioPost(url, pParams, body, &at, responseOut);
+   // return netlib::HttpAsioPost(url, pParams, body, &at, responseOut);
 
 /*
     CURL* pCurl = curl_easy_init();
@@ -1294,8 +1294,8 @@ int ConnectionManager::HttpPutWithAuth( const std::string &url,
     at.m_MacKey = mackey;
     at.m_MacAlgorithm = macalgorithm;
 
-    return netlib::HttpAsioPut(url, pParams, body, &at, responseOut);
-    //return netlib::HttpPut(url, pParams, body, &at, responseOut);
+    //return netlib::HttpAsioPut(url, pParams, body, &at, responseOut);
+    return netlib::HttpPut(url, pParams, body, &at, responseOut);
 
 
 
