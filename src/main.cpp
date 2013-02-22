@@ -35,6 +35,16 @@
 // Globals
 std::string g_Entity;
 
+TEST(TESTSTS, TSTSTST)
+{
+    std::string url = "https://manuel.tent.is/tent/posts";
+    std::string host, path;
+
+    netlib::ExtractHostAndPath(url, host, path);
+    std::cout<<" HOST : " << host << std::endl;
+    std::cout<<" PATH : " << path << std::endl;
+}
+
 bool g_bRegApp = false;
 TEST(APP_REGISTRATION, STARTAPPINST)
 {

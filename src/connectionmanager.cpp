@@ -179,12 +179,14 @@ int ConnectionManager::GetResponseCode(CURL* pCurl)
     return responsecode; 
 }
 
+#include "netlib.h"
 int ConnectionManager::HttpHead( const std::string &url, 
                                 const UrlParams* pParams,
                                 Response& responseOut, 
                                 bool verbose)
 {
-
+    return netlib::HttpHead(url, pParams, NULL, responseOut);
+/*
     CURL* pCurl = curl_easy_init();
     CURLcode res; 
 
@@ -223,6 +225,7 @@ int ConnectionManager::HttpHead( const std::string &url,
     curl_easy_cleanup(pCurl);
 
     return ret::A_OK;
+    */
 }
 
 int ConnectionManager::HttpHeadWithAuth( const std::string &url, 
@@ -287,7 +290,7 @@ int ConnectionManager::HttpHeadWithAuth( const std::string &url,
     return status;
 }
 
-#include "netlib.h"
+
 
 int ConnectionManager::HttpGet( const std::string &url, 
                                 const UrlParams* pParams,

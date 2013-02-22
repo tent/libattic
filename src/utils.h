@@ -29,6 +29,30 @@ namespace utils
         return out;
     }
 
+    static std::vector<std::string> &SplitStringSubStr( const std::string& s,
+                                                  const std::string& delim,
+                                                  split& out)
+    {
+        int left = 0;
+        int right = 0; 
+        std::string hold;
+        for(;;)
+        {
+            hold.clear();
+            right = s.find(delim, right);
+            if(right == std::string::npos) // npos == -1
+                break;
+
+            int diff = right - left;
+            hold = s.substr(left, diff);
+            out.push_back(hold);
+            left = right + delim.size();
+            right = left;
+        }
+
+        return out;
+    }
+
     static unsigned int CheckFilesize(const std::string &filepath)
     {
         unsigned int fileSize = 0;

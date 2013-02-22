@@ -78,6 +78,11 @@ namespace netlib
                         const AccessToken* at, 
                         Response& out);
 
+    static int HttpHead( const std::string& url, 
+                         const UrlParams* pParams,
+                         const AccessToken* at, 
+                         Response& out);
+    
     static int HttpPost( const std::string& url, 
                          const UrlParams* pParams,
                          const AccessToken* at, 
@@ -123,6 +128,47 @@ namespace netlib
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   tcp::socket& socket, 
                                   Response& resp);
+
+    static bool CheckForChunkedTransferEncoding(http::client::response& response)
+    {
+        typedef http::basic_client<http::tags::http_default_8bit_tcp_resolve,1, 1> http_client;
+        headers_range<http_client::response>::type respheaders = headers(response);
+
+        bool bChunkedEncoding = false;
+        BOOST_FOREACH(http_client::response::header_type const & header, respheaders) {
+            std::string key = header.first;
+            std::string value = header.second;
+            std::cout << key << " : " << value << std::endl;
+
+            if(header.first == "transfer-encoding"){
+                if(header.second == "chunked")
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    static void DeChunkString(std::string& in, std::string& out)
+    {
+        utils::split splitbody;
+
+        // de-chunk the body
+        utils::split outsplit;
+        std::string delim = "\r\n";
+        utils::SplitStringSubStr(in, delim, outsplit);
+        
+        for(unsigned int i=0; i<outsplit.size(); i+=2)
+        {
+            std::string chunksize = outsplit[i];
+            int c_size;
+            sscanf(chunksize.c_str(), "%x", &c_size);
+
+            if(c_size >= 0 && (i+1)<outsplit.size()) {
+                out.append(outsplit[i+1].c_str(), c_size);
+            }
+        }
+    }
     
     // TODO move to hpp
     // Definitions start ***********************************************************
@@ -149,17 +195,65 @@ namespace netlib
         std::cout << " STATUS : " << status(response) << std::endl;
         std::cout << " BODY : " << body(response) << std::endl;
 
+        // Check for Chunked Transfer Encoding
+        std::string respbody = body(response);
+        if(CheckForChunkedTransferEncoding(response))
+        {
+            std::string out;
+            DeChunkString(respbody, out);
+            respbody.clear();
+            respbody = out;
+        }
+
+        out.code = status(response);
+        out.body = respbody;
+    
+        return sstatus;
+    }
+
+    static int HttpHead( const std::string& url, 
+                         const UrlParams* pParams,
+                         const AccessToken* at, 
+                         Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
+
+        std::cout<<" url : " << uri << std::endl;
+
+        http::client::request request;
+        BuildRequest( url,
+                      "HEAD",
+                      at,
+                      request);
+
+        http::client client;
+        http::client::response response = client.head(request);
+
+        int st = status(response);
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
         typedef http::basic_client<http::tags::http_default_8bit_tcp_resolve,1, 1> http_client;
         headers_range<http_client::response>::type respheaders = headers(response);
 
+        std::cout<<" return headers : " << std::endl;
         BOOST_FOREACH(http_client::response::header_type const & header, respheaders) {
-            std::string cookie_value = header.second;
-            std::cout << cookie_value << std::endl;
+            std::string key = header.first;
+            std::string value = header.second;
+            // Append headers to body
+            //std::cout<< key << " : " << value << std::endl;
+
+            out.body += key;
+            out.body += " : ";
+            out.body += value;
+            out.body += "\r\n";
         }
 
-
         out.code = status(response);
-        out.body = body(response);
+        std::cout<< " outgoing body : " << out.body << std::endl;
     
         return sstatus;
     }
@@ -190,8 +284,18 @@ namespace netlib
         std::cout << " STATUS : " << status(response) << std::endl;
         std::cout << " BODY : " << body(response) << std::endl;
 
+        // Check for Chunked Transfer Encoding
+        std::string respbody = body(response);
+        if(CheckForChunkedTransferEncoding(response))
+        {
+            std::string out;
+            DeChunkString(respbody, out);
+            respbody.clear();
+            respbody = out;
+        }
+
         out.code = status(response);
-        out.body = body(response);
+        out.body = respbody;
 
         return sstatus;
     }
@@ -221,8 +325,18 @@ namespace netlib
         std::cout << " STATUS : " << status(response) << std::endl;
         std::cout << " BODY : " << body(response) << std::endl;
 
+        // Check for Chunked Transfer Encoding
+        std::string respbody = body(response);
+        if(CheckForChunkedTransferEncoding(response))
+        {
+            std::string out;
+            DeChunkString(respbody, out);
+            respbody.clear();
+            respbody = out;
+        }
+
         out.code = status(response);
-        out.body = body(response);
+        out.body = respbody;
 
         return sstatus;
     }
@@ -317,11 +431,11 @@ namespace netlib
         }
 
         reqOut << header("Connection", "close");
-        reqOut << header("Accept:", "application/vnd.tent.v0+json" );
-        reqOut << header("Content-Type:", "application/vnd.tent.v0+json");
+        reqOut << header("Accept", "application/vnd.tent.v0+json" );
+        reqOut << header("Content-Type", "application/vnd.tent.v0+json");
 
         if(!authheader.empty())
-            reqOut << header("Authorization: " , authheader);
+            reqOut << header("Authorization" , authheader);
     }
 
     static void BuildMultipartRequest( const std::string& url,
@@ -466,18 +580,20 @@ namespace netlib
 
     static void ExtractHostAndPath(const std::string& url, std::string& host, std::string& path)
     {
-        std::cout<<" Extracting host and path ... " << std::endl;
-        std::cout<< " from url : " << url << std::endl;
-        unsigned int pos = url.find(".com");
-        std::cout<< " POS : " << pos << std::endl;
-        host = url.substr(0, pos+4);
-        path = url.substr(pos+4);
+        int left = 0;
+        left = url.find("http");
+        if(left != std::string::npos){
+            left = 7;
+            if(url[4] == 's')
+                left += 1;
+        }
+        else
+            left = 0;
 
-        // remove the https
-        //host = host.substr(8);
-        // remove the http://
-        host = host.substr(8);
-
+        int right = url.find("/", left);
+        int diff = right - left;
+        host = url.substr(left, diff);
+        path = url.substr(right);
     }
 
     static int HttpAsioPut( const std::string& url,
