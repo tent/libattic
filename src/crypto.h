@@ -15,6 +15,21 @@
 
 #include "errorcodes.h"
 #include "credentials.h"
+#include "utils.h"
+
+extern "C"
+{
+    #include "crypto_scrypt.h"
+    int crypto_scrypt( const uint8_t *,
+                       size_t,
+                       const uint8_t *,
+                       size_t,
+                       uint64_t,
+                       uint32_t,
+                       uint32_t,
+                       uint8_t *,
+                       size_t);
+}
 
 static const int TAG_SIZE = 16;
 static const int SALT_SIZE = 16;
@@ -23,8 +38,50 @@ static unsigned int                    g_Stride = 400000;    // Size of stride u
 
 namespace crypto
 {
-    static void GenerateCredentials(Credentials& cred);
 
+    static Credentials GenerateCredentials();
+    static void GenerateCredentials(Credentials& cred);
+    static void GenerateIv(std::string& out);
+    static bool GenerateHash( const std::string& source, std::string& hashOut);
+
+    static int EncryptStringCFB( const std::string& data,
+                                 const Credentials& cred,
+                                 std::string& out);
+ 
+    static int DecryptStringCFB( const std::string& cipher,
+                                 const Credentials& cred,
+                                 std::string& out);
+
+    static int EncryptStringGCM( const std::string& data,
+                                 const Credentials& cred,
+                                 std::string& out);
+
+    static int DecryptStringGCM( const std::string& cipher,
+                                 const Credentials& cred,
+                                 std::string& out);
+
+    static int GenerateKeyFromPassphrase( const std::string& pass, 
+                                          std::string& salt,
+                                          Credentials& out);
+
+    static bool ScryptEncode( const std::string &input, 
+                              const std::string &salt,
+                              std::string &out,
+                              unsigned int size);
+
+    static int CheckSalt(std::string& salt);
+    static int GenerateSalt(std::string& out);
+
+    static int GenerateHMACForString( const std::string& input,
+                                      const Credentials& cred,
+                                      std::string& macOut);
+
+    static int VerifyHMACForString( const std::string& input,
+                                    const Credentials& cred,
+                                    const std::string& mac);
+
+
+    
     static Credentials GenerateCredentials()
     {
         // This is returning a copy on purpose, 
@@ -73,8 +130,8 @@ namespace crypto
     }
 
     static int EncryptStringCFB( const std::string& data,
-                          const Credentials& cred,
-                          std::string& out)
+                                 const Credentials& cred,
+                                 std::string& out)
     {
         int status = ret::A_OK;
 
@@ -99,8 +156,8 @@ namespace crypto
     }
 
     static int DecryptStringCFB( const std::string& cipher,
-                          const Credentials& cred,
-                          std::string& out)
+                                 const Credentials& cred,
+                                 std::string& out)
     {
         int status = ret::A_OK;
 
@@ -123,8 +180,8 @@ namespace crypto
     }
 
     static int EncryptStringGCM( const std::string& data,
-                          const Credentials& cred,
-                          std::string& out)
+                                 const Credentials& cred,
+                                 std::string& out)
     {
         int status = ret::A_OK;
         try {
@@ -147,8 +204,8 @@ namespace crypto
     }
 
     static int DecryptStringGCM( const std::string& cipher,
-                          const Credentials& cred,
-                          std::string& out)
+                                 const Credentials& cred,
+                                 std::string& out)
     {
         try {
             CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
@@ -182,6 +239,179 @@ namespace crypto
         }                                                            
         return ret::A_OK;
     }
+
+
+
+    static int GenerateKeyFromPassphrase( const std::string& pass, 
+                                          std::string& salt,
+                                          Credentials& out)
+    {
+        int status = ret::A_OK;
+        std::string outKey; //, outIv;
+
+        // Check salt for size and correctness
+        status = CheckSalt(salt);
+        if(status == ret::A_OK) {
+            ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH);
+            //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
+            memcpy(out.m_Key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
+            memcpy(out.m_Iv, salt.c_str(), salt.size());
+        }
+
+        return status;
+    }
+
+    static bool ScryptEncode( const std::string &input, 
+                              const std::string &salt,
+                              std::string &out,
+                              unsigned int size)
+    {
+        // Note* pass in 16 bit salt
+        //uint8_t salt[32]; // 16 <- do 16, 64 or 128
+
+        uint8_t* password;
+        size_t plen;
+
+        uint64_t N = 16384;
+        uint32_t r = 8;
+        uint32_t p = 1;
+
+        //uint8_t dk[64]; // Derived key
+        uint8_t dk[size]; // Derived key
+
+        byte* pInput = new byte[input.size()];
+        memcpy(pInput, reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
+
+        byte* pSalt = new byte[salt.size()];
+        memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
+
+        crypto_scrypt( pInput,
+                       input.size(),
+                       pSalt,
+                       salt.size(),
+                       N,
+                       r,
+                       p,
+                       dk,
+                       size);
+        
+
+        out.append( reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
+
+        if(pInput) {
+            delete[] pInput;
+            pInput = NULL;
+        }
+
+        if(pSalt) {
+            delete[] pSalt;
+            pSalt = NULL;
+        }
+
+        return true;
+    }
+
+    static int CheckSalt(std::string& salt)
+    {
+        int status = ret::A_OK;
+
+        // Check for correct size
+        if(salt.size() != SALT_SIZE) {
+            status = ret::A_FAIL_SCRYPT_INVALID_SALT_SIZE;
+        }
+        return status;
+    }
+
+    static int GenerateSalt(std::string& out) 
+    {
+        int status = ret::A_OK;
+        utils::GenerateRandomString(out, SALT_SIZE);
+        return status;
+    }
+
+    static int GenerateHMACForString( const std::string& input,
+                                      const Credentials& cred,
+                                      std::string& macOut)
+    {
+        int status = ret::A_OK;
+        std::string mac;
+        try {
+            CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+            CryptoPP::StringSource( input,
+                                    true,
+                                    new CryptoPP::HashFilter( hmac,
+                                        new CryptoPP::StringSink(mac)
+                                        )
+                                  );
+        }
+        catch(const CryptoPP::Exception& e) {
+            // Log error 
+            std::cout << e.what() << std::endl;
+            status = ret::A_FAIL_HMAC;
+        }
+
+        if(status == ret::A_OK) {
+            std::string hexencoded;
+            // Encode to hex
+            CryptoPP::StringSource( mac, 
+                          true,
+                          new CryptoPP::HexEncoder(
+                             new CryptoPP::StringSink(hexencoded)
+                             ) // HexEncoder
+                         ); // StringSource
+
+            if(!hexencoded.empty())
+                macOut = hexencoded;
+            else
+                status = ret::A_FAIL_HEX_ENCODE;
+        }
+
+        return status;
+    }
+
+    static int VerifyHMACForString( const std::string& input,
+                                    const Credentials& cred,
+                                    const std::string& mac)
+
+    {
+        int status = ret::A_OK;
+
+        try {
+            // Decode hmac
+            std::string decoded;
+            CryptoPP::StringSource ss( mac,
+                                       true,
+                                       new CryptoPP::HexDecoder(
+                                            new CryptoPP::StringSink(decoded)
+                                ) // HexDecoder
+            ); // StringSource
+
+            if(!decoded.empty()) {
+
+                CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+
+                const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
+            
+                CryptoPP::StringSource( input + decoded, 
+                                        true, 
+                                        new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
+                                       ); // StringSource
+            }
+            else {
+                status = ret::A_FAIL_HEX_DECODE;
+            }
+        }
+        catch(const CryptoPP::Exception& e) {
+            std::cout << e.what() << std::endl;
+            status = ret::A_FAIL_HMAC_VERIFY;
+        }
+
+        return status;
+    }
+
+
+
+
 };
 
 
