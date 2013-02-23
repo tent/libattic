@@ -17,6 +17,7 @@
 #include <hmac.h>       // cryptopp
 #include <base64.h>     // cryptopp
  
+#include "log.h"
 #include "url.h"
 #include "urlparams.h"
 #include "utils.h"
@@ -1282,6 +1283,36 @@ namespace netlib
         outstream << "\r\n" << reqbuf.str() << "\r\n0\r\n\r\n";
     }
 
+    static int ResolveHost( boost::asio::io_service& io_service, 
+                            tcp::socket& socket,
+                            const std::string& host)
+    {
+        int status = ret::A_OK;
+
+        boost::system::error_code error = boost::asio::error::host_not_found; 
+
+        // Get a list of endpoints corresponding to the server name. 
+        tcp::resolver resolver(io_service); 
+        tcp::resolver::query query(host, "https");   // <-- HTTPS 
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
+        tcp::resolver::iterator end; 
+        
+        while (error && endpoint_iterator != end) { 
+            socket.close(); 
+            socket.connect(*endpoint_iterator++, error); 
+        } 
+
+        if (error) {
+            //throw boost::system::system_error(error); 
+            alog::Log( Logger::ERROR, 
+                       boost::system::system_error(error).what(), 
+                       ret::A_FAIL_TCP_ENDPOINT_NOT_FOUND);
+            status = ret::A_FAIL_TCP_ENDPOINT_NOT_FOUND;
+        }
+
+        return status;
+    }
+
     static int HttpAsioMultipartRequest( const std::string& requestType, // POST, PUT
                                       const std::string& url,
                                       const UrlParams* pParams,
@@ -1290,6 +1321,7 @@ namespace netlib
                                       std::list<std::string>& paths,
                                       Response& resp)
     {
+        int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try
         {
@@ -1299,15 +1331,20 @@ namespace netlib
             ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
+            tcp::socket socket(io_service); 
+            
+            status = ResolveHost(io_service, socket, host); 
+            if(status != ret::A_OK)
+                return status;
 
+            // Try each endpoint until we successfully establish a connection. 
+
+/*
             // Get a list of endpoints corresponding to the server name. 
             tcp::resolver resolver(io_service); 
             tcp::resolver::query query(host, "https");   // <-- HTTPS 
             tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
             tcp::resolver::iterator end; 
-
-            // Try each endpoint until we successfully establish a connection. 
-            tcp::socket socket(io_service); 
             
             boost::system::error_code error = boost::asio::error::host_not_found; 
             while (error && endpoint_iterator != end) { 
@@ -1316,7 +1353,9 @@ namespace netlib
             } 
             if (error) 
                 throw boost::system::system_error(error); 
+                */
 
+            boost::system::error_code error = boost::asio::error::host_not_found; 
             // setup an ssl context 
             boost::asio::ssl::context ctx( io_service, 
                                            boost::asio::ssl::context::sslv23_client); 
@@ -1324,8 +1363,11 @@ namespace netlib
             boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
             ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-            if (error) 
-                throw boost::system::system_error(error); 
+            if (error) {
+                alog::Log( Logger::ERROR, 
+                           boost::system::system_error(error).what(), 
+                           ret::A_FAIL_EXCEPTION);
+            }
 
             std::string boundary;
             utils::GenerateRandomString(boundary, 20);
@@ -1480,16 +1522,20 @@ namespace netlib
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
             InterpretResponse(response, ssl_sock, resp);
-            
-
         }
         catch (std::exception& e)
         {
-            std::cout << "Exception: " << e.what() << "\n";
+            //std::cout << "Exception: " << e.what() << "\n";
+            std::string errexception;
+            errexception += "netlib exception ";
+            errexception += e.what();
+
+            alog::Log(Logger::ERROR, errexception , ret::A_FAIL_EXCEPTION);
+            status = ret::A_FAIL_EXCEPTION;
         }
     
 
-        return ret::A_OK;
+        return status; 
     }
     static void BuildAuthHeader( const std::string &url, 
                                  const std::string &requestMethod, 
