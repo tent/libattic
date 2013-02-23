@@ -19,7 +19,7 @@
 
 class FileManager : public MutexClass
 {
-    FileInfo* CreateFileInfo();
+
     bool ReadInHeader(std::string &h);
     bool ReadInEntry(std::string &e);
 
@@ -78,7 +78,11 @@ public:
     bool FileExists(std::string& filepath);               // File exists on disc
 
     FileInfo* GetFileInfo(const std::string &filename);
+
     int GetAllFileInfo(std::vector<FileInfo>& out);
+
+
+    FileInfo* CreateFileInfo();
 
     FileInfo* CreateFileInfo( const std::string &filename,
                               const std::string &filepath,

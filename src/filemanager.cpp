@@ -1012,7 +1012,11 @@ void FileManager::ConstructOutboundPath( const std::string &workingDir,
 
 FileInfo* FileManager::CreateFileInfo()
 {
-    return m_FileInfoFactory.CreateFileInfoObject();
+    Lock();
+    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
+    Unlock();
+
+    return pFi;
 }
 
 bool FileManager::FindFileInManifest(const std::string &filename)
@@ -1030,17 +1034,16 @@ bool FileManager::FileExists(std::string& filepath)
 
 FileInfo* FileManager::GetFileInfo(const std::string &filename)
 {
-    // TODO :: refactor fileinfo factory to do searches for preloaded files, before creating a new file.
+    Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-
-    if(!pFi)
-        std::cout<<"INVALID"<<std::endl;
     m_Manifest.QueryForFile(filename, pFi);
+    Unlock();
 
-    if(!pFi)
-        std::cout<<"INVALID"<<std::endl;
-    if(!pFi->IsValid())
-        return NULL;
+    if(pFi) {
+        if(!pFi->IsValid())
+            return NULL;
+    }
+
     return pFi;
 }
 
