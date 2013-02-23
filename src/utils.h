@@ -71,6 +71,21 @@ namespace utils
         return fileSize;
     }
 
+    static bool CheckFileExists(const std::string &filepath)
+    {
+        bool bExists = false;
+
+        std::ifstream ifs;
+        ifs.open(filepath.c_str(), std::ifstream::binary);
+
+        if(ifs.is_open()) {
+            bExists = true;
+            ifs.close();
+        }
+
+        return bExists;
+    }
+
     static unsigned int CheckIStreamSize(std::ifstream &ifs)
     {
         unsigned int size = 0;
