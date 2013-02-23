@@ -63,6 +63,7 @@ namespace ret
         A_FAIL_TCP_ENDPOINT_NOT_FOUND,
         A_FAIL_SSL_HANDSHAKE,
         A_FAIL_EMPTY_ATTACHMENTS, // 55
+        A_FAIL_EXCEPTION,
         A_FAIL_OTHER     
     };
 
