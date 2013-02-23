@@ -110,7 +110,7 @@ ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
     ofs.open(szFilePath.c_str(), std::ofstream::out | std::ofstream::binary); 
 
     if(!ofs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     std::string serialized;
     JsonSerializer::SerializeObject(this, serialized);
@@ -127,7 +127,7 @@ ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
     ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     unsigned int size = utils::CheckIStreamSize(ifs);
     char* pBuf = new char[size+1];

@@ -211,14 +211,14 @@ ret::eCode Crypto::EncryptFile( const std::string &filepath,
     ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     // create ofstream (write out)
     std::ofstream ofs;
     ofs.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     // Get Sizeof file
     char* pBuffer = new char[m_Stride];
@@ -323,14 +323,14 @@ ret::eCode Crypto::DecryptFile( const std::string &szFilePath,
     ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     // create ofstream (write out)
     std::ofstream ofs;
     ofs.open(outputPath.c_str(), std::ofstream::out | std::ofstream::binary);
 
     if(!ofs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     char* pBuffer = new char[m_Stride + TAG_SIZE];
 
@@ -665,7 +665,7 @@ int Crypto::GenerateHMACForFile( const std::string& filepath,
     }
     else
     {
-        status = ret::A_FAIL_OPEN;
+        status = ret::A_FAIL_OPEN_FILE;
     }
 
 
@@ -700,7 +700,7 @@ int Crypto::VerifyHMACForFile( const std::string& filepath,
     }
     else
     {
-        status = ret::A_FAIL_OPEN;
+        status = ret::A_FAIL_OPEN_FILE;
     }
 
     return status;
