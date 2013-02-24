@@ -8,7 +8,7 @@
 
 namespace compress
 {
-    int CompressString(std::string& in, std::string& out, const int nDeflateLevel = 1)
+    static int CompressString(std::string& in, std::string& out, const int nDeflateLevel = 1)
     {
         // deflate level (1-9) level of compression
         int status = ret::A_OK;
@@ -45,7 +45,7 @@ namespace compress
         return status;
     }
 
-    int DecompressString(std::string& in, std::string& out)
+    static int DecompressString(std::string& in, std::string& out)
     {
         int status = ret::A_OK;
         try {
