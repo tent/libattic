@@ -61,6 +61,8 @@ void PushTask::RunTask()
     //int status = PushFile(filepath);
 
     int status = PushFileNew(filepath);
+
+    std::cout<<" finishing push task ... " << std::endl;
     
     // Callback
     Callback(status, NULL);
@@ -130,9 +132,9 @@ int PushTask::PushFile(const std::string& filepath)
     {
         // Send Attic Post
         int trycount = 0;
-        for(status = SendAtticPost(fi, filepath, filename); status != ret::A_OK; trycount++)
+        for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++)
         {
-            status = SendAtticPost(fi, filepath, filename);
+            status = SendAtticPost(fi, filepath);
             std::cout<<" RETRYING .................................." << std::endl;
             if(trycount > 2)
                 break;
@@ -273,17 +275,20 @@ int PushTask::SendChunkPost( FileInfo* fi,
     return status;
 }
 
-int PushTask::SendAtticPost( FileInfo* fi, 
-                             const std::string& filepath, 
-                             const std::string& filename )
+int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
 {
     int status = ret::A_OK;
     // Create Attic Post
     if(!fi)
         std::cout<<"invalid file info"<<std::endl;
+
+    std::string filename;
+    utils::ExtractFileName(filepath, filename);
+
     // Check for existing post
     std::string postid;
     fi->GetPostID(postid);
+
 
     // Get ChunkInfo List
     FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
@@ -403,25 +408,23 @@ int PushTask::InitAtticPost( AtticPost& post,
                              bool pub,
                              const std::string& filepath,
                              const std::string& filename, 
-                             const std::string& chunkname,
+                             const std::string& chunkname, // Depricated
                              unsigned int size,
                              FileInfo::ChunkMap* pList)
 {
     int status = ret::A_OK;
 
-    if(pList)
-    {
+    if(pList) {
         post.SetPublic(pub);
         post.AtticPostSetFilepath(filepath);
         post.AtticPostSetFilename(filename);
         post.AtticPostSetSize(size);
-        post.AtticPostSetChunkName(chunkname);
+        post.AtticPostSetChunkName(chunkname); // Depricated
         
         FileInfo::ChunkMap::iterator itr = pList->begin();
 
         std::string identifier, postids;
-        for(;itr != pList->end(); itr++)
-        {
+        for(;itr != pList->end(); itr++) {
             identifier.clear();
             postids.clear();
 
@@ -430,13 +433,10 @@ int PushTask::InitAtticPost( AtticPost& post,
         }
 
         FileManager* fm = GetFileManager();
-        fm->Lock(); 
         FileInfo* fi = fm->GetFileInfo(filepath);
-        fm->Unlock();
 
         std::string chunkpostid;
-        if(fi)
-        {
+        if(fi) {
             std::string encKey, iv;
             fi->GetEncryptedKey(encKey);
             fi->GetIv(iv);
@@ -448,8 +448,7 @@ int PushTask::InitAtticPost( AtticPost& post,
             post.PushBackChunkPostId(chunkpostid);
         }
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_INVALID_PTR;
     }
 
@@ -499,24 +498,36 @@ int PushTask::PushFileNew(const std::string& filepath)
         std::string chunkPostId;
         fi->GetChunkPostID(chunkPostId);
 
+        Credentials fileCredentials;
         // Initiate Chunk Post request
         std::string requestType;
         if(chunkPostId.empty()) {
             requestType = "POST";
+            // This is a new file
+            // Generate Credentials
+            crypto::GenerateCredentials(fileCredentials);
         }
         else {
             requestType = "PUT";
             utils::CheckUrlAndAppendTrailingSlash(posturl);
             posturl += chunkPostId;
+            fi->GetFileCredentials(fileCredentials);
+        }
+        
+        // Check for key
+        if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
+            status = ret::A_FAIL_INVALID_FILE_KEY;
         }
 
-
         Response resp;
-        status = ProcessFile( requestType,
-                              posturl,
-                              filepath,
-                              fi,
-                              resp);
+        if(status == ret::A_OK) {
+            status = ProcessFile( requestType,
+                                  posturl,
+                                  filepath,
+                                  fileCredentials,
+                                  fi,
+                                  resp);
+        }
 
         if(status == ret::A_OK) {
             std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
@@ -558,7 +569,51 @@ int PushTask::PushFileNew(const std::string& filepath)
                     std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
                 }
 
+                std::string filename;
+                utils::ExtractFileName(filepath, filename);
+                unsigned int filesize = utils::CheckFilesize(filepath);
+
+                // Encrypt File Key
+                MasterKey mKey;
+                GetCredentialsManager()->GetMasterKeyCopy(mKey);
+
+                std::string mk;
+                mKey.GetMasterKey(mk);
+
+                // Insert File Data
+                fi->SetChunkPostID(chunkPostId);
+                fi->SetFilepath(filepath);
+                fi->SetFilename(filename);
+                fi->SetFileSize(filesize);
+                fi->SetFileCredentials(fileCredentials);
+
+                // Encrypt File Key
+                std::string fileKey, fileIv;
+                fileCredentials.GetKey(fileKey);
+                fileCredentials.GetIv(fileIv);
+
+                Credentials fCred;
+                fCred.SetKey(mk);
+                fCred.SetIv(fileIv);
+
+                std::string encryptedKey;
+                crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+
+                fi->SetEncryptedKey(encryptedKey);
+
+                // Insert file info to manifest
+                GetFileManager()->InsertToManifest(fi);
                 // create attic file metadata post
+                status = SendAtticPost(fi, filepath);
+                // Send Attic Post
+                int trycount = 0;
+                for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
+                    status = SendAtticPost(fi, filepath);
+                    std::cout<<" RETRYING .................................." << std::endl;
+                    if(trycount > 2)
+                        break;
+                }
+
             }
         }
     }
@@ -573,6 +628,7 @@ int PushTask::PushFileNew(const std::string& filepath)
 int PushTask::ProcessFile( const std::string& requestType,
                            const std::string& url,
                            const std::string& filepath,
+                           const Credentials& fileCredentials,
                            FileInfo* pFi,
                            Response& resp)
 {
@@ -605,14 +661,15 @@ int PushTask::ProcessFile( const std::string& requestType,
             return status;
 
         AccessToken* at = GetAccessToken();
-        MasterKey mKey;
-        GetCredentialsManager()->GetMasterKeyCopy(mKey);
-
-        std::string mk;
-        mKey.GetMasterKey(mk);
-
+        
         std::string boundary;
         utils::GenerateRandomString(boundary, 20);
+
+        std::string fileKey;
+        fileCredentials.GetKey(fileKey);
+
+        Credentials chunkCred;
+        chunkCred.SetKey(fileKey);
 
         // Build request
         boost::asio::streambuf request;
@@ -677,11 +734,9 @@ int PushTask::ProcessFile( const std::string& requestType,
                 std::string encryptedChunk;
                 std::string iv;
                 crypto::GenerateIv(iv);
-                Credentials cred;
-                cred.SetKey(mk);
-                cred.SetIv(iv);
+                chunkCred.SetIv(iv);
 
-                crypto::EncryptStringCFB(compressedChunk, cred, encryptedChunk);
+                crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
 
                 std::string ciphertextHash;
                 crypto::GenerateHash(encryptedChunk, ciphertextHash);
@@ -713,8 +768,7 @@ int PushTask::ProcessFile( const std::string& requestType,
 
                     boost::system::error_code errorcode;
                     static int breakcount = 0;
-                    do
-                    {
+                    do {
                         boost::asio::write(ssl_sock, partEnd, errorcode); 
                         if(errorcode)
                             std::cout<<errorcode.message()<<std::endl;

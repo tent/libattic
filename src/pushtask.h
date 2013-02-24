@@ -34,14 +34,13 @@ class PushTask : public TentTask
                        const std::string& filepath, 
                        const std::string& filename );
 
-    int SendAtticPost( FileInfo* fi, 
-                       const std::string& filepath,
-                       const std::string& filename);
+    int SendAtticPost( FileInfo* fi, const std::string& filepath );
 
     int PushFileNew( const std::string& filepath );
     int ProcessFile( const std::string& requestType,
                      const std::string& url,
                      const std::string& filepath,
+                     const Credentials& fileCredentials,
                      FileInfo* pFi,
                      Response& resp);
 

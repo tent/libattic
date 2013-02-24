@@ -40,7 +40,7 @@ public:
 
     void SetFileCredentials(const Credentials& cred)    { m_FileCredentials = cred; }
     void SetFileKey(const std::string &key)             { m_FileCredentials.SetKey(key); }
-    void SetEncryptedKey(const std::string& key)        { m_EncryptedKey = key; }
+    void SetEncryptedKey(const std::string& key)        { m_EncryptedKey = key; } 
     void SetIv(const std::string &iv)                   { m_FileCredentials.SetIv(iv); }
 
     void GetFilename(std::string &out) const    { out = m_Filename; }
@@ -73,7 +73,9 @@ public:
 
 private:    
     ChunkMap        m_Chunks;
-    Credentials     m_FileCredentials; // File Specific credentials
+    Credentials     m_FileCredentials; // File Specific credentials 
+                                       // Key is used to encrypt chunks, an iv is specific to chunk
+                                       // Iv is used to encrypt this key
     std::string     m_EncryptedKey;
 
     std::string     m_Filename;   // File within directory
