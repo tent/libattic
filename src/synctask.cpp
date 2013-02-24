@@ -325,7 +325,6 @@ int SyncTask::SpinOffPullAllTask()
     Entity entity;
     GetEntity(entity);
 
-
     Task* t = tf->GetTentTask( Task::PULLALL,
                                GetTentApp(), 
                                GetFileManager(), 
@@ -339,6 +338,7 @@ int SyncTask::SpinOffPullAllTask()
                                workingdir,       
                                configdir,        
                                &SyncCallBack);      
+
     
     ta->SpinOffTask(t);
     m_CallbackCount++;
