@@ -29,6 +29,9 @@ namespace cnst
     static const char* g_szPhraseTokenName = "phst";
     static const char* g_szManifestName = "manifest";                                        
     static const char* g_szEntityName = "ent";
+
+    // Chunk Data
+    static unsigned int g_unChunkSize = 400000; // just default arbitrary number, to be overriden
 };
 
 
