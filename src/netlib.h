@@ -212,6 +212,16 @@ namespace netlib
         return sstatus;
     }
 
+    static int HttpGetAttachment ( const std::string& url, 
+                                   const UrlParams* pParams,
+                                   const AccessToken* at, 
+                                   Response& out)
+    {
+        int sstatus = ret::A_OK;
+
+        return sstatus;
+    }
+
     static int HttpHead( const std::string& url, 
                          const UrlParams* pParams,
                          const AccessToken* at, 
