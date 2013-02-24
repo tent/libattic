@@ -522,13 +522,42 @@ int PushTask::PushFileNew(const std::string& filepath)
             std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
             std::cout<< "RESPONSE BODY : " << resp.body << std::endl;
             if(resp.code == 200) {
-            // On success 
+                // On success 
+                FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+                ChunkPost p;
+                // Deserialize basic post data
+                JsonSerializer::DeserializeObject((Post*)&p, resp.body);
+                InitChunkPost(p, *pList);
+                // Setup post url
+                if(chunkPostId.empty()) {
+                    p.GetID(chunkPostId);
+                    if(chunkPostId.empty()) {
+                        status = ret::A_FAIL_INVALID_POST_ID;
+                    }
+                    utils::CheckUrlAndAppendTrailingSlash(posturl);
+                    posturl += chunkPostId;
+                }
 
-            {
-            // update chunk post with chunk info metadata
-                // use non multipart to just update the post body
-                // leaving existing attachment in-tact
-            // create attic file metadata post
+                if(status == ret::A_OK) {
+                    // update chunk post with chunk info metadata
+                    // use non multipart to just update the post body
+                    // leaving existing attachment in-tact
+
+                    std::string bodyBuffer;
+                    JsonSerializer::SerializeObject(&p, bodyBuffer);
+                    
+                    Response metaResp;
+                    AccessToken* at = GetAccessToken();
+                    status = conops::HttpPut( posturl,
+                                              NULL,
+                                              bodyBuffer,
+                                              *at,
+                                              metaResp);
+
+                    std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
+                    std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
+                }
+                // create attic file metadata post
             }
         }
     }
