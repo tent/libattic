@@ -557,6 +557,7 @@ int PushTask::PushFileNew(const std::string& filepath)
                     std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
                     std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
                 }
+
                 // create attic file metadata post
             }
         }
