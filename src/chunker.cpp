@@ -46,7 +46,7 @@ ret::eCode Chunker::ChunkFile(FileInfo *fi, const std::string &filepath, const s
 
     if (!m_ifStream.is_open())
     {
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
     }
 
     std::string name;
@@ -124,7 +124,7 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
     {
         // strerror, <- STANDARD DEF, NON STANDARD IMPLEMENTATION, MAY NOT WORK
         //std::cout << " ERROR : " << std::strerror(errno) << std::endl;
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
     }
 
     std::string fileName;
@@ -147,7 +147,7 @@ ret::eCode Chunker::DeChunkFile( FileInfo *fi,
 
         if(!m_ifStream.is_open())
         {
-            return ret::A_FAIL_OPEN;
+            return ret::A_FAIL_OPEN_FILE;
         }
 
         // Get Size of Chunk

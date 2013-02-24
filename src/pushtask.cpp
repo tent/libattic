@@ -12,6 +12,7 @@
 #include "compression.h"
 #include "constants.h"
 #include "conoperations.h"
+#include "jsonserializable.h"
 
 #include "log.h"
 
@@ -52,11 +53,14 @@ PushTask::~PushTask()
 
 void PushTask::RunTask()
 {
+    std::cout<<" running push task ... " << std::endl;
     // Run the task
     std::string filepath;
     GetFilepath(filepath);
 
-    int status = PushFile(filepath);
+    //int status = PushFile(filepath);
+
+    int status = PushFileNew(filepath);
     
     // Callback
     Callback(status, NULL);
@@ -496,22 +500,41 @@ int PushTask::PushFileNew(const std::string& filepath)
         fi->GetChunkPostID(chunkPostId);
 
         // Initiate Chunk Post request
-            // Grab chunk of file
-            // Compress
-            // Encrypt
-            // Create and send multipart
-            // Create Chunk info object, push_back to chunk map
-        
-        // On success 
-        // update chunk post with chunk info metadata
-            // use non multipart to just update the post body
-            // leaving existing attachment in-tact
-        // create attic file metadata post
+        std::string requestType;
+        if(chunkPostId.empty()) {
+            requestType = "POST";
+        }
+        else {
+            requestType = "PUT";
+            utils::CheckUrlAndAppendTrailingSlash(posturl);
+            posturl += chunkPostId;
+        }
+
+
+        Response resp;
+        status = ProcessFile( requestType,
+                              posturl,
+                              filepath,
+                              fi,
+                              resp);
+
+        if(status == ret::A_OK) {
+            std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
+            std::cout<< "RESPONSE BODY : " << resp.body << std::endl;
+            if(resp.code == 200) {
+            // On success 
+
+            {
+            // update chunk post with chunk info metadata
+                // use non multipart to just update the post body
+                // leaving existing attachment in-tact
+            // create attic file metadata post
+            }
+        }
     }
     else {
         status = ret::A_FAIL_OPEN_FILE;
     }
-
 
     return status;
 }
@@ -568,7 +591,9 @@ int PushTask::ProcessFile( const std::string& requestType,
         netlib::BuildRequestHeader(requestType, url, boundary, at, request_stream); 
 
         // Build Body Form header
-        std::string body("{}"); // we send an empty body for now
+        ChunkPost p;
+        std::string body; // we send an empty body for now
+        JsonSerializer::SerializeObject(&p, body);
 
         boost::asio::streambuf requestBody;
         std::ostream part_stream(&requestBody);

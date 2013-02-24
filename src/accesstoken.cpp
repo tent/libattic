@@ -20,7 +20,7 @@ ret::eCode AccessToken::SaveToFile(const std::string& filepath)
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary); 
 
     if(!ofs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     std::string serialized;
     JsonSerializer::SerializeObject(this, serialized);
@@ -37,7 +37,7 @@ ret::eCode AccessToken::LoadFromFile(const std::string& filepath)
     ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
-        return ret::A_FAIL_OPEN;
+        return ret::A_FAIL_OPEN_FILE;
 
     unsigned int size = utils::CheckIStreamSize(ifs);
     char* pBuf = new char[size+1];

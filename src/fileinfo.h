@@ -51,8 +51,8 @@ public:
 
     void GetFileCredentials(Credentials& cred) const    { cred = m_FileCredentials; }
     void GetFileKey(std::string &out) const             { m_FileCredentials.GetKey(out); }
-    void GetEncryptedKey(std::string& out) const { out = m_EncryptedKey; }
-    void GetIv(std::string &out) const                      { m_FileCredentials.GetIv(out); }
+    void GetEncryptedKey(std::string& out) const        { out = m_EncryptedKey; }
+    void GetIv(std::string &out) const                  { m_FileCredentials.GetIv(out); }
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }
@@ -78,7 +78,7 @@ private:
 
     std::string     m_Filename;   // File within directory
     std::string     m_Filepath;   // Directory
-    std::string     m_ChunkName;
+    std::string     m_ChunkName;                                                    // Depricated
 
     std::string     m_PostID; // Id of the post the file is potentially attached to
     std::string     m_ChunkPostID; // Id of the chunk post

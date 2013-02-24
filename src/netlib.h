@@ -1363,11 +1363,8 @@ namespace netlib
             boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
             ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-            if (error) {
-                alog::Log( Logger::ERROR, 
-                           boost::system::system_error(error).what(), 
-                           ret::A_FAIL_EXCEPTION);
-            }
+            if (error) 
+                throw boost::system::system_error(error); 
 
             std::string boundary;
             utils::GenerateRandomString(boundary, 20);
