@@ -36,30 +36,7 @@
 // Globals
 std::string g_Entity;
 
-TEST(COMPRESS, COMPRESSSTRING)
-{
-    std::string in("this is my test string it is a pretty decent test string");
-    std::string out;
 
-    std::cout<<" before : " << in << std::endl;
-    compress::CompressString(in, out);
-    std::cout<<" after : " << out << std::endl;
-
-    std::string decomp;
-    compress::DecompressString(out, decomp);
-    std::cout<<" decompressed : " << decomp << std::endl;
-
-}
-
-TEST(NETLIB, EXTRACTHOSTANDPATH)
-{
-    std::string url = "https://manuel.tent.is/tent/posts";
-    std::string host, path;
-
-    netlib::ExtractHostAndPath(url, host, path);
-    ASSERT_EQ(host, std::string("manuel.tent.is"));
-    ASSERT_EQ(path, std::string("/tent/posts"));
-}
 
 bool g_bRegApp = false;
 TEST(APP_REGISTRATION, STARTAPPINST)
@@ -1415,6 +1392,50 @@ TEST(LOG, LOGGING)
 }
 */
 
+TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
+{
+    std::string test("This is a test string, of some sort of data, it's pretty great");
+
+    // Compress
+    std::string compressed;
+    compress::CompressString(test, compressed);
+    // Encrypt
+    Credentials cred = crypto::GenerateCredentials();
+    std::string encrypted;
+    crypto::EncryptStringCFB(compressed, cred, encrypted);
+    // Decrypt
+    std::string decrypted;
+    crypto::DecryptStringCFB(encrypted, cred, decrypted);
+    // Decompress
+    std::string decompressed;
+    compress::DecompressString(decrypted, decompressed);
+
+    ASSERT_EQ(test, decompressed);
+
+}
+
+TEST(COMPRESS, COMPRESSSTRING)
+{
+    std::string in("this is my test string it is a pretty decent test string");
+    std::string out;
+
+    compress::CompressString(in, out);
+
+    std::string decomp;
+    compress::DecompressString(out, decomp);
+
+    ASSERT_EQ(in, decomp);
+}
+
+TEST(NETLIB, EXTRACTHOSTANDPATH)
+{
+    std::string url = "https://manuel.tent.is/tent/posts";
+    std::string host, path;
+
+    netlib::ExtractHostAndPath(url, host, path);
+    ASSERT_EQ(host, std::string("manuel.tent.is"));
+    ASSERT_EQ(path, std::string("/tent/posts"));
+}
 
 TEST(CREDENTIALS, ISEMPTY)
 {

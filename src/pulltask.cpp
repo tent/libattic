@@ -64,6 +64,9 @@ int PullTask::PullFileNew(const std::string& filepath)
     FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
 
     if(fi) {                                                                                            
+        // TODO :: pull file metadata post first
+        // get file key data and enencrypt
+        // so you can properly unencrypt chunks
         std::string postid;                                                                          
         fi->GetChunkPostID(postid);
         if(!postid.empty()) {
@@ -112,15 +115,20 @@ int PullTask::RetreiveFile( const std::string filepath,
     std::string attachmentpath, outpath;
 
     AccessToken* at = GetAccessToken();
-    // Encrypt File Key
+    // Decrypt File Key
     MasterKey mKey;
     GetCredentialsManager()->GetMasterKeyCopy(mKey);
 
     std::string mk;
     mKey.GetMasterKey(mk);
 
+    std::cout<<" MK : " << mk << std::endl;
+    std::string filekey;
+    fi->GetFileKey(filekey);
+    std::cout<<" filekey : " << filekey << std::endl;
+
     Credentials fCred;
-    fCred.SetKey(mk);
+    fCred.SetKey(filekey);
 
     std::cout<< " filepath : " << filepath << std::endl;
 
@@ -159,12 +167,17 @@ int PullTask::RetreiveFile( const std::string filepath,
                 std::string iv;
                 ci->GetIv(iv);
                 fCred.SetIv(iv);
+                std::cout << "IV : " << iv << std::endl;
 
                 std::cout<< " BUFFER SIZE : " << buffer.size() << std::endl;
+                std::cout<< " BUFFER : " << buffer << std::endl;
+                // Base64Decode
+                std::string base64Chunk;
+                crypto::Base64DecodeString(buffer, base64Chunk);
 
                 // Decrypt
                 std::string decryptedChunk;
-                status = crypto::DecryptStringCFB(buffer, fCred, decryptedChunk);
+                status = crypto::DecryptStringCFB(base64Chunk, fCred, decryptedChunk);
 
                 if(status == ret::A_OK) {
                     std::cout<<" DECRYPTED STRING SIZE : " << decryptedChunk.size() << std::endl;

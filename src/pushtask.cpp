@@ -732,9 +732,11 @@ int PushTask::ProcessFile( const std::string& requestType,
                 crypto::GenerateIv(iv);
                 chunkCred.SetIv(iv);
 
-                // Base64 Encode
-
                 crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
+
+                // Base64 Encode
+                std::string finishedChunk;
+                crypto::Base64EncodeString(encryptedChunk, finishedChunk);
 
                 std::string ciphertextHash;
                 crypto::GenerateHash(encryptedChunk, ciphertextHash);
@@ -752,7 +754,7 @@ int PushTask::ProcessFile( const std::string& requestType,
                 // Build Attachment
                 boost::asio::streambuf attachment;
                 std::ostream attachmentstream(&attachment);
-                netlib::BuildAttachmentForm(chunkName, encryptedChunk, boundary, count, attachmentstream);
+                netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
 
                 // create multipart post
                 if(totalread >= filesize) {
