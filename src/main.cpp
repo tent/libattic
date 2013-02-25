@@ -1415,6 +1415,7 @@ TEST(LOG, LOGGING)
 }
 */
 
+
 TEST(CREDENTIALS, ISEMPTY)
 {
     Credentials cred;
@@ -1427,6 +1428,16 @@ TEST(CREDENTIALS, ISEMPTY)
 
     ASSERT_EQ(cred.KeyEmpty(), false);
     ASSERT_EQ(cred.IvEmpty(), false);
+}
+
+TEST(CRYPTO, BASE64)
+{
+    std::string teststring("this is my test string, that I'm going to base64 encode");
+    std::string encoded;
+    crypto::Base64EncodeString(teststring, encoded);
+    std::string decoded;
+    crypto::Base64DecodeString(encoded, decoded);
+    ASSERT_EQ(teststring, decoded);
 }
 
 TEST(CRYPTO, HMAC)

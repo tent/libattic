@@ -410,6 +410,21 @@ namespace crypto
     }
 
 
+    static void Base64EncodeString(const std::string& input, std::string& output)
+    {
+        CryptoPP::StringSource( input, 
+                                true, 
+                                new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output)));
+
+    }
+
+    static void Base64DecodeString(const std::string& input, std::string& output)
+    {
+        CryptoPP::StringSource( input,
+                                true,
+                                new CryptoPP::Base64Decoder(new CryptoPP::StringSink(output)));
+    }
+
 
 
 };
