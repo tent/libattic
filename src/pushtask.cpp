@@ -507,6 +507,23 @@ int PushTask::PushFileNew(const std::string& filepath)
             requestType = "PUT";
             utils::CheckUrlAndAppendTrailingSlash(posturl);
             posturl += chunkPostId;
+            std::string encryptedkey, fileiv; 
+
+            fi->GetEncryptedKey(encryptedkey);
+            fi->GetIv(fileiv);
+            // Decrypt file key
+            Credentials masterCred;
+            MasterKey mKey;
+            GetCredentialsManager()->GetMasterKeyCopy(mKey);
+            std::string mk;
+            mKey.GetMasterKey(mk);
+            masterCred.SetKey(mk);
+            masterCred.SetIv(fileiv);
+
+            std::string decryptedkey;
+            crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
+            fi->SetFileKey(decryptedkey);
+            std::cout<<" DECRYPTED KEY : " << decryptedkey << std::endl;
             fi->GetFileCredentials(fileCredentials);
         }
         
@@ -595,6 +612,8 @@ int PushTask::PushFileNew(const std::string& filepath)
                 std::string encryptedKey;
                 crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
 
+                fi->SetIv(fileIv);
+                fi->SetFileKey(fileKey);
                 fi->SetEncryptedKey(encryptedKey);
 
                 // Insert file info to manifest
@@ -664,6 +683,7 @@ int PushTask::ProcessFile( const std::string& requestType,
         std::string fileKey;
         fileCredentials.GetKey(fileKey);
 
+        std::cout << " encryption file key : " << fileKey << std::endl;
         Credentials chunkCred;
         chunkCred.SetKey(fileKey);
 
@@ -732,7 +752,9 @@ int PushTask::ProcessFile( const std::string& requestType,
                 crypto::GenerateIv(iv);
                 chunkCred.SetIv(iv);
 
+                std::cout<< " IV : " << iv << std::endl;
                 crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
+                //crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
 
                 // Base64 Encode
                 std::string finishedChunk;

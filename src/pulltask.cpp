@@ -57,42 +57,106 @@ void PullTask::RunTask()
     SetFinishedState();
 }
 
+int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
+{
+    int status = ret::A_OK;
+    if(fi) {
+        std::string posturl;
+        ConstructPostUrl(posturl);
+
+        std::string postid;
+        fi->GetPostID(postid);
+        utils::CheckUrlAndAppendTrailingSlash(posturl);
+        posturl += postid;
+
+        // Get Metadata post
+        AccessToken* at = GetAccessToken();
+        Response resp;
+        netlib::HttpGet(posturl, NULL, at, resp);
+
+        if(resp.code == 200) {
+            AtticPost ap;
+            if(JsonSerializer::DeserializeObject(&ap, resp.body)) {
+                std::string key, iv;
+                ap.GetAtticPostKeyData(key);
+                ap.GetAtticPostIvData(iv);
+
+                MasterKey mKey;
+                GetCredentialsManager()->GetMasterKeyCopy(mKey);
+
+                std::string mk;
+                mKey.GetMasterKey(mk);
+                Credentials FileKeyCred;
+                FileKeyCred.SetKey(mk);
+                FileKeyCred.SetIv(iv);
+
+                // Decrypt File Key
+                std::string filekey;
+                crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+
+                std::cout<<" FILE KEY : " << filekey << std::endl;
+
+                out.SetKey(filekey);
+                out.SetIv(iv);
+            }
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
 int PullTask::PullFileNew(const std::string& filepath)
 {
     int status = ret::A_OK;
 
     FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
 
-    if(fi) {                                                                                            
-        // TODO :: pull file metadata post first
-        // get file key data and enencrypt
-        // so you can properly unencrypt chunks
-        std::string postid;                                                                          
-        fi->GetChunkPostID(postid);
-        if(!postid.empty()) {
-            // Construct Post URL                                                                        
-            std::string posturl;
-            ConstructPostUrl(posturl);
-            utils::CheckUrlAndAppendTrailingSlash(posturl);
-            posturl += postid;
+    if(fi) {
+        Credentials fileCred;
+        status = RetreiveFileCredentials(fi, fileCred);
 
-            Response response;                                                                        
-            status = GetChunkPost(fi, response);
+        std::string chunkpostid;
+        fi->GetChunkPostID(chunkpostid);
+        if(status == ret::A_OK) {
+            if(!chunkpostid.empty()) {
+                // Construct Post URL
+                std::string posturl;
+                ConstructPostUrl(posturl);
 
-            if(status == ret::A_OK) {
-                if(response.code == 200) {
-                    Post p;
-                    JsonSerializer::DeserializeObject(&p, response.body);
+                std::string chunkposturl = posturl;
+                utils::CheckUrlAndAppendTrailingSlash(chunkposturl);
+                chunkposturl += chunkpostid;
 
-                    status = RetreiveFile(filepath, posturl, p, fi);
+                Response response;
+                status = GetChunkPost(fi, response);
+
+                if(status == ret::A_OK) {
+                    if(response.code == 200) {
+                        Post p;
+                        JsonSerializer::DeserializeObject(&p, response.body);
+                        status = RetreiveFile( filepath, 
+                                               chunkposturl, 
+                                               fileCred, 
+                                               p, 
+                                               fi);
+                    }
+                    else {
+                        status = ret::A_FAIL_NON_200;
+                    }
                 }
-                else {
-                    status = ret::A_FAIL_NON_200;
-                }
+            }
+            else {
+                status = ret::A_FAIL_INVALID_POST_ID;
             }
         }
         else {
-            status = ret::A_FAIL_INVALID_POST_ID;
+            status = ret::A_FAIL_NO_CREDENTIALS;
         }
     }
     else {
@@ -104,6 +168,7 @@ int PullTask::PullFileNew(const std::string& filepath)
 
 int PullTask::RetreiveFile( const std::string filepath, 
                             const std::string postpath, 
+                            const Credentials& fileCred,
                             Post& post,
                             FileInfo* fi)
 {
@@ -115,26 +180,15 @@ int PullTask::RetreiveFile( const std::string filepath,
     std::string attachmentpath, outpath;
 
     AccessToken* at = GetAccessToken();
-    // Decrypt File Key
-    MasterKey mKey;
-    GetCredentialsManager()->GetMasterKeyCopy(mKey);
-
-    std::string mk;
-    mKey.GetMasterKey(mk);
-
-    std::cout<<" MK : " << mk << std::endl;
-    std::string filekey;
-    fi->GetFileKey(filekey);
-    std::cout<<" filekey : " << filekey << std::endl;
-
-    Credentials fCred;
-    fCred.SetKey(filekey);
-
+    
+    Credentials fCred = fileCred;
     std::cout<< " filepath : " << filepath << std::endl;
+    std::string fileKey;
+    fCred.GetKey(fileKey);
+    std::cout<< " file key : " << fileKey << std::endl;
 
     std::ofstream ofs;
     ofs.open(filepath.c_str(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
-
 
     std::cout<<" FAILBIT : " << ofs.fail() << std::endl;
     std::cout<<" TRYING TO OPEN THE FILE " << std::endl;
@@ -167,10 +221,9 @@ int PullTask::RetreiveFile( const std::string filepath,
                 std::string iv;
                 ci->GetIv(iv);
                 fCred.SetIv(iv);
-                std::cout << "IV : " << iv << std::endl;
 
-                std::cout<< " BUFFER SIZE : " << buffer.size() << std::endl;
-                std::cout<< " BUFFER : " << buffer << std::endl;
+                std::cout<< " IV : " << iv << std::endl;
+
                 // Base64Decode
                 std::string base64Chunk;
                 crypto::Base64DecodeString(buffer, base64Chunk);
@@ -178,15 +231,12 @@ int PullTask::RetreiveFile( const std::string filepath,
                 // Decrypt
                 std::string decryptedChunk;
                 status = crypto::DecryptStringCFB(base64Chunk, fCred, decryptedChunk);
+                //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
 
                 if(status == ret::A_OK) {
-                    std::cout<<" DECRYPTED STRING SIZE : " << decryptedChunk.size() << std::endl;
-
                     // Decompress
                     std::string decompressedChunk;
                     compress::DecompressString(decryptedChunk, decompressedChunk);
-
-                    std::cout<< " DECOMPRESSED CHUNK SIZE : " << decompressedChunk.size() << std::endl;
                     // Write out
                     ofs.write(decompressedChunk.c_str(), decompressedChunk.size());
                 }
@@ -219,9 +269,16 @@ int PullTask::RetrieveAttachment(const std::string& url, const AccessToken* at, 
     int status = ret::A_OK;
 
     if(at) { 
+        std::cout<<" retrieving attachment .... : " << url << std::endl;
         Response response;
         status = netlib::HttpAsioGetAttachment(url, NULL, at, response);
-        outBuffer = response.body;
+
+        if(response.code == 200) {
+            outBuffer = response.body;
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
     }
     else { 
         status = ret::A_FAIL_INVALID_PTR;

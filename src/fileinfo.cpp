@@ -56,11 +56,13 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
 
 int FileInfo::PushChunkBack(ChunkInfo& Chunk)
 {
+    // Will overwrite what was already in there.
     int status = ret::A_OK;
 
     // Check if entry exists
     std::string chunkname;
     Chunk.GetChunkName(chunkname);
+    /*
     if(m_Chunks.find(chunkname) == m_Chunks.end())
     {
         m_Chunks[chunkname] = Chunk;
@@ -70,6 +72,11 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk)
     {
         status = ret::A_FAIL_DUPLICATE_ENTRY;
     }
+    */
+
+    m_Chunks[chunkname] = Chunk;
+    m_ChunkCount = m_Chunks.size();
+
 
     return status;
 }

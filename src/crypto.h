@@ -146,7 +146,7 @@ namespace crypto
                                     new CryptoPP::StreamTransformationFilter( e,
                                         new CryptoPP::StringSink(out)
                                     ) // StreamTransformationFilter      
-                        ); // StringSource
+                                  ); // StringSource
         }
         catch (CryptoPP::Exception &e) {
             status = ret::A_FAIL_ENCRYPT;

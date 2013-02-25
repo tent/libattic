@@ -20,10 +20,14 @@ class PullTask: public TentTask
     int PullFileNew(const std::string& filepath);
     int RetreiveFile( const std::string filepath, 
                       const std::string postpath, 
+                      const Credentials& fileCred,
                       Post& post,
                       FileInfo* fi);
 
-    int RetrieveAttachment(const std::string& url, const AccessToken* at, std::string& outBuffer);
+    int RetreiveFileCredentials(FileInfo* fi, Credentials& out);
+    int RetrieveAttachment( const std::string& url, 
+                            const AccessToken* at, 
+                            std::string& outBuffer);
 
 public:
     PullTask( TentApp* pApp, 
