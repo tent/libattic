@@ -732,6 +732,8 @@ int PushTask::ProcessFile( const std::string& requestType,
                 crypto::GenerateIv(iv);
                 chunkCred.SetIv(iv);
 
+                // Base64 Encode
+
                 crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
 
                 std::string ciphertextHash;
