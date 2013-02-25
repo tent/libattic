@@ -11,7 +11,13 @@
 /vendor/jsoncpp/include/CMakeFiles
 /vendor/jsoncpp/src/CMakeFiles
 /vendor/jsoncpp/src/lib_json/CMakeFiles
+/vendor/boost_1_53_0/bin.v2/
+/vendor/boost_1_53_0/libs/
 
+# Boost 
+/vendor/boost_1_53_0/b2
+/vendor/boost_1_53_0/bjam
+/vendor/boost_1_53_0/bootstrap.log
 
 # Build files
 CMakeCache.txt
