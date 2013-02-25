@@ -74,6 +74,13 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk)
     return status;
 }
 
+ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname)
+{
+    if(m_Chunks.find(chunkname) != m_Chunks.end()) 
+        return &m_Chunks[chunkname];
+    return NULL;
+}
+
 void FileInfo::GetSerializedChunkData(std::string& out) const
 {
     ChunkMap::const_iterator itr = m_Chunks.begin();

@@ -75,6 +75,8 @@ namespace conops
                                              const std::string& filepath,
                                              Response& responseOut)
     {
+        int status = netlib::HttpGetAttachment( url, pParams, &at, responseOut);
+        /*
         ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
                                                                         pParams,                   
                                                                         responseOut,               
@@ -83,9 +85,10 @@ namespace conops
                                                                         at.GetAccessToken(),   
                                                                         at.GetMacKey(),        
                                                                         false);                  
+        */
 
 
-        return ret::A_OK;
+        return status;
     } 
 
     static int HttpGetAttachmentAndWriteOut( const std::string& url,
@@ -95,6 +98,16 @@ namespace conops
                                              ConnectionHandle* pHandler,
                                              Response& responseOut)
     {
+
+        int status = ret::A_OK;
+        std::cout<<" ATTACHMENT URL : " << url << std::endl;
+
+        //status = netlib::HttpGetAttachment( url, pParams, &at, responseOut);
+
+        status = netlib::HttpAsioGetAttachment( url, pParams, &at, responseOut);
+
+
+        /*
         ConnectionManager::GetInstance()->HttpGetAttachmentWriteToFile( url,                    
                                                                         pParams,                   
                                                                         responseOut,               
@@ -105,8 +118,13 @@ namespace conops
                                                                         pHandler,
                                                                         false);                  
 
+        */
 
-        return ret::A_OK;
+
+        std::cout<< " GET ATTACH RESPONSE CODE : " << responseOut.code << std::endl;
+        std::cout<< " GET ATTACH RESPONSE BODY : " << responseOut.body << std::endl;
+
+        return status;
     }
     static int HttpDelete( const std::string& url,
                            const UrlParams* pParams,

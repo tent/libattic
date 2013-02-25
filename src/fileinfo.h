@@ -62,6 +62,8 @@ public:
     unsigned int GetPostVersion() const { return m_PostVersion ; }
 
     int PushChunkBack(ChunkInfo& Chunk);
+    ChunkInfo* GetChunkInfo(const std::string& chunkname);
+
     ChunkMap* GetChunkInfoList() { return &m_Chunks; }
     //std::vector<std::string>* GetChunkPostsList() { return &m_ChunkPosts; }
 

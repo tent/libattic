@@ -436,6 +436,8 @@ int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
         headers = curl_slist_append(headers, "Accept: application/octet-stream" );
         headers = curl_slist_append(headers, "Connection: close");
 
+
+        std::cout<<" URLPATH : " << urlPath << std::endl;
         // Build Auth header
         std::string authheader;
         BuildAuthHeader( urlPath, 
@@ -445,6 +447,8 @@ int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
                          authheader);
 
         headers = curl_slist_append(headers, authheader.c_str());
+
+        std::cout<< " AUTH HEADER : " << authheader << std::endl;
 
         curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
         curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, write_data);
@@ -498,6 +502,7 @@ int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
     curl_slist *headers = 0; // Init to null, always
     headers = curl_slist_append(headers, "Accept: application/octet-stream" );
 
+    std::cout<<" URLPATH : " << urlPath << std::endl;
     // Build Auth header
     std::string authheader;
     BuildAuthHeader( urlPath, 
@@ -507,6 +512,8 @@ int ConnectionManager::HttpGetAttachmentWriteToFile( const std::string &url,
                      authheader);
 
     headers = curl_slist_append(headers, authheader.c_str());
+
+    std::cout<< " AUTH HEADER : " << authheader << std::endl;
 
     curl_easy_setopt(pCurl, CURLOPT_URL, urlPath.c_str());
     curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, write_data);

@@ -69,10 +69,6 @@ void PushTask::RunTask()
     SetFinishedState();
 }
 
-
-
-
-
 int PushTask::PushFile(const std::string& filepath)
 {
     if(!GetTentApp())

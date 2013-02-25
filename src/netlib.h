@@ -94,6 +94,12 @@ namespace netlib
                         const AccessToken* at, 
                         Response& out);
 
+    static int HttpAsioGetAttachment( const std::string& url, 
+                                      const UrlParams* pParams,
+                                      const AccessToken* at, 
+                                      Response& out);
+
+
     static void GenerateHmacSha256(std::string &out);
 
     static void BuildRequest( const std::string& url,
@@ -101,6 +107,11 @@ namespace netlib
                               const AccessToken* at,
                               http::client::request& reqOut);
 
+    static void BuildAttachmentRequest( const std::string& url,
+                                        const std::string& requestMethod,
+                                        const AccessToken* at,
+                                        http::client::request& reqOut);
+    
     static void BuildMultipartRequest( const std::string& url,
                                        const std::string& requestMethod,
                                        const AccessToken* at,
@@ -120,8 +131,14 @@ namespace netlib
  
     static void GenerateHmacSha256(std::string &out);
 
-    static void EncodeAndAppendUrlParams(const UrlParams* pParams, std::string& url);
+    static void ExtractHostAndPath( const std::string& url, std::string& host, std::string& path );
 
+    static void EncodeAndAppendUrlParams( const UrlParams* pParams, std::string& url );
+
+    static int ResolveHost( boost::asio::io_service& io_service, 
+                            tcp::socket& socket,
+                            const std::string& host);
+    
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
                                   Response& resp);
@@ -217,9 +234,108 @@ namespace netlib
                                    const AccessToken* at, 
                                    Response& out)
     {
+
+        // This currently doesn't work for some reason, suspect a bug with ccp-netlib
+        // use HttpAsioGetAttachment instead, when you have time look into the fix for
+        // this and submit it.
+        return HttpAsioGetAttachment( url, pParams, at, out);
+
         int sstatus = ret::A_OK;
 
+        std::string uri = url;
+        EncodeAndAppendUrlParams(pParams, uri);
+
+        http::client::request request;
+        BuildRequest( uri,
+                      "GET",
+                      at,
+                      request);
+
+        http::client client;
+        http::client::response response = client.get(request);
+
+        int st = status(response);
+        std::cout << " STATUS : " << status(response) << std::endl;
+        std::cout << " BODY : " << body(response) << std::endl;
+
+        // Check for Chunked Transfer Encoding
+        std::string respbody = body(response);
+        if(CheckForChunkedTransferEncoding(response))
+        {
+            std::string out;
+            DeChunkString(respbody, out);
+            respbody.clear();
+            respbody = out;
+        }
+
+        out.code = status(response);
+        out.body = respbody;
+    
         return sstatus;
+    }
+
+    static int HttpAsioGetAttachment( const std::string& url, 
+                                      const UrlParams* pParams,
+                                      const AccessToken* at, 
+                                      Response& out)
+    {
+        int status = ret::A_OK;
+        using namespace boost::asio::ssl;
+        try {
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            
+            boost::asio::io_service io_service; 
+            tcp::socket socket(io_service); 
+            
+            status = ResolveHost(io_service, socket, host); 
+            if(status != ret::A_OK)
+                return status;
+
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
+
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+            if (error) 
+                throw boost::system::system_error(error); 
+
+            std::string authheader;
+            if(at) {
+                netlib::BuildAuthHeader( url,
+                                         "GET",
+                                         at->GetAccessToken(),
+                                         at->GetMacKey(),
+                                         authheader);
+            }
+
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "GET " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/octet-stream\r\n";
+            //request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
+
+            // Send the request.
+            boost::asio::write(ssl_sock, request);
+
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
+
+            return ret::A_OK;
+        }
+        catch (std::exception& e) {
+            std::cout << "Exception: " << e.what() << "\n";
+        }
+
+        return ret::A_OK;
     }
 
     static int HttpHead( const std::string& url, 
@@ -430,15 +546,12 @@ namespace netlib
     {
         reqOut.uri(url);
         std::string authheader;
-        if(at)
-        {
-            // Build Auth Header
+        if(at) {
             BuildAuthHeader( url,
                              requestMethod,
                              at->GetAccessToken(),
                              at->GetMacKey(),
                              authheader );
-
         }
 
         reqOut << header("Connection", "close");
@@ -447,6 +560,35 @@ namespace netlib
 
         if(!authheader.empty())
             reqOut << header("Authorization" , authheader);
+    }
+
+    static void BuildAttachmentRequest( const std::string& url,
+                                        const std::string& requestMethod,
+                                        const AccessToken* at,
+                                        http::client::request& reqOut)
+    {
+        reqOut.uri(url);
+        std::string authheader;
+        if(at) {
+            std::cout<< " MAC KEY : " << at->GetMacKey() << std::endl;
+
+            BuildAuthHeader( url,
+                             requestMethod,
+                             at->GetAccessToken(),
+                             at->GetMacKey(),
+                             authheader );
+        }
+
+
+        reqOut << header("Accept", "application/octet-stream" );
+        reqOut << header("Connection", "close");
+        //reqOut << header("Content-Type", "application/vnd.tent.v0+json");
+
+        if(!authheader.empty())
+            reqOut << header("Authorization" , authheader);
+
+        std::cout<<" AUTH HEADER : " << authheader << std::endl;
+
     }
 
     static void BuildMultipartRequest( const std::string& url,
@@ -1134,7 +1276,6 @@ namespace netlib
             output_buffer = dechunked;
         }
 
-        std::cout<<" OUTPUT BUFFER : " << output_buffer << std::endl;
         resp.body = output_buffer;
 
         //if (error != boost::asio::error::eof)
@@ -1183,7 +1324,6 @@ namespace netlib
             std::cout << header << "\n";
         std::cout << "\n";
 
-        std::cout<<" **************** " << std::endl;
         // Write whatever content we already have to output.
         if (response.size() > 0)
         {
@@ -1254,6 +1394,7 @@ namespace netlib
                                      unsigned int attachmentnumber,
                                      std::ostream& bodystream)
     {
+        std::cout<<" ATTACHMENT NAME : " << name << std::endl;
         char szSize[256] = {'\0'};
         snprintf(szSize, 256, "%lu", body.size());
         char szAttachmentCount[256] = {'\0'};
@@ -1333,8 +1474,7 @@ namespace netlib
     {
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
-        try
-        {
+        try {
             std::cout<<"URL : " << url << std::endl;
             // Parse the url, separate the root from the path
             std::string host, path;
@@ -1454,8 +1594,7 @@ namespace netlib
             std::list<std::string>::iterator itr = paths.begin(); 
             unsigned int path_count = paths.size();
             std::cout<<" PATH COUNT : " << path_count << std::endl;
-            for(;itr!= paths.end(); itr++)
-            {
+            for(;itr!= paths.end(); itr++) {
                 std::cout<< " create chunk part " << std::endl;
                 unsigned int size = utils::CheckFilesize(*itr);
                                                                                       
@@ -1503,8 +1642,7 @@ namespace netlib
 
                     boost::system::error_code errorcode;
 
-                    do
-                    {
+                    do {
                         boost::asio::write(ssl_sock, partEnd, errorcode); 
                         if(errorcode)
                             std::cout<<errorcode.message()<<std::endl;
@@ -1530,8 +1668,7 @@ namespace netlib
             boost::asio::read_until(ssl_sock, response, "\r\n");
             InterpretResponse(response, ssl_sock, resp);
         }
-        catch (std::exception& e)
-        {
+        catch (std::exception& e) {
             //std::cout << "Exception: " << e.what() << "\n";
             std::string errexception;
             errexception += "netlib exception ";
