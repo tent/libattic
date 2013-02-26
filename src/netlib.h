@@ -149,47 +149,69 @@ namespace netlib
         }
     }
     
-    // TODO move to hpp
     // Definitions start ***********************************************************
     static int HttpGet( const std::string& url, 
                         const UrlParams* pParams,
                         const AccessToken* at, 
                         Response& out)
     {
-        int sstatus = ret::A_OK;
+        int status = ret::A_OK;
+        using namespace boost::asio::ssl;
+        try {
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            
+            boost::asio::io_service io_service; 
+            tcp::socket socket(io_service); 
+            
+            status = ResolveHost(io_service, socket, host); 
+            if(status != ret::A_OK)
+                return status;
 
-        /*
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        http::client::request request;
-        BuildRequest( url,
-                      "GET",
-                      at,
-                      request);
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+            if (error) 
+                throw boost::system::system_error(error); 
 
-        http::client client;
-        http::client::response response = client.get(request);
+            std::string authheader;
+            if(at) {
+                netlib::BuildAuthHeader( url,
+                                         "GET",
+                                         at->GetAccessToken(),
+                                         at->GetMacKey(),
+                                         authheader);
+            }
 
-        int st = status(response);
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "GET " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
 
-        // Check for Chunked Transfer Encoding
-        std::string respbody = body(response);
-        if(CheckForChunkedTransferEncoding(response))
-        {
-            std::string out;
-            DeChunkString(respbody, out);
-            respbody.clear();
-            respbody = out;
+            // Send the request.
+            boost::asio::write(ssl_sock, request);
+
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
+
+            return ret::A_OK;
+        }
+        catch (std::exception& e) {
+            std::cout << "Exception: " << e.what() << "\n";
         }
 
-        out.code = status(response);
-        out.body = respbody;
-        */
-    
-        return sstatus;
+        return status;
     }
 
     static int HttpGetAttachment ( const std::string& url, 
@@ -197,46 +219,7 @@ namespace netlib
                                    const AccessToken* at, 
                                    Response& out)
     {
-
-        // This currently doesn't work for some reason, suspect a bug with ccp-netlib
-        // use HttpAsioGetAttachment instead, when you have time look into the fix for
-        // this and submit it.
         return HttpAsioGetAttachment( url, pParams, at, out);
-
-        int sstatus = ret::A_OK;
-
-        /*
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
-
-        http::client::request request;
-        BuildRequest( uri,
-                      "GET",
-                      at,
-                      request);
-
-        http::client client;
-        http::client::response response = client.get(request);
-
-        int st = status(response);
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
-
-        // Check for Chunked Transfer Encoding
-        std::string respbody = body(response);
-        if(CheckForChunkedTransferEncoding(response))
-        {
-            std::string out;
-            DeChunkString(respbody, out);
-            respbody.clear();
-            respbody = out;
-        }
-
-        out.code = status(response);
-        out.body = respbody;
-        */
-    
-        return sstatus;
     }
 
     static int HttpAsioGetAttachment( const std::string& url, 
@@ -358,42 +341,70 @@ namespace netlib
                          const AccessToken* at, 
                          Response& out)
     {
-        int sstatus = ret::A_OK;
+        int status = ret::A_OK;
+        using namespace boost::asio::ssl;
+        try {
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            
+            boost::asio::io_service io_service; 
+            tcp::socket socket(io_service); 
+            
+            status = ResolveHost(io_service, socket, host); 
+            if(status != ret::A_OK)
+                return status;
 
-        /*
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        http::client::request request;
-        BuildRequest( url,
-                      "POST",
-                      at,
-                      request);
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+            if (error) 
+                throw boost::system::system_error(error); 
 
-        http::client client;
+            std::string authheader;
+            if(at) {
+                netlib::BuildAuthHeader( url,
+                                         "POST",
+                                         at->GetAccessToken(),
+                                         at->GetMacKey(),
+                                         authheader);
+            }
 
-        // No need to set set the content length, that's take care of automatically
-        http::client::response response = client.post(request, requestbody);
+            char len[256] = {'\0'};
+            snprintf(len, 256, "lu", requestbody.size());
 
-        int st = status(response);
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "POST " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Length: " << len << "\r\n";
+            if(!authheader.empty())
+                request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
 
-        // Check for Chunked Transfer Encoding
-        std::string respbody = body(response);
-        if(CheckForChunkedTransferEncoding(response))
-        {
-            std::string out;
-            DeChunkString(respbody, out);
-            respbody.clear();
-            respbody = out;
+            request_stream << requestbody;
+
+            // Send the request.
+            boost::asio::write(ssl_sock, request);
+
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
+
+            return ret::A_OK;
+        }
+        catch (std::exception& e) {
+            std::cout << "Exception: " << e.what() << "\n";
         }
 
-        out.code = status(response);
-        out.body = respbody;
-        */
-
-        return sstatus;
+        return status;
     }
 
     static int HttpPut( const std::string& url, 
@@ -402,41 +413,70 @@ namespace netlib
                         const AccessToken* at, 
                         Response& out)
     {
-        int sstatus = ret::A_OK;
+        int status = ret::A_OK;
+        using namespace boost::asio::ssl;
+        try {
+            // Parse the url, separate the root from the path
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
+            
+            boost::asio::io_service io_service; 
+            tcp::socket socket(io_service); 
+            
+            status = ResolveHost(io_service, socket, host); 
+            if(status != ret::A_OK)
+                return status;
 
-        /*
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
+            boost::system::error_code error = boost::asio::error::host_not_found; 
+            // setup an ssl context 
+            boost::asio::ssl::context ctx( io_service, 
+                                           boost::asio::ssl::context::sslv23_client); 
+            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
+            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        http::client::request request;
-        BuildRequest( url,
-                      "PUT",
-                      at,
-                      request);
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+            if (error) 
+                throw boost::system::system_error(error); 
 
-        http::client client;
-        // No need to set set the content length, that's take care of automatically
-        http::client::response response = client.put(request, requestbody);
+            std::string authheader;
+            if(at) {
+                netlib::BuildAuthHeader( url,
+                                         "POST",
+                                         at->GetAccessToken(),
+                                         at->GetMacKey(),
+                                         authheader);
+            }
 
-        int st = status(response);
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
+            char len[256] = {'\0'};
+            snprintf(len, 256, "lu", requestbody.size());
 
-        // Check for Chunked Transfer Encoding
-        std::string respbody = body(response);
-        if(CheckForChunkedTransferEncoding(response))
-        {
-            std::string out;
-            DeChunkString(respbody, out);
-            respbody.clear();
-            respbody = out;
+            boost::asio::streambuf request;
+            std::ostream request_stream(&request);
+            request_stream << "PUT " << path << " HTTP/1.1\r\n";
+            request_stream << "Host: " << host << "\r\n";
+            request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+            request_stream << "Content-Length : " << len << "\r\n";
+            if(!authheader.empty())
+                request_stream << "Authorization: " << authheader <<"\r\n";
+            request_stream << "Connection: close\r\n\r\n";
+
+            request_stream << requestbody;
+
+            // Send the request.
+            boost::asio::write(ssl_sock, request);
+
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
+
+            return ret::A_OK;
+        }
+        catch (std::exception& e) {
+            std::cout << "Exception: " << e.what() << "\n";
         }
 
-        out.code = status(response);
-        out.body = respbody;
-        */
-
-        return sstatus;
+        return status;
     }
 
 
