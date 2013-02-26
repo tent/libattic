@@ -1319,37 +1319,7 @@ TEST(COMPRESS, ENCRYPT)
 
 
 
-    // Test FileManager
-    TEST(FileManager, IndexFile)
-    {
-        std::string manifestpath;
-        manifestpath.append("./data/manifest._mn");
-        std::string path;
-        path.append("./data/test.pdf");
-
-        std::string workingdir;
-        workingdir.append("./output");
-     
-        FileManager fm(manifestpath, workingdir);
-
-        ASSERT_EQ(fm.FileExists(path), true);
-        //ASSERT_EQ(mf.CreateEmptyManifest(), true);
-        ASSERT_EQ(fm.StartupFileManager(), true);
-
-        ret::eCode status = fm.IndexFile(path);
-        ASSERT_EQ(status, ret::A_OK);
-
-        std::cout<< "STATUS : " << status << std::endl;
-        ASSERT_EQ(fm.ShutdownFileManager(), true);
-
-
-     //   std::string filename;
-    //    filename.append("test.pdf");
-    //    ASSERT_EQ(fm.ConstructFile(filename), true);
-    }
-
-
-    */
+        */
 
     /*
     // Test FileInfo

@@ -256,8 +256,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
 
     bool post = true;
     Response response;
-    if(postid.empty())
-    {
+    if(postid.empty()) {
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
 
@@ -284,8 +283,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                                    *at,
                                    response );
     }
-    else
-    {
+    else {
         post = false;
         // Modify Post
         posturl += "/";
@@ -306,8 +304,6 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
         std::string postBuffer;
         JsonSerializer::SerializeObject(&p, postBuffer);
 
-        std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
-
         AccessToken* at = GetAccessToken();
         status = conops::HttpPut( posturl,
                                    NULL,
@@ -317,39 +313,26 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
    }
 
     // Handle Response
-    if(response.code == 200)
-    {
-        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-
+    if(response.code == 200) {
         AtticPost p;
         JsonSerializer::DeserializeObject(&p, response.body);
 
         std::string postid;
         p.GetID(postid);
 
-        if(!postid.empty())
-        {
+        if(!postid.empty()) {
             FileManager* fm = GetFileManager();
             fi->SetPostID(postid); 
-            if(post)
-            {
+            if(post){
                 std::string filepath;
                 fi->SetPostVersion(0); // temporary for now, change later
                 fi->GetFilepath(filepath);
 
-                while(fm->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
                 fm->SetFilePostId(filepath, postid);
-                fm->Unlock();
             }
         }
     }
-    else
-    {
-        std::cout<<" HANDLING FAILED RESPONSE : " << response.code << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-
-
+    else {
         status = ret::A_FAIL_NON_200;
     }
 

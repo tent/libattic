@@ -19,40 +19,6 @@
 
 class FileManager : public MutexClass
 {
-
-    bool ReadInHeader(std::string &h);
-    bool ReadInEntry(std::string &e);
-
-    void ConstructOutboundPath( const std::string &workingDir, 
-                                const std::string &filename, 
-                                const std::string &postfix,
-                                std::string &outboundPath,
-                                bool bStripFileType);
-    
-    void GenerateCompressionPath(FileInfo* pFi, std::string &outpath);
-    void GenerateCompressionPath(std::string filename, std::string &outpath);
-
-    void GenerateCryptoPath(FileInfo* pFi, std::string &outpath);
-    void GenerateEncryptionPath(std::string filename, std::string &outpath);
-
-    int ChunkFile(FileInfo* pFi);
-    int CompressChunks(FileInfo* pFi);
-    int EncryptCompressedChunks(FileInfo* pFi);
-
-    int DecryptChunks(FileInfo* pFi);
-    int DecompressChunks(FileInfo* pFi);
-    int DechunkFile(FileInfo* pFi);
-
-    int CheckManifestForFile(const std::string& filename, FileInfo* pFi);
-
-    int GenerateHMACForChunks(FileInfo* pFi);
-    int GenerateHMACForEncryptedChunks(FileInfo* pFi);
-
-    int VerifyHMACForChunks(FileInfo* pFi);
-    int VerifyHMACForEncryptedChunks(FileInfo* pFi);
-
-    int GetDecryptedFileKey(FileInfo* pFi, std::string& keyOut);
-   
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
 public:
@@ -66,18 +32,9 @@ public:
     bool StartupFileManager();
     bool ShutdownFileManager();
 
-    int IndexFileNew(const std::string& filepath,
-                     const bool insert,
-                     FileInfo* pFi = NULL);
-
-    int ConstructFileNew(const std::string& filepath);
-
     int RemoveFile(const std::string &filepath);
 
-    bool FindFileInManifest(const std::string &filepath);   // File exists in manifest
-    bool FileExists(std::string& filepath);               // File exists on disc
-
-    FileInfo* GetFileInfo(const std::string &filename);
+    FileInfo* GetFileInfo(const std::string &filepath);
 
     int GetAllFileInfo(std::vector<FileInfo>& out);
 
@@ -111,15 +68,11 @@ public:
     }
     
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
-    //void GetManifestPostID(std::string &out) const   { m_Manifest.GetPostID(out); }// Depricated
 
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
     unsigned int GetFileStride() const               { return m_FileStride; }
-
-    void GetFilePostId(const std::string& filename, std::string& out);
-    void GetFileChunkPostId(const std::string& filename, std::string& out);
 
     void SetManifestFilePath(const std::string &filepath)       { m_ManifestFilePath = filepath; }
     void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); } // Depricated
