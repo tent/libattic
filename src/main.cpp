@@ -36,8 +36,6 @@
 // Globals
 std::string g_Entity;
 
-
-
 bool g_bRegApp = false;
 TEST(APP_REGISTRATION, STARTAPPINST)
 {
@@ -315,6 +313,8 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
     if(g_Entity.empty()) return;
     if(!g_bDiscover) return;
 
+    std::cout<<" init ? " << std::endl;
+
     int status = InitLibAttic( 
                   "./data",
                   "./config",
@@ -322,6 +322,7 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
                   "./config/logs",
                   g_Entity.c_str());
 
+    std::cout<<" Getting entity api root ... " << std::endl;
 
     ASSERT_EQ(status, ret::A_OK);
     std::cout<<" ENTITY API ROOT : " << GetEntityApiRoot(g_Entity.c_str()) << std::endl;
@@ -1400,9 +1401,9 @@ TEST(COMPRESS, COMPRESSSTRING)
 TEST(NETLIB, EXTRACTHOSTANDPATH)
 {
     std::string url = "https://manuel.tent.is/tent/posts";
-    std::string host, path;
+    std::string protocol, host, path;
 
-    netlib::ExtractHostAndPath(url, host, path);
+    netlib::ExtractHostAndPath(url, protocol, host, path);
     ASSERT_EQ(host, std::string("manuel.tent.is"));
     ASSERT_EQ(path, std::string("/tent/posts"));
 }

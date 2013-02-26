@@ -28,7 +28,8 @@ int MultipartConsumer::ConnectToHost(const std::string& url)
 {
     int status = ret::A_OK;
     m_Url = url;
-    netlib::ExtractHostAndPath(m_Url, m_Host, m_Path);
+    std::string protocol;
+    netlib::ExtractHostAndPath(m_Url, protocol, m_Host, m_Path);
     
     // Get list of endpoints corresponding to server name
     tcp::resolver::query query(m_Host, "https");

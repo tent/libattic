@@ -90,10 +90,7 @@ namespace netlib
  
     static void GenerateHmacSha256(std::string &out);
 
-    static void ExtractHostAndPath( const std::string& url, 
-                                    std::string& protocol, 
-                                    std::string& host, 
-                                    std::string& path );
+    static void ExtractHostAndPath( const std::string& url, std::string& host, std::string& path );
 
     static void EncodeAndAppendUrlParams( const UrlParams* pParams, std::string& url );
 
@@ -104,14 +101,11 @@ namespace netlib
     
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
-                                  Response& resp,
-                                  std::string& returnHeaders);
+                                  Response& resp);
 
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   tcp::socket& socket, 
-                                  Response& resp,
-                                  std::string& returnHeaders);
-
+                                  Response& resp);
 
     /*
     static bool CheckForChunkedTransferEncoding(http::client::response& response)
@@ -166,8 +160,8 @@ namespace netlib
         using namespace boost::asio::ssl;
         try {
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -210,9 +204,9 @@ namespace netlib
 
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
 
-            std::string returnheaders;
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            return ret::A_OK;
         }
         catch (std::exception& e) {
             std::cout << "Exception: " << e.what() << "\n";
@@ -238,8 +232,8 @@ namespace netlib
         using namespace boost::asio::ssl;
         try {
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -282,9 +276,9 @@ namespace netlib
 
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
 
-            std::string responseheaders;
-            status = InterpretResponse(response, ssl_sock, out, responseheaders);
+            return ret::A_OK;
         }
         catch (std::exception& e) {
             std::cout << "Exception: " << e.what() << "\n";
@@ -301,27 +295,15 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
-            std::cout<< "HEAD URL : " << url << std::endl;
+            std::cout<< "URL : " << url << std::endl;
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
-
-            std::cout<<" HOST : " << host << std::endl;
-            std::cout<<" PROT : " << protocol << std::endl;
-            std::cout<<" PATH : " << path << std::endl;
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
             
-            bool bSSL = false;
-            if(protocol == "https") {
-                status = ResolveHost(io_service, socket, host, true); 
-                bSSL = true;
-            }
-            else {
-                status = ResolveHost(io_service, socket, host, false); 
-            }
-
+            status = ResolveHost(io_service, socket, host, true); 
             if(status != ret::A_OK) { 
                 std::cout<< " failed to resolve host " << std::endl;
                 return status;
@@ -334,9 +316,7 @@ namespace netlib
             ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
             boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-            if(bSSL)
-                ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
             if (error) 
                 throw boost::system::system_error(error); 
 
@@ -360,25 +340,15 @@ namespace netlib
             request_stream << "Connection: close\r\n\r\n";
 
             std::cout << " HEAD REQUEST HAPPENING HERE " << std::endl;
-
             // Send the request.
-            boost::asio::streambuf response;
-            std::string returnheaders;
-            if(bSSL) { 
-                boost::asio::write(ssl_sock, request);
-                boost::asio::read_until(ssl_sock, response, "\r\n");
-                status = InterpretResponse(response, ssl_sock, out, returnheaders);
-            }
-            else { 
-                boost::asio::write(socket, request);
-                boost::asio::read_until(socket, response, "\r\n");
-                status = InterpretResponse(response, socket, out, returnheaders);
-            }
+            boost::asio::write(ssl_sock, request);
 
-            std::cout<<" CODE : " << out.code << std::endl;
-            std::cout<<" BODY : " << out.body << std::endl;
-            std::cout<<" RETURN HEADERS : " << returnheaders << std::endl;
-            out.body = returnheaders;
+            boost::asio::streambuf response;
+            boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
+
+
+            return ret::A_OK;
         }
         catch (std::exception& e) {
             std::cout << "Exception: " << e.what() << "\n";
@@ -397,8 +367,8 @@ namespace netlib
         using namespace boost::asio::ssl;
         try {
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
 
             if(pParams)
                 std::cout<<" PARAMS ARE PASSED " << std::endl;
@@ -457,9 +427,9 @@ namespace netlib
 
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
+            InterpretResponse(response, ssl_sock, out);
 
-            std::string returnheaders;
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            return ret::A_OK;
         }
         catch (std::exception& e) {
             std::cout << "Exception: " << e.what() << "\n";
@@ -478,8 +448,8 @@ namespace netlib
         using namespace boost::asio::ssl;
         try {
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -529,8 +499,7 @@ namespace netlib
 
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
-            std::string returnheaders;
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            InterpretResponse(response, ssl_sock, out);
         }
         catch (std::exception& e) {
             std::cout << "Exception: " << e.what() << "\n";
@@ -929,7 +898,7 @@ namespace netlib
             std::cout<<"URL : " << url << std::endl;
             // Parse the url, separate the root from the path
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(url, host, path);
             std::cout<<" HOST : " << host << std::endl;
             std::cout<<" PATH : " << path << std::endl;
 
@@ -1074,8 +1043,8 @@ namespace netlib
         {
             std::cout<<"URL : " << url << std::endl;
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             std::cout<<" HOST : " << host << std::endl;
             std::cout<<" PATH : " << path << std::endl;
 
@@ -1208,8 +1177,7 @@ namespace netlib
 
                 //std::cout << " response : " << &response << std::endl;
 
-                std::string returnheaders;
-                InterpretResponse(response, ssl_sock, resp, returnheaders);
+                InterpretResponse(response, ssl_sock, resp);
                 //InterpretResponse(response, socket, resp);
 
                 std::cout<<" CALLBACK RESPONSE : " << resp.code << std::endl;
@@ -1227,8 +1195,7 @@ namespace netlib
 
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
-                                  Response& resp,
-                                  std::string& returnHeaders)
+                                  Response& resp)
     {
         // Check that response is OK.
         boost::system::error_code error = boost::asio::error::host_not_found; 
@@ -1262,8 +1229,6 @@ namespace netlib
         std::string header;
         while (std::getline(response_stream, header) && header != "\r") {
             std::cout << header << "\n";
-            returnHeaders += header;
-            returnHeaders += "\n";
             int pos = header.find("transfer-encoding:");
             if(pos != std::string::npos){
                 if(header.find("chunked") != std::string::npos)
@@ -1311,8 +1276,7 @@ namespace netlib
 
     static int InterpretResponse( boost::asio::streambuf& response, 
                                   tcp::socket& socket, 
-                                  Response& resp,
-                                  std::string& returnHeaders)
+                                  Response& resp)
     {
         // Check that response is OK.
         boost::system::error_code error = boost::asio::error::host_not_found; 
@@ -1329,11 +1293,13 @@ namespace netlib
 
         resp.code = status_code;
 
-        if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+        {
             std::cout << "Invalid response\n";
             return 1;
         }
-        if (status_code != 200) {
+        if (status_code != 200)
+        {
             std::cout << "Response returned with status code " << status_code << "\n";
             return 1;
         }
@@ -1342,48 +1308,24 @@ namespace netlib
         boost::asio::read_until(socket, response, "\r\n\r\n");
 
         // Process the response headers.
-        bool bChunked = false;
         std::string header;
-        while (std::getline(response_stream, header) && header != "\r") {
+        while (std::getline(response_stream, header) && header != "\r")
             std::cout << header << "\n";
-            returnHeaders += header;
-            returnHeaders += "\n";
-            int pos = header.find("transfer-encoding:");
-            if(pos != std::string::npos){
-                if(header.find("chunked") != std::string::npos)
-                    bChunked = true;
-            }
-        }
+        std::cout << "\n";
 
-        std::string output_buffer;
         // Write whatever content we already have to output.
-        if (response.size() > 0) {
-            std::ostringstream strbuf;
-            strbuf << &response;
-            output_buffer = strbuf.str();
-        }
-
-        std::cout<<" reading til end of file " << std::endl;
-        // Read until EOF, writing data to output as we go.
-        //boost::system::error_code error;
-        while (boost::asio::read( socket, 
-                                  response,
-                                  boost::asio::transfer_at_least(1), 
-                                  error))
+        if (response.size() > 0)
         {
             std::ostringstream strbuf;
             strbuf << &response;
-            output_buffer += strbuf.str();
+            resp.body = strbuf.str();
+            std::cout << &response;
         }
-
-        std::string dechunked;
-        if(bChunked){
-            DeChunkString(output_buffer, dechunked);
-            output_buffer = dechunked;
-        }
-
-        resp.body = output_buffer;
-
+        // Read until EOF, writing data to output as we go.
+        //boost::system::error_code error;
+        while (boost::asio::read(socket, response,
+            boost::asio::transfer_at_least(1), error))
+        std::cout << &response;
         //if (error != boost::asio::error::eof)
         if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
             throw boost::system::system_error(error);
@@ -1397,11 +1339,8 @@ namespace netlib
                                     const AccessToken* pAt,
                                     std::ostream& requeststream)
     {
-        std::string protocol, host, path;
-        ExtractHostAndPath( url, 
-                            protocol, 
-                            host, 
-                            path);
+        std::string host, path;
+        ExtractHostAndPath(url, host, path);
 
         std::string authheader;
         if(pAt)
@@ -1533,8 +1472,8 @@ namespace netlib
         try {
             std::cout<<"URL : " << url << std::endl;
             // Parse the url, separate the root from the path
-            std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            std::string host, path;
+            ExtractHostAndPath(url, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -1722,8 +1661,7 @@ namespace netlib
             std::cout<<" getting response " << std::endl;
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
-            std::string returnheaders;
-            status = InterpretResponse(response, ssl_sock, resp, returnheaders);
+            InterpretResponse(response, ssl_sock, resp);
         }
         catch (std::exception& e) {
             //std::cout << "Exception: " << e.what() << "\n";

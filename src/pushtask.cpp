@@ -430,8 +430,8 @@ int PushTask::ProcessFile( const std::string& requestType,
 {
     int status = ret::A_OK;
 
-    std::string host, path;
-    netlib::ExtractHostAndPath(url, host, path);
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(url, protocol, host, path);
             
     boost::asio::io_service io_service; 
     tcp::socket socket(io_service); 
@@ -614,7 +614,8 @@ int PushTask::ProcessFile( const std::string& requestType,
 
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
-            netlib::InterpretResponse(response, ssl_sock, resp);
+            std::string responseheaders;
+            netlib::InterpretResponse(response, ssl_sock, resp, responseheaders);
         }
         else {
             status = ret::A_FAIL_OPEN_FILE;

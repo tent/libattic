@@ -482,7 +482,11 @@ namespace conops
         int status = ret::A_OK;
 
         Response response;
-        HttpHead( entityurl, NULL, response);
+        std::cout<<" calling ... " << std::endl;
+        netlib::HttpHead( entityurl, NULL, NULL, response);
+
+        std::cout<<" RESPONSE : " << response.code << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
     
         status = ExtractProfile(entityurl, response, entOut);
         return status;

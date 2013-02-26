@@ -38,16 +38,22 @@ int EntityManager::Shutdown()
 
 int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
 {
+    std::cout<< " discover " << std::endl;
     int status = ret::A_OK;
     status = conops::DiscoverWithAuth(entityurl, at, entOut);
 
+    std::cout<< " discover " << std::endl;
+
     if(status == ret::A_OK)
     {
+    std::cout<< " discover " << std::endl;
         // Grab entity api root etc
         RetrieveEntityProfiles(entOut, at);
         
+    std::cout<< " discover " << std::endl;
         // Set Api root
         Profile* pProf = entOut.GetActiveProfile();
+    std::cout<< " discover " << std::endl;
         if(pProf)
         {
             std::string apiroot;

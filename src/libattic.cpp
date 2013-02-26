@@ -1041,9 +1041,12 @@ void GetEntityFilepath(std::string& out)
 
 int LoadEntity(bool override)
 {
+    std::cout<< " here " << std::endl;
     std::string entpath;
     GetEntityFilepath(entpath);
     int status = g_Entity.LoadFromFile(entpath);
+
+    std::cout<< " here " << std::endl;
  
     
     if(status != ret::A_OK)// || override)
@@ -1051,12 +1054,15 @@ int LoadEntity(bool override)
         if(override)
             g_Entity.Reset();
 
+    std::cout<< " here " << std::endl;
         // Load Entity
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
+    std::cout<< " here " << std::endl;
         status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
 
+    std::cout<< " here " << std::endl;
         if(status == ret::A_OK)
             g_Entity.WriteToFile(entpath);
         else
