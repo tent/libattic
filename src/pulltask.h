@@ -12,7 +12,7 @@ class PullTask: public TentTask
 {
     int GetChunkPost(FileInfo* fi, Response& responseOut);
 
-    int PullFileNew(const std::string& filepath);
+    int PullFile(const std::string& filepath);
     int RetreiveFile( const std::string filepath, 
                       const std::string postpath, 
                       const Credentials& fileCred,

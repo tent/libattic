@@ -50,11 +50,65 @@ void PullTask::RunTask()
 {
     std::string filepath;
     GetFilepath(filepath);
-    //int status = PullFile(filepath);
-    int status = PullFileNew(filepath);
+    int status = PullFile(filepath);
 
     Callback(status, NULL);
     SetFinishedState();
+}
+
+int PullTask::PullFile(const std::string& filepath)
+{
+    int status = ret::A_OK;
+
+    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
+
+    if(fi) {
+        Credentials fileCred;
+        status = RetreiveFileCredentials(fi, fileCred);
+
+        std::string chunkpostid;
+        fi->GetChunkPostID(chunkpostid);
+        if(status == ret::A_OK) {
+            if(!chunkpostid.empty()) {
+                // Construct Post URL
+                std::string posturl;
+                ConstructPostUrl(posturl);
+
+                std::string chunkposturl = posturl;
+                utils::CheckUrlAndAppendTrailingSlash(chunkposturl);
+                chunkposturl += chunkpostid;
+
+                Response response;
+                status = GetChunkPost(fi, response);
+
+                if(status == ret::A_OK) {
+                    if(response.code == 200) {
+                        Post p;
+                        JsonSerializer::DeserializeObject(&p, response.body);
+                        status = RetreiveFile( filepath, 
+                                               chunkposturl, 
+                                               fileCred, 
+                                               p, 
+                                               fi);
+                    }
+                    else {
+                        status = ret::A_FAIL_NON_200;
+                    }
+                }
+            }
+            else {
+                status = ret::A_FAIL_INVALID_POST_ID;
+            }
+        }
+        else {
+            status = ret::A_FAIL_NO_CREDENTIALS;
+        }
+    }
+    else {
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
+    }
+
+    return status;
 }
 
 int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
@@ -106,61 +160,6 @@ int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
     }
     else {
         status = ret::A_FAIL_INVALID_PTR;
-    }
-
-    return status;
-}
-
-int PullTask::PullFileNew(const std::string& filepath)
-{
-    int status = ret::A_OK;
-
-    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
-
-    if(fi) {
-        Credentials fileCred;
-        status = RetreiveFileCredentials(fi, fileCred);
-
-        std::string chunkpostid;
-        fi->GetChunkPostID(chunkpostid);
-        if(status == ret::A_OK) {
-            if(!chunkpostid.empty()) {
-                // Construct Post URL
-                std::string posturl;
-                ConstructPostUrl(posturl);
-
-                std::string chunkposturl = posturl;
-                utils::CheckUrlAndAppendTrailingSlash(chunkposturl);
-                chunkposturl += chunkpostid;
-
-                Response response;
-                status = GetChunkPost(fi, response);
-
-                if(status == ret::A_OK) {
-                    if(response.code == 200) {
-                        Post p;
-                        JsonSerializer::DeserializeObject(&p, response.body);
-                        status = RetreiveFile( filepath, 
-                                               chunkposturl, 
-                                               fileCred, 
-                                               p, 
-                                               fi);
-                    }
-                    else {
-                        status = ret::A_FAIL_NON_200;
-                    }
-                }
-            }
-            else {
-                status = ret::A_FAIL_INVALID_POST_ID;
-            }
-        }
-        else {
-            status = ret::A_FAIL_NO_CREDENTIALS;
-        }
-    }
-    else {
-        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
     }
 
     return status;
@@ -327,9 +326,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
 int PullTask::GetDownloadSpeed()
 {
     int speed = -1;
-    if(GetConnectionHandle())
-        speed = GetConnectionHandle()->GetDownloadSpeed();
+
     return speed;
 }
-
 
