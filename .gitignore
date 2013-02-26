@@ -42,4 +42,3 @@ Makefile
 # other
 *.pyc # generated during the build process
 CMakefiles
-build
