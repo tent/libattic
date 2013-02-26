@@ -32,6 +32,7 @@ void SyncBuffer::Startup(const std::string& directory)
                 m_Ofs.open(hold.c_str(), std::ofstream::out | std::ofstream::app);
                 if(m_Ofs.is_open())
                 {
+                    std::cout<<" opened log file " << std::endl;
                     m_Filepath = filepath;
                     // Check size
 
@@ -48,6 +49,14 @@ void SyncBuffer::Startup(const std::string& directory)
                 //std::cout<<" filepath : " << filepath << std::endl;
             }
 
+            if(namecount >= 20) { 
+                std::cout<<" reached log size limit appending to last log.. " << std::endl;
+                m_Ofs.open(hold.c_str(), std::ofstream::out | std::ofstream::app);
+                if(m_Ofs.is_open()) {
+                    std::cout<<" opened log file " << std::endl;
+                    m_Filepath = filepath;
+                }
+            }
         }
     }
 }
@@ -57,8 +66,7 @@ void SyncBuffer::Shutdown()
     if(m_Ofs.is_open())
         m_Ofs.close();
 
-    if(m_pInstance)
-    {
+    if(m_pInstance) {
         delete m_pInstance;
         m_pInstance = NULL;
     }
@@ -74,8 +82,7 @@ SyncBuffer* SyncBuffer::GetInstance()
 void SyncBuffer::PushToBuffer(std::ostringstream& os)
 {
     Lock();
-    if(m_Ofs.is_open())
-    {
+    if(m_Ofs.is_open()) {
         m_Ofs << os.str() << std::endl;
         os.flush();
     }
@@ -106,6 +113,8 @@ void Logger::Log(const Logger::LogLevel level, const std::string& input)
     os << " - " << ToString(level) << " : " << input ;
     if(m_pSyncBuffer)
         m_pSyncBuffer->PushToBuffer(os);
+
+    std::cout<<" logging out ... " << std::endl;
 }
 
 void Logger::PrintBuffer()
