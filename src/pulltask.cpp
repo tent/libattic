@@ -264,7 +264,8 @@ int PullTask::RetreiveFile( const std::string filepath,
     return status;
 }
 
-int PullTask::RetrieveAttachment(const std::string& url, const AccessToken* at, std::string& outBuffer)           
+int PullTask::RetrieveAttachment( const std::string& url, 
+                                  const AccessToken* at, std::string& outBuffer)           
 {                                                                                            
     int status = ret::A_OK;
 
@@ -287,59 +288,6 @@ int PullTask::RetrieveAttachment(const std::string& url, const AccessToken* at, 
     return status;                                                                        
 }
 
-int PullTask::PullFile(const std::string& filepath)
-{                                                                                                
-    //std::string filename;                                                                        
-    //utils::ExtractFileName(filepath, filename);                                                  
-
-    if(!GetFileManager())                                                                          
-        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;                                     
-
-    std::cout<<" QUERY FILEPATH : " << filepath << std::endl;
-    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
-
-    if(!fi) {                                                                                            
-        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
-    }                                                                                            
-
-    // Construct Post URL                                                                        
-    std::string posturl;
-    ConstructPostUrl(posturl);
-
-    std::string postid;                                                                          
-    fi->GetChunkPostID(postid);
-    posturl += "/" + postid;                                                                          
-
-    int status = ret::A_OK;
-    Response response;                                                                        
-    status = GetChunkPost(fi, response);
-
-    if(status == ret::A_OK) {
-        /*
-        std::cout<<" Chunk post response : " << response.code << std::endl;
-        std::cout<<" Chunk post body : " << response.body << std::endl;
-        */
-
-        if(response.code == 200) {
-            // Deserialize response into post
-            Post resp;
-            JsonSerializer::DeserializeObject(&resp, response.body);
-            GetAttachmentsFromPost(posturl, resp);
-
-            // Construct File                                                                        
-            GetFileManager()->Lock();
-            GetFileManager()->ConstructFileNew(filepath);
-            GetFileManager()->Unlock();
-        }
-        else
-        {
-            status = ret::A_FAIL_NON_200;
-        }
-    }
-
-    return status;
-}
-
 int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
 {
     int status = ret::A_OK;
@@ -351,7 +299,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
 
         std::string postid;                                                            
         fi->GetChunkPostID(postid);
-        posturl += "/" + postid;                                                                          
+        posturl += "/" + postid;
 
         std::cout<<" Post path : " << posturl << std::endl;
         // Get Post                                                                                  
@@ -375,67 +323,6 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
 
     return status;
 }
-
-int PullTask::GetAttachmentsFromPost(const std::string postpath, Post& post)
-{
-    int status = ret::A_OK;
-
-    // Construct list of attachments                                                             
-    Post::AttachmentVec* av = post.GetAttachments();                                             
-    Post::AttachmentVec::iterator itr = av->begin();                                             
-    std::string attachmentpath, outpath;
-
-    int count = 0;
-
-    for(;itr != av->end(); itr++) {
-        // Construct attachment path
-        attachmentpath.clear();
-        attachmentpath += postpath;
-        attachmentpath.append("/attachments/");
-
-        char szCount[256]={'\0'};
-        snprintf(szCount, 256, "%d", count);
-
-        attachmentpath += (*itr).Name;
-
-        outpath.clear();
-        GetTempDirectory(outpath);
-
-        utils::CheckUrlAndAppendTrailingSlash(outpath);
-        outpath += (*itr).Name;
-
-        // Request attachment                                                                
-        GetFileAndWriteOut(attachmentpath, outpath);
-        count++;
-    }                                                                                        
-    
-    return status;
-}
-
-int PullTask::GetFileAndWriteOut(const std::string& url, const std::string &filepath)           
-{                                                                                            
-    int status = ret::A_OK;
-
-    Response response;
-    AccessToken* at = GetAccessToken();
-
-    if(at)
-    {
-        //status = conops::HttpGetAttachmentAndWriteOut(url, NULL, *at, filepath, response);
-        status = conops::HttpGetAttachmentAndWriteOut( url, 
-                                                       NULL, 
-                                                       *at, 
-                                                       filepath, 
-                                                       GetConnectionHandle(), 
-                                                       response);
-    }
-    else
-    {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
-
-    return status;                                                                        
-}                                                                                            
 
 int PullTask::GetDownloadSpeed()
 {
