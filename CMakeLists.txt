@@ -86,11 +86,14 @@ include_directories(${libattic_INCLUDE_DIRS})
 # Boost
 include(ExternalProject)
 ExternalProject_Add(boost
-  URL "https://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2/download"
+  URL "http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2/download"
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND <SOURCE_DIR>/bootstrap.sh
-  BUILD_COMMAND <SOURCE_DIR>/b2 install -j4 link=static --with-thread --with-system --with-test --with-regex --with-date_time --with-filesystem --with-program_options --prefix=<INSTALL_DIR>
+  BUILD_COMMAND <SOURCE_DIR>/b2 install -j4 link=static --with-thread --with-system --prefix=<INSTALL_DIR>
+  INSTALL_COMMAND ""
+#--with-test --with-regex --with-date_time --with-filesystem --with-program_options 
 )
+
 
 ExternalProject_Get_Property(boost INSTALL_DIR)
 set(BOOST_DIR ${INSTALL_DIR})
@@ -130,5 +133,4 @@ if(ATTIC_BINARY)
 
 endif(ATTIC_BINARY)
 
-add_dependencies(attic boost cpp-netlib)
-add_dependencies(cpp-netlib boost)
+add_dependencies(attic boost)
