@@ -39,8 +39,6 @@ INCLUDE_DIRECTORIES(vendor/jsoncpp/include)
 INCLUDE_DIRECTORIES(vendor/sqlite)
 INCLUDE_DIRECTORIES(vendor/scrypt)
 INCLUDE_DIRECTORIES(vendor/base64)
-INCLUDE_DIRECTORIES(vendor/cpp-netlib-0.9.4)
-INCLUDE_DIRECTORIES(vendor/boost_1_53_0)
 
 if(ATTIC_BINARY)
     # This is where binary files will go
@@ -96,6 +94,8 @@ ExternalProject_Add(boost
 
 ExternalProject_Get_Property(boost INSTALL_DIR)
 set(BOOST_DIR ${INSTALL_DIR})
+INCLUDE_DIRECTORIES(${BOOST_DIR}/include)
+
 
 add_library(boost_thread STATIC IMPORTED)
 set_property(TARGET boost_thread PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_thread.a)
@@ -103,36 +103,18 @@ set_property(TARGET boost_thread PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/lib
 add_library(boost_system STATIC IMPORTED)
 set_property(TARGET boost_system PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_system.a)
 
-# cpp-netlib
-ExternalProject_Add(cpp-netlib
-  GIT_REPOSITORY git://github.com/cpp-netlib/cpp-netlib.git
-  CMAKE_ARGS -DBOOST_ROOT:PATH=${BOOST_DIR} -DCPP-NETLIB_BUILD_TESTS:BOOL=OFF -DCPP-NETLIB_BUILD_EXAMPLES:BOOL=OFF
-  INSTALL_COMMAND ""
-)
-
-ExternalProject_Get_Property(cpp-netlib BINARY_DIR)
-set(NETLIB_DIR ${BINARY_DIR})
-
-add_library(netlib_uri STATIC IMPORTED)
-set_property(TARGET netlib_uri PROPERTY IMPORTED_LOCATION ${NETLIB_DIR}/uri/src/libcppnetlib-uri.a)
-
-add_library(netlib_http_client_connections STATIC IMPORTED)
-set_property(TARGET netlib_http_client_connections PROPERTY IMPORTED_LOCATION ${NETLIB_DIR}/http/src/libcppnetlib-http-client-connections.a)
-
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
     #link lib
     target_link_libraries(attic
                           boost_thread
                           boost_system
-                          netlib_uri
-                          netlib_http_client_connections
                           curl
                           pthread
                           ssl)
 
     include(mergestaticlibs)
-    merge_static_libs(atticlib attic boost_thread boost_system netlib_uri netlib_http_client_connections)
+    merge_static_libs(atticlib attic boost_thread boost_system)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
@@ -141,8 +123,6 @@ if(ATTIC_BINARY)
     target_link_libraries(attic
                           boost_thread
                           boost_system
-                          netlib_uri
-                          netlib_http_client_connections
                           curl
                           pthread
                           ssl
