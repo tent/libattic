@@ -13,13 +13,15 @@ set (CMAKE_C_COMPILER clang)
 
 set(CMAKE_CXX_FLAGS "-g")
 
+
 # Build dependencies
 # Build gtest libs
 
 project(libattic)
 add_subdirectory("vendor/jsoncpp")
 add_subdirectory("vendor/cryptopp")
-#add_subdirectory("vendor/cpp-netlib-0.9.4")
+
+set(CMAKE_MODULE_PATH ${libattic_SOURCE_DIR}/cmake)
 
 if(ATTIC_BINARY)
     message(STATUS " including googletest includes")
@@ -83,70 +85,70 @@ include_directories(${libattic_INCLUDE_DIRS})
 #add_library(imp_gtest STATIC IMPORTED)
 #set_property(TARGET imp_gtest PROPERTY IMPORTED_LOCATION ${gtest_lib})
 
-# Build boost libs
-if(EXISTS ./vendor/boost_1_53_0/bin.v2/)
-else()
-    execute_process(WORKING_DIRECTORY ./vendor/boost_1_53_0
-                    COMMAND ./bootstrap.sh
-                    COMMAND ./b2 link=static
-                    RESULT_VARIABLE ret_var)
-endif()
+# Boost
+include(ExternalProject)
+ExternalProject_Add(boost
+  URL "https://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2/download"
+  BUILD_IN_SOURCE 1
+  CONFIGURE_COMMAND <SOURCE_DIR>/bootstrap.sh
+  BUILD_COMMAND <SOURCE_DIR>/b2 install -j4 link=static --with-thread --with-system --with-test --with-regex --with-date_time --with-filesystem --with-program_options --prefix=<INSTALL_DIR>
+)
 
-# Add boost threading
-file(GLOB_RECURSE libboost_thread "vendor/boost_1_53_0/bin.v2/*libboost_thread.a")
-add_library(imp_boost_thread STATIC IMPORTED)
-set_property(TARGET imp_boost_thread PROPERTY IMPORTED_LOCATION ${libboost_thread})
+ExternalProject_Get_Property(boost INSTALL_DIR)
+set(BOOST_DIR ${INSTALL_DIR})
 
-# Add boost system
-file(GLOB_RECURSE libboost_system "vendor/boost_1_53_0/bin.v2/*libboost_system.a")
-add_library(imp_boost_system STATIC IMPORTED)
-set_property(TARGET imp_boost_system PROPERTY IMPORTED_LOCATION ${libboost_system})
+add_library(boost_thread STATIC IMPORTED)
+set_property(TARGET boost_thread PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_thread.a)
 
-# Build cpp-netlib
-# Add cpp-netlib
-if(EXISTS ./vendor/cpp-netlib-0.9.4/libs/network/src/libcppnetlib-uri.a)
-else()
-execute_process(WORKING_DIRECTORY ./vendor/cpp-netlib-0.9.4
-                    COMMAND cmake .
-                    COMMAND make
-                    RESULT_VARIABLE ret_var)
-message("IGNORE CPP-NETLIB ERRORS")
-endif()
+add_library(boost_system STATIC IMPORTED)
+set_property(TARGET boost_system PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_system.a)
 
-file(GLOB_RECURSE libcppnetlib-uri "/vendor/cpp-netlib-0.9.4/libs/network/src/libcppnetlib-uri.a")
-add_library(imp_cppnet_uri STATIC IMPORTED)
-set_property(TARGET imp_cppnet_uri PROPERTY IMPORTED_LOCATION ${libcppnetlib-uri})
+# cpp-netlib
+ExternalProject_Add(cpp-netlib
+  GIT_REPOSITORY git://github.com/cpp-netlib/cpp-netlib.git
+  CMAKE_ARGS -DBOOST_ROOT:PATH=${BOOST_DIR} -DCPP-NETLIB_BUILD_TESTS:BOOL=OFF -DCPP-NETLIB_BUILD_EXAMPLES:BOOL=OFF
+  INSTALL_COMMAND ""
+)
 
+ExternalProject_Get_Property(cpp-netlib BINARY_DIR)
+set(NETLIB_DIR ${BINARY_DIR})
 
-file(GLOB_RECURSE libcppnetlib-connections "/vendor/cpp-netlib-0.9.4/libs/network/src/libcppnetlib-client-connections.a")
-add_library(imp_cppnet_client_connections STATIC IMPORTED)
-set_property(TARGET imp_cppnet_client_connections PROPERTY IMPORTED_LOCATION ${libcppnetlib-connections})
+add_library(netlib_uri STATIC IMPORTED)
+set_property(TARGET netlib_uri PROPERTY IMPORTED_LOCATION ${NETLIB_DIR}/uri/src/libcppnetlib-uri.a)
+
+add_library(netlib_http_client_connections STATIC IMPORTED)
+set_property(TARGET netlib_http_client_connections PROPERTY IMPORTED_LOCATION ${NETLIB_DIR}/http/src/libcppnetlib-http-client-connections.a)
 
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
     #link lib
-    target_link_libraries( attic 
-                           imp_boost_thread
-                           imp_boost_system
-                           imp_cppnet_uri
-                           imp_cppnet_client_connections
-                           curl 
-                           pthread 
-                           ssl)
+    target_link_libraries(attic
+                          boost_thread
+                          boost_system
+                          netlib_uri
+                          netlib_http_client_connections
+                          curl
+                          pthread
+                          ssl)
+
+    include(mergestaticlibs)
+    merge_static_libs(atticlib attic boost_thread boost_system netlib_uri netlib_http_client_connections)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
-    add_executable(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json>) 
+    add_executable(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json>)
     #link libs
-    target_link_libraries( attic 
-                           imp_boost_thread
-                           imp_boost_system
-                           imp_cppnet_uri
-                           imp_cppnet_client_connections
-                           curl 
-                           pthread 
-                           ssl
-                           gtest) #pulls gtest from google subdirectory
+    target_link_libraries(attic
+                          boost_thread
+                          boost_system
+                          netlib_uri
+                          netlib_http_client_connections
+                          curl
+                          pthread
+                          ssl
+                          gtest) #pulls gtest from google subdirectory
 
 endif(ATTIC_BINARY)
 
+add_dependencies(attic boost cpp-netlib)
+add_dependencies(cpp-netlib boost)
