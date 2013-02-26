@@ -86,9 +86,7 @@ int DeleteTask::DeleteFile(const std::string& filename)
     status = DeletePost(postid);
     
     // Remove from Manifest
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
     status = GetFileManager()->RemoveFile(filename);
-    GetFileManager()->Unlock();
 
     return status; 
 }
