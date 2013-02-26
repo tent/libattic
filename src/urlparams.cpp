@@ -1,8 +1,6 @@
 #include "urlparams.h"
 
 #include <iostream>
-#include <boost/network/uri/encode.hpp>
-
 
 void UrlParams::AddValue(const std::string& key, const std::string &value)
 {
@@ -51,7 +49,6 @@ void UrlParams::SerializeToString(std::string &out) const
 }
 
 
-#include <boost/network/uri/encode.hpp>
 void UrlParams::SerializeAndEncodeToString(CURL* pCurl, std::string &out) const
 {
     if(!pCurl)
@@ -87,7 +84,7 @@ void UrlParams::SerializeAndEncodeToString(CURL* pCurl, std::string &out) const
     }   
 
 }
-
+// TODO :: FIX THIS, CURRENTLY NO URLENCODING
 void UrlParams::SerializeAndEncodeToString(std::string &out) const
 {
     out.append("?");
@@ -112,7 +109,7 @@ void UrlParams::SerializeAndEncodeToString(std::string &out) const
             hold.append(*valItr);
             // TODO :: make sure this isn't leaking
             //char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size()); 
-            boost::network::uri::encoded(hold);
+//            boost::network::uri::encoded(hold);
             out += hold;
             
             if(*valItr != itr->second.back())

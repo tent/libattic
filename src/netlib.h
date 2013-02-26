@@ -9,9 +9,6 @@
 #include <list>
 #include <string.h>
 #include <stdio.h>
-//#include <boost/mime.hpp>
-#include <boost/network/uri/encode.hpp>
-#include <boost/network/protocol/http/client.hpp>
 
 #include <hex.h>        // cryptopp
 #include <hmac.h>       // cryptopp
@@ -30,49 +27,8 @@
 #include <boost/foreach.hpp>
 using boost::asio::ip::tcp;
 
-
-using namespace boost::network;
-
-
 namespace netlib
 {
-    struct body_handler {
-        explicit body_handler(std::string & body)
-                                : body(body) {}
-
-        BOOST_NETWORK_HTTP_BODY_CALLBACK(operator(), range, error) {
-            std::cout<< " BODY HANDLER HIT BRAH : " << std::endl;
-            body.append(boost::begin(range), boost::end(range));
-
-            std::cout<<" just appended to body? : " << body << std::endl;
-        }
-
-        std::string & body;
-    };
-
-/*
-    BOOST_NETWORK_HTTP_BODY_CALLBACK(print_body, range, error) {
-        std::cout<< "BODY CALLBACK HIT : " << std::endl;
-        if (!error){
-            std::cout << "Received " << boost::distance(range) << "bytes." << std::endl;
-            std::string b;
-            b.append(boost::begin(range), boost::end(range));
-            std::cout<<" what i received : " << b << std::endl;
-        }
-        else
-            std::cout << "Error: " << error << std::endl;
-    }
-    */
-
-/*
-    struct my_traits {
-        typedef std::string string_type;
-        //  typedef std::pair < std::string, string_type > header_type;
-        typedef std::string body_type;
-    };
-
-    typedef boost::mime::basic_mime<my_traits>  mime_part;
-    */
     // Forward Declarations ******************************************************
     static int HttpGet( const std::string& url, 
                         const UrlParams* pParams,
@@ -102,10 +58,12 @@ namespace netlib
 
     static void GenerateHmacSha256(std::string &out);
 
+    /*
     static void BuildRequest( const std::string& url,
                               const std::string& requestMethod,
                               const AccessToken* at,
                               http::client::request& reqOut);
+
 
     static void BuildAttachmentRequest( const std::string& url,
                                         const std::string& requestMethod,
@@ -116,6 +74,7 @@ namespace netlib
                                        const std::string& requestMethod,
                                        const AccessToken* at,
                                        http::client::request& reqOut);
+                              */
 
     static void BuildAuthHeader( const std::string &url, 
                                  const std::string &requestMethod, 
@@ -147,6 +106,7 @@ namespace netlib
                                   tcp::socket& socket, 
                                   Response& resp);
 
+    /*
     static bool CheckForChunkedTransferEncoding(http::client::response& response)
     {
         typedef http::basic_client<http::tags::http_default_8bit_tcp_resolve,1, 1> http_client;
@@ -166,6 +126,7 @@ namespace netlib
 
         return false;
     }
+    */
 
     static void DeChunkString(std::string& in, std::string& out)
     {
@@ -197,6 +158,7 @@ namespace netlib
     {
         int sstatus = ret::A_OK;
 
+        /*
         std::string uri = url;
         EncodeAndAppendUrlParams(pParams, uri);
 
@@ -225,6 +187,7 @@ namespace netlib
 
         out.code = status(response);
         out.body = respbody;
+        */
     
         return sstatus;
     }
@@ -242,6 +205,7 @@ namespace netlib
 
         int sstatus = ret::A_OK;
 
+        /*
         std::string uri = url;
         EncodeAndAppendUrlParams(pParams, uri);
 
@@ -270,6 +234,7 @@ namespace netlib
 
         out.code = status(response);
         out.body = respbody;
+        */
     
         return sstatus;
     }
@@ -345,6 +310,7 @@ namespace netlib
     {
         int sstatus = ret::A_OK;
 
+        /*
         std::string uri = url;
         EncodeAndAppendUrlParams(pParams, uri);
 
@@ -381,6 +347,7 @@ namespace netlib
 
         out.code = status(response);
         std::cout<< " outgoing body : " << out.body << std::endl;
+        */
     
         return sstatus;
     }
@@ -393,6 +360,7 @@ namespace netlib
     {
         int sstatus = ret::A_OK;
 
+        /*
         std::string uri = url;
         EncodeAndAppendUrlParams(pParams, uri);
 
@@ -423,6 +391,7 @@ namespace netlib
 
         out.code = status(response);
         out.body = respbody;
+        */
 
         return sstatus;
     }
@@ -435,6 +404,7 @@ namespace netlib
     {
         int sstatus = ret::A_OK;
 
+        /*
         std::string uri = url;
         EncodeAndAppendUrlParams(pParams, uri);
 
@@ -464,65 +434,7 @@ namespace netlib
 
         out.code = status(response);
         out.body = respbody;
-
-        return sstatus;
-    }
-
-    static int HttpMultipartRequest( const std::string& requestType, 
-                                     const std::string& url, 
-                                     const UrlParams* pParams,
-                                     const std::string& requestbody,
-                                     const AccessToken* at, 
-                                     Response& out)
-    {
-        int sstatus = ret::A_OK;
-
-        if(requestType.empty())
-            return ret::A_FAIL_EMPTY_STRING;
-
-        std::string uri = url;
-        EncodeAndAppendUrlParams(pParams, uri);
-
-        http::client::request request;
-        BuildMultipartRequest( url,
-                               requestType,
-                               at,
-                               request);
-
-
-/*
-        boost::shared_ptr<mime_part> part ( new mime_part ( "text", "plain" ));
-        part->set_body ( "This is a test.....\n", 20 );
-        part->append_phrase_to_content_type ( "charset", "usascii" );
-            std::cout << "PART : " << part << std::endl;
-
-        mime_part mp( "multipart", "multiple" );
-        mp.set_body("This is the body of a multipart\n", 32);
-        mp.append_part(part);
-
-        std::ostringstream os;
-        os << mp;
-        std::cout<< mp << std::endl;
         */
-
-        //request << os.str();
-
-        http::client client;
-        http::client::response response;
-        if(requestType == "POST")
-            //response = client.post(request, requestbody, http::_body_handler=print_body);
-            response = client.post(request, requestbody);
-        else
-            //response = client.put(request, requestbody, http::_body_handler=print_body);
-            response = client.put(request, requestbody);
-
-        int st = status(response);
-
-        std::cout << " STATUS : " << status(response) << std::endl;
-        std::cout << " BODY : " << body(response) << std::endl;
-
-        out.code = status(response);
-        out.body = body(response);
 
         return sstatus;
     }
@@ -539,6 +451,7 @@ namespace netlib
         }
     }
 
+    /*
     static void BuildRequest( const std::string& url,
                               const std::string& requestMethod,
                               const AccessToken* at,
@@ -616,6 +529,7 @@ namespace netlib
         if(!authheader.empty())
             reqOut << header("Authorization: " , authheader);
     }
+*/
 
     static int HttpAsioGet( const std::string& url,
                              const AccessToken* at)
