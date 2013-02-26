@@ -58,9 +58,7 @@ void PushTask::RunTask()
     std::string filepath;
     GetFilepath(filepath);
 
-    //int status = PushFile(filepath);
-
-    int status = PushFileNew(filepath);
+    int status = PushFile(filepath);
 
     std::cout<<" finishing push task ... " << std::endl;
     
@@ -71,202 +69,160 @@ void PushTask::RunTask()
 
 int PushTask::PushFile(const std::string& filepath)
 {
-    if(!GetTentApp())
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
-
-    if(!GetFileManager())
-        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-    // Index File
-    std::string filename;
-    utils::ExtractFileName(filepath, filename);
-
-    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);
-
     int status = ret::A_OK;
-    if(!fi)
-    {
-        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        status = GetFileManager()->IndexFileNew(filepath, true, NULL);
-        GetFileManager()->Unlock();
 
-        if(status != ret::A_OK)
-        {
-            return status;
+    // Verify file exists
+    if(utils::CheckFileExists(filepath)) {
+        // Begin the chunking pipeline
+        std::string posturl;
+        ConstructPostUrl(posturl);
+
+        // Retrieve file info if already exists
+        FileInfo* fi = RetrieveFileInfo(filepath);
+        std::string chunkPostId;
+        fi->GetChunkPostID(chunkPostId);
+
+        Credentials fileCredentials;
+        // Initiate Chunk Post request
+        std::string requestType;
+        if(chunkPostId.empty()) {
+            requestType = "POST";
+            // This is a new file
+            // Generate Credentials
+            crypto::GenerateCredentials(fileCredentials);
         }
+        else {
+            requestType = "PUT";
+            utils::CheckUrlAndAppendTrailingSlash(posturl);
+            posturl += chunkPostId;
+            std::string encryptedkey, fileiv; 
 
-        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        fi = GetFileManager()->GetFileInfo(filepath);
-        GetFileManager()->Unlock();
-    }
-    else
-    {
-        // Make sure temporary pieces exist
-        // be able to pass in chosen chunkname
-        while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0);} 
-        status = GetFileManager()->IndexFileNew(filepath, true, fi);
-        GetFileManager()->Unlock();
+            fi->GetEncryptedKey(encryptedkey);
+            fi->GetIv(fileiv);
+            // Decrypt file key
+            Credentials masterCred;
+            MasterKey mKey;
+            GetCredentialsManager()->GetMasterKeyCopy(mKey);
+            std::string mk;
+            mKey.GetMasterKey(mk);
+            masterCred.SetKey(mk);
+            masterCred.SetIv(fileiv);
 
-        if(status != ret::A_OK)
-            return status;
-    }
-
-    if(status == ret::A_OK)
-    {
-        // Create Chunk Post
-        int trycount = 0;
-        for(status = SendChunkPost(fi, filepath, filename); status != ret::A_OK; trycount++)
-        {
-            status = SendChunkPost(fi, filepath, filename);
-            std::cout<<" RETRYING .................................." << std::endl;
-            if(trycount > 2)
-                break;
+            std::string decryptedkey;
+            crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
+            fi->SetFileKey(decryptedkey);
+            std::cout<<" DECRYPTED KEY : " << decryptedkey << std::endl;
+            fi->GetFileCredentials(fileCredentials);
         }
-    }
-
-    if(status == ret::A_OK)
-    {
-        // Send Attic Post
-        int trycount = 0;
-        for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++)
-        {
-            status = SendAtticPost(fi, filepath);
-            std::cout<<" RETRYING .................................." << std::endl;
-            if(trycount > 2)
-                break;
-        }
-    }
-
-    return status;
-}
-
-
-int PushTask::SendChunkPost( FileInfo* fi, 
-                             const std::string& filepath, 
-                             const std::string& filename )
-
-{
-    std::cout<<" SEND CHUNK POST : " << std::endl;
-    int status = ret::A_OK;
-    // Create Chunk Post
-    if(!fi)
-        alog::Log(Logger::DEBUG, "PushTask 144 Invalid file info ");
-
-    std::string chunkPostId;
-    fi->GetChunkPostID(chunkPostId);
-
-    // Get ChunkInfo List
-    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
-
-    // Construct post url
-    // TODO :: abstract this common functionality somewhere else, utils?
-    std::string posturl;
-    ConstructPostUrl(posturl);
-
-    bool post = true;
-    Response response;
-    if(chunkPostId.empty())
-    {
-        ChunkPost p;
-        InitChunkPost(p, *pList);
-        // Post
-        std::string tempdir;
-        GetTempDirectory(tempdir);
-
-        AccessToken* at = GetAccessToken();
-        status = conops::PostFile( posturl, 
-                                   filepath, 
-                                   tempdir, 
-                                   fi,
-                                   &p,
-                                   *at,
-                                   GetConnectionHandle(),
-                                   response);
-
-        std::cout<<" --------------------- " << std::endl;
-    }
-    else
-    {
-        // Put
-        post = false;
-        // Modify Post
-        posturl += "/";
-        posturl += chunkPostId;
-
-        std::cout<< " PUT URL : " << posturl << std::endl;
         
-        unsigned int size = utils::CheckFilesize(filepath);
+        // Check for key
+        if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
+            status = ret::A_FAIL_INVALID_FILE_KEY;
+        }
 
-        ChunkPost p;
-        InitChunkPost(p, *pList);
-
-        std::string tempdir;
-        GetTempDirectory(tempdir);
-
-        AccessToken* at = GetAccessToken();
-        /*
-        status = conops::PutFile( posturl, 
-                                  filepath, 
-                                  tempdir, 
-                                  ConnectionManager::GetInstance(),
+        Response resp;
+        if(status == ret::A_OK) {
+            status = ProcessFile( requestType,
+                                  posturl,
+                                  filepath,
+                                  fileCredentials,
                                   fi,
-                                  &p,
-                                  *at, response);
-                                  */
-        
-        status = conops::PutFile( posturl, 
-                                  filepath, 
-                                  tempdir, 
-                                  fi,
-                                  &p,
-                                  *at,
-                                  GetConnectionHandle(),
-                                  response);
+                                  resp);
+        }
 
-    }
-
-    // Handle Response
-    if(response.code == 200)
-    {
-        std::cout<<" HANDLING SUCCESSFUL RESPONSE : " << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-
-        ChunkPost p;
-        std::cout<<" here .... " <<std::endl;
-        JsonSerializer::DeserializeObject(&p, response.body);
-
-        std::cout<<" here .... " <<std::endl;
-
-        std::string postid;
-        p.GetID(postid);
-
-        if(!postid.empty()) {
-            fi->SetChunkPostID(postid); 
-            fi->SetPostVersion(0); // temporary for now, change later
-            std::cout << " SIZE : " << p.GetAttachments()->size() << std::endl;
-
-            if((*p.GetAttachments()).size()) {
-                std::cout << " Name : " << (*p.GetAttachments())[0].Name << std::endl;
-
-                FileManager* fm = GetFileManager();
-                if(post) {
-                    fm->Lock();
-                    fm->SetFileChunkPostId(filepath, postid);
-                    fm->Unlock();
+        if(status == ret::A_OK) {
+            std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
+            std::cout<< "RESPONSE BODY : " << resp.body << std::endl;
+            if(resp.code == 200) {
+                // On success 
+                FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+                ChunkPost p;
+                // Deserialize basic post data
+                JsonSerializer::DeserializeObject((Post*)&p, resp.body);
+                InitChunkPost(p, *pList);
+                // Setup post url
+                if(chunkPostId.empty()) {
+                    p.GetID(chunkPostId);
+                    if(chunkPostId.empty()) {
+                        status = ret::A_FAIL_INVALID_POST_ID;
+                    }
+                    utils::CheckUrlAndAppendTrailingSlash(posturl);
+                    posturl += chunkPostId;
                 }
-            }
-            else {
-                status = ret::A_FAIL_EMPTY_ATTACHMENTS;
+
+                if(status == ret::A_OK) {
+                    // update chunk post with chunk info metadata
+                    // use non multipart to just update the post body
+                    // leaving existing attachment in-tact
+
+                    std::string bodyBuffer;
+                    JsonSerializer::SerializeObject(&p, bodyBuffer);
+                    
+                    Response metaResp;
+                    AccessToken* at = GetAccessToken();
+                    status = conops::HttpPut( posturl,
+                                              NULL,
+                                              bodyBuffer,
+                                              *at,
+                                              metaResp);
+
+                    std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
+                    std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
+                }
+
+                std::string filename;
+                utils::ExtractFileName(filepath, filename);
+                unsigned int filesize = utils::CheckFilesize(filepath);
+
+                // Encrypt File Key
+                MasterKey mKey;
+                GetCredentialsManager()->GetMasterKeyCopy(mKey);
+
+                std::string mk;
+                mKey.GetMasterKey(mk);
+
+                // Insert File Data
+                fi->SetChunkPostID(chunkPostId);
+                fi->SetFilepath(filepath);
+                fi->SetFilename(filename);
+                fi->SetFileSize(filesize);
+                fi->SetFileCredentials(fileCredentials);
+
+                // Encrypt File Key
+                std::string fileKey, fileIv;
+                fileCredentials.GetKey(fileKey);
+                fileCredentials.GetIv(fileIv);
+
+                Credentials fCred;
+                fCred.SetKey(mk);
+                fCred.SetIv(fileIv);
+
+                std::string encryptedKey;
+                crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+
+                fi->SetIv(fileIv);
+                fi->SetFileKey(fileKey);
+                fi->SetEncryptedKey(encryptedKey);
+
+                // Insert file info to manifest
+                GetFileManager()->InsertToManifest(fi);
+                // create attic file metadata post
+                status = SendAtticPost(fi, filepath);
+                // Send Attic Post
+                int trycount = 0;
+                for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
+                    status = SendAtticPost(fi, filepath);
+                    std::cout<<" RETRYING .................................." << std::endl;
+                    if(trycount > 2)
+                        break;
+                }
+
             }
         }
     }
-    else
-    {
-        status = ret::A_FAIL_NON_200;
+    else {
+        status = ret::A_FAIL_OPEN_FILE;
     }
-
-    std::cout<< " RESPONSE : " << response.code << std::endl;
-    std::cout<< " BODY : " << response.body << std::endl;
 
     return status;
 }
@@ -479,165 +435,7 @@ FileInfo* PushTask::RetrieveFileInfo(const std::string& filepath)
     return fi;
 }
 
-int PushTask::PushFileNew(const std::string& filepath)
-{
-    int status = ret::A_OK;
 
-    // Verify file exists
-    if(utils::CheckFileExists(filepath)) {
-        // Begin the chunking pipeline
-        std::string posturl;
-        ConstructPostUrl(posturl);
-
-        // Retrieve file info if already exists
-        FileInfo* fi = RetrieveFileInfo(filepath);  // TODO :: right now querying for file info is useless
-        std::string chunkPostId;
-        fi->GetChunkPostID(chunkPostId);
-
-        Credentials fileCredentials;
-        // Initiate Chunk Post request
-        std::string requestType;
-        if(chunkPostId.empty()) {
-            requestType = "POST";
-            // This is a new file
-            // Generate Credentials
-            crypto::GenerateCredentials(fileCredentials);
-        }
-        else {
-            requestType = "PUT";
-            utils::CheckUrlAndAppendTrailingSlash(posturl);
-            posturl += chunkPostId;
-            std::string encryptedkey, fileiv; 
-
-            fi->GetEncryptedKey(encryptedkey);
-            fi->GetIv(fileiv);
-            // Decrypt file key
-            Credentials masterCred;
-            MasterKey mKey;
-            GetCredentialsManager()->GetMasterKeyCopy(mKey);
-            std::string mk;
-            mKey.GetMasterKey(mk);
-            masterCred.SetKey(mk);
-            masterCred.SetIv(fileiv);
-
-            std::string decryptedkey;
-            crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
-            fi->SetFileKey(decryptedkey);
-            std::cout<<" DECRYPTED KEY : " << decryptedkey << std::endl;
-            fi->GetFileCredentials(fileCredentials);
-        }
-        
-        // Check for key
-        if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
-            status = ret::A_FAIL_INVALID_FILE_KEY;
-        }
-
-        Response resp;
-        if(status == ret::A_OK) {
-            status = ProcessFile( requestType,
-                                  posturl,
-                                  filepath,
-                                  fileCredentials,
-                                  fi,
-                                  resp);
-        }
-
-        if(status == ret::A_OK) {
-            std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
-            std::cout<< "RESPONSE BODY : " << resp.body << std::endl;
-            if(resp.code == 200) {
-                // On success 
-                FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
-                ChunkPost p;
-                // Deserialize basic post data
-                JsonSerializer::DeserializeObject((Post*)&p, resp.body);
-                InitChunkPost(p, *pList);
-                // Setup post url
-                if(chunkPostId.empty()) {
-                    p.GetID(chunkPostId);
-                    if(chunkPostId.empty()) {
-                        status = ret::A_FAIL_INVALID_POST_ID;
-                    }
-                    utils::CheckUrlAndAppendTrailingSlash(posturl);
-                    posturl += chunkPostId;
-                }
-
-                if(status == ret::A_OK) {
-                    // update chunk post with chunk info metadata
-                    // use non multipart to just update the post body
-                    // leaving existing attachment in-tact
-
-                    std::string bodyBuffer;
-                    JsonSerializer::SerializeObject(&p, bodyBuffer);
-                    
-                    Response metaResp;
-                    AccessToken* at = GetAccessToken();
-                    status = conops::HttpPut( posturl,
-                                              NULL,
-                                              bodyBuffer,
-                                              *at,
-                                              metaResp);
-
-                    std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
-                    std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
-                }
-
-                std::string filename;
-                utils::ExtractFileName(filepath, filename);
-                unsigned int filesize = utils::CheckFilesize(filepath);
-
-                // Encrypt File Key
-                MasterKey mKey;
-                GetCredentialsManager()->GetMasterKeyCopy(mKey);
-
-                std::string mk;
-                mKey.GetMasterKey(mk);
-
-                // Insert File Data
-                fi->SetChunkPostID(chunkPostId);
-                fi->SetFilepath(filepath);
-                fi->SetFilename(filename);
-                fi->SetFileSize(filesize);
-                fi->SetFileCredentials(fileCredentials);
-
-                // Encrypt File Key
-                std::string fileKey, fileIv;
-                fileCredentials.GetKey(fileKey);
-                fileCredentials.GetIv(fileIv);
-
-                Credentials fCred;
-                fCred.SetKey(mk);
-                fCred.SetIv(fileIv);
-
-                std::string encryptedKey;
-                crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
-
-                fi->SetIv(fileIv);
-                fi->SetFileKey(fileKey);
-                fi->SetEncryptedKey(encryptedKey);
-
-                // Insert file info to manifest
-                GetFileManager()->InsertToManifest(fi);
-                // create attic file metadata post
-                status = SendAtticPost(fi, filepath);
-                // Send Attic Post
-                int trycount = 0;
-                for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
-                    status = SendAtticPost(fi, filepath);
-                    std::cout<<" RETRYING .................................." << std::endl;
-                    if(trycount > 2)
-                        break;
-                }
-
-            }
-        }
-    }
-    else {
-        status = ret::A_FAIL_OPEN_FILE;
-    }
-
-    return status;
-}
 
 
 int PushTask::ProcessFile( const std::string& requestType,

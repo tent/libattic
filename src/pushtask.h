@@ -30,13 +30,8 @@ class PushTask : public TentTask
 
     int PushFile( const std::string& filepath );
 
-    int SendChunkPost( FileInfo* fi, 
-                       const std::string& filepath, 
-                       const std::string& filename );
-
     int SendAtticPost( FileInfo* fi, const std::string& filepath );
 
-    int PushFileNew( const std::string& filepath );
     int ProcessFile( const std::string& requestType,
                      const std::string& url,
                      const std::string& filepath,
