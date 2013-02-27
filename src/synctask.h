@@ -12,7 +12,6 @@ class SyncTask : public TentTask
     int GetChunkPosts();
 
     int InsertFileInfoToManager(const std::vector<FileInfo>& filist);
-    int SpinOffPullAllTask();
 public:
     SyncTask( TentApp* pApp,
               FileManager* pFm,
@@ -35,11 +34,7 @@ public:
 
     void RunTask();
 
-    void SyncCb(int a, void* b);
 private:
-    unsigned int m_CallbackCount;
-    unsigned int m_CallbackHit;
-
 
 };
 

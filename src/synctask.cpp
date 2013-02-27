@@ -14,13 +14,6 @@
 
 static SyncTask* g_pCurrent = NULL;
 
-void SyncCallBack(int a, void* b)
-{
-    if(g_pCurrent)
-    {
-        g_pCurrent->SyncCb(a,b);
-    }
-}
 
 SyncTask::SyncTask( TentApp* pApp,
               FileManager* pFm,
@@ -67,53 +60,22 @@ void SyncTask::OnPaused()
 
 void SyncTask::OnFinished() 
 { 
-    int status = ret::A_OK;
-
-    g_pCurrent = NULL;
-
-    if(m_CallbackCount > m_CallbackHit)
-        status = ret::A_FAIL_TIMED_OUT;
-
-    Callback(status, NULL);
 }
 
 void SyncTask::RunTask()
 {
     int status = ret::A_OK;
 
-    if(!g_pCurrent)
-    {
+    if(!g_pCurrent) { 
         g_pCurrent = this;
-
-
         // Sync meta data posts and populate the manifest
         status = SyncMetaData(); 
-        
-        if(status == ret::A_OK)
-        {
-            std::cout<<" Spinning off pull task " << std::endl;
-            // Run a pull all files afterwards
-            status = SpinOffPullAllTask();
-            /*
-            if(status == ret::A_OK)
-            {
-                //wait
-                for(;;)
-                {
-                    if(m_CallbackCount <= m_CallbackHit)
-                    {
-                        break;
-                    }
-                    sleep(0);
-                }
-            }
-            */
-        }
+        Callback(status, NULL);
+        SetFinishedState();
     }
-    else
-    {
-        //status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
-        //Callback(status, NULL);
+    else {
+        status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
+        Callback(status, NULL);
         SetFinishedState();
     }
 }
@@ -278,7 +240,6 @@ int SyncTask::GetAtticPostCount()
     std::string url;
     GetEntityUrl(url);
     utils::CheckUrlAndAppendTrailingSlash(url);
-
     url += "posts/count";
 
     std::cout<<" URL : " << url << std::endl;
@@ -297,55 +258,12 @@ int SyncTask::GetAtticPostCount()
     std::cout<< "RESPONSE : " << response.body << std::endl;                                      
 
     int count = -1;                                                                               
-    if(response.code == 200)
-    {
-        count = atoi(response.body.c_str());                                                          
+    if(response.code == 200) {
+        count = atoi(response.body.c_str());
     }
 
     return count;
 }    
 
-int SyncTask::SpinOffPullAllTask()
-{
-    int status = ret::A_OK;
-    TaskFactory* tf = GetTaskFactory();
-    TaskArbiter* ta = GetTaskArbiter();
-    std::string entityurl, tempdir, workingdir, configdir;
-    GetEntityUrl(entityurl);
-    GetTempDirectory(tempdir);
-    GetWorkingDirectory(workingdir);
-    GetConfigDirectory(configdir);
 
-    Entity entity;
-    GetEntity(entity);
-
-    Task* t = tf->GetTentTask( Task::PULLALL,
-                               GetTentApp(), 
-                               GetFileManager(), 
-                               GetCredentialsManager(),
-                               GetTaskArbiter(),
-                               GetTaskFactory(),
-                               GetAccessTokenCopy(),
-                               entity,
-                               "",               
-                               tempdir,          
-                               workingdir,       
-                               configdir,        
-                               &SyncCallBack);      
-
-    
-    ta->SpinOffTask(t);
-    m_CallbackCount++;
-
-    return status;
-}
-
-void SyncTask::SyncCb(int a, void* b)
-{
-    m_CallbackHit++;
-    if(m_CallbackCount <= m_CallbackHit)
-    {
-        SetFinishedState();
-    }
-}
 
