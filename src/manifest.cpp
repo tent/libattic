@@ -62,9 +62,9 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 
 }
 
-void Manifest::Initialize()
+int Manifest::Initialize()
 {
-    OpenSqliteDb();
+    return OpenSqliteDb();
 }
 
 void Manifest::Shutdown()
@@ -72,26 +72,29 @@ void Manifest::Shutdown()
     CloseSqliteDb();
 }
 
-void Manifest::OpenSqliteDb()
+int Manifest::OpenSqliteDb()
 {
+    int status = ret::A_OK;
+
     std::cout<<" attempting to open : " << m_Filepath << std::endl;
     int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
 
-    if( rc )
-    {
+    if(rc) {
         // failed
         std::cout<< "Can't open database: " << sqlite3_errmsg(m_pDb);
+        status = ret::A_FAIL_TO_LOAD_MANIFEST;
     }
-    else
-    {
-        if(!m_pDb)
-        {
+    else {
+        if(!m_pDb) {
             std::cout << " invlid db instance " << std::endl;
-            return;
+            status = ret::A_FAIL_TO_LOAD_MANIFEST;
+        } 
+        else { 
+            CreateTables();
         }
-
-        CreateTables();
     }
+
+    return status;
 }
 
 void Manifest::CloseSqliteDb()
