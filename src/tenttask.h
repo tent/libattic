@@ -9,12 +9,9 @@
 
 #include "entity.h"
 #include "filemanager.h"
-#include "connectionmanager.h"
 #include "credentialsmanager.h"
 #include "taskarbiter.h"
 #include "taskfactory.h"
-
-#include "connectionhandle.h"
 
 class TentTask : public Task
 {
@@ -140,9 +137,7 @@ protected:
         out += "/posts";
     }
 
-    ConnectionHandle* GetConnectionHandle() { return &m_ConnectionHandle; }
 private:
-    ConnectionHandle     m_ConnectionHandle;
     AccessToken          m_At;
     Entity               m_Entity;
 

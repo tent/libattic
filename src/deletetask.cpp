@@ -1,7 +1,6 @@
 #include "deletetask.h"
 
 #include "filemanager.h"
-#include "connectionmanager.h"
 
 #include "errorcodes.h"
 #include "utils.h"
@@ -106,9 +105,9 @@ int DeleteTask::DeletePost(const std::string& szPostID)
     AccessToken* at = GetAccessToken();
 
     Response response;
-    conops::HttpDelete( posturl,
+    netlib::HttpDelete( posturl,
                         NULL,
-                        *at,
+                        at,
                         response);
 
     std::cout<<"Code : " << response.code << std::endl;

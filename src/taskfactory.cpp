@@ -12,7 +12,6 @@
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
-#include "connectionmanager.h"
 #include "taskarbiter.h"
 #include "tentapp.h"
 

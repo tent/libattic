@@ -10,6 +10,7 @@
 #include "conoperations.h"
 #include "postutils.h"
 #include "utils.h"                      
+#include "netlib.h"
 
 static SyncTask* g_pCurrent = NULL;
 
@@ -140,9 +141,9 @@ int SyncTask::SyncMetaData()
 
         Response response;                                                                 
         AccessToken* at = GetAccessToken();                                                
-        conops::HttpGet( url,
+        netlib::HttpGet( url,
                          &params,
-                         *at,
+                         at,
                          response); 
 
         std::cout<< " CODE : " << response.code << std::endl;
@@ -200,9 +201,9 @@ int SyncTask::SyncMetaData()
                             chunkposturl += postid;
 
                             response.clear();
-                            conops::HttpGet( chunkposturl, 
+                            netlib::HttpGet( chunkposturl, 
                                              &params,
-                                             *at,
+                                             at,
                                              response); 
 
                             std::cout<< " CODE : " << response.code << std::endl;
@@ -294,9 +295,9 @@ int SyncTask::GetAtticPostCount()
 
     Response response;                                                                            
     AccessToken* at = GetAccessToken();                                                           
-    conops::HttpGet( url,
+    netlib::HttpGet( url,
                      &params,
-                     *at,
+                     at,
                      response);
 
     std::cout<< "CODE : " << response.code << std::endl;                                          

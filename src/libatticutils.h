@@ -9,7 +9,6 @@
 
 #include "constants.h"
 #include "entitymanager.h"
-#include "connectionmanager.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "taskarbiter.h"
@@ -148,16 +147,6 @@ namespace liba
         return status;
     }
 
-    int InitializeConnectionManager()
-    {
-        int status = ret::A_OK;
-        status = ConnectionManager::GetInstance()->Initialize();
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, " failed to shutdown connection manager");
-
-        return status;
-    }
-
 
     int ShutdownTaskArbiter()
     {
@@ -262,17 +251,6 @@ namespace liba
 
         if(status != ret::A_OK)
             alog::Log(Logger::ERROR, " failed to shutdown app instance");
-
-        return status;
-    }
-
-    int ShutdownConnectionManager()
-    {
-        int status = ret::A_OK;
-        status = ConnectionManager::GetInstance()->Shutdown();
-
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to Shutdown Connection Manager", status);
 
         return status;
     }

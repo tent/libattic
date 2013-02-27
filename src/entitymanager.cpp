@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "errorcodes.h"
 #include "conoperations.h"
+#include "netlib.h"
 
 #include "log.h"
 
@@ -86,9 +87,9 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
         while(itr != ProfUrlList->end())
         {
             Response response;
-            conops::HttpGet( *itr, 
+            netlib::HttpGet( *itr, 
                              NULL,
-                             at,
+                             &at,
                              response);
 
             /*

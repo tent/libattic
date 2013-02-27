@@ -4,7 +4,6 @@
 #include <string>
 
 #include "entitymanager.h"
-#include "connectionmanager.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "entity.h"
@@ -145,8 +144,6 @@ int InitLibAttic( const char* szWorkingDirectory,
         
         status = liba::InitializeTaskArbiter(threadCount);
 
-        status = liba::InitializeConnectionManager();
-
         // Load Entity Authentication  - ORDER MATTERS
         status = LoadEntity();
          if(status != ret::A_OK)
@@ -211,7 +208,6 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     status = liba::ShutdownCredentialsManager(&g_pCredManager);
     status = liba::ShutdownEntityManager(&g_pEntityManager);
     status = liba::ShutdownAppInstance(&g_pApp);
-    status = liba::ShutdownConnectionManager();
     status = liba::ShutdownTaskManager(&g_pTaskManager);
 
     g_pFileManager = NULL;
@@ -278,11 +274,11 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
     if(JsonSerializer::SerializeObject(g_pApp, serialized))
     {
         Response response;
-        status = ConnectionManager::GetInstance()->HttpPost( postpath, 
-                                                             NULL,
-                                                             serialized,
-                                                             response,
-                                                             false);
+        status = netlib::HttpPost( postpath, 
+                                   NULL,
+                                   serialized,
+                                   NULL,
+                                   response);
 
         // Deserialize new data into app
         if(JsonSerializer::DeserializeObject(g_pApp, response.body))
@@ -398,19 +394,13 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 
     int status = ret::A_OK;
     Response response;
-    ConnectionManager* pCm = ConnectionManager::GetInstance();
 
-    pCm->HttpPostWithAuth( path, 
-                           NULL,
-                           serialized, 
-                           response, 
-                           g_pApp->GetMacAlgorithm(), 
-                           g_pApp->GetMacKeyID(), 
-                           g_pApp->GetMacKey(), 
-                           true);
+    AccessToken at;
+    at.m_MacAlgorithm = g_pApp->GetMacAlgorithm();
+    at.m_AccessToken = g_pApp->GetMacKeyID();
+    at.m_MacKey = g_pApp->GetMacKey();
 
-    //std::cout<< " CODE : " << response.code << std::endl;
-    //std::cout<< " RESPONSE : " << response.body << std::endl;
+    netlib::HttpPost(path, NULL, serialized, &at, response);
 
     if(response.code == 200)
     {
@@ -780,9 +770,6 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
 
     std::string url;
     g_Entity.GetFrontProfileUrl(url);
-    
-
-
 
     AccessToken at;
     if(g_pCredManager)
@@ -804,7 +791,7 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
         url.append(pPm);
 
         Response resp;
-        conops::HttpPut(url, NULL, output, at, resp);
+        netlib::HttpPut(url, NULL, output, &at, resp);
 
         std::cout<<" URL : " << url << std::endl;
         std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
@@ -1041,12 +1028,9 @@ void GetEntityFilepath(std::string& out)
 
 int LoadEntity(bool override)
 {
-    std::cout<< " here " << std::endl;
     std::string entpath;
     GetEntityFilepath(entpath);
     int status = g_Entity.LoadFromFile(entpath);
-
-    std::cout<< " here " << std::endl;
  
     
     if(status != ret::A_OK)// || override)
@@ -1054,15 +1038,12 @@ int LoadEntity(bool override)
         if(override)
             g_Entity.Reset();
 
-    std::cout<< " here " << std::endl;
         // Load Entity
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
 
-    std::cout<< " here " << std::endl;
         status = g_pEntityManager->Discover(g_EntityUrl, at, g_Entity);
 
-    std::cout<< " here " << std::endl;
         if(status == ret::A_OK)
             g_Entity.WriteToFile(entpath);
         else

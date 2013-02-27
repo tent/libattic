@@ -4,7 +4,6 @@
 #include <list>
 
 #include "filemanager.h"
-#include "connectionmanager.h"
 #include "chunkinfo.h"
 #include "errorcodes.h"
 #include "utils.h"
@@ -160,10 +159,10 @@ int PushTask::PushFile(const std::string& filepath)
                     
                     Response metaResp;
                     AccessToken* at = GetAccessToken();
-                    status = conops::HttpPut( posturl,
+                    status = netlib::HttpPut( posturl,
                                               NULL,
                                               bodyBuffer,
-                                              *at,
+                                              at,
                                               metaResp);
 
                     std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
@@ -277,10 +276,10 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
 
         AccessToken* at = GetAccessToken();
 
-        status = conops::HttpPost( posturl,
+        status = netlib::HttpPost( posturl,
                                    NULL,
                                    postBuffer,
-                                   *at,
+                                   at,
                                    response );
     }
     else {
@@ -305,11 +304,11 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
         JsonSerializer::SerializeObject(&p, postBuffer);
 
         AccessToken* at = GetAccessToken();
-        status = conops::HttpPut( posturl,
-                                   NULL,
-                                   postBuffer,
-                                   *at,
-                                   response );
+        status = netlib::HttpPut( posturl,
+                                  NULL,
+                                  postBuffer,
+                                  at,
+                                  response );
    }
 
     // Handle Response
@@ -403,8 +402,7 @@ int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List)
 int PushTask::GetUploadSpeed()
 {
     int speed = -1;
-    if(GetConnectionHandle())
-        speed = GetConnectionHandle()->GetUploadSpeed();
+
     return speed;
 }
 
@@ -417,9 +415,6 @@ FileInfo* PushTask::RetrieveFileInfo(const std::string& filepath)
 
     return fi;
 }
-
-
-
 
 int PushTask::ProcessFile( const std::string& requestType,
                            const std::string& url,

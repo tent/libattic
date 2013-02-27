@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "filemanager.h"
-#include "connectionmanager.h"
 
 #include "errorcodes.h"
 #include "utils.h"
@@ -271,7 +270,7 @@ int PullTask::RetrieveAttachment( const std::string& url,
     if(at) { 
         std::cout<<" retrieving attachment .... : " << url << std::endl;
         Response response;
-        status = netlib::HttpAsioGetAttachment(url, NULL, at, response);
+        status = netlib::HttpGetAttachment(url, NULL, at, response);
 
         if(response.code == 200) {
             outBuffer = response.body;
@@ -304,7 +303,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
         // Get Post                                                                                  
         AccessToken* at = GetAccessToken();
         if(at) {
-            status = netlib::HttpAsioGetAttachment( posturl, NULL, at, responseOut);
+            status = netlib::HttpGetAttachment( posturl, NULL, at, responseOut);
 
             std::cout<<" response out : " << responseOut.body << std::endl;
             if(status == ret::A_OK) {

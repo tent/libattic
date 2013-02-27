@@ -7,6 +7,8 @@
 #include <string>
 
 #include "tenttask.h"
+#include "response.h"
+#include "post.h"
 
 class PullTask: public TentTask
 {

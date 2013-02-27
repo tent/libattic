@@ -12,7 +12,6 @@
 #include "crypto.h"
 #include "compressor.h"
 #include "errorcodes.h"
-#include "connectionmanager.h"
 #include "urlparams.h"
 
 #include <curl/curl.h>
@@ -967,39 +966,7 @@ TEST(LIBATTIC, CODEUSAGE)
 /*
 */
 /*
-TEST(CONNECTIONMANAGER, POST)
-{
-    std::string postpath("https://manuel.tent.is/tent/apps");
 
-    TentApp app;
-    app.SetAppName(std::string("COOL APP"));
-    app.SetAppDescription(std::string("this is a cool app"));
-    app.SetAppURL(std::string("http://manuel.tent.is"));
-    app.SetScope(std::string("read_posts"));
-    app.SetScope(std::string("write_posts"));
-    app.SetRedirectURI(std::string("https://manuel.tent.is"));
-
-    std::string serialized;
-
-    JsonSerializer::SerializeObject(&app, serialized);
-
-    ConnectionManager* pCm = ConnectionManager::GetInstance();
-
-    std::string responseOut;
-    pCm->HttpPost(postpath, serialized, responseOut, true);
-
-    std::cout<< " RESPONSE : " << responseOut << std::endl;
-    pCm->Shutdown();
-
-    TentApp app2;
-    JsonSerializer::DeserializeObject(&app2, responseOut);
-
-    std::string s2;
-    JsonSerializer::SerializeObject(&app2, s2);
-    std::cout<< " S2 : \n" << s2 << std::endl;
-}
-*/
-/*
 TEST(CURL, POST)
 {
 

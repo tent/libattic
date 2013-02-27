@@ -10,6 +10,7 @@
 #include "conoperations.h"
 #include "postutils.h"
 #include "utils.h"
+#include "netlib.h"
 
 
 
@@ -69,9 +70,9 @@ void DeleteAllPostsTask::RunTask()
 
     Response response;                                                                 
     AccessToken* at = GetAccessToken();                                                
-    conops::HttpGet( url,
+    netlib::HttpGet( url,
                      &params,
-                     *at,
+                     at,
                      response); 
 
     if(response.code == 200)
@@ -148,9 +149,9 @@ int DeleteAllPostsTask::DeletePost(const std::string& postId)
     AccessToken* at = GetAccessToken();
 
     Response response;
-    conops::HttpDelete( posturl,
+    netlib::HttpDelete( posturl,
                         NULL,
-                        *at,
+                        at,
                         response);
 
     std::cout<<"Code : " << response.code << std::endl;

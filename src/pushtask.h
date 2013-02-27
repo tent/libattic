@@ -9,6 +9,7 @@
 #include "tenttask.h"
 #include "atticpost.h"
 #include "chunkpost.h"
+#include "response.h"
 
 
 class PushTask : public TentTask
