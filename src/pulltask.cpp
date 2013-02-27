@@ -83,7 +83,7 @@ int PullTask::PullFile(const std::string& filepath)
                 if(status == ret::A_OK) {
                     if(response.code == 200) {
                         Post p;
-                        JsonSerializer::DeserializeObject(&p, response.body);
+                        jsn::DeserializeObject(&p, response.body);
                         status = RetreiveFile( filepath, 
                                                chunkposturl, 
                                                fileCred, 
@@ -129,7 +129,7 @@ int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
 
         if(resp.code == 200) {
             AtticPost ap;
-            if(JsonSerializer::DeserializeObject(&ap, resp.body)) {
+            if(jsn::DeserializeObject(&ap, resp.body)) {
                 std::string key, iv;
                 ap.GetAtticPostKeyData(key);
                 ap.GetAtticPostIvData(iv);

@@ -23,7 +23,7 @@ ret::eCode AccessToken::SaveToFile(const std::string& filepath)
         return ret::A_FAIL_OPEN_FILE;
 
     std::string serialized;
-    JsonSerializer::SerializeObject(this, serialized);
+    jsn::SerializeObject(this, serialized);
 
     ofs.write(serialized.c_str(), serialized.size());
     ofs.close();
@@ -59,7 +59,7 @@ ret::eCode AccessToken::LoadFromFile(const std::string& filepath)
     }
     
     // Deserialize into self.
-    JsonSerializer::DeserializeObject(this, loaded);
+    jsn::DeserializeObject(this, loaded);
 
     return ret::A_OK;
 }

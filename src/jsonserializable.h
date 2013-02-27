@@ -1,15 +1,10 @@
-
 #ifndef JSONSERIALIZABLE_H_
 #define JSONSERIALIZABLE_H_
 #pragma once
 
 #include <string>
-#include <json/json.h>
-
 #include <iostream>
-
-#include <stdio.h>
-#include <string.h>
+#include <json/json.h>
 
 class JsonSerializable
 {
@@ -21,12 +16,24 @@ public:
     virtual void Deserialize(Json::Value& root) = 0;
 };
 
-class JsonSerializer
+namespace jsn
 {
-    JsonSerializer(){}
-    JsonSerializer(const JsonSerializer& rhs) {}
-    JsonSerializer operator=(const JsonSerializer& rhs) { return *this; }
-public:
+
+    static bool SerializeObject(JsonSerializable* pObj, std::string& output);
+    static bool SerializeObject(JsonSerializable* pObj, Json::Value &val);
+    static bool SerializeJsonValue(Json::Value& root, std::string& output);
+    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec);
+    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m);
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m);
+ 
+    static bool DeserializeJsonValue(Json::Value& val, std::string& input);
+    static bool DeserializeObject(JsonSerializable* pObj, const std::string& input);
+    static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val);
+    static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec);
+    static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec);
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m);
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m);
 
     static bool SerializeObject(JsonSerializable* pObj, std::string& output)
     {
@@ -45,8 +52,7 @@ public:
 
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val)
     {
-        if(pObj && val.isObject())
-        {
+        if(pObj && val.isObject()) {
             pObj->Serialize(val);
             return true;
         }
@@ -86,8 +92,7 @@ public:
 
     static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val)
     {
-        if(pObj && val.isObject())
-        {
+        if(pObj && val.isObject()) {
             pObj->Deserialize(val);
             return true;
         }
@@ -97,8 +102,7 @@ public:
 
     static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec) 
     {                                                                                           
-        if(val.isObject())                                                                      
-        {                                                                                       
+        if(val.isObject()) {
             std::vector<std::string>::iterator itr = vec.begin();                               
             for(; itr != vec.end(); itr++)                                                      
                 val[*itr];
@@ -194,23 +198,18 @@ public:
 
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m)
     {
-        if(val.isObject())
-        {
+        if(val.isObject()) {
             m.clear();
             Json::ValueIterator itr = val.begin();
 
-            for(; itr != val.end(); itr++)                                                                      
-            {   
+            for(; itr != val.end(); itr++) {
                 m[itr.key().asString()] = (*itr).asBool();
             }
-
         }
     }
 
 
 };
-
-                                                                                                           
 
 #endif
 

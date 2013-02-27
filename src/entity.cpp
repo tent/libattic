@@ -36,7 +36,7 @@ int Entity::WriteToFile(const std::string& filepath)
         return ret::A_FAIL_OPEN_FILE;
 
     std::string serialized;
-    JsonSerializer::SerializeObject(this, serialized);
+    jsn::SerializeObject(this, serialized);
 
     ofs.write(serialized.c_str(), serialized.size());
     ofs.close();
@@ -73,7 +73,7 @@ int Entity::LoadFromFile(const std::string& filepath)
         pBuf = 0;                                                                                 
     }                                                                                             
     // Deserialize into self.                                                                     
-    JsonSerializer::DeserializeObject(this, loaded);                                              
+    jsn::DeserializeObject(this, loaded);                                              
     
     return ret::A_OK;    
 }
@@ -84,7 +84,7 @@ void Entity::Serialize(Json::Value& root)
     root["api_root"] = m_ApiRoot;
 
     Json::Value urllist;
-    JsonSerializer::SerializeVector(urllist, m_ProfileUrls); 
+    jsn::SerializeVector(urllist, m_ProfileUrls); 
     root["profile_urls"] = urllist;
 
     std::vector<std::string> profiles;
@@ -94,12 +94,12 @@ void Entity::Serialize(Json::Value& root)
     for(;itr != m_Profiles.end(); itr++)
     {
         buffer.clear();
-        JsonSerializer::SerializeObject(&*itr, buffer);
+        jsn::SerializeObject(&*itr, buffer);
         profiles.push_back(buffer);
     }
 
     Json::Value profilelist;
-    JsonSerializer::SerializeVector(profilelist, profiles);
+    jsn::SerializeVector(profilelist, profiles);
     root["profile_list"] = profilelist;
 }
 
@@ -108,15 +108,15 @@ void Entity::Deserialize(Json::Value& root)
     m_EntityUrl = root.get("entity_url", "").asString();
     m_ApiRoot = root.get("api_root", "").asString();
 
-    JsonSerializer::DeserializeIntoVector(root["profile_urls"], m_ProfileUrls);
+    jsn::DeserializeIntoVector(root["profile_urls"], m_ProfileUrls);
     std::vector<std::string> profiles;
-    JsonSerializer::DeserializeIntoVector(root["profile_list"], profiles);
+    jsn::DeserializeIntoVector(root["profile_list"], profiles);
 
     std::vector<std::string>::iterator itr = profiles.begin();
     for(;itr != profiles.end(); itr++)
     {
         Profile p;
-        JsonSerializer::DeserializeObject(&p, *itr);
+        jsn::DeserializeObject(&p, *itr);
         m_Profiles.push_back(p);
     }
 

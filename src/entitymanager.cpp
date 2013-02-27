@@ -91,7 +91,7 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
             {
                 // Deserialize into Profile Object
                 Profile* pProf = new Profile();
-                JsonSerializer::DeserializeObject(pProf, response.body);
+                jsn::DeserializeObject(pProf, response.body);
                 
                 // Push back into entity
                 ent.PushBackProfile(pProf);

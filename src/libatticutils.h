@@ -273,7 +273,7 @@ namespace liba
     {
         int status = ret::A_OK;
     
-        if(!JsonSerializer::DeserializeObject(&out, body))
+        if(!jsn::DeserializeObject(&out, body))
             status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
 
         return status;

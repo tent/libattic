@@ -58,15 +58,15 @@ void TentApp::Serialize(Json::Value& root)
     {
         Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
         //Json::Value scopes(Json::nullValue);
-        JsonSerializer::SerializeVectorIntoObjectValue(scopes, m_Scopes);
-       // JsonSerializer::SerializeVector(scopes, m_Scopes);
+        jsn::SerializeVectorIntoObjectValue(scopes, m_Scopes);
+       // jsn::SerializeVector(scopes, m_Scopes);
         root["scopes"] = scopes;
     }
 
     if((m_RedirectURIs.size() > 0))
     {
         Json::Value redirecturis;
-        JsonSerializer::SerializeVector(redirecturis, m_RedirectURIs);
+        jsn::SerializeVector(redirecturis, m_RedirectURIs);
         root["redirect_uris"] = redirecturis;
     }
 
@@ -80,7 +80,7 @@ void TentApp::Serialize(Json::Value& root)
     if(m_Authorizations.size() > 0)
     {
         Json::Value authorizations;
-        JsonSerializer::SerializeVector(authorizations, m_Authorizations);
+        jsn::SerializeVector(authorizations, m_Authorizations);
         root["authorizations"] = authorizations;
     }
 }
@@ -98,9 +98,9 @@ void TentApp::Deserialize(Json::Value& root)
     m_MacKeyID = root.get("mac_key_id", "").asString();
     m_MacKey = root.get("mac_key", "").asString();
 
-    JsonSerializer::DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
-    JsonSerializer::DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
-    JsonSerializer::DeserializeIntoVector(root["authorizations"], m_Authorizations);
+    jsn::DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
+    jsn::DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
+    jsn::DeserializeIntoVector(root["authorizations"], m_Authorizations);
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
@@ -113,7 +113,7 @@ ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
         return ret::A_FAIL_OPEN_FILE;
 
     std::string serialized;
-    JsonSerializer::SerializeObject(this, serialized);
+    jsn::SerializeObject(this, serialized);
 
     ofs.write(serialized.c_str(), serialized.size());
     ofs.close();
@@ -149,7 +149,7 @@ ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
     }
     
     // Deserialize into self.
-    JsonSerializer::DeserializeObject(this, loaded);
+    jsn::DeserializeObject(this, loaded);
 
     return ret::A_OK;
 }

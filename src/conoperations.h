@@ -85,7 +85,7 @@ namespace conops
                 {
                     // Deserialize into Profile Object
                     Profile* pProf = new Profile();
-                    JsonSerializer::DeserializeObject(pProf, response.body);
+                    jsn::DeserializeObject(pProf, response.body);
                     
                     // Push back into entity
                     ent.PushBackProfile(pProf);
@@ -128,7 +128,7 @@ namespace conops
                 {
                     // Deserialize into Profile Object
                     Profile* pProf = new Profile();
-                    JsonSerializer::DeserializeObject(pProf, response.body);
+                    jsn::DeserializeObject(pProf, response.body);
                     
                     // Push back into entity
                     ent.PushBackProfile(pProf);

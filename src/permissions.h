@@ -59,12 +59,12 @@ public:
 
         Json::Value groups;
         for(unsigned int i=0; i< m_Groups.size(); i++)
-            JsonSerializer::SerializeObject(&m_Groups[i], groups );
+            jsn::SerializeObject(&m_Groups[i], groups );
 
         root["groups"] = groups;
 
         Json::Value entities(Json::objectValue);
-        JsonSerializer::SerializeMapIntoObject(entities, m_EntityPermissionMap);
+        jsn::SerializeMapIntoObject(entities, m_EntityPermissionMap);
 
         root["entities"] = entities;
     }
@@ -80,13 +80,13 @@ public:
             for(; itr != root["groups"].end(); itr++)
             {
                 Group g;
-                JsonSerializer::DeserializeObject(&g, *itr);
+                jsn::DeserializeObject(&g, *itr);
                 m_Groups.push_back(g);
             }
 
         }
 
-        JsonSerializer::DeserializeObjectValueIntoMap(root["entities"], m_EntityPermissionMap);
+        jsn::DeserializeObjectValueIntoMap(root["entities"], m_EntityPermissionMap);
     }
 
     bool GetIsPublic() const { return m_Public; }

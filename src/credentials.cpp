@@ -39,7 +39,7 @@ void Credentials::Deserialize(Json::Value& root)
 
 void Credentials::GetSerializedCredentials(std::string& out)
 {
-    JsonSerializer::SerializeObject(this, out);
+    jsn::SerializeObject(this, out);
 }
 
 int Credentials::SetKey(const std::string& key) 

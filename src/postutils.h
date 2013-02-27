@@ -119,13 +119,13 @@ namespace postutils
         {
             Json::Value val;
             std::string input = response.body;
-            JsonSerializer::DeserializeJsonValue(val, input);
+            jsn::DeserializeJsonValue(val, input);
 
             Json::ValueIterator itr = val.begin();
             for(;itr != val.end(); itr++)
             {
                 ChunkPost post;
-                JsonSerializer::DeserializeObject(&post, *itr);
+                jsn::DeserializeObject(&post, *itr);
                 out->push_back(post);
             }
         }

@@ -34,7 +34,7 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)
 {
     Lock();
     int status = ret::A_OK;
-    if(!JsonSerializer::DeserializeObject(&m_AccessToken, buffer))
+    if(!jsn::DeserializeObject(&m_AccessToken, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
 
@@ -65,7 +65,7 @@ int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer)
 {
     Lock();
     int status = ret::A_OK;
-    if(!JsonSerializer::DeserializeObject(&m_PhraseToken, buffer))
+    if(!jsn::DeserializeObject(&m_PhraseToken, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
 

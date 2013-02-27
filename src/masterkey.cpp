@@ -49,7 +49,7 @@ void MasterKey::WriteToFile(const std::string& filepath)
     {
         // serialize
         std::string json;
-        JsonSerializer::SerializeObject(this, json);
+        jsn::SerializeObject(this, json);
         
         // write out
         ofs.write(json.c_str(), json.size());

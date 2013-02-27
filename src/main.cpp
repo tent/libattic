@@ -32,6 +32,8 @@
 #include "netlib.h"
 #include "compression.h"
 
+#include "filesystem.h"
+
 // Globals
 std::string g_Entity;
 
@@ -1547,6 +1549,14 @@ TEST(REINTERPREST, CAST)
     int res =  strcmp( reinterpret_cast<const char*>(bkey), 
                        reinterpret_cast<const char*>(bkey1));
     ASSERT_EQ(res, 0);
+}
+
+TEST(FILESYSTEM, RELATIVETO)
+{
+    std::string relative;
+    fs::MakePathRelative("foo/bar", "foo/bar/what.txt", relative);
+    //ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
+    std::cout<<" RELATIVE : " << relative << std::endl;
 }
 
 int main (int argc, char* argv[])

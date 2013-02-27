@@ -32,15 +32,15 @@ void AtticPost::Serialize(Json::Value& root)
     SetContent("chunk_name", m_ChunkName);
     
     Json::Value chunkposts;
-    JsonSerializer::SerializeVector(chunkposts, m_ChunkPosts);
+    jsn::SerializeVector(chunkposts, m_ChunkPosts);
     std::string chunkval;
-    JsonSerializer::SerializeJsonValue(chunkposts, chunkval);
+    jsn::SerializeJsonValue(chunkposts, chunkval);
     SetContent("chunk_posts", chunkval);
 
     Json::Value chunkids;
-    JsonSerializer::SerializeVector(chunkids, m_ChunkIds);
+    jsn::SerializeVector(chunkids, m_ChunkIds);
     std::string idval;
-    JsonSerializer::SerializeJsonValue(chunkids, idval);
+    jsn::SerializeJsonValue(chunkids, idval);
     SetContent("chunk_ids", idval);
 
     SetContent( "kdata", 
@@ -81,12 +81,12 @@ void AtticPost::Deserialize(Json::Value& root)
     std::cout<<" deserializing here " << std::endl;
 
     Json::Value cp, ci;
-    JsonSerializer::DeserializeJsonValue(cp, chunkval);
-    JsonSerializer::DeserializeJsonValue(ci, idval);
+    jsn::DeserializeJsonValue(cp, chunkval);
+    jsn::DeserializeJsonValue(ci, idval);
     std::cout<<" deserializing here " << std::endl;
 
-    JsonSerializer::DeserializeIntoVector(cp, m_ChunkPosts);
-    JsonSerializer::DeserializeIntoVector(ci, m_ChunkIds);
+    jsn::DeserializeIntoVector(cp, m_ChunkPosts);
+    jsn::DeserializeIntoVector(ci, m_ChunkIds);
     std::cout<<" deserializing here " << std::endl;
 
     GetContent("kdata", m_KeyData);

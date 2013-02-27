@@ -256,7 +256,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 
     int status = ret::A_OK;
     std::string serialized;
-    if(JsonSerializer::SerializeObject(g_pApp, serialized)) {
+    if(jsn::SerializeObject(g_pApp, serialized)) {
         Response response;
         status = netlib::HttpPost( postpath, 
                                    NULL,
@@ -265,7 +265,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
                                    response);
 
         // Deserialize new data into app
-        if(JsonSerializer::DeserializeObject(g_pApp, response.body))
+        if(jsn::DeserializeObject(g_pApp, response.body))
             SaveAppToFile();
         else
             status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
@@ -366,7 +366,7 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 
     // serialize RedirectCode
     std::string serialized;
-    if(!JsonSerializer::SerializeObject(&rcode, serialized))
+    if(!jsn::SerializeObject(&rcode, serialized))
         return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
     int status = ret::A_OK;
@@ -432,7 +432,7 @@ int LoadAppFromFile()
     if(status == ret::A_OK)
     {
         std::string buffer;
-        JsonSerializer::SerializeObject(g_pApp, buffer);
+        jsn::SerializeObject(g_pApp, buffer);
         //std::cout<<" BUFFER : " << buffer << std::endl;
     }
 
@@ -713,7 +713,7 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
 
     // Save and post
     std::string output;
-    JsonSerializer::SerializeObject(pAtticProf, output);
+    jsn::SerializeObject(pAtticProf, output);
 
     std::string url;
     g_Entity.GetFrontProfileUrl(url);

@@ -134,7 +134,7 @@ int PushTask::PushFile(const std::string& filepath)
                 FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
                 ChunkPost p;
                 // Deserialize basic post data
-                JsonSerializer::DeserializeObject((Post*)&p, resp.body);
+                jsn::DeserializeObject((Post*)&p, resp.body);
                 InitChunkPost(p, *pList);
                 // Setup post url
                 if(chunkPostId.empty()) {
@@ -151,7 +151,7 @@ int PushTask::PushFile(const std::string& filepath)
                     // use non multipart to just update the post body
                     // leaving existing attachment in-tact
                     std::string bodyBuffer;
-                    JsonSerializer::SerializeObject(&p, bodyBuffer);
+                    jsn::SerializeObject(&p, bodyBuffer);
                     
                     // Set
                     Response metaResp;
@@ -267,7 +267,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                       pList);
 
         std::string postBuffer;
-        JsonSerializer::SerializeObject(&p, postBuffer);
+        jsn::SerializeObject(&p, postBuffer);
 
         std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
 
@@ -298,7 +298,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                       pList);
 
         std::string postBuffer;
-        JsonSerializer::SerializeObject(&p, postBuffer);
+        jsn::SerializeObject(&p, postBuffer);
 
         AccessToken* at = GetAccessToken();
         status = netlib::HttpPut( posturl,
@@ -311,7 +311,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
     // Handle Response
     if(response.code == 200) {
         AtticPost p;
-        JsonSerializer::DeserializeObject(&p, response.body);
+        jsn::DeserializeObject(&p, response.body);
 
         std::string postid;
         p.GetID(postid);
@@ -472,7 +472,7 @@ int PushTask::ProcessFile( const std::string& requestType,
         // Build Body Form header
         ChunkPost p;
         std::string body; // we send an empty body for now
-        JsonSerializer::SerializeObject(&p, body);
+        jsn::SerializeObject(&p, body);
 
         boost::asio::streambuf requestBody;
         std::ostream part_stream(&requestBody);

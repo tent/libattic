@@ -64,14 +64,14 @@ void Post::Serialize(Json::Value& root)
     if(m_Mentions.size() > 0)
     {
         Json::Value mentions;
-        JsonSerializer::SerializeVector(mentions, m_Mentions);
+        jsn::SerializeVector(mentions, m_Mentions);
         root["mentions"] = mentions;
     }
     
     if(m_Licenses.size() > 0)
     {
         Json::Value licenses;
-        JsonSerializer::SerializeVector(licenses, m_Licenses);
+        jsn::SerializeVector(licenses, m_Licenses);
         root["licenses"] = licenses;
     }
 
@@ -82,7 +82,7 @@ void Post::Serialize(Json::Value& root)
     {
         // TODO::this
         Json::Value content(Json::objectValue); // We want scopes to be an object {}// vs []
-        JsonSerializer::SerializeMapIntoObject(content, m_Content);
+        jsn::SerializeMapIntoObject(content, m_Content);
         root["content"] = content;
     }
 
@@ -101,17 +101,17 @@ void Post::Serialize(Json::Value& root)
     if(m_Views.size() > 0)
     {
         Json::Value views(Json::objectValue); // We want scopes to be an object {}// vs []
-        JsonSerializer::SerializeMapIntoObject(views, m_Views);
+        jsn::SerializeMapIntoObject(views, m_Views);
         root["views"] = views;
     }
 
     /*
     Json::Value permissions(Json::objectValue); // We want scopes to be an object {}// vs []
-    JsonSerializer::SerializeMapIntoObject(permissions, m_Permissions);
+    jsn::SerializeMapIntoObject(permissions, m_Permissions);
     root["permissions"] = permissions;
     */
     Json::Value perm;
-    JsonSerializer::SerializeObject(&m_Permissions, perm);
+    jsn::SerializeObject(&m_Permissions, perm);
     root["permissions"] = perm;
 
     //root["version"] = m_Version;
@@ -130,15 +130,15 @@ void Post::Deserialize(Json::Value& root)
 
     std::cout<< " root deserialize " << std::endl;
 
-    JsonSerializer::DeserializeIntoVector(root["mentions"], m_Mentions);
-    JsonSerializer::DeserializeIntoVector(root["licenses"], m_Licenses);
+    jsn::DeserializeIntoVector(root["mentions"], m_Mentions);
+    jsn::DeserializeIntoVector(root["licenses"], m_Licenses);
 
     std::cout<< " root deserialize " << std::endl;
     // TODO :: content is dynamic, and can be a variety of things
     //         serialization and deserialization is more complex than
     //         just a map of strings
    
-    JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
+    jsn::DeserializeObjectValueIntoMap(root["content"], m_Content);
     
     std::cout<< " root deserialize " << std::endl;
     // Deserialize this into an array of objects
@@ -178,9 +178,9 @@ void Post::Deserialize(Json::Value& root)
         //m_TentApp->Deserialize(root["app"].asObject());
     }
 
-    JsonSerializer::DeserializeObjectValueIntoMap(root["views"], m_Views);
-    //JsonSerializer::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
-    JsonSerializer::DeserializeObject(&m_Permissions,root["permissions"]);
+    jsn::DeserializeObjectValueIntoMap(root["views"], m_Views);
+    //jsn::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
+    jsn::DeserializeObject(&m_Permissions,root["permissions"]);
 }
 
 

@@ -98,14 +98,14 @@ void FileInfo::GetSerializedChunkData(std::string& out) const
     {
         ChunkInfo ci = itr->second;
         chunk.clear();
-        JsonSerializer::SerializeObject(&ci, chunk);
+        jsn::SerializeObject(&ci, chunk);
         chunkList.push_back(chunk);
     }
 
     if(chunkList.size() > 0)
     {
         Json::Value val;
-        JsonSerializer::SerializeVector(val, chunkList);
+        jsn::SerializeVector(val, chunkList);
 
         Json::StyledWriter writer;
         out = writer.write(val);
@@ -126,14 +126,14 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
         return false;
 
     std::vector<std::string> chunkList;
-    JsonSerializer::DeserializeIntoVector(root, chunkList);
+    jsn::DeserializeIntoVector(root, chunkList);
 
     std::vector<std::string>::iterator itr = chunkList.begin();
 
     for(;itr != chunkList.end(); itr++)
     {
         ChunkInfo* ci = new ChunkInfo();
-        JsonSerializer::DeserializeObject(ci, *itr);
+        jsn::DeserializeObject(ci, *itr);
 
         std::string name;
         ci->GetChunkName(name);

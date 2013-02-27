@@ -213,7 +213,7 @@ int SyncTask::SyncMetaData()
 
                             if(response.code == 200) {
                                 ChunkPost cp;
-                                JsonSerializer::DeserializeObject(&cp, response.body);
+                                jsn::DeserializeObject(&cp, response.body);
                                 if(cp.GetChunkSize()) {
                                     std::cout<<" THIS ChunkPost : " << cp.GetChunkSize() << std::endl;
                                     std::vector<ChunkInfo>* ciList = cp.GetChunkList();
