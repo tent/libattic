@@ -124,12 +124,14 @@ int FileManager::RemoveFile(const std::string &filepath)
 void FileManager::InsertToManifest (FileInfo* pFi) { 
     if(!pFi) return;
     // Calculate relative path
-    std::string filepath;
+    std::string filepath, canonical;
     pFi->GetFilepath(filepath);
-
+    fs::GetCanonicalPath(filepath, canonical);
     std::cout<<" filepath : " << filepath << std::endl;
+    std::cout<<" canonical : " << canonical << std::endl;
+    std::cout<<" working dir : " << m_WorkingDirectory << std::endl;
     std::string relative;
-    fs::MakePathRelative(m_WorkingDirectory, filepath, relative);
+    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
     std::cout<<" relative : " << relative << std::endl;
 
     pFi->SetFilepath(relative);

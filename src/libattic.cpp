@@ -131,9 +131,8 @@ int InitLibAttic( const char* szWorkingDirectory,
             alog::Log(Logger::ERROR, "Failed to set entity url");
 
         status = liba::InitializeFileManager( &g_pFileManager,
-                                              cnst::g_szManifestName,
                                               g_ConfigDirectory,
-                                              g_TempDirectory );
+                                              g_WorkingDirectory);
 
         status = liba::InitializeCredentialsManager( &g_pCredManager,
                                                      g_ConfigDirectory);
