@@ -14,33 +14,27 @@
 #include "taskarbiter.h"
 #include "taskmanager.h"
 #include "log.h"
-//#include "entity.h"
+#include "filesystem.h"
 
 // Inward facing utility methods used at libattic interface level
 
 namespace liba
 {
     int InitializeFileManager( FileManager** pFm, 
-                               const std::string& manifestName,
-                               const std::string& configDir, 
-                               const std::string& tempDir)
+                               const std::string& manifestDir,
+                               const std::string& workingDir)
     {
         int status = ret::A_OK;
 
-        if(!(*pFm))
-        {
+        if(!(*pFm)) {
+            std::string manifest, working;
+            status = fs::GetCanonicalPath(manifestDir, manifest);
+            status = fs::GetCanonicalPath(workingDir, working);
             // Construct path
-            std::string filepath(configDir);
-            utils::CheckUrlAndAppendTrailingSlash(filepath);
-            filepath.append(manifestName);
-
-                (*pFm) = new FileManager(filepath, configDir);
-                (*pFm)->SetTempDirectory(tempDir);
-
-                if(!(*pFm)->StartupFileManager())
-                {
-                    status = ret::A_FAIL_TO_LOAD_FILE;
-                }
+            if(status == ret::A_OK) {
+                (*pFm) = new FileManager(manifest, working);
+                status = (*pFm)->StartupFileManager();
+            }
         }
         else
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
@@ -146,7 +140,6 @@ namespace liba
             alog::Log(Logger::ERROR, "Failed to initialize TaskFactory");
         return status;
     }
-
 
     int ShutdownTaskArbiter()
     {
