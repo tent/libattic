@@ -66,6 +66,7 @@ namespace ret
         A_FAIL_EMPTY_ATTACHMENTS, 
         A_FAIL_EXCEPTION,
         A_FAIL_INVALID_POST_ID,
+        A_FAIL_PATH_DOESNT_EXIST,
         A_FAIL_OTHER     
     };
 

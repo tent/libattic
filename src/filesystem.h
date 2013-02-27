@@ -3,8 +3,11 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
+
+#include "errorcodes.h"
 
 namespace fs
 {
@@ -42,7 +45,30 @@ namespace fs
 
         relativeOut = MakePathRelative( root, second ).string();
     }
-    
+
+    static int GetCanonicalPath(const std::string& path, std::string& out)
+    {
+        int status = ret::A_OK;
+        boost::filesystem::path root(path.c_str());
+
+        if(boost::filesystem::exists(root)){
+            boost::system::error_code error;
+            boost::filesystem::path can = boost::filesystem::canonical(root, error);
+
+            if(!error) {
+                out = can.string();
+            }
+            else {
+                std::cout<< " In GetCanonicalPath ... " << std::endl;
+                std::cout<< boost::system::system_error(error).what() << std::endl;
+            }
+        }
+        else {
+            status = ret::A_FAIL_PATH_DOESNT_EXIST;
+        }
+
+        return status;
+    }
 };
 
 #endif
