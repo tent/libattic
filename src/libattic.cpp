@@ -87,7 +87,6 @@ int SaveEntity();
 int LoadPhraseToken();
 int SavePhraseToken(PhraseToken& pt);
 int LoadMasterKey(); // call with a valid phrase token
-int SetFileManagerMasterKey();
 
 void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
@@ -158,7 +157,6 @@ int InitLibAttic( const char* szWorkingDirectory,
         if(LoadMasterKey() == ret::A_OK) {  // don't set it equal to status, because if this fails
                                             // it's really not that important, we can have the user
                                             // go ahead and enter it.
-            status = SetFileManagerMasterKey();
         }
 
         AccessToken at;
@@ -183,19 +181,6 @@ int InitLibAttic( const char* szWorkingDirectory,
     if(status == ret::A_OK)
         g_bLibInitialized = true;
     return status;
-}
-
-int SetFileManagerMasterKey()
-{
-    // If loaded Set master key in filemanager
-    MasterKey mk;
-    g_pCredManager->GetMasterKeyCopy(mk);
-
-    g_pFileManager->Lock();
-    g_pFileManager->SetMasterKey(mk);
-    g_pFileManager->Unlock();
-    
-    return ret::A_OK;
 }
 
 int ShutdownLibAttic(void (*callback)(int, void*))
@@ -672,8 +657,6 @@ int EnterPassphrase(const char* szPass)
                 //LoadPhraseToken();
                 // Load Master Key
                 status = LoadMasterKey();
-                if(status == ret::A_OK)
-                    status = SetFileManagerMasterKey();
             }
         }
     }

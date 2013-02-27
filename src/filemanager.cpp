@@ -6,15 +6,9 @@
 #include <vector>
 #include <iostream>
 
+#include "filesystem.h"
 #include "utils.h"
 #include "chunkinfo.h"
-
-// TODO :: considering removing all file reading/writing out of 
-//         manifest to filemanager. (centralize all file writing)
-//
-
-static const char* szCompSuffix = "_cmp";
-static const char* szEncryptSuffix = "_enc";
 
 FileManager::FileManager() : MutexClass()
 {
@@ -33,9 +27,7 @@ FileManager::FileManager( const std::string &manifestpath,
     m_WorkingDirectory = workingDirectory;
 
     // Set File Stride
-    m_FileStride = uFileStride;
-    m_Chunker.SetChunkSize(m_FileStride);
-    m_Crypto.SetStride(m_FileStride);
+    m_FileStride = uFileStride; // depricated TODO :: remove
 }
 
 FileManager::~FileManager()
@@ -129,7 +121,23 @@ int FileManager::RemoveFile(const std::string &filepath)
 
     return status;
 }
+void FileManager::InsertToManifest (FileInfo* pFi) { 
+    if(!pFi) return;
+    // Calculate relative path
+    std::string filepath;
+    pFi->GetFilepath(filepath);
 
+    std::cout<<" filepath : " << filepath << std::endl;
+    std::string relative;
+    fs::MakePathRelative(m_WorkingDirectory, filepath, relative);
+    std::cout<<" relative : " << relative << std::endl;
+
+    pFi->SetFilepath(relative);
+    Lock();
+    if(pFi) m_Manifest.InsertFileInfo(pFi); 
+    Unlock();
+}
+ 
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
 {
     Lock();

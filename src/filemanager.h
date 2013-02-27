@@ -7,15 +7,9 @@
 
 #include "mutexclass.h"
 #include "manifest.h"
-#include "chunker.h"
 #include "fileinfo.h"
 #include "fileinfofactory.h"
-#include "compressor.h"
-#include "crypto.h"
 #include "errorcodes.h"
-
-#include "taskarbiter.h"
-#include "masterkey.h"
 
 class FileManager : public MutexClass
 {
@@ -61,12 +55,8 @@ public:
                               unsigned char *key, // byte
                               unsigned char *iv); // byte
 
-    void InsertToManifest (const FileInfo* pFi) { 
-        Lock();
-        if(pFi) m_Manifest.InsertFileInfo(pFi); 
-        Unlock();
-    }
-    
+    void InsertToManifest (FileInfo* pFi);
+   
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
 
     void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
@@ -81,19 +71,10 @@ public:
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
     void SetFilePostId(const std::string &filepath, const std::string& postid);
     void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
-    void SetMasterKey(const MasterKey& mk)                      { m_MasterKey = mk; } 
 
 private:
-    MasterKey           m_MasterKey;
-
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;
-    Chunker             m_Chunker;
-    Crypto              m_Crypto;
-    Compressor          m_Compressor;
-
-    std::ifstream       m_ifStream;
-    std::ofstream       m_ofStream;
 
     std::string         m_ManifestFilePath; // Location of manifest
     std::string         m_WorkingDirectory; // Location where original files live.
