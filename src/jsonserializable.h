@@ -76,14 +76,24 @@ namespace jsn
 
     static bool DeserializeObject(JsonSerializable* pObj, const std::string& input)
     {
-        if(!pObj)
+        std::cout<<" deserializing object .... " << std::endl;
+        if(input.empty()) {
+            std::cout<<" input empty ... " << std::endl;
             return false;
+        }
+
+        if(!pObj) { 
+            std::cout<<" Invalid object " << std::endl;
+            return false;
+        }
 
         Json::Value root;
         Json::Reader reader;
 
-        if(!reader.parse(input, root))
+        if(!reader.parse(input, root)) { 
+            std::cout<< " failed to parse " << std::endl;
             return false;
+        }
 
         pObj->Deserialize(root);
 

@@ -263,11 +263,20 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
                                    NULL,
                                    response);
 
+        std::cout<< " CODE : " << response.code << std::endl;
+        std::cout<< " BODY : " << response.body << std::endl;
         // Deserialize new data into app
-        if(jsn::DeserializeObject(g_pApp, response.body))
-            SaveAppToFile();
-        else
-            status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
+        if(response.code == 200) {
+            if(jsn::DeserializeObject(g_pApp, response.body)) {
+                SaveAppToFile();
+            }
+            else { 
+                status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
+            }
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
     }
     else {
         status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
