@@ -7,8 +7,6 @@
 #include <vector>
 #include <string>
 
-#include <curl/curl.h>
-
 class UrlParams
 {
     typedef std::vector<std::string> UrlParam;
@@ -18,8 +16,6 @@ public:
     UrlParam GetValue(const std::string& key);
 
     void SerializeToString(std::string &out) const;
-    void SerializeAndEncodeToString(CURL* pCurl, std::string &out) const;
-
     void SerializeAndEncodeToString(std::string &out) const;
 
     static void UrlEncode(const std::string &url);
