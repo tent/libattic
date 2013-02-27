@@ -27,6 +27,13 @@ Manifest::~Manifest()
 {
 
 }
+
+void Manifest::SetDirectory(std::string &filePath) 
+{ 
+    m_Filepath = filePath; 
+    utils::CheckUrlAndAppendTrailingSlash(m_Filepath);
+    m_Filepath += "manifest";
+}
 /*
  * Order to write out (and read in)
  * Manifest Header
@@ -51,8 +58,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
     std::cout << " callback hit ... " << std::endl;
     int i;
 
-    for(i=0; i<argc; i++)
-    {
+    for(i=0; i<argc; i++) {
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
     }
 
@@ -75,7 +81,7 @@ void Manifest::Shutdown()
 int Manifest::OpenSqliteDb()
 {
     int status = ret::A_OK;
-
+    
     std::cout<<" attempting to open : " << m_Filepath << std::endl;
     int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
 

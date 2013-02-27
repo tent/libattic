@@ -1554,9 +1554,17 @@ TEST(REINTERPREST, CAST)
 TEST(FILESYSTEM, RELATIVETO)
 {
     std::string relative;
-    fs::MakePathRelative("foo/bar", "foo/bar/what.txt", relative);
-    //ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
-    std::cout<<" RELATIVE : " << relative << std::endl;
+    fs::MakePathRelative("foo/bar", "this/foo/test/something/what.txt", relative);
+    ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
+}
+
+TEST(FILESYSTEM, GETCANONICALPATH)
+{
+    std::string path("./data/oglisv.pdf");
+    std::string absolute;
+    fs::GetCanonicalPath(path, absolute);
+
+    std::cout<<" absolute : " << absolute << std::endl;
 }
 
 int main (int argc, char* argv[])

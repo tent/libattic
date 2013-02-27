@@ -15,13 +15,13 @@ FileManager::FileManager() : MutexClass()
 
 }
 
-FileManager::FileManager( const std::string &manifestpath, 
+FileManager::FileManager( const std::string &manifestDirectory, 
                           const std::string &workingDirectory, 
                           unsigned int uFileStride)
 {
     // Set manifest path
-    m_ManifestFilePath = manifestpath;
-    m_Manifest.SetFilePath(m_ManifestFilePath);
+    m_ManifestDirectory = manifestDirectory;
+    m_Manifest.SetDirectory(m_ManifestDirectory);
 
     // Set working directory
     m_WorkingDirectory = workingDirectory;
@@ -163,9 +163,14 @@ FileInfo* FileManager::CreateFileInfo()
 
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
+    std::string canonical, relative;
+    fs::GetCanonicalPath(filepath, canonical);
+    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+    std::cout<<" RELATIVE : " << relative << std::endl;
+
     Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-    m_Manifest.QueryForFile(filepath, pFi);
+    m_Manifest.QueryForFile(relative, pFi);
     Unlock();
 
     if(pFi) {

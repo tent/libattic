@@ -104,7 +104,7 @@ public:
 
     void SetPostID(const std::string &id)   { InsertPostID(id); }
     void SetEntryCount(unsigned int count)  { m_EntryCount = count; }
-    void SetFilePath(std::string &filePath) { m_Filepath = filePath; }
+    void SetDirectory(std::string &filePath); 
 
     void CompareAndMergeDb(sqlite3* pDb);
 

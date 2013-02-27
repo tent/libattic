@@ -17,7 +17,7 @@ class FileManager : public MutexClass
     FileManager operator=(const FileManager &rhs) { return *this; }
 public:
     FileManager();
-    FileManager( const std::string &manifestpath, 
+    FileManager( const std::string &manifestDirectory, 
                  const std::string &workingDirectory, 
                  unsigned int uFileStride = 400000);
 
@@ -59,12 +59,12 @@ public:
    
     unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
 
-    void GetManifestFilePath(std::string &out) const { out = m_ManifestFilePath; }
+    void GetManifestDirectory(std::string &out) const { out = m_ManifestDirectory; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
     void GetTempDirectory(std::string &out) const    { out = m_TempDirectory; }
     unsigned int GetFileStride() const               { return m_FileStride; }
 
-    void SetManifestFilePath(const std::string &filepath)       { m_ManifestFilePath = filepath; }
+    void SetManifestDirectory(const std::string &filepath)       { m_ManifestDirectory = filepath; }
     void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); } // Depricated
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
@@ -76,7 +76,7 @@ private:
     FileInfoFactory     m_FileInfoFactory;
     Manifest            m_Manifest;
 
-    std::string         m_ManifestFilePath; // Location of manifest
+    std::string         m_ManifestDirectory; // Location of manifest
     std::string         m_WorkingDirectory; // Location where original files live.
     std::string         m_TempDirectory;    // Location where file copies will be made and manipulated
                                             // compression, chunking, cryptio, etc ...
