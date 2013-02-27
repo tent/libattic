@@ -164,32 +164,33 @@ public:
             Json::ValueIterator itr = val.begin();
 
             for(; itr != val.end(); itr++) {
-                printf( " key type=[%d]", itr.key().type());
-                printf( " value type=[%d]\n", (*itr).type());
+                if(itr.key().isString() && (*itr).isString())
+                    m[itr.key().asString()] = (*itr).asString();
+                else { 
+                    if((*itr).type() == 6) {
+                        Json::Value arr(Json::arrayValue);
+                        arr = (*itr);
 
-                if((*itr).type() == 6) {
-                    Json::Value arr(Json::arrayValue);
-                    arr = (*itr);
+                        std::cout << "parsing array " << std::endl;
+                        Json::ValueIterator itr2 = arr.begin();
 
-                    std::cout<<" size : " << arr.size() << std::endl;
-                                                                            
-                    std::cout << "parsing array " << std::endl;
-                    Json::ValueIterator itr2 = arr.begin();
+                        std::string vallist;
+                        for(; itr2 != arr.end(); itr2++) {
+                            if(!vallist.empty())
+                                vallist += ", ";
 
-                    for(; itr2 != arr.end(); itr2++) {
-                        std::cout<< (*itr2).asString() << std::endl;
+                            if((*itr2).isString())
+                                vallist += (*itr2).asString();
+                        }
+
+                        if(itr.key().isString())
+                            m[itr.key().asString()] = vallist;
                     }
+                    std::cout<<" Nonstandard json response in DeserializeObjectValueIntoMap of type(s) : " << itr.key().type() << " " << (*itr).type() <<std::endl;
                 }
-
-                std::cout << itr.key().asString() << std::endl; 
-                std::cout << (*itr).asString() << std::endl;
-
-                m[itr.key().asString()] = (*itr).asString();
-
             }
         }
     }
-
 
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m)
     {
