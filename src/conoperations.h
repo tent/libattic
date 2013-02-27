@@ -101,10 +101,10 @@ namespace conops
 
     static void RetrieveEntityProfiles(const AccessToken& at, Entity& ent)
     {
+        std::cout<<" REEEEEEETREIVE ENTITY PROFILES < -------------- " << std::endl;
         unsigned int profcount = ent.GetProfileCount();
         std::cout<<" PROF COUNT : " << profcount << std::endl;
-        if(profcount)
-        {
+        if(profcount) {
             const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
             Entity::UrlList::const_iterator itr = ProfUrlList->begin();
 
@@ -116,7 +116,7 @@ namespace conops
 
                 netlib::HttpGet( *itr, 
                          NULL,
-                         NULL,//at,
+                         &at,
                          response);
 
                 std::cout<< " resp : " << response.body << std::endl;
@@ -269,15 +269,13 @@ namespace conops
             
             // Set Api root
             Profile* pProf = entOut.GetActiveProfile();
-            if(pProf)
-            {
+            if(pProf) {
                 std::string apiroot;
                 pProf->GetApiRoot(apiroot);
                 entOut.SetApiRoot(apiroot);
                 entOut.SetEntityUrl(entityurl);
             }
-            else
-            {
+            else {
                 status = ret::A_FAIL_INVALID_PTR;
             }
 
@@ -293,15 +291,13 @@ namespace conops
             
             // Set Api root
             Profile* pProf = entOut.GetActiveProfile();
-            if(pProf)
-            {
+            if(pProf) {
                 std::string apiroot;
                 pProf->GetApiRoot(apiroot);
                 entOut.SetApiRoot(apiroot);
                 entOut.SetEntityUrl(entityurl);
             }
-            else
-            {
+            else {
                 status = ret::A_FAIL_INVALID_PTR;
             }
 

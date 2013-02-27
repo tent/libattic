@@ -55,6 +55,7 @@ static CredentialsManager*  g_pCredManager = NULL;
 static EntityManager*       g_pEntityManager = NULL;
 static TaskManager*         g_pTaskManager = NULL;
 
+static AccessToken          g_AccessToken;
 //static TaskArbiter g_Arb;
 
 // Directories
@@ -154,28 +155,27 @@ int InitLibAttic( const char* szWorkingDirectory,
             alog::Log(Logger::ERROR, "Failed to load phrase token");
 
         // Try to load a master key if we have one
-        if(LoadMasterKey() == ret::A_OK) // don't set it equal to status, because if this fails
-        {                              // it's really not that important, we can have the user
-                                       // go ahead and enter it.
+        if(LoadMasterKey() == ret::A_OK) {  // don't set it equal to status, because if this fails
+                                            // it's really not that important, we can have the user
+                                            // go ahead and enter it.
             status = SetFileManagerMasterKey();
         }
 
         AccessToken at;
         g_pCredManager->GetAccessTokenCopy(at);
         status = liba::InitializeTaskManager( &g_pTaskManager,
-                                                g_pApp,
-                                                g_pFileManager,
-                                                g_pCredManager,
-                                                at,
-                                                g_Entity,
-                                                g_TempDirectory,
-                                                g_WorkingDirectory,
-                                                g_ConfigDirectory);
+                                              g_pApp,
+                                              g_pFileManager,
+                                              g_pCredManager,
+                                              at,
+                                              g_Entity,
+                                              g_TempDirectory,
+                                              g_WorkingDirectory,
+                                              g_ConfigDirectory);
 
 
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_LOAD_APP_DATA;
         alog::Log(Logger::ERROR, "Failed to load app data");
     }
@@ -271,8 +271,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 
     int status = ret::A_OK;
     std::string serialized;
-    if(JsonSerializer::SerializeObject(g_pApp, serialized))
-    {
+    if(JsonSerializer::SerializeObject(g_pApp, serialized)) {
         Response response;
         status = netlib::HttpPost( postpath, 
                                    NULL,
@@ -286,8 +285,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
         else
             status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
     }
     return status;
@@ -308,24 +306,20 @@ int RequestAppAuthorizationURL(const char* szEntityUrl)
     UrlParams val;
     val.AddValue(std::string("client_id"), g_pApp->GetAppID());
 
-    if(g_pApp->GetRedirectURIs())
-    {
+    if(g_pApp->GetRedirectURIs()) {
         TentApp::RedirectVec* pUris = g_pApp->GetRedirectURIs();
         TentApp::RedirectVec::iterator itr = pUris->begin();
 
-        for(;itr!=pUris->end();itr++)
-        {
+        for(;itr!=pUris->end();itr++) {
             val.AddValue(std::string("redirect_uri"), *itr);
         }
     }
 
-    if(g_pApp->GetScopes())
-    {
+    if(g_pApp->GetScopes()) {
         TentApp::ScopeVec* pScopes = g_pApp->GetScopes();
         TentApp::ScopeVec::iterator itr = pScopes->begin();
 
-        for(;itr!=pScopes->end();itr++)
-        {
+        for(;itr!=pScopes->end();itr++) {
             val.AddValue(std::string("scope"), *itr);
         }
     }
@@ -402,17 +396,14 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 
     netlib::HttpPost(path, NULL, serialized, &at, response);
 
-    if(response.code == 200)
-    {
+    if(response.code == 200) {
         AccessToken at;
         status = liba::DeserializeIntoAccessToken(response.body, at);
-        if(status == ret::A_OK)
-        {
+        if(status == ret::A_OK) {
             status = liba::WriteOutAccessToken(at, g_ConfigDirectory);
         }
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_NON_200;
     }
 
@@ -423,10 +414,8 @@ int LoadAccessToken()
 {
     int status = g_pCredManager->LoadAccessToken();
 
-    if(status == ret::A_OK)
-    {
-        AccessToken at;
-        g_pCredManager->GetAccessTokenCopy(at);
+    if(status == ret::A_OK) {
+        g_pCredManager->GetAccessTokenCopy(g_AccessToken);
     }
     
     return status; 
@@ -575,8 +564,7 @@ int GetMasterKeyFromProfile(std::string& out)
     int status = ret::A_OK;
 
     Profile* prof = g_Entity.GetFrontProfile();
-    if(prof)
-    {
+    if(prof) {
         AtticProfileInfo* atpi = prof->GetAtticInfo();
         if(atpi)
             atpi->GetMasterKey(out);
@@ -600,26 +588,21 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
         std::string encmk; // Encrypted Master Key
         status = GetMasterKeyFromProfile(encmk);
 
-        if(status == ret::A_OK)
-        {
-            if(!encmk.empty())
-            {
+        if(status == ret::A_OK) {
+            if(!encmk.empty()) {
                 // Attempt to Decrypt Master Key
                 std::string out;
                 Crypto crypto;
                 status = crypto.DecryptStringCFB(encmk, cred, out);
 
-                if(status == ret::A_OK)
-                {
-                    if(out.size() >= 8)
-                    {
+                if(status == ret::A_OK) {
+                    if(out.size() >= 8) {
                         // Check sentinel bytes
                         std::string sentone, senttwo;
                         sentone = out.substr(0, 4);
                         senttwo = out.substr(4, 4);
                         
-                        if(sentone == senttwo)
-                        {
+                        if(sentone == senttwo) {
                             // extract actual key apart from sentinel bytes
                             std::string keyActual;
                             keyActual = out.substr(8);
@@ -635,27 +618,22 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
                             SavePhraseToken(g_Pt);
                             g_bEnteredPassphrase = true;
                         }
-                        else
-                        {
+                        else {
                             status = ret::A_FAIL_SENTINEL_MISMATCH;
                             alog::Log(Logger::ERROR, " Failed to decrypt master key : ", status);
                         }
                     }
-                    else
-                    {
+                    else {
                         status = ret::A_FAIL_OTHER;
                     }
                 }
-
             }
-            else
-            {
+            else {
                 status = ret::A_FAIL_INVALID_MASTERKEY;
             }
         }
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
     }
     return status;
@@ -666,8 +644,7 @@ int EnterPassphrase(const char* szPass)
 {
     int status = IsLibInitialized(false);
 
-    if(status == ret::A_OK)
-    {
+    if(status == ret::A_OK) {
         // Enter the passphrase and generate phrase token
         // TODO :: when entering the passphrase always check against the master key with sentinel
         //         if the first 8 bytes don't match (4 bytes == next 4 bytes) then the user entered
@@ -687,8 +664,7 @@ int EnterPassphrase(const char* szPass)
 
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
-        if(status == ret::A_OK)
-        {
+        if(status == ret::A_OK) {
             /*
             std::cout<< " PASS : " << szPass << std::endl;
             std::cout<< " PHRASE KEY : " << phraseKey << std::endl;
@@ -697,20 +673,14 @@ int EnterPassphrase(const char* szPass)
 
             status = DecryptMasterKey(phraseKey, salt);
 
-            if(status == ret::A_OK)
-            {
+            if(status == ret::A_OK) {
                 // Reload phrase token
                 //LoadPhraseToken();
                 // Load Master Key
                 status = LoadMasterKey();
                 if(status == ret::A_OK)
                     status = SetFileManagerMasterKey();
-
             }
-            //std::cout<<" DECRYPT STATUS : " << status << std::endl;
-
-
-
         }
     }
 
@@ -772,17 +742,15 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
     g_Entity.GetFrontProfileUrl(url);
 
     AccessToken at;
-    if(g_pCredManager)
-    {
+    if(g_pCredManager) {
+        std::cout<<" getting access token ... " << std::endl;
         g_pCredManager->GetAccessTokenCopy(at);
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_INVALID_PTR;
     }
 
-    if(status == ret::A_OK)
-    {
+    if(status == ret::A_OK) {
         // TODO :: add the type as url params and just pass the attic profile type
         // UrlParams params
         std::string hold(cnst::g_szAtticProfileType);
@@ -797,8 +765,7 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
         std::cout<<" REGISTER RESP CODE : " << resp.code << std::endl;
         std::cout<<" BODY : " << resp.body << std::endl;
         
-        if(resp.code != 200)
-        {
+        if(resp.code != 200) {
             status = ret::A_FAIL_NON_200;
             alog::Log(Logger::DEBUG, "RegisterPassphraseProfilePost : \n" +
                       resp.CodeAsString() +
@@ -1031,7 +998,10 @@ int LoadEntity(bool override)
     std::string entpath;
     GetEntityFilepath(entpath);
     int status = g_Entity.LoadFromFile(entpath);
- 
+
+    // Check for master key
+    if(!g_Entity.HasAtticProfileMasterKey())
+        status = ret::A_FAIL_INVALID_MASTERKEY;
     
     if(status != ret::A_OK)// || override)
     {
