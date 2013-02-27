@@ -738,9 +738,10 @@ int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::s
         // TODO :: add the type as url params and just pass the attic profile type
         // UrlParams params
         std::string hold(cnst::g_szAtticProfileType);
-        char *pPm = curl_easy_escape(NULL, hold.c_str() , hold.size());  
+        hold = netlib::UriEncode(hold);
+
         url.append("/");
-        url.append(pPm);
+        url.append(hold);
 
         Response resp;
         netlib::HttpPut(url, NULL, output, &at, resp);

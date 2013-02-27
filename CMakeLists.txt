@@ -120,7 +120,6 @@ if(ATTIC_STATIC_LIB)
                           boost_system
                           boost_filesystem
                           boost_datetime
-                          curl
                           pthread
                           ssl)
 
@@ -136,7 +135,6 @@ if(ATTIC_BINARY)
                           boost_system
                           boost_filesystem
                           boost_datetime
-                          curl
                           pthread
                           ssl
                           gtest) #pulls gtest from google subdirectory
