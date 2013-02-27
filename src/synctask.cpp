@@ -266,7 +266,8 @@ int SyncTask::InsertFileInfoToManager(const std::vector<FileInfo>& filist)
 
     for(;itr != filist.end(); itr++) {
         // Need to resolve local paths
-        fm->InsertToManifest(&*itr);
+        FileInfo fi = *itr;
+        fm->InsertToManifest(&fi);
     }
 
     return status;
