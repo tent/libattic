@@ -338,6 +338,42 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 
 }
 
+bool g_bSync = false;
+void SYNCCB(int a, void* b)
+{
+    std::cout<<" SYNC CALLBACK HIT : " << a << std::endl;
+
+}
+TEST(TEST, SYNC)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bSync) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+    if(status == ret::A_OK) {
+
+        EnterPassphrase("password");
+        std::cout<<"syncing..."<<std::endl;
+        status = SyncFiles(SYNCCB);
+        std::cout<<"done calling ... " << std::endl;
+    }
+
+    for(;;)
+    {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+}
 /*
 */
 /*
@@ -384,41 +420,7 @@ TEST(TEST, DELETEALLPOSTS)
 */
 /*
 
-void SYNCCB(int a, void* b)
-{
-    std::cout<<" SYNC CALLBACK HIT BRAH : " << a << std::endl;
 
-}
-TEST(TEST, SYNC)
-{
-    int status = InitLibAttic( "./data",
-                  "./config",
-                  "./data/temp",
-                  "https://manuel.tent.is");
-
-    if(status == ret::A_OK)
-    {
-        std::cout<<"syncing..."<<std::endl;
-        status = SyncFiles(SYNCCB);
-        std::cout<<"done calling ... " << std::endl;
-
-        if(status == ret::A_FAIL_NEED_ENTER_PASSPHRASE)
-        {
-            EnterPassphrase("password");
-        }
-    }
-
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
-
-    status = ShutdownLibAttic();
-    std::cout<<" Shutdown status : " << status << std::endl;
-}
 
 /*
  */
@@ -1654,6 +1656,7 @@ int main (int argc, char* argv[])
                     }
                     case SYNC:
                     {
+                        g_bSync = true;
                         break;
                     }
                     case QUERYMANIFEST:

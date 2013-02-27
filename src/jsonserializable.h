@@ -7,6 +7,10 @@
 #include <json/json.h>
 
 #include <iostream>
+
+#include <stdio.h>
+#include <string.h>
+
 class JsonSerializable
 {
 public:
@@ -112,8 +116,7 @@ public:
     {
         vec.clear();
         Json::ValueIterator itr = val.begin();
-        for(; itr != val.end(); itr++)
-        { 
+        for(; itr != val.end(); itr++) { 
             if((*itr).isConvertibleTo(Json::stringValue))
                 vec.push_back((*itr).asString());
         }
@@ -121,13 +124,11 @@ public:
 
     static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
     {
-        if(val.isObject())
-        {
+        if(val.isObject()) {
             vec.clear();
             Json::ValueIterator itr = val.begin();
                                                                                     
-            for(; itr != val.end(); itr++)
-            { 
+            for(; itr != val.end(); itr++) { 
                 vec.push_back(itr.key().asString());
             }
         }
@@ -135,12 +136,10 @@ public:
 
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m)
     {
-        if(val.isObject())
-        {
+        if(val.isObject()) {
             std::map<std::string, std::string>::iterator itr = m.begin();
 
-            for(;itr != m.end(); itr++)
-            {
+            for(;itr != m.end(); itr++) {
                 val[(*itr).first] = (*itr).second;
             }
 
@@ -149,12 +148,10 @@ public:
 
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m)
     {
-        if(val.isObject())
-        {
+        if(val.isObject()) {
             std::map<std::string, bool>::iterator itr = m.begin();
 
-            for(;itr != m.end(); itr++)
-            {
+            for(;itr != m.end(); itr++) {
                 val[(*itr).first] = (*itr).second;
             }
         }
@@ -162,16 +159,34 @@ public:
 
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m)
     {
-        if(val.isObject())
-        {
+        if(val.isObject()){
             m.clear();
             Json::ValueIterator itr = val.begin();
 
-            for(; itr != val.end(); itr++)                                                                      
-            {
-                m[itr.key().asString()] = (*itr).asString();
-            }
+            for(; itr != val.end(); itr++) {
+                printf( " key type=[%d]", itr.key().type());
+                printf( " value type=[%d]\n", (*itr).type());
 
+                if((*itr).type() == 6) {
+                    Json::Value arr(Json::arrayValue);
+                    arr = (*itr);
+
+                    std::cout<<" size : " << arr.size() << std::endl;
+                                                                            
+                    std::cout << "parsing array " << std::endl;
+                    Json::ValueIterator itr2 = arr.begin();
+
+                    for(; itr2 != arr.end(); itr2++) {
+                        std::cout<< (*itr2).asString() << std::endl;
+                    }
+                }
+
+                std::cout << itr.key().asString() << std::endl; 
+                std::cout << (*itr).asString() << std::endl;
+
+                m[itr.key().asString()] = (*itr).asString();
+
+            }
         }
     }
 

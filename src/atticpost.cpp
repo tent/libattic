@@ -58,28 +58,36 @@ void AtticPost::Serialize(Json::Value& root)
 
 void AtticPost::Deserialize(Json::Value& root)
 {
+    std::cout<<" deserializing here " << std::endl;
     Post::Deserialize(root);
+
+    std::cout<<" deserializing here " << std::endl;
 
     // Extract attic post specific things from post content
     GetContent("name", m_Name);
     GetContent("path", m_Path);
     GetContent("type", m_MimeType);
 
+    std::cout<<" deserializing here " << std::endl;
     std::string size;
     GetContent("size", size);
     m_Size = atoi(size.c_str());
 
+    std::cout<<" deserializing here " << std::endl;
     std::string chunkval, idval;
     GetContent("chunk_name", m_ChunkName);
     GetContent("chunk_posts", chunkval);
     GetContent("chunk_ids", idval);
+    std::cout<<" deserializing here " << std::endl;
 
     Json::Value cp, ci;
     JsonSerializer::DeserializeJsonValue(cp, chunkval);
     JsonSerializer::DeserializeJsonValue(ci, idval);
+    std::cout<<" deserializing here " << std::endl;
 
     JsonSerializer::DeserializeIntoVector(cp, m_ChunkPosts);
     JsonSerializer::DeserializeIntoVector(ci, m_ChunkIds);
+    std::cout<<" deserializing here " << std::endl;
 
     GetContent("kdata", m_KeyData);
     m_KeyData = cb64::base64_decode(m_KeyData);

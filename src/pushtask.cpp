@@ -110,7 +110,6 @@ int PushTask::PushFile(const std::string& filepath)
             std::string decryptedkey;
             crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
             fi->SetFileKey(decryptedkey);
-            std::cout<<" DECRYPTED KEY : " << decryptedkey << std::endl;
             fi->GetFileCredentials(fileCredentials);
         }
         
@@ -130,8 +129,6 @@ int PushTask::PushFile(const std::string& filepath)
         }
 
         if(status == ret::A_OK) {
-            std::cout<< "RESPONSE CODE : " << resp.code << std::endl;
-            std::cout<< "RESPONSE BODY : " << resp.body << std::endl;
             if(resp.code == 200) {
                 // On success 
                 FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
@@ -153,10 +150,10 @@ int PushTask::PushFile(const std::string& filepath)
                     // update chunk post with chunk info metadata
                     // use non multipart to just update the post body
                     // leaving existing attachment in-tact
-
                     std::string bodyBuffer;
                     JsonSerializer::SerializeObject(&p, bodyBuffer);
                     
+                    // Set
                     Response metaResp;
                     AccessToken* at = GetAccessToken();
                     status = netlib::HttpPut( posturl,
@@ -424,6 +421,9 @@ int PushTask::ProcessFile( const std::string& requestType,
                            Response& resp)
 {
     int status = ret::A_OK;
+
+    std::cout<< "processing file ... " <<std::endl;
+    std::cout<< "filepath : " << filepath << std::endl;
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);

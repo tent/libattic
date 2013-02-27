@@ -124,14 +124,14 @@ int SyncTask::SyncMetaData()
     
     int postcount = GetAtticPostCount();
                                                                                                   
-    if(postcount > 0)
-    { 
+    if(postcount > 0) { 
         Entity entity;
         GetEntity(entity);
              
         std::string url;                                                                   
         entity.GetApiRoot(url);
-        url += "/posts";
+        utils::CheckUrlAndAppendTrailingSlash(url);
+        url += "posts";
 
         std::cout<<" URL : " << url << std::endl;
 
@@ -147,7 +147,7 @@ int SyncTask::SyncMetaData()
                          response); 
 
         std::cout<< " CODE : " << response.code << std::endl;
-        std::cout<< " RESPONSE : " << response.body << std::endl;                          
+        //std::cout<< " RESPONSE : " << response.body << std::endl;                          
 
         if(response.code == 200)
         {
@@ -155,9 +155,11 @@ int SyncTask::SyncMetaData()
             Json::Value root;                               
             Json::Reader reader;                            
                                                               
-            if(reader.parse(response.body, root))          
-            {  
+            std::cout << " parsing response body " << std::endl;
+            if(reader.parse(response.body, root)) {  
                 std::vector<FileInfo> fileInfoList;
+
+                std::cout<<" root size : " << root.size() << std::endl;
 
                 Json::ValueIterator itr = root.begin();         
                 int count = 0;                                  
@@ -209,18 +211,15 @@ int SyncTask::SyncMetaData()
                             std::cout<< " CODE : " << response.code << std::endl;
                             //std::cout<< " RESP : " << response.body << std::endl;
 
-                            if(response.code == 200)
-                            {
+                            if(response.code == 200) {
                                 ChunkPost cp;
                                 JsonSerializer::DeserializeObject(&cp, response.body);
-                                if(cp.GetChunkSize())
-                                {
+                                if(cp.GetChunkSize()) {
                                     std::cout<<" THIS ChunkPost : " << cp.GetChunkSize() << std::endl;
                                     std::vector<ChunkInfo>* ciList = cp.GetChunkList();
                                     std::vector<ChunkInfo>::iterator itr = ciList->begin();
 
-                                    for(;itr != ciList->end(); itr++)
-                                    {
+                                    for(;itr != ciList->end(); itr++) {
                                         fi.PushChunkBack(*itr);
                                     }
 
@@ -229,25 +228,21 @@ int SyncTask::SyncMetaData()
                                 std::cout<<" CHUNK COUNT : " << fi.GetChunkCount() << std::endl;
                                 fileInfoList.push_back(fi);
                                 InsertFileInfoToManager(fileInfoList);
-
                             }
                         }
                     }
-                    else
-                    {
+                    else {
                         std::cout<<" no chunks ... : " << chunkPosts.size() << std::endl;
                     }
 
 
                 }
             }
-            else
-            {
+            else {
                 status = ret::A_FAIL_JSON_PARSE;              
             }
         }
-        else
-        {
+        else {
             status = ret::A_FAIL_NON_200;
         }
 
@@ -269,13 +264,10 @@ int SyncTask::InsertFileInfoToManager(const std::vector<FileInfo>& filist)
 
     std::vector<FileInfo>::const_iterator itr = filist.begin();
 
-    fm->Lock();
-    for(;itr != filist.end(); itr++)
-    {
+    for(;itr != filist.end(); itr++) {
+        // Need to resolve local paths
         fm->InsertToManifest(&*itr);
     }
-
-    fm->Unlock();
 
     return status;
 }
@@ -284,9 +276,9 @@ int SyncTask::GetAtticPostCount()
 {                                                                                                 
     std::string url;
     GetEntityUrl(url);
+    utils::CheckUrlAndAppendTrailingSlash(url);
 
-    // TODO :: make this provider agnostic                                                         
-    url += "/tent/posts/count";
+    url += "posts/count";
 
     std::cout<<" URL : " << url << std::endl;
 

@@ -110,14 +110,15 @@ namespace conops
 
             std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
 
-            while(itr != ProfUrlList->end())
-            {
+            while(itr != ProfUrlList->end()) {
                 Response response;
 
+                std::cout<<" ACCESS TOKEN : " << at.GetAccessToken() << std::endl;
+
                 netlib::HttpGet( *itr, 
-                         NULL,
-                         &at,
-                         response);
+                                 NULL,
+                                 &at,
+                                 response);
 
                 std::cout<< " resp : " << response.body << std::endl;
                 std::cout<< " code : " << response.code << std::endl;

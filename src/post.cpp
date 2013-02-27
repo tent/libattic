@@ -121,58 +121,58 @@ void Post::Serialize(Json::Value& root)
 void Post::Deserialize(Json::Value& root)
 {
     // General Post
+    std::cout<< " root deserialize " << std::endl;
     m_ID            = root.get("id", "").asString();
     m_Entity        = root.get("entity", "").asString();
     m_PublishedAt   = root.get("published_at", 0).asInt(); 
     m_ReceivedAt    = root.get("received_at", 0).asInt();
     m_Version       = root.get("version", 0).asUInt();
 
+    std::cout<< " root deserialize " << std::endl;
+
     JsonSerializer::DeserializeIntoVector(root["mentions"], m_Mentions);
     JsonSerializer::DeserializeIntoVector(root["licenses"], m_Licenses);
 
+    std::cout<< " root deserialize " << std::endl;
     // TODO :: content is dynamic, and can be a variety of things
     //         serialization and deserialization is more complex than
     //         just a map of strings
    
     JsonSerializer::DeserializeObjectValueIntoMap(root["content"], m_Content);
     
+    std::cout<< " root deserialize " << std::endl;
     // Deserialize this into an array of objects
     Json::Value atch(Json::arrayValue);
     atch = root["attachments"];
 
-    if(atch.size() > 0)
-    {
+    std::cout<< " root deserialize " << std::endl;
+    if(atch.size() > 0) {
         Json::ValueIterator itr = atch.begin();           
 
-        for(; itr != atch.end(); itr++)                   
-        {                                                
+        for(; itr != atch.end(); itr++) {
             //Attachment* pAtch = new Attachment;
             Attachment pAtch;
             Json::Value aobj(Json::objectValue);
             aobj = (*itr);
 
-            if(aobj.isObject())
-            {
-                if(aobj.size() >= 4)
-                {
+            if(aobj.isObject()) {
+                if(aobj.size() >= 4) {
                     Json::ValueIterator ii = aobj.begin();
 
-                    for(; ii != aobj.end(); ii++)
-                    {
+                    for(; ii != aobj.end(); ii++) {
                         pAtch.AssignKeyValue(ii.key().asString(), (*ii));
                     }
-                    //pAtch->AssignKeyValue(itr.key(), *itr);
                 }
             }
 
-            //JsonSerializer::DeserializeObject(pAtch, aobj.asString());
             m_Attachments.push_back(pAtch);
         }
+
+        std::cout<< " root deserialize " << std::endl;
     }
 
 
-    if(!root["app"].isNull())
-    {
+    if(!root["app"].isNull()) {
         //m_TentApp = new TentApp();
         // TODO :: this
         //m_TentApp->Deserialize(root["app"].asObject());
