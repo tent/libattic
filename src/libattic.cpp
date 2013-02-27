@@ -837,6 +837,9 @@ int RegisterPassphrase(const char* szPass, bool override)
 
             status = RegisterPassphraseWithAttic(szPass, mk);
         }
+
+        if(status == ret::A_OK)
+            EnterPassphrase(szPass); // Load phrase token, and write out to ent file
     }
 
     return status;
