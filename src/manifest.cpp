@@ -269,9 +269,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
             out->SetPostVersion(res.results[7+step]);
             out->SetEncryptedKey(res.results[8+step]);
             out->SetIv(res.results[9+step]);
-            std::cout<<" yep " << std::endl;
             out->SetDeleted(res.results[10+step]);
-            std::cout<<" yep " << std::endl;
         }
     }
 
@@ -519,26 +517,23 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
     return PerformQuery(pexc);
 }
 
-//" (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
-// FolderTable
-
+//" (foldername TEXT, folderpath TEXT, contents TEXT, folderpostid TEXT,";
+// " PRIMARY KEY(folderpath ASC));";
 int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
 {
-    std::string name, path, children, postid;
+    std::string name, path, contents, postid;
 
     std::string query;
     query += "INSERT OR REPLACE INTO ";
     query += g_foldertable;
-    query += " (name, path, children, postid) VALUES (?,?,?,?);";
+    query += " (foldername, folderpath, contents, folderpostid) VALUES (?,?,?,?);";
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
     int ret = sqlite3_prepare_v2(m_pDb, query.c_str(), -1, &stmt, 0);
 
-    if(ret == SQLITE_OK)
-    {
-        if(stmt)
-        {
+    if(ret == SQLITE_OK) {
+        if(stmt) {
             ret = sqlite3_bind_text(stmt, 1, name.c_str(), name.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK)
             {
@@ -547,36 +542,31 @@ int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
             }
 
             ret = sqlite3_bind_text(stmt, 2, path.c_str(), path.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 3, children.c_str(), children.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            ret = sqlite3_bind_text(stmt, 3, contents.c_str(), children.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 4, postid.c_str(), postid.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_step(stmt);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_DONE) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_finalize(stmt);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
