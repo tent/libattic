@@ -41,17 +41,13 @@ class Manifest
 
     bool CreateTables();
     bool CreateInfoTable();
-    bool CreateMetaTable();
     bool CreateFolderTable();
 
     bool PerformQuery(const std::string& query) const;
     bool PerformSelect(const std::string& select, SelectResult &out) const;
 
     // InfoTable
-    bool InsertCredentialsToDb(const FileInfo* fi);
-
     bool QueryForFileExistence(const std::string& filename);
-
     void CheckIfTableExists(const std::string &tableName);
 
 public:
