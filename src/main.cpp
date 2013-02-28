@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <vector>
 
@@ -13,8 +12,6 @@
 #include "compressor.h"
 #include "errorcodes.h"
 #include "urlparams.h"
-
-#include <curl/curl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
