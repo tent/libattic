@@ -32,6 +32,10 @@ namespace cnst
 
     // Chunk Data
     static unsigned int g_unChunkSize = 400000; // just default arbitrary number, to be overriden
+
+    // Folder Entry Types
+    static const char* g_FolderType = "folder";
+    static const char* g_FileType = "file";
 };
 
 
