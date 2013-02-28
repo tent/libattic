@@ -286,8 +286,8 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 
 int RequestAppAuthorizationURL(const char* szEntityUrl)
 {
-    if(!g_pApp)
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!szEntityUrl) return ret::A_FAIL_INVALID_CSTR;
 
     std::string apiroot;
     apiroot = GetEntityApiRoot(szEntityUrl);
@@ -352,8 +352,9 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
     LoadAppFromFile();
 
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
-    if(!szCode)
-        return ret::A_FAIL_INVALID_CSTR;
+    if(!szCode)             return ret::A_FAIL_INVALID_CSTR;
+    if(!szEntityUrl)        return ret::A_FAIL_INVALID_CSTR;
+    if(!szConfigDirectory)  return ret::A_FAIL_INVALID_CSTR;
 
     std::string apiroot;
     apiroot = GetEntityApiRoot(szEntityUrl);
