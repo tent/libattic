@@ -10,8 +10,12 @@
 class FolderEntry : public JsonSerializable
 {
 public:
-    FolderEntry() {}
-    ~FolderEntry() {}
+    FolderEntry();
+    FolderEntry( const std::string& postid,
+                 const std::string& type,
+                 const std::string& path); 
+
+    ~FolderEntry();
 
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
@@ -37,7 +41,9 @@ public:
     ~Folder();
 
     virtual void Serialize(Json::Value& root);
+    void SerializeContents(std::string& out);
     virtual void Deserialize(Json::Value& root);
+    void DeserializeContents(const std::string& in);
 
     void PushBackEntry(const FolderEntry& entry) { m_Entries.push_back(entry); }
 
