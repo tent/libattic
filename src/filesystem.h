@@ -61,10 +61,26 @@ namespace fs
             else {
                 std::cout<< " In GetCanonicalPath ... " << std::endl;
                 std::cout<< boost::system::system_error(error).what() << std::endl;
+                status = ret::A_FAIL_FS_ERROR;
             }
         }
         else {
             status = ret::A_FAIL_PATH_DOESNT_EXIST;
+        }
+
+        return status;
+    }
+
+    static int GetParentPath(const std::string& path, std::string& out)
+    {
+        int status = ret::A_OK;
+
+        std::string ppath;
+        status = GetCanonicalPath(path, ppath);
+        if(status == ret::A_OK) {
+            boost::filesystem::path p(ppath);
+            boost::filesystem::path dir = p.parent_path();
+            out = dir.string();
         }
 
         return status;
