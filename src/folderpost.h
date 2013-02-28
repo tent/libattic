@@ -24,7 +24,7 @@ public:
     void SetRelativePath(const std::string& path) { m_RelativePath = path; }
 
 private:
-    std::vector<FolderPost> m_Children;
+    std::vector<FolderPost> m_Children; // If folder anything 
     std::string m_RelativePath; // Relative path to file or folder
     std::string m_FileType;     // File or Folder
 };
