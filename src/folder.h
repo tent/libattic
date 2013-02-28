@@ -5,23 +5,45 @@
 #include <string>
 #include <vector>
 
-struct FolderEntry
+#include "jsonserializable.h"
+
+class FolderEntry : public JsonSerializable
 {
-    std::string postid; 
-    std::string type;   // file or folder
-    std::string name;
-    std::string path;
+public:
+    FolderEntry() {}
+    ~FolderEntry() {}
+
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
+
+    void GetPostID(std::string& out) { out = m_Postid; }
+    void GetType(std::string& out) { out = m_Type; }
+    void GetPath(std::string& out) { out = m_Path; }
+
+    void SetPostID(const std::string& id) { m_Postid = id; }
+    void SetType(const std::string& type) { m_Type = type; }
+    void SetPath(const std::string& path) { m_Path = path; }
+
+private:
+    std::string m_Postid; 
+    std::string m_Type;   // file or folder
+    std::string m_Path;
 };
 
 class Folder : public FolderEntry
 {
-
 public:
     Folder();
     ~Folder();
 
+    virtual void Serialize(Json::Value& root);
+    virtual void Deserialize(Json::Value& root);
+
+    void PushBackEntry(const FolderEntry& entry) { m_Entries.push_back(entry); }
+
 private:
-    std::vector<FolderEntry> m_Entries;
+    typedef std::vector<FolderEntry> EntryList;
+    EntryList m_Entries;
 };
 
 #endif
