@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 
-#include "fileinfo.h"
 #include "utils.h"
 
 
@@ -46,21 +45,6 @@ void Manifest::SetDirectory(std::string &filepath)
  * - Encrypted Key (blob) // Encrytped
  * - Iv (blob) // not encrypted
  */
-static int callback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-
-    std::cout << " callback hit ... " << std::endl;
-    int i;
-
-    for(i=0; i<argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-
-    printf("\n");
-
-    return 0;
-
-}
 
 int Manifest::Initialize()
 {
@@ -140,7 +124,7 @@ bool Manifest::CreateFolderTable()
     std::string pexc;
     pexc += "CREATE TABLE IF NOT EXISTS ";
     pexc += g_foldertable;
-    pexc += " (foldername TEXT, folderpath TEXT, contents TEXT, folderpostid TEXT,";
+    pexc += " (foldername TEXT, folderpath TEXT, foldercontents TEXT, folderpostid TEXT,";
     pexc += " PRIMARY KEY(folderpath ASC));";
 
     return PerformQuery(pexc);
@@ -225,10 +209,11 @@ bool Manifest::QueryForFileExistence(const std::string& filepath)
     return false;
 }
 
-bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
+bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out)
 {
     char pexc[1024];
 
+    std::cout<< "-------------> FILEPATH : " << filepath << std::endl;
     snprintf( pexc,
               1024, 
               "SELECT * FROM %s WHERE filepath=\"%s\";",
@@ -259,23 +244,25 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
         */
 
         if(step > 0) {
-            out->SetFilename(res.results[0+step]);
-            out->SetFilepath(res.results[1+step]);
-            out->SetChunkCount(res.results[2+step]);
-            out->LoadSerializedChunkData(res.results[3+step]);
-            out->SetFileSize(res.results[4+step]);
-            out->SetPostID(res.results[5+step]);
-            out->SetChunkPostID(res.results[6+step]);
-            out->SetPostVersion(res.results[7+step]);
-            out->SetEncryptedKey(res.results[8+step]);
-            out->SetIv(res.results[9+step]);
-            out->SetDeleted(res.results[10+step]);
+            out.SetFilename(res.results[0+step]);
+            out.SetFilepath(res.results[1+step]);
+            out.SetChunkCount(res.results[2+step]);
+            out.LoadSerializedChunkData(res.results[3+step]);
+            out.SetFileSize(res.results[4+step]);
+            out.SetPostID(res.results[5+step]);
+            out.SetChunkPostID(res.results[6+step]);
+            out.SetPostVersion(res.results[7+step]);
+            out.SetEncryptedKey(res.results[8+step]);
+            out.SetIv(res.results[9+step]);
+            out.SetDeleted(res.results[10+step]);
         }
     }
 
     std::cout<<" query done " << std::endl;
-
     sqlite3_free_table(res.results);
+
+    if(!step)
+        return false;
 
     return true;
 }
@@ -337,39 +324,35 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
 
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
-bool Manifest::InsertFileInfo(const FileInfo* fi)
+bool Manifest::InsertFileInfo(const FileInfo& fi)
 {
     std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
     if(!m_pDb) {
         std::cout<<"fail db " <<std::endl;
         return false;
     }
-    if(!fi) {
-        std::cout<<" attempted to insert invalid file info " << std::endl;
-        return false;
-    }
 
     std::string filename, filepath, chunkdata, metapostid, chunkpostid, encryptedkey, iv;
 
-    fi->GetFilename(filename);
-    fi->GetFilepath(filepath);
-    fi->GetSerializedChunkData(chunkdata);
-    fi->GetPostID(metapostid);
-    fi->GetChunkPostID(chunkpostid);
-    fi->GetEncryptedKey(encryptedkey);
-    fi->GetIv(iv);
+    fi.GetFilename(filename);
+    fi.GetFilepath(filepath);
+    fi.GetSerializedChunkData(chunkdata);
+    fi.GetPostID(metapostid);
+    fi.GetChunkPostID(chunkpostid);
+    fi.GetEncryptedKey(encryptedkey);
+    fi.GetIv(iv);
 
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
-    std::cout<< " count : " << fi->GetChunkCount() << std::endl;
-    std::cout<< " filesize : " << fi->GetFileSize() << std::endl;
+    std::cout<< " count : " << fi.GetChunkCount() << std::endl;
+    std::cout<< " filesize : " << fi.GetFileSize() << std::endl;
     std::cout<< " meta id : " << metapostid << std::endl;
     std::cout<< " chunk id : " << chunkpostid << std::endl;
-    std::cout<< " version : " << fi->GetPostVersion() << std::endl;
+    std::cout<< " version : " << fi.GetPostVersion() << std::endl;
     std::cout<< " chunkdata : " << chunkdata << std::endl;
     std::cout<< " encrypted key : " << encryptedkey << std::endl;
     std::cout<< " iv : " << iv << std::endl;
-    std::cout<< " deleted : " << fi->GetDeleted() << std::endl;
+    std::cout<< " deleted : " << fi.GetDeleted() << std::endl;
 
     std::string query;
     query += "INSERT OR REPLACE INTO ";
@@ -397,7 +380,7 @@ bool Manifest::InsertFileInfo(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 3, fi->GetChunkCount());
+            ret = sqlite3_bind_int(stmt, 3, fi.GetChunkCount());
             if(ret != SQLITE_OK) {
                 printf("chunk count Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -409,7 +392,7 @@ bool Manifest::InsertFileInfo(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 5, fi->GetFileSize());
+            ret = sqlite3_bind_int(stmt, 5, fi.GetFileSize());
             if(ret != SQLITE_OK) {
                 printf("filesize Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -427,7 +410,7 @@ bool Manifest::InsertFileInfo(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 8, fi->GetPostVersion());
+            ret = sqlite3_bind_int(stmt, 8, fi.GetPostVersion());
             if(ret != SQLITE_OK) {
                 printf("version Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -445,7 +428,7 @@ bool Manifest::InsertFileInfo(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 11, fi->GetDeleted());
+            ret = sqlite3_bind_int(stmt, 11, fi.GetDeleted());
             if(ret != SQLITE_OK) {
                 printf(" deleted Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -517,16 +500,16 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
     return PerformQuery(pexc);
 }
 
-//" (foldername TEXT, folderpath TEXT, contents TEXT, folderpostid TEXT,";
+//" (foldername TEXT, folderpath TEXT, foldercontents TEXT, folderpostid TEXT,";
 // " PRIMARY KEY(folderpath ASC));";
-int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
+int Manifest::InsertFolder(const Folder& folder)
 {
-    std::string name, path, contents, postid;
+    std::string name, path, foldercontents, postid;
 
     std::string query;
     query += "INSERT OR REPLACE INTO ";
     query += g_foldertable;
-    query += " (foldername, folderpath, contents, folderpostid) VALUES (?,?,?,?);";
+    query += " (foldername, folderpath, foldercontents, folderpostid) VALUES (?,?,?,?);";
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
@@ -547,7 +530,7 @@ int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 3, contents.c_str(), children.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 3, foldercontents.c_str(), foldercontents.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -571,15 +554,13 @@ int Manifest::InsertFolderDataToFolderTable(const FileInfo* fi)
                 return false;
             }
         }
-        else
-        {
+        else {
             std::cout<< "Invalid statement" << std::endl;
             printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
             return false;
         }
     }
-    else
-    {
+    else {
         std::cout<< "failed to prepare statement " << std::endl;
         printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
         return false;
@@ -594,11 +575,7 @@ bool Manifest::RemoveFolderData(const std::string& folderpath)
     return false;
 }
 
-bool Manifest::QueryForFolderData( const std::string& folderpath,
-                                   std::string &nameOut,
-                                   std::string &pathOut,
-                                   std::string &childrenOut,
-                                   std::string &postidOut)
+bool Manifest::QueryForFolder( const std::string& folderpath, Folder& out)
 {
     std::string query;
     query += "SELECT * FROM ";
@@ -616,11 +593,10 @@ bool Manifest::QueryForFolderData( const std::string& folderpath,
     std::cout << " Col count : " << res.nCol << std::endl;
     */
 
+    std::string foldername;
     int step = 0;
-    for(int i=0; i<res.nRow+1; i++)
-    {
+    for(int i=0; i<res.nRow+1; i++) {
         step = i*res.nCol;
-
         /*
         for(int j=0; j<res.nCol; j++)
         {
@@ -628,17 +604,19 @@ bool Manifest::QueryForFolderData( const std::string& folderpath,
         }
         */
 
-        if(step > 0)
-        {
-            nameOut = res.results[0+step];
-            pathOut = res.results[1+step];
-            childrenOut = res.results[2+step];
-            postidOut = res.results[3+step];
+        if(step > 0){
+            //out.SetName(res.results[0+step]);
+            foldername = res.results[0+step];
+            out.SetPath(res.results[1+step]);
+            out.DeserializeContents(res.results[2+step]);
+            out.SetPostID(res.results[3+step]);
         }
     }
 
     sqlite3_free_table(res.results);
-    return false;
+    if(!step)
+        return false;
+    return true;
 }
 
 bool Manifest::IsFileInManifest(const std::string &filepath)
