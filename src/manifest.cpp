@@ -15,12 +15,7 @@ static const std::string g_metatable("metatable");
 
 Manifest::Manifest()
 {
-    // Set the default filename
-    m_Filename.append("manifest._mn");
-    m_EntryCount = 0;
-    m_VersionNumber = 0;
     m_pDb = NULL;
-    m_Dirty = false;
 }
 
 Manifest::~Manifest()
@@ -28,9 +23,9 @@ Manifest::~Manifest()
 
 }
 
-void Manifest::SetDirectory(std::string &filePath) 
+void Manifest::SetDirectory(std::string &filepath) 
 { 
-    m_Filepath = filePath; 
+    m_Filepath = filepath; 
     utils::CheckUrlAndAppendTrailingSlash(m_Filepath);
     m_Filepath += "manifest";
 }
@@ -81,13 +76,12 @@ void Manifest::Shutdown()
 int Manifest::OpenSqliteDb()
 {
     int status = ret::A_OK;
-    
-    std::cout<<" attempting to open : " << m_Filepath << std::endl;
-    int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
 
+    int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
     if(rc) {
         // failed
         std::cout<< "Can't open database: " << sqlite3_errmsg(m_pDb);
+        std::cout<< " attempted to open : " << m_Filepath << std::endl;
         status = ret::A_FAIL_TO_LOAD_MANIFEST;
     }
     else {
@@ -105,8 +99,7 @@ int Manifest::OpenSqliteDb()
 
 void Manifest::CloseSqliteDb()
 {
-    if(m_pDb)
-    {
+    if(m_pDb) {
         sqlite3_close(m_pDb);
         m_pDb = 0;
     }
@@ -117,20 +110,17 @@ bool Manifest::CreateTables()
     if(!m_pDb)
         return false;
 
-    if(!CreateInfoTable())
-    {
+    if(!CreateInfoTable()) {
         std::cout<<" Failed to create infotable..." << std::endl;
         return false;
     }
 
-    if(!CreateMetaTable())
-    {
+    if(!CreateMetaTable()) {
         std::cout<<" Failed to create metatable..." << std::endl;
         return false;
     }
 
-    if(!CreateFolderTable())
-    {
+    if(!CreateFolderTable()) {
         std::cout<<" Failed to create foldertable..." << std::endl;
         return false;
     }
@@ -147,37 +137,15 @@ bool Manifest::CreateInfoTable()
     pexc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
     pexc += " postversion INT, encryptedkey BLOB, iv BLOB, PRIMARY KEY(filepath ASC));";
 
-
-    std::cout<< pexc << std::endl;
-
-    /*
-    char pexc[1024];
-    snprintf( pexc,
-              1024,
-              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, encryptedkey BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
-              g_infotable.c_str()
-            );
-            */
-    /*
-    snprintf( pexc,
-              1024,
-              "CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, filesize INT, postid TEXT, postversion INT, key BLOB, iv BLOB, PRIMARY KEY(filename ASC));",
-              g_infotable.c_str()
-            );
-            */
-
-    return PerformQuery(pexc.c_str());
+    return PerformQuery(pexc);
 }
 
 bool Manifest::CreateMetaTable()
 {
-    char pexc[1024];
-
-    snprintf( pexc,
-              1024,
-              "CREATE TABLE IF NOT EXISTS %s (key TEXT, value TEXT, PRIMARY KEY(key ASC));",
-              g_metatable.c_str()
-            );
+    std::string pexc;
+    pexc += "CREATE TABLE IF NOT EXISTS ";
+    pexc += g_metatable;
+    pexc += " (key TEXT, value TEXT, PRIMARY KEY(key ASC));";
 
     return PerformQuery(pexc);
 }
@@ -189,26 +157,24 @@ bool Manifest::CreateFolderTable()
     pexc += g_foldertable;
     pexc += " (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
 
-    return PerformQuery(pexc.c_str());
+    return PerformQuery(pexc);
 }
 
-bool Manifest::PerformQuery(const char* pQuery) const
+bool Manifest::PerformQuery(const std::string& query) const
 {
-    if(!m_pDb || !pQuery)
+    if(!m_pDb || query.empty())
         return false;
 
     char* szError = NULL;
     int rc = sqlite3_exec( m_pDb, 
-                           pQuery, 
+                           query.c_str(), 
                            NULL, 
                            NULL,
                            &szError);
 
-    if(rc != SQLITE_OK)
-    {
+    if(rc != SQLITE_OK) {
         fprintf(stderr, "SQL error: %s\n", szError);
-        if(szError)
-        {
+        if(szError) {
             sqlite3_free(szError);
             szError = NULL;
         }
@@ -227,9 +193,9 @@ bool Manifest::PerformQuery(const char* pQuery) const
 //                       char **pzErrmsg       /* Error msg written here */
 //                       );
 //                      void sqlite3_free_table(char **result);
-bool Manifest::PerformSelect(const char* pSelect, SelectResult &out) const
+bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const
 {
-    if(!m_pDb || !pSelect)
+    if(!m_pDb || select.empty())
         return false;
 
     char *szError = NULL;
@@ -239,15 +205,14 @@ bool Manifest::PerformSelect(const char* pSelect, SelectResult &out) const
     char *pzErr = NULL;
 
     int rc = sqlite3_get_table( m_pDb,
-                                pSelect,       /* SQL to be evaluated */
+                                select.c_str(),       /* SQL to be evaluated */
                                 &out.results,  /* Results of the query */
                                 &out.nRow,     /* Number of result rows written here */
                                 &out.nCol,     /* Number of result columns written here */
                                 &pzErr         /* Error msg written here */
                                );
 
-    if(pzErr)
-    {
+    if(pzErr) {
         std::cout << " Perform Select Error : " << pzErr << std::endl;
         return false;
     }
@@ -258,161 +223,20 @@ bool Manifest::PerformSelect(const char* pSelect, SelectResult &out) const
 
 bool Manifest::QueryForFileExistence(const std::string& filepath)
 {
-    char pexc[1024];
+    std::string pexc;
+    pexc += "SELECT * FROM ";
+    pexc += g_infotable;
+    pexc += " WHERE filepath=\"";
+    pexc += filepath;
+    pexc += "\";";
 
-    snprintf( pexc,
-              1024, 
-              "SELECT * FROM %s WHERE filepath=\"%s\";",
-              g_infotable.c_str(),
-              filepath.c_str()
-            );
-     
     SelectResult res;
-    if(PerformSelect(pexc,res))
-    {
+    if(PerformSelect(pexc.c_str() ,res)) {
         if(res.nRow)
             return true;
     }
 
     return false;
-}
-
-void Manifest::QueryForMetaPostID(std::string &out) const
-{
-   char pexc[1024];
-
-    snprintf( pexc,
-              1024, 
-              "SELECT * FROM %s WHERE key=\"%s\";",
-              g_metatable.c_str(),
-              "post" 
-            );
-     
-    SelectResult res;
-    if(!PerformSelect(pexc, res))
-    {
-        // Most likely doesn't exist, if not create it and set to 1
-        std::cout<<"Doesn't exist..."<<std::endl;
-    }
-    else 
-    {
-        if(res.nRow == 0)
-        {
-            std::cout<<" no entry..."<<std::endl;
-        }
-        else
-        {
-            // Extract version number
-            int step = 0;
-            for(int i=0; i < res.nRow+1; i++)
-            {
-                step = i*res.nCol;
-                /*
-                for(int j=0; j < res.nCol; j++)
-                {
-                    std::cout<< "\t" << res.results[j + step];
-                }
-                */
-
-                if(step > 0)
-                {
-                    out = res.results[1 + step];
-                    break;
-                }
-            }
-
-            std::cout<<" POST : " << out << std::endl;
-        }
-    }
-
-
-}
-
-unsigned int Manifest::QueryForVersion() const
-{
-    char pexc[1024];
-
-    snprintf( pexc,
-              1024, 
-              "SELECT * FROM %s WHERE key=\"%s\";",
-              g_metatable.c_str(),
-              "version" 
-            );
-     
-    SelectResult res;
-    unsigned int version = 1;
-    if(!PerformSelect(pexc, res))
-    {
-        // Most likely doesn't exist, if not create it and set to 1
-        std::cout<<"Doesn't exist..."<<std::endl;
-        version = 0;
-    }
-    else 
-    {
-        std::string hold;
-        if(res.nRow == 0)
-        {
-            std::cout<<" no entry, set default"<<std::endl;
-            InsertVersionNumber(1);
-        }
-        else
-        {
-            // Extract version number
-            int step = 0;
-            for(int i=0; i < res.nRow+1; i++)
-            {
-                step = i*res.nCol;
-                /*
-                for(int j=0; j < res.nCol; j++)
-                {
-                    std::cout<< "\t" << res.results[j + step];
-                }
-                */
-
-                if(step > 0)
-                {
-                    hold = res.results[1 + step];
-                    break;
-                }
-            }
-
-            version = atoi(hold.c_str());
-            //std::cout<<" VERSION : " << version << std::endl;
-        }
-    }
-
-    return version;
-}
-
-bool Manifest::InsertVersionNumber(unsigned int version) const
-{
-    char ver[256];
-    snprintf(ver, 256, "%u", version);
-
-    char pexc[1024];
-    snprintf( pexc,
-              1024, 
-              "INSERT OR REPLACE INTO \"%s\" (key, value) VALUES (\"%s\", \"%s\");",
-              g_metatable.c_str(),
-              "version",
-              ver
-            ); 
-
-    return PerformQuery(pexc);
-}
-
-bool Manifest::InsertPostID(const std::string &postID) const
-{
-    char pexc[1024];
-    snprintf( pexc,
-              1024, 
-              "INSERT OR REPLACE INTO \"%s\" (key, value) VALUES (\"%s\", \"%s\");",
-              g_metatable.c_str(),
-              "post",
-              postID.c_str() 
-            ); 
-
-    return PerformQuery(pexc);
 }
 
 bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
@@ -429,17 +253,13 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
     SelectResult res;
     if(!PerformSelect(pexc, res))
         return false;
-
-    
     /*
     std::cout << " Row count : " << res.nRow << std::endl;
     std::cout << " Col count : " << res.nCol << std::endl;
     */
     
-
     int step = 0;
-    for(int i=0; i<res.nRow+1; i++)
-    {
+    for(int i=0; i<res.nRow+1; i++) {
         step = i*res.nCol;
         //std::cout<< " step : " << step << std::endl;
 
@@ -450,8 +270,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo* out)
         }
         */
 
-        if(step > 0)
-        {
+        if(step > 0) {
             out->SetFilename(res.results[0+step]);
             out->SetFilepath(res.results[1+step]);
             out->SetChunkName(res.results[2+step]);
@@ -482,8 +301,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
 
     SelectResult res;
     
-    if(PerformSelect(pexc.c_str(), res))
-    {
+    if(PerformSelect(pexc.c_str(), res)) {
 
         /*
         std::cout << " Row count : " << res.nRow << std::endl;
@@ -491,8 +309,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
         */
 
         int step = 0;
-        for(int i=0; i<res.nRow+1; i++)
-        {
+        for(int i=0; i<res.nRow+1; i++) {
             step = i*res.nCol;
             /*
             for(int j=0; j<res.nCol; j++)
@@ -501,8 +318,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
             }
             */
 
-            if(step > 0)
-            {
+            if(step > 0) {
                 FileInfo fi;
                 fi.SetFilename(res.results[0+step]);
                 fi.SetFilepath(res.results[1+step]);
@@ -522,8 +338,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
 
         sqlite3_free_table(res.results);
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_TO_QUERY_MANIFEST;
     }
 
@@ -532,16 +347,17 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
 
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkname TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
-bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
+bool Manifest::InsertFileInfo(const FileInfo* fi)
 {
     std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
-    if(!m_pDb)
-    {
+    if(!m_pDb) {
         std::cout<<"fail db " <<std::endl;
         return false;
     }
-    if(!fi)
+    if(!fi) {
+        std::cout<<" attempted to insert invalid file info " << std::endl;
         return false;
+    }
 
     std::string filename, filepath, chunkname, chunkdata, metapostid, chunkpostid, encryptedkey, iv;
 
@@ -576,20 +392,16 @@ bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
     sqlite3_stmt* stmt = NULL;
     int ret = sqlite3_prepare_v2(m_pDb, query.c_str(), -1, &stmt, 0);
 
-    if(ret == SQLITE_OK)
-    {
-        if(stmt)
-        {
+    if(ret == SQLITE_OK) {
+        if(stmt) {
             ret = sqlite3_bind_text(stmt, 1, filename.c_str(), filename.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("filename Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 2, filepath.c_str(), filepath.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("filepath Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
@@ -602,85 +414,74 @@ bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
             }
 
             ret = sqlite3_bind_int(stmt, 4, fi->GetChunkCount());
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("chunk count Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_blob(stmt, 5, chunkdata.c_str(), chunkdata.size(), SQLITE_TRANSIENT);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("chunkdata Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_int(stmt, 6, fi->GetFileSize());
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("filesize Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 7, metapostid.c_str(), metapostid.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("metapostid Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 8, chunkpostid.c_str(), chunkpostid.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("chunkpostid Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_int(stmt, 9, fi->GetPostVersion());
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("version Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_blob(stmt, 10, encryptedkey.c_str(), encryptedkey.size(), SQLITE_TRANSIENT);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("key Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_bind_blob(stmt, 11, iv.c_str(), iv.size(), SQLITE_TRANSIENT);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf(" iv Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_step(stmt);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_DONE) {
+                std::cout<<" return : " << ret << std::endl;
                 printf("step Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
             ret = sqlite3_finalize(stmt);
-            if(ret != SQLITE_OK)
-            {
+            if(ret != SQLITE_OK) {
                 printf("finalize Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
         }
-        else
-        {
+        else {
             std::cout<< "Invalid statement" << std::endl;
             printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
             return false;
         }
 
     }
-    else
-    {
+    else {
         std::cout<< "failed to prepare statement " << std::endl;
         printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
         return false;
@@ -689,19 +490,27 @@ bool Manifest::InsertFileDataToInfoTable(const FileInfo* fi)
     return true;
 }
 
+bool Manifest::RemoveFileInfo(const std::string &filepath)
+{
+    std::string pexc;
+    pexc += "DELETE FROM \"";
+    pexc += g_infotable;
+    pexc += "\"  WHERE filepath=\"";
+    pexc += filepath;
+    pexc += "\";";
+    return PerformQuery(pexc.c_str());
+}
 
 bool Manifest::InsertFilePostID(const std::string& filepath, const std::string &id)
 {
-    char pexc[1024];
-
-    snprintf( pexc,
-              1024, 
-              "UPDATE \"%s\" SET metapostid=\"%s\" WHERE filepath=\"%s\";",
-              g_infotable.c_str(),
-              id.c_str(),
-              filepath.c_str()
-            ); 
-
+    std::string pexc;
+    pexc += "UPDATE \"";
+    pexc += g_infotable;
+    pexc += "\" SET metapostid=\"";
+    pexc += id;
+    pexc += "\" WHERE filepath=\"";
+    pexc += filepath;
+    pexc +="\";";
     return PerformQuery(pexc);
 }
 
@@ -715,23 +524,7 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
     pexc += "\" WHERE filepath=\"";
     pexc += filepath.c_str();
     pexc += "\";";
-
-    std::cout<<" PEXC : " << pexc << std::endl;
-
-    /*
-    char pexc[1024];
-
-    snprintf( pexc,
-              1024, 
-              "UPDATE \"%s\" SET chunkpostid=\"%s\" WHERE filepath=\"%s\";",
-              g_infotable.c_str(),
-              id.c_str(),
-              filepath.c_str()
-            ); 
-            */
-
-
-    return PerformQuery(pexc.c_str());
+    return PerformQuery(pexc);
 }
 
 //" (name TEXT, path TEXT, children TEXT, postid TEXT, PRIMARY KEY(path ASC));";
@@ -875,64 +668,11 @@ bool Manifest::InsertCredentialsToDb(const FileInfo* fi)
     return false; // should be true
 }
 
-bool Manifest::RemoveFileFromDb(const std::string &filepath)
-{
-    char pexc[1024];
 
-    snprintf( pexc,
-              1024, 
-              "DELETE FROM \"%s\"  WHERE filepath=\"%s\";",
-              g_infotable.c_str(),
-              filepath.c_str()
-            ); 
-
-    return PerformQuery(pexc);
-}
-
-bool Manifest::InsertFileInfo(const FileInfo* fi)
-{
-    if(!fi)
-        return false;
-    
-    //TODO :: expand checks for valid file etc
-    //        for now just insert and be done.
-    //TODO :: select an in memory strategy for files recently 
-    //        accessed. Should we keep all files (file info objects
-    //        in memory upon use? Should we load them in?, should
-    //        we set perhaps a half life?
-
-    // Insert into Info Table
-    bool status = InsertFileDataToInfoTable(fi);
-    if(status)
-    {
-        SetIsDirty(true);
-    }
-
-
-
-    return status;
-}
-
-bool Manifest::RemoveFileInfo(const std::string &filepath)
-{
-    bool status = RemoveFileFromDb(filepath);
-    if(status)
-    {
-        SetIsDirty(true);
-    }
-
-    return status;
-}
 
 
 bool Manifest::IsFileInManifest(const std::string &filepath)
 {
     return QueryForFileExistence(filepath);
-}
-
-void Manifest::CompareAndMergeDb(sqlite3* pDb)
-{
-    // Select * db
-
 }
 

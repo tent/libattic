@@ -44,26 +44,16 @@ class Manifest
     bool CreateMetaTable();
     bool CreateFolderTable();
 
-    bool PerformQuery(const char* pQuery) const;
-    bool PerformSelect(const char* pSelect, SelectResult &out) const;
+    bool PerformQuery(const std::string& query) const;
+    bool PerformSelect(const std::string& select, SelectResult &out) const;
 
     // InfoTable
-    bool InsertFileDataToInfoTable(const FileInfo* fi);
     bool InsertCredentialsToDb(const FileInfo* fi);
 
     bool QueryForFileExistence(const std::string& filename);
 
-    bool RemoveFileFromDb(const std::string &filename);
     void CheckIfTableExists(const std::string &tableName);
 
-    // MetaTable
-    unsigned int QueryForVersion() const;
-    void QueryForMetaPostID(std::string &out) const;
-
-    bool InsertVersionNumber(unsigned int version) const;
-    bool InsertPostID(const std::string &postID) const;
-
-    void SetIsDirty(bool dirty) { m_Dirty = dirty; }  // Deprecated
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
 
@@ -83,7 +73,7 @@ public:
     bool QueryForFile(const std::string &filename, FileInfo* out);
     int QueryAllFiles(std::vector<FileInfo>& out);
 
-    bool RemoveFileInfo(const std::string &filename);
+    bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
@@ -97,17 +87,7 @@ public:
                              std::string &childrenOut,
                              std::string &postidOut);
 
-    unsigned int GetEntryCount()              { return m_EntryCount; }
-    unsigned int GetVersionNumber() const     { return QueryForVersion(); }//return m_VersionNumber; }
-    //void GetPostID(std::string &out) const    { QueryForMetaPostID(out); }
-    bool GetIsDirty()                         { return m_Dirty; } 
-
-    void SetPostID(const std::string &id)   { InsertPostID(id); }
-    void SetEntryCount(unsigned int count)  { m_EntryCount = count; }
-    void SetDirectory(std::string &filePath); 
-
-    void CompareAndMergeDb(sqlite3* pDb);
-
+    void SetDirectory(std::string &filepath); 
 private:
     sqlite3*            m_pDb;
     std::ifstream       m_ifStream;
@@ -115,12 +95,6 @@ private:
 
     // Manifest specific data
     std::string         m_Filepath;     // path to manifest file
-    std::string         m_Filename;     // filename of the manifest
-    unsigned int        m_EntryCount;   // Number of entries in the manifest
-    
-    unsigned int        m_VersionNumber; // Version Number of sqlitedb
-
-    bool                m_Dirty; // Has manifest been written to since last sync
 };
 
 #endif

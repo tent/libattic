@@ -958,8 +958,7 @@ int LoadEntity(bool override)
     if(!g_Entity.HasAtticProfileMasterKey())
         status = ret::A_FAIL_INVALID_MASTERKEY;
     
-    if(status != ret::A_OK)// || override)
-    {
+    if(status != ret::A_OK || override){
         if(override)
             g_Entity.Reset();
 
@@ -1039,8 +1038,7 @@ int IsLibInitialized(bool checkPassphrase)
 {
     int status = ret::A_OK;
 
-    if(checkPassphrase && g_Pt.IsPhraseKeyEmpty())
-    {
+    if(checkPassphrase && g_Pt.IsPhraseKeyEmpty()) {
         g_bEnteredPassphrase = false;
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
     }

@@ -15,6 +15,11 @@ class FileInfo
 public:
     typedef std::map<std::string, ChunkInfo> ChunkMap;
 
+    FileInfo( const std::string& filename,
+              const std::string& filepath,
+              const std::string& postid,
+              const std::string& chunkpostid);
+
     FileInfo();  
     ~FileInfo(); 
 
@@ -65,7 +70,6 @@ public:
     ChunkInfo* GetChunkInfo(const std::string& chunkname);
 
     ChunkMap* GetChunkInfoList() { return &m_Chunks; }
-    //std::vector<std::string>* GetChunkPostsList() { return &m_ChunkPosts; }
 
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
@@ -88,7 +92,7 @@ private:
     std::string     m_ChunkPostID; // Id of the chunk post
 
     unsigned int    m_PostVersion; // Version of the post the file is attached to
-    unsigned int    m_ChunkCount;
+    unsigned int    m_ChunkCount; // depricated
     unsigned int    m_FileSize;   // Filesize, not compressed
 };
 

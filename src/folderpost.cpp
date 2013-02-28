@@ -15,6 +15,7 @@ FolderPost::~FolderPost()
 
 void FolderPost::Serialize(Json::Value& root)
 {
+    SetContent("type", m_FileType);
 
 }
 

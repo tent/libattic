@@ -12,6 +12,17 @@ FileInfo::FileInfo()
 
 }
 
+FileInfo::FileInfo( const std::string& filename,
+                    const std::string& filepath,
+                    const std::string& postid,
+                    const std::string& chunkpostid)
+{
+    m_Filename = filename;
+    m_Filepath = filepath;
+    m_PostID = postid;
+    m_ChunkPostID = chunkpostid;
+}
+
 FileInfo::~FileInfo()
 {
 

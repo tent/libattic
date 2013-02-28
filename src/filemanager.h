@@ -56,8 +56,6 @@ public:
                               unsigned char *iv); // byte
 
     void InsertToManifest (FileInfo* pFi);
-   
-    unsigned int GetManifestVersion() const          { return m_Manifest.GetVersionNumber(); }
 
     void GetManifestDirectory(std::string &out) const { out = m_ManifestDirectory; }
     void GetWorkingDirectory(std::string &out) const { out = m_WorkingDirectory; }
@@ -65,7 +63,6 @@ public:
     unsigned int GetFileStride() const               { return m_FileStride; }
 
     void SetManifestDirectory(const std::string &filepath)       { m_ManifestDirectory = filepath; }
-    void SetManifestPostID(const std::string &id)               { m_Manifest.SetPostID(id); } // Depricated
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
     void SetFileStride(unsigned int uFileStride )               { m_FileStride = uFileStride; }
