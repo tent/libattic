@@ -9,6 +9,7 @@
 #include "filesystem.h"
 #include "utils.h"
 #include "chunkinfo.h"
+#include "folder.h"
 
 FileManager::FileManager() : MutexClass()
 {
@@ -47,69 +48,6 @@ bool FileManager::ShutdownFileManager()
     return true;
 }
 
-
-
-FileInfo* FileManager::CreateFileInfo( const std::string &filename,
-                                       const std::string &filepath,
-                                       const std::string &chunkName,
-                                       const std::string &chunkCount,
-                                       const std::string &fileSize,
-                                       const std::string &postId,
-                                       const std::string &postVersion,
-                                       unsigned char *key, // byte
-                                       unsigned char *iv) // byte
-{
-    char* pKey = reinterpret_cast<char*>(key);
-    char* pIv = reinterpret_cast<char*>(iv);
-
-    FileInfo* pFi = CreateFileInfo( filename,
-                                    filepath,
-                                    chunkName,
-                                    chunkCount,
-                                    fileSize,
-                                    postId,
-                                    postVersion,
-                                    std::string(pKey),
-                                    std::string(pIv)
-                                 );
-   return pFi;
-}
-
-
-FileInfo* FileManager::CreateFileInfo( const std::string &filename,
-                                       const std::string &filepath,
-                                       const std::string &chunkName,
-                                       const std::string &chunkCount,
-                                       const std::string &fileSize,
-                                       const std::string &postId,
-                                       const std::string &postVersion,
-                                       const std::string &key,
-                                       const std::string &iv)
-{
-    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-
-    // Filename (str)
-    pFi->SetFilename(filename);
-    // Filepath (str)
-    pFi->SetFilepath(filepath);
-    // ChunkName (str)
-    pFi->SetChunkName(chunkName);
-    // ChunkCount (unsigned int)
-    pFi->SetChunkCount((unsigned)atoi(chunkCount.c_str()));
-    // FileSize (unsigned int)
-    pFi->SetFileSize((unsigned)atoi(fileSize.c_str()));
-    // Post ID
-    pFi->SetPostID(postId);
-    // Post Version
-    pFi->SetPostVersion((unsigned)atoi(postVersion.c_str()));
-    // Key 
-    pFi->SetEncryptedKey(key);
-    // Iv
-    pFi->SetIv(iv);
-
-    return pFi;
-}
-
 int FileManager::RemoveFile(const std::string &filepath)
 {
     int status = ret::A_OK;
@@ -121,23 +59,43 @@ int FileManager::RemoveFile(const std::string &filepath)
 
     return status;
 }
+
 void FileManager::InsertToManifest (FileInfo* pFi) { 
     if(!pFi) return;
     // Calculate relative path
-    std::string filepath, canonical;
+    std::string filepath, relative, canonical, parent_path, parent_relative;
     pFi->GetFilepath(filepath);
     fs::GetCanonicalPath(filepath, canonical);
-    std::cout<<" filepath : " << filepath << std::endl;
-    std::cout<<" canonical : " << canonical << std::endl;
-    std::cout<<" working dir : " << m_WorkingDirectory << std::endl;
-    std::string relative;
     fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-    std::cout<<" relative : " << relative << std::endl;
+    fs::GetParentPath(filepath, parent_path);
+    fs::MakePathRelative(m_WorkingDirectory, parent_path, parent_relative);
+
+    std::cout<<" filepath        : " << filepath << std::endl;
+    std::cout<<" canonical       : " << canonical << std::endl;
+    std::cout<<" relative        : " << relative << std::endl;
+    std::cout<<" working dir     : " << m_WorkingDirectory << std::endl;
+    std::cout<<" parent dir      : " << parent_path << std::endl;
+    std::cout<<" parent relative : " << parent_relative << std::endl;
 
     pFi->SetFilepath(relative);
     Lock();
-    if(pFi) m_Manifest.InsertFileInfo(pFi); 
+    if(pFi) {
+        // Insert into infotable
+        m_Manifest.InsertFileInfo(*pFi);
+        // Insert into folder
+        Folder folder;
+        if(m_Manifest.QueryForFolder(parent_relative, folder)) {
+            // it exists
+
+        }
+        else {
+            // does not
+
+        }
+    }
+
     Unlock();
+
 }
  
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
@@ -166,11 +124,10 @@ FileInfo* FileManager::GetFileInfo(const std::string &filepath)
     std::string canonical, relative;
     fs::GetCanonicalPath(filepath, canonical);
     fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-    std::cout<<" RELATIVE : " << relative << std::endl;
 
     Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-    m_Manifest.QueryForFile(relative, pFi);
+    m_Manifest.QueryForFile(relative, *pFi);
     Unlock();
 
     if(pFi) {

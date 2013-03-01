@@ -35,26 +35,6 @@ public:
 
     FileInfo* CreateFileInfo();
 
-    FileInfo* CreateFileInfo( const std::string &filename,
-                              const std::string &filepath,
-                              const std::string &chunkName,
-                              const std::string &chunkCount,
-                              const std::string &fileSize,
-                              const std::string &postId,
-                              const std::string &postVersion,
-                              const std::string &key,
-                              const std::string &iv);
-
-    FileInfo* CreateFileInfo( const std::string &filename,
-                              const std::string &filepath,
-                              const std::string &chunkName,
-                              const std::string &chunkCount,
-                              const std::string &fileSize,
-                              const std::string &postId,
-                              const std::string &postVersion,
-                              unsigned char *key, // byte
-                              unsigned char *iv); // byte
-
     void InsertToManifest (FileInfo* pFi);
 
     void GetManifestDirectory(std::string &out) const { out = m_ManifestDirectory; }
