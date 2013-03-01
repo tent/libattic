@@ -5,11 +5,9 @@
 #include <cbase64.h>
  
 #include "utils.h"
-#include "chunker.h"
 #include "manifest.h"
 #include "filemanager.h"
 #include "crypto.h"
-#include "compressor.h"
 #include "errorcodes.h"
 #include "urlparams.h"
 
@@ -428,8 +426,7 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.KeyEmpty(), true);
     ASSERT_EQ(cred.IvEmpty(), true);
 
-    Crypto cp;
-    cred = cp.GenerateCredentials();
+    cred = crypto::GenerateCredentials();
 
     ASSERT_EQ(cred.KeyEmpty(), false);
     ASSERT_EQ(cred.IvEmpty(), false);
@@ -448,52 +445,49 @@ TEST(CRYPTO, BASE64)
 TEST(CRYPTO, HMAC)
 {
     int status = ret::A_OK;
-    Crypto cp;
-    Credentials cred = cp.GenerateCredentials();
+    Credentials cred = crypto::GenerateCredentials();
 
     std::string plaintext("this is my plain text");
 
     std::string macout;
-    status = cp.GenerateHMACForString( plaintext, cred, macout);
+    status = crypto::GenerateHMACForString( plaintext, cred, macout);
     ASSERT_EQ(status, ret::A_OK);
 
-    status = cp.VerifyHMACForString( plaintext, cred, macout);
+    status = crypto::VerifyHMACForString( plaintext, cred, macout);
     ASSERT_EQ(status, ret::A_OK);
 }
 
 TEST(CRYPTO, ENCRYPTIONCFB)
 {
-    Crypto cp;
-    Credentials cred = cp.GenerateCredentials();
+    Credentials cred = crypto::GenerateCredentials();
 
     std::string plaintext("this is my plain text");
 
     std::string cyphertext;
-    cp.EncryptStringCFB(plaintext, cred, cyphertext);
+    crypto::EncryptStringCFB(plaintext, cred, cyphertext);
 
     std::string decryptedtext;
-    cp.DecryptStringCFB(cyphertext, cred, decryptedtext);
+    crypto::DecryptStringCFB(cyphertext, cred, decryptedtext);
 
     ASSERT_EQ(plaintext, decryptedtext);
 }
 
 TEST(CRYPTO, CREDENCRYPTIONGCM)
 {
-    Crypto cp;
     Credentials masterkey;
 
     std::string phrase("this is a test");
     std::string iv;
-    cp.GenerateSalt(iv);
+    crypto::GenerateSalt(iv);
 
     // Genterate key from passphrase
-    int status = cp.GenerateKeyFromPassphrase( phrase,
+    int status = crypto::GenerateKeyFromPassphrase( phrase,
                                                iv,
                                                masterkey);
     ASSERT_EQ(status, 0);
 
     Credentials cred; // Credentials to encrypt
-    cred = cp.GenerateCredentials();
+    cred = crypto::GenerateCredentials();
 
     std::string key;
     cred.GetKey(key);
@@ -510,12 +504,12 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     intercred.SetIv(fileiv);
 
     std::string enckey;
-    status = cp.EncryptStringGCM(key, intercred, enckey);
+    status = crypto::EncryptStringGCM(key, intercred, enckey);
     ASSERT_EQ(status, 0);
 
     // Generate key again for good measure
     Credentials mkcopy;
-    status = cp.GenerateKeyFromPassphrase( phrase,
+    status = crypto::GenerateKeyFromPassphrase( phrase,
                                            iv,
                                            mkcopy);
     ASSERT_EQ(status, 0);
@@ -528,7 +522,7 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     intercred1.SetIv(fileiv);
 
     std::string deckey;
-    status = cp.DecryptStringGCM(enckey, intercred1, deckey);
+    status = crypto::DecryptStringGCM(enckey, intercred1, deckey);
     ASSERT_EQ(status, 0);
 
     ASSERT_EQ(key, deckey);
@@ -536,19 +530,18 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
 
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {
-    Crypto cp;
     Credentials cred, cred1;
 
     std::string pw("password");
     std::string iv;
-    cp.GenerateSalt(iv); 
+    crypto::GenerateSalt(iv); 
 
-    int status = cp.GenerateKeyFromPassphrase( pw,
+    int status = crypto::GenerateKeyFromPassphrase( pw,
                                                iv,
                                                cred);
     
     ASSERT_EQ(status, 0);
-    status = cp.GenerateKeyFromPassphrase( pw ,
+    status = crypto::GenerateKeyFromPassphrase( pw ,
                                   iv,
                                   cred1);
 
@@ -562,12 +555,11 @@ TEST(SCRYPT, ENCODE)
     std::string input("thisistestinput");
     std::string iv;
 
-    Crypto cp;
-    cp.GenerateSalt(iv); 
+    crypto::GenerateSalt(iv); 
 
     std::string out, out1;
-    cp.ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
-    cp.ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
+    crypto::ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
+    crypto::ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
 
     int res =  strcmp(out.c_str(), out1.c_str());
     ASSERT_EQ(res, 0);

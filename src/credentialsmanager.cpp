@@ -119,7 +119,7 @@ int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
     Lock();
     // Create Master Key
     Credentials MasterKey;
-    m_Crypto.GenerateCredentials(MasterKey);
+    crypto::GenerateCredentials(MasterKey);
 
     mkOut.SetCredentials(MasterKey);
     Unlock();
@@ -132,7 +132,7 @@ int CredentialsManager::GenerateMasterKey( std::string& keyOut)
     Lock();
     // Create Master Key
     Credentials MasterKey;
-    m_Crypto.GenerateCredentials(MasterKey);
+    crypto::GenerateCredentials(MasterKey);
 
     MasterKey.GetKey(keyOut);
     Unlock();
@@ -152,8 +152,8 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     int status = ret::A_OK;
     // Generate Salt
     std::string salt;
-    status = m_Crypto.GenerateSalt(salt);
-    status = m_Crypto.CheckSalt(salt);
+    status = crypto::GenerateSalt(salt);
+    status = crypto::CheckSalt(salt);
 
     if(status == ret::A_OK)
     {
@@ -161,7 +161,7 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
 
         // Generate Passphrase Key 
         Credentials cred;
-        m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
+        crypto::GenerateKeyFromPassphrase(pass, salt, cred);
         
         // Set the key generated from phrase
         ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
@@ -176,7 +176,7 @@ int CredentialsManager::EnterPassphrase( const std::string& pass,
 {
     Lock();
     Credentials cred;
-    m_Crypto.GenerateKeyFromPassphrase(pass, salt, cred);
+    crypto::GenerateKeyFromPassphrase(pass, salt, cred);
     // Create Passphrase token
     keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
     Unlock();

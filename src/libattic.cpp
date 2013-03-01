@@ -583,8 +583,7 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
             if(!encmk.empty()) {
                 // Attempt to Decrypt Master Key
                 std::string out;
-                Crypto crypto;
-                status = crypto.DecryptStringCFB(encmk, cred, out);
+                status = crypto::DecryptStringCFB(encmk, cred, out);
 
                 if(status == ret::A_OK) {
                     if(out.size() >= 8) {
@@ -693,8 +692,6 @@ int EncryptKeyWithPassphrase( const std::string& key,
 {
     int status = ret::A_OK;
 
-    Crypto crypto;
-
     // encryption credentials
     Credentials enc;
     enc.SetKey(phrasekey);
@@ -704,7 +701,7 @@ int EncryptKeyWithPassphrase( const std::string& key,
     //std::cout<< "Using iv : " << salt << std::endl;
     // Encrypt MasterKey with passphrase key
     std::string out;
-    crypto.EncryptStringCFB(key, enc, keyOut);
+    crypto::EncryptStringCFB(key, enc, keyOut);
     
     return status;
 } 

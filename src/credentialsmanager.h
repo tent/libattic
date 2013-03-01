@@ -95,7 +95,6 @@ public:
     }
 
 private:
-    Crypto          m_Crypto;
     MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb
     AccessToken     m_AccessToken;  // Access Token used to auth during tent posts
     PhraseToken     m_PhraseToken;
