@@ -47,6 +47,8 @@ public:
     void SetFileKey(const std::string &key)             { m_FileCredentials.SetKey(key); }
     void SetEncryptedKey(const std::string& key)        { m_EncryptedKey = key; } 
     void SetIv(const std::string &iv)                   { m_FileCredentials.SetIv(iv); }
+    void SetDeleted(const std::string& deleted)         { m_Deleted = atoi(deleted.c_str()); }
+    void SetDeleted(const int deleted)                 { m_Deleted = deleted; }
 
     void GetFilename(std::string &out) const    { out = m_Filename; }
     void GetFilepath(std::string &out) const    { out = m_Filepath; }
@@ -58,6 +60,7 @@ public:
     void GetFileKey(std::string &out) const             { m_FileCredentials.GetKey(out); }
     void GetEncryptedKey(std::string& out) const        { out = m_EncryptedKey; }
     void GetIv(std::string &out) const                  { m_FileCredentials.GetIv(out); }
+    int GetDeleted() const                              { return m_Deleted; }
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }
     unsigned int GetFileSize() const        { return m_FileSize; }
@@ -94,6 +97,7 @@ private:
     unsigned int    m_PostVersion; // Version of the post the file is attached to
     unsigned int    m_ChunkCount; // depricated
     unsigned int    m_FileSize;   // Filesize, not compressed
+    int    m_Deleted; // Is the file deleted? // soft delete
 };
 
 #endif

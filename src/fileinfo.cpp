@@ -9,7 +9,7 @@
 
 FileInfo::FileInfo()
 {
-
+    m_Deleted = 0;
 }
 
 FileInfo::FileInfo( const std::string& filename,
@@ -21,6 +21,7 @@ FileInfo::FileInfo( const std::string& filename,
     m_Filepath = filepath;
     m_PostID = postid;
     m_ChunkPostID = chunkpostid;
+    m_Deleted = 0;
 }
 
 FileInfo::~FileInfo()
@@ -141,15 +142,13 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
 
     std::vector<std::string>::iterator itr = chunkList.begin();
 
-    for(;itr != chunkList.end(); itr++)
-    {
+    for(;itr != chunkList.end(); itr++) {
         ChunkInfo* ci = new ChunkInfo();
         jsn::DeserializeObject(ci, *itr);
 
         std::string name;
         ci->GetChunkName(name);
-        if(m_Chunks.find(name) == m_Chunks.end())
-        {
+        if(m_Chunks.find(name) == m_Chunks.end()) {
             m_Chunks[name] = *ci;
         }
 

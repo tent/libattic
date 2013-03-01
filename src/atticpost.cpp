@@ -26,10 +26,14 @@ void AtticPost::Serialize(Json::Value& root)
     SetContent("name", m_Name); 
     SetContent("path", m_Path);
     //SetContent("type", m_Type)
-    char buf[256];
+    char buf[256] = {'\0'};
     snprintf(buf, 256, "%d", m_Size);
     SetContent("size", buf);
     SetContent("chunk_name", m_ChunkName);
+
+    char del[256] = {'\0'};
+    snprintf(del, 256, "%d", m_Deleted);
+    SetContent("deleted", del);
     
     Json::Value chunkposts;
     jsn::SerializeVector(chunkposts, m_ChunkPosts);
@@ -72,6 +76,10 @@ void AtticPost::Deserialize(Json::Value& root)
     std::string size;
     GetContent("size", size);
     m_Size = atoi(size.c_str());
+    
+    std::string del;
+    GetContent("deleted", del);
+    m_Deleted = atoi(del.c_str());
 
     std::cout<<" deserializing here " << std::endl;
     std::string chunkval, idval;

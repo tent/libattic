@@ -27,7 +27,7 @@ namespace jsn
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m);
  
-    static bool DeserializeJsonValue(Json::Value& val, std::string& input);
+    static bool DeserializeJsonValue(Json::Value& val, const std::string& input);
     static bool DeserializeObject(JsonSerializable* pObj, const std::string& input);
     static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val);
     static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec);
@@ -66,7 +66,7 @@ namespace jsn
         return true;
     }
 
-    static bool DeserializeJsonValue(Json::Value& val, std::string& input)
+    static bool DeserializeJsonValue(Json::Value& val, const std::string& input)
     {
         Json::Reader reader;
         if(!reader.parse(input, val))

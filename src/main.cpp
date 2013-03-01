@@ -30,6 +30,7 @@
 #include "compression.h"
 
 #include "filesystem.h"
+#include "folder.h"
 
 // Globals
 std::string g_Entity;
@@ -619,7 +620,7 @@ TEST(MANIFEST, INSERTFILEINFO)
     int status = mf.Initialize();
     ASSERT_EQ(status, ret::A_OK);
 
-    ASSERT_EQ(mf.InsertFileInfo(&fi), true);
+    ASSERT_EQ(mf.InsertFileInfo(fi), true);
 
     mf.Shutdown();
 }
@@ -653,6 +654,25 @@ TEST(MANIFEST, REMOVEFILEINFO)
     mf.Shutdown();
 }
 
+TEST(FOLDER, SERIALIZATION)
+{
+    Folder folder;
+    FolderEntry one("dasf", "file", "adsfae");
+    FolderEntry two("einen", "file", "914891284192jfkjadkfe");
+    folder.PushBackEntry(one);
+    folder.PushBackEntry(two);
+
+    std::string output;
+    jsn::SerializeObject(&folder, output);
+
+    Folder other;
+    jsn::DeserializeObject(&other, output);
+
+    std::string output2;
+    jsn::SerializeObject(&other, output2);
+
+    ASSERT_EQ(output, output2);
+}
 
 int main (int argc, char* argv[])
 {
