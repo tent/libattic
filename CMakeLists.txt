@@ -4,8 +4,8 @@
 
 cmake_minimum_required (VERSION 2.8)
 
-option (ATTIC_STATIC_LIB "Build Attic Static lib" OFF)
-option (ATTIC_BINARY "Build Attic Binary test executable" ON)
+option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
+option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
@@ -124,7 +124,7 @@ if(ATTIC_STATIC_LIB)
                           ssl)
 
     include(mergestaticlibs)
-    merge_static_libs(atticlib attic boost_thread boost_system)
+    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
