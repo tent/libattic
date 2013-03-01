@@ -13,10 +13,9 @@
 #include <vector>
 #include <string>
 #include <map>
-
 #include <sqlite3.h>
-
-class FileInfo;
+#include "folder.h"
+#include "fileinfo.h"
 
 class SelectResult
 { 
@@ -62,26 +61,20 @@ public:
     bool CreateEmptyManifest();
 
     // File Info
-    bool InsertFileInfo(const FileInfo* fi);
+    bool InsertFileInfo(const FileInfo& fi);
     bool InsertFilePostID(const std::string &filename, const std::string &id);
     bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
 
-    bool QueryForFile(const std::string &filename, FileInfo* out);
+    bool QueryForFile(const std::string &filename, FileInfo& out);
     int QueryAllFiles(std::vector<FileInfo>& out);
 
     bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
-    int InsertFolderDataToFolderTable(const FileInfo* fi);
+    int InsertFolder(const Folder& folder);
     bool RemoveFolderData(const std::string& folderpath);
-
-
-    bool QueryForFolderData( const std::string& folderpath,
-                             std::string &nameOut,
-                             std::string &pathOut,
-                             std::string &childrenOut,
-                             std::string &postidOut);
+    bool QueryForFolder( const std::string& folderpath, Folder& out);
 
     void SetDirectory(std::string &filepath); 
 private:
