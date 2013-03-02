@@ -38,9 +38,19 @@ public:
         m_Wofs = (m_Wofs + 1) % windowSize;
     }
     
+    bool split(int size)
+    {
+        if((m_S2 & (size - 1)) == ((0^0) & (size - 1)))
+            return true;
+        return false;
+    }
     bool OnSplit()
     {   
-        if((m_S2 & (m_BlobSize - 1)) == ((0^0) & (m_BlobSize - 1)))
+        int min = 1 << 21;
+        int max = 1 << 23;
+
+        //if((m_S2 & (m_BlobSize - 1)) == ((0^0) & (m_BlobSize - 1)))
+        if(split(max) || split(min))
             return true;
         return false;
     }

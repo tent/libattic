@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <deque>
 
 #include <gtest/gtest.h>
 #include <cbase64.h>
@@ -29,6 +30,8 @@
 
 #include "filesystem.h"
 #include "folder.h"
+
+#include "rollsum.h"
 
 // Globals
 std::string g_Entity;
@@ -666,13 +669,118 @@ TEST(FOLDER, SERIALIZATION)
     ASSERT_EQ(output, output2);
 }
 
+bool g_bRollsum = false;
+std::string g_filepath;
+TEST(ROLLSUM, FILETEST)
+{
+    if(g_filepath.empty()) return;
+    if(!g_bRollsum) return;
+
+    std::ifstream ifs;
+    ifs.open(g_filepath.c_str(), std::ios::in  | std::ios::binary);
+
+    int totalsize = 0;
+
+    std::string data;
+    if(ifs.is_open()) {
+        ifs.seekg(0, std::ifstream::end);
+        totalsize = ifs.tellg();
+        ifs.seekg(0, std::ifstream::beg);
+
+        char* pData = new char[totalsize];
+        ifs.read(pData, totalsize);
+        data.append(pData, totalsize);
+
+        if(pData) {
+            delete pData;
+            pData = NULL;
+        }
+
+        ifs.close();
+    }
+
+
+    std::deque<unsigned int> splits;
+    std::cout<<" starting size : " << splits.size() << std::endl;
+    std::cout<<" data size : " << data.size() << std::endl;
+    std::cout<<" total size : " << totalsize << std::endl;
+    if(data.size()) {
+        RollSum s;
+
+        for(unsigned int i=0; i < data.size(); i++) {
+            char c = data[i];
+            s.Roll(c);
+            if(s.OnSplit()) { 
+                std::cout<<" found split : " << i << std::endl;
+                splits.push_back(i);
+            }
+        }
+
+        std::cout<<std::endl;
+
+        ifs.open(g_filepath.c_str(), std::ios::in  | std::ios::binary);
+
+        int runningtotal = 0;
+        int last = 0;
+        int len = splits.size();
+        long long size = 0;
+        if(len) {
+            for(int j=0; j<len+1; j++) {
+
+                std::cout<<"split : " << splits[j] << std::endl;
+                size = 0;
+                if(j < len)
+                    size = splits[j] - last;
+                else {
+                    size = totalsize - splits[j-1];
+                    std::cout<<" end split : " << splits[j-1] << std::endl;
+                }
+
+                runningtotal += size;
+
+                std::cout << " size : " << size << std::endl;
+
+                if(size < 0) { 
+                    std::cout << "at split : " << splits[j] << std::endl;
+                    std::cout<<" end split : " << splits[len-1] << std::endl;
+                }
+
+                char* pData = new char[size];
+                ifs.read(pData, size);
+                std::string tdata;
+                tdata.append(pData, size);
+
+                delete pData;
+                pData = NULL;
+
+
+                std::string hash;
+                crypto::GenerateHash(tdata, hash);
+
+                std::cout<<" hash : " << hash << std::endl;
+
+                ifs.seekg(splits[j]);
+                last = splits[j];
+
+            }
+            ifs.close();
+
+            ASSERT_EQ(runningtotal, totalsize);
+        }
+       
+
+
+    }
+
+}
+
 int main (int argc, char* argv[])
 {
     int status = 0;
 
     if(argc > 1)
     {
-        int optcount = 9;
+        int optcount = 10;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -682,7 +790,8 @@ int main (int argc, char* argv[])
             "PUSH",
             "SYNC",
             "QUERYMANIFEST",
-            "DISCOVER"
+            "DISCOVER",
+            "SPLITTEST",
             };
 
         enum ecmd
@@ -695,7 +804,8 @@ int main (int argc, char* argv[])
             PUSH,
             SYNC,
             QUERYMANIFEST,
-            DISCOVER
+            DISCOVER,
+            SPLITTEST
         };
 
         if(!strcmp(argv[1], "--help"))
@@ -785,6 +895,18 @@ int main (int argc, char* argv[])
                     {
                         g_bDiscover = true;
                         break;
+                    }
+                    case SPLITTEST:
+                    {
+
+                        if(argc > 2)
+                        {
+                            g_filepath = argv[2];
+                            g_bRollsum = true;
+                        }
+                        else
+                            std::cout<<" Invalid params ";
+
                     }
                     default:
                         break;
