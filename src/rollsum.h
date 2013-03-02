@@ -1,109 +1,73 @@
-
 #ifndef ROLLSUM_H_
 #define ROLLSUM_H_
 #pragma once
 
-#include <stdint.h>
 #include <iostream>
+#include <string.h>
+#include <stdint.h>
 
-//#define BLOBBITS (13)
-#define BLOBBITS (22)
-#define BLOBSIZE (1<<BLOBBITS)
-//#define WINDOWBITS (7)
-//#define WINDOWSIZE (1<<(WINDOWBITS-1))
+static const int windowSize = 64;
+static const int charOffset = 31;
 
-#define WINDOWSIZE (64)
-#define CHAR_OFFSET 31 
-
-
-class Rollsum 
+class RollSum
 {
 public:
-    Rollsum()
-    {
-        s1 = WINDOWSIZE * CHAR_OFFSET;
-        s2 = WINDOWSIZE * (WINDOWSIZE - 1) * CHAR_OFFSET;
-        wofs = 0;
-        memset(window, 0, WINDOWSIZE);
-    }
- 
-    ~Rollsum(){}
+    RollSum(int bits = 22)
+    {   
+        m_Wofs = 0;
+        m_S1 = windowSize * charOffset; 
+        m_S2 = windowSize * (windowSize -1) * charOffset;
+        memset(m_Window, 0, windowSize);
 
-    void Add(uint8_t drop, uint8_t add)
-    {
-        s1 += (unsigned int)add - (unsigned int)drop;
-        s2 += s1 - ((unsigned int)WINDOWSIZE * (unsigned int)(drop + CHAR_OFFSET));
+        m_BlobBits = bits;
+        m_BlobSize = 1 << m_BlobBits;   // 1 << 22 ~ 4mbs
     }
-
-    void Roll(char ch)
-    {
-        Add(window[wofs], ch);
-        window[wofs] = ch;
-        wofs = (wofs +1) % WINDOWSIZE;
+    
+    ~RollSum() {}
+    
+    void add(uint32_t drop, uint32_t add)
+    {   
+        m_S1 += add - drop;
+        m_S2 += m_S1 - uint32_t(windowSize) * uint32_t(drop + uint32_t(charOffset));
     }
-
+    
+    void Roll(char byte)
+    {   
+        add(m_Window[m_Wofs], byte);
+        m_Window[m_Wofs] = byte;
+        m_Wofs = (m_Wofs + 1) % windowSize;
+    }
+    
     bool OnSplit()
-    {
-        return (s2 & (BLOBSIZE-1)) == ((~0) & (BLOBSIZE-1));
+    {   
+        if((m_S2 & (m_BlobSize - 1)) == ((0^0) & (m_BlobSize - 1)))
+            return true;
+        return false;
     }
 
-    uint32_t Digest()
-    {
-        return (s1 << 16) | (s2 & 0xffff);
-    }
-
-    unsigned int GetS1() { return s1; }
-    unsigned int GetS2() { return s2; }
-    int GetWofs() { return wofs; }
+    int GetSize() const { return m_BlobSize; } 
 
 private:
-    unsigned int s1;
-    unsigned int s2;
-    uint8_t window[WINDOWSIZE];
-    int wofs; // Window offset
+    uint32_t    m_S1;
+    uint32_t    m_S2;
+    uint8_t     m_Window[windowSize];
+    int         m_Wofs;
+    int         m_BlobBits;
+    int         m_BlobSize;
 };
 
-static uint32_t rollsum_sum(unsigned char *buf, size_t ofs, size_t len)
+// Example usage
+static void CalculateSplits(const std::string& data)
 {
-    size_t count;
-    Rollsum r;
-    for (count = ofs; count < len; count++)
-        r.Roll(buf[count]);
-    return r.Digest();
-}
-
-static int FindOffset(unsigned char* buf, unsigned int len, int *bits)
-{
-    Rollsum r;
-    int count;
-    std::cout<<" Len : " << len << std::endl;
-    std::cout<<" Blobsize : " << BLOBSIZE << std::endl;
-    std::cout<<" Supposed to be Equal to : " << ((~0) & (BLOBSIZE-1)) << std::endl;
-
-    for (count = 0; count < len; count++)
-    {
-        r.Roll(buf[count]);
-        if (r.OnSplit())
-        {
-            std::cout<<" SPLIT EQUAL "<<std::endl;
-            if (bits)
-            {
-                unsigned rsum = r.Digest(); 
-                *bits = BLOBBITS;
-                rsum >>= BLOBBITS;
-                for (*bits = BLOBBITS; (rsum >>= 1) & 1; (*bits)++)
-                ;
-            }
-            return count+1;
-        }
+    RollSum s;
+    for(uint32_t k = 0; k<data.size();++k) {
+        char c = data[k];
+        s.Roll(c);
+        if(s.OnSplit())
+            std::cout<< " split : " << k << std::endl;
     }
-
-    std::cout<< " S1 : " << r.GetS1() << std::endl;
-    std::cout<< " S2 : " << r.GetS2() << std::endl;
-    std::cout<< " Count : " << count << " : " << (r.GetS2() & (BLOBSIZE-1)) << std::endl;
-    std::cout<<" returning 0 "<< std::endl;
-    return 0;
 }
+
 
 #endif
 
