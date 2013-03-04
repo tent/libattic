@@ -72,7 +72,7 @@ public:
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
-    int InsertFolder(const Folder& folder);
+    int InsertFolder(Folder& folder);
     bool RemoveFolderData(const std::string& folderpath);
     bool QueryForFolder( const std::string& folderpath, Folder& out);
 

@@ -502,7 +502,7 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
 
 //" (foldername TEXT, folderpath TEXT, foldercontents TEXT, folderpostid TEXT,";
 // " PRIMARY KEY(folderpath ASC));";
-int Manifest::InsertFolder(const Folder& folder)
+int Manifest::InsertFolder(Folder& folder)
 {
     std::string name, path, foldercontents, postid;
 
@@ -510,6 +510,10 @@ int Manifest::InsertFolder(const Folder& folder)
     query += "INSERT OR REPLACE INTO ";
     query += g_foldertable;
     query += " (foldername, folderpath, foldercontents, folderpostid) VALUES (?,?,?,?);";
+
+
+    // Setup folder contents
+    folder.SerializeContents(foldercontents);
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
