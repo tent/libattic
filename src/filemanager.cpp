@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "chunkinfo.h"
 #include "folder.h"
+#include "constants.h"
 
 FileManager::FileManager() : MutexClass()
 {
@@ -87,10 +88,26 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
         if(m_Manifest.QueryForFolder(parent_relative, folder)) {
             // it exists
 
+            // TODO :: possible useless entries ... check this out later
+            // Update entry
+            FolderEntry fe;
+            fe.SetType(cnst::g_szFileType);
+            fe.SetPath(relative);
+
+            folder.PushBackEntry(fe);
+
+            m_Manifest.InsertFolder(folder);
         }
         else {
-            // does not
+            folder.SetPath(parent_relative);
+            // create folder entry
+            FolderEntry fe;
+            fe.SetType(cnst::g_szFileType);
+            fe.SetPath(relative);
 
+            folder.PushBackEntry(fe);
+
+            m_Manifest.InsertFolder(folder);
         }
     }
 
