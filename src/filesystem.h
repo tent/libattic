@@ -85,6 +85,24 @@ namespace fs
 
         return status;
     }
+
+    static int CreateDirectory(const std::string& path)
+    {
+        std::cout<<" creating directory ... " << std::endl;
+        int status = ret::A_OK;
+
+        boost::filesystem::path root(path);
+
+        if(!boost::filesystem::exists(root)){
+            std::cout<<"doesn't exist ... " << std::endl;
+            if (!boost::filesystem::create_directory(root)) { 
+                std::cout<<"failed to create" << std::endl;
+                status = ret::A_FAIL_CREATE_DIRECTORY;
+            }
+        }
+    
+        return status;
+    }
 };
 
 #endif

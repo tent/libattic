@@ -32,6 +32,7 @@
 #include "log.h"
 
 #include "taskmanager.h"
+#include "filesystem.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -247,9 +248,12 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
 
     g_ConfigDirectory.clear();
     g_ConfigDirectory += (szConfigDirectory);
+    fs::CreateDirectory(g_ConfigDirectory);
 
-    std::string postpath;
-    postpath += GetEntityApiRoot(szEntityUrl);
+    std::string postpath, entityurl;
+    entityurl = szEntityUrl;
+    utils::CheckUrlAndAppendTrailingSlash(entityurl);
+    postpath += GetEntityApiRoot(entityurl.c_str());
     utils::CheckUrlAndAppendTrailingSlash(postpath);
     postpath += "apps";
 
@@ -994,6 +998,8 @@ int SetWorkingDirectory(const char* szDir)
     g_WorkingDirectory.clear();
     g_WorkingDirectory.append(szDir);
 
+    fs::CreateDirectory(g_WorkingDirectory);
+
     return ret::A_OK;
 }
 
@@ -1005,6 +1011,8 @@ int SetConfigDirectory(const char* szDir)
     g_ConfigDirectory.clear();
     g_ConfigDirectory.append(szDir);
 
+    fs::CreateDirectory(g_ConfigDirectory);
+
     return ret::A_OK;
 }
 
@@ -1015,6 +1023,8 @@ int SetTempDirectory(const char* szDir)
 
     g_TempDirectory.clear();
     g_TempDirectory.append(szDir);
+
+    fs::CreateDirectory(g_TempDirectory);
 
     return ret::A_OK;
 }
@@ -1051,8 +1061,12 @@ int IsLibInitialized(bool checkPassphrase)
 
 const char* GetEntityApiRoot(const char* szEntityUrl)
 {
+    if(!szEntityUrl) return NULL;
+
     Entity out;
-    int status = conops::Discover(szEntityUrl, out);
+    std::string entityurl(szEntityUrl);
+    utils::CheckUrlAndAppendTrailingSlash(entityurl);
+    int status = conops::Discover(entityurl, out);
 
     std::string apiroot;
     if(status == ret::A_OK)
