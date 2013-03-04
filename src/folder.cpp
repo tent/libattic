@@ -62,7 +62,7 @@ void Folder::SerializeContents(std::string& out)
     std::string val;
     for(;itr!=m_Entries.end(); itr++) {
         val.clear();
-        jsn::SerializeObject(&(*itr), val);
+        jsn::SerializeObject(&(itr->second), val);
         serializedList.push_back(val);
     }
 
@@ -91,7 +91,7 @@ void Folder::DeserializeContents(const std::string& in)
         for(;itr != serializedList.end(); itr++) {
             FolderEntry fe;
             jsn::DeserializeObject(&fe, (*itr));                          
-            m_Entries.push_back(fe); // copy                            
+            m_Entries[fe.GetPath()] = fe; // copy                            
         }                                                                 
     }     
 }

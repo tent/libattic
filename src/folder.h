@@ -3,7 +3,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <map>
 
 #include "jsonserializable.h"
 
@@ -20,9 +20,11 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void GetPostID(std::string& out) { out = m_Postid; }
-    void GetType(std::string& out) { out = m_Type; }
-    void GetPath(std::string& out) { out = m_Path; }
+    void GetPostID(std::string& out) const { out = m_Postid; }
+    void GetType(std::string& out) const { out = m_Type; }
+    void GetPath(std::string& out) const { out = m_Path; }
+    std::string GetPath(void) const { return m_Path; }
+
 
     void SetPostID(const std::string& id) { m_Postid = id; }
     void SetType(const std::string& type) { m_Type = type; }
@@ -45,10 +47,10 @@ public:
     virtual void Deserialize(Json::Value& root);
     void DeserializeContents(const std::string& in);
 
-    void PushBackEntry(const FolderEntry& entry) { m_Entries.push_back(entry); }
+    void PushBackEntry(const FolderEntry& entry) { m_Entries[entry.GetPath()] = entry; }
 
 private:
-    typedef std::vector<FolderEntry> EntryList;
+    typedef std::map<std::string, FolderEntry> EntryList;
     EntryList m_Entries;
 };
 
