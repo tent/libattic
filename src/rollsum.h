@@ -66,18 +66,27 @@ private:
     int         m_BlobSize;
 };
 
-// Example usage
-static void CalculateSplits(const std::string& data)
+namespace roll
 {
-    RollSum s;
-    for(uint32_t k = 0; k<data.size();++k) {
-        char c = data[k];
-        s.Roll(c);
-        if(s.OnSplit())
-            std::cout<< " split : " << k << std::endl;
+
+    // Example usage
+    static void CalculateSplits(const std::string& data)
+    {
+        RollSum s;
+        for(uint32_t k = 0; k<data.size();++k) {
+            char c = data[k];
+            s.Roll(c);
+            if(s.OnSplit())
+                std::cout<< " split : " << k << std::endl;
+        }
     }
+
+    static void CaclulateSplitsForFile(const std::string& filepath, std::deque<unsigned int> out)
+    {
+
+
+    }
+
 }
-
-
 #endif
 

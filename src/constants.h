@@ -34,8 +34,13 @@ namespace cnst
     static unsigned int g_unChunkSize = 400000; // just default arbitrary number, to be overriden
 
     // Folder Entry Types
-    static const char* g_FolderType = "folder";
-    static const char* g_FileType = "file";
+    static const char* g_szFolderType = "folder";
+    static const char* g_szFileType = "file";
+
+    // File splitting
+    static const unsigned int g_uSplitMin = 1 << 21; // ~2 mbs
+    static const unsigned int g_unSplitMax = 1 << 23; // ~8 mbs 
+    static const unsigned int g_unMaxBuffer = 1 << 24; // ~16 mbs
 };
 
 

@@ -38,7 +38,7 @@ void FolderEntry::Deserialize(Json::Value& root)
 
 Folder::Folder()
 {
-    SetType(cnst::g_FolderType);
+    SetType(cnst::g_szFolderType);
 }
 
 Folder::~Folder()

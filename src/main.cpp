@@ -681,24 +681,83 @@ TEST(ROLLSUM, FILETEST)
 
     int totalsize = 0;
 
-    std::string data;
+    int splitmin = 2000000;
+    int splitmax = 8000000;
+
+    int buffersize = 10000000;
+
+    std::string data, remainder;
     if(ifs.is_open()) {
         ifs.seekg(0, std::ifstream::end);
         totalsize = ifs.tellg();
         ifs.seekg(0, std::ifstream::beg);
 
-        char* pData = new char[totalsize];
-        ifs.read(pData, totalsize);
-        data.append(pData, totalsize);
+        int totalreadcount = 0;
+        while(!ifs.eof()) { 
+            int buffsize = 3000000;
+            char* pData = NULL;
+            int readcount = 0;
+            if(totalsize > buffsize) {
+                pData = new char[buffsize];
+                ifs.read(pData, buffsize);
+                readcount = buffsize;
+            }
+            else { 
+                pData = new char[totalsize];
+                ifs.read(pData, totalsize);
+                data.append(pData, totalsize);
+                readcount = totalsize;
+            }
+            data.clear();
+            data += remainder;
+            remainder.clear();
+            data.append(pData, readcount);
+            totalreadcount += readcount;
 
-        if(pData) {
-            delete pData;
-            pData = NULL;
+            if(pData) {
+                delete pData;
+                pData = NULL;
+            }
+            // Go through data here with the rollsum
+            RollSum s;
+
+            int lastsplit = 0;
+            int passing = 0;
+            for(unsigned int i=0; i < data.size(); i++) {
+                char c = data[i];
+                s.Roll(c);
+                if(s.OnSplit()) { 
+                    // check min
+                    if(passing > splitmin) { 
+                        std::cout<<" found split : " << i << std::endl;
+
+                        passing = 0;
+                        lastsplit = i;
+                    }
+                }
+
+                if(passing >= splitmax) {
+                    std::cout<< "split max : " << i << std::endl;
+
+                    passing = 0;
+                    lastsplit = i;
+                }
+
+
+                passing++;
+            }
+            // Get the remainder and append it to remainder
+            int df = data.size() - (lastsplit+1);
+            std::cout<<" dif : " << df << std::endl;
+
+            if(totalreadcount >= totalsize) break;
         }
+             
 
         ifs.close();
     }
 
+    return;
 
     std::deque<unsigned int> splits;
     std::cout<<" starting size : " << splits.size() << std::endl;
@@ -707,13 +766,27 @@ TEST(ROLLSUM, FILETEST)
     if(data.size()) {
         RollSum s;
 
+        int passing = 0;
         for(unsigned int i=0; i < data.size(); i++) {
             char c = data[i];
             s.Roll(c);
             if(s.OnSplit()) { 
-                std::cout<<" found split : " << i << std::endl;
-                splits.push_back(i);
+                // check min
+                if(passing > splitmin) { 
+                    std::cout<<" found split : " << i << std::endl;
+                    splits.push_back(i);
+                    passing = 0;
+                }
             }
+
+            if(passing >= splitmax) {
+                std::cout<< "split max : " << i << std::endl;
+                passing = 0;
+                splits.push_back(i);
+                passing = 0;
+            }
+
+            passing++;
         }
 
         std::cout<<std::endl;
@@ -726,7 +799,6 @@ TEST(ROLLSUM, FILETEST)
         long long size = 0;
         if(len) {
             for(int j=0; j<len+1; j++) {
-
                 std::cout<<"split : " << splits[j] << std::endl;
                 size = 0;
                 if(j < len)
@@ -753,7 +825,6 @@ TEST(ROLLSUM, FILETEST)
                 delete pData;
                 pData = NULL;
 
-
                 std::string hash;
                 crypto::GenerateHash(tdata, hash);
 
@@ -767,19 +838,14 @@ TEST(ROLLSUM, FILETEST)
 
             ASSERT_EQ(runningtotal, totalsize);
         }
-       
-
-
     }
-
 }
 
 int main (int argc, char* argv[])
 {
     int status = 0;
 
-    if(argc > 1)
-    {
+    if(argc > 1) {
         int optcount = 10;
         char* options[] = {
             "REGISTERAPP",
@@ -808,12 +874,10 @@ int main (int argc, char* argv[])
             SPLITTEST
         };
 
-        if(!strcmp(argv[1], "--help"))
-        {
+        if(!strcmp(argv[1], "--help")) {
             std::cout<<" Usage : ./attic <OPTION> {<OPTION ARG>} <ENTITY>" << std::endl;
             std::cout<<" Options : "<< std::endl;
-            for(int i=0; i<optcount; i++)
-            {
+            for(int i=0; i<optcount; i++) {
                 std::cout << "\t" << options[i] << std::endl;
             }
             return 0;
@@ -821,18 +885,14 @@ int main (int argc, char* argv[])
 
         // Init gtestframework
         testing::InitGoogleTest(&argc, argv);
-        if(argc > 2)
-        {
+        if(argc > 2) {
             // Extract entity
             g_Entity = argv[argc-1];
 
-
             int opt=-1;
             // Extract command
-            for(int i=0; i < optcount; i++)
-            {
-                if(!strcmp(options[i], argv[1]))
-                {
+            for(int i=0; i < optcount; i++) {
+                if(!strcmp(options[i], argv[1])) {
                     opt = i;
                     break;
                 }
@@ -840,10 +900,8 @@ int main (int argc, char* argv[])
 
             std::cout<<" OPT : " << opt << std::endl;
 
-            if(opt!=-1)
-            {
-                switch(opt)
-                {
+            if(opt!=-1) {
+                switch(opt) {
                     case REGISTERAPP:
                     {
                         std::cout<<" SET TRUE  " << std::endl;
@@ -899,14 +957,12 @@ int main (int argc, char* argv[])
                     case SPLITTEST:
                     {
 
-                        if(argc > 2)
-                        {
+                        if(argc > 2) {
                             g_filepath = argv[2];
                             g_bRollsum = true;
                         }
                         else
                             std::cout<<" Invalid params ";
-
                     }
                     default:
                         break;

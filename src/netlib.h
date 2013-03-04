@@ -842,7 +842,7 @@ namespace netlib
         bodystream << body;
     }
 
-    static void AddEndBoundry(std::ostream& bodystream, std::string& boundary) 
+    static void AddEndBoundry(std::ostream& bodystream, const std::string& boundary) 
     {
         bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
     }
