@@ -250,9 +250,8 @@ TEST(PULL, AFILE)
     status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
-    if(status == ret::A_OK)
-    {
-        status = PullFile("./data/oglisv.pdf", &PULLCB);
+    if(status == ret::A_OK) {
+        status = PullFile("oglisv.pdf", &PULLCB);
         //status = PullFile("./data/oa.pdf", &PUSHCB);
         ASSERT_EQ(status, ret::A_OK);
     }

@@ -121,13 +121,14 @@ FileInfo* FileManager::CreateFileInfo()
 
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
-    std::string canonical, relative;
-    fs::GetCanonicalPath(filepath, canonical);
-    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+    //std::string canonical, relative;
+    //fs::GetCanonicalPath(filepath, canonical);
+    //fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
 
     Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-    m_Manifest.QueryForFile(relative, *pFi);
+    //m_Manifest.QueryForFile(relative, *pFi);
+    m_Manifest.QueryForFile(filepath, *pFi);
     Unlock();
 
     if(pFi) {

@@ -38,9 +38,9 @@ namespace cnst
     static const char* g_szFileType = "file";
 
     // File splitting
-    static const unsigned int g_uSplitMin = 1 << 21; // ~2 mbs
+    static const unsigned int g_unSplitMin = 1 << 21; // ~2 mbs
     static const unsigned int g_unSplitMax = 1 << 23; // ~8 mbs 
-    static const unsigned int g_unMaxBuffer = 1 << 24; // ~16 mbs
+    static const unsigned int g_unMaxBuffer = 1 << 26; // ~67 mbs <-- this needs to be at least 2mbs
 };
 
 

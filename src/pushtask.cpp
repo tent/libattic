@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "conoperations.h"
 #include "jsonserializable.h"
+#include "rollsum.h"
 
 #include "log.h"
 
@@ -482,7 +483,7 @@ int PushTask::ProcessFile( const std::string& requestType,
         boost::asio::write(ssl_sock, request); 
         boost::asio::write(ssl_sock, chunkedBody);
 
-        unsigned int filesize = utils::CheckFilesize(filepath);
+        const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
         std::ifstream ifs;
         ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
@@ -490,6 +491,7 @@ int PushTask::ProcessFile( const std::string& requestType,
         unsigned int count = 0;
         unsigned int totalread = 0; // total read count
         if (ifs.is_open()) {
+            /*
             unsigned int chunksize = cnst::g_unChunkSize;
             char* szChunkBuffer = new char[chunksize];
 
@@ -514,6 +516,81 @@ int PushTask::ProcessFile( const std::string& requestType,
                 // send
                 count++;
                 if(end) break;
+            }
+            */
+            // Setup window buffer
+            std::string window, remainder;
+            unsigned int readcount = 0;
+            RollSum rs;
+            while(!ifs.eof()) {
+                char* pData = NULL;
+                unsigned int datasize = 0;
+                if(filesize >= cnst::g_unMaxBuffer) {
+                    pData = new char[filesize];
+                    datasize = filesize;
+                }
+                else {
+                    if((filesize - readcount) <= cnst::g_unMaxBuffer) {
+                        pData = new char[(filesize - readcount)];
+                        datasize = (filesize - readcount);
+                    }
+                    else {
+                        pData = new char[cnst::g_unMaxBuffer];
+                        datasize = cnst::g_unMaxBuffer;
+                    }
+                }
+
+                ifs.read(pData, datasize);
+                readcount += datasize;
+
+                window.clear();
+                window += remainder;
+                remainder.clear();
+
+                if(datasize)
+                    window.append(pData, datasize);
+
+                // find splits
+                int totalread = 0, count = 0, lastsplit = 0;
+                for(unsigned int i=0; i<window.size(); i++) {
+                    char c = window[i];
+                    count++;
+                    rs.Roll(c);
+                    if(rs.OnSplit()) {
+                        if(count >= cnst::g_unSplitMin) {
+                            std::string chunk;
+                            int diff = i - lastsplit;
+                            chunk = window.substr(lastsplit, diff);
+                            // Transform
+                            SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
+                            lastsplit = i;
+                            count = 0;
+                            totalread += chunk.size();
+                        }
+                    }
+
+                    if(count >= cnst::g_unSplitMax) {
+                        std::string chunk;
+                        int diff = i - lastsplit;
+                        chunk = window.substr(lastsplit, diff);
+                        // Transform
+                        SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
+                        lastsplit = i;
+                        count = 0;
+                        totalread += chunk.size();
+                    }
+                }
+
+                // Set remainder
+                int wdiff = window.size() - totalread;
+                if(wdiff)
+                    remainder = window.substr(lastsplit, wdiff);
+
+                if((readcount + remainder.size()) >= filesize) {
+                    SendChunk( remainder, fileKey, boundary, ssl_sock, count, true, pFi);
+                    break;
+                }
+
             }
 
             boost::asio::streambuf response;

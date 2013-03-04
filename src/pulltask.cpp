@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "filesystem.h"
 #include "filemanager.h"
 
 #include "errorcodes.h"
@@ -181,12 +182,23 @@ int PullTask::RetreiveFile( const std::string filepath,
     
     Credentials fCred = fileCred;
     std::cout<< " filepath : " << filepath << std::endl;
+    std::string workingdir;
+    GetWorkingDirectory(workingdir);
+    utils::CheckUrlAndAppendTrailingSlash(workingdir);
+    std::string path;
+    path = workingdir + filepath;
+
+    std::cout<< " path : " <<path << std::endl;
+    fs::GetCanonicalPath(path, path);
+
+    std::cout<< " path : " << path << std::endl;
+
     std::string fileKey;
     fCred.GetKey(fileKey);
     std::cout<< " file key : " << fileKey << std::endl;
 
     std::ofstream ofs;
-    ofs.open(filepath.c_str(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+    ofs.open(path.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
 
     std::cout<<" FAILBIT : " << ofs.fail() << std::endl;
     std::cout<<" TRYING TO OPEN THE FILE " << std::endl;
