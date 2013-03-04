@@ -459,14 +459,9 @@ int PushTask::ProcessFile( const std::string& requestType,
         std::string fileKey;
         fileCredentials.GetKey(fileKey);
 
-        std::cout << " encryption file key : " << fileKey << std::endl;
-        Credentials chunkCred;
-        chunkCred.SetKey(fileKey);
-
         // Build request
         boost::asio::streambuf request;
         std::ostream request_stream(&request);
-        //BuildRequestHeader("POST", url, boundary, at, request_stream); 
         netlib::BuildRequestHeader(requestType, url, boundary, at, request_stream); 
 
         // Build Body Form header
@@ -510,101 +505,15 @@ int PushTask::ProcessFile( const std::string& requestType,
                 // append to string
                 std::string chunk(szChunkBuffer, chunksize);
 
-                // Calculate plaintext hash
-                std::string plaintextHash;
-                crypto::GenerateHash(chunk, plaintextHash);
+                bool end = false;
+                if(totalread >= filesize)
+                    end = true;
 
-                // create chunk name (hex encoded plaintext hash)
-                std::string chunkName;
-                utils::StringToHex(plaintextHash, chunkName);
-
-                // Compress
-                std::string compressedChunk;
-                compress::CompressString(chunk, compressedChunk);
-
-                // Encrypt
-                std::string encryptedChunk;
-                std::string iv;
-                crypto::GenerateIv(iv);
-                chunkCred.SetIv(iv);
-
-                std::cout<< " IV : " << iv << std::endl;
-                crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
-                //crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
-
-                // Base64 Encode
-                std::string finishedChunk;
-                crypto::Base64EncodeString(encryptedChunk, finishedChunk);
-
-                std::string ciphertextHash;
-                crypto::GenerateHash(encryptedChunk, ciphertextHash);
-
-                // Fill Out Chunk info object
-                ChunkInfo ci;
-                ci.SetChunkName(chunkName);
-                ci.SetPlainTextMac(plaintextHash);
-                ci.SetCipherTextMac(ciphertextHash);
-                ci.SetIv(iv);
-                if(pFi) pFi->PushChunkBack(ci);
-
-                // Push chunk back into fileinfo
-
-                // Build Attachment
-                boost::asio::streambuf attachment;
-                std::ostream attachmentstream(&attachment);
-                netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
-
-                // create multipart post
-                if(totalread >= filesize) {
-                    // Add end part
-                    netlib::AddEndBoundry(attachmentstream, boundary);
-
-                    // Chunk the end
-                    boost::asio::streambuf partEnd;
-                    std::ostream partendstream(&partEnd);
-                    netlib::ChunkEnd(attachment, partendstream);
-
-                    boost::system::error_code errorcode;
-                    static int breakcount = 0;
-                    do {
-                        boost::asio::write(ssl_sock, partEnd, errorcode); 
-                        if(errorcode)
-                            std::cout<<errorcode.message()<<std::endl;
-
-                        if(breakcount > 20)
-                            break;
-                        breakcount++;
-                    }
-                    while(errorcode);
-                    break;
-
-                }
-                else {
-                    // carry on
-                    // Chunk the part
-                    boost::asio::streambuf part;
-                    std::ostream chunkpartbuf(&part);
-                    netlib::ChunkPart(attachment, chunkpartbuf);
-                    
-                    std::cout<<" write to socket " << std::endl;
-
-                    boost::system::error_code errorcode;
-                    static int breakcount = 0;
-                    do
-                    {
-                        boost::asio::write(ssl_sock, part, errorcode); 
-                        if(errorcode)
-                            std::cout<<errorcode.message()<<std::endl;
-
-                        if(breakcount > 20)
-                            break;
-                        breakcount++;
-                    }
-                    while(errorcode);
-                }
+                SendChunk( chunk, fileKey, boundary, ssl_sock, count, end, pFi);
 
                 // send
                 count++;
+                if(end) break;
             }
 
             boost::asio::streambuf response;
@@ -616,6 +525,134 @@ int PushTask::ProcessFile( const std::string& requestType,
             status = ret::A_FAIL_OPEN_FILE;
         }
     }
+
+    return status;
+}
+
+int PushTask::SendChunk( const std::string& chunk, 
+                         const std::string& fileKey,
+                         const std::string& boundary,
+                         boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
+                         const unsigned int count,
+                         bool end,
+                         FileInfo* pFi)
+{
+    int status = ret::A_OK;
+    // Transform
+    std::string finishedChunk, chunkName;
+    TransformChunk( chunk, 
+                    fileKey, 
+                    finishedChunk, 
+                    chunkName, 
+                    pFi);
+
+    // Build Attachment
+    boost::asio::streambuf attachment;
+    std::ostream attachmentstream(&attachment);
+    //netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
+    netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
+
+    // create multipart post
+    if(end) {
+        // Add end part
+        netlib::AddEndBoundry(attachmentstream, boundary);
+
+        // Chunk the end
+        boost::asio::streambuf partEnd;
+        std::ostream partendstream(&partEnd);
+        netlib::ChunkEnd(attachment, partendstream);
+
+        boost::system::error_code errorcode;
+        static int breakcount = 0;
+        do {
+            boost::asio::write(ssl_sock, partEnd, errorcode); 
+            if(errorcode)
+                std::cout<<errorcode.message()<<std::endl;
+
+            if(breakcount > 20)
+                break;
+            breakcount++;
+        }
+        while(errorcode);
+    }
+    else {
+        // carry on
+        // Chunk the part
+        boost::asio::streambuf part;
+        std::ostream chunkpartbuf(&part);
+        netlib::ChunkPart(attachment, chunkpartbuf);
+        
+        std::cout<<" write to socket " << std::endl;
+
+        boost::system::error_code errorcode;
+        static int breakcount = 0;
+        do{
+            boost::asio::write(ssl_sock, part, errorcode); 
+            if(errorcode)
+                std::cout<<errorcode.message()<<std::endl;
+
+            if(breakcount > 20)
+                break;
+            breakcount++;
+        }
+        while(errorcode);
+    }
+
+    return status;
+}
+
+int PushTask::TransformChunk( const std::string& chunk, 
+                              const std::string& fileKey,
+                              std::string& finalizedOut, 
+                              std::string& nameOut, 
+                              FileInfo* pFi)
+{
+    int status = ret::A_OK;
+
+    Credentials chunkCred;
+    chunkCred.SetKey(fileKey);
+
+    // Calculate plaintext hash
+    std::string plaintextHash;
+    crypto::GenerateHash(chunk, plaintextHash);
+
+    // create chunk name (hex encoded plaintext hash)
+    std::string chunkName;
+    utils::StringToHex(plaintextHash, chunkName);
+
+    // Compress
+    std::string compressedChunk;
+    compress::CompressString(chunk, compressedChunk);
+
+    // Encrypt
+    std::string encryptedChunk;
+    std::string iv;
+    crypto::GenerateIv(iv);
+    chunkCred.SetIv(iv);
+
+    std::cout<< " IV : " << iv << std::endl;
+    crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
+    //crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
+
+    // Base64 Encode
+    std::string finishedChunk;
+    crypto::Base64EncodeString(encryptedChunk, finishedChunk);
+    finalizedOut = finishedChunk;
+
+    std::string ciphertextHash;
+    crypto::GenerateHash(encryptedChunk, ciphertextHash);
+
+    // Fill Out Chunk info object
+    ChunkInfo ci;
+    ci.SetChunkName(chunkName);
+    ci.SetPlainTextMac(plaintextHash);
+    ci.SetCipherTextMac(ciphertextHash);
+    ci.SetIv(iv);
+
+    nameOut = chunkName;
+
+    // Push chunk back into fileinfo
+    if(pFi) pFi->PushChunkBack(ci);
 
     return status;
 }

@@ -8,7 +8,7 @@
 
 namespace compress
 {
-    static int CompressString(std::string& in, std::string& out, const int nDeflateLevel = 1)
+    static int CompressString(const std::string& in, std::string& out, const int nDeflateLevel = 1)
     {
         // deflate level (1-9) level of compression
         int status = ret::A_OK;

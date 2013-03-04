@@ -10,6 +10,7 @@
 #include "atticpost.h"
 #include "chunkpost.h"
 #include "response.h"
+#include "netlib.h"
 
 
 class PushTask : public TentTask
@@ -39,6 +40,21 @@ class PushTask : public TentTask
                      const Credentials& fileCredentials,
                      FileInfo* pFi,
                      Response& resp);
+    
+    int TransformChunk( const std::string& chunk, 
+                        const std::string& fileKey,
+                        std::string& finalizedOut, 
+                        std::string& nameOut, 
+                        FileInfo* pFi);
+
+    int SendChunk( const std::string& chunk, 
+                   const std::string& fileKey,
+                   const std::string& boundary,
+                   boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
+                   const unsigned int count,
+                   bool end,
+                   FileInfo* pFi);
+
 
     FileInfo* RetrieveFileInfo(const std::string& filepath);
 
