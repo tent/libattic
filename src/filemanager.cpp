@@ -1,9 +1,6 @@
 #include "filemanager.h"
 
 #include <string>
-//#include <string.h>
-#include <stdlib.h>
-#include <string>
 #include <vector>
 #include <iostream>
 
