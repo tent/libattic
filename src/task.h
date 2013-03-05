@@ -29,7 +29,9 @@ public:
         ENCRYPT,
         DECRYPT,
         // ManifestTask
-        QUERYMANIFEST
+        QUERYMANIFEST,
+        // Polling
+        POLL
     };
 protected:
     Task(TaskType type = UNKNOWN)
