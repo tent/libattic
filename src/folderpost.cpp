@@ -23,10 +23,9 @@ FolderPost::~FolderPost()
 
 void FolderPost::Serialize(Json::Value& root)
 {
-    std::string folder;
+    Json::Value folder(Json::objectValue);
     jsn::SerializeObject(&m_Folder, folder);
 
-    std::cout<<" FOLDER : " << folder << std::endl;
     SetContent("children", folder);
 
     Post::Serialize(root);
@@ -35,7 +34,7 @@ void FolderPost::Serialize(Json::Value& root)
 void FolderPost::Deserialize(Json::Value& root)
 {
     Post::Deserialize(root);
-    std::string folder;
+    Json::Value folder;
     GetContent("children", folder);
     jsn::DeserializeObject(&m_Folder, folder);
 }

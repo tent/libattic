@@ -402,6 +402,7 @@ int PushTask::SendFolderPost(const std::string& filepath)
                                       postBuffer,
                                       at,
                                       response );
+
         }
 
         std::cout<<" FOLDER POST RESPONSE CODE : " << response.code << std::endl;
@@ -475,6 +476,10 @@ int PushTask::InitAtticPost( AtticPost& post,
 
             fi->GetChunkPostID(chunkpostid);
             post.PushBackChunkPostId(chunkpostid);
+        }
+        else {
+            std::cout<<" &&&&&&&&&&&&&& INVALID FILE INFO &&&&&&&&&& FOR : " << filepath << std::endl;
+
         }
     }
     else {

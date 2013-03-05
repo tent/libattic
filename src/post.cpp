@@ -41,13 +41,12 @@ Post::~Post()
     }
 }
 
-void Post::GetContent(const std::string& key, std::string& out)
+//void Post::GetContent(const std::string& key, std::string& out)
+void Post::GetContent(const std::string& key, Json::Value& out)
 {
     ContentMap::iterator itr = m_Content.find(key);
     if(itr != m_Content.end())
-    {
         out = itr->second;
-    }
 }
 
 void Post::Serialize(Json::Value& root)

@@ -26,6 +26,7 @@ namespace jsn
     static void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m);
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, Json::Value> &m);
  
     static bool DeserializeJsonValue(Json::Value& val, const std::string& input);
     static bool DeserializeObject(JsonSerializable* pObj, const std::string& input);
@@ -34,6 +35,7 @@ namespace jsn
     static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m);
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m);
 
     static bool SerializeObject(JsonSerializable* pObj, std::string& output)
     {
@@ -148,6 +150,18 @@ namespace jsn
         }
     }
 
+
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, Json::Value> &m)
+    {
+        if(val.isObject()) {
+            std::map<std::string, Json::Value>::iterator itr = m.begin();
+
+            for(;itr != m.end(); itr++) {
+                val[(*itr).first] = (*itr).second;
+            }
+        }
+    }
+
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m)
     {
         if(val.isObject()) {
@@ -214,6 +228,18 @@ namespace jsn
 
             for(; itr != val.end(); itr++) {
                 m[itr.key().asString()] = (*itr).asBool();
+            }
+        }
+    }
+
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m)
+    {
+        if(val.isObject()) {
+            m.clear();
+            Json::ValueIterator itr = val.begin();
+
+            for(; itr != val.end(); itr++) {
+                m[itr.key().asString()] = (*itr);
             }
         }
     }

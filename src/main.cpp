@@ -33,6 +33,7 @@
 #include "folderpost.h"
 
 #include "rollsum.h"
+#include "atticpost.h"
 
 // Globals
 std::string g_Entity;
@@ -207,8 +208,8 @@ TEST(PUSH, AFILE)
 
     if(status == 0)
     {
-        status = PushFile("./data/oglisv.pdf", &PUSHCB);
-    //    status = PushFile("./data/oa.pdf", &PUSHCB);
+   //     status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        status = PushFile("./data/ccf.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -680,6 +681,25 @@ TEST(FOLDER, SERIALIZATION)
 
     FolderPost pp;
     jsn::DeserializeObject(&pp, fp);
+
+    Permissions perm;
+    std::string permout;
+    jsn::SerializeObject(&perm, permout);
+
+    std::cout<<" permissions out : " << permout << std::endl;
+
+    Post post;
+    std::string postout;
+    jsn::SerializeObject(&post, postout);
+
+    std::cout<<" post out : " << postout << std::endl;
+
+
+    AtticPost ap;
+    std::string atticout;
+    jsn::SerializeObject(&ap, atticout);
+    std::cout<<" attic out : " << atticout << std::endl;
+
 
 
    

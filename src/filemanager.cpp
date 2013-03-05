@@ -1,6 +1,7 @@
 #include "filemanager.h"
 
-#include <string.h>
+#include <string>
+//#include <string.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
@@ -206,14 +207,29 @@ FileInfo* FileManager::CreateFileInfo()
 
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
-    //std::string canonical, relative;
-    //fs::GetCanonicalPath(filepath, canonical);
-    //fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+    std::string canonical, relative;
+    fs::GetCanonicalPath(filepath, canonical);
+    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+
+    std::cout<<" GET FILE INFO : " << std::endl;
+    std::cout<<" \t filepath : " << filepath << std::endl;
+    std::cout<<" \t canonical : " << canonical << std::endl;
+    std::cout<<" \t relatvie : " << relative << std::endl;
+    
+    if(canonical.empty()) {
+        relative = filepath;
+        if(relative.find("/") == std::string::npos && relative.find("\\") == std::string::npos) {
+            canonical = m_WorkingDirectory + "/" + relative;
+            fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        }
+
+        std::cout<<" NEW RELATIVE : " << relative << std::endl;
+    }
 
     Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-    //m_Manifest.QueryForFile(relative, *pFi);
-    m_Manifest.QueryForFile(filepath, *pFi);
+    m_Manifest.QueryForFile(relative, *pFi);
+   // m_Manifest.QueryForFile(filepath, *pFi);
     Unlock();
 
     if(pFi) {

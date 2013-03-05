@@ -75,7 +75,8 @@ public:
 
     void GetID(std::string& out) const          { out = m_ID; }
     void GetPostType(std::string& out) const    { out = m_Type; }
-    void GetContent(const std::string& key, std::string& out);
+    //void GetContent(const std::string& key, std::string& out);
+    void GetContent(const std::string& key, Json::Value& out);
     unsigned int GetAttachmentCount()           { return m_Attachments.size(); }
     AttachmentVec* GetAttachments()             { return &m_Attachments; }
     unsigned int GetVersion() const             { return m_Version; }
@@ -84,7 +85,9 @@ public:
     void setEntity(const std::string &entity)   { m_Entity = entity; }
     void SetPublishedAt(unsigned int uUnixTime) { m_PublishedAt = uUnixTime; }
     void SetPostType(const std::string &type)   { m_Type = type; }
-    void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
+
+    //void SetContent(const std::string &type, const std::string &val) { m_Content[type] = val; }
+    void SetContent(const std::string &type, Json::Value &val) { m_Content[type] = val; }
 
     void SetPublic(const bool pub) { m_Permissions.SetIsPublic(pub); }
     //void SetPermission(const std::string &permission, bool Val) { m_Permissions[permission] = Val; }
@@ -100,7 +103,8 @@ private:
     std::vector<std::string>            m_Licenses;
     std::string                         m_Type;
 
-    typedef std::map<std::string, std::string> ContentMap;
+    //typedef std::map<std::string, std::string> ContentMap;
+    typedef std::map<std::string, Json::Value> ContentMap;
     ContentMap                          m_Content;
 
     AttachmentVec                       m_Attachments;

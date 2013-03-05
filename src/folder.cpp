@@ -47,11 +47,29 @@ Folder::~Folder()
 
 void Folder::Serialize(Json::Value& root)
 {
+    /*
     std::string sval;
+    SerializeContents(sval);
+    root["foldercontents"] = sval;
+    */
+
+    Json::Value sval(Json::objectValue);
     SerializeContents(sval);
     root["foldercontents"] = sval;
 
     FolderEntry::Serialize(root);
+}
+
+void Folder::SerializeContents(Json::Value& root)
+{
+    EntryList::iterator itr = m_Entries.begin();
+
+    for(;itr!=m_Entries.end(); itr++) {
+        Json::Value val(Json::objectValue);
+        jsn::SerializeObject(&(itr->second), val);
+        root[itr->first] = val;
+    }
+
 }
 
 void Folder::SerializeContents(std::string& out)
@@ -74,8 +92,23 @@ void Folder::SerializeContents(std::string& out)
 void Folder::Deserialize(Json::Value& root)
 {
     FolderEntry::Deserialize(root);
-    std::string sval = root.get("foldercontents", "").asString();
+    //std::string sval = root.get("foldercontents", "").asString();
+    //DeserializeContents(sval);
+
+    Json::Value sval = root["foldercontents"];
     DeserializeContents(sval);
+
+}
+
+void Folder::DeserializeContents(Json::Value& root)
+{
+    Json::ValueIterator itr = root.begin();
+
+    for(; itr != root.end(); itr++) {
+        FolderEntry fe;
+        jsn::DeserializeObject(&fe, (*itr));
+        m_Entries[itr.key().asString()] = fe;
+    }
 }
 
 void Folder::DeserializeContents(const std::string& in)

@@ -43,8 +43,10 @@ public:
 
     virtual void Serialize(Json::Value& root);
     void SerializeContents(std::string& out);
+    void SerializeContents(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
     void DeserializeContents(const std::string& in);
+    void DeserializeContents(Json::Value& root);
 
     void PushBackEntry(const FolderEntry& entry) { m_Entries[entry.GetPath()] = entry; }
     bool GetFolderEntry(const std::string& path, FolderEntry& entry);
