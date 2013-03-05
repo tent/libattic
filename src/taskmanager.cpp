@@ -163,19 +163,43 @@ int TaskManager::SyncFiles(void (*callback)(int, void*))
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetTentTask( Task::SYNC,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    "",
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
+                                         m_pApp,
+                                         m_pFileManager,
+                                         m_pCredentialsManager,
+                                         TaskArbiter::GetInstance(),
+                                         &m_TaskFactory,
+                                         m_AccessToken,
+                                         m_Entity,
+                                         "",
+                                         m_TempDir,
+                                         m_WorkingDir,
+                                         m_ConfigDir,
+                                         callback,
+                                         this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+
+    return status;
+}
+
+int TaskManager::PollFiles(void (*callback)(int, void*))
+{
+    int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.GetTentTask( Task::POLL,
+                                         m_pApp,
+                                         m_pFileManager,
+                                         m_pCredentialsManager,
+                                         TaskArbiter::GetInstance(),
+                                         &m_TaskFactory,
+                                         m_AccessToken,
+                                         m_Entity,
+                                         "",
+                                         m_TempDir,
+                                         m_WorkingDir,
+                                         m_ConfigDir,
+                                         callback,
+                                         this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
 

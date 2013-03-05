@@ -12,7 +12,9 @@ FolderPost::FolderPost()
 
 FolderPost::FolderPost(const Folder& folder)
 {
-    FolderPost();
+    SetPostType(cnst::g_szFolderPostType);
+    SetPublic(false);
+
     m_Folder = folder;
 }
 

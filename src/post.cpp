@@ -57,8 +57,8 @@ void Post::Serialize(Json::Value& root)
     if(!m_Entity.empty())
         root["entity"] = m_Entity;
 
-    root["published_at"] = m_PublishedAt;
-    root["received_at"] = m_ReceivedAt;
+    if(m_PublishedAt > 0)
+        root["published_at"] = m_PublishedAt;
 
     if(m_Mentions.size() > 0) {
         Json::Value mentions;
@@ -75,8 +75,7 @@ void Post::Serialize(Json::Value& root)
     if(!m_Type.empty())
         root["type"] = m_Type;
    
-    if(m_Content.size() > 0)
-    {
+    if(m_Content.size() > 0) {
         // TODO::this
         Json::Value content(Json::objectValue); // We want scopes to be an object {}// vs []
         jsn::SerializeMapIntoObject(content, m_Content);

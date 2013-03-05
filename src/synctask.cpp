@@ -68,7 +68,12 @@ void SyncTask::RunTask()
 
     if(!g_pCurrent) { 
         g_pCurrent = this;
-        // Sync meta data posts and populate the manifest
+        // Sync meta data posts from the manifest, obtained from the folder table,
+        // check if they exist in the infotable
+        //      if not insert it
+        // check if file exists
+        //      if not spin off a pull task
+
         status = SyncMetaData(); 
         Callback(status, NULL);
         SetFinishedState();

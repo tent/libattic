@@ -79,7 +79,9 @@ int DeleteFile(const char* szFilePath, void (*callback)(int, void*));
 // Pull All files in manifest
 int PullAllFiles(void (*callback)(int, void*)); // Pull into lib, don't expose
 
+// TODO :: These two methods are just temporarily exposed, to be used internally only
 int SyncFiles(void (*callback)(int, void*));
+int PollFiles(void (*callback)(int, void*));
 
 int SetEntityUrl(const char* szUrl);
 

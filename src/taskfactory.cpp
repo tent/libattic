@@ -9,6 +9,7 @@
 #include "deleteallpoststask.h"
 #include "synctask.h"
 #include "queryfilestask.h"
+#include "polltask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -274,6 +275,22 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         case Task::SYNC:
         {
             t = new SyncTask( pApp,                  
+                              pFm,                   
+                              pCm,                   
+                              pTa,                   
+                              pTf,
+                              at,                    
+                              entity,                
+                              filepath,              
+                              tempdir,               
+                              workingdir,            
+                              configdir,             
+                              callback);             
+            break;
+        }
+        case Task::POLL:
+        {
+            t = new PollTask( pApp,                  
                               pFm,                   
                               pCm,                   
                               pTa,                   

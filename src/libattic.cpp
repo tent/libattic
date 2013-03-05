@@ -492,6 +492,17 @@ int SyncFiles(void (*callback)(int, void*))
     return status;
 }
 
+int PollFiles(void (*callback)(int, void*))
+{
+    int status = IsLibInitialized();
+
+    if(status == ret::A_OK)
+        status = g_pTaskManager->PollFiles(callback);
+
+    return status;
+
+}
+
 int DeleteFile(const char* szFilePath, void (*callback)(int, void*) )
 {
     int status = IsLibInitialized();

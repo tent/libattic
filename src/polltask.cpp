@@ -18,15 +18,15 @@ PollTask::PollTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    void (*callback)(int, void*));
+                    void (*callback)(int, void*))
                     :                                               
                     TentTask( Task::POLL,
                               pApp,                                 
-                              pFm,                                  
-                              pCm,                                  
-                              pTa,                                  
-                              pTf,                                  
-                              at,                                   
+                              pFm,
+                              pCm,
+                              pTa,
+                              pTf,
+                              at,
                               entity,                               
                               filepath,                             
                               tempdir,                              
@@ -73,6 +73,7 @@ void PollTask::RunTask()
 
 int PollTask::SyncFolderPosts()
 {
+    int status = ret::A_OK;
     // Get Folder Posts
     int postcount = GetAtticPostCount();
     if(postcount > 0) {
@@ -118,12 +119,14 @@ int PollTask::SyncFolderPosts()
             }
             else {
                 break;
+            }
 
         }
     }
+    return status;
 }
 
-int SyncTask::GetAtticPostCount()
+int PollTask::GetAtticPostCount()
 {                                                                                                 
     std::string url;
     GetEntityUrl(url);
