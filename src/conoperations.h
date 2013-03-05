@@ -211,8 +211,14 @@ namespace conops
 
         std::cout<<" RESPONSE : " << response.code << std::endl;
         std::cout<<" BODY : " << response.body << std::endl;
-    
-        status = ExtractProfile(entityurl, response, entOut);
+        
+        if(response.code == 200) {
+            status = ExtractProfile(entityurl, response, entOut);
+        }
+        else { 
+            status = ret::A_FAIL_NON_200;
+        }
+
         return status;
     }
     static int GetRequestEntity(const std::string& entityurl, Entity& entOut)
@@ -308,15 +314,22 @@ namespace conops
 
     static int Discover(const std::string& entityurl, Entity& entOut)
     {
+        std::cout<<" Discovering entity ... " << std::endl;
+        std::cout<<" entity url : " << entityurl << std::endl;
         int status = ret::A_OK;
 
         status = HeadRequestEntity(entityurl,entOut);
-        if(status != ret::A_OK)
+        if(status != ret::A_OK) { 
+            std::cout<<" head request failed ... get request " << std::endl;
             status = GetRequestEntity(entityurl, entOut);
+        }
 
-        if(status == ret::A_OK)
+        if(status == ret::A_OK) {
+            std::cout<<" Init entity " << std::endl;
             status = InitEntity(entityurl, entOut);
+        }
 
+        std::cout<<" Discover status : " << status << std::endl;
         return status; 
     }
 
@@ -324,16 +337,24 @@ namespace conops
     {
         int status = ret::A_OK;
 
+        std::cout<<" Discovering entity with auth... " << std::endl;
+        std::cout<<" entity url : " << entityurl << std::endl;
 
         status = HeadRequestEntity(entityurl,entOut);
         //status = HeadRequestEntityWithAuth( entityurl,
          //                                   at,
           //                                  entOut);
-        if(status != ret::A_OK)
+        if(status != ret::A_OK) { 
+            std::cout<<" head request failed ... get request " << std::endl;
             status = GetRequestEntity(entityurl, entOut);
+        }
 
-        if(status == ret::A_OK)
+        if(status == ret::A_OK) { 
+            std::cout<<" Init entity " << std::endl;
             status = InitEntity(entityurl, at, entOut);
+        }
+
+        std::cout<<" Discover with auth status : " << status << std::endl;
 
         return status;
     }

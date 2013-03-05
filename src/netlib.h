@@ -285,6 +285,7 @@ namespace netlib
             
             bool bSSL = false;
             if(protocol == "https") {
+                std::cout<<"\t ssl enabled " << std::endl;
                 status = ResolveHost(io_service, socket, host, true); 
                 bSSL = true;
             }
@@ -600,11 +601,12 @@ namespace netlib
                                     std::string& host, 
                                     std::string& path)
     {
+        std::string uri = url;
         int left = 0;
-        left = url.find("http");
+        left = uri.find("http");
         if(left != std::string::npos){
             left = 7;
-            if(url[4] == 's') { 
+            if(uri[4] == 's') { 
                 protocol = "https";
                 left += 1;
             } 
@@ -614,10 +616,15 @@ namespace netlib
         else
             left = 0;
 
-        int right = url.find("/", left);
+        int right = uri.find("/", left);
+        if(right == std::string::npos) {
+            utils::CheckUrlAndAppendTrailingSlash(uri);
+        }
+        right = uri.find("/", left);
+
         int diff = right - left;
-        host = url.substr(left, diff);
-        path = url.substr(right);
+        host = uri.substr(left, diff);
+        path = uri.substr(right);
     }
 
     static int InterpretResponse( boost::asio::streambuf& response, 

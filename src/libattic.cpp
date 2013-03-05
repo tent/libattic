@@ -557,6 +557,7 @@ int ChangePassphrase(const char* szOld, const char* szNew)
 
 int GetMasterKeyFromProfile(std::string& out)
 {
+    std::cout<<" Getting master key from profile ... " << std::endl;
     int status = ret::A_OK;
 
     Profile* prof = g_Entity.GetFrontProfile();
@@ -566,7 +567,7 @@ int GetMasterKeyFromProfile(std::string& out)
             atpi->GetMasterKey(out);
     }
     else
-        status = ret::A_FAIL_INVALID_PTR;
+        status = ret::A_FAIL_INVALID_PROFILE;
 
     return status;
 }
@@ -630,6 +631,8 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
     else {
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
     }
+
+    std::cout << " Decrypt Master Key status : " << status << std::endl;
     return status;
 }
 
@@ -655,7 +658,6 @@ int EnterPassphrase(const char* szPass)
         g_Pt.GetSalt(salt);
 
         std::string phraseKey;
-
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
         std::cout<<" PHRASE KEY : " << phraseKey << std::endl;
@@ -664,11 +666,13 @@ int EnterPassphrase(const char* szPass)
         if(status == ret::A_OK) {
             status = DecryptMasterKey(phraseKey, salt);
 
+            std::cout<<" DECRYPT STATUS : " << status << std::endl;
             if(status == ret::A_OK) {
                 // Reload phrase token
                 //LoadPhraseToken();
                 // Load Master Key
                 status = LoadMasterKey();
+                std::cout<< " LOAD MASTER KEY STATUS : " << status << std::endl;
             }
         }
     }
