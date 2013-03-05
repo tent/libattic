@@ -61,15 +61,13 @@ void Post::Serialize(Json::Value& root)
     root["published_at"] = m_PublishedAt;
     root["received_at"] = m_ReceivedAt;
 
-    if(m_Mentions.size() > 0)
-    {
+    if(m_Mentions.size() > 0) {
         Json::Value mentions;
         jsn::SerializeVector(mentions, m_Mentions);
         root["mentions"] = mentions;
     }
     
-    if(m_Licenses.size() > 0)
-    {
+    if(m_Licenses.size() > 0) {
         Json::Value licenses;
         jsn::SerializeVector(licenses, m_Licenses);
         root["licenses"] = licenses;
@@ -86,37 +84,27 @@ void Post::Serialize(Json::Value& root)
         root["content"] = content;
     }
 
-    if(m_Attachments.size() > 0)
-    {
+    if(m_Attachments.size() > 0) {
         // TODO::this
     }
 
-    if(m_TentApp)
-    {
+    if(m_TentApp) {
         Json::Value app;
         m_TentApp->Serialize(app); 
         root["app"] = app;
     }
 
-    if(m_Views.size() > 0)
-    {
+    if(m_Views.size() > 0) {
         Json::Value views(Json::objectValue); // We want scopes to be an object {}// vs []
         jsn::SerializeMapIntoObject(views, m_Views);
         root["views"] = views;
     }
 
-    /*
     Json::Value permissions(Json::objectValue); // We want scopes to be an object {}// vs []
-    jsn::SerializeMapIntoObject(permissions, m_Permissions);
+    jsn::SerializeObject(&m_Permissions, permissions);
     root["permissions"] = permissions;
-    */
-    //Json::Value perm;
-    std::string permval;
-    jsn::SerializeObject(&m_Permissions, permval);
-    root["permissions"] = permval;
 
     //root["version"] = m_Version;
-    
 }
 
 void Post::Deserialize(Json::Value& root)
@@ -180,7 +168,6 @@ void Post::Deserialize(Json::Value& root)
     }
 
     jsn::DeserializeObjectValueIntoMap(root["views"], m_Views);
-    //jsn::DeserializeObjectValueIntoMap(root["permissions"], m_Permissions);
     jsn::DeserializeObject(&m_Permissions,root["permissions"]);
 }
 

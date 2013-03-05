@@ -618,6 +618,7 @@ int PushTask::ProcessFile( const std::string& requestType,
             // Setup window buffer
             std::string window, remainder;
             unsigned int readcount = 0;
+            unsigned int chunkcount = 0;
             RollSum rs;
             while(!ifs.eof()) {
                 char* pData = NULL;
@@ -662,6 +663,7 @@ int PushTask::ProcessFile( const std::string& requestType,
                             SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
                             lastsplit = i;
                             count = 0;
+                            chunkcount++;
                             totalread += chunk.size();
                         }
                     }
@@ -674,6 +676,7 @@ int PushTask::ProcessFile( const std::string& requestType,
                         SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
                         lastsplit = i;
                         count = 0;
+                        chunkcount++;
                         totalread += chunk.size();
                     }
                 }
@@ -684,12 +687,12 @@ int PushTask::ProcessFile( const std::string& requestType,
                     remainder = window.substr(lastsplit, wdiff);
 
                 if((readcount + remainder.size()) >= filesize) {
-                    SendChunk( remainder, fileKey, boundary, ssl_sock, count, true, pFi);
+                    SendChunk( remainder, fileKey, boundary, ssl_sock, chunkcount, true, pFi);
+                    chunkcount++;
                     break;
                 }
-
             }
-
+            
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
             std::string responseheaders;
@@ -699,6 +702,9 @@ int PushTask::ProcessFile( const std::string& requestType,
             status = ret::A_FAIL_OPEN_FILE;
         }
     }
+
+    if(resp.code != 200)
+        status = ret::A_FAIL_NON_200;
 
     return status;
 }
@@ -739,6 +745,8 @@ int PushTask::SendChunk( const std::string& chunk,
         boost::system::error_code errorcode;
         static int breakcount = 0;
         do {
+
+            std::cout<<" write to socket " << std::endl;
             boost::asio::write(ssl_sock, partEnd, errorcode); 
             if(errorcode)
                 std::cout<<errorcode.message()<<std::endl;
