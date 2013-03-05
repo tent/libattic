@@ -1083,11 +1083,16 @@ const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
 
 int GetFileList(void(*callback)(int, char**, int, int))
 {
-    int status = IsLibInitialized();
+    int status = ret::A_OK;
+    if(!callback)
+        status = ret::A_FAIL_INVALID_PTR;
 
-    if(status == ret::A_OK)
-        status = g_pTaskManager->QueryManifest(callback);
+    if(status == ret::A_OK) {
+        status = IsLibInitialized();
 
+        if(status == ret::A_OK)
+            status = g_pTaskManager->QueryManifest(callback);
+    }
 
     return status;
 }
