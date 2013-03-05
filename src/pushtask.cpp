@@ -3,6 +3,8 @@
 
 #include <list>
 
+#include "folderpost.h"
+#include "filesystem.h"
 #include "filemanager.h"
 #include "chunkinfo.h"
 #include "errorcodes.h"
@@ -227,6 +229,7 @@ int PushTask::PushFile(const std::string& filepath)
 int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
 {
     int status = ret::A_OK;
+    std::cout<<" SEND ATTIC POST " << std::endl;
     // Create Attic Post
     if(!fi)
         std::cout<<"invalid file info"<<std::endl;
@@ -322,15 +325,109 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
             fi->SetPostID(postid); 
             if(post){
                 std::string filepath;
-                fi->SetPostVersion(0); // temporary for now, change later
+                fi->SetPostVersion(0); // TODO :: temporary for now, change later
                 fi->GetFilepath(filepath);
-
                 fm->SetFilePostId(filepath, postid);
+                // Send Folder Post
+                SendFolderPost(filepath);
             }
         }
     }
     else {
         status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+
+int PushTask::SendFolderPost(const std::string& filepath)
+{
+    int status = ret::A_OK;
+
+    std::string path, relative, canonical, parent_path, parent_relative, workingdir;
+                                                                                               
+    GetWorkingDirectory(workingdir);
+    fs::GetCanonicalPath(workingdir, workingdir);
+
+    std::cout<<"send WORKING : " << workingdir << std::endl;
+    path += workingdir;                                                                
+    utils::CheckUrlAndAppendTrailingSlash(path);                                               
+    path += filepath;                                                                          
+                                                                                               
+    fs::GetCanonicalPath(path, canonical);                                                     
+//    fs::MakePathRelative(workingdir, canonical, relative);                             
+    fs::GetParentPath(canonical, parent_path);                                                 
+    fs::MakePathRelative(workingdir, parent_path, parent_relative);                    
+
+    std::cout<<"send CANONICAL : " << canonical << std::endl;
+    std::cout<<"send PARENT_PATH : " << parent_path << std::endl;
+    std::cout<<"send WORKING : " << workingdir << std::endl;
+
+    Folder folder;
+    FileManager* fm = GetFileManager();
+    if(fm->GetFolderInfo(parent_relative, folder)) {
+        // serialize and send
+        FolderPost p(folder);
+        std::string postid;
+        folder.GetPostID(postid);
+        std::cout<<" FOLDER POST : " << postid << std::endl;
+
+        std::string posturl;
+        ConstructPostUrl(posturl);
+
+        std::string postBuffer;
+        jsn::SerializeObject(&p, postBuffer);
+
+        std::cout<<" POST BUFFER : \n" << postBuffer << std::endl;
+
+        AccessToken* at = GetAccessToken();
+        Response response;
+        bool bPost = true;
+        if(postid.empty()) { // POST
+            std::cout<< "FOLDER POST URL : " << posturl << std::endl;
+            status = netlib::HttpPost( posturl,
+                                       NULL,
+                                       postBuffer,
+                                       at,
+                                       response);
+        }
+        else { // PUT
+            bPost = false;
+            posturl += "/";
+            posturl += postid;
+            std::cout<<"FOLDER PUT URL : " << posturl << std::endl;
+
+            status = netlib::HttpPut( posturl,
+                                      NULL,
+                                      postBuffer,
+                                      at,
+                                      response );
+        }
+
+        std::cout<<" FOLDER POST RESPONSE CODE : " << response.code << std::endl;
+        std::cout<<" FOLDER POST RESPONSE BODY : " << response.body << std::endl;
+
+        if(response.code == 200) {
+            FolderPost p;
+            jsn::DeserializeObject(&p, response.body);
+            
+            std::string postid;
+            p.GetID(postid);
+
+            if(!postid.empty()) {
+                if(bPost) {
+                    FileManager* fm = GetFileManager();
+                    fm->SetFolderPostId(parent_relative, postid);
+                }
+            }
+
+
+        }
+
+
+    }
+    else {
+        std::cout<<" FOLDER NOT IN MANIFEST " << std::endl;
     }
 
     return status;
@@ -733,4 +830,5 @@ int PushTask::TransformChunk( const std::string& chunk,
 
     return status;
 }
+
 

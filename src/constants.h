@@ -36,6 +36,7 @@ namespace cnst
     // Folder Entry Types
     static const char* g_szFolderType = "folder";
     static const char* g_szFileType = "file";
+    static const char* g_szWorkingPlaceHolder = "<working>";
 
     // File splitting
     static const unsigned int g_unSplitMin = 1 << 21; // ~2 mbs

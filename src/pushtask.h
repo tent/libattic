@@ -33,6 +33,7 @@ class PushTask : public TentTask
     int PushFile( const std::string& filepath );
 
     int SendAtticPost( FileInfo* fi, const std::string& filepath );
+    int SendFolderPost(const std::string& filepath); // filepath of a file, this will extract the folder;
 
     int ProcessFile( const std::string& requestType,
                      const std::string& url,

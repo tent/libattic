@@ -30,6 +30,7 @@
 
 #include "filesystem.h"
 #include "folder.h"
+#include "folderpost.h"
 
 #include "rollsum.h"
 
@@ -601,6 +602,7 @@ TEST(FILESYSTEM, GETCANONICALPATH)
     fs::GetCanonicalPath(path, absolute);
 }
 
+/*
 TEST(MANIFEST, INSERTFILEINFO)
 {
     FileInfo fi( "somefile.pdf",
@@ -647,6 +649,7 @@ TEST(MANIFEST, REMOVEFILEINFO)
 
     mf.Shutdown();
 }
+*/
 
 TEST(FOLDER, SERIALIZATION)
 {
@@ -665,7 +668,21 @@ TEST(FOLDER, SERIALIZATION)
     std::string output2;
     jsn::SerializeObject(&other, output2);
 
+    std::cout<<" OUTPUT : " << output << std::endl;
+
     ASSERT_EQ(output, output2);
+
+    FolderPost p(folder);
+    std::string fp;
+    jsn::SerializeObject(&p, fp);
+
+    std::cout<<" FOLDER POST : " << fp << std::endl;
+
+    FolderPost pp;
+    jsn::DeserializeObject(&pp, fp);
+
+
+   
 }
 
 bool g_bRollsum = false;

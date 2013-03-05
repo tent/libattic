@@ -25,7 +25,6 @@ public:
     void GetPath(std::string& out) const { out = m_Path; }
     std::string GetPath(void) const { return m_Path; }
 
-
     void SetPostID(const std::string& id) { m_Postid = id; }
     void SetType(const std::string& type) { m_Type = type; }
     void SetPath(const std::string& path) { m_Path = path; }
@@ -48,6 +47,8 @@ public:
     void DeserializeContents(const std::string& in);
 
     void PushBackEntry(const FolderEntry& entry) { m_Entries[entry.GetPath()] = entry; }
+    bool GetFolderEntry(const std::string& path, FolderEntry& entry);
+
 
 private:
     typedef std::map<std::string, FolderEntry> EntryList;

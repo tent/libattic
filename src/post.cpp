@@ -110,9 +110,10 @@ void Post::Serialize(Json::Value& root)
     jsn::SerializeMapIntoObject(permissions, m_Permissions);
     root["permissions"] = permissions;
     */
-    Json::Value perm;
-    jsn::SerializeObject(&m_Permissions, perm);
-    root["permissions"] = perm;
+    //Json::Value perm;
+    std::string permval;
+    jsn::SerializeObject(&m_Permissions, permval);
+    root["permissions"] = permval;
 
     //root["version"] = m_Version;
     

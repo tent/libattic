@@ -96,4 +96,14 @@ void Folder::DeserializeContents(const std::string& in)
     }     
 }
 
+bool Folder::GetFolderEntry(const std::string& path, FolderEntry& entry)
+{
+    EntryList::iterator itr = m_Entries.find(path);
+    if( itr != m_Entries.end()) {
+       entry = itr->second; 
+       return true;
+    }
+
+    return false;
+}
 

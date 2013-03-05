@@ -124,7 +124,7 @@ bool Manifest::CreateFolderTable()
     std::string pexc;
     pexc += "CREATE TABLE IF NOT EXISTS ";
     pexc += g_foldertable;
-    pexc += " (foldername TEXT, folderpath TEXT, foldercontents TEXT, folderpostid TEXT,";
+    pexc += " (folderpath TEXT, foldercontents TEXT, folderpostid TEXT,";
     pexc += " PRIMARY KEY(folderpath ASC));";
 
     return PerformQuery(pexc);
@@ -504,16 +504,17 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
 // " PRIMARY KEY(folderpath ASC));";
 int Manifest::InsertFolder(Folder& folder)
 {
-    std::string name, path, foldercontents, postid;
+    std::string path, foldercontents, postid;
 
     std::string query;
     query += "INSERT OR REPLACE INTO ";
     query += g_foldertable;
-    query += " (foldername, folderpath, foldercontents, folderpostid) VALUES (?,?,?,?);";
-
+    query += " (folderpath, foldercontents, folderpostid) VALUES (?,?,?);";
 
     // Setup folder contents
+    folder.GetPath(path);
     folder.SerializeContents(foldercontents);
+    folder.GetPostID(postid);
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
@@ -521,26 +522,19 @@ int Manifest::InsertFolder(Folder& folder)
 
     if(ret == SQLITE_OK) {
         if(stmt) {
-            ret = sqlite3_bind_text(stmt, 1, name.c_str(), name.size(), SQLITE_STATIC);
-            if(ret != SQLITE_OK)
-            {
-                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
-                return false;
-            }
-
-            ret = sqlite3_bind_text(stmt, 2, path.c_str(), path.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 1, path.c_str(), path.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 3, foldercontents.c_str(), foldercontents.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 2, foldercontents.c_str(), foldercontents.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 4, postid.c_str(), postid.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 3, postid.c_str(), postid.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -597,7 +591,6 @@ bool Manifest::QueryForFolder( const std::string& folderpath, Folder& out)
     std::cout << " Col count : " << res.nCol << std::endl;
     */
 
-    std::string foldername;
     int step = 0;
     for(int i=0; i<res.nRow+1; i++) {
         step = i*res.nCol;
@@ -610,10 +603,9 @@ bool Manifest::QueryForFolder( const std::string& folderpath, Folder& out)
 
         if(step > 0){
             //out.SetName(res.results[0+step]);
-            foldername = res.results[0+step];
-            out.SetPath(res.results[1+step]);
-            out.DeserializeContents(res.results[2+step]);
-            out.SetPostID(res.results[3+step]);
+            out.SetPath(res.results[0+step]);
+            out.DeserializeContents(res.results[1+step]);
+            out.SetPostID(res.results[2+step]);
         }
     }
 

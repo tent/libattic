@@ -24,8 +24,6 @@ QueryFilesTask::~QueryFilesTask()
 
 void QueryFilesTask::RunTask()
 {
-
-
     std::vector<FileInfo> vec;                          
     GetFileManager()->GetAllFileInfo(vec); // blocking
     CreateCStringListsAndCallBack(vec);
@@ -42,8 +40,7 @@ int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec)
     if(m_Stride == 0) m_Stride = 1;
 
     int size = 0;
-    for(unsigned int i=0; i<totalcount; i+=m_Stride)
-    {
+    for(unsigned int i=0; i<totalcount; i+=m_Stride) {
         if((i+m_Stride) < totalcount)
             size = m_Stride;
         else
@@ -52,8 +49,7 @@ int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec)
         char** buf = new char*[size];
 
         std::string fp;
-        for(unsigned int j=0; j<size; j++)
-        {
+        for(unsigned int j=0; j<size; j++) {
            fp.clear(); 
            vec[i+j].GetFilepath(fp); 
            buf[j] = new char[fp.size()+1];

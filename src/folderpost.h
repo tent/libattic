@@ -5,11 +5,13 @@
 
 #include <vector>
 #include "post.h"
+#include "folder.h"
 
 class FolderPost : public Post
 {
 public:
     FolderPost();
+    FolderPost(const Folder& folder);
     ~FolderPost();
 
     virtual void Serialize(Json::Value& root);  
@@ -24,7 +26,7 @@ public:
     void SetRelativePath(const std::string& path) { m_RelativePath = path; }
 
 private:
-    std::vector<FolderPost> m_Children; // If folder anything 
+    Folder  m_Folder;
     std::string m_RelativePath; // Relative path to file or folder
     std::string m_FileType;     // File or Folder
 };
