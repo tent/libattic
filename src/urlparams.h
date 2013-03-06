@@ -1,4 +1,3 @@
-
 #ifndef URLPARAMS_H_
 #define URLPARAMS_H_
 #pragma once
@@ -12,15 +11,13 @@ class UrlParams
     typedef std::vector<std::string> UrlParam;
     typedef std::map<std::string, UrlParam> UrlParamMap;
 public:
+    UrlParams();
+    ~UrlParams();
     void AddValue(const std::string& key, const std::string &value);
     UrlParam GetValue(const std::string& key);
 
     void SerializeToString(std::string &out) const;
     void SerializeAndEncodeToString(std::string &out) const;
-
-    static void UrlEncode(const std::string &url);
-    static void UrlDecode(const std::string &url, std::string &out);
-
 private:
     UrlParamMap m_Values;
 };

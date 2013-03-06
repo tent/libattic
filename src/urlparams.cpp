@@ -1,7 +1,15 @@
 #include "urlparams.h"
 
-#include <iostream>
 #include "netlib.h"
+
+
+UrlParams::UrlParams()
+{
+}
+
+UrlParams::~UrlParams()
+{
+}
 
 void UrlParams::AddValue(const std::string& key, const std::string &value)
 {
@@ -13,8 +21,7 @@ std::vector<std::string> UrlParams::GetValue(const std::string& key)
 {
     UrlParam value;
     UrlParamMap::iterator itr = m_Values.find(key);
-    if(itr != m_Values.end())
-    {
+    if(itr != m_Values.end()) {
         value = itr->second;
     }
     return value;
@@ -28,10 +35,8 @@ void UrlParams::SerializeToString(std::string &out) const
 
     UrlParamMap::const_iterator itr = m_Values.begin();
 
-    for(;itr != m_Values.end(); itr++)
-    {
-        if(itr != m_Values.begin())
-        {
+    for(;itr != m_Values.end(); itr++) {
+        if(itr != m_Values.begin()) {
             out.append("&");
         }
 
@@ -39,8 +44,7 @@ void UrlParams::SerializeToString(std::string &out) const
         out.append("=");
 
         UrlParam::const_iterator valItr = itr->second.begin();
-        for(; valItr != itr->second.end(); valItr++)
-        {
+        for(; valItr != itr->second.end(); valItr++) {
             out.append(*valItr);
             
             if(*valItr != itr->second.back())
