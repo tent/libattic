@@ -52,7 +52,7 @@ void PullTask::RunTask()
     GetFilepath(filepath);
     int status = PullFile(filepath);
 
-    Callback(status, NULL);
+    Callback(status, (void*)filepath.c_str());
     SetFinishedState();
 }
 

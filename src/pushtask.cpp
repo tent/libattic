@@ -65,7 +65,7 @@ void PushTask::RunTask()
     std::cout<<" finishing push task ... " << std::endl;
     
     // Callback
-    Callback(status, NULL);
+    Callback(status, (void*)filepath.c_str());
     SetFinishedState();
 }
 
