@@ -1,5 +1,4 @@
 #include "httpheader.h"
-#include <iostream>
 
 HttpHeader::HttpHeader()
 {
@@ -11,7 +10,6 @@ HttpHeader::~HttpHeader()
 
 void HttpHeader::AddValue(const std::string& key, const std::string& value)
 {
-    std::cout<<" ADD VALUE : " << key << std::endl;
     m_Values[key] = value;
 }
 
@@ -69,7 +67,6 @@ void HttpHeader::ParseString(const std::string& in)
         // Find Value
         value.clear();
         pos = in.find("\n", left + 2);
-        std::cout<<" FOUND RN? : " << pos << std::endl;
         if(pos == std::string::npos) break;
         //pos += 2;
         diff = pos - (left+2);
