@@ -12,13 +12,15 @@ public:
     HttpHeader();
     ~HttpHeader();
 
+    std::string& operator[](const std::string& index);
     void AddValue(const std::string& key, const std::string& value);
-    bool ValueExists(const std::string& key);
+    bool HasValue(const std::string& key);
     std::string GetValue(const std::string& key);
     void GetValue(const std::string& key, std::string& out);
 
     void ParseString(const std::string& in);
     void ReturnAsString(std::string& out);
+    std::string ReturnAsString(void);
 
 private:
     HttpHeaderMap m_Values;

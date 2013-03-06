@@ -1,5 +1,4 @@
 #include "httpheader.h"
-
 #include <iostream>
 
 HttpHeader::HttpHeader()
@@ -12,6 +11,7 @@ HttpHeader::~HttpHeader()
 
 void HttpHeader::AddValue(const std::string& key, const std::string& value)
 {
+    std::cout<<" ADD VALUE : " << key << std::endl;
     m_Values[key] = value;
 }
 
@@ -34,7 +34,7 @@ void HttpHeader::GetValue(const std::string& key, std::string& out)
     }
 }
 
-bool HttpHeader::ValueExists(const std::string& key)
+bool HttpHeader::HasValue(const std::string& key)
 {
     HttpHeaderMap::iterator itr = m_Values.find(key);
     if(itr != m_Values.end()) {
@@ -43,6 +43,13 @@ bool HttpHeader::ValueExists(const std::string& key)
     }
 
     return false;
+}
+
+void Trim(std::string& in)
+{
+    int pos = in.find("\r\n");
+    if(pos != std::string::npos)
+        in.erase(pos, 2);
 }
 
 void HttpHeader::ParseString(const std::string& in)
@@ -61,16 +68,17 @@ void HttpHeader::ParseString(const std::string& in)
         left = pos;
         // Find Value
         value.clear();
-        pos = in.find("\r\n", left + 2);
+        pos = in.find("\n", left + 2);
+        std::cout<<" FOUND RN? : " << pos << std::endl;
         if(pos == std::string::npos) break;
         //pos += 2;
         diff = pos - (left+2);
         value = in.substr((left+2), diff);
         left = pos;
         // Push back
-        std::cout<<" PUSH KEY : " << key << std::endl;
-        std::cout<<" PUSH VAL : " << value << std::endl;
            
+        Trim(key);
+        Trim(value);
         AddValue(key, value);
     }
 }
@@ -85,5 +93,17 @@ void HttpHeader::ReturnAsString(std::string& out)
         out += itr->second;
         out += "\r\n";
     }
+}
+
+std::string HttpHeader::ReturnAsString(void)
+{
+    std::string out;
+    ReturnAsString(out);
+    return out;
+}
+
+std::string& HttpHeader::operator[](const std::string& index)
+{
+    return m_Values[index];
 }
 
