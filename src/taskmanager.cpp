@@ -54,6 +54,21 @@ int TaskManager::Shutdown()
 
 void TaskManager::OnEventRaised(const Event& event)
 {
+    std::cout<<" TASK MANAGER EVENT RAISED " << std::endl;
+    switch(event.type) {
+        case Event::REQUEST_PULL:
+            {
+                DownloadFile(event.value, event.callback);
+                break;
+            }
+        case Event::REQUEST_PUSH:
+            {
+                UploadFile(event.value, event.callback);
+                break;
+            }
+        default:
+            std::cout<<"received unknown event"<<std::endl;
+    }
 
 }
 
