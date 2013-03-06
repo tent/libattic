@@ -34,6 +34,8 @@
 #include "taskmanager.h"
 #include "filesystem.h"
 
+#include "eventsystem.h"
+
 #include <cbase64.h>
 // TODO :: 
 // Things to wrap with mutexes
@@ -195,6 +197,7 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     status = liba::ShutdownAppInstance(&g_pApp);
     status = liba::ShutdownTaskManager(&g_pTaskManager);
 
+    evnt::ShutdownEventSystem();
     g_pFileManager = NULL;
     g_pCredManager = NULL;
     g_pEntityManager = NULL;
@@ -456,8 +459,18 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
 {
     int status = IsLibInitialized();
 
-    if(status == ret::A_OK)
-        status = g_pTaskManager->UploadFile(szFilePath, callback);
+    if(status == ret::A_OK){
+        Event event;
+        event.type = Event::REQUEST_PUSH;
+        event.value = szFilePath;
+        event.callback = callback;
+
+        evnt::RaiseEvent(event);
+        //status = g_pTaskManager->UploadFile(szFilePath, callback);
+    }
+
+
+
 
     return status;
 }
@@ -466,8 +479,15 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
 {
     int status = IsLibInitialized();
 
-    if(status == ret::A_OK)
-        status = g_pTaskManager->DownloadFile(szFilePath, callback);
+    if(status == ret::A_OK){
+        Event event;
+        event.type = Event::REQUEST_PULL;
+        event.value = szFilePath;
+        event.callback = callback;
+
+        evnt::RaiseEvent(event);
+        // status = g_pTaskManager->DownloadFile(szFilePath, callback);
+    }
 
     return ret::A_OK;
 }
