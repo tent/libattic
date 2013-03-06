@@ -1,5 +1,7 @@
 #include "httpheader.h"
 
+#include <iostream>
+
 HttpHeader::HttpHeader()
 {
 }
@@ -41,5 +43,47 @@ bool HttpHeader::ValueExists(const std::string& key)
     }
 
     return false;
+}
+
+void HttpHeader::ParseString(const std::string& in)
+{
+    int left = 0, pos = 0, diff = 0;
+    std::string key, value;
+
+    while(pos != std::string::npos) {
+        // Find Key
+        key.clear();
+        pos = in.find(": ", left + 1);
+        if(pos == std::string::npos) break;
+        //pos -= 1;
+        diff = pos - left;
+        key = in.substr(left, diff);
+        left = pos;
+        // Find Value
+        value.clear();
+        pos = in.find("\r\n", left + 2);
+        if(pos == std::string::npos) break;
+        //pos += 2;
+        diff = pos - (left+2);
+        value = in.substr((left+2), diff);
+        left = pos;
+        // Push back
+        std::cout<<" PUSH KEY : " << key << std::endl;
+        std::cout<<" PUSH VAL : " << value << std::endl;
+           
+        AddValue(key, value);
+    }
+}
+
+void HttpHeader::ReturnAsString(std::string& out)
+{
+    HttpHeaderMap::iterator itr = m_Values.begin();
+   
+    for(;itr!= m_Values.end(); itr++) {
+        out += itr->first;
+        out += ": ";
+        out += itr->second;
+        out += "\r\n";
+    }
 }
 

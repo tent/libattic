@@ -17,6 +17,9 @@ public:
     std::string GetValue(const std::string& key);
     void GetValue(const std::string& key, std::string& out);
 
+    void ParseString(const std::string& in);
+    void ReturnAsString(std::string& out);
+
 private:
     HttpHeaderMap m_Values;
 };
