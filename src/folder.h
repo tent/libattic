@@ -38,6 +38,8 @@ private:
 class Folder : public FolderEntry
 {
 public:
+    typedef std::map<std::string, FolderEntry> EntryList;
+
     Folder();
     ~Folder();
 
@@ -51,9 +53,10 @@ public:
     void PushBackEntry(const FolderEntry& entry) { m_Entries[entry.GetPath()] = entry; }
     bool GetFolderEntry(const std::string& path, FolderEntry& entry);
 
+    EntryList* GetEntryList() { return &m_Entries; }
 
 private:
-    typedef std::map<std::string, FolderEntry> EntryList;
+
     EntryList m_Entries;
 };
 
