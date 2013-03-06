@@ -15,12 +15,15 @@ struct Event
         PULL,
         REQUEST_PUSH,
         REQUEST_PULL,
+        SYNC,
+        POLL,
         UPLOAD_SPEED,
         DOWNLOAD_SPEED
     };
 
     EventType type;
     std::string value;
+    void (*callback)(int, void*);
 };
 
 class EventListener
@@ -40,7 +43,7 @@ class EventSystem : public MutexClass
 public:
     ~EventSystem() {}
 
-    EventSystem* GetInstance();
+    static EventSystem* GetInstance();
 
     void Shutdown();
 
