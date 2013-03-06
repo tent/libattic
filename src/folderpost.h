@@ -1,4 +1,3 @@
-
 #ifndef FOLDERPOST_H_
 #define FOLDERPOST_H_
 #pragma once
@@ -24,6 +23,8 @@ public:
     
     void SetFileType(const std::string& type) { m_FileType = type; }
     void SetRelativePath(const std::string& path) { m_RelativePath = path; }
+
+    void GetFolder(Folder& folder) const { folder = m_Folder; }
 
 private:
     Folder  m_Folder;
