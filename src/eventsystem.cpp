@@ -10,6 +10,7 @@ EventSystem* EventSystem::GetInstance() {
 
 void EventSystem::Shutdown()
 {
+    Lock();
     ListenerMap::iterator itr = m_ListenerMap.begin();
     for(;itr != m_ListenerMap.end(); itr++) {
         itr->second.clear();
@@ -20,6 +21,7 @@ void EventSystem::Shutdown()
         delete m_pInstance;
         m_pInstance = NULL;
     }
+    Unlock();
 }
 void EventSystem::RaiseEvent(const Event& event)
 {

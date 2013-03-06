@@ -61,5 +61,19 @@ private:
     static EventSystem* m_pInstance;
 };
 
+namespace evnt
+{
+    static void RaiseEvent(const Event& event) 
+    {
+        EventSystem::GetInstance()->RaiseEvent(event);
+    }
+
+    static void ShutdownEventSystem()
+    {
+        EventSystem::GetInstance()->Shutdown();
+    }
+
+};
+
 #endif
 
