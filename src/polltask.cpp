@@ -5,6 +5,7 @@
 
 #include "netlib.h"
 #include "constants.h"
+#include "folderpost.h"
 
 
 static int g_instance_count = 0;
@@ -81,7 +82,7 @@ int PollTask::SyncFolderPosts()
 {
     int status = ret::A_OK;
     // Get Folder Posts
-    int postcount = GetAtticPostCount();
+    int postcount = GetFolderPostCount();
     if(postcount > 0) {
         Entity entity;
         GetEntity(entity);
@@ -115,24 +116,62 @@ int PollTask::SyncFolderPosts()
                              &params,
                              at,
                              resp);
+
+            std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
             std::cout<<" response code : " << resp.code << std::endl;
             std::cout<<" response body : " << resp.body << std::endl;
 
             if(resp.code == 200) { 
                 // Loop through all the responses
+                // For each folder post spin off a sync task for now, just do it serially
+                // TODO :: make sure to spin off a task after new threading and message passing 
+                //         framework is in place.
 
+                // Parse json
+                std::deque<Folder> folders;
+                Json::Value root;
+                Json::Reader reader;
+                reader.parse(resp.body, root);
 
+                std::cout<<" entries : " << root.size() << std::endl;
+                // extract since id
+                Json::ValueIterator itr = root.begin();
+                for(; itr != root.end(); itr++) {
+                    FolderPost fp;
+                    jsn::DeserializeObject(&fp, root);
+                    Folder folder;
+                    fp.GetFolder(folder);
+                    folders.push_back(folder);
+                }
             }
             else {
                 break;
             }
-
         }
     }
     return status;
 }
 
-int PollTask::GetAtticPostCount()
+int SyncFolder(Folder& folder)
+{
+    // Make sure the folder exists in the manifest
+    //
+    // loop through the entries make sure they exist, if there is a newer version
+    // spin off a pull command
+    int status = ret::A_OK;
+    Folder::EntryList* pList = folder.GetEntryList();
+
+    if(pList) { 
+        Folder::EntryList::iterator itr = pList->begin();
+        for(;itr != pList->end(); itr++) {
+
+        }
+    }
+
+    return status;
+}
+
+int PollTask::GetFolderPostCount()
 {                                                                                                 
     std::string url;
     GetEntityUrl(url);
@@ -142,7 +181,7 @@ int PollTask::GetAtticPostCount()
     std::cout<<" URL : " << url << std::endl;
 
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(cnst::g_szAtticPostType));             
+    params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType));             
 
     Response response;                                                                            
     AccessToken* at = GetAccessToken();                                                           
@@ -150,9 +189,6 @@ int PollTask::GetAtticPostCount()
                      &params,
                      at,
                      response);
-
-    std::cout<< "CODE : " << response.code << std::endl;                                          
-    std::cout<< "RESPONSE : " << response.body << std::endl;                                      
 
     int count = -1;                                                                               
     if(response.code == 200) {

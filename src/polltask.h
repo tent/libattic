@@ -3,12 +3,13 @@
 #pragma once
 
 #include "tenttask.h"
+#include "folder.h"
 
 class PollTask : public TentTask
 {
-
     int SyncFolderPosts();
-    int GetAtticPostCount();
+    int SyncFolder(Folder& folder);
+    int GetFolderPostCount();
 public:
     PollTask( TentApp* pApp,
               FileManager* pFm,
