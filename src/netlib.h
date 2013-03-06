@@ -22,6 +22,7 @@
 #include "response.h"
 #include "errorcodes.h"
 #include "accesstoken.h"
+#include "httpheader.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp> 
@@ -678,7 +679,8 @@ namespace netlib
         bool bChunked = false;
         std::string header;
         while (std::getline(response_stream, header) && header != "\r") {
-            std::cout << header << "\n";
+            resp.ConsumeHeader(header + "\n");
+            //std::cout << header << "\n";
             returnHeaders += header;
             returnHeaders += "\n";
             int pos = header.find("transfer-encoding:");
@@ -688,7 +690,6 @@ namespace netlib
             }
         }
 
-        std::cout<<" RETURN HEADER : " << returnHeaders << std::endl;
         std::string output_buffer;
         // Write whatever content we already have to output.
         if (response.size() > 0) {
@@ -755,7 +756,8 @@ namespace netlib
         bool bChunked = false;
         std::string header;
         while (std::getline(response_stream, header) && header != "\r") {
-            std::cout << header << "\n";
+            resp.ConsumeHeader(header + "\n");
+            //std::cout << header << "\n";
             returnHeaders += header;
             returnHeaders += "\n";
             int pos = header.find("transfer-encoding:");
