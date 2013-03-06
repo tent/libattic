@@ -362,7 +362,8 @@ TEST(TEST, SYNC)
 
         EnterPassphrase("password");
         std::cout<<"syncing..."<<std::endl;
-        status = SyncFiles(SYNCCB);
+     //   status = SyncFiles(SYNCCB);
+        status = PollFiles(SYNCCB);
         std::cout<<"done calling ... " << std::endl;
     }
 

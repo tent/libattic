@@ -2,10 +2,12 @@
 
 #include <string>
 #include <iostream>
+
 #include "netlib.h"
+#include "constants.h"
 
 
-static const int g_instance_count = 0;
+static int g_instance_count = 0;
 
 PollTask::PollTask( TentApp* pApp,
                     FileManager* pFm,
@@ -54,13 +56,17 @@ void PollTask::OnFinished()
 
 void PollTask::RunTask()
 {
+    int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions
     if(!g_instance_count) {
         g_instance_count++;
         // Poll for folder posts
         // Update Entries on a counter
         // Update pull
+        SyncFolderPosts();
 
+
+        SetFinishedState();
         g_instance_count = 0;
     }
     else {
@@ -101,7 +107,7 @@ int PollTask::SyncFolderPosts()
             UrlParams params;                                                                  
             params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType));  
             params.AddValue(std::string("limit"), std::string(countBuff));                         
-            if(!lastid.emtpy()) 
+            if(!lastid.empty())
                 params.AddValue(std::string("last_id"), lastid);
 
             Response resp;
