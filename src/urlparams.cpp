@@ -69,8 +69,8 @@ void UrlParams::SerializeAndEncodeToString(std::string &out) const
             hold.clear();
             hold.append(*valItr);
             
-            netlib::UriEncode(hold);
-            out += hold;
+            out += netlib::UriEncode(hold);
+            
             if(*valItr != itr->second.back())
                 out.append(",");
         }
