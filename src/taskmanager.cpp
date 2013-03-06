@@ -5,6 +5,7 @@
 #include "credentialsmanager.h"
 #include "filemanager.h"
 
+
 TaskManager::TaskManager( TentApp* pApp, 
                           FileManager* pFm, 
                           CredentialsManager* pCm,
@@ -37,6 +38,9 @@ int TaskManager::Initialize()
     int status = ret::A_OK;
     status = m_TaskFactory.Initialize();
 
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PULL);
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PUSH);
+
     return status;
 }
 
@@ -46,6 +50,11 @@ int TaskManager::Shutdown()
     status = m_TaskFactory.Shutdown();
 
     return status;
+}
+
+void TaskManager::OnEventRaised(const Event& event)
+{
+
 }
 
 void TaskManager::OnTaskCreate(Task* t)

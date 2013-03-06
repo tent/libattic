@@ -7,12 +7,13 @@
 #include "accesstoken.h"
 #include "entity.h"
 #include "taskfactory.h"
+#include "eventsystem.h"
 
 class TentApp;
 class FileManager;
 class CredentialsManager;
 
-class TaskManager : public TaskFactoryDelegate
+class TaskManager : public TaskFactoryDelegate, public EventListener
 {
 public:
     TaskManager( TentApp* pApp, 
@@ -29,6 +30,8 @@ public:
 
     int Initialize();
     int Shutdown();
+
+    virtual void OnEventRaised(const Event& event);
 
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
