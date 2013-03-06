@@ -8,6 +8,19 @@ EventSystem* EventSystem::GetInstance() {
     return m_pInstance;
 }
 
+void EventSystem::Shutdown()
+{
+    ListenerMap::iterator itr = m_ListenerMap.begin();
+    for(;itr != m_ListenerMap.end(); itr++) {
+        itr->second.clear();
+    }
+    m_ListenerMap.clear();
+
+    if(m_pInstance) {
+        delete m_pInstance;
+        m_pInstance = NULL;
+    }
+}
 void EventSystem::RaiseEvent(const Event& event)
 {
     // TODO:: test the cost memory vs speed making local copy of map or vector and iterating through that

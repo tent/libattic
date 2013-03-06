@@ -42,6 +42,8 @@ public:
 
     EventSystem* GetInstance();
 
+    void Shutdown();
+
     void RaiseEvent(const Event& event);
 
     void RegisterForEvent(EventListener* pListener, Event::EventType type);
