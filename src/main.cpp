@@ -233,6 +233,7 @@ bool g_bPull = false;
 void PULLCB(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
+    std::cout<<" VoiD : " << (char*)b << std::endl;
 
 }
 TEST(PULL, AFILE)
