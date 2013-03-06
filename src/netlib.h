@@ -129,8 +129,12 @@ namespace netlib
         using namespace boost::asio::ssl;
         try {
             // Parse the url, separate the root from the path
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -162,7 +166,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "GET",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -212,9 +216,13 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             // Parse the url, separate the root from the path
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -236,7 +244,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "GET",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -277,8 +285,12 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
 
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -311,7 +323,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "HEAD",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -360,13 +372,14 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             // Parse the url, separate the root from the path
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
 
-            if(pParams)
-                std::cout<<" PARAMS ARE PASSED " << std::endl;
-            
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
             
@@ -387,7 +400,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "POST",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -441,9 +454,13 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             // Parse the url, separate the root from the path
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -465,7 +482,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "PUT",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -511,9 +528,13 @@ namespace netlib
         int status = ret::A_OK;
         using namespace boost::asio::ssl;
         try {
+            std::string local_url = url;
+            if(pParams)
+                EncodeAndAppendUrlParams(pParams, local_url);
+
             // Parse the url, separate the root from the path
             std::string protocol, host, path;
-            ExtractHostAndPath(url, protocol, host, path);
+            ExtractHostAndPath(local_url, protocol, host, path);
             
             boost::asio::io_service io_service; 
             tcp::socket socket(io_service); 
@@ -545,7 +566,7 @@ namespace netlib
 
             std::string authheader;
             if(at) {
-                netlib::BuildAuthHeader( url,
+                netlib::BuildAuthHeader( local_url,
                                          "DELETE",
                                          at->GetAccessToken(),
                                          at->GetMacKey(),
@@ -588,8 +609,7 @@ namespace netlib
     // Utility Functions ***********************************************************
     static void EncodeAndAppendUrlParams(const UrlParams* pParams, std::string& url)
     {
-        if(pParams)
-        {
+        if(pParams) {
             std::string enc;
             pParams->SerializeAndEncodeToString(enc);
             url += enc;
