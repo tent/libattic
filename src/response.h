@@ -4,11 +4,11 @@
 
 #include <string>
 
-struct Response                              
-{                                            
-    int code =0;                             
-    std::string body;                        
+#include "httpheader.h"
 
+class Response                              
+{                                            
+public:
     std::string CodeAsString()               
     {                                        
         char buf[256]={'\0'};                
@@ -22,7 +22,16 @@ struct Response
     {                                        
         code = -1;                           
         body.clear();                        
-    }                                        
+    }
+
+    void ConsumeHeader(const std::string& in) 
+    {
+        header.ParseString(in);
+    }
+
+    int code =0;                             
+    std::string body;                        
+    HttpHeader header;  // Response Header
 };                                           
 
 
