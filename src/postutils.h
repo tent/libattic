@@ -16,8 +16,7 @@ namespace postutils
     static int InitializeAtticPostToFileInfo(FileInfo* pFi, AtticPost& postOut, bool isPublic)
     {
         int status = ret::A_OK;
-        if(pFi)
-        {
+        if(pFi) {
             std::string filepath, filename;
             pFi->GetFilepath(filepath);
             pFi->GetFilename(filename);
@@ -44,21 +43,18 @@ namespace postutils
             postOut.PushBackChunkPostId(chunkpostid);
 
             FileInfo::ChunkMap* pList = pFi->GetChunkInfoList();
-            if(pList)
-            {
+            if(pList) {
                 FileInfo::ChunkMap::iterator itr = pList->begin();
 
                 std::string identifier;
-                for(;itr != pList->end(); itr++)
-                {
+                for(;itr != pList->end(); itr++) {
                     identifier.clear();
                     itr->second.GetChecksum(identifier);
                     postOut.PushBackChunkIdentifier(identifier);
                 }
             }
         }
-        else
-        {
+        else {
             status = ret::A_FAIL_INVALID_PTR;
         }
 
@@ -96,15 +92,13 @@ namespace postutils
     {
         int status = ret::A_OK;
 
-        if(post)
-        {
+        if(post) {
             std::string postid;
             post->GetID(postid);
 
             fiOut.SetPostID(postid);
         }
-        else
-        {
+        else {
             status = ret::A_FAIL_INVALID_PTR;
         }
 
@@ -115,22 +109,19 @@ namespace postutils
     {
         int status = ret::A_OK;
 
-        if(out)
-        {
+        if(out) {
             Json::Value val;
             std::string input = response.body;
             jsn::DeserializeJsonValue(val, input);
 
             Json::ValueIterator itr = val.begin();
-            for(;itr != val.end(); itr++)
-            {
+            for(;itr != val.end(); itr++) {
                 ChunkPost post;
                 jsn::DeserializeObject(&post, *itr);
                 out->push_back(post);
             }
         }
-        else
-        {
+        else {
             status = ret::A_FAIL_INVALID_PTR;
         }
 

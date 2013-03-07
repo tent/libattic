@@ -74,13 +74,18 @@ int PushTask::PushFile(const std::string& filepath)
     int status = ret::A_OK;
 
     // Verify file exists
-    if(utils::CheckFileExists(filepath)) {
+    if(fs::CheckFileExists(filepath)) {
         // Begin the chunking pipeline
         std::string posturl;
         ConstructPostUrl(posturl);
 
+        std::string relative_path;
+        FileManager* fm = GetFileManager();
+        fm->GetRelativeFilepath(filepath, relative_path);
+        std::cout<<" PUSHING RELATIVE PATH : " << relative_path << std::endl;
+
         // Retrieve file info if already exists
-        FileInfo* fi = RetrieveFileInfo(filepath);
+        FileInfo* fi = RetrieveFileInfo(relative_path);
         std::string chunkPostId;
         fi->GetChunkPostID(chunkPostId);
 
@@ -125,6 +130,7 @@ int PushTask::PushFile(const std::string& filepath)
         if(status == ret::A_OK) {
             status = ProcessFile( requestType,
                                   posturl,
+                                 // relative_path,
                                   filepath,
                                   fileCredentials,
                                   fi,
@@ -181,8 +187,9 @@ int PushTask::PushFile(const std::string& filepath)
                 mKey.GetMasterKey(mk);
 
                 // Insert File Data
+                std::cout<<" INSERTING RELATIVE PATH : "<< relative_path << std::endl;
                 fi->SetChunkPostID(chunkPostId);
-                fi->SetFilepath(filepath);
+                fi->SetFilepath(relative_path);
                 fi->SetFilename(filename);
                 fi->SetFileSize(filesize);
                 fi->SetFileCredentials(fileCredentials);
@@ -206,11 +213,11 @@ int PushTask::PushFile(const std::string& filepath)
                 // Insert file info to manifest
                 GetFileManager()->InsertToManifest(fi);
                 // create attic file metadata post
-                status = SendAtticPost(fi, filepath);
+                //status = SendAtticPost(fi, relative_path);
                 // Send Attic Post
                 int trycount = 0;
-                for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
-                    status = SendAtticPost(fi, filepath);
+                for(status = SendAtticPost(fi, relative_path); status != ret::A_OK; trycount++) {
+                    status = SendAtticPost(fi, relative_path);
                     std::cout<<" RETRYING .................................." << std::endl;
                     if(trycount > 2)
                         break;
@@ -228,6 +235,7 @@ int PushTask::PushFile(const std::string& filepath)
 
 int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
 {
+    std::cout<<" send attic post filepath : " << filepath << std::endl;
     int status = ret::A_OK;
     std::cout<<" SEND ATTIC POST " << std::endl;
     // Create Attic Post
@@ -324,11 +332,13 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
             FileManager* fm = GetFileManager();
             fi->SetPostID(postid); 
             if(post){
-                std::string filepath;
-                fi->SetPostVersion(0); // TODO :: temporary for now, change later
-                fi->GetFilepath(filepath);
-                fm->SetFilePostId(filepath, postid);
+                std::string fi_filepath;
+                fi->SetPostVersion(p.GetVersion()); // TODO update this in the manifest
+                fi->GetFilepath(fi_filepath);
+                fm->SetFilePostId(fi_filepath, postid);
+                // set post version
                 // Send Folder Post
+                std::cout<<" sending folder post to filepath : " << fi_filepath << std::endl;
                 SendFolderPost(filepath);
             }
         }
@@ -344,6 +354,7 @@ int PushTask::SendFolderPost(const std::string& filepath)
 {
     int status = ret::A_OK;
 
+    std::cout<<" Send Folder Post filepath : " << filepath << std::endl;
     std::string path, relative, canonical, parent_path, parent_relative, workingdir;
                                                                                                
     GetWorkingDirectory(workingdir);
@@ -359,9 +370,11 @@ int PushTask::SendFolderPost(const std::string& filepath)
     fs::GetParentPath(canonical, parent_path);                                                 
     fs::MakePathRelative(workingdir, parent_path, parent_relative);                    
 
+    std::cout<<"send filepath : " << filepath << std::endl;
     std::cout<<"send CANONICAL : " << canonical << std::endl;
     std::cout<<"send PARENT_PATH : " << parent_path << std::endl;
     std::cout<<"send WORKING : " << workingdir << std::endl;
+    std::cout<<"send PARENT RELATIVE : " << parent_relative << std::endl;
 
     Folder folder;
     FileManager* fm = GetFileManager();
@@ -535,6 +548,11 @@ int PushTask::ProcessFile( const std::string& requestType,
     tcp::socket socket(io_service); 
             
     status = netlib::ResolveHost(io_service, socket, host); 
+    std::cout<<" Resolve host : " << status << std::endl;
+    std::cout<<" protocol : " << protocol << std::endl;
+    std::cout<<" host : " << host << std::endl;
+    std::cout<<" path : " << path << std::endl;
+    std::cout<<" connection status : " << status << std::endl;
     if(status == ret::A_OK) {
         // Setup SSL handshake
         boost::system::error_code error = boost::asio::error::host_not_found; 
@@ -587,6 +605,7 @@ int PushTask::ProcessFile( const std::string& requestType,
 
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
+        std::cout<<" attempting to open filepath : " << filepath << std::endl;
         std::ifstream ifs;
         ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
@@ -708,8 +727,12 @@ int PushTask::ProcessFile( const std::string& requestType,
         }
     }
 
-    if(resp.code != 200)
+    if(resp.code != 200) { 
+        std::cout<<" FAILED TO CONNECT : " << resp.code << std::endl;
+        std::cout<<" body : " << resp.body << std::endl;
+        std::cout<<" status : " << status << std::endl;
         status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }

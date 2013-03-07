@@ -34,6 +34,10 @@
 
 #include "rollsum.h"
 #include "atticpost.h"
+#include "constants.h"
+#include "httpheader.h"
+
+#include "eventsystem.h"
 
 // Globals
 std::string g_Entity;
@@ -208,8 +212,8 @@ TEST(PUSH, AFILE)
 
     if(status == 0)
     {
-   //     status = PushFile("./data/oglisv.pdf", &PUSHCB);
-        status = PushFile("./data/ccf.pdf", &PUSHCB);
+        status = PushFile("./data/oglisv.pdf", &PUSHCB);
+   //     status = PushFile("./data/ccf.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -671,41 +675,45 @@ TEST(FOLDER, SERIALIZATION)
     std::string output2;
     jsn::SerializeObject(&other, output2);
 
-    std::cout<<" OUTPUT : " << output << std::endl;
 
     ASSERT_EQ(output, output2);
-
-    FolderPost p(folder);
-    std::string fp;
-    jsn::SerializeObject(&p, fp);
-
-    std::cout<<" FOLDER POST : " << fp << std::endl;
-
-    FolderPost pp;
-    jsn::DeserializeObject(&pp, fp);
-
-    Permissions perm;
-    std::string permout;
-    jsn::SerializeObject(&perm, permout);
-
-    std::cout<<" permissions out : " << permout << std::endl;
-
-    Post post;
-    std::string postout;
-    jsn::SerializeObject(&post, postout);
-
-    std::cout<<" post out : " << postout << std::endl;
-
-
-    AtticPost ap;
-    std::string atticout;
-    jsn::SerializeObject(&ap, atticout);
-    std::cout<<" attic out : " << atticout << std::endl;
-
-
-
-   
 }
+
+TEST(PARAMS, ENCODE) 
+{
+    UrlParams params;                                                                  
+    params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType)); 
+    params.AddValue(std::string("limit"), std::string("200"));                     
+
+    std::string enc;                           
+    params.SerializeAndEncodeToString(enc);  
+
+    std::cout<<" encoded string : " << enc << std::endl;
+
+    std::cout<<netlib::UriEncode(enc)<<std::endl;
+
+
+    std::string consume;
+    consume = "Cache-Control: max-age=0, private, must-revalidate\r\n"
+              "Content-Type: application/vnd.tent.v0+json\r\n"
+              "Date: Wed, 06 Mar 2013 15:51:58 GMT\r\n"
+              "Etag: \"fc96cd64868268c1940a382bdd4eae9f\"\r\n"
+              "Link: </posts?limit=1&post_types=https%3A%2F%2Fcupcake.io%2Ftypes%2Fpost%2Fattic-folder%2Fv0.1.0&since_id=4WAPeWUmBoM1Stq02BVMfA&since_id_entity=https%3A%2F%2Fpolar-springs-6638.herokuapp.com>; rel=\"prev\", </posts?limit=1&post_types=https%3A%2F%2Fcupcake.io%2Ftypes%2Fpost%2Fattic-folder%2Fv0.1.0&before_id=4WAPeWUmBoM1Stq02BVMfA&before_id_entity=https%3A%2F%2Fpolar-springs-6638.herokuapp.com>; rel=\"next\"\r\n";
+
+    HttpHeader head;
+    head.ParseString(consume);
+    std::string out;
+    head.ReturnAsString(out);
+
+    head["TEST"] = "testing operator overloading, do i still remember?";
+    std::cout<<out<<std::endl;
+    std::cout<<head["TEST"]<< std::endl;
+    /*
+    std::cout << " date " << std::endl;
+    std::cout << head["Date"] << std::endl;
+    */
+}
+
 
 bool g_bRollsum = false;
 std::string g_filepath;
@@ -879,12 +887,44 @@ TEST(ROLLSUM, FILETEST)
     }
 }
 
+bool g_bDaemon = false;
+TEST(ATTIC, DAEMON)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bDaemon) return;
+
+    std::cout<<" Initializing daemon ... " << std::endl;
+    
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+    std::cout<<" status : " << status << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<" entering passphrase ... " << std::endl;
+    status = EnterPassphrase("password");
+    std::cout<<" status : " << status << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<" running til interrupt ... " << std::endl;
+    for(;;) {
+
+       sleep(10);
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+}
+
 int main (int argc, char* argv[])
 {
     int status = 0;
 
     if(argc > 1) {
-        int optcount = 10;
+        int optcount = 11;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -896,6 +936,7 @@ int main (int argc, char* argv[])
             "QUERYMANIFEST",
             "DISCOVER",
             "SPLITTEST",
+            "DAEMON",
             };
 
         enum ecmd
@@ -909,7 +950,8 @@ int main (int argc, char* argv[])
             SYNC,
             QUERYMANIFEST,
             DISCOVER,
-            SPLITTEST
+            SPLITTEST,
+            DAEMON
         };
 
         if(!strcmp(argv[1], "--help")) {
@@ -1001,6 +1043,11 @@ int main (int argc, char* argv[])
                         }
                         else
                             std::cout<<" Invalid params ";
+                    }
+                    case DAEMON:
+                    {
+                        g_bDaemon = true;
+                        break;
                     }
                     default:
                         break;

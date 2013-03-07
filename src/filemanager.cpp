@@ -61,11 +61,16 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     std::string filepath, relative, canonical, parent_path, parent_relative;
     pFi->GetFilepath(filepath);
 
+    std::string test;
+    GetRelativeFilepath(filepath, test);
+    std::cout<<" TEST : " << test << std::endl;
+
     fs::GetCanonicalPath(filepath, canonical);
     fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
     fs::GetParentPath(filepath, parent_path);
     fs::MakePathRelative(m_WorkingDirectory, parent_path, parent_relative);
 
+    std::cout<<"INSERTING TO MANIFEST " << std::endl;
     std::cout<<" filepath        : " << filepath << std::endl;
     std::cout<<" canonical       : " << canonical << std::endl;
     std::cout<<" relative        : " << relative << std::endl;
@@ -73,10 +78,15 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     std::cout<<" parent dir      : " << parent_path << std::endl;
     std::cout<<" parent relative : " << parent_relative << std::endl;
 
-    if(parent_relative.empty())
+    //if(parent_relative.empty())
+    if(canonical.empty()) {
         parent_relative = cnst::g_szWorkingPlaceHolder;
+        relative = test;
+    }
+
 
     std::cout<<" PARENT_RELATIVE NOW : " << parent_relative << std::endl;
+    std::cout<<" RELATIVE : " << relative << std::endl;
 
     pFi->SetFilepath(relative);
     Lock();
@@ -96,6 +106,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 
             folder.PushBackEntry(fe);
 
+            std::cout<<" INSERTING TO FOLDER " << std::endl;
             m_Manifest.InsertFolder(folder);
         }
         else {
@@ -107,6 +118,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 
             folder.PushBackEntry(fe);
 
+            std::cout<<" INSERTING TO FOLDER " << std::endl;
             m_Manifest.InsertFolder(folder);
         }
     }
@@ -212,13 +224,20 @@ void FileManager::GetRelativeFilepath(const std::string& filepath, std::string& 
     std::cout<<" \t filepath : " << filepath << std::endl;
     std::cout<<" \t canonical : " << canonical << std::endl;
     std::cout<<" \t relatvie : " << relative << std::endl;
+    std::cout<<" \t working : " << m_WorkingDirectory << std::endl;
     
     if(canonical.empty()) {
         relative = filepath;
-        if(relative.find("/") == std::string::npos && relative.find("\\") == std::string::npos) {
+        if(relative.find("/") == std::string::npos){// && relative.find("\\") == std::string::npos) {
             canonical = m_WorkingDirectory + "/" + relative;
+
+            std::cout<<" new canonical : " << canonical << std::endl;
             fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
         }
+        else {
+            std::cout<<" not npos : " <<relative.find("/") << std::endl;
+        }
+
 
         std::cout<<" NEW RELATIVE : " << relative << std::endl;
     }

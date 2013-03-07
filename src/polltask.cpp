@@ -191,11 +191,14 @@ int PollTask::SyncFolder(Folder& folder)
                 // Check if currently in the sync queue
                     // if no sync
                     // if yes ignore
+                /*
                 Event event;
                 event.type = Event::REQUEST_SYNC_POST;
                 event.value = postid;
                 event.callback = polltask::PollTaskCB;
                 evnt::RaiseEvent(event);
+                */
+                event::RaiseEvent(Event::REQUEST_SYNC_POST, postid, polltask::PollTaskCB);
             }
 
 

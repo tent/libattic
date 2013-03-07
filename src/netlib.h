@@ -919,6 +919,7 @@ namespace netlib
         } 
 
         if (error) {
+            std::cout<<" Resolve host error : " << boost::system::system_error(error).what() << std::endl;
             //throw boost::system::system_error(error); 
             alog::Log( Logger::ERROR, 
                        boost::system::system_error(error).what(), 

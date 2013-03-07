@@ -103,6 +103,13 @@ namespace fs
     
         return status;
     }
+
+    static bool CheckFileExists(const std::string& filepath) 
+    {
+        if(boost::filesystem::exists(filepath))
+            return true;
+        return false;
+    }
 };
 
 #endif

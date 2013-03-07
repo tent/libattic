@@ -2,12 +2,16 @@
 #define SYNCFILETASK_H_
 #pragma once
 
+#include <string>
 #include "tenttask.h"
 #include "atticpost.h"
+
+class FileInfo;
 
 class SyncFileTask : public TentTask
 {
     int SyncMetaData(AtticPost& out);
+    int RetrieveChunkInfo(AtticPost& post, FileInfo* fi);
 public:
     SyncFileTask( TentApp* pApp,
                   FileManager* pFm,

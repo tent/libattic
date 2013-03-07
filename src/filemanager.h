@@ -17,7 +17,7 @@ class FileManager : public MutexClass
     FileManager(const FileManager &rhs) { }
     FileManager operator=(const FileManager &rhs) { return *this; }
 
-    void GetRelativeFilepath(const std::string& filepath, std::string& out);
+
 public:
     FileManager();
     FileManager( const std::string &manifestDirectory, 
@@ -32,6 +32,8 @@ public:
     int RemoveFile(const std::string &filepath);
 
     FileInfo* CreateFileInfo();
+
+    void GetRelativeFilepath(const std::string& filepath, std::string& out);
 
     bool DoesFileExist(const std::string& filepath);
     void GetManifestDirectory(std::string &out) const { out = m_ManifestDirectory; }

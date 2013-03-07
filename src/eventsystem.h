@@ -62,11 +62,22 @@ private:
     static EventSystem* m_pInstance;
 };
 
-namespace evnt
+namespace event
 {
     static void RaiseEvent(const Event& event) 
     {
         EventSystem::GetInstance()->RaiseEvent(event);
+    }
+
+    static void RaiseEvent( const Event::EventType type, 
+                            const std::string& value, 
+                            void (*callback)(int, void*))
+    {
+        Event event;
+        event.type = type;
+        event.value = value;
+        event.callback = callback;
+        RaiseEvent(event);
     }
 
     static void ShutdownEventSystem()
