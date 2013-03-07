@@ -18,10 +18,10 @@ void* ThreadFunc(void* arg)
         std::cout<<" setting up thread " << std::endl;
         // Setup thread                                                              
         ThreadData* pTd = (ThreadData*)arg;                                          
-        if(pTd)
-        {
+        if(pTd) {
             pTd->Lock();
-            TaskQueue* pTq = pTd->GetTaskQueue();
+            //TaskQueue* pTq = pTd->GetTaskQueue();
+            TaskQueue* pTq = CentralTaskQueue::GetInstance();
             pthread_t handle = pTd->GetThreadHandle();
             pTd->Unlock();
 
@@ -32,26 +32,21 @@ void* ThreadFunc(void* arg)
             //Task* pTask = NULL;                                                  
             std::cout<<"Thread : " << handle <<" running til done..."<< std::endl;
 
-            for(;;)                                                                  
-            {                                                                        
+            for(;;) {
                 if(!pTd)
-                {
                     std::cout<<" INVALID THREAD DATA " << std::endl;
-                }
 
                 pTd->Lock();
                 int State = pTd->GetThreadState()->GetThreadState();                             
                 pTd->Unlock();                                                  
 
-                if(State == ThreadState::EXIT || State == ThreadState::FINISHED)
-                {
+                if(State == ThreadState::EXIT || State == ThreadState::FINISHED) {
                     std::cout<<"Thread : " << handle << " Got exit signal! " << std::endl;
                     break;
                 }
 
                 unsigned int size = LocalTaskQueue.size();
-                if(size)
-                {
+                if(size) {
                     //std::cout<<"thread : " << handle << " aquired task " << std::endl;
                     if(State != ThreadState::RUNNING)                                
                     {                                                                
@@ -64,14 +59,11 @@ void* ThreadFunc(void* arg)
                     // if they are in the running state.
                     Task* pTask = NULL;
                     TaskQueue::iterator itr = LocalTaskQueue.begin();
-                    for(;itr != LocalTaskQueue.end(); itr++)
-                    {
+                    for(;itr != LocalTaskQueue.end(); itr++) {
                         pTask = (*itr);
-                        if(pTask)
-                        {
+                        if(pTask) {
 //                            std::cout<<" switching " << std::endl;
-                            switch(pTask->GetTaskState())
-                            {
+                            switch(pTask->GetTaskState()) {
                                 case Task::IDLE:
                                     {
                                         std::cout<<" starting task " << std::endl;
@@ -113,33 +105,27 @@ void* ThreadFunc(void* arg)
 
                             };
                         }
-                        else
-                        {
+                        else {
                             std::cout<<" INVALID " << std::endl;
                         }
                         sleep(0); // sleep between iterations
                     }
                 }
-                else
-                {
+                else {
+                    //std::cout<<" grab a task ? " << std::endl;
                     // Grab some tasks
                     Task* pTask = pTq->SyncPopFront();                                
 
-                    if(!pTask && (State != ThreadState::IDLE))                       
-                    {                                                                
+                    if(!pTask && (State != ThreadState::IDLE)) {
                         std::cout <<"Thread : " << handle << " Didn't aquire a task, idling ... " << std::endl;
                         pTd->Lock();                    
                         pTd->GetThreadState()->SetStateIdle();                                   
                         pTd->Unlock();                                          
                     } 
-                    else
-                    {
 
-                        if(pTask)
-                        {
-                            std::cout <<"Thread : " << handle << " Got new task : " << std::endl;
-                            LocalTaskQueue.push_back(pTask);
-                        }
+                    if(pTask) {
+                        std::cout <<"Thread : " << handle << " Got new task : " << std::endl;
+                        LocalTaskQueue.push_back(pTask);
                     }
 
                 }

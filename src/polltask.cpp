@@ -6,9 +6,18 @@
 #include "netlib.h"
 #include "constants.h"
 #include "folderpost.h"
+#include "eventsystem.h"
 
+namespace polltask 
+{
+    static PollTask* g_pCurrentPollTask = NULL;
 
-static int g_instance_count = 0;
+    static void PollTaskCB(int a, void* b)
+    {
+        if(g_pCurrentPollTask)
+            g_pCurrentPollTask->PollTaskCB(a, b);
+    }
+}
 
 PollTask::PollTask( TentApp* pApp,
                     FileManager* pFm,
@@ -55,20 +64,26 @@ void PollTask::OnFinished()
 {
 }
 
+void PollTask::PollTaskCB(int a, void* b)
+{
+    std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
+
+}
+
 void PollTask::RunTask()
 {
     int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions
-    if(!g_instance_count) {
-        g_instance_count++;
+    if(!polltask::g_pCurrentPollTask) {
+        polltask::g_pCurrentPollTask = this;
         // Poll for folder posts
         // Update Entries on a counter
         // Update pull
-        SyncFolderPosts();
+        status = SyncFolderPosts();
 
-
+        Callback(status, NULL);
         SetFinishedState();
-        g_instance_count = 0;
+        polltask::g_pCurrentPollTask = NULL;
     }
     else {
         status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
@@ -133,15 +148,18 @@ int PollTask::SyncFolderPosts()
                 Json::Reader reader;
                 reader.parse(resp.body, root);
 
+                jsn::PrintOutJsonValue(&root);
+
                 std::cout<<" entries : " << root.size() << std::endl;
                 // extract since id
                 Json::ValueIterator itr = root.begin();
                 for(; itr != root.end(); itr++) {
                     FolderPost fp;
-                    jsn::DeserializeObject(&fp, root);
+                    jsn::DeserializeObject(&fp, *itr);
                     Folder folder;
                     fp.GetFolder(folder);
                     folders.push_back(folder);
+                    SyncFolder(folder);
                 }
             }
             else {
@@ -152,20 +170,39 @@ int PollTask::SyncFolderPosts()
     return status;
 }
 
-int SyncFolder(Folder& folder)
+int PollTask::SyncFolder(Folder& folder)
 {
     // Make sure the folder exists in the manifest
     //
     // loop through the entries make sure they exist, if there is a newer version
     // spin off a pull command
+    std::cout<<" Syncing ... folder ... " << std::endl;
     int status = ret::A_OK;
     Folder::EntryList* pList = folder.GetEntryList();
 
     if(pList) { 
+        std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
         Folder::EntryList::iterator itr = pList->begin();
         for(;itr != pList->end(); itr++) {
+            std::string postid;
+            itr->second.GetPostID(postid);
+            std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
+            if(!postid.empty()) { 
+                // Check if currently in the sync queue
+                    // if no sync
+                    // if yes ignore
+                Event event;
+                event.type = Event::REQUEST_SYNC_POST;
+                event.value = postid;
+                event.callback = polltask::PollTaskCB;
+                evnt::RaiseEvent(event);
+            }
+
 
         }
+    }
+    else {
+        std::cout<<" invalid entry list " << std::endl;
     }
 
     return status;

@@ -7,10 +7,13 @@
 
 class PollTask : public TentTask
 {
+
     int SyncFolderPosts();
     int SyncFolder(Folder& folder);
     int GetFolderPostCount();
 public:
+    void PollTaskCB(int a, void* b);
+
     PollTask( TentApp* pApp,
               FileManager* pFm,
               CredentialsManager* pCm,

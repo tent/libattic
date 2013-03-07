@@ -30,7 +30,7 @@ public:
 private:
     static bool            m_bInitialized;
     static TaskArbiter*    m_pInstance;
-    TaskQueue*             m_pTaskQueue;
+//    TaskQueue*             m_pTaskQueue;
     ThreadPool*            m_pPool;
 };
 

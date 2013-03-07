@@ -40,6 +40,7 @@ int TaskManager::Initialize()
 
     EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PULL);
     EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PUSH);
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_SYNC_POST);
 
     return status;
 }
@@ -66,6 +67,12 @@ void TaskManager::OnEventRaised(const Event& event)
                 UploadFile(event.value, event.callback);
                 break;
             }
+        case Event::REQUEST_SYNC_POST:
+            {
+                std::cout<<" creating request sync task " << std::endl;
+                SyncFile(event.value, event.callback);
+                break;
+            }
         default:
             std::cout<<"received unknown event"<<std::endl;
     }
@@ -86,6 +93,39 @@ void TaskManager::OnTaskInsert(Task* t)
 
     // Maybe move spin off task to spin off?
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
+}
+int TaskManager::SyncFile(const std::string& postid, void (*callback)(int, void*))
+{
+    return CreateAndSpinOffTask( Task::SYNC_FILE_TASK,
+                                 postid,
+                                 callback);
+}
+
+int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype, 
+                                       const std::string& filepath, 
+                                       void (*callback)(int, void*))
+{
+    int status = ret::A_OK;
+
+    Task* t = m_TaskFactory.GetTentTask( tasktype,
+                                         m_pApp,
+                                         m_pFileManager,
+                                         m_pCredentialsManager,
+                                         TaskArbiter::GetInstance(),
+                                         &m_TaskFactory,
+                                         m_AccessToken,
+                                         m_Entity,
+                                         filepath,
+                                         m_TempDir,
+                                         m_WorkingDir,
+                                         m_ConfigDir,
+                                         callback,
+                                         this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+
+    return status;
+
 }
 
 int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, void*))
@@ -117,19 +157,19 @@ int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int,
     int status = ret::A_OK;
  
     Task* t = m_TaskFactory.GetTentTask( Task::PULL,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    filepath,
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
+                                         m_pApp,
+                                         m_pFileManager,
+                                         m_pCredentialsManager,
+                                         TaskArbiter::GetInstance(),
+                                         &m_TaskFactory,
+                                         m_AccessToken,
+                                         m_Entity,
+                                         filepath,
+                                         m_TempDir,
+                                         m_WorkingDir,
+                                         m_ConfigDir,
+                                         callback,
+                                         this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
@@ -140,19 +180,19 @@ int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, v
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetTentTask( Task::DELETE,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    filepath,
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
+                                         m_pApp,
+                                         m_pFileManager,
+                                         m_pCredentialsManager,
+                                         TaskArbiter::GetInstance(),
+                                         &m_TaskFactory,
+                                         m_AccessToken,
+                                         m_Entity,
+                                         filepath,
+                                         m_TempDir,
+                                         m_WorkingDir,
+                                         m_ConfigDir,
+                                         callback,
+                                         this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
 

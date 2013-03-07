@@ -26,6 +26,7 @@ public:
         DELETE,                                                         
         DELETEALLPOSTS,
         SYNC,
+        SYNC_FILE_TASK,
         ENCRYPT,
         DECRYPT,
         // ManifestTask

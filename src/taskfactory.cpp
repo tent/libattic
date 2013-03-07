@@ -10,6 +10,7 @@
 #include "synctask.h"
 #include "queryfilestask.h"
 #include "polltask.h"
+#include "syncfiletask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -288,6 +289,23 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               callback);             
             break;
         }
+        case Task::SYNC_FILE_TASK:
+        {
+            t = new SyncFileTask( pApp,                  
+                              pFm,                   
+                              pCm,                   
+                              pTa,                   
+                              pTf,
+                              at,                    
+                              entity,                
+                              filepath,              
+                              tempdir,               
+                              workingdir,            
+                              configdir,             
+                              callback);
+
+            break;
+        }
         case Task::POLL:
         {
             t = new PollTask( pApp,                  
@@ -306,6 +324,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         }
         default:
         {
+            std::cout<<" CREATING UNKNOWN TASK " << std::endl;
             LogUnknownTaskType(type);
         }
     }

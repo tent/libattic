@@ -3,10 +3,11 @@
 #pragma once
 
 #include "tenttask.h"
+#include "atticpost.h"
 
 class SyncFileTask : public TentTask
 {
-    int SyncMetaData();
+    int SyncMetaData(AtticPost& out);
 public:
     SyncFileTask( TentApp* pApp,
                   FileManager* pFm,
@@ -30,6 +31,7 @@ public:
     void RunTask();
 
 private:
+    std::string m_PostID;
 
 
 };

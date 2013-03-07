@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "conoperations.h"
 #include "compression.h"
+#include "syncfiletask.h"
 
 
 PullTask::PullTask( TentApp* pApp, 

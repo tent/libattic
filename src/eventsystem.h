@@ -15,6 +15,7 @@ struct Event
         PULL,
         REQUEST_PUSH,
         REQUEST_PULL,
+        REQUEST_SYNC_POST,
         SYNC,
         POLL,
         UPLOAD_SPEED,

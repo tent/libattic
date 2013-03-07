@@ -202,6 +202,40 @@ FileInfo* FileManager::CreateFileInfo()
     return pFi;
 }
 
+void FileManager::GetRelativeFilepath(const std::string& filepath, std::string& out)
+{
+    std::string canonical, relative;
+    fs::GetCanonicalPath(filepath, canonical);
+    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+
+    std::cout<<" GET FILE INFO : " << std::endl;
+    std::cout<<" \t filepath : " << filepath << std::endl;
+    std::cout<<" \t canonical : " << canonical << std::endl;
+    std::cout<<" \t relatvie : " << relative << std::endl;
+    
+    if(canonical.empty()) {
+        relative = filepath;
+        if(relative.find("/") == std::string::npos && relative.find("\\") == std::string::npos) {
+            canonical = m_WorkingDirectory + "/" + relative;
+            fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        }
+
+        std::cout<<" NEW RELATIVE : " << relative << std::endl;
+    }
+    out = relative;
+}
+
+bool FileManager::DoesFileExist(const std::string& filepath)
+{
+    std::string relative;
+    GetRelativeFilepath(filepath, relative);
+    Lock();
+    bool stat = m_Manifest.IsFileInManifest(relative);
+    Unlock();
+
+    return stat;
+}
+
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
     std::string canonical, relative;
@@ -251,9 +285,6 @@ bool FileManager::GetFolderInfo(const std::string& folderpath, Folder& folder)
 
     return bRet;
 }
-
-
-
 
 int FileManager::GetAllFileInfo(std::vector<FileInfo>& out)
 {

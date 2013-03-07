@@ -8,6 +8,7 @@
 #include "entity.h"
 #include "taskfactory.h"
 #include "eventsystem.h"
+#include "task.h"
 
 class TentApp;
 class FileManager;
@@ -42,8 +43,14 @@ public:
     int DownloadAllFiles(void (*callback)(int, void*));
     int PollFiles(void (*callback)(int, void*));
     int SyncFiles(void (*callback)(int, void*));
+    int SyncFile(const std::string& postid, void (*callback)(int, void*));
     int DeleteFile(const std::string& filepath, void (*callback)(int, void*));
     int DeleteAllPosts(void (*callback)(int, void*));
+
+    int CreateAndSpinOffTask( Task::TaskType tasktype, 
+                              const std::string& filepath, 
+                              void (*callback)(int, void*));
+
 
     // Utility Tasks
     int QueryManifest(void(*callback)(int, char**, int, int));
