@@ -38,6 +38,7 @@
 #include "httpheader.h"
 
 #include "eventsystem.h"
+#include "threadworker.h"
 
 // Globals
 std::string g_Entity;
@@ -207,14 +208,15 @@ TEST(PUSH, AFILE)
 
     ASSERT_EQ(status, ret::A_OK);
 
-    status = EnterPassphrase("password");
+    //status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
+    /*
     if(status == 0)
     {
    //     status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
-        status = PushFile("./data/CathBaz.pdf", &PUSHCB);
+        //status = PushFile("./data/freenet.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -225,13 +227,17 @@ TEST(PUSH, AFILE)
        //std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
        //std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
 
-       sleep(10);
+       sleep(3);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
+    */
 
-    ShutdownLibAttic(NULL);
+    std::cout<<"shutting down " << std::endl;
+    status = ShutdownLibAttic(NULL);
+    std::cout<<" shutdown status : " << status << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
 }
 
 bool g_bPull = false;
@@ -676,8 +682,12 @@ TEST(FOLDER, SERIALIZATION)
     std::string output2;
     jsn::SerializeObject(&other, output2);
 
-
     ASSERT_EQ(output, output2);
+
+    FolderEntry three("fdasfsad", "1111", "2222222");
+    folder.PushBackEntry(three);
+    std::string tt; 
+    jsn::SerializeObject(&folder, tt);
 }
 
 TEST(PARAMS, ENCODE) 
@@ -688,11 +698,6 @@ TEST(PARAMS, ENCODE)
 
     std::string enc;                           
     params.SerializeAndEncodeToString(enc);  
-
-    std::cout<<" encoded string : " << enc << std::endl;
-
-    std::cout<<netlib::UriEncode(enc)<<std::endl;
-
 
     std::string consume;
     consume = "Cache-Control: max-age=0, private, must-revalidate\r\n"
@@ -707,12 +712,6 @@ TEST(PARAMS, ENCODE)
     head.ReturnAsString(out);
 
     head["TEST"] = "testing operator overloading, do i still remember?";
-    std::cout<<out<<std::endl;
-    std::cout<<head["TEST"]<< std::endl;
-    /*
-    std::cout << " date " << std::endl;
-    std::cout << head["Date"] << std::endl;
-    */
 }
 
 
@@ -910,6 +909,8 @@ TEST(ATTIC, DAEMON)
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, ret::A_OK);
 
+    std::cout<<" starting to poll ... " << std::endl;
+    status = PollFiles(SYNCCB);
     std::cout<<" running til interrupt ... " << std::endl;
     for(;;) {
 
@@ -919,6 +920,7 @@ TEST(ATTIC, DAEMON)
 
     ShutdownLibAttic(NULL);
 }
+
 
 int main (int argc, char* argv[])
 {

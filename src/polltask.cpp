@@ -140,8 +140,8 @@ int PollTask::SyncFolderPosts()
                              resp);
 
             std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
-            std::cout<<" response code : " << resp.code << std::endl;
-            std::cout<<" response body : " << resp.body << std::endl;
+            //std::cout<<" response code : " << resp.code << std::endl;
+            //std::cout<<" response body : " << resp.body << std::endl;
 
             if(resp.code == 200) { 
                 // Loop through all the responses

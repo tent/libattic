@@ -3,51 +3,32 @@
 #define MUTEXCLASS_H_
 #pragma once
 
-#include <unistd.h>
-#include <pthread.h>
+#include <iostream>
+#include <boost/thread/thread.hpp>
 
 class MutexClass                                                                                  
 {                                                                                                 
 public:                                                                                           
-    MutexClass()                                                                                  
+    MutexClass() {}
+    virtual ~MutexClass() {}
+
+    void Unlock()                                                                                  
     {                                                                                             
-        pthread_mutex_init(&m_Mutex, NULL);                                                        
+       std::cout<<" unlock " << std::endl;
+       m_Mtx.unlock(); 
     }                                                                                             
 
-    virtual ~MutexClass()                                                                         
-    {                                                                                             
-        pthread_mutex_destroy(&m_Mutex);                                                          
-    }                                                                                             
-
-    int TryLock()                                                                                 
-    {                                                                                             
-        return pthread_mutex_trylock(&m_Mutex);        
-    } // as all things unix 0 is ok                                                               
-
-    int Unlock()                                                                                  
-    {                                                                                             
-        return pthread_mutex_unlock(&m_Mutex);      
-    }                                                                                             
-
-//protected:
-    int Lock(int breakcount = -1)
+    void Lock(int breakcount = -1) 
     {
-        int count = 0;
-        while(TryLock())
-        { 
-            sleep(0); 
-            if(breakcount > -1)
-            {
-                if(count > breakcount)
-                    return 1;
-                count++;
-            }
-        }  
-        return 0;
+        std::cout<<" lock " << std::endl;
+        while(!m_Mtx.try_lock()) {
+            std::cout<<"trying..."<<std::endl;
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));  
+        }
     }
 
 private:                                                                                          
-    pthread_mutex_t     m_Mutex;                                                                      
+    boost::mutex    m_Mtx;
 
 };                                                                                                
 

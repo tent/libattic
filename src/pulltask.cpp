@@ -149,7 +149,7 @@ int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
                 std::string filekey;
                 crypto::DecryptStringCFB(key, FileKeyCred, filekey);
 
-                std::cout<<" FILE KEY : " << filekey << std::endl;
+                //std::cout<<" FILE KEY : " << filekey << std::endl;
 
                 out.SetKey(filekey);
                 out.SetIv(iv);
@@ -318,7 +318,7 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
         if(at) {
             status = netlib::HttpGetAttachment( posturl, NULL, at, responseOut);
 
-            std::cout<<" response out : " << responseOut.body << std::endl;
+            //std::cout<<" response out : " << responseOut.body << std::endl;
             if(status == ret::A_OK) {
                 if(responseOut.code != 200)
                     status = ret::A_FAIL_NON_200;

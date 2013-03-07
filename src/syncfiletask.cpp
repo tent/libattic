@@ -129,6 +129,7 @@ void SyncFileTask::RunTask()
         std::cout<<" ...failed to get metadata ... status : " << status << std::endl;
     }
 
+    std::cout<<" ...sync file task finished ... " << std::endl;
     Callback(status, NULL);
     SetFinishedState();
 }
@@ -149,8 +150,8 @@ int SyncFileTask::SyncMetaData(AtticPost& out)
                      at,
                      response); 
 
-    std::cout<< " CODE : " << response.code << std::endl;
-    std::cout<< " RESPONSE : " << response.body << std::endl;                          
+    //std::cout<< " CODE : " << response.code << std::endl;
+    //std::cout<< " RESPONSE : " << response.body << std::endl;                          
 
     if(response.code == 200) {
         jsn::DeserializeObject(&out, response.body);
@@ -199,7 +200,7 @@ int SyncFileTask::RetrieveChunkInfo(AtticPost& post, FileInfo* fi)
                              at,
                              response); 
 
-            std::cout<< " CODE : " << response.code << std::endl;
+            //std::cout<< " CODE : " << response.code << std::endl;
             //std::cout<< " RESP : " << response.body << std::endl;
 
             if(response.code == 200) {

@@ -190,12 +190,25 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     int status = ret::A_OK;
 
     // Shutdown threading first, ALWAYS
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownTaskArbiter();
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownFileManager(&g_pFileManager);
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownCredentialsManager(&g_pCredManager);
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownEntityManager(&g_pEntityManager);
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownAppInstance(&g_pApp);
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownTaskManager(&g_pTaskManager);
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
 
     event::ShutdownEventSystem();
     g_pFileManager = NULL;
@@ -204,10 +217,13 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     g_pApp = NULL;
     g_pTaskManager = NULL;
 
+    std::cout<<" heeeeeeeeeere " << std::endl;
     if(callback)
         callback(status, NULL);
 
     alog::ShutdownLogging();
+
+    std::cout<<" heeeeeeeeeere " << std::endl;
     g_bLibInitialized = false;
     return status;
 }
@@ -460,17 +476,8 @@ int PushFile(const char* szFilePath, void (*callback)(int, void*) )
     int status = IsLibInitialized();
 
     if(status == ret::A_OK){
-        /*
-        Event event;
-        event.type = Event::REQUEST_PUSH;
-        event.value = szFilePath;
-        event.callback = callback;
-
-        evnt::RaiseEvent(event);
-        */
         std::string filepath(szFilePath);
         event::RaiseEvent(Event::REQUEST_PUSH, filepath, callback);
-        //status = g_pTaskManager->UploadFile(szFilePath, callback);
     }
     return status;
 }

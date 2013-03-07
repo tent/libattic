@@ -69,9 +69,7 @@ int DeleteTask::DeleteFile(const std::string& filename)
     if(!GetFileManager())
         return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
-    while(GetFileManager()->TryLock()) { /* Spinlock, temporary */ sleep(0); } 
     FileInfo* fi = GetFileManager()->GetFileInfo(filename);
-    GetFileManager()->Unlock();
 
     if(!fi)
         return ret::A_FAIL_FILE_NOT_IN_MANIFEST;

@@ -12,7 +12,7 @@
 class TaskQueue : public MutexClass                                                
 {                                                                                  
 public:                                                                            
-    TaskQueue(){m_TaskQueue.clear();}                                                                  
+    TaskQueue(){m_TaskQueue.clear();}
 
     ~TaskQueue(){}                                                                 
 
@@ -23,8 +23,7 @@ public:
             return;
         }
 
-        while(TryLock()) { sleep(0); }
-
+        Lock();
         if(pTask) {
              std::cout<< "^^^\t pushing back task ... of type : "<< pTask->GetTaskType() << std::endl;
              m_TaskQueue.push_back(pTask);
@@ -35,9 +34,10 @@ public:
 
     Task* SyncPopFront()                                                           
     {                                                                              
-        while(TryLock()) { sleep(0); }
+
         Task* pTask = NULL;                                                        
         
+        Lock();
         if(m_TaskQueue.size() > 0) {
             std::cout<<" Popping off task ... "<< m_TaskQueue.size() << std::endl;
             pTask = m_TaskQueue.front();                                           

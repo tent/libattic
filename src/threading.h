@@ -3,11 +3,15 @@
 #define THREADING_H_
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <pthread.h>
 
+#include <boost/thread/thread.hpp>
+
 #include "mutexclass.h"
 
+class ThreadWorker;
 class TaskQueue;
 
 class ThreadState                                                         
@@ -27,7 +31,7 @@ public:
 
     void SetStateIdle()     { if(m_State != EXIT) m_State = IDLE; } 
     void SetStateRunning()  { if(m_State != EXIT) m_State = RUNNING; }
-    void SetStateExit()     { m_State = EXIT; }
+    void SetStateExit()     { std::cout<<" THREAD EXIT STATE " << std::endl; m_State = EXIT; }
     void SetStateFinished() { m_State = FINISHED; }
 
     int GetThreadState() { return m_State; }                                               
@@ -69,6 +73,9 @@ public:
     int AbridgePool(unsigned int stride);                                                       
 
 private:                                                                                         
+    std::vector<boost::thread*> m_Threads;
+    std::vector<ThreadWorker*> m_Workers;
+
     std::vector<pthread_t>    m_ThreadHandles;
     std::vector<ThreadData*>  m_ThreadData;                                                       
     TaskQueue* m_TaskQueue;

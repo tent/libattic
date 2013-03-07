@@ -34,6 +34,7 @@ TaskArbiter::~TaskArbiter()
 int TaskArbiter::Initialize(unsigned int poolSize)
 {
     int status = ret::A_OK;
+    std::cout<<" init lock ... " << std::endl;
     Lock();
     if(m_pPool)  {
         m_pPool->Initialize();
@@ -46,16 +47,21 @@ int TaskArbiter::Initialize(unsigned int poolSize)
         status = ret::A_FAIL_INVALID_PTR;
     }
     Unlock();
+    std::cout<<" init unlock ... " << std::endl;
     return status; 
 }
 
 int TaskArbiter::Shutdown()
 {
     int status = ret::A_OK;
+
+
+    std::cout<<"s lock ... " << std::endl;
     Lock();
     if(m_pPool)
         status = m_pPool->Shutdown();
     Unlock();
+    std::cout<<" s unlock ... " << std::endl;
 
     if(m_pInstance)
     {

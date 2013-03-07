@@ -194,7 +194,7 @@ namespace liba
         int status = ret::A_OK;
         if((*pCm))
         {
-            while((*pCm)->TryLock()) { sleep(0); }
+            (*pCm)->Lock();
             status = (*pCm)->Shutdown();
             (*pCm)->Unlock();
 
@@ -215,7 +215,7 @@ namespace liba
         int status = ret::A_OK;
         if((*pEm))
         {
-            while((*pEm)->TryLock()) { sleep(0); }
+            (*pEm)->Lock();
             status = (*pEm)->Shutdown();
             (*pEm)->Unlock();
 

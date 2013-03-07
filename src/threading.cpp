@@ -7,10 +7,20 @@
 #include "errorcodes.h"
 #include "task.h"
 #include "taskqueue.h"
+#include "threadworker.h"
 
 #include "log.h"
 
 
+void NewThreadFunc(ThreadWorker* pWorker)
+{
+    if(pWorker) {
+        pWorker->Run();
+        delete pWorker;
+        pWorker = NULL;
+    }
+}
+/*
 void* ThreadFunc(void* arg)
 {
     if(arg)                                                                          
@@ -42,6 +52,10 @@ void* ThreadFunc(void* arg)
 
                 if(State == ThreadState::EXIT || State == ThreadState::FINISHED) {
                     std::cout<<"Thread : " << handle << " Got exit signal! " << std::endl;
+                    if(State == ThreadState::EXIT)
+                        std::cout<<" THREAD ON EXIT STATE " << std::endl;
+                    if(State == ThreadState::FINISHED)
+                        std::cout<<" THREAD ON FINISHED STATE " << std::endl;
                     break;
                 }
 
@@ -121,6 +135,7 @@ void* ThreadFunc(void* arg)
                         pTd->Lock();                    
                         pTd->GetThreadState()->SetStateIdle();                                   
                         pTd->Unlock();                                          
+                        sleep(0);
                     } 
 
                     if(pTask) {
@@ -131,9 +146,10 @@ void* ThreadFunc(void* arg)
                 }
             }                                                                        
 
-            pTd->Lock();    
-            pTd->GetThreadState()->SetStateFinished();
-            pTd->Unlock();                             
+            //std::cout<<" setting FINISHED STATE " << std::endl;
+            //pTd->Lock();    
+            //pTd->GetThreadState()->SetStateFinished();
+            //pTd->Unlock();                             
         }
     }    
 
@@ -141,6 +157,7 @@ void* ThreadFunc(void* arg)
     g_ThreadCount--;                                                                 
     pthread_exit(NULL);                                                              
 }
+*/
 
 ThreadPool::ThreadPool()
 {                                               
@@ -190,9 +207,11 @@ int ThreadPool::Shutdown()
     }
     */
 
+    /*
     for(unsigned int i=0; i<m_ThreadData.size(); i++)
     {
         while(m_ThreadData[i]->TryLock()) { sleep(0); }
+        std::cout<<" setting thread exit state .... " << std::endl;
         m_ThreadData[i]->GetThreadState()->SetStateExit();
         m_ThreadData[i]->Unlock();
     }
@@ -216,6 +235,15 @@ int ThreadPool::Shutdown()
 
     std::cout<<" SIZE : " << m_ThreadData.size();
     m_ThreadData.clear();
+    */
+
+    for(unsigned int i=0; i<m_Workers.size(); i++) {
+        m_Workers[i]->SetThreadExit();
+    }
+
+    for(unsigned int i=0; i<m_Threads.size(); i++) {
+        m_Threads[i]->join();
+    }
 
     return ret::A_OK;
 }
@@ -224,6 +252,17 @@ int ThreadPool::ExtendPool(unsigned int stride)
 {
     int status = ret::A_OK;
 
+    for(unsigned int i=0; i < stride; i++){
+        ThreadWorker* pWorker = new ThreadWorker();
+        m_Workers.push_back(pWorker);
+
+        boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
+        m_Threads.push_back(pt);
+
+        pt->detach();
+
+    }
+/*
     for(unsigned int i=0; i < stride; i++)
     {
         ThreadData* pData = new ThreadData();
@@ -251,6 +290,7 @@ int ThreadPool::ExtendPool(unsigned int stride)
             pData->Unlock();
         }
     }
+    */
 
     return status;
 }

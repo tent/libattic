@@ -27,6 +27,7 @@ void EventSystem::RaiseEvent(const Event& event)
 {
     // TODO:: test the cost memory vs speed making local copy of map or vector and iterating through that
     // Notify listeners
+    std::cout<<" Lock event system " << std::endl;
     Lock();
     if(m_ListenerMap[event.type].size()) {
         Listeners::iterator itr = m_ListenerMap[event.type].begin();
@@ -36,6 +37,7 @@ void EventSystem::RaiseEvent(const Event& event)
         }
     }
     Unlock();
+    std::cout<<" unLock event system " << std::endl;
 }
 
 void EventSystem::RegisterForEvent(EventListener* pListener, Event::EventType type)
