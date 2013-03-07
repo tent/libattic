@@ -18,6 +18,7 @@ public:
 
 namespace jsn
 {
+    static void PrintOutJsonValue(Json::Value* val);
 
     static bool SerializeObject(JsonSerializable* pObj, std::string& output);
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val);
@@ -36,6 +37,18 @@ namespace jsn
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m);
+
+    static void PrintOutJsonValue(Json::Value* val)
+    {
+        if(val) {
+            std::string output;
+            Json::StyledWriter writer;
+            output = writer.write(*val);
+            std::cout<<"***********************************************\n" << std::endl;
+            std::cout<<" json value writer : \n" << output << std::endl;
+            std::cout<<"***********************************************\n" << std::endl;
+        }
+    }
 
     static bool SerializeObject(JsonSerializable* pObj, std::string& output)
     {
