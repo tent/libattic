@@ -212,8 +212,9 @@ TEST(PUSH, AFILE)
 
     if(status == 0)
     {
-        status = PushFile("./data/oglisv.pdf", &PUSHCB);
-   //     status = PushFile("./data/ccf.pdf", &PUSHCB);
+   //     status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        //status = PushFile("./data/ccf.pdf", &PUSHCB);
+        status = PushFile("./data/CathBaz.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }

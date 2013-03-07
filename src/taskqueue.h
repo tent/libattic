@@ -28,6 +28,7 @@ public:
         if(pTask) {
              std::cout<< "^^^\t pushing back task ... of type : "<< pTask->GetTaskType() << std::endl;
              m_TaskQueue.push_back(pTask);
+             std::cout<<" queue size : " << m_TaskQueue.size() << std::endl;
         }
         Unlock();
     }

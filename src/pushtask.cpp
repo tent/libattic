@@ -342,6 +342,9 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                 SendFolderPost(filepath);
             }
         }
+        else{
+            std::cout<<" EMPTY POST ID ON RETURN " << std::endl;
+        }
     }
     else {
         status = ret::A_FAIL_NON_200;

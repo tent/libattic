@@ -113,7 +113,7 @@ int PollTask::SyncFolderPosts()
         utils::CheckUrlAndAppendTrailingSlash(url);
         url += "posts";
 
-        AccessToken* at = GetAccessToken();                                                           
+        AccessToken* at = GetAccessToken();
         int cap = 200;
         std::string lastid;
         for(int i=0; i < postcount; i+=cap) {

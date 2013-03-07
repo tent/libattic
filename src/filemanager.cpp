@@ -164,6 +164,9 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
             fe.SetPostID(postid);
             folder.PushBackEntry(fe);
 
+            std::string test;
+            fe.GetPostID(test);
+            std::cout<<" FOLDER ENTRY POST ID : " << test << std::endl;
             m_Manifest.InsertFolder(folder);
         }
         else {

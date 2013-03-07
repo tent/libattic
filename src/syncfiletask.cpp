@@ -63,11 +63,13 @@ void SyncFileTask::OnFinished()
 void SyncFileTask::RunTask()
 {
     int status = ret::A_OK;
+    std::cout << ".... Syncing file task ... " << std::endl;
 
     // Retrieve metadata
     AtticPost p;
     status = SyncMetaData(p);
     if(status == ret::A_OK) {
+        std::cout<<" ... got meta data ... " << std::endl;
         std::string filepath;
         p.GetAtticPostFilepath(filepath);
 
@@ -97,8 +99,6 @@ void SyncFileTask::RunTask()
                 bPull= true;
             else
                 std::cout<<" FILE DOES NOT EXIST : " << relative_path << std::endl;
-
-            
         }
         else {
             std::cout<<" file does not exist locally " << std::endl;
@@ -120,14 +120,19 @@ void SyncFileTask::RunTask()
                 std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
             }
         }
+        else {
+            std::cout<<" not pulling ... " << std::endl;
+        }
 
+    }
+    else {
+        std::cout<<" ...failed to get metadata ... status : " << status << std::endl;
     }
 
     Callback(status, NULL);
     SetFinishedState();
 }
 
-int Poll();
 int SyncFileTask::SyncMetaData(AtticPost& out)
 {
     int status = ret::A_OK;
