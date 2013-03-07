@@ -127,6 +127,7 @@ void SyncFileTask::RunTask()
     SetFinishedState();
 }
 
+int Poll();
 int SyncFileTask::SyncMetaData(AtticPost& out)
 {
     int status = ret::A_OK;

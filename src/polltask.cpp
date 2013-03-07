@@ -46,6 +46,7 @@ PollTask::PollTask( TentApp* pApp,
                               configdir,                            
                               callback)                             
 {
+    m_bRunning = false;
 }
 
 PollTask::~PollTask() 
@@ -76,10 +77,16 @@ void PollTask::RunTask()
     // Spin off consumer task for checking each file meta post for newer versions
     if(!polltask::g_pCurrentPollTask) {
         polltask::g_pCurrentPollTask = this;
-        // Poll for folder posts
-        // Update Entries on a counter
-        // Update pull
-        status = SyncFolderPosts();
+        m_bRunning = true;
+        while(m_bRunning) {
+            // Poll for folder posts
+            // Update Entries on a counter
+            // Update pull
+            status = SyncFolderPosts();
+            if(status != ret::A_OK)
+                std::cout<<" POLLING ERR : " << status << std::endl;
+            sleep(3);
+        }
 
         Callback(status, NULL);
         SetFinishedState();

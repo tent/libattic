@@ -36,6 +36,7 @@ public:
     void RunTask();
 
 private:
+    bool m_bRunning;
 
 };
 
