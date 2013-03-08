@@ -43,6 +43,7 @@ namespace crypto
     static void GenerateCredentials(Credentials& cred);
     static void GenerateIv(std::string& out);
     static bool GenerateHash( const std::string& source, std::string& hashOut);
+    static void GenerateRandomString(std::string& out, const unsigned int size);
 
     static int EncryptStringCFB( const std::string& data,
                                  const Credentials& cred,
@@ -425,6 +426,19 @@ namespace crypto
                                 new CryptoPP::Base64Decoder(new CryptoPP::StringSink(output)));
     }
 
+    static void GenerateRandomString(std::string& out, const unsigned int size = 16)
+    {
+        const unsigned int BLOCKSIZE = size * 8;
+        byte pcbScratch[BLOCKSIZE];
+        // Random Block
+        CryptoPP::AutoSeededRandomPool rng;
+        rng.GenerateBlock( pcbScratch, BLOCKSIZE );
+
+        // Output
+        std::string intermed;
+        intermed.append(reinterpret_cast<const char*>(pcbScratch), BLOCKSIZE);
+        Base64EncodeString(intermed, out);
+    }
 
 
 };
