@@ -43,6 +43,7 @@
 // Globals
 std::string g_Entity;
 
+std::string g_appName;
 bool g_bRegApp = false;
 TEST(APP_REGISTRATION, STARTAPPINST)
 {
@@ -76,7 +77,11 @@ TEST(APP_REGISTRATION, STARTAPPINST)
                   "write_secrets"};
 
 
-    int status = StartupAppInstance( "libattic", 
+    std::string name("libattic");
+    name += " ";
+    name += g_appName;
+
+    int status = StartupAppInstance( name.c_str(), 
                                      "LibAttic Test Suite", 
                                      "www.tent.is", 
                                      "", 
@@ -84,8 +89,7 @@ TEST(APP_REGISTRATION, STARTAPPINST)
                                      1, 
                                      s, 
                                      18);
-    if(status != ret::A_OK)
-    {
+    if(status != ret::A_OK) {
         std::cout<<"Startup app instance FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
@@ -994,14 +998,18 @@ int main (int argc, char* argv[])
                 switch(opt) {
                     case REGISTERAPP:
                     {
-                        std::cout<<" SET TRUE  " << std::endl;
-                        g_bRegApp = true;
+                        if(argc > 3) {
+                            g_appName = argv[2];
+                            g_bRegApp = true;
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic REGISTERAPP <app name> <entity>" << std::endl;
+                        }
                         break;
                     }
                     case REQUESTAUTHCODE:
                     {
-                        if(argc > 3)
-                        {
+                        if(argc > 3) {
                             g_AuthCode = argv[2];
                             g_bReqAuthDetails = true;
                         }
