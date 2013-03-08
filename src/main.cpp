@@ -211,28 +211,31 @@ TEST(PUSH, AFILE)
     //status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
-    /*
+    
+    
     if(status == 0)
     {
-   //     status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
 
+    
     for(;;)
     {
        //std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
        //std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
        //std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
 
-       sleep(3);
+       sleep(10);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
-    */
+
+    
 
     std::cout<<"shutting down " << std::endl;
     status = ShutdownLibAttic(NULL);

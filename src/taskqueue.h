@@ -34,7 +34,6 @@ public:
 
     Task* SyncPopFront()                                                           
     {                                                                              
-
         Task* pTask = NULL;                                                        
         
         Lock();
@@ -47,6 +46,7 @@ public:
             
         }                                                                          
         Unlock();
+
         return pTask;                                                              
     }                                                                              
 

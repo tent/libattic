@@ -50,7 +50,7 @@ public:
 
     virtual void Reset() = 0;
 
-    TaskState GetTaskState() const { return m_State; }
+    TaskState GetTaskState() const { if(!this) std::cout<<" INVALID INSTANCE " << std::endl; return m_State; }
     TaskType GetTaskType() const { return m_Type; }
     //void GetTaskState(TaskState state) { m_State = state; }
 

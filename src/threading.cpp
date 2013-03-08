@@ -12,244 +12,58 @@
 #include "log.h"
 
 
-void NewThreadFunc(ThreadWorker* pWorker)
+void NewThreadFunc(ThreadWorker *pWorker)
 {
+    std::cout<<" thread starting " << std::endl;
     if(pWorker) {
         pWorker->Run();
         delete pWorker;
         pWorker = NULL;
     }
+    std::cout<<" thread ending " << std::endl;
 }
-/*
-void* ThreadFunc(void* arg)
-{
-    if(arg)                                                                          
-    {                                                                                
-        std::cout<<" setting up thread " << std::endl;
-        // Setup thread                                                              
-        ThreadData* pTd = (ThreadData*)arg;                                          
-        if(pTd) {
-            pTd->Lock();
-            //TaskQueue* pTq = pTd->GetTaskQueue();
-            TaskQueue* pTq = CentralTaskQueue::GetInstance();
-            pthread_t handle = pTd->GetThreadHandle();
-            pTd->Unlock();
-
-            // Local task queue
-            typedef std::deque<Task*> TaskQueue;
-            TaskQueue LocalTaskQueue;
-
-            //Task* pTask = NULL;                                                  
-            std::cout<<"Thread : " << handle <<" running til done..."<< std::endl;
-
-            for(;;) {
-                if(!pTd)
-                    std::cout<<" INVALID THREAD DATA " << std::endl;
-
-                pTd->Lock();
-                int State = pTd->GetThreadState()->GetThreadState();                             
-                pTd->Unlock();                                                  
-
-                if(State == ThreadState::EXIT || State == ThreadState::FINISHED) {
-                    std::cout<<"Thread : " << handle << " Got exit signal! " << std::endl;
-                    if(State == ThreadState::EXIT)
-                        std::cout<<" THREAD ON EXIT STATE " << std::endl;
-                    if(State == ThreadState::FINISHED)
-                        std::cout<<" THREAD ON FINISHED STATE " << std::endl;
-                    break;
-                }
-
-                unsigned int size = LocalTaskQueue.size();
-                if(size) {
-                    //std::cout<<"thread : " << handle << " aquired task " << std::endl;
-                    if(State != ThreadState::RUNNING)                                
-                    {                                                                
-                        while(pTd->TryLock()) { sleep(0); }                    
-                        pTd->GetThreadState()->SetStateRunning();                                
-                        pTd->Unlock();                                          
-                    }
-
-                    // If we have things in the queue, lets run them, 
-                    // if they are in the running state.
-                    Task* pTask = NULL;
-                    TaskQueue::iterator itr = LocalTaskQueue.begin();
-                    for(;itr != LocalTaskQueue.end(); itr++) {
-                        pTask = (*itr);
-                        if(pTask) {
-//                            std::cout<<" switching " << std::endl;
-                            switch(pTask->GetTaskState()) {
-                                case Task::IDLE:
-                                    {
-                                        std::cout<<" starting task " << std::endl;
-                                        // Start the task
-                                        pTask->OnStart();
-                                        pTask->SetRunningState();
-                                        break;
-                                    }
-                                case Task::RUNNING:
-                                    {
-                                        std::cout<<" running task " << std::endl;
-                                        // Run the task
-                                        pTask->RunTask();
-                                        break;
-                                    }
-                                case Task::PAUSED:
-                                    {
- //                                       std::cout<< " task paused " << std::endl;
-                                        pTask->OnPaused();
-                                        break;
-                                    }
-                                case Task::FINISHED:
-                                    {
-                                        std::cout<< " task finished " << std::endl;
-                                        pTask->OnFinished();
-                                        // Remove from LocalTaskQueue
-                                        (*itr) = NULL;
-                                        itr = LocalTaskQueue.erase(itr);
-                                        itr--;
-                                        std::cout<< " new size : " << LocalTaskQueue.size() << std::endl;
-                                        break;
-
-                                    }
-                                default:
-                                    {
-                                        std::cout<<" default " << std::endl;
-                                    }
-                                    break;
-
-                            };
-                        }
-                        else {
-                            std::cout<<" INVALID " << std::endl;
-                        }
-                        sleep(0); // sleep between iterations
-                    }
-                }
-                else {
-                    //std::cout<<" grab a task ? " << std::endl;
-                    // Grab some tasks
-                    Task* pTask = pTq->SyncPopFront();                                
-
-                    if(!pTask && (State != ThreadState::IDLE)) {
-                        std::cout <<"Thread : " << handle << " Didn't aquire a task, idling ... " << std::endl;
-                        pTd->Lock();                    
-                        pTd->GetThreadState()->SetStateIdle();                                   
-                        pTd->Unlock();                                          
-                        sleep(0);
-                    } 
-
-                    if(pTask) {
-                        std::cout <<"Thread : " << handle << " Got new task : " << std::endl;
-                        LocalTaskQueue.push_back(pTask);
-                    }
-
-                }
-            }                                                                        
-
-            //std::cout<<" setting FINISHED STATE " << std::endl;
-            //pTd->Lock();    
-            //pTd->GetThreadState()->SetStateFinished();
-            //pTd->Unlock();                             
-        }
-    }    
-
-    std::cout << " thread exiting ... " << std::endl;
-    g_ThreadCount--;                                                                 
-    pthread_exit(NULL);                                                              
-}
-*/
 
 ThreadPool::ThreadPool()
 {                                               
-    m_TaskQueue = NULL;
 }                                               
 
 ThreadPool::~ThreadPool()
 {
-    if(m_TaskQueue)
-        m_TaskQueue = NULL;
-}
-
-void ThreadPool::SetTaskQueue(TaskQueue* pQueue)
-{
-    if(pQueue)
-    {
-        m_TaskQueue = pQueue;
-    }
-    else
-    {
-        std::cout<<" Invalid Task Queue ... " << std::endl;
-    }
-
 }
 
 int ThreadPool::Initialize()
 {
-
     return ret::A_OK;
 }
 
 int ThreadPool::Shutdown()
 {
-    /*
-    while(m_ThreadCount)
-    {
-        //alog::Log(Logger::ERROR, "Thread data does not match count, timing out...");
-        //TODO:: hack, find a better way.
-        sleep(1);
-        static unsigned int shutdowncount = 0;
-        if(shutdowncount == 10)
-        {
-            alog::Log(Logger::ERROR, "Thread data does not match count, timing out...");
-            break;
-        }
-        shutdowncount++;
-    }
-    */
-
-    /*
-    for(unsigned int i=0; i<m_ThreadData.size(); i++)
-    {
-        while(m_ThreadData[i]->TryLock()) { sleep(0); }
-        std::cout<<" setting thread exit state .... " << std::endl;
-        m_ThreadData[i]->GetThreadState()->SetStateExit();
-        m_ThreadData[i]->Unlock();
-    }
-
-    std::cout<<" joining threads " << std::endl;
-    for(unsigned int i=0; i<m_ThreadHandles.size(); i++)
-    {
-        pthread_join(m_ThreadHandles[i], NULL);
-    }
-
-    std::cout<<" cleaning up thread data " << std::endl;
-    for(unsigned int i=0; i<m_ThreadData.size(); i++)
-    {
-        if(m_ThreadData[i])
-        {
-            std::cout<<"right here"<< std::endl;
-            delete m_ThreadData[i];
-            m_ThreadData[i] = NULL;
-        }
-    }
-
-    std::cout<<" SIZE : " << m_ThreadData.size();
-    m_ThreadData.clear();
-    */
-
+    std::cout<<" shutting down pool " << std::endl;
     for(unsigned int i=0; i<m_Workers.size(); i++) {
         m_Workers[i]->SetThreadExit();
     }
 
+    std::cout<<" joining threads ... " << std::endl;
     for(unsigned int i=0; i<m_Threads.size(); i++) {
-        m_Threads[i]->join();
+        try {
+            std::cout<<" joining : " << i << std::endl;
+            std::cout<<" joinable : " << m_Threads[i]->joinable() << std::endl;
+            if(m_Threads[i]->joinable()) {
+                m_Threads[i]->join();
+            }
+        }
+        catch(boost::system::system_error& ti) {
+            std::cout<<" join error : " << ti.what() << std::endl;
+        }
     }
 
+    std::cout<<" done " << std::endl;
     return ret::A_OK;
 }
 
 int ThreadPool::ExtendPool(unsigned int stride)
 {
+    std::cout<<" extending thread pool " << std::endl;
     int status = ret::A_OK;
 
     for(unsigned int i=0; i < stride; i++){
@@ -259,38 +73,11 @@ int ThreadPool::ExtendPool(unsigned int stride)
         boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
         m_Threads.push_back(pt);
 
+        // decide whether or not to keep as a detached thread
+        std::cout<<"detaching thread ... " << std::endl;
         pt->detach();
 
     }
-/*
-    for(unsigned int i=0; i < stride; i++)
-    {
-        ThreadData* pData = new ThreadData();
-        while(m_TaskQueue->TryLock()) { sleep(0); }
-        pData->SetTaskQueue(m_TaskQueue);
-        m_TaskQueue->Unlock();
-
-        pthread_t Handle;                                                                          
-        int rc = pthread_create(&Handle, NULL, ThreadFunc, (void*)pData);
-
-        if(rc)
-        {
-            // Error spinning off task
-            std::cout<< " error spinning off task " << std::endl;
-            status = ret::A_FAIL_CREATE_THREAD;
-        }
-        else
-        {
-            m_ThreadHandles.push_back(Handle);
-            
-            while(pData->TryLock()) { sleep(0); }
-            pData->SetThreadHandle(Handle);
-            m_ThreadData.push_back(pData);
-            m_ThreadCount++;
-            pData->Unlock();
-        }
-    }
-    */
 
     return status;
 }
@@ -298,6 +85,7 @@ int ThreadPool::ExtendPool(unsigned int stride)
 int ThreadPool::AbridgePool(unsigned int stride)
 {
     int status = ret::A_OK;
+    std::cout<<" not implemented " <<std::endl;
     /*
     for(unsigned int i=0; i < stride; i++)
     {

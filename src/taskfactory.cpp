@@ -41,6 +41,10 @@ int TaskFactory::Shutdown()
 {
     std::cout<<" Shutting down task factory " << std::endl;
 
+// TODO, decide whether to delete tasks here, or completely transfer ownership to 
+//       parent thread, if we delete here, we absolutely cannot run detached threads.
+//       if we want detached threads perhaps a scoped_mutex or similar for ownership
+
     /*
     TaskMap::iterator itr = m_TaskPool.begin();
 
@@ -80,8 +84,7 @@ int TaskFactory::Shutdown()
 
 void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
 {
-    if(t)
-    {
+    if(t) {
         if(delegate)
             delegate->OnTaskCreate(t);
 
@@ -259,17 +262,17 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         case Task::DELETEALLPOSTS:
         {
             t = new DeleteAllPostsTask( pApp,                                  
-                                pFm,                          
-                                pCm,          
-                                pTa,                          
-                                pTf,
-                                at,
-                                entity,                                
-                                filepath,                              
-                                tempdir,                         
-                                workingdir,                      
-                                configdir,                       
-                                callback);     
+                                        pFm,                          
+                                        pCm,          
+                                        pTa,                          
+                                        pTf,
+                                        at,
+                                        entity,                                
+                                        filepath,                              
+                                        tempdir,                         
+                                        workingdir,                      
+                                        configdir,                       
+                                        callback);     
 
             break;
         }
@@ -292,17 +295,17 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         case Task::SYNC_FILE_TASK:
         {
             t = new SyncFileTask( pApp,                  
-                              pFm,                   
-                              pCm,                   
-                              pTa,                   
-                              pTf,
-                              at,                    
-                              entity,                
-                              filepath,              
-                              tempdir,               
-                              workingdir,            
-                              configdir,             
-                              callback);
+                                  pFm,                   
+                                  pCm,                   
+                                  pTa,                   
+                                  pTf,
+                                  at,                    
+                                  entity,                
+                                  filepath,              
+                                  tempdir,               
+                                  workingdir,            
+                                  configdir,             
+                                  callback);
 
             break;
         }
@@ -354,15 +357,12 @@ int TaskFactory::RemoveActiveTask(Task* pTask)
 
 void TaskFactory::TaskFinished(int code, Task* pTask)
 {
-    if(code == ret::A_OK && pTask)
-    {
+    if(code == ret::A_OK && pTask) {
         // Reset task and return it into the active pool
     }
-    else
-    {
+    else {
         // Log error
-        if(pTask)
-        {
+        if(pTask) {
             delete pTask;
             pTask = NULL;
         }

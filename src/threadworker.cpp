@@ -17,33 +17,37 @@ ThreadWorker::~ThreadWorker()
 
 void ThreadWorker::Run()
 {
+    std::cout<<" thread worker starting ... " << std::endl;
     Task* pTask = NULL;
-    while(!m_State == ThreadWorker::EXIT) {
-
+    while(!(GetState() == ThreadWorker::EXIT)) {
         if(GetState() == ThreadWorker::IDLE) {
             // Get a job
             pTask = CentralTaskQueue::GetInstance()->SyncPopFront();
         }
 
-        if(pTask) 
+        if(pTask)  {
+            SetState(ThreadWorker::RUNNING);
             PollTask(pTask);
 
-        if(pTask->GetTaskState() == Task::FINISHED) {
-            pTask = NULL;
-            SetState(ThreadWorker::FINISHED);
+            if(pTask->GetTaskState() == Task::FINISHED) {
+                pTask = NULL;
+                SetState(ThreadWorker::FINISHED);
+            }
         }
 
         if(GetState() == ThreadWorker::FINISHED) {
             // Do some finished step, then idle
-            SetState(ThreadWorker::FINISHED);
+            SetState(ThreadWorker::IDLE);
         }
 
         boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     }
+    std::cout<<" thread  worker ending ... " << std::endl;
 }
 
 void ThreadWorker::PollTask(Task* pTask)
 {
+    std::cout<<"polling task " << std::endl;
     switch(pTask->GetTaskState()) {
         case Task::IDLE:
             {
@@ -81,10 +85,10 @@ void ThreadWorker::PollTask(Task* pTask)
 
 int ThreadWorker::GetState()
 {
-    ThreadState t;
-    Lock();
+    int t;
+    this->Lock();
     t = m_State;
-    Unlock();
+    this->Unlock();
     return t;
 }
 
@@ -97,7 +101,7 @@ void ThreadWorker::SetState(ThreadState t)
 
 void ThreadWorker::SetThreadExit()
 {
-    Lock();
+    this->Lock();
     m_State = ThreadWorker::EXIT;
-    Unlock();
+    this->Unlock();
 }

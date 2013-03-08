@@ -190,25 +190,12 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     int status = ret::A_OK;
 
     // Shutdown threading first, ALWAYS
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownTaskArbiter();
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownFileManager(&g_pFileManager);
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownCredentialsManager(&g_pCredManager);
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownEntityManager(&g_pEntityManager);
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownAppInstance(&g_pApp);
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
     status = liba::ShutdownTaskManager(&g_pTaskManager);
-
-    std::cout<<" heeeeeeeeeere " << std::endl;
 
     event::ShutdownEventSystem();
     g_pFileManager = NULL;
@@ -217,13 +204,11 @@ int ShutdownLibAttic(void (*callback)(int, void*))
     g_pApp = NULL;
     g_pTaskManager = NULL;
 
-    std::cout<<" heeeeeeeeeere " << std::endl;
     if(callback)
         callback(status, NULL);
 
     alog::ShutdownLogging();
 
-    std::cout<<" heeeeeeeeeere " << std::endl;
     g_bLibInitialized = false;
     return status;
 }

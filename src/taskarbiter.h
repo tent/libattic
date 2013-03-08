@@ -3,12 +3,9 @@
 #define TASKARBITER_H_
 #pragma once
 
-#include <pthread.h>
-
 #include "mutexclass.h"
 
 class Task;
-class TaskQueue;
 class ThreadPool;
 
 class TaskArbiter : public MutexClass
@@ -30,7 +27,6 @@ public:
 private:
     static bool            m_bInitialized;
     static TaskArbiter*    m_pInstance;
-//    TaskQueue*             m_pTaskQueue;
     ThreadPool*            m_pPool;
 };
 
