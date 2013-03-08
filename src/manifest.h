@@ -14,8 +14,9 @@
 #include <string>
 #include <map>
 #include <sqlite3.h>
-#include "folder.h"
+
 #include "fileinfo.h"
+#include "folder.h"
 
 class SelectResult
 { 
@@ -41,12 +42,12 @@ class Manifest
     bool CreateTables();
     bool CreateInfoTable();
     bool CreateFolderTable();
+    bool CreateFolderEntryTable();
 
     bool PerformQuery(const std::string& query) const;
     bool PerformSelect(const std::string& select, SelectResult &out) const;
 
     // InfoTable
-    bool QueryForFileExistence(const std::string& filename);
     void CheckIfTableExists(const std::string &tableName);
 
 public:
@@ -72,9 +73,28 @@ public:
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
-    int InsertFolder(Folder& folder);
+    bool IsFolderInManifest(const std::string& folderpath);
+    bool IsFolderInManifestWithID(const std::string& folderid);
+    bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
+
+    bool SetFolderPostID(const std::string& folderpath, const std::string& folderpostid);
+    bool GetFolderPostID(const std::string& folderpath, std::string& out);
+    bool GetFolderID(const std::string& folderpath, std::string& out);
+
     bool RemoveFolderData(const std::string& folderpath);
-    bool QueryForFolder( const std::string& folderpath, Folder& out);
+
+    // Folder Entry
+    bool IsFolderEntryInManifest(const std::string& filepath);
+    bool InsertFolderEnrty(const std::string& folderid, 
+                           const std::string& metapostid, 
+                           const std::string& type,
+                           const std::string& filepath);
+
+
+    bool SetFolderEntryMetapostID(const std::string& filepath, const std::string& metapostid);
+    bool GetFolderEntryMetapostID(const std::string& filepath, std::string& out);
+
+    bool GetFolderEntries(const std::string& folderid, std::vector<FolderEntry>& out);
 
     void SetDirectory(std::string &filepath); 
 private:

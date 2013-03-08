@@ -715,6 +715,10 @@ TEST(PARAMS, ENCODE)
     head.ReturnAsString(out);
 
     head["TEST"] = "testing operator overloading, do i still remember?";
+
+    std::string random;
+    crypto::GenerateRandomString(random, 4);
+    std::cout<<" RANDOM STRING : " << random << std::endl;
 }
 
 

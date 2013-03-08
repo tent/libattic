@@ -84,47 +84,39 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
         relative = test;
     }
 
-
     std::cout<<" PARENT_RELATIVE NOW : " << parent_relative << std::endl;
     std::cout<<" RELATIVE : " << relative << std::endl;
 
     pFi->SetFilepath(relative);
     Lock();
-    if(pFi) {
-        // Insert into infotable
-        m_Manifest.InsertFileInfo(*pFi);
-        // Insert into folder
-        Folder folder;
-        if(m_Manifest.QueryForFolder(parent_relative, folder)) {
-            // it exists
-
-            // TODO :: possible useless entries ... check this out later
-            // Update entry
-            FolderEntry fe;
-            fe.SetType(cnst::g_szFileType);
-            fe.SetPath(relative);
-
-            folder.PushBackEntry(fe);
-
-            std::cout<<" INSERTING TO FOLDER " << std::endl;
-            m_Manifest.InsertFolder(folder);
-        }
-        else {
-            folder.SetPath(parent_relative);
-            // create folder entry
-            FolderEntry fe;
-            fe.SetType(cnst::g_szFileType);
-            fe.SetPath(relative);
-
-            folder.PushBackEntry(fe);
-
-            std::cout<<" INSERTING TO FOLDER " << std::endl;
-            m_Manifest.InsertFolder(folder);
-        }
-    }
-
+    // Insert into infotable
+    m_Manifest.InsertFileInfo(*pFi);
     Unlock();
 
+    // Folder operations
+    Lock();
+    if(!m_Manifest.IsFolderInManifest(parent_relative)){
+        // Create folder entry
+        m_Manifest.InsertFolderInfo(parent_relative, "");
+    }
+    Unlock();
+
+    // File operations
+    Lock();
+    std::string folderid;
+    if(!m_Manifest.GetFolderID(parent_relative, folderid)) {
+        std::cout<<" failed to find folder post " << std::endl;
+    }
+
+    std::string postid;
+    pFi->GetPostID(postid);
+    if(!m_Manifest.IsFolderEntryInManifest(relative)) {
+       m_Manifest.InsertFolderEnrty(folderid,   
+                                    postid, 
+                                    cnst::g_szFileType,       
+                                    relative);  
+    }
+    Unlock();
 }
  
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
@@ -157,26 +149,10 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
 
     // Update folder entry
     Lock();
-    Folder folder;
-    if(m_Manifest.QueryForFolder(parent_relative, folder)) {
-        FolderEntry fe;
-        if(folder.GetFolderEntry(relative, fe)) {
-            fe.SetPostID(postid);
-            folder.PushBackEntry(fe);
-
-            std::string test;
-            fe.GetPostID(test);
-            std::cout<<" FOLDER ENTRY POST ID : " << test << std::endl;
-            m_Manifest.InsertFolder(folder);
-        }
-        else {
-            std::cout<<" FOLDER ENTRY DOES NOT EXIST IN FOLDER " << std::endl;
-        }
-
-    }
-    else
-        std::cout<<" FOLDER DOES NOT EXIST IN MANIFEST " << std::endl;
-
+    if(m_Manifest.IsFolderEntryInManifest(relative))
+        m_Manifest.SetFolderEntryMetapostID(relative, postid);
+    else 
+        std::cout<< "Could not find folder entry in MANIFEST " << std::endl;
     Unlock();
 }
 
@@ -191,14 +167,10 @@ void FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
     std::cout<<" SETTING FOLDER POST ID : " << parent_relative << std::endl;
 
     Lock();
-    Folder folder;
-    if(m_Manifest.QueryForFolder(parent_relative, folder)) {
-        folder.SetPostID(postid);
-        m_Manifest.InsertFolder(folder);
-    }
-    else {
+    if(m_Manifest.IsFolderInManifest(parent_relative))
+        m_Manifest.SetFolderPostID(parent_relative, postid);
+    else
         std::cout<<" COULD NOT FIND FOLDER IN MANIFEST " << std::endl;
-    }
     Unlock();
  
 }
@@ -301,8 +273,24 @@ bool FileManager::GetFolderInfo(const std::string& folderpath, Folder& folder)
     if(parent_relative.empty())
         parent_relative = cnst::g_szWorkingPlaceHolder;
 
+    bool bRet = false;
     Lock();
-    bool bRet = m_Manifest.QueryForFolder(parent_relative, folder);
+    if(m_Manifest.IsFolderInManifest(parent_relative)) {
+        std::string folderpostid, folder_id; 
+        m_Manifest.GetFolderPostID(parent_relative, folderpostid);
+        m_Manifest.GetFolderID(parent_relative, folder_id);
+        folder.SetPostID(folderpostid);
+        folder.SetPath(parent_relative);
+        // Retreive Entries
+        std::vector<FolderEntry> entries;
+        m_Manifest.GetFolderEntries(folder_id, entries);
+
+        std::cout<<" NUMBER OF ENTRIES : " << entries.size() << std::endl;
+        for(unsigned int i=0; i<entries.size(); i++)
+            folder.PushBackEntry(entries[i]);
+        
+        bRet = true;
+    }
     Unlock();
 
     return bRet;
