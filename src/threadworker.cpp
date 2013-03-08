@@ -29,11 +29,6 @@ void ThreadWorker::Run()
         if(pTask)  {
             SetState(ThreadWorker::RUNNING);
             PollTask(pTask);
-
-            if(pTask->GetTaskState() == Task::FINISHED) {
-                pTask = NULL;
-                SetState(ThreadWorker::FINISHED);
-            }
         }
 
         if(GetState() == ThreadWorker::FINISHED) {
@@ -74,6 +69,12 @@ void ThreadWorker::PollTask(Task* pTask)
             {
                 std::cout<< " task finished " << std::endl;
                 pTask->OnFinished();
+                // cleanup task
+                if(pTask)
+                    delete pTask;
+                pTask = NULL;
+
+                SetState(ThreadWorker::FINISHED);
                 break;
             }
         default:
@@ -87,9 +88,9 @@ void ThreadWorker::PollTask(Task* pTask)
 int ThreadWorker::GetState()
 {
     int t;
-    this->Lock();
+    Lock();
     t = m_State;
-    this->Unlock();
+    Unlock();
     return t;
 }
 
@@ -103,7 +104,7 @@ void ThreadWorker::SetState(ThreadState t)
 
 void ThreadWorker::SetThreadExit()
 {
-    this->Lock();
+    Lock();
     m_State = ThreadWorker::EXIT;
-    this->Unlock();
+    Unlock();
 }

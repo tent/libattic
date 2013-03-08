@@ -74,8 +74,8 @@ int ThreadPool::ExtendPool(unsigned int stride)
         m_Threads.push_back(pt);
 
         // decide whether or not to keep as a detached thread
-        std::cout<<"detaching thread ... " << std::endl;
-        pt->detach();
+//        std::cout<<"detaching thread ... " << std::endl;
+//        pt->detach();
 
     }
 

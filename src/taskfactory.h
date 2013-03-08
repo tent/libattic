@@ -58,8 +58,8 @@ public:
     TaskFactory();                                                      
     ~TaskFactory();                                                     
 
-    int Initialize();
-    int Shutdown();
+    int Initialize(); // Depricated
+    int Shutdown(); // Depricated
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
@@ -83,13 +83,13 @@ public:
                            void (*callback)(int, char**, int, int),
                            TaskFactoryDelegate* delegate = NULL);
 
-    int RemoveActiveTask(Task* pTask);
+    int RemoveActiveTask(Task* pTask); // Depricated
 
     // Information methods
-    int GetNumberOfActiveTasks(const Task::TaskType type);
+    int GetNumberOfActiveTasks(const Task::TaskType type); // Depricated
 
-    int GetActiveTaskUploadSpeed();
-    int GetActiveTaskDownloadSpeed();
+    int GetActiveTaskUploadSpeed(); // Depricated
+    int GetActiveTaskDownloadSpeed(); // Depricated
 
 private:
     TaskPool    m_ActiveTaskPool;

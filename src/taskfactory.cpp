@@ -29,7 +29,7 @@ TaskFactory::~TaskFactory()
 
 }
 
-int TaskFactory::Initialize()
+int TaskFactory::Initialize() // Depricated
 {
     std::cout<<" Initializing task factory " << std::endl;
 
@@ -37,47 +37,9 @@ int TaskFactory::Initialize()
     return ret::A_OK;
 }
 
-int TaskFactory::Shutdown()
+int TaskFactory::Shutdown() // Depricated
 {
     std::cout<<" Shutting down task factory " << std::endl;
-
-// TODO, decide whether to delete tasks here, or completely transfer ownership to 
-//       parent thread, if we delete here, we absolutely cannot run detached threads.
-//       if we want detached threads perhaps a scoped_mutex or similar for ownership
-
-    /*
-    TaskMap::iterator itr = m_TaskPool.begin();
-
-    for(;itr != m_TaskPool.end(); itr++)
-    {
-        TaskPool* pPool = &(itr->second);
-        TaskPool::iterator ii = pPool->begin();
-
-        for(;pPool->size() > 0;)
-        {
-            std::cout<<" deleting task ... " << std::endl;
-            Task* pTask = pPool->front();
-            delete pTask;
-            pTask = NULL;
-            pPool->pop_front();
-        }
-    }
-
-    // TODO :: when pools come into use remove the following ...
-    TaskPool::iterator ii = m_ActiveTasks.begin();
-
-    while(m_ActiveTasks.size() > 0)
-    {
-        Task* pTask = m_ActiveTasks.front();
-        std::cout<<" deleting task ... " << std::endl;
-
-        delete pTask;
-        pTask = NULL;
-
-        m_ActiveTasks.pop_front();
-    }
-    */
-
 
     return ret::A_OK;
 }
@@ -88,9 +50,12 @@ void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
         if(delegate)
             delegate->OnTaskCreate(t);
 
+        // TODO :: this is probably unecessary, let the owner delete task
+        /*
         Lock();
         m_ActiveTaskPool.PushBack(t);
         Unlock();
+        */
 
         if(delegate)
             delegate->OnTaskInsert(t);
@@ -346,7 +311,7 @@ void TaskFactory::LogUnknownTaskType(Task::TaskType type)
     alog::Log(Logger::ERROR, a);
 }
 
-int TaskFactory::RemoveActiveTask(Task* pTask)
+int TaskFactory::RemoveActiveTask(Task* pTask) // Depricated
 {
     int status = ret::A_OK;
     // Remove from active list
@@ -369,40 +334,46 @@ void TaskFactory::TaskFinished(int code, Task* pTask)
     }
 }
 
-int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type)
+int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type) // Depricated
 {
-    int taskcount = 0;
+    int taskcount = -1;
 
+    /*
     m_ActiveTaskPool.Lock();
     taskcount = m_ActiveTaskPool[type]->size();
     m_ActiveTaskPool.Unlock();
+    */
 
     return taskcount;
 }
 
-int TaskFactory::GetActiveTaskUploadSpeed()
+int TaskFactory::GetActiveTaskUploadSpeed() // Depricated
 {
-    int speed = 0;
+    int speed = -1;
     
+    /*
     m_ActiveTaskPool.Lock();
     Task* task = m_ActiveTaskPool[Task::PUSH]->front();
     m_ActiveTaskPool.Unlock();
 
     if(task->GetTaskType() == Task::PUSH)
         speed = ((PushTask*)task)->GetUploadSpeed();
+        */
     return speed;
 }
 
-int TaskFactory::GetActiveTaskDownloadSpeed()
+int TaskFactory::GetActiveTaskDownloadSpeed() // Depricated
 {
-    int speed = 0;
+    int speed = -1;
     
+    /*
     m_ActiveTaskPool.Lock();
     Task* task = m_ActiveTaskPool[Task::PULL]->front();
     m_ActiveTaskPool.Unlock();
 
     if(task->GetTaskType() == Task::PULL)
         speed = ((PushTask*)task)->GetUploadSpeed();
+        */
     return speed;
 }
 

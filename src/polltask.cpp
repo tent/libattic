@@ -55,6 +55,10 @@ PollTask::~PollTask()
 
 void PollTask::OnStart()
 {
+    if(!polltask::g_pCurrentPollTask) {
+        polltask::g_pCurrentPollTask = this;
+    }
+     
 }
 
 void PollTask::OnPaused()
@@ -75,10 +79,10 @@ void PollTask::RunTask()
 {
     int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions
-    if(!polltask::g_pCurrentPollTask) {
-        polltask::g_pCurrentPollTask = this;
-        m_bRunning = true;
-        while(m_bRunning) {
+    if(polltask::g_pCurrentPollTask == this) {
+      //  polltask::g_pCurrentPollTask = this;
+       // m_bRunning = true;
+        //while(m_bRunning) {
             // Poll for folder posts
             // Update Entries on a counter
             // Update pull
@@ -86,11 +90,11 @@ void PollTask::RunTask()
             if(status != ret::A_OK)
                 std::cout<<" POLLING ERR : " << status << std::endl;
             sleep(3);
-        }
+        //}
 
-        Callback(status, NULL);
-        SetFinishedState();
-        polltask::g_pCurrentPollTask = NULL;
+        //Callback(status, NULL);
+        //SetFinishedState();
+        //polltask::g_pCurrentPollTask = NULL;
     }
     else {
         status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
