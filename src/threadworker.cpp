@@ -15,6 +15,7 @@ ThreadWorker::~ThreadWorker()
 {
 }
 
+// Once a thread is set to exist state, it cannot/shouldnot be changed back
 void ThreadWorker::Run()
 {
     std::cout<<" thread worker starting ... " << std::endl;
@@ -95,7 +96,8 @@ int ThreadWorker::GetState()
 void ThreadWorker::SetState(ThreadState t)
 {
     Lock();
-    m_State = t;
+    if(m_State != ThreadWorker::EXIT)
+        m_State = t;
     Unlock();
 }
 
