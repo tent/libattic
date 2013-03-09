@@ -1,4 +1,3 @@
-
 #ifndef PUSHTASK_H_
 #define PUSHTASK_H_
 #pragma once
@@ -33,8 +32,7 @@ class PushTask : public TentTask
     int PushFile( const std::string& filepath );
 
     int SendAtticPost( FileInfo* fi, const std::string& filepath );
-    int SendFolderPost(const std::string& filepath); // filepath of a file, this will extract the folder;
-
+    int SendFolderPost(const FileInfo* fi); 
     int ProcessFile( const std::string& requestType,
                      const std::string& url,
                      const std::string& filepath,

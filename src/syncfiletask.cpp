@@ -72,6 +72,7 @@ void SyncFileTask::RunTask()
         std::cout<<" ... got meta data ... " << std::endl;
         std::string filepath;
         p.GetAtticPostFilepath(filepath);
+        std::cout<<" POST FILEPATH : " << filepath << std::endl;
 
         FileInfo fi;
         postutils::DeserializeAtticPostIntoFileInfo(p, fi);
@@ -82,47 +83,67 @@ void SyncFileTask::RunTask()
 
         // Get Local file info
         FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
-        std::string relative_path;
-        fm->GetRelativeFilepath(filepath, relative_path);
 
-        bool bPull = false;
-        if(fm->DoesFileExist(filepath)) {
-            // compare versions
-            if(pLocal_fi->GetPostVersion() < version) {
-                std::cout<<" VERSION : " << version << std::endl;
-                // if version on the server is newer, pull
+        if(pLocal_fi) {
+            std::string canonical_path;
+            fm->GetCanonicalFilepath(filepath, canonical_path);
+
+            std::cout<< "checking file....." << std::endl;
+            bool bPull = false;
+            if(fm->DoesFileExist(filepath)) {
+                // compare versions
+                if(pLocal_fi->GetPostVersion() < version) {
+                    std::cout<<" VERSION : " << version << std::endl;
+                    // if version on the server is newer, pull
+                    bPull = true;
+                }
+                // check if file exists
+                if(!fs::CheckFileExists(canonical_path)) { 
+                    std::cout<<" checking if file exists --- " << std::endl;
+                    std::cout<<" maybe use path ? : " << filepath << std::endl;
+                    std::cout<<" or ? : " << canonical_path << std::endl;
+                    std::cout<<" file does not exist pulling ... " << std::endl;
+                    bPull= true;
+                }
+                else
+                    std::cout<<" FILE EXISTS : " << canonical_path << std::endl;
+
+
+            }
+            else {
+                std::cout<<" file does not exist in the local cache ... " << std::endl;
                 bPull = true;
             }
 
-            // check if file exists
-            if(!fs::CheckFileExists(relative_path))
-                bPull= true;
-            else
-                std::cout<<" FILE DOES NOT EXIST : " << relative_path << std::endl;
-        }
-        else {
-            std::cout<<" file does not exist locally " << std::endl;
-            bPull = true;
-        }
-        // Update and insert to manifest
-        //
-        if(bPull) {
-            // retreive chunk info
-            status = RetrieveChunkInfo(p, &fi);
-            if(status == ret::A_OK) {
-                // insert to file manager
-                FileManager* fm = GetFileManager();
-                fm->InsertToManifest(&fi);
-                // pull request
-                event::RaiseEvent(Event::REQUEST_PULL, relative_path, NULL);
+            std::cout<<" pullling ? : " << bPull << std::endl;
+            // Update and insert to manifest
+            //
+            if(bPull) {
+                // retreive chunk info
+                status = RetrieveChunkInfo(p, &fi);
+                if(status == ret::A_OK) {
+                    std::cout<<" GET FILEINFO VERSION : " << fi.GetPostVersion() << std::endl;
+                    std::cout<<" GET POST VERSION : " << version << std::endl;
+                    std::cout<<" INSERTING " << std::endl;
+
+                    // insert to file manager
+                    FileManager* fm = GetFileManager();
+                    fm->InsertToManifest(&fi);
+                    // pull request
+                    event::RaiseEvent(Event::REQUEST_PULL, filepath, NULL);
+                }
+                else {
+                    std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
+                }
             }
             else {
-                std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
+                std::cout<<" not pulling ... " << std::endl;
             }
         }
         else {
-            std::cout<<" not pulling ... " << std::endl;
+            std::cout<< " NULL local file info " << std::endl;
         }
+
 
     }
     else {
@@ -150,8 +171,8 @@ int SyncFileTask::SyncMetaData(AtticPost& out)
                      at,
                      response); 
 
-    //std::cout<< " CODE : " << response.code << std::endl;
-    //std::cout<< " RESPONSE : " << response.body << std::endl;                          
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " RESPONSE : " << response.body << std::endl;                          
 
     if(response.code == 200) {
         jsn::DeserializeObject(&out, response.body);
@@ -162,6 +183,7 @@ int SyncFileTask::SyncMetaData(AtticPost& out)
 
     return status;
 }
+
 
 int SyncFileTask::RetrieveChunkInfo(AtticPost& post, FileInfo* fi)
 {

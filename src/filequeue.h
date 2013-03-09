@@ -14,8 +14,7 @@ public:
     FileQueue() {}
     ~FileQueue() {}
 
-    virtual bool LockFile(const std::string& filepath)
-    {
+    virtual bool LockFile(const std::string& filepath) {
         if(!m_FileQueue[filepath]) {
             m_FileQueue[filepath] = true;
             return true;
@@ -23,12 +22,17 @@ public:
         return false;
     }
 
-    virtual bool UnlockFile(const std::string& filepath)
-    {
+    virtual bool UnlockFile(const std::string& filepath) {
         if(m_FileQueue[filepath]) {
             m_FileQueue[filepath] = false;
             return true;
         }
+        return false;
+    }
+    
+    bool IsFileLocked(const std::string& filepath) {
+        if(m_FileQueue.find(filepath) != m_FileQueue.end())
+            return m_FileQueue[filepath];
         return false;
     }
 
@@ -46,21 +50,29 @@ public:
     ~CentralFileQueue() {}
 
     bool LockFile(const std::string& filepath) {
-        bool ret = false;
+        bool retval = false;
         Lock();
-        ret = m_FileQueue.LockFile(filepath);
+        retval = m_FileQueue.LockFile(filepath);
         event::RaiseEvent(Event::FILE_LOCK, filepath, NULL);
         Unlock();
-        return ret;
+        return retval;
     }
 
     bool UnlockFile(const std::string& filepath) {
-        bool ret = false;
+        bool retval = false;
         Lock();
-        ret = m_FileQueue.UnlockFile(filepath);
+        retval = m_FileQueue.UnlockFile(filepath);
         event::RaiseEvent(Event::FILE_UNLOCK, filepath, NULL);
         Unlock();
-        return ret;
+        return retval;
+    }
+
+    bool IsFileLocked(const std::string& filepath) {
+        bool retval = false;
+        Lock();
+        retval = m_FileQueue.IsFileLocked(filepath);
+        Unlock();
+        return retval;
     }
 
     static CentralFileQueue* GetInstance() {

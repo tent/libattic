@@ -97,6 +97,7 @@ namespace postutils
             post->GetID(postid);
 
             fiOut.SetPostID(postid);
+            fiOut.SetPostVersion(post->GetVersion());
         }
         else {
             status = ret::A_FAIL_INVALID_PTR;

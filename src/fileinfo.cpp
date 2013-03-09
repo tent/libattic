@@ -9,6 +9,7 @@
 
 FileInfo::FileInfo()
 {
+    m_PostVersion = 0;
     m_Deleted = 0;
 }
 
@@ -17,11 +18,12 @@ FileInfo::FileInfo( const std::string& filename,
                     const std::string& postid,
                     const std::string& chunkpostid)
 {
+    FileInfo::FileInfo();
+
     m_Filename = filename;
     m_Filepath = filepath;
     m_PostID = postid;
     m_ChunkPostID = chunkpostid;
-    m_Deleted = 0;
 }
 
 FileInfo::~FileInfo()

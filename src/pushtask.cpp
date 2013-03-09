@@ -69,6 +69,9 @@ void PushTask::RunTask()
     SetFinishedState();
 }
 
+
+// Note* path should not be relative, let the filemanager take care of
+// all the canonical to relative path conversions
 int PushTask::PushFile(const std::string& filepath)
 {
     int status = ret::A_OK;
@@ -79,13 +82,10 @@ int PushTask::PushFile(const std::string& filepath)
         std::string posturl;
         ConstructPostUrl(posturl);
 
-        std::string relative_path;
-        FileManager* fm = GetFileManager();
-        fm->GetRelativeFilepath(filepath, relative_path);
-        std::cout<<" PUSHING RELATIVE PATH : " << relative_path << std::endl;
+        std::cout<<" PUSHING PATH : " << filepath << std::endl;
 
         // Retrieve file info if already exists
-        FileInfo* fi = RetrieveFileInfo(relative_path);
+        FileInfo* fi = RetrieveFileInfo(filepath);
         std::string chunkPostId;
         fi->GetChunkPostID(chunkPostId);
 
@@ -130,7 +130,6 @@ int PushTask::PushFile(const std::string& filepath)
         if(status == ret::A_OK) {
             status = ProcessFile( requestType,
                                   posturl,
-                                 // relative_path,
                                   filepath,
                                   fileCredentials,
                                   fi,
@@ -187,9 +186,8 @@ int PushTask::PushFile(const std::string& filepath)
                 mKey.GetMasterKey(mk);
 
                 // Insert File Data
-                std::cout<<" INSERTING RELATIVE PATH : "<< relative_path << std::endl;
                 fi->SetChunkPostID(chunkPostId);
-                fi->SetFilepath(relative_path);
+                fi->SetFilepath(filepath);
                 fi->SetFilename(filename);
                 fi->SetFileSize(filesize);
                 fi->SetFileCredentials(fileCredentials);
@@ -216,8 +214,8 @@ int PushTask::PushFile(const std::string& filepath)
                 //status = SendAtticPost(fi, relative_path);
                 // Send Attic Post
                 int trycount = 0;
-                for(status = SendAtticPost(fi, relative_path); status != ret::A_OK; trycount++) {
-                    status = SendAtticPost(fi, relative_path);
+                for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
+                    status = SendAtticPost(fi, filepath);
                     std::cout<<" RETRYING .................................." << std::endl;
                     if(trycount > 2)
                         break;
@@ -262,17 +260,19 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
     std::string chunkname;
     fi->GetChunkName(chunkname);
 
+    std::string relative_path;
+    fi->GetFilepath(relative_path);
+    std::cout<<" INSERTING RELATIVE PATH TO POST : " << relative_path << std::endl;
     bool post = true;
     Response response;
     if(postid.empty()) {
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
-
-                unsigned int size = utils::CheckFilesize(filepath);
+        unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
         InitAtticPost(p,
                       false,
-                      filepath,
+                      relative_path,
                       filename,
                       chunkname,
                       size,
@@ -303,7 +303,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
         AtticPost p;
         InitAtticPost(p,
                       false,
-                      filepath,
+                      relative_path,
                       filename,
                       chunkname,
                       size,
@@ -339,7 +339,7 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                 // set post version
                 // Send Folder Post
                 std::cout<<" sending folder post to filepath : " << fi_filepath << std::endl;
-                SendFolderPost(filepath);
+                SendFolderPost(fi);
             }
         }
         else{
@@ -353,34 +353,23 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
     return status;
 }
 
-int PushTask::SendFolderPost(const std::string& filepath)
+int PushTask::SendFolderPost(const FileInfo* fi)
 {
     int status = ret::A_OK;
 
-    std::cout<<" Send Folder Post filepath : " << filepath << std::endl;
-    std::string path, relative, canonical, parent_path, parent_relative, workingdir;
-                                                                                               
-    GetWorkingDirectory(workingdir);
-    fs::GetCanonicalPath(workingdir, workingdir);
-
-    std::cout<<"send WORKING : " << workingdir << std::endl;
-    path += workingdir;                                                                
-    utils::CheckUrlAndAppendTrailingSlash(path);                                               
-    path += filepath;                                                                          
-                                                                                               
-    fs::GetCanonicalPath(path, canonical);                                                     
-//    fs::MakePathRelative(workingdir, canonical, relative);                             
-    fs::GetParentPath(canonical, parent_path);                                                 
-    fs::MakePathRelative(workingdir, parent_path, parent_relative);                    
-
-    std::cout<<"send filepath : " << filepath << std::endl;
-    std::cout<<"send CANONICAL : " << canonical << std::endl;
-    std::cout<<"send PARENT_PATH : " << parent_path << std::endl;
-    std::cout<<"send WORKING : " << workingdir << std::endl;
-    std::cout<<"send PARENT RELATIVE : " << parent_relative << std::endl;
+    std::string filepath, filename, parent_relative;
+    fi->GetFilepath(filepath);
+    fi->GetFilename(filename);
+    int pos = filepath.find(filename);
+    if(pos == std::string::npos) { 
+        std::cout<<"MALFORMED FILEPATH " << filepath << std::endl;
+        return -1;
+    }
+    parent_relative = filepath.substr(0, pos-1);
 
     Folder folder;
     FileManager* fm = GetFileManager();
+    std::cout<<"PARENT RELATIVE : " << parent_relative << std::endl;
     if(fm->GetFolderInfo(parent_relative, folder)) {
         // serialize and send
         FolderPost p(folder);
@@ -398,6 +387,7 @@ int PushTask::SendFolderPost(const std::string& filepath)
 
         AccessToken* at = GetAccessToken();
         Response response;
+
         bool bPost = true;
         if(postid.empty()) { // POST
             std::cout<< "FOLDER POST URL : " << posturl << std::endl;
@@ -525,7 +515,6 @@ int PushTask::GetUploadSpeed()
 FileInfo* PushTask::RetrieveFileInfo(const std::string& filepath)
 {
     FileInfo* fi = GetFileManager()->GetFileInfo(filepath);
-
     if(!fi)
         fi = GetFileManager()->CreateFileInfo();
 

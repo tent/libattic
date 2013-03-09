@@ -5,12 +5,16 @@
 #include <string>
 #include "tenttask.h"
 #include "atticpost.h"
+#include "fileinfo.h"
 
-class FileInfo;
 
 class SyncFileTask : public TentTask
 {
     int SyncMetaData(AtticPost& out);
+    /*
+    int AssessFileInfo(const FileInfo& local_fi, const FileInfo& meta_fi);
+    int Pull(const AtticPost& p, const FileInfo& meta_fi);
+    */
     int RetrieveChunkInfo(AtticPost& post, FileInfo* fi);
 public:
     SyncFileTask( TentApp* pApp,

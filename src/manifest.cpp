@@ -289,7 +289,6 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out)
     if(!PerformSelect(pexc, res))
         return false;
 
-    std::cout<<" query start " << std::endl;
     int step = 0;
     for(int i=0; i<res.nRow+1; i++) {
         step = i*res.nCol;
@@ -317,7 +316,6 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out)
         }
     }
 
-    std::cout<<" query done " << std::endl;
     sqlite3_free_table(res.results);
 
     if(!step)
@@ -401,6 +399,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi)
     fi.GetEncryptedKey(encryptedkey);
     fi.GetIv(iv);
 
+    /*
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
     std::cout<< " count : " << fi.GetChunkCount() << std::endl;
@@ -412,6 +411,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi)
     std::cout<< " encrypted key : " << encryptedkey << std::endl;
     std::cout<< " iv : " << iv << std::endl;
     std::cout<< " deleted : " << fi.GetDeleted() << std::endl;
+    */
 
     std::string query;
     query += "INSERT OR REPLACE INTO ";
@@ -635,7 +635,7 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string
             crypto::GenerateRandomString(folderid);
         }
 
-        std::cout<<" FOLDER ID : " << folderid << std::endl;
+        //std::cout<<" FOLDER ID : " << folderid << std::endl;
 
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
@@ -841,7 +841,7 @@ bool Manifest::GetFolderEntries(const std::string& folderid, std::vector<FolderE
     if(!PerformSelect(query, res))
         return false;
 
-    std::cout<<" query start " << std::endl;
+    //std::cout<<" query start " << std::endl;
     int step = 0;
     for(int i=0; i<res.nRow+1; i++) {
         step = i*res.nCol;
@@ -860,7 +860,7 @@ bool Manifest::GetFolderEntries(const std::string& folderid, std::vector<FolderE
         }
     }
 
-    std::cout<<" query done " << std::endl;
+    //std::cout<<" query done " << std::endl;
     sqlite3_free_table(res.results);
 
     if(!step)

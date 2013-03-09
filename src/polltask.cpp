@@ -222,8 +222,7 @@ int PollTask::SyncFolder(Folder& folder)
     return status;
 }
 
-int PollTask::GetFolderPostCount()
-{                                                                                                 
+int PollTask::GetFolderPostCount() {
     std::string url;
     GetEntityUrl(url);
     utils::CheckUrlAndAppendTrailingSlash(url);
@@ -248,3 +247,19 @@ int PollTask::GetFolderPostCount()
 
     return count;
 }
+
+void PollTask::PushBackFile(const std::string& filepath) {
+    m_ProcessingQueue[filepath] = true;
+}
+
+void PollTask::RemoveFile(const std::string& filepath) {
+    m_ProcessingQueue.erase(filepath);
+}
+
+bool PollTask::IsFileInQueue(const std::string& filepath) {
+    if(m_ProcessingQueue.find(filepath)!= m_ProcessingQueue.end())
+        return true;
+    return false;
+}
+
+

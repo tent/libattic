@@ -213,16 +213,16 @@ TEST(PUSH, AFILE)
 
     ASSERT_EQ(status, ret::A_OK);
 
-    //status = EnterPassphrase("password");
+    status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
     
     
     if(status == 0)
     {
-        status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        //status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
-        //status = PushFile("./data/freenet.pdf", &PUSHCB);
+        status = PushFile("./data/freenet.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -931,6 +931,17 @@ TEST(ATTIC, DAEMON)
     }
 
     ShutdownLibAttic(NULL);
+}
+
+TEST(FILEINFO, POSTVERSION)
+{
+    FileInfo fi;
+    std::cout<<" POST VERSION : " << fi.GetPostVersion() << std::endl;
+
+    fi.SetPostVersion("12");
+    std::cout<<" POST VERSION : " << fi.GetPostVersion() << std::endl;
+
+
 }
 
 

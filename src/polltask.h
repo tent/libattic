@@ -5,12 +5,18 @@
 #include "tenttask.h"
 #include "folder.h"
 
-class PollTask : public TentTask
-{
+#include <map>
+#include <string>
 
+class PollTask : public TentTask {
     int SyncFolderPosts();
     int SyncFolder(Folder& folder);
     int GetFolderPostCount();
+
+    void PushBackFile(const std::string& filepath);
+    void RemoveFile(const std::string& filepath);
+    bool IsFileInQueue(const std::string& filepath);
+
 public:
     void PollTaskCB(int a, void* b);
 
@@ -38,6 +44,7 @@ public:
 private:
     bool m_bRunning;
 
+    std::map<std::string, bool> m_ProcessingQueue; // Files currently being processed
 };
 
 #endif

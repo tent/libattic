@@ -55,37 +55,44 @@ int FileManager::RemoveFile(const std::string &filepath)
     return status;
 }
 
-void FileManager::InsertToManifest (FileInfo* pFi) { 
-    if(!pFi) return;
-    // Calculate relative path
-    std::string filepath, relative, canonical, parent_path, parent_relative;
+void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
+                                       std::string& relative_out, 
+                                       std::string& parent_relative_out)
+{
+    std::string filepath, relative, canonical;
     pFi->GetFilepath(filepath);
-
-    std::string test;
-    GetRelativeFilepath(filepath, test);
-    std::cout<<" TEST : " << test << std::endl;
 
     fs::GetCanonicalPath(filepath, canonical);
     fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-    fs::GetParentPath(filepath, parent_path);
-    fs::MakePathRelative(m_WorkingDirectory, parent_path, parent_relative);
+    // TODO :: fix for windows
+    relative = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
+    //if(parent_relative.empty())
+    if(canonical.empty()) {
+        std::cout<<" FILEMANAGER - CANONICAL IS EMPTY - " << filepath << std::endl;
+    }
+    // Extract parent relative :
+    std::string filename;
+    pFi->GetFilename(filename);
+    int pos = relative.find(filename);
+    std::string parent_relative;
+    if(pos != std::string::npos)
+        parent_relative = relative.substr(0, pos-1); // minus 1 to include /
 
     std::cout<<"INSERTING TO MANIFEST " << std::endl;
     std::cout<<" filepath        : " << filepath << std::endl;
     std::cout<<" canonical       : " << canonical << std::endl;
     std::cout<<" relative        : " << relative << std::endl;
-    std::cout<<" working dir     : " << m_WorkingDirectory << std::endl;
-    std::cout<<" parent dir      : " << parent_path << std::endl;
-    std::cout<<" parent relative : " << parent_relative << std::endl;
+    std::cout<<" parent_relative : " << parent_relative << std::endl;
 
-    //if(parent_relative.empty())
-    if(canonical.empty()) {
-        parent_relative = cnst::g_szWorkingPlaceHolder;
-        relative = test;
-    }
+    relative_out = relative;
+    parent_relative_out = parent_relative;
+}
 
-    std::cout<<" PARENT_RELATIVE NOW : " << parent_relative << std::endl;
-    std::cout<<" RELATIVE : " << relative << std::endl;
+void FileManager::InsertToManifest (FileInfo* pFi) { 
+    if(!pFi) return;
+    // Calculate relative path
+    std::string relative, parent;
+    ExtractRelativePaths(pFi, relative, parent);
 
     pFi->SetFilepath(relative);
     Lock();
@@ -95,16 +102,18 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 
     // Folder operations
     Lock();
-    if(!m_Manifest.IsFolderInManifest(parent_relative)){
+    if(!m_Manifest.IsFolderInManifest(parent)){
+        std::string postid;
+        pFi->GetPostID(postid);
         // Create folder entry
-        m_Manifest.InsertFolderInfo(parent_relative, "");
+        m_Manifest.InsertFolderInfo(parent, postid);
     }
     Unlock();
 
     // File operations
     Lock();
     std::string folderid;
-    if(!m_Manifest.GetFolderID(parent_relative, folderid)) {
+    if(!m_Manifest.GetFolderID(parent, folderid)) {
         std::cout<<" failed to find folder post " << std::endl;
     }
 
@@ -180,8 +189,7 @@ void FileManager::SetFileChunkPostId(const std::string &filepath, const std::str
     m_Manifest.InsertFileChunkPostID(filepath, postid);
 }
 
-FileInfo* FileManager::CreateFileInfo()
-{
+FileInfo* FileManager::CreateFileInfo() {
     Lock();
     FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
     Unlock();
@@ -189,77 +197,59 @@ FileInfo* FileManager::CreateFileInfo()
     return pFi;
 }
 
-void FileManager::GetRelativeFilepath(const std::string& filepath, std::string& out)
-{
-    std::string canonical, relative;
-    fs::GetCanonicalPath(filepath, canonical);
-    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-
-    std::cout<<" GET FILE INFO : " << std::endl;
-    std::cout<<" \t filepath : " << filepath << std::endl;
-    std::cout<<" \t canonical : " << canonical << std::endl;
-    std::cout<<" \t relatvie : " << relative << std::endl;
-    std::cout<<" \t working : " << m_WorkingDirectory << std::endl;
-    
-    if(canonical.empty()) {
-        relative = filepath;
-        if(relative.find("/") == std::string::npos){// && relative.find("\\") == std::string::npos) {
-            canonical = m_WorkingDirectory + "/" + relative;
-
-            std::cout<<" new canonical : " << canonical << std::endl;
-            fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-        }
-        else {
-            std::cout<<" not npos : " <<relative.find("/") << std::endl;
-        }
-
-
-        std::cout<<" NEW RELATIVE : " << relative << std::endl;
+void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
+    std::string relative, canonical;
+    int pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
+    if(pos != std::string::npos) {
+        out = m_WorkingDirectory + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
     }
-    out = relative;
+    else {
+        std::cout << " MALFORMED RELATIVE PATH " << relativepath << std::endl;
+    }
+}
+
+bool FileManager::IsPathRelative(const std::string& filepath)
+{
+    if(filepath.find(cnst::g_szWorkingPlaceHolder) != std::string::npos)
+        return true;
+    return false;
 }
 
 bool FileManager::DoesFileExist(const std::string& filepath)
 {
-    std::string relative;
-    GetRelativeFilepath(filepath, relative);
-    Lock();
-    bool stat = m_Manifest.IsFileInManifest(relative);
-    Unlock();
+    bool stat = false;
+    if(IsPathRelative(filepath)) {
+        Lock();
+        stat = m_Manifest.IsFileInManifest(filepath);
+        Unlock();
+    }
+    else {
+        std::cout<<" FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
+    }
 
     return stat;
 }
 
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
-    std::string canonical, relative;
-    fs::GetCanonicalPath(filepath, canonical);
-    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+    FileInfo* pFi = NULL;
+    if(IsPathRelative(filepath)) {
+        Lock();
+        pFi = m_FileInfoFactory.CreateFileInfoObject();
+        m_Manifest.QueryForFile(filepath, *pFi);
+        Unlock();
 
-    std::cout<<" GET FILE INFO : " << std::endl;
-    std::cout<<" \t filepath : " << filepath << std::endl;
-    std::cout<<" \t canonical : " << canonical << std::endl;
-    std::cout<<" \t relatvie : " << relative << std::endl;
-    
-    if(canonical.empty()) {
-        relative = filepath;
-        if(relative.find("/") == std::string::npos && relative.find("\\") == std::string::npos) {
-            canonical = m_WorkingDirectory + "/" + relative;
-            fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        if(pFi) {
+            if(!pFi->IsValid()) {
+                pFi = NULL;
+            }
         }
-
-        std::cout<<" NEW RELATIVE : " << relative << std::endl;
+        else {
+            std::cout<<" NULL FileInfo " << std::endl;
+        }
     }
-
-    Lock();
-    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
-    m_Manifest.QueryForFile(relative, *pFi);
-   // m_Manifest.QueryForFile(filepath, *pFi);
-    Unlock();
-
-    if(pFi) {
-        if(!pFi->IsValid())
-            return NULL;
+    else {
+        std::cout<<"GETFILEINFO FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
     }
 
     return pFi;

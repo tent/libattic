@@ -1,3 +1,3 @@
 #include "filequeue.h"
 
-static CentralFileQueue* CentralFileQueue::m_pInstance = 0;
+CentralFileQueue* CentralFileQueue::m_pInstance = 0;
