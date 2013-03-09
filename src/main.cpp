@@ -39,6 +39,7 @@
 
 #include "eventsystem.h"
 #include "threadworker.h"
+#include "filequeue.h"
 
 // Globals
 std::string g_Entity;

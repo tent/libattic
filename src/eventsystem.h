@@ -19,7 +19,9 @@ struct Event
         SYNC,
         POLL,
         UPLOAD_SPEED,
-        DOWNLOAD_SPEED
+        DOWNLOAD_SPEED,
+        FILE_LOCK,
+        FILE_UNLOCK
     };
 
     EventType type;
