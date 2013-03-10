@@ -64,6 +64,10 @@ int PullTask::PullFile(const std::string& filepath)
     FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
 
     if(fi) {
+        // Get relative filepath
+        std::string relative_filepath;
+        fi->GetFilepath(relative_filepath);
+
         Credentials fileCred;
         status = RetreiveFileCredentials(fi, fileCred);
 
@@ -86,7 +90,7 @@ int PullTask::PullFile(const std::string& filepath)
                     if(response.code == 200) {
                         Post p;
                         jsn::DeserializeObject(&p, response.body);
-                        status = RetreiveFile( filepath, 
+                        status = RetreiveFile( relative_filepath, 
                                                chunkposturl, 
                                                fileCred, 
                                                p, 
@@ -183,14 +187,10 @@ int PullTask::RetreiveFile( const std::string filepath,
     
     Credentials fCred = fileCred;
     std::cout<< " filepath : " << filepath << std::endl;
-    std::string workingdir;
-    GetWorkingDirectory(workingdir);
-    utils::CheckUrlAndAppendTrailingSlash(workingdir);
-    std::string path;
-    path = workingdir + filepath;
 
-    std::cout<< " path : " <<path << std::endl;
-    fs::GetCanonicalPath(path, path);
+    std::string path;
+    FileManager* fm = GetFileManager();
+    fm->GetCanonicalFilepath(filepath, path);
 
     std::cout<< " path : " << path << std::endl;
 

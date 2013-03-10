@@ -212,13 +212,53 @@ bool FileManager::DoesFileExist(const std::string& filepath)
     return stat;
 }
 
+bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::string& out)
+{
+    bool retval = false;
+    std::cout<<" attempting to get a relative path " << std::endl;
+    std::string canonical;
+    int pos = 0;
+    int last = 0;
+    while(pos != std::string::npos) {
+        last = 0;
+        pos = filepath.find("/", pos + 1);
+    }
+
+    if(last) {
+        fs::GetCanonicalPath(filepath.substr(0, pos-1), canonical);
+        canonical += filepath.substr(pos+1);
+    }
+    else {
+        fs::GetCanonicalPath(filepath, canonical);
+    }
+
+    if(canonical.find(m_WorkingDirectory) != std::string::npos) {
+        std::string relative;
+        fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
+        retval = true;
+    }
+    else {
+        std::cout<< " could not find working directory within canonical path " << std::endl;
+    }
+    return retval;
+} 
+
 FileInfo* FileManager::GetFileInfo(const std::string &filepath)
 {
     FileInfo* pFi = NULL;
-    if(IsPathRelative(filepath)) {
+    std::string relative;
+    if(!IsPathRelative(filepath)) {
+        AttemptToGetRelativePath(filepath, relative);
+    } 
+    else
+        relative = filepath;
+
+    // Attempt to get relative path
+    if(IsPathRelative(relative)) {
         Lock();
         pFi = m_FileInfoFactory.CreateFileInfoObject();
-        m_Manifest.QueryForFile(filepath, *pFi);
+        m_Manifest.QueryForFile(relative, *pFi);
         Unlock();
 
         if(pFi) {

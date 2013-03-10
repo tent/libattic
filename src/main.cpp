@@ -220,9 +220,9 @@ TEST(PUSH, AFILE)
     
     if(status == 0)
     {
-        //status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
-        status = PushFile("./data/freenet.pdf", &PUSHCB);
+        //status = PushFile("./data/freenet.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -273,7 +273,7 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
 
     if(status == ret::A_OK) {
-        status = PullFile("oglisv.pdf", &PULLCB);
+        status = PullFile("./data/oglisv.pdf", &PULLCB);
         //status = PullFile("./data/oa.pdf", &PUSHCB);
         ASSERT_EQ(status, ret::A_OK);
     }

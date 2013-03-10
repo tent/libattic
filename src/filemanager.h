@@ -21,6 +21,8 @@ class FileManager : public MutexClass
                               std::string& relative_out, 
                               std::string& parent_relative_out);
     bool IsPathRelative(const std::string& filepath);
+
+    bool AttemptToGetRelativePath(const std::string& filepath, std::string& out);
 public:
     FileManager();
     FileManager( const std::string &manifestDirectory, 
