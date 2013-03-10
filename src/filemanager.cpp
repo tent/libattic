@@ -130,39 +130,21 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
  
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
 {
-    std::string path, relative, canonical, parent_path, parent_relative;
+    if(IsPathRelative(filepath)) {
+        Lock();
+        m_Manifest.InsertFilePostID(filepath, postid);
+        Unlock();
 
-    path += m_WorkingDirectory;
-    utils::CheckUrlAndAppendTrailingSlash(path);
-    path += filepath;
-
-    fs::GetCanonicalPath(path, canonical);
-    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-    fs::GetParentPath(canonical, parent_path);
-    fs::MakePathRelative(m_WorkingDirectory, parent_path, parent_relative);
-
-
-    std::cout<<" ** setpostid filepath : " << filepath << std::endl;
-    std::cout<<" ** canonical : " << canonical << std::endl;
-    std::cout<<" ** relative : " << relative << std::endl;
-    std::cout<<" ** parent : " << parent_path << std::endl;
-    std::cout<<" ** parent relative : " << parent_relative << std::endl;
-
-    Lock();
-    m_Manifest.InsertFilePostID(relative, postid);
-    Unlock();
-    //m_Manifest.InsertFilePostID(filepath, postid);
-
-    if(parent_relative.empty())
-        parent_relative = cnst::g_szWorkingPlaceHolder;
-
-    // Update folder entry
-    Lock();
-    if(m_Manifest.IsFolderEntryInManifest(relative))
-        m_Manifest.SetFolderEntryMetapostID(relative, postid);
-    else 
-        std::cout<< "Could not find folder entry in MANIFEST " << std::endl;
-    Unlock();
+        Lock();
+        if(m_Manifest.IsFolderEntryInManifest(filepath))
+            m_Manifest.SetFolderEntryMetapostID(filepath, postid);
+        else 
+            std::cout<< "Could not find folder entry in MANIFEST " << std::endl;
+        Unlock();
+    }
+    else {
+        std::cout<<" FILEPATH NOT RELATIVE IN SET POST ID : " << filepath << std::endl;
+    }
 }
 
 void FileManager::SetFolderPostId(const std::string& folderpath, const std::string& postid)
