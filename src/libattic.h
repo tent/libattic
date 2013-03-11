@@ -46,7 +46,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                   const char* szTempDirectory,
                   const char* szLogDirectory,
                   const char* szEntityURL,
-                  unsigned int threadCount = 2);
+                  unsigned int threadCount = 5);
 
 int ShutdownLibAttic(void (*callback)(int, void*));
 
