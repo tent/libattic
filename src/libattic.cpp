@@ -1,4 +1,5 @@
 #include "libattic.h"
+#include "callbackhandler.h"
 
 #include <fstream>
 #include <string>

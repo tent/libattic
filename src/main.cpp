@@ -40,6 +40,7 @@
 #include "eventsystem.h"
 #include "threadworker.h"
 #include "filequeue.h"
+#include "callbackhandler.h"
 
 // Globals
 std::string g_Entity;
