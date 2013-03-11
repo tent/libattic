@@ -52,15 +52,12 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
 {
     std::string name;
     unsigned int size = filepath.size();
-    if(size)
-    {
+    if(size) {
         // Check if passed a directory
-        if(filepath[size-1] != '/')
-        {
+        if(filepath[size-1] != '/') {
             std::vector<std::string> out;
             utils::SplitString(filepath, '/', out);
-            if(out.size())
-            {
+            if(out.size()) {
                 name = out[out.size()-1];
             }
         }
@@ -76,17 +73,6 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk)
     // Check if entry exists
     std::string chunkname;
     Chunk.GetChunkName(chunkname);
-    /*
-    if(m_Chunks.find(chunkname) == m_Chunks.end())
-    {
-        m_Chunks[chunkname] = Chunk;
-        m_ChunkCount = m_Chunks.size();
-    }
-    else
-    {
-        status = ret::A_FAIL_DUPLICATE_ENTRY;
-    }
-    */
 
     m_Chunks[chunkname] = Chunk;
     m_ChunkCount = m_Chunks.size();
@@ -108,16 +94,14 @@ void FileInfo::GetSerializedChunkData(std::string& out) const
     std::vector<std::string> chunkList;
 
     std::string chunk;
-    for(;itr != m_Chunks.end(); itr++)
-    {
+    for(;itr != m_Chunks.end(); itr++) {
         ChunkInfo ci = itr->second;
         chunk.clear();
         jsn::SerializeObject(&ci, chunk);
         chunkList.push_back(chunk);
     }
 
-    if(chunkList.size() > 0)
-    {
+    if(chunkList.size() > 0) {
         Json::Value val;
         jsn::SerializeVector(val, chunkList);
 

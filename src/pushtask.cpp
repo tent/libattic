@@ -335,7 +335,11 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
                 std::string fi_filepath;
                 fi->SetPostVersion(p.GetVersion()); // TODO update this in the manifest
                 fi->GetFilepath(fi_filepath);
+
                 fm->SetFilePostId(fi_filepath, postid);
+                char szVer[256] = {'\0'};
+                snprintf(szVer, 256, "%d", p.GetVersion());
+                fm->SetFileVersion(fi_filepath, std::string(szVer));
                 // set post version
                 // Send Folder Post
                 std::cout<<" sending folder post to filepath : " << fi_filepath << std::endl;

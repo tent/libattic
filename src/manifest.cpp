@@ -524,16 +524,29 @@ bool Manifest::InsertFileInfo(const FileInfo& fi)
 
 bool Manifest::RemoveFileInfo(const std::string &filepath)
 {
-    std::string pexc;
-    pexc += "DELETE FROM \"";
-    pexc += g_infotable;
-    pexc += "\"  WHERE filepath=\"";
-    pexc += filepath;
-    pexc += "\";";
-    return PerformQuery(pexc.c_str());
+    std::string exc;
+    exc += "DELETE FROM \"";
+    exc += g_infotable;
+    exc += "\"  WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+    return PerformQuery(exc);
 }
 
-bool Manifest::InsertFilePostID(const std::string& filepath, const std::string &id)
+bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string& version)
+{
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += g_infotable;
+    exc += "\" SET postversion=\"";
+    exc += version;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc +="\";";
+    return PerformQuery(exc);
+}
+
+bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &id)
 {
     std::string exc;
     exc += "UPDATE \"";
@@ -546,7 +559,7 @@ bool Manifest::InsertFilePostID(const std::string& filepath, const std::string &
     return PerformQuery(exc);
 }
 
-bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::string &id)
+bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::string &id)
 {
     std::string exc;
     exc += "UPDATE ";
@@ -559,7 +572,7 @@ bool Manifest::InsertFileChunkPostID(const std::string &filepath, const std::str
     return PerformQuery(exc);
 }
 
-bool Manifest::SetFolderPostID(const std::string& folderpath, const std::string& folderpostid)
+bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid)
 {
     std::string exc;
     exc += "UPDATE ";
@@ -571,6 +584,8 @@ bool Manifest::SetFolderPostID(const std::string& folderpath, const std::string&
     exc += "\";";
     return PerformQuery(exc);
 }
+
+
 
 bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out)
 {

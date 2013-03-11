@@ -61,7 +61,8 @@ int PullTask::PullFile(const std::string& filepath)
 {
     int status = ret::A_OK;
 
-    FileInfo* fi = GetFileManager()->GetFileInfo(filepath);                                        
+    FileManager* fm = GetFileManager();
+    FileInfo* fi = fm->GetFileInfo(filepath);                                        
 
     if(fi) {
         // Get relative filepath
@@ -95,10 +96,21 @@ int PullTask::PullFile(const std::string& filepath)
                                                fileCred, 
                                                p, 
                                                fi);
+                        // File retrieval was successfull, post step
+                        if(status == ret::A_OK) {
+                            // Update version
+                            char szVer[256] = {'\0'};
+                            snprintf(szVer, 256, "%d", p.GetVersion());
+                            fm->SetFileVersion(relative_filepath, std::string(szVer));
+                        }
+
                     }
                     else {
                         status = ret::A_FAIL_NON_200;
                     }
+
+                    
+
                 }
             }
             else {

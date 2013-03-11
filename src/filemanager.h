@@ -52,6 +52,7 @@ public:
     void SetManifestDirectory(const std::string &filepath)       { m_ManifestDirectory = filepath; }
     void SetWorkingDirectory(const std::string &workingDir)     { m_WorkingDirectory = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { m_TempDirectory = tempDir; }
+    void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFilePostId(const std::string &filepath, const std::string& postid);
     void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
     void SetFolderPostId(const std::string& folderpath, const std::string& postid);

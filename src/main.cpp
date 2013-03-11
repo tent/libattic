@@ -273,8 +273,12 @@ TEST(PULL, AFILE)
     ASSERT_EQ(status, ret::A_OK);
 
     if(status == ret::A_OK) {
-        status = PullFile("./data/oglisv.pdf", &PULLCB);
-        //status = PullFile("./data/oa.pdf", &PUSHCB);
+        std::string rel("./data");
+        std::string filepath;
+        fs::GetCanonicalPath(rel, filepath);
+        filepath += "/oglisv.pdf";
+
+        status = PullFile(filepath.c_str(), &PULLCB);
         ASSERT_EQ(status, ret::A_OK);
     }
 

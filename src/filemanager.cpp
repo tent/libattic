@@ -128,11 +128,21 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     Unlock();
 }
  
+
+void FileManager::SetFileVersion(const std::string& filepath, const std::string& version)
+{
+    if(IsPathRelative(filepath)) {
+        Lock();
+        m_Manifest.UpdateFileVersion(filepath, version);
+        Unlock();
+    }
+}
+
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
 {
     if(IsPathRelative(filepath)) {
         Lock();
-        m_Manifest.InsertFilePostID(filepath, postid);
+        m_Manifest.UpdateFilePostID(filepath, postid);
         Unlock();
 
         Lock();
@@ -159,7 +169,7 @@ void FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
 
     Lock();
     if(m_Manifest.IsFolderInManifest(parent_relative))
-        m_Manifest.SetFolderPostID(parent_relative, postid);
+        m_Manifest.UpdateFolderPostID(parent_relative, postid);
     else
         std::cout<<" COULD NOT FIND FOLDER IN MANIFEST " << std::endl;
     Unlock();
@@ -168,7 +178,7 @@ void FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
 
 void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid)
 {
-    m_Manifest.InsertFileChunkPostID(filepath, postid);
+    m_Manifest.UpdateFileChunkPostID(filepath, postid);
 }
 
 FileInfo* FileManager::CreateFileInfo() {
@@ -216,21 +226,28 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
 {
     bool retval = false;
     std::cout<<" attempting to get a relative path " << std::endl;
+    std::cout<<" for : " << filepath << std::endl;
+    std::string rel;
+    fs::MakePathRelative(m_WorkingDirectory, filepath, rel);
+    std::cout<<" rel : " << rel << std::endl;
     std::string canonical;
     int pos = 0;
     int last = 0;
     while(pos != std::string::npos) {
-        last = 0;
+        last = pos;
         pos = filepath.find("/", pos + 1);
     }
 
     if(last) {
         fs::GetCanonicalPath(filepath.substr(0, pos-1), canonical);
+        std::cout<<"can?onical? : " << canonical << std::endl;
         canonical += filepath.substr(pos+1);
     }
     else {
+        std::cout<<" getting canonical " << std::endl;
         fs::GetCanonicalPath(filepath, canonical);
     }
+    std::cout<<" canonical : " << canonical << std::endl;
 
     if(canonical.find(m_WorkingDirectory) != std::string::npos) {
         std::string relative;

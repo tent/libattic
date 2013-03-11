@@ -94,6 +94,7 @@ void SyncFileTask::RunTask()
                 // compare versions
                 if(pLocal_fi->GetPostVersion() < version) {
                     std::cout<<" VERSION : " << version << std::endl;
+                    std::cout<<" LOCAL VERSION " << pLocal_fi->GetPostVersion() << std::endl;
                     // if version on the server is newer, pull
                     bPull = true;
                 }
@@ -216,6 +217,7 @@ int SyncFileTask::RetrieveChunkInfo(AtticPost& post, FileInfo* fi)
             std::string url = chunkposturl;
             url += postid;
 
+            std::cout<<" getting : " << url << std::endl;
             Response response;
             netlib::HttpGet( url, 
                              NULL,
@@ -228,8 +230,8 @@ int SyncFileTask::RetrieveChunkInfo(AtticPost& post, FileInfo* fi)
             if(response.code == 200) {
                 ChunkPost cp;
                 jsn::DeserializeObject(&cp, response.body);
+
                 if(cp.GetChunkSize()) {
-                    std::cout<<" THIS ChunkPost : " << cp.GetChunkSize() << std::endl;
                     std::vector<ChunkInfo>* ciList = cp.GetChunkList();
                     std::vector<ChunkInfo>::iterator itr = ciList->begin();
 

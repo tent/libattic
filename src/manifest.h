@@ -63,8 +63,10 @@ public:
 
     // File Info
     bool InsertFileInfo(const FileInfo& fi);
-    bool InsertFilePostID(const std::string &filename, const std::string &id);
-    bool InsertFileChunkPostID(const std::string &filename, const std::string &id);
+    bool UpdateFilePostID(const std::string &filename, const std::string &id);
+    bool UpdateFileChunkPostID(const std::string &filename, const std::string &id);
+
+    bool UpdateFileVersion(const std::string& filepath, const std::string& version);
 
     bool QueryForFile(const std::string &filename, FileInfo& out);
     int QueryAllFiles(std::vector<FileInfo>& out);
@@ -77,7 +79,7 @@ public:
     bool IsFolderInManifestWithID(const std::string& folderid);
     bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
 
-    bool SetFolderPostID(const std::string& folderpath, const std::string& folderpostid);
+    bool UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid);
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
 

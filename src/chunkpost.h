@@ -7,8 +7,7 @@
 #include <map>
 
 #include "post.h"
-
-class ChunkInfo;
+#include "chunkinfo.h"
 
 class ChunkPost : public Post
 {
@@ -21,7 +20,7 @@ public:
 
     int SetChunkInfoList(std::map<std::string, ChunkInfo>& pList);
 
-    int GetChunkSize() { m_ChunkList.size(); }
+    int GetChunkSize() { return m_ChunkList.size(); }
     std::vector<ChunkInfo>* GetChunkList() { return &m_ChunkList; }
 
 private:
