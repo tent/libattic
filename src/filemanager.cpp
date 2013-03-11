@@ -117,10 +117,8 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     // Folder operations
     Lock();
     if(!m_Manifest.IsFolderInManifest(parent)){
-        std::string postid;
-        pFi->GetPostID(postid);
         // Create folder entry
-        m_Manifest.InsertFolderInfo(parent, postid);
+        m_Manifest.InsertFolderInfo(parent, "");
     }
     Unlock();
 

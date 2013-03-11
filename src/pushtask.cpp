@@ -86,6 +86,7 @@ int PushTask::PushFile(const std::string& filepath)
         ConstructPostUrl(posturl);
 
         std::cout<<" PUSHING PATH : " << filepath << std::endl;
+        std::cout<<" POST URL : " << posturl << std::endl;
 
         // Retrieve file info if already exists
         FileInfo* fi = RetrieveFileInfo(filepath);
@@ -165,6 +166,7 @@ int PushTask::PushFile(const std::string& filepath)
                     jsn::SerializeObject(&p, bodyBuffer);
                     
                     // Set
+                    std::cout<<" Updating chunk post metadata : " << posturl << std::endl;
                     Response metaResp;
                     AccessToken* at = GetAccessToken();
                     status = netlib::HttpPut( posturl,
@@ -424,6 +426,12 @@ int PushTask::SendFolderPost(const FileInfo* fi)
         if(response.code == 200) {
             FolderPost p;
             jsn::DeserializeObject(&p, response.body);
+
+            std::string buffer;
+            jsn::SerializeObject(&p, buffer);
+            std::cout<<" retreived body : " << buffer << std::endl;
+
+
             
             std::string postid;
             p.GetID(postid);
