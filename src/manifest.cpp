@@ -650,8 +650,6 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string
             crypto::GenerateRandomString(folderid);
         }
 
-        //std::cout<<" FOLDER ID : " << folderid << std::endl;
-
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
         exc += g_foldertable;

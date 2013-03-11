@@ -430,8 +430,6 @@ int PushTask::SendFolderPost(const FileInfo* fi)
             std::string buffer;
             jsn::SerializeObject(&p, buffer);
             std::cout<<" retreived body : " << buffer << std::endl;
-
-
             
             std::string postid;
             p.GetID(postid);

@@ -201,17 +201,24 @@ int PullTask::RetreiveFile( const std::string filepath,
     AccessToken* at = GetAccessToken();
     
     Credentials fCred = fileCred;
+    // This should be relative ie: <working>/some/path/file.txt
     std::cout<< " filepath : " << filepath << std::endl;
+
+
 
     std::string path;
     FileManager* fm = GetFileManager();
     fm->GetCanonicalFilepath(filepath, path);
 
     std::cout<< " path : " << path << std::endl;
+    // check if we need to create folders
+    fs::CreateDirectoryTree(path);
 
     std::string fileKey;
     fCred.GetKey(fileKey);
     std::cout<< " file key : " << fileKey << std::endl;
+
+
 
     std::ofstream ofs;
     ofs.open(path.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);

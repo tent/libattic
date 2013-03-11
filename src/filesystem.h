@@ -11,13 +11,21 @@
 
 namespace fs
 {
-    static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, boost::filesystem::path a_To );
+    static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
+                                                     boost::filesystem::path a_To );
 
     static void MakePathRelative( const std::string& rootPath, 
                                   const std::string& secondPath, 
                                   std::string& relativeOut);
 
-    static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, boost::filesystem::path a_To )
+    static int GetCanonicalPath(const std::string& path, std::string& out);
+    static int GetParentPath(const std::string& path, std::string& out);
+    static int CreateDirectory(const std::string& path);
+    static void CreateDirectoryTree(const std::string& filepath);
+    static bool CheckFileExists(const std::string& filepath);
+
+    static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
+                                                     boost::filesystem::path a_To )
     {
         a_From = boost::filesystem::absolute( a_From ); a_To = boost::filesystem::absolute( a_To );
         boost::filesystem::path ret;
@@ -46,8 +54,7 @@ namespace fs
         relativeOut = MakePathRelative( root, second ).string();
     }
 
-    static int GetCanonicalPath(const std::string& path, std::string& out)
-    {
+    static int GetCanonicalPath(const std::string& path, std::string& out) {
         int status = ret::A_OK;
         boost::filesystem::path root(path.c_str());
 
@@ -71,8 +78,7 @@ namespace fs
         return status;
     }
 
-    static int GetParentPath(const std::string& path, std::string& out)
-    {
+    static int GetParentPath(const std::string& path, std::string& out) {
         int status = ret::A_OK;
 
         std::string ppath;
@@ -86,8 +92,7 @@ namespace fs
         return status;
     }
 
-    static int CreateDirectory(const std::string& path)
-    {
+    static int CreateDirectory(const std::string& path) {
         std::cout<<" creating directory ... " << std::endl;
         int status = ret::A_OK;
 
@@ -104,8 +109,22 @@ namespace fs
         return status;
     }
 
-    static bool CheckFileExists(const std::string& filepath) 
-    {
+    static void CreateDirectoryTree(const std::string& filepath) {
+        // Pass in full filepath /root/directory/some/other/file.txt
+        try {
+            boost::filesystem::path root(filepath);
+            boost::filesystem::path parent = root.parent_path();
+            if(!boost::filesystem::exists(root)) {
+                std::cout<<" folder does not exist : " << parent.string() << std::endl;
+                boost::filesystem::create_directories(parent);
+            }
+        }
+        catch(boost::filesystem::filesystem_error& er) {
+            std::cout<<" error : " << er.what() << std::endl; 
+        }
+    }
+
+    static bool CheckFileExists(const std::string& filepath) {
         if(boost::filesystem::exists(filepath))
             return true;
         return false;
