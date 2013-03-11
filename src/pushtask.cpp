@@ -15,6 +15,7 @@
 #include "conoperations.h"
 #include "jsonserializable.h"
 #include "rollsum.h"
+#include "eventsystem.h"
 
 #include "log.h"
 
@@ -60,7 +61,9 @@ void PushTask::RunTask()
     std::string filepath;
     GetFilepath(filepath);
 
+    event::RaiseEvent(Event::PUSH, Event::START, filepath, NULL);
     int status = PushFile(filepath);
+    event::RaiseEvent(Event::PUSH, Event::DONE, filepath, NULL);
 
     std::cout<<" finishing push task ... " << std::endl;
     

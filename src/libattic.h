@@ -57,6 +57,9 @@ int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
 
 
+// Register for Events
+void RegisterForPullNotify(void (*callback)(int, int, const char*));
+void RegisterForPushNotify(void (*callback)(int, int, const char*));
 
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)

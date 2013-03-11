@@ -8,28 +8,27 @@
 #include "eventsystem.h"
 
 class CallbackHandler : public EventListener {
+
+    void Notify(const Event& event);
 public:
-    typedef void(*EventCallback)(int, char*);
+    typedef void(*EventCallback)(int, int, const char*);
 
-    CallbackHandler() {}
-    ~CallbackHandler() {}
+    CallbackHandler();
+    ~CallbackHandler();
 
-    void RegisterCallback(Event::EventType type, EventCallback cb) {
-        m_CallbackMap[type].push_back(cb);
-    }
+    void Initialize();
 
-    void OnEventRaised(const Event& event) {
-        switch(event.type) {
-            default:
-                break;
-        };
-
-    }
+    void RegisterCallback(Event::EventType type, EventCallback cb);
+    void OnEventRaised(const Event& event);
 
 private:
     typedef std::deque<EventCallback> CallbackList;
     std::map<Event::EventType, CallbackList>  m_CallbackMap;
 
 };
+
 #endif
+
+
+
 

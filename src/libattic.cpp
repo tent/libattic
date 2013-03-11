@@ -36,6 +36,7 @@
 #include "filesystem.h"
 
 #include "eventsystem.h"
+#include "callbackhandler.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -60,6 +61,7 @@ static EntityManager*       g_pEntityManager = NULL;
 static TaskManager*         g_pTaskManager = NULL;
 
 static AccessToken          g_AccessToken;
+static CallbackHandler      g_CallbackHandler;
 //static TaskArbiter g_Arb;
 
 // Directories
@@ -174,7 +176,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                                               g_WorkingDirectory,
                                               g_ConfigDirectory);
 
-
+        g_CallbackHandler.Initialize();
     }
     else {
         status = ret::A_FAIL_LOAD_APP_DATA;
@@ -1180,3 +1182,15 @@ int GetActiveDownloadSpeed()
         g_pTaskManager->GetActiveDownloadSpeed();
     return speed; 
 }
+
+void RegisterForPullNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(Event::PULL, callback);
+}
+
+void RegisterForPushNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(Event::PUSH, callback);
+}
+
+

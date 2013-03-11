@@ -4,12 +4,12 @@
 
 #include "filesystem.h"
 #include "filemanager.h"
-
 #include "errorcodes.h"
 #include "utils.h"
 #include "conoperations.h"
 #include "compression.h"
 #include "syncfiletask.h"
+#include "eventsystem.h"
 
 
 PullTask::PullTask( TentApp* pApp, 
@@ -51,7 +51,10 @@ void PullTask::RunTask()
 {
     std::string filepath;
     GetFilepath(filepath);
+
+    event::RaiseEvent(Event::PULL, Event::START, filepath, NULL);
     int status = PullFile(filepath);
+    event::RaiseEvent(Event::PULL, Event::DONE, filepath, NULL);
 
     Callback(status, (void*)filepath.c_str());
     SetFinishedState();

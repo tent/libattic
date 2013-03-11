@@ -10,6 +10,13 @@
 
 struct Event
 {
+    enum EventStatus {
+        START = 0,
+        RUNNING,
+        PAUSED,
+        DONE,
+    };
+
     enum EventType {
         PUSH = 0,
         PULL,
@@ -24,6 +31,7 @@ struct Event
         FILE_UNLOCK
     };
 
+    EventStatus status = START;
     EventType type;
     std::string value;
     void (*callback)(int, void*);
@@ -81,6 +89,21 @@ namespace event
         event.callback = callback;
         RaiseEvent(event);
     }
+
+    static void RaiseEvent( const Event::EventType type,
+                            const Event::EventStatus status,
+                            const std::string& value,
+                            void (*callback)(int, void*))
+    {
+        Event event;
+        event.type = type;
+        event.status = status;
+        event.value = value;
+        event.callback = callback;
+        RaiseEvent(event);
+    }
+
+            
 
     static void ShutdownEventSystem()
     {
