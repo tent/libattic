@@ -58,6 +58,13 @@ int GetPhraseStatus();
 
 
 // Register for Events
+// Event Type, Event Status, data
+//  EventStatus:
+//    - START = 0,
+//    - RUNNING,                     
+//    - PAUSED,
+//    - DONE,
+
 void RegisterForPullNotify(void (*callback)(int, int, const char*));
 void RegisterForPushNotify(void (*callback)(int, int, const char*));
 

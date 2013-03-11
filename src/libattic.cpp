@@ -449,8 +449,7 @@ int LoadAppFromFile()
 
     status = g_pApp->LoadFromFile(szSavePath);
 
-    if(status == ret::A_OK)
-    {
+    if(status == ret::A_OK) {
         std::string buffer;
         jsn::SerializeObject(g_pApp, buffer);
         //std::cout<<" BUFFER : " << buffer << std::endl;
@@ -475,17 +474,8 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     int status = IsLibInitialized();
 
     if(status == ret::A_OK){
-        /*
-        Event event;
-        event.type = Event::REQUEST_PULL;
-        event.value = szFilePath;
-        event.callback = callback;
-
-        evnt::RaiseEvent(event);
-        */
         std::string filepath(szFilePath);
         event::RaiseEvent(Event::REQUEST_PULL, filepath, callback);
-        // status = g_pTaskManager->DownloadFile(szFilePath, callback);
     }
 
     return ret::A_OK;
@@ -1151,32 +1141,28 @@ int FreeFileList(char** pList, int stride)
     }
 }
 
-int GetActivePushTaskCount()
-{
+int GetActivePushTaskCount() {
     int taskcount = -1;
     if(g_pTaskManager)
         taskcount = g_pTaskManager->TaskCount(Task::PUSH);
     return taskcount;
 }
 
-int GetActivePullTaskCount()
-{
+int GetActivePullTaskCount() {
     int taskcount = -1;
     if(g_pTaskManager)
         taskcount = g_pTaskManager->TaskCount(Task::PULL);
     return taskcount;
 }
 
-int GetActiveUploadSpeed()
-{
+int GetActiveUploadSpeed() {
     int speed = -1;
     if(g_pTaskManager)
         speed = g_pTaskManager->GetActiveUploadSpeed();
     return speed; 
 }
 
-int GetActiveDownloadSpeed()
-{
+int GetActiveDownloadSpeed() {
     int speed = -1;
     if(g_pTaskManager)
         g_pTaskManager->GetActiveDownloadSpeed();
