@@ -84,12 +84,13 @@ void SyncFileTask::RunTask()
         // Get Local file info
         FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
 
+        bool bPull = false;
         if(pLocal_fi) {
             std::string canonical_path;
             fm->GetCanonicalFilepath(filepath, canonical_path);
 
             std::cout<< "checking file....." << std::endl;
-            bool bPull = false;
+
             if(fm->DoesFileExist(filepath)) {
                 // compare versions
                 if(pLocal_fi->GetPostVersion() < version) {
@@ -119,7 +120,15 @@ void SyncFileTask::RunTask()
             std::cout<<" pullling ? : " << bPull << std::endl;
             // Update and insert to manifest
             //
-            if(bPull) {
+        
+        }
+        else {
+            std::cout<< " NULL local file info " << std::endl;
+            std::cout<< " just pull ... " << std::endl;
+            bPull = true;
+        }
+
+        if(bPull) {
                 // retreive chunk info
                 status = RetrieveChunkInfo(p, &fi);
                 if(status == ret::A_OK) {
@@ -140,10 +149,6 @@ void SyncFileTask::RunTask()
             else {
                 std::cout<<" not pulling ... " << std::endl;
             }
-        }
-        else {
-            std::cout<< " NULL local file info " << std::endl;
-        }
 
 
     }

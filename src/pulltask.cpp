@@ -49,12 +49,15 @@ PullTask::~PullTask()
 
 void PullTask::RunTask()
 {
+    std::cout<<" RUNNING PULL TASK " << std::endl;
     std::string filepath;
     GetFilepath(filepath);
 
     event::RaiseEvent(Event::PULL, Event::START, filepath, NULL);
     int status = PullFile(filepath);
     event::RaiseEvent(Event::PULL, Event::DONE, filepath, NULL);
+
+    std::cout<<" PULL TASK FINISHED STATUS : " << status << std::endl;
 
     Callback(status, (void*)filepath.c_str());
     SetFinishedState();
@@ -111,9 +114,6 @@ int PullTask::PullFile(const std::string& filepath)
                     else {
                         status = ret::A_FAIL_NON_200;
                     }
-
-                    
-
                 }
             }
             else {

@@ -62,13 +62,27 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     std::string filepath, relative, canonical;
     pFi->GetFilepath(filepath);
 
-    fs::GetCanonicalPath(filepath, canonical);
-    fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
-    // TODO :: fix for windows
-    relative = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
-    //if(parent_relative.empty())
-    if(canonical.empty()) {
-        std::cout<<" FILEMANAGER - CANONICAL IS EMPTY - " << filepath << std::endl;
+    // If filepath is already relative
+    if(IsPathRelative(filepath)) {
+        // set canonical
+        std::cout<<" PATH IS RELATIVE " << std::endl;
+        int pos = filepath.find(cnst::g_szWorkingPlaceHolder);
+        canonical = m_WorkingDirectory + filepath.substr((pos+strlen(cnst::g_szWorkingPlaceHolder)));
+        std::cout<<" working : " << m_WorkingDirectory << std::endl;
+        std::cout<<" CANONICAL IS : " << canonical << std::endl;
+        relative = filepath;
+    }
+    else {
+        fs::GetCanonicalPath(filepath, canonical);
+        fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        // TODO :: fix for windows
+        relative = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
+
+        std::cout<<" RELATIVE : " << relative << std::endl;
+        //if(parent_relative.empty())
+        if(canonical.empty()) {
+            std::cout<<" FILEMANAGER - CANONICAL IS EMPTY - " << filepath << std::endl;
+        }
     }
     // Extract parent relative :
     std::string filename;
@@ -191,13 +205,22 @@ FileInfo* FileManager::CreateFileInfo() {
 
 void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
     std::string relative, canonical;
-    int pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
-    if(pos != std::string::npos) {
-        out = m_WorkingDirectory + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
+
+    std::cout<<" RELATIVE IN : " << relativepath << std::endl;
+    if(IsPathRelative(relativepath)) {
+        int pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
+        if(pos != std::string::npos) {
+            out = m_WorkingDirectory + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
+            std::cout<<" OUT : " << out << std::endl;
+        }
+        else {
+            std::cout << " MALFORMED RELATIVE PATH " << relativepath << std::endl;
+        }
     }
     else {
-        std::cout << " MALFORMED RELATIVE PATH " << relativepath << std::endl;
+        std::cout<< " PATH NOT RELATIVE " << std::endl;
     }
+
 }
 
 bool FileManager::IsPathRelative(const std::string& filepath)
