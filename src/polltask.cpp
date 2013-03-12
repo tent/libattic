@@ -80,6 +80,7 @@ void PollTask::RunTask()
     int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
+        std::cout<<" starting to poll ... " << std::endl;
       //  polltask::g_pCurrentPollTask = this;
        // m_bRunning = true;
         //while(m_bRunning) {
@@ -97,6 +98,7 @@ void PollTask::RunTask()
         //polltask::g_pCurrentPollTask = NULL;
     }
     else {
+        std::cout<<" FAIL MULTI INSTANCE " << std::endl;
         status = ret::A_FAIL_RUNNING_SINGLE_INSTANCE;
         Callback(status, NULL);
         SetFinishedState();
@@ -104,8 +106,8 @@ void PollTask::RunTask()
 
 }
 
-int PollTask::SyncFolderPosts()
-{
+int PollTask::SyncFolderPosts() {
+    std::cout<<" sync folder posts ... " << std::endl;
     int status = ret::A_OK;
     // Get Folder Posts
     int postcount = GetFolderPostCount();

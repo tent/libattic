@@ -134,8 +134,7 @@ int PullTask::PullFile(const std::string& filepath)
     return status;
 }
 
-int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out)
-{
+int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out) {
     int status = ret::A_OK;
     if(fi) {
         std::string posturl;
@@ -207,8 +206,6 @@ int PullTask::RetreiveFile( const std::string filepath,
     // This should be relative ie: <working>/some/path/file.txt
     std::cout<< " filepath : " << filepath << std::endl;
 
-
-
     std::string path;
     FileManager* fm = GetFileManager();
     fm->GetCanonicalFilepath(filepath, path);
@@ -271,6 +268,8 @@ int PullTask::RetreiveFile( const std::string filepath,
                     // Decompress
                     std::string decompressedChunk;
                     compress::DecompressString(decryptedChunk, decompressedChunk);
+                    //Verify chunk Check plaintext hmac
+                    
                     // Write out
                     ofs.write(decompressedChunk.c_str(), decompressedChunk.size());
                 }
