@@ -15,13 +15,14 @@ class PullTask: public TentTask
     int GetChunkPost(FileInfo* fi, Response& responseOut);
 
     int PullFile(const std::string& filepath);
-    int RetreiveFile( const std::string filepath, 
+    int RetrieveFile( const std::string filepath, 
+
                       const std::string postpath, 
                       const Credentials& fileCred,
                       Post& post,
                       FileInfo* fi);
 
-    int RetreiveFileCredentials(FileInfo* fi, Credentials& out);
+    int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
     int RetrieveAttachment( const std::string& url, 
                             const AccessToken* at, 
                             std::string& outBuffer);

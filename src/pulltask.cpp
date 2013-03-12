@@ -79,7 +79,7 @@ int PullTask::PullFile(const std::string& filepath)
         fi->GetFilepath(relative_filepath);
 
         Credentials fileCred;
-        status = RetreiveFileCredentials(fi, fileCred);
+        status = RetrieveFileCredentials(fi, fileCred);
 
         std::string chunkpostid;
         fi->GetChunkPostID(chunkpostid);
@@ -100,7 +100,7 @@ int PullTask::PullFile(const std::string& filepath)
                     if(response.code == 200) {
                         Post p;
                         jsn::DeserializeObject(&p, response.body);
-                        status = RetreiveFile( relative_filepath, 
+                        status = RetrieveFile( relative_filepath, 
                                                chunkposturl, 
                                                fileCred, 
                                                p, 
@@ -134,7 +134,7 @@ int PullTask::PullFile(const std::string& filepath)
     return status;
 }
 
-int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out) {
+int PullTask::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
     int status = ret::A_OK;
     if(fi) {
         std::string posturl;
@@ -187,7 +187,7 @@ int PullTask::RetreiveFileCredentials(FileInfo* fi, Credentials& out) {
     return status;
 }
 
-int PullTask::RetreiveFile( const std::string filepath, 
+int PullTask::RetrieveFile( const std::string filepath, 
                             const std::string postpath, 
                             const Credentials& fileCred,
                             Post& post,
@@ -313,6 +313,7 @@ int PullTask::RetreiveFile( const std::string filepath,
 
         ofs.close();
         // Copy
+        fs::MoveFile(temppath, path);
     }
     else {
         std::cout<<" FAIL TO OPEN FILE " << std::endl;

@@ -131,7 +131,10 @@ namespace fs
     }
 
     static void MoveFile(const std::string& originalpath, const std::string& newpath) {
-
+        boost::filesystem::path from_fp(originalpath);
+        CreateDirectoryTree(newpath);
+        boost::filesystem::path to_fp(newpath);
+        boost::filesystem::rename(from_fp, to_fp);
     }
 };
 
