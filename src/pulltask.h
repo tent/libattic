@@ -1,5 +1,3 @@
-
-
 #ifndef PULLTASK_H_
 #define PULLTASK_H_
 #pragma once
@@ -10,8 +8,7 @@
 #include "response.h"
 #include "post.h"
 
-class PullTask: public TentTask
-{
+class PullTask: public TentTask {
     int GetChunkPost(FileInfo* fi, Response& responseOut);
 
     int PullFile(const std::string& filepath);
@@ -43,16 +40,15 @@ public:
 
     ~PullTask();
 
-    virtual void OnStart() { } 
-    virtual void OnPaused() { } 
-    virtual void OnFinished() { }
+    virtual void OnStart() {} 
+    virtual void OnPaused() {} 
+    virtual void OnFinished() {}
 
     void RunTask();
 
     int GetDownloadSpeed();
 
 private:
-   
 };
 
 #endif

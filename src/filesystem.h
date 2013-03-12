@@ -9,8 +9,7 @@
 
 #include "errorcodes.h"
 
-namespace fs
-{
+namespace fs {
     static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
                                                      boost::filesystem::path a_To );
 

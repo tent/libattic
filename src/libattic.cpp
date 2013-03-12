@@ -37,6 +37,7 @@
 
 #include "eventsystem.h"
 #include "callbackhandler.h"
+#include "passphrase.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -96,8 +97,6 @@ int LoadMasterKey(); // call with a valid phrase token
 
 void GetPhraseTokenFilepath(std::string& out);
 void GetEntityFilepath(std::string& out);
-
-int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey);
 
 int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
 
@@ -553,35 +552,7 @@ int GetCurrentTasks(void (*callback)(char* pArr, int count))
     return status;
 }
 
-int ChangePassphrase(const char* szOld, const char* szNew)
-{
-    int status = IsLibInitialized(false);
 
-    if(status == ret::A_OK)
-    {
-        // TODO :: make this a task
-        // TODO :: this should be a task
-        //         pull all files
-        //         decrypt them with the old key
-        //         re-encrypt them with the new key
-        status = EnterPassphrase(szOld);
-
-        if(status == ret::A_OK)
-        {
-            // Get the master key
-            MasterKey mk;
-            g_pCredManager->GetMasterKeyCopy(mk);
-
-            // Register new passphrase with attic
-            std::string key;
-            mk.GetMasterKey(key);
-
-            status = RegisterPassphraseWithAttic(szNew, key);
-        }
-    }
-
-    return status;
-}
 
 int GetMasterKeyFromProfile(std::string& out)
 {
@@ -664,9 +635,43 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
     return status;
 }
 
-// Master Key
-int EnterPassphrase(const char* szPass)
-{
+int RegisterPassphrase(const char* szPass, bool override) {
+    int status = IsLibInitialized(false);
+
+    if(status == ret::A_OK) {
+        // TODO :: probably should check if a passphrase already exists
+        // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
+        //          - at the begining of the master key append 4 random bytes repeated twice,
+        //          - check the first 4 against the latter 4 and if they are the same you entered
+        //            the passphrase in correctly.
+        //          - obviously skip the first 8 bytes when getting the master key
+        //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
+
+        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+
+        if(!g_Entity.HasAtticProfileMasterKey() || override) {
+            // Register a new passphrase.
+            std::string key;
+            // Enter passphrase to generate key.
+            g_pCredManager->GenerateMasterKey(key); // Generate random master key
+
+            status = pass::RegisterPassphraseWithAttic(std::string(szPass), 
+                                                       key, // master key
+                                                       g_Pt,
+                                                       g_pCredManager,
+                                                       g_Entity);
+             if(status == ret::A_OK)
+                SavePhraseToken(g_Pt);
+        }
+
+        if(status == ret::A_OK)
+            EnterPassphrase(szPass); // Load phrase token, and write out to ent file
+    }
+
+    return status;
+}
+
+int EnterPassphrase(const char* szPass) {
     int status = IsLibInitialized(false);
 
     if(status == ret::A_OK) {
@@ -708,180 +713,36 @@ int EnterPassphrase(const char* szPass)
     return status;
 }
 
-int ConstructMasterKey(const std::string& masterkey, MasterKey& out)
-{
-    int status = ret::A_OK;
-
-    // Enter passphrase to generate key.
-    g_pCredManager->RegisterPassphrase(masterkey, g_Pt); // This generates a random salt
-                                                         // Sets Phrase key
-    g_pCredManager->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
-    g_pCredManager->SetMasterKey(out);
-
-    return status;
-}
-
-int EncryptKeyWithPassphrase( const std::string& key, 
-                              const std::string& phrasekey, 
-                              const std::string& salt,
-                              std::string& keyOut)
-{
-    int status = ret::A_OK;
-
-    // encryption credentials
-    Credentials enc;
-    enc.SetKey(phrasekey);
-    enc.SetIv(salt);
-
-    //std::cout<< "Encrypting key with passphrase key : " << phrasekey << std::endl;
-    //std::cout<< "Using iv : " << salt << std::endl;
-    // Encrypt MasterKey with passphrase key
-    std::string out;
-    crypto::EncryptStringCFB(key, enc, keyOut);
-    
-    return status;
-} 
-
-// TODO :: this can be abstracted somewhere
-int RegisterPassphraseProfilePost( const std::string& encryptedKey, const std::string& salt)
-{
-    int status = ret::A_OK;
-
-    // Create Profile post for 
-    AtticProfileInfo* pAtticProf = new AtticProfileInfo();
-    // MasterKey with sentinel and Salt
-    pAtticProf->SetMasterKey(encryptedKey);
-    pAtticProf->SetSalt(salt);
-
-    // Save and post
-    std::string output;
-    jsn::SerializeObject(pAtticProf, output);
-
-    std::string url;
-    g_Entity.GetFrontProfileUrl(url);
-
-    AccessToken at;
-    if(g_pCredManager) {
-        g_pCredManager->GetAccessTokenCopy(at);
-    }
-    else {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
-
-    if(status == ret::A_OK) {
-        // TODO :: add the type as url params and just pass the attic profile type
-        // UrlParams params
-        std::string hold(cnst::g_szAtticProfileType);
-        hold = netlib::UriEncode(hold);
-
-        url.append("/");
-        url.append(hold);
-
-        Response resp;
-        netlib::HttpPut(url, NULL, output, &at, resp);
-
-        if(resp.code != 200) {
-            status = ret::A_FAIL_NON_200;
-            alog::Log(Logger::DEBUG, "RegisterPassphraseProfilePost : \n" +
-                      resp.CodeAsString() +
-                      resp.body);
-        }
-    }
-
-    return status;
-}
-
-int RegisterPassphraseWithAttic(const std::string& pass, const std::string& masterkey)
-{
-    int status = ret::A_OK;
-    // Have the passphrase, and the master key
-    // generate random iv and salt
-    // Inward facing method
-    // Register a new passphrase.
-
-    /*
-    std::string gptphrasekey, gptdirtykey;
-    g_Pt.GetPhraseKey(gptphrasekey);
-    g_Pt.GetDirtyKey(gptdirtykey);
-    std::cout<<" Phrase key : " << gptphrasekey << std::endl;
-    std::cout<<" Dirty key : " << gptdirtykey << std::endl;
-    */
-
-    MasterKey mk;
-    status = ConstructMasterKey(masterkey, mk); // also generates salt, inserts into 
-                                                // phrase token
-
-    std::string genmk; mk.GetMasterKey(genmk);
-
-    if(status == ret::A_OK) {
-        // Insert sentinel value
-        mk.InsertSentinelIntoMasterKey();
-        // Get Salt
-        std::string salt;
-        g_Pt.GetSalt(salt);  // Phrase Token
-        // Get Dirty Master Key (un-encrypted master key with sentinel values)
-        std::string dirtykey;
-        mk.GetMasterKeyWithSentinel(dirtykey);
-        g_Pt.SetDirtyKey(dirtykey); // Set Phrase Token
-        // Enter passphrase to generate key.
-        std::string phraseKey;
-        status = g_pCredManager->EnterPassphrase(pass, salt, phraseKey);
-        if(status == ret::A_OK) {
-            g_Pt.SetPhraseKey(phraseKey);
-            // Setup passphrase cred to encrypt master key
-            std::string encryptedkey;
-            status = EncryptKeyWithPassphrase( dirtykey, 
-                                               phraseKey, 
-                                               salt, 
-                                               encryptedkey);
-            if(status == ret::A_OK) {
-                status = RegisterPassphraseProfilePost( encryptedkey, 
-                                                        salt);
-                if(status == ret::A_OK)
-                    SavePhraseToken(g_Pt);
-            }
-        }
-    }
-    else {
-        status = ret::A_FAIL_INVALID_MASTERKEY;
-    }
-       
-    return status; 
-}
-
-int RegisterPassphrase(const char* szPass, bool override)
-{
+int ChangePassphrase(const char* szOld, const char* szNew) {
     int status = IsLibInitialized(false);
 
     if(status == ret::A_OK) {
-        // TODO :: probably should check if a passphrase already exists
-        // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
-        //          - at the begining of the master key append 4 random bytes repeated twice,
-        //          - check the first 4 against the latter 4 and if they are the same you entered
-        //            the passphrase in correctly.
-        //          - obviously skip the first 8 bytes when getting the master key
-        //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
+        status = EnterPassphrase(szOld);
 
-        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+        if(status == ret::A_OK) {
+            // Get the master key
+            MasterKey mk;
+            g_pCredManager->GetMasterKeyCopy(mk);
 
-        if(!g_Entity.HasAtticProfileMasterKey() || override) {
-            // Register a new passphrase.
-            std::string mk;
-            // Enter passphrase to generate key.
-            g_pCredManager->GenerateMasterKey(mk); // Generate random master key
+            // Register new passphrase with attic
+            std::string key;
+            mk.GetMasterKey(key);
 
-            status = RegisterPassphraseWithAttic(szPass, mk);
+            status = pass::RegisterPassphraseWithAttic( std::string(szNew), 
+                                                        key, // master key
+                                                        g_Pt,
+                                                        g_pCredManager,
+                                                        g_Entity);
+            if(status == ret::A_OK)
+                SavePhraseToken(g_Pt);
+
         }
-
-        if(status == ret::A_OK)
-            EnterPassphrase(szPass); // Load phrase token, and write out to ent file
     }
 
     return status;
 }
 
-int LoadPhraseToken()
-{
+int LoadPhraseToken() {
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
 
@@ -931,15 +792,13 @@ int LoadPhraseToken()
     return status; 
 }
 
-int SavePhraseToken(PhraseToken& pt)
-{
+int SavePhraseToken(PhraseToken& pt) {
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
     return g_Pt.SaveToFile(ptpath);
 }
 
-int PhraseStatus()
-{
+int PhraseStatus() {
     int status = ret::A_OK;
 
     if(!g_bEnteredPassphrase)
@@ -948,8 +807,7 @@ int PhraseStatus()
     return status;
 }
 
-int LoadMasterKey()
-{
+int LoadMasterKey() {
     int status = ret::A_OK;
     // Check for valid phrase token
     if(g_Pt.IsPhraseKeyEmpty()) {
@@ -968,22 +826,19 @@ int LoadMasterKey()
     return status;
 }
 
-void GetPhraseTokenFilepath(std::string& out)
-{
+void GetPhraseTokenFilepath(std::string& out) {
     out += g_ConfigDirectory;
     out += "/";
     out += cnst::g_szPhraseTokenName;
 }
 
-void GetEntityFilepath(std::string& out)
-{
+void GetEntityFilepath(std::string& out) {
     out += g_ConfigDirectory;
     out += "/";
     out += cnst::g_szEntityName;
 }
 
-int LoadEntity(bool override)
-{
+int LoadEntity(bool override) {
     std::string entpath;
     GetEntityFilepath(entpath);
     int status = g_Entity.LoadFromFile(entpath);

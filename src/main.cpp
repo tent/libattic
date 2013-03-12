@@ -191,6 +191,42 @@ TEST(PASSPHRASE, ENTER)
     ShutdownLibAttic(NULL);
 }
 
+bool g_bChangePass = false;
+TEST(PASSPHRASE, CHANGE)
+{
+    if(g_Entity.empty()) return;
+    if(!g_bChangePass) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+
+    std::cout<<" Changing password to \"thispass\""<<std::endl;
+    status = ChangePassphrase("password", "thispass");
+    std::cout<<" Change passphrase status : " << status << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
+    status = EnterPassphrase("thispass");
+    ASSERT_EQ(status, ret::A_OK);
+    std::cout<<" Changing password back " << std::endl;
+    status = ChangePassphrase("thispass", "password");
+    ASSERT_EQ(status, ret::A_OK);
+    status = EnterPassphrase("password");
+    ASSERT_EQ(status, ret::A_OK);
+
+    for(;;) {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
+}
+
 bool g_bPush = false;
 
 static void PUSHCB(int a, void* b)
@@ -1003,12 +1039,13 @@ int main (int argc, char* argv[])
     int status = 0;
 
     if(argc > 1) {
-        int optcount = 12;
+        int optcount = 13;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
             "REGISTERPASS",
             "ENTERPASS",
+            "CHANGEPASS",
             "PULL",
             "PUSH",
             "DELETE",
@@ -1025,6 +1062,7 @@ int main (int argc, char* argv[])
             REQUESTAUTHCODE,
             REGISTERPASS,
             ENTERPASS,
+            CHANGEPASS,
             PULL,
             PUSH,
             DELETE,
@@ -1092,6 +1130,11 @@ int main (int argc, char* argv[])
                     case ENTERPASS:
                     {
                         g_bEnterPass = true;
+                        break;
+                    }
+                    case CHANGEPASS:
+                    {
+                        g_bChangePass = true;
                         break;
                     }
                     case PULL:

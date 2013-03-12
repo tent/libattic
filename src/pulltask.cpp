@@ -313,6 +313,7 @@ int PullTask::RetrieveFile( const std::string filepath,
 
         ofs.close();
         // Copy
+        std::cout<<" moving file to : " << path << std::endl;
         fs::MoveFile(temppath, path);
     }
     else {
@@ -347,8 +348,7 @@ int PullTask::RetrieveAttachment( const std::string& url,
     return status;                                                                        
 }
 
-int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut)
-{
+int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut) {
     int status = ret::A_OK;
 
     if(fi) {

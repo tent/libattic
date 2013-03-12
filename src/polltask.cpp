@@ -81,21 +81,10 @@ void PollTask::RunTask()
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
         std::cout<<" starting to poll ... " << std::endl;
-      //  polltask::g_pCurrentPollTask = this;
-       // m_bRunning = true;
-        //while(m_bRunning) {
-            // Poll for folder posts
-            // Update Entries on a counter
-            // Update pull
-            status = SyncFolderPosts();
-            if(status != ret::A_OK)
-                std::cout<<" POLLING ERR : " << status << std::endl;
-            sleep(3);
-        //}
-
-        //Callback(status, NULL);
-        //SetFinishedState();
-        //polltask::g_pCurrentPollTask = NULL;
+        status = SyncFolderPosts();
+        if(status != ret::A_OK)
+            std::cout<<" POLLING ERR : " << status << std::endl;
+        sleep(3);
     }
     else {
         std::cout<<" FAIL MULTI INSTANCE " << std::endl;
@@ -204,13 +193,6 @@ int PollTask::SyncFolder(Folder& folder)
                 // Check if currently in the sync queue
                     // if no sync
                     // if yes ignore
-                /*
-                Event event;
-                event.type = Event::REQUEST_SYNC_POST;
-                event.value = postid;
-                event.callback = polltask::PollTaskCB;
-                evnt::RaiseEvent(event);
-                */
                 event::RaiseEvent(Event::REQUEST_SYNC_POST, postid, polltask::PollTaskCB);
             }
 
