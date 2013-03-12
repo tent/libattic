@@ -177,14 +177,18 @@ int InitLibAttic( const char* szWorkingDirectory,
                                               g_ConfigDirectory);
 
         g_CallbackHandler.Initialize();
+
+
     }
     else {
         status = ret::A_FAIL_LOAD_APP_DATA;
         alog::Log(Logger::ERROR, "Failed to load app data");
     }
 
-    if(status == ret::A_OK)
+    if(status == ret::A_OK) { 
         g_bLibInitialized = true;
+    }
+
     return status;
 }
 

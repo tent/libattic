@@ -221,12 +221,13 @@ TEST(AFILE, PUSH)
     
     if(status == 0)
     {
-        //status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
         //status = PushFile("./data/oa.pdf", &PUSHCB);
         //status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);
-        status = PushFile("./data/docs/cb.pdf", &PUSHCB);
+        //status = PushFile("./data/cpp/isoiec.pdf", &PUSHCB);
+
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -973,9 +974,9 @@ TEST(ATTIC, DAEMON)
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, ret::A_OK);
 
-    std::cout<<" starting to poll ... " << std::endl;
+    //std::cout<<" starting to poll ... " << std::endl;
     status = PollFiles(SYNCCB);
-    std::cout<<" running til interrupt ... " << std::endl;
+    //std::cout<<" running til interrupt ... " << std::endl;
     for(;;) {
 
        sleep(10);
@@ -1002,7 +1003,7 @@ int main (int argc, char* argv[])
     int status = 0;
 
     if(argc > 1) {
-        int optcount = 11;
+        int optcount = 12;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",

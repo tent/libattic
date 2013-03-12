@@ -203,11 +203,17 @@ int PullTask::RetreiveFile( const std::string filepath,
     AccessToken* at = GetAccessToken();
     
     Credentials fCred = fileCred;
+    std::string fp, filename;
+    fi->GetFilename(filename);
+    fi->GetFilepath(fp);
     // This should be relative ie: <working>/some/path/file.txt
     std::cout<< " filepath : " << filepath << std::endl;
+    std::cout<< " filepath from fi : " << fp << std::endl;
+    std::cout<< " filename : " << filename << std::endl;
 
     std::string path;
     FileManager* fm = GetFileManager();
+
     fm->GetCanonicalFilepath(filepath, path);
 
     std::cout<< " path : " << path << std::endl;
@@ -218,8 +224,13 @@ int PullTask::RetreiveFile( const std::string filepath,
     fCred.GetKey(fileKey);
     std::cout<< " file key : " << fileKey << std::endl;
 
+    std::string temppath, randstr;
+    GetTempDirectory(temppath);
+    crypto::GenerateRandomString(randstr, 4);
+    temppath += "/" + filename + "_" + randstr;
+
     std::ofstream ofs;
-    ofs.open(path.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
+    ofs.open(temppath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
 
     std::cout<<" FAILBIT : " << ofs.fail() << std::endl;
     std::cout<<" TRYING TO OPEN THE FILE " << std::endl;
@@ -254,6 +265,7 @@ int PullTask::RetreiveFile( const std::string filepath,
                 fCred.SetIv(iv);
 
                 std::cout<< " IV : " << iv << std::endl;
+                std::cout<< " SIZEOF : " << buffer.size() << std::endl;
 
                 // Base64Decode
                 std::string base64Chunk;
@@ -269,6 +281,18 @@ int PullTask::RetreiveFile( const std::string filepath,
                     std::string decompressedChunk;
                     compress::DecompressString(decryptedChunk, decompressedChunk);
                     //Verify chunk Check plaintext hmac
+                    std::string local_hash, plaintexthash;
+                    crypto::GenerateHash(decompressedChunk, local_hash);
+                    ci->GetPlainTextMac(plaintexthash);
+                    std::cout<<" LOCAL HASH : " << local_hash << std::endl;
+                    std::cout<<" CI HASH : " << plaintexthash << std::endl;
+
+                    if(local_hash == plaintexthash) {
+                        std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
+                    }
+                    else
+                        std::cout<<" ---- HASHES ARE DIFFERENT ---- " << std::endl;
+
                     
                     // Write out
                     ofs.write(decompressedChunk.c_str(), decompressedChunk.size());
@@ -288,6 +312,7 @@ int PullTask::RetreiveFile( const std::string filepath,
         }
 
         ofs.close();
+        // Copy
     }
     else {
         std::cout<<" FAIL TO OPEN FILE " << std::endl;

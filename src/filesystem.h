@@ -129,6 +129,10 @@ namespace fs
             return true;
         return false;
     }
+
+    static void MoveFile(const std::string& originalpath, const std::string& newpath) {
+
+    }
 };
 
 #endif
