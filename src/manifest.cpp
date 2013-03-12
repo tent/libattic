@@ -546,6 +546,22 @@ bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string&
     return PerformQuery(exc);
 }
 
+bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val)
+{
+    char szDel[256] = {'\0'};
+    snprintf(szDel, 256, "%d", val);
+
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += g_infotable;
+    exc += "\" SET deleted=\"";
+    exc += std::string(szDel);
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc +="\";";
+    return PerformQuery(exc);
+}
+
 bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &id)
 {
     std::string exc;

@@ -16,7 +16,7 @@
 #include "jsonserializable.h"
 #include "rollsum.h"
 #include "eventsystem.h"
-
+#include "postutils.h"
 #include "log.h"
 
 PushTask::PushTask( TentApp* pApp, 
@@ -236,8 +236,7 @@ int PushTask::PushFile(const std::string& filepath)
     return status;
 }
 
-int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
-{
+int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath) {
     std::cout<<" send attic post filepath : " << filepath << std::endl;
     int status = ret::A_OK;
     std::cout<<" SEND ATTIC POST " << std::endl;
@@ -245,25 +244,13 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
     if(!fi)
         std::cout<<"invalid file info"<<std::endl;
 
-    std::string filename;
-    utils::ExtractFileName(filepath, filename);
-
     // Check for existing post
     std::string postid;
     fi->GetPostID(postid);
 
-
-    // Get ChunkInfo List
-    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
-
     // Construct post url
-    // TODO :: abstract this common functionality somewhere else, utils?
-
     std::string posturl;
     ConstructPostUrl(posturl);
-
-    std::string chunkname;
-    fi->GetChunkName(chunkname);
 
     std::string relative_path;
     fi->GetFilepath(relative_path);
@@ -275,21 +262,14 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
         std::cout<< " POST URL : " << posturl << std::endl;
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
-        InitAtticPost(p,
-                      false,
-                      relative_path,
-                      filename,
-                      chunkname,
-                      size,
-                      pList);
-
+        postutils::InitializeAtticPost(fi, p, false);
+        
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
 
         std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
 
         AccessToken* at = GetAccessToken();
-
         status = netlib::HttpPost( posturl,
                                    NULL,
                                    postBuffer,
@@ -306,14 +286,9 @@ int PushTask::SendAtticPost( FileInfo* fi, const std::string& filepath)
         
         unsigned int size = utils::CheckFilesize(filepath);
         AtticPost p;
-        InitAtticPost(p,
-                      false,
-                      relative_path,
-                      filename,
-                      chunkname,
-                      size,
-                      pList);
 
+        postutils::InitializeAtticPost(fi, p, false);
+        
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
 
@@ -440,11 +415,7 @@ int PushTask::SendFolderPost(const FileInfo* fi)
                     fm->SetFolderPostId(parent_relative, postid);
                 }
             }
-
-
         }
-
-
     }
     else {
         std::cout<<" FOLDER NOT IN MANIFEST " << std::endl;
@@ -452,62 +423,6 @@ int PushTask::SendFolderPost(const FileInfo* fi)
 
     return status;
 }
-
-int PushTask::InitAtticPost( AtticPost& post,
-                             bool pub,
-                             const std::string& filepath,
-                             const std::string& filename, 
-                             const std::string& chunkname, // Depricated
-                             unsigned int size,
-                             FileInfo::ChunkMap* pList)
-{
-    int status = ret::A_OK;
-
-    if(pList) {
-        post.SetPublic(pub);
-        post.AtticPostSetFilepath(filepath);
-        post.AtticPostSetFilename(filename);
-        post.AtticPostSetSize(size);
-        post.AtticPostSetChunkName(chunkname); // Depricated
-        
-        FileInfo::ChunkMap::iterator itr = pList->begin();
-
-        std::string identifier, postids;
-        for(;itr != pList->end(); itr++) {
-            identifier.clear();
-            postids.clear();
-
-            itr->second.GetChecksum(identifier);
-            post.PushBackChunkIdentifier(identifier);
-        }
-
-        FileManager* fm = GetFileManager();
-        FileInfo* fi = fm->GetFileInfo(filepath);
-
-        std::string chunkpostid;
-        if(fi) {
-            std::string encKey, iv;
-            fi->GetEncryptedKey(encKey);
-            fi->GetIv(iv);
-
-            post.AtticPostSetKeyData(encKey);
-            post.AtticPostSetIvData(iv);
-
-            fi->GetChunkPostID(chunkpostid);
-            post.PushBackChunkPostId(chunkpostid);
-        }
-        else {
-            std::cout<<" &&&&&&&&&&&&&& INVALID FILE INFO &&&&&&&&&& FOR : " << filepath << std::endl;
-
-        }
-    }
-    else {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
-
-    return status;
-}
-
 
 int PushTask::InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List)
 {

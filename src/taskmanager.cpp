@@ -40,6 +40,7 @@ int TaskManager::Initialize()
 
     EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PULL);
     EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PUSH);
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_DELETE);
     EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_SYNC_POST);
 
     return status;
@@ -65,6 +66,11 @@ void TaskManager::OnEventRaised(const Event& event)
         case Event::REQUEST_PUSH:
             {
                 UploadFile(event.value, event.callback);
+                break;
+            }
+        case Event::REQUEST_DELETE:
+            {
+                DeleteFile(event.value, event.callback);
                 break;
             }
         case Event::REQUEST_SYNC_POST:

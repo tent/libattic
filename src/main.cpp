@@ -198,7 +198,7 @@ static void PUSHCB(int a, void* b)
     std::cout<<" PUSH CALLBACK : " << a << std::endl;
 }
 
-TEST(PUSH, AFILE)
+TEST(AFILE, PUSH)
 {
     if(g_Entity.empty()) return;
     if(!g_bPush) return;
@@ -225,7 +225,8 @@ TEST(PUSH, AFILE)
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
         //status = PushFile("./data/oa.pdf", &PUSHCB);
-        status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);
+        //status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);
+        status = PushFile("./data/docs/cb.pdf", &PUSHCB);
 
         ASSERT_EQ(status, ret::A_OK);
     }
@@ -255,10 +256,10 @@ bool g_bPull = false;
 void PULLCB(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
-    std::cout<<" VoiD : " << (char*)b << std::endl;
+    std::cout<<" void : " << (char*)b << std::endl;
 
 }
-TEST(PULL, AFILE)
+TEST(AFILE, PULL)
 {
     if(g_Entity.empty()) return;
     if(!g_bPull) return;
@@ -295,6 +296,50 @@ TEST(PULL, AFILE)
 
     ShutdownLibAttic(NULL);
 
+}
+
+bool g_bDelete = false;
+void DELETECB(int a, void* b)
+{
+    std::cout<<" DELETE CALLBACK HIT " << a << std::endl;
+
+}
+
+TEST(AFILE, DELETE) 
+{
+    if(g_Entity.empty()) return;
+    if(!g_bDelete) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+    ASSERT_EQ(status, ret::A_OK);
+
+    status = EnterPassphrase("password");
+    ASSERT_EQ(status, ret::A_OK);
+
+    if(status == ret::A_OK) {
+        std::string rel("./data");
+        std::string filepath;
+        fs::GetCanonicalPath(rel, filepath);
+        filepath += "/docs/cb.pdf";
+
+        status = DeleteFile(filepath.c_str(), &DELETECB);
+        ASSERT_EQ(status, ret::A_OK);
+    }
+
+    for(;;) {
+       sleep(10);
+       if(!g_ThreadCount)
+           break;
+       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+    }
+
+    ShutdownLibAttic(NULL);
 }
 
 bool g_bManifest = false;
@@ -965,6 +1010,7 @@ int main (int argc, char* argv[])
             "ENTERPASS",
             "PULL",
             "PUSH",
+            "DELETE",
             "SYNC",
             "QUERYMANIFEST",
             "DISCOVER",
@@ -980,6 +1026,7 @@ int main (int argc, char* argv[])
             ENTERPASS,
             PULL,
             PUSH,
+            DELETE,
             SYNC,
             QUERYMANIFEST,
             DISCOVER,
@@ -1054,6 +1101,11 @@ int main (int argc, char* argv[])
                     case PUSH:
                     {
                         g_bPush = true;
+                        break;
+                    }
+                    case DELETE:
+                    {
+                        g_bDelete = true;
                         break;
                     }
                     case SYNC:

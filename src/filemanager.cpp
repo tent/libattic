@@ -141,11 +141,18 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 }
  
 
-void FileManager::SetFileVersion(const std::string& filepath, const std::string& version)
-{
+void FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
     if(IsPathRelative(filepath)) {
         Lock();
         m_Manifest.UpdateFileVersion(filepath, version);
+        Unlock();
+    }
+}
+
+void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
+    if(IsPathRelative(filepath)) {
+        Lock();
+        m_Manifest.UpdateFileDeleted(filepath, del);
         Unlock();
     }
 }
@@ -246,6 +253,15 @@ bool FileManager::DoesFileExist(const std::string& filepath)
 bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::string& out)
 {
     bool retval = false;
+
+    if(filepath.find(m_WorkingDirectory) != std::string::npos) {
+        std::string relative;
+        fs::MakePathRelative(m_WorkingDirectory, filepath, relative);
+        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
+        retval = true;
+        return retval;
+    }
+
     std::cout<<" attempting to get a relative path " << std::endl;
     std::cout<<" for : " << filepath << std::endl;
     std::string rel;

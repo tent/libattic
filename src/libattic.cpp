@@ -481,6 +481,18 @@ int PullFile(const char* szFilePath, void (*callback)(int, void*))
     return ret::A_OK;
 }
 
+int DeleteFile(const char* szFilePath, void (*callback)(int, void*) )
+{
+    int status = IsLibInitialized();
+
+    if(status == ret::A_OK) {
+        std::string filepath(szFilePath);
+        event::RaiseEvent(Event::REQUEST_DELETE, filepath, callback);
+    }
+
+    return status;
+}
+
 int PullAllFiles(void (*callback)(int, void*))
 {
     int status = IsLibInitialized();
@@ -512,15 +524,7 @@ int PollFiles(void (*callback)(int, void*))
 
 }
 
-int DeleteFile(const char* szFilePath, void (*callback)(int, void*) )
-{
-    int status = IsLibInitialized();
 
-    if(status == ret::A_OK)
-        status = g_pTaskManager->DeleteFile(szFilePath, callback);
-
-    return status;
-}
 
 int DeleteAllPosts(void (*callback)(int, void*))
 {

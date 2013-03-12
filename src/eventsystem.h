@@ -22,6 +22,7 @@ struct Event
         PULL,
         REQUEST_PUSH,
         REQUEST_PULL,
+        REQUEST_DELETE,
         REQUEST_SYNC_POST,
         SYNC,
         POLL,

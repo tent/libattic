@@ -71,6 +71,9 @@ int PullTask::PullFile(const std::string& filepath)
     FileInfo* fi = fm->GetFileInfo(filepath);                                        
 
     if(fi) {
+        if(fi->GetDeleted())
+            return ret::A_FAIL_PULL_DELETED_FILE;
+
         // Get relative filepath
         std::string relative_filepath;
         fi->GetFilepath(relative_filepath);
@@ -212,13 +215,11 @@ int PullTask::RetreiveFile( const std::string filepath,
 
     std::cout<< " path : " << path << std::endl;
     // check if we need to create folders
-    fs::CreateDirectoryTree(path);
+    fs::CreateDirectoryTree(path); // safer to pass canonical 
 
     std::string fileKey;
     fCred.GetKey(fileKey);
     std::cout<< " file key : " << fileKey << std::endl;
-
-
 
     std::ofstream ofs;
     ofs.open(path.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);

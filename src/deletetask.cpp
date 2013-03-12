@@ -5,7 +5,8 @@
 #include "errorcodes.h"
 #include "utils.h"
 #include "conoperations.h"
-
+#include "fileinfo.h"
+#include "postutils.h"
 
 DeleteTask::DeleteTask( TentApp* pApp, 
                         FileManager* pFm, 
@@ -34,62 +35,123 @@ DeleteTask::DeleteTask( TentApp* pApp,
                                   configdir,
                                   callback)
 {
-
 }
 
 DeleteTask::~DeleteTask()
 {
-
 }
 
 void DeleteTask::RunTask()
 {
     // Run the task
+    int status = ret::A_OK;
+
     std::string filepath;
     GetFilepath(filepath);
-
-    std::string filename;
-    utils::ExtractFileName(filepath, filename);
-
-    std::cout<<" FILE NAME : " << filename << std::endl;
-
-    int status = DeleteFile(filename);
-
+    FileInfo* fi = RetrieveFileInfo(filepath);
+    // Mark as deleted
+    status = MarkFileDeleted(fi);
+    // Update Post
+    status = UpdatePost(fi);
+    
     // Callback
     Callback(status, NULL);
     SetFinishedState();
 }
 
+FileInfo* DeleteTask::RetrieveFileInfo(const std::string& filepath) {
+    FileInfo* fi = NULL;
+    FileManager* fm = GetFileManager();
+    if(fm)
+        fi = fm->GetFileInfo(filepath);
 
-int DeleteTask::DeleteFile(const std::string& filename)
-{
-    if(!GetTentApp())
-        return ret::A_FAIL_INVALID_APP_INSTANCE;
-
-    if(!GetFileManager())
-        return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-    FileInfo* fi = GetFileManager()->GetFileInfo(filename);
-
-    if(!fi)
-        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-
-    std::string postid;
-    fi->GetPostID(postid);
-
-    int status = ret::A_OK;
-
-    // Delete post
-    status = DeletePost(postid);
-    
-    // Remove from Manifest
-    status = GetFileManager()->RemoveFile(filename);
-
-    return status; 
+    return fi;
 }
 
-int DeleteTask::DeletePost(const std::string& szPostID)
-{
+int DeleteTask::MarkFileDeleted(FileInfo* fi) {
+    int status = ret::A_OK;
+    if(fi) {
+        std::string filepath;
+        fi->GetFilepath(filepath);
+        fi->SetDeleted(1);
+        FileManager* fm = GetFileManager();
+        if(fm)
+            fm->SetFileDeleted(filepath, true);
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+}
+
+int DeleteTask::UpdatePost(FileInfo* fi) {
+    int status = ret::A_OK;
+
+    if(fi) {
+        int trycount = 0;
+        for(status = SendAtticPost(fi); status != ret::A_OK; trycount++) {
+            status = SendAtticPost(fi);
+            std::cout<<" RETRYING .................................." << std::endl;
+            if(trycount > 2)
+                break;
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+    return status;
+}
+
+int DeleteTask::SendAtticPost(FileInfo* fi) {
+    int status = ret::A_OK;
+    if(fi) {
+        std::string postid;
+        fi->GetPostID(postid);
+        if(!postid.empty()) {
+            std::string posturl;
+            ConstructPostUrl(posturl);
+            posturl += "/" + postid;
+
+            std::cout<<" deleted : " << fi->GetDeleted() << std::endl;
+            std::cout<<" delete url : " << postid << std::endl;
+
+            AtticPost p;
+            postutils::InitializeAtticPost(fi, p, false);
+
+            std::string postBuffer;
+            jsn::SerializeObject(&p, postBuffer);
+
+            AccessToken* at = GetAccessToken();
+            Response response;
+            status = netlib::HttpPut( posturl,
+                                      NULL,
+                                      postBuffer,
+                                      at,
+                                      response);
+            std::cout<<" response code : " << response.code << std::endl;
+            std::cout<<" response body : " << response.body << std::endl;
+            // Handle Response
+            if(response.code != 200) {
+                status = ret::A_FAIL_NON_200;
+            }
+        }
+        else {
+            std::cout<<" POST ID EMPTY INVALID FILEINFO " << std::endl;
+            status = ret::A_FAIL_INVALID_POST_ID;
+        }
+
+    }
+    else {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+
+    return status;
+
+}
+
+// Depricated, kept for referece
+int DeleteTask::DeletePost(const std::string& szPostID) {
     // Modify Post
     Entity entity;
     GetEntity(entity);

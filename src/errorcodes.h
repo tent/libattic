@@ -72,6 +72,7 @@ namespace ret
         A_FAIL_FS_ERROR,
         A_FAIL_CREATE_DIRECTORY,
         A_FAIL_INVALID_PROFILE,
+        A_FAIL_PULL_DELETED_FILE,
         A_FAIL_OTHER     
     };
 

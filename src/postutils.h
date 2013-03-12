@@ -13,8 +13,7 @@ namespace postutils
     static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut);
     static int DeserializePostIntoFileInfo(const Post& post, FileInfo& fiOut);
 
-    static int InitializeAtticPostToFileInfo(FileInfo* pFi, AtticPost& postOut, bool isPublic)
-    {
+    static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic) {
         int status = ret::A_OK;
         if(pFi) {
             std::string filepath, filename;
@@ -27,6 +26,7 @@ namespace postutils
             postOut.AtticPostSetFilepath(filepath);
             postOut.AtticPostSetFilename(filename);
             postOut.AtticPostSetSize(size);
+            postOut.AtticPostSetDeleted(pFi->GetDeleted());
 
             // Set Attic post key info
             std::string encryptedkey, iv;
@@ -61,8 +61,7 @@ namespace postutils
         return status;
     }
 
-    static int DeserializeAtticPostIntoFileInfo(const AtticPost& post, FileInfo& fiOut)
-    {
+    static int DeserializeAtticPostIntoFileInfo(const AtticPost& post, FileInfo& fiOut) {
         int status = ret::A_OK;
         
         // Attic Post specific
