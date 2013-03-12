@@ -32,8 +32,10 @@ void EventSystem::RaiseEvent(const Event& event)
     if(m_ListenerMap[event.type].size()) {
         Listeners::iterator itr = m_ListenerMap[event.type].begin();
         for(;itr != m_ListenerMap[event.type].end(); itr++) {
-            if(*itr) 
+            if(*itr) { 
+                std::cout<<"raising event"<<std::endl;
                 (*itr)->OnEventRaised(event);
+            }
         }
     }
     Unlock();
@@ -43,6 +45,7 @@ void EventSystem::RaiseEvent(const Event& event)
 void EventSystem::RegisterForEvent(EventListener* pListener, Event::EventType type)
 {
     Lock();
+    std::cout<<" REGISTERING FOR EVENT : " << type << std::endl;
     m_ListenerMap[type].push_back(pListener);
     Unlock();
 }

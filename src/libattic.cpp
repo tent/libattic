@@ -865,20 +865,17 @@ int LoadEntity(bool override) {
     return status;
 }
 
-int GetPhraseStatus()
-{
+int GetPhraseStatus() {
 
     return ret::A_OK;
 }
 
-int SaveEntity()
-{
+int SaveEntity() {
 
     return ret::A_OK;
 }
 
-int SetWorkingDirectory(const char* szDir)
-{
+int SetWorkingDirectory(const char* szDir) {
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -890,8 +887,7 @@ int SetWorkingDirectory(const char* szDir)
     return ret::A_OK;
 }
 
-int SetConfigDirectory(const char* szDir)
-{
+int SetConfigDirectory(const char* szDir) {
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -903,8 +899,7 @@ int SetConfigDirectory(const char* szDir)
     return ret::A_OK;
 }
 
-int SetTempDirectory(const char* szDir)
-{
+int SetTempDirectory(const char* szDir) {
     if(!szDir)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -916,8 +911,7 @@ int SetTempDirectory(const char* szDir)
     return ret::A_OK;
 }
 
-int SetEntityUrl(const char* szUrl)
-{
+int SetEntityUrl(const char* szUrl) {
     if(!szUrl)
         return ret::A_FAIL_INVALID_CSTR;
 
@@ -929,8 +923,7 @@ int SetEntityUrl(const char* szUrl)
     return ret::A_OK;
 }
 
-int IsLibInitialized(bool checkPassphrase)
-{
+int IsLibInitialized(bool checkPassphrase) {
     int status = ret::A_OK;
 
     if(checkPassphrase && g_Pt.IsPhraseKeyEmpty()) {
@@ -946,8 +939,7 @@ int IsLibInitialized(bool checkPassphrase)
     return status;
 }
 
-const char* GetEntityApiRoot(const char* szEntityUrl)
-{
+const char* GetEntityApiRoot(const char* szEntityUrl) {
     if(!szEntityUrl) return NULL;
 
     Entity out;
@@ -968,8 +960,7 @@ const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
 const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
 const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
 
-int GetFileList(void(*callback)(int, char**, int, int))
-{
+int GetFileList(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
     if(!callback)
         status = ret::A_FAIL_INVALID_PTR;
@@ -984,20 +975,15 @@ int GetFileList(void(*callback)(int, char**, int, int))
     return status;
 }
 
-int FreeFileList(char** pList, int stride)
-{
-    if(pList)
-    {
+int FreeFileList(char** pList, int stride) {
+    if(pList) {
         char* p = *pList;
         int count = 0;
-        for(int i=0; i< stride; i++)
-        {
-            if(pList[i])
-            {
+        for(int i=0; i< stride; i++) {
+            if(pList[i]) {
                 delete[] pList[i];
                 pList[i] = NULL;
             }
-
         }
         delete[] pList;
         pList = NULL;
@@ -1040,6 +1026,18 @@ void RegisterForPullNotify(void (*callback)(int, int, const char*)) {
 void RegisterForPushNotify(void (*callback)(int, int, const char*)) {
     if(callback)
         g_CallbackHandler.RegisterCallback(Event::PUSH, callback);
+}
+
+void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(Event::UPLOAD_SPEED, callback);
+}
+
+void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(Event::DOWNLOAD_SPEED, callback);
+    else
+        std::cout<<" INvALID CALLBACK " << std::endl;
 }
 
 

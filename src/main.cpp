@@ -234,6 +234,12 @@ static void PUSHCB(int a, void* b)
     std::cout<<" PUSH CALLBACK : " << a << std::endl;
 }
 
+static void UPLOADSPEEDCB(int a, int b, const char* c) {
+    if(c) {
+        std::cout<<" SPEED : " << c << "b/s" << std::endl;
+    }
+}
+
 TEST(AFILE, PUSH)
 {
     if(g_Entity.empty()) return;
@@ -253,10 +259,9 @@ TEST(AFILE, PUSH)
     status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
+    RegisterForUploadSpeedNotify(&UPLOADSPEEDCB);
     
-    
-    if(status == 0)
-    {
+    if(status == 0) {
         status = PushFile("./data/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
@@ -294,8 +299,15 @@ void PULLCB(int a, void* b)
 {
     std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
     std::cout<<" void : " << (char*)b << std::endl;
-
 }
+
+static void DOWNLOADSPEEDCB(int a, int b, const char* c) {
+    std::cout<<" DOWNLOADSPEEDCB HIT " << std::endl;
+    if(c) {
+        std::cout<<" SPEED : " << c << "b/s" << std::endl;
+    }
+}
+
 TEST(AFILE, PULL)
 {
     if(g_Entity.empty()) return;
@@ -309,6 +321,9 @@ TEST(AFILE, PULL)
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
+
+    std::cout<<" DOWNLOAD SPEED NOTIFY ... " << std::endl;
+    RegisterForDownloadSpeedNotify(&DOWNLOADSPEEDCB);
 
     status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
@@ -325,7 +340,7 @@ TEST(AFILE, PULL)
 
     for(;;)
     {
-       sleep(10);
+       sleep(15);
        if(!g_ThreadCount)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;

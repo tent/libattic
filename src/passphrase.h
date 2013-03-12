@@ -13,16 +13,17 @@
 
 namespace pass {
 
-
 static int RegisterPassphraseWithAttic(const std::string& pass, 
                                        const std::string& masterkey,
                                        PhraseToken& pt,
                                        CredentialsManager* pCm,
                                        Entity& entity);
+
 static int RegisterPassphraseProfilePost(const std::string& encryptedKey, 
                                          const std::string& salt,
                                          CredentialsManager* pCm,
                                          Entity& entity);
+
 static int ConstructMasterKey(const std::string& masterkey, 
                               MasterKey& out,
                               CredentialsManager* pCm,

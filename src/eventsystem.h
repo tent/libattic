@@ -75,8 +75,7 @@ private:
 
 namespace event
 {
-    static void RaiseEvent(const Event& event) 
-    {
+    static void RaiseEvent(const Event& event) {
         EventSystem::GetInstance()->RaiseEvent(event);
     }
 
@@ -106,8 +105,7 @@ namespace event
 
             
 
-    static void ShutdownEventSystem()
-    {
+    static void ShutdownEventSystem() {
         EventSystem::GetInstance()->Shutdown();
     }
 

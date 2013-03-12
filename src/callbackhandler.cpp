@@ -6,6 +6,8 @@ CallbackHandler::~CallbackHandler() {}
 void CallbackHandler::Initialize() {
     EventSystem::GetInstance()->RegisterForEvent(this, Event::PULL);
     EventSystem::GetInstance()->RegisterForEvent(this, Event::PUSH);
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::UPLOAD_SPEED);
+    EventSystem::GetInstance()->RegisterForEvent(this, Event::DOWNLOAD_SPEED);
 }
 
 void CallbackHandler::RegisterCallback(Event::EventType type, EventCallback cb) {

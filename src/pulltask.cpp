@@ -1,6 +1,7 @@
 #include "pulltask.h"
 
 #include <iostream>
+#include <boost/timer/timer.hpp>
 
 #include "filesystem.h"
 #include "filemanager.h"
@@ -226,8 +227,11 @@ int PullTask::RetrieveFile( const std::string filepath,
 
     std::string temppath, randstr;
     GetTempDirectory(temppath);
-    crypto::GenerateRandomString(randstr, 4);
+    //crypto::GenerateRandomString(randstr, 4);
+    utils::GenerateRandomString(randstr, 16);
     temppath += "/" + filename + "_" + randstr;
+
+    std::cout<<" TEMPPATH : " << temppath << std::endl;
 
     std::ofstream ofs;
     ofs.open(temppath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
@@ -255,7 +259,21 @@ int PullTask::RetrieveFile( const std::string filepath,
 
             // Request attachment                                                                
             std::string buffer;
+            boost::timer::cpu_timer::cpu_timer t;
+            std::cout<<" ATTACHMENT PATH : " << attachmentpath << std::endl;
             RetrieveAttachment(attachmentpath, at, buffer);
+            boost::timer::cpu_times time = t.elapsed();
+            long elapsed = time.user;
+            std::cout<<" ELAPSED : "<< elapsed << std::endl;
+            if(elapsed > 0) {
+                std::cout<<" buffer size : "<< buffer.size() << std::endl;
+                unsigned int bps = (buffer.size()/elapsed);
+                std::cout<<" BPS : " << bps << std::endl;
+                // Raise event
+                char szSpeed[256] = {'\0'};
+                snprintf(szSpeed, 256, "%u", bps);
+                event::RaiseEvent(Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
+            }
 
             ChunkInfo* ci = fi->GetChunkInfo((*itr).Name);
 
@@ -325,7 +343,8 @@ int PullTask::RetrieveFile( const std::string filepath,
 }
 
 int PullTask::RetrieveAttachment( const std::string& url, 
-                                  const AccessToken* at, std::string& outBuffer)           
+                                  const AccessToken* at, 
+                                  std::string& outBuffer)           
 {                                                                                            
     int status = ret::A_OK;
 

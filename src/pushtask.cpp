@@ -1,7 +1,6 @@
-
 #include "pushtask.h"
 
-#include <list>
+#include <boost/timer/timer.hpp>
 
 #include "folderpost.h"
 #include "filesystem.h"
@@ -690,20 +689,34 @@ int PushTask::SendChunk( const std::string& chunk,
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
 
+        netlib::WriteToSSLSocket(ssl_sock, partEnd);
+
+        /*
         boost::system::error_code errorcode;
         static int breakcount = 0;
         do {
-
             std::cout<<" write to socket " << std::endl;
+            boost::timer t;
             boost::asio::write(ssl_sock, partEnd, errorcode); 
             if(errorcode)
                 std::cout<<errorcode.message()<<std::endl;
+            else {
+                double elapsed = t.elapsed();
+                if(elapsed > 0) {
+                    unsigned int bps = (partEnd.size()/elapsed);
+                    // Raise event
+                    char szSpeed[256] = {'\0'};
+                    snprintf(szSpeed, 256, "%u", bps);
+                    event::RaiseEvent(Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+                }
+            }
 
             if(breakcount > 20)
                 break;
             breakcount++;
         }
         while(errorcode);
+        */
     }
     else {
         // carry on
@@ -711,21 +724,35 @@ int PushTask::SendChunk( const std::string& chunk,
         boost::asio::streambuf part;
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
-        
+
+        netlib::WriteToSSLSocket(ssl_sock, part);
+       /* 
         std::cout<<" write to socket " << std::endl;
 
         boost::system::error_code errorcode;
         static int breakcount = 0;
         do{
+            boost::timer t;
             boost::asio::write(ssl_sock, part, errorcode); 
             if(errorcode)
                 std::cout<<errorcode.message()<<std::endl;
+            else {
+                double elapsed = t.elapsed();
+                if(elapsed > 0) {
+                    unsigned int bps = (part.size()/elapsed);
+                    // Raise event
+                    char szSpeed[256] = {'\0'};
+                    snprintf(szSpeed, 256, "%u", bps);
+                    event::RaiseEvent(Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+                }
+            }
 
             if(breakcount > 20)
                 break;
             breakcount++;
         }
         while(errorcode);
+        */
     }
 
     return status;
