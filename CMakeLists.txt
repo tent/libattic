@@ -4,8 +4,8 @@
 
 cmake_minimum_required (VERSION 2.8)
 
-option (ATTIC_STATIC_LIB "Build Attic Static lib" OFF)
-option (ATTIC_BINARY "Build Attic Binary test executable" ON)
+option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
+option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
@@ -89,7 +89,7 @@ ExternalProject_Add(boost
   URL "http://sourceforge.net/projects/boost/files/boost/1.53.0/boost_1_53_0.tar.bz2/download"
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND <SOURCE_DIR>/bootstrap.sh
-  BUILD_COMMAND <SOURCE_DIR>/b2 install -j4 link=static --with-thread --with-system --with-date_time --with-filesystem --prefix=<INSTALL_DIR>
+  BUILD_COMMAND <SOURCE_DIR>/b2 install -j4 link=static --with-thread --with-system --with-date_time --with-filesystem --with-timer --with-chrono --prefix=<INSTALL_DIR>
   INSTALL_COMMAND ""
 #--with-test --with-regex --with-date_time --with-filesystem --with-program_options 
 )
@@ -112,6 +112,13 @@ set_property(TARGET boost_filesystem PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib
 add_library(boost_datetime STATIC IMPORTED)
 set_property(TARGET boost_datetime PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_date_time.a)
 
+add_library(boost_timer STATIC IMPORTED)
+set_property(TARGET boost_timer PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_timer.a)
+
+add_library(boost_chrono STATIC IMPORTED)
+set_property(TARGET boost_chrono PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_chrono.a)
+
+
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
     #link lib
@@ -120,9 +127,10 @@ if(ATTIC_STATIC_LIB)
                           boost_system
                           boost_filesystem
                           boost_datetime
+                          boost_timer
+                          boost_chrono
                           pthread
-                          ssl
-                          rt)
+                          ssl)
 
 
     include(mergestaticlibs)
@@ -137,6 +145,8 @@ if(ATTIC_BINARY)
                           boost_system
                           boost_filesystem
                           boost_datetime
+                          boost_timer
+                          boost_chrono
                           pthread
                           ssl
                           rt
