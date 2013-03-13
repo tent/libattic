@@ -530,33 +530,6 @@ int PushTask::ProcessFile( const std::string& requestType,
         unsigned int count = 0;
         unsigned int totalread = 0; // total read count
         if (ifs.is_open()) {
-            /*
-            unsigned int chunksize = cnst::g_unChunkSize;
-            char* szChunkBuffer = new char[chunksize];
-
-            chunksize = sizeof(char)*chunksize; // char is always 1, but for good practice calc this
-
-            while(!ifs.eof()) {
-                memset(szChunkBuffer, 0, chunksize);
-                // read to the buffer
-                ifs.read(szChunkBuffer, chunksize);
-                unsigned int readcount = ifs.gcount();
-                totalread += readcount;
-
-                // append to string
-                std::string chunk(szChunkBuffer, chunksize);
-
-                bool end = false;
-                if(totalread >= filesize)
-                    end = true;
-
-                SendChunk( chunk, fileKey, boundary, ssl_sock, count, end, pFi);
-
-                // send
-                count++;
-                if(end) break;
-            }
-            */
             // Setup window buffer
             std::string window, remainder;
             unsigned int readcount = 0;
@@ -589,6 +562,11 @@ int PushTask::ProcessFile( const std::string& requestType,
 
                 if(datasize)
                     window.append(pData, datasize);
+
+                if(pData) {
+                    delete[] pData;
+                    pData = NULL;
+                }
 
                 // find splits
                 int totalread = 0, count = 0, lastsplit = 0;
@@ -687,35 +665,7 @@ int PushTask::SendChunk( const std::string& chunk,
         boost::asio::streambuf partEnd;
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
-
         netlib::WriteToSSLSocket(ssl_sock, partEnd);
-
-        /*
-        boost::system::error_code errorcode;
-        static int breakcount = 0;
-        do {
-            std::cout<<" write to socket " << std::endl;
-            boost::timer t;
-            boost::asio::write(ssl_sock, partEnd, errorcode); 
-            if(errorcode)
-                std::cout<<errorcode.message()<<std::endl;
-            else {
-                double elapsed = t.elapsed();
-                if(elapsed > 0) {
-                    unsigned int bps = (partEnd.size()/elapsed);
-                    // Raise event
-                    char szSpeed[256] = {'\0'};
-                    snprintf(szSpeed, 256, "%u", bps);
-                    event::RaiseEvent(Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
-                }
-            }
-
-            if(breakcount > 20)
-                break;
-            breakcount++;
-        }
-        while(errorcode);
-        */
     }
     else {
         // carry on
@@ -723,35 +673,7 @@ int PushTask::SendChunk( const std::string& chunk,
         boost::asio::streambuf part;
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
-
         netlib::WriteToSSLSocket(ssl_sock, part);
-       /* 
-        std::cout<<" write to socket " << std::endl;
-
-        boost::system::error_code errorcode;
-        static int breakcount = 0;
-        do{
-            boost::timer t;
-            boost::asio::write(ssl_sock, part, errorcode); 
-            if(errorcode)
-                std::cout<<errorcode.message()<<std::endl;
-            else {
-                double elapsed = t.elapsed();
-                if(elapsed > 0) {
-                    unsigned int bps = (part.size()/elapsed);
-                    // Raise event
-                    char szSpeed[256] = {'\0'};
-                    snprintf(szSpeed, 256, "%u", bps);
-                    event::RaiseEvent(Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
-                }
-            }
-
-            if(breakcount > 20)
-                break;
-            breakcount++;
-        }
-        while(errorcode);
-        */
     }
 
     return status;
