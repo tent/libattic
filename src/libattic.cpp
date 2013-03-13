@@ -27,7 +27,6 @@
 #include "constants.h"
 #include "credentials.h"
 #include "profile.h"
-#include "conoperations.h"
 
 #include "libatticutils.h"
 #include "log.h"
@@ -38,6 +37,7 @@
 #include "eventsystem.h"
 #include "callbackhandler.h"
 #include "passphrase.h"
+#include "tentclient.h"
 
 #include <cbase64.h>
 // TODO :: 
@@ -945,7 +945,7 @@ const char* GetEntityApiRoot(const char* szEntityUrl) {
     Entity out;
     std::string entityurl(szEntityUrl);
     utils::CheckUrlAndAppendTrailingSlash(entityurl);
-    int status = conops::Discover(entityurl, out);
+    int status = client::Discover(entityurl, NULL, out);
 
     std::string apiroot;
     if(status == ret::A_OK)

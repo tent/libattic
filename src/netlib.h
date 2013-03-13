@@ -11,6 +11,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <boost/timer/timer.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp> 
+#include <boost/foreach.hpp>
+
+using boost::asio::ip::tcp;
+
+
 #include <hex.h>        // cryptopp
 #include <hmac.h>       // cryptopp
 #include <sha.h>
@@ -25,14 +33,6 @@
 #include "accesstoken.h"
 #include "httpheader.h"
 #include "eventsystem.h"
-
-#include <boost/timer/timer.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp> 
-#include <boost/foreach.hpp>
-
-using boost::asio::ip::tcp;
-
 
 namespace netlib {
 // Forward Declarations ******************************************************
