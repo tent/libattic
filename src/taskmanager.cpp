@@ -129,175 +129,36 @@ int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype,
                                          this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
     return status;
 
 }
 
-int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::PUSH,
-                                          m_pApp,
-                                          m_pFileManager,
-                                          m_pCredentialsManager,
-                                          TaskArbiter::GetInstance(),
-                                          &m_TaskFactory,
-                                          m_AccessToken,
-                                          m_Entity,
-                                          filepath,
-                                          m_TempDir,
-                                          m_WorkingDir,
-                                          m_ConfigDir,
-                                          callback,
-                                          this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
-    return status;
+int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask( Task::PUSH, filepath, callback);
 }
 
-int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
- 
-    Task* t = m_TaskFactory.GetTentTask( Task::PULL,
-                                         m_pApp,
-                                         m_pFileManager,
-                                         m_pCredentialsManager,
-                                         TaskArbiter::GetInstance(),
-                                         &m_TaskFactory,
-                                         m_AccessToken,
-                                         m_Entity,
-                                         filepath,
-                                         m_TempDir,
-                                         m_WorkingDir,
-                                         m_ConfigDir,
-                                         callback,
-                                         this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-    return status;
+int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask( Task::PULL, filepath, callback);
 }
 
-int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::DELETE,
-                                         m_pApp,
-                                         m_pFileManager,
-                                         m_pCredentialsManager,
-                                         TaskArbiter::GetInstance(),
-                                         &m_TaskFactory,
-                                         m_AccessToken,
-                                         m_Entity,
-                                         filepath,
-                                         m_TempDir,
-                                         m_WorkingDir,
-                                         m_ConfigDir,
-                                         callback,
-                                         this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
-    return status;
+int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask( Task::DELETE, filepath, callback);
 }
 
-int TaskManager::DownloadAllFiles(void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::PULLALL,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    "",
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-    return status;
+int TaskManager::DownloadAllFiles(void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask(Task::PULLALL, "", callback);
 }
 
-int TaskManager::SyncFiles(void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::SYNC,
-                                         m_pApp,
-                                         m_pFileManager,
-                                         m_pCredentialsManager,
-                                         TaskArbiter::GetInstance(),
-                                         &m_TaskFactory,
-                                         m_AccessToken,
-                                         m_Entity,
-                                         "",
-                                         m_TempDir,
-                                         m_WorkingDir,
-                                         m_ConfigDir,
-                                         callback,
-                                         this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
-    return status;
+int TaskManager::SyncFiles(void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask(Task::SYNC, "", callback);
 }
 
-int TaskManager::PollFiles(void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::POLL,
-                                         m_pApp,
-                                         m_pFileManager,
-                                         m_pCredentialsManager,
-                                         TaskArbiter::GetInstance(),
-                                         &m_TaskFactory,
-                                         m_AccessToken,
-                                         m_Entity,
-                                         "",
-                                         m_TempDir,
-                                         m_WorkingDir,
-                                         m_ConfigDir,
-                                         callback,
-                                         this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
-    return status;
+int TaskManager::PollFiles(void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask( Task::POLL, "", callback);
 }
 
-int TaskManager::DeleteAllPosts(void (*callback)(int, void*))
-{
-    int status = ret::A_OK;
-
-    Task* t = m_TaskFactory.GetTentTask( Task::DELETEALLPOSTS,
-                                                    m_pApp,
-                                                    m_pFileManager,
-                                                    m_pCredentialsManager,
-                                                    TaskArbiter::GetInstance(),
-                                                    &m_TaskFactory,
-                                                    m_AccessToken,
-                                                    m_Entity,
-                                                    "",
-                                                    m_TempDir,
-                                                    m_WorkingDir,
-                                                    m_ConfigDir,
-                                                    callback,
-                                                    this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-
-    return status;
+int TaskManager::DeleteAllPosts(void (*callback)(int, void*)) {
+    return CreateAndSpinOffTask(Task::DELETEALLPOSTS, "", callback);
 }
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
@@ -316,15 +177,5 @@ int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
 int TaskManager::TaskCount(const Task::TaskType type)
 {
     return m_TaskFactory.GetNumberOfActiveTasks(type);
-}
-
-int TaskManager::GetActiveUploadSpeed()
-{
-    return m_TaskFactory.GetActiveTaskUploadSpeed();
-}
-
-int TaskManager::GetActiveDownloadSpeed()
-{
-    return m_TaskFactory.GetActiveTaskDownloadSpeed();
 }
 

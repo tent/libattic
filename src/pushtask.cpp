@@ -11,7 +11,6 @@
 #include "netlib.h"
 #include "compression.h"
 #include "constants.h"
-#include "conoperations.h"
 #include "jsonserializable.h"
 #include "rollsum.h"
 #include "eventsystem.h"

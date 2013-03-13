@@ -527,10 +527,7 @@ int PollFiles(void (*callback)(int, void*))
 
 }
 
-
-
-int DeleteAllPosts(void (*callback)(int, void*))
-{
+int DeleteAllPosts(void (*callback)(int, void*)) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
@@ -539,23 +536,7 @@ int DeleteAllPosts(void (*callback)(int, void*))
     return status;
 }
 
-int GetCurrentTasks(void (*callback)(char* pArr, int count))
-{
-    int status = IsLibInitialized();
-
-    if(status == ret::A_OK)
-    {
-
-
-    }
- 
-    return status;
-}
-
-
-
-int GetMasterKeyFromProfile(std::string& out)
-{
+int GetMasterKeyFromProfile(std::string& out) {
     std::cout<<" Getting master key from profile ... " << std::endl;
     int status = ret::A_OK;
 
@@ -988,34 +969,6 @@ int FreeFileList(char** pList, int stride) {
         delete[] pList;
         pList = NULL;
     }
-}
-
-int GetActivePushTaskCount() {
-    int taskcount = -1;
-    if(g_pTaskManager)
-        taskcount = g_pTaskManager->TaskCount(Task::PUSH);
-    return taskcount;
-}
-
-int GetActivePullTaskCount() {
-    int taskcount = -1;
-    if(g_pTaskManager)
-        taskcount = g_pTaskManager->TaskCount(Task::PULL);
-    return taskcount;
-}
-
-int GetActiveUploadSpeed() {
-    int speed = -1;
-    if(g_pTaskManager)
-        speed = g_pTaskManager->GetActiveUploadSpeed();
-    return speed; 
-}
-
-int GetActiveDownloadSpeed() {
-    int speed = -1;
-    if(g_pTaskManager)
-        g_pTaskManager->GetActiveDownloadSpeed();
-    return speed; 
 }
 
 void RegisterForPullNotify(void (*callback)(int, int, const char*)) {

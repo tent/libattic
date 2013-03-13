@@ -7,11 +7,10 @@
 #include "filemanager.h"
 #include "errorcodes.h"
 #include "utils.h"
-#include "conoperations.h"
 #include "compression.h"
 #include "syncfiletask.h"
 #include "eventsystem.h"
-
+#include "netlib.h"
 
 PullTask::PullTask( TentApp* pApp, 
                     FileManager* pFm, 
@@ -264,6 +263,8 @@ int PullTask::RetrieveFile( const std::string filepath,
             RetrieveAttachment(attachmentpath, at, buffer);
             boost::timer::cpu_times time = t.elapsed();
             long elapsed = time.user;
+            // to milliseconds
+            elapsed *= 0.000001;
             std::cout<<" ELAPSED : "<< elapsed << std::endl;
             if(elapsed > 0) {
                 std::cout<<" buffer size : "<< buffer.size() << std::endl;

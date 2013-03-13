@@ -97,13 +97,6 @@ int PollFiles(void (*callback)(int, void*));
 
 int SetEntityUrl(const char* szUrl);
 
-// Status Methods
-int GetCurrentTasks(void (*callback)(char* pArr, int count));
-int GetActivePushTaskCount();
-int GetActivePullTaskCount();
-int GetActiveUploadSpeed();
-int GetActiveDownloadSpeed();
-
 // Utility
 const char* GetWorkingDirectory();
 const char* GetConfigDirectory();

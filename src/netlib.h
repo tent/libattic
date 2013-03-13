@@ -111,6 +111,7 @@ static bool WriteToSSLSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
 
 
     unsigned int buffersize = buffer.size();
+    std::cout<<" BUFFERSIZE : " << buffersize << std::endl;
     boost::system::error_code errorcode;
     int breakcount = 0;
     do {
@@ -121,6 +122,8 @@ static bool WriteToSSLSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
         else {
             boost::timer::cpu_times time = t.elapsed();
             long elapsed = time.user;
+            // To milliseconds
+            elapsed *= 0.000001; 
             std::cout<<" ELAPSED : " << elapsed << std::endl;
             if(elapsed > 0) {
                 unsigned int bps = (buffersize/elapsed);

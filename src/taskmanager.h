@@ -57,11 +57,6 @@ public:
 
     // Info tasks
     int TaskCount(const Task::TaskType);
-    int GetActiveUploadSpeed();
-    int GetActiveDownloadSpeed();
-
-
-
 private:
     TaskFactory             m_TaskFactory; // Local to upload manager
 

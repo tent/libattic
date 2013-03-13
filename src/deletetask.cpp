@@ -4,9 +4,9 @@
 
 #include "errorcodes.h"
 #include "utils.h"
-#include "conoperations.h"
 #include "fileinfo.h"
 #include "postutils.h"
+#include "netlib.h"
 
 DeleteTask::DeleteTask( TentApp* pApp, 
                         FileManager* pFm, 
