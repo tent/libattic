@@ -134,7 +134,7 @@ if(ATTIC_STATIC_LIB)
 
 
     include(mergestaticlibs)
-    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime)
+    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime boost_timer boost_chrono)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
