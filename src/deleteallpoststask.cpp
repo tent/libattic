@@ -103,7 +103,7 @@ void DeleteAllPostsTask::RunTask()
 
                 // Get Chunk info
                 std::vector<std::string> chunkPosts;
-                chunkPosts = *p.GetChunkPosts();
+                chunkPosts = p.GetChunkPosts();
 
                 if(chunkPosts.size())
                 {

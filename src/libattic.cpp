@@ -671,10 +671,12 @@ int EnterPassphrase(const char* szPass) {
         std::string salt;
         g_Pt.GetSalt(salt);
 
+        std::cout<<" entering pass ... " << std::endl;
         std::string phraseKey;
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
-        std::cout<<" PHRASE KEY : " << phraseKey << std::endl;
+        std::cout<<" yep " << std::endl;
+        //std::cout<<" PHRASE KEY : " << phraseKey << std::endl;
         std::cout<<" SALT : " << salt << std::endl;
 
         if(status == ret::A_OK) {

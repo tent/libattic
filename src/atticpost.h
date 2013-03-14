@@ -39,7 +39,7 @@ public:
     void PushBackChunkPostId(const std::string& postId) { m_ChunkPosts.push_back(postId); }
     void PushBackChunkIdentifier(const std::string& id) { m_ChunkIds.push_back(id); }
 
-    std::vector<std::string>* GetChunkPosts() { return &m_ChunkPosts; }
+    std::vector<std::string> GetChunkPosts() const { return m_ChunkPosts; }
 
 private:
     std::vector<std::string> m_ChunkPosts;

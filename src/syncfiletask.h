@@ -3,19 +3,20 @@
 #pragma once
 
 #include <string>
+#include <map>
 #include "tenttask.h"
 #include "atticpost.h"
 #include "fileinfo.h"
 
 
-class SyncFileTask : public TentTask
-{
+class SyncFileTask : public TentTask {
     int SyncMetaData(AtticPost& out);
     /*
     int AssessFileInfo(const FileInfo& local_fi, const FileInfo& meta_fi);
     int Pull(const AtticPost& p, const FileInfo& meta_fi);
     */
-    int RetrieveChunkInfo(AtticPost& post, FileInfo* fi);
+    int ProcessFileInfo(const AtticPost& p);
+    int RetrieveChunkInfo(const AtticPost& post, FileInfo* fi);
 public:
     SyncFileTask( TentApp* pApp,
                   FileManager* pFm,
@@ -38,10 +39,11 @@ public:
 
     void RunTask();
 
+    void Cb(int a, void* b);
+
 private:
+    std::map<std::string, bool> m_ProcessingQueue;
     std::string m_PostID;
-
-
 };
 
 #endif

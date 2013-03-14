@@ -72,7 +72,16 @@ void PollTask::OnFinished()
 void PollTask::PollTaskCB(int a, void* b)
 {
     std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
-
+    if(b) {
+        std::string returnpost = (char*)b;
+        if(m_ProcessingQueue.find(returnpost) != m_ProcessingQueue.end()) {
+            // remove it from the map
+            m_ProcessingQueue.erase(returnpost);
+        }
+        else {
+            std::cout<<" POSTID NOT FOUND IN QUEUE ?!?!? " << (char*)b << std::endl;
+        }
+    }
 }
 
 void PollTask::RunTask()
@@ -191,12 +200,12 @@ int PollTask::SyncFolder(Folder& folder)
             std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
             if(!postid.empty()) { 
                 // Check if currently in the sync queue
-                    // if no sync
-                    // if yes ignore
-                event::RaiseEvent(Event::REQUEST_SYNC_POST, postid, polltask::PollTaskCB);
+                if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
+                    m_ProcessingQueue[postid] = true;
+                    event::RaiseEvent(Event::REQUEST_SYNC_POST, postid, polltask::PollTaskCB);
+                }
+                // If it is in the queue ignore, do not reaise an event
             }
-
-
         }
     }
     else {
