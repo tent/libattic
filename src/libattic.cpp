@@ -675,9 +675,8 @@ int EnterPassphrase(const char* szPass) {
         std::string phraseKey;
         status = g_pCredManager->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
-        std::cout<<" yep " << std::endl;
         //std::cout<<" PHRASE KEY : " << phraseKey << std::endl;
-        std::cout<<" SALT : " << salt << std::endl;
+        //std::cout<<" SALT : " << salt << std::endl;
 
         if(status == ret::A_OK) {
             status = DecryptMasterKey(phraseKey, salt);
