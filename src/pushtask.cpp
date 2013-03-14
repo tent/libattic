@@ -16,6 +16,7 @@
 #include "eventsystem.h"
 #include "postutils.h"
 #include "log.h"
+#include "taskdelegate.h"
 
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
@@ -28,7 +29,7 @@ PushTask::PushTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    void (*callback)(int, void*))
+                    const TaskDelegate* callbackDelegate)
                     :
                     TentTask ( Task::PUSH,
                                pApp,
@@ -42,39 +43,35 @@ PushTask::PushTask( TentApp* pApp,
                                tempdir,
                                workingdir,
                                configdir,
-                               callback )
+                               callbackDelegate)
 {
-
 }
 
 PushTask::~PushTask()
 {
-
 }
 
-void PushTask::RunTask()
-{
+void PushTask::RunTask() {
     std::cout<<" running push task ... " << std::endl;
     // Run the task
     std::string filepath;
     GetFilepath(filepath);
 
-    event::RaiseEvent(Event::PUSH, Event::START, filepath, NULL);
+    event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
     int status = PushFile(filepath);
-    event::RaiseEvent(Event::PUSH, Event::DONE, filepath, NULL);
+    event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
 
     std::cout<<" finishing push task ... " << std::endl;
     
     // Callback
-    Callback(status, (void*)filepath.c_str());
+    Callback(status, filepath);
     SetFinishedState();
 }
 
 
 // Note* path should not be relative, let the filemanager take care of
 // all the canonical to relative path conversions
-int PushTask::PushFile(const std::string& filepath)
-{
+int PushTask::PushFile(const std::string& filepath) {
     int status = ret::A_OK;
 
     // Verify file exists

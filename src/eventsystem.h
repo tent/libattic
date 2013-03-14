@@ -7,9 +7,11 @@
 #include <string>
 
 #include "mutexclass.h"
+#include "taskdelegate.h"
 
-struct Event
-{
+namespace event {
+
+struct Event {
     enum EventStatus {
         START = 0,
         RUNNING,
@@ -29,17 +31,17 @@ struct Event
         UPLOAD_SPEED,
         DOWNLOAD_SPEED,
         FILE_LOCK,
-        FILE_UNLOCK
+        FILE_UNLOCK,
+        ERROR_NOTIFY,
     };
 
     EventStatus status = START;
     EventType type;
     std::string value;
-    void (*callback)(int, void*);
+    TaskDelegate* delegate = NULL;
 };
 
-class EventListener
-{
+class EventListener {
 public:
     EventListener() {}
     ~EventListener() {}
@@ -47,8 +49,7 @@ public:
     virtual void OnEventRaised(const Event& event) = 0;
 };
 
-class EventSystem : public MutexClass
-{
+class EventSystem : public MutexClass {
     EventSystem() {}
     EventSystem(const EventSystem& rhs) {}
     EventSystem operator=(const EventSystem& rhs) { return *this; }
@@ -73,43 +74,45 @@ private:
     static EventSystem* m_pInstance;
 };
 
-namespace event
+
+static void RegisterForEvent(EventListener* pListener, Event::EventType type) {
+    if(pListener)
+        EventSystem::GetInstance()->RegisterForEvent(pListener, type);  
+}
+
+static void RaiseEvent(const Event& event) {
+    EventSystem::GetInstance()->RaiseEvent(event);
+}
+
+static void RaiseEvent( const Event::EventType type, 
+                        const std::string& value, 
+                        TaskDelegate* delegate)
 {
-    static void RaiseEvent(const Event& event) {
-        EventSystem::GetInstance()->RaiseEvent(event);
-    }
+    Event event;
+    event.type = type;
+    event.value = value;
+    event.delegate = delegate;
+    RaiseEvent(event);
+}
 
-    static void RaiseEvent( const Event::EventType type, 
-                            const std::string& value, 
-                            void (*callback)(int, void*))
-    {
-        Event event;
-        event.type = type;
-        event.value = value;
-        event.callback = callback;
-        RaiseEvent(event);
-    }
+static void RaiseEvent( const Event::EventType type,
+                        const Event::EventStatus status,
+                        const std::string& value,
+                        TaskDelegate* delegate)
+{
+    Event event;
+    event.type = type;
+    event.status = status;
+    event.value = value;
+    event.delegate = delegate;
+    RaiseEvent(event);
+}
 
-    static void RaiseEvent( const Event::EventType type,
-                            const Event::EventStatus status,
-                            const std::string& value,
-                            void (*callback)(int, void*))
-    {
-        Event event;
-        event.type = type;
-        event.status = status;
-        event.value = value;
-        event.callback = callback;
-        RaiseEvent(event);
-    }
+static void ShutdownEventSystem() {
+    EventSystem::GetInstance()->Shutdown();
+}
 
-            
-
-    static void ShutdownEventSystem() {
-        EventSystem::GetInstance()->Shutdown();
-    }
 
 };
-
 #endif
 

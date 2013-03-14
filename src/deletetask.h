@@ -1,4 +1,3 @@
-
 #ifndef DELETETASK_H_
 #define DELETETASK_H_
 #pragma once
@@ -6,6 +5,8 @@
 #include "tenttask.h"
 
 class FileInfo;
+class TaskDelegate;
+
 class DeleteTask : public TentTask
 {
     int DeletePost(const std::string& szPostID); // Depricated, kept for referece
@@ -26,7 +27,7 @@ public:
                 const std::string& tempdir, 
                 const std::string& workingdir,
                 const std::string& configdir,
-                void (*callback)(int, void*));
+                const TaskDelegate* callbackDelegate);
 
     ~DeleteTask();
 

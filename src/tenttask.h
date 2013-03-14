@@ -6,15 +6,14 @@
 
 #include "tentapp.h"
 #include "task.h"
-
 #include "entity.h"
 #include "filemanager.h"
 #include "credentialsmanager.h"
 #include "taskarbiter.h"
 #include "taskfactory.h"
+#include "taskdelegate.h"
 
-class TentTask : public Task
-{
+class TentTask : public Task {
 public:
     TentTask( Task::TaskType type,
               TentApp* pApp, 
@@ -28,7 +27,7 @@ public:
               const std::string& tempdir, 
               const std::string& workingdir,
               const std::string& configdir,
-              void (*callback)(int, void*))
+              const TaskDelegate* callbackDelegate)
               : 
               Task(type)
     {
@@ -46,21 +45,14 @@ public:
         m_WorkingDirectory = workingdir;
         m_ConfigDirectory = configdir;
 
-        mCallback = callback;
+        m_pCallbackDelegate = callbackDelegate;
     }
 
-    virtual void SetFinishedState()                                         
-    {                                                                       
+    virtual void SetFinishedState() {
         Task::SetFinishedState();
-        if(mCallback)                                              
-        {
-            mCallback(ret::A_OK, NULL);                            
-            mCallback = NULL; // Invalidate functor
-        }
     }                                                                       
 
-    virtual ~TentTask()
-    {
+    virtual ~TentTask() {
         m_pTentApp              = NULL;
         m_pFileManager          = NULL;
         m_pCredentialsManager   = NULL;
@@ -100,11 +92,9 @@ public:
     void SetTempDirectory(const std::string& tempdir)           { m_TempDirectory = tempdir; }
     void SetWorkingDirectory(const std::string& workingdir)     { m_WorkingDirectory = workingdir; }
     void SetConfigDirectory(const std::string& configdir)       { m_ConfigDirectory = configdir; }
-    void SetCallback(void (*cb)(int, void*))                    { mCallback = cb; }
 
 
-    void Reset()
-    {
+    void Reset() {
         m_pTentApp              = NULL;
         m_pFileManager          = NULL;
         m_pCredentialsManager   = NULL;
@@ -118,19 +108,16 @@ public:
         m_TempDirectory.clear();
         m_WorkingDirectory.clear();
         m_ConfigDirectory.clear();
-
-        mCallback = NULL;
+        m_pTaskFactory = NULL;
     }
 
 protected:
-    void Callback(int code, void* p)
-    {
-        if(mCallback)
-            mCallback(code, p); 
+    void Callback(const int code, const std::string& var) {
+        if(m_pCallbackDelegate)
+            m_pCallbackDelegate->Callback(GetTaskType(), code, GetTaskState(), var);
     }
 
-    void ConstructPostUrl(std::string& out)
-    {
+    void ConstructPostUrl(std::string& out) {
         Entity entity;
         GetEntity(entity);
         entity.GetApiRoot(out);
@@ -153,7 +140,7 @@ private:
     TaskArbiter*         m_pTaskArbiter;
     TaskFactory*         m_pTaskFactory;
 
-    void (*mCallback)(int, void*);
+    const TaskDelegate* m_pCallbackDelegate;
 };
 
 #endif

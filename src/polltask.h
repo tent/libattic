@@ -2,11 +2,14 @@
 #define POLLTASK_H_
 #pragma once
 
-#include "tenttask.h"
-#include "folder.h"
-
 #include <map>
 #include <string>
+
+#include "tenttask.h"
+#include "folder.h"
+#include "taskdelegate.h"
+
+class PollDelegate;
 
 class PollTask : public TentTask {
     int SyncFolderPosts();
@@ -18,7 +21,7 @@ class PollTask : public TentTask {
     bool IsFileInQueue(const std::string& filepath);
 
 public:
-    void PollTaskCB(int a, void* b);
+    void PollTaskCB(int a, std::string& b);
 
     PollTask( TentApp* pApp,
               FileManager* pFm,
@@ -31,8 +34,8 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              void (*callback)(int, void*));
-
+              const TaskDelegate* callbackDelegate);
+ 
     ~PollTask();
 
     virtual void OnStart(); 
@@ -42,9 +45,35 @@ public:
     void RunTask();
 
 private:
-    bool m_bRunning;
-
     std::map<std::string, bool> m_ProcessingQueue; // Files currently being processed
+
+    PollDelegate* m_pDelegate;
+};
+
+class PollDelegate : public TaskDelegate {
+public:
+    PollDelegate(PollTask* p){
+        m_pTask = p;
+    }
+    ~PollDelegate(){}
+
+    virtual void Callback(const int type,
+                          const int code,
+                          const int state,
+                          const std::string& var) const
+    {
+        if(m_pTask) {
+            std::string retval = var;
+            m_pTask->PollTaskCB(code, retval);
+        }
+
+        if(this)
+            delete this;
+    }
+
+private:
+    PollTask* m_pTask;
 };
 
 #endif
+

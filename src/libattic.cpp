@@ -438,8 +438,7 @@ int SaveAppToFile()
     return g_pApp->SaveToFile(szSavePath);
 }
 
-int LoadAppFromFile()
-{
+int LoadAppFromFile() {
     int status = ret::A_OK;
 
     if(!g_pApp)
@@ -461,77 +460,52 @@ int LoadAppFromFile()
     return status;
 }
 
-int PushFile(const char* szFilePath, void (*callback)(int, void*) )
-{
+int PushFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK){
         std::string filepath(szFilePath);
-        event::RaiseEvent(Event::REQUEST_PUSH, filepath, callback);
+        event::RaiseEvent(event::Event::REQUEST_PUSH, filepath, NULL);
     }
     return status;
 }
 
-int PullFile(const char* szFilePath, void (*callback)(int, void*))
-{
+int PullFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK){
         std::string filepath(szFilePath);
-        event::RaiseEvent(Event::REQUEST_PULL, filepath, callback);
+        event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
     }
 
     return ret::A_OK;
 }
 
-int DeleteFile(const char* szFilePath, void (*callback)(int, void*) )
-{
+int DeleteFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK) {
         std::string filepath(szFilePath);
-        event::RaiseEvent(Event::REQUEST_DELETE, filepath, callback);
+        event::RaiseEvent(event::Event::REQUEST_DELETE, filepath, NULL);
     }
 
     return status;
 }
 
-int PullAllFiles(void (*callback)(int, void*))
-{
+int SyncFiles(void) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pTaskManager->DownloadAllFiles(callback);
+        status = g_pTaskManager->SyncFiles(NULL);
 
     return status;
 }
 
-int SyncFiles(void (*callback)(int, void*))
-{
+int PollFiles(void) {
     int status = IsLibInitialized();
 
     if(status == ret::A_OK)
-        status = g_pTaskManager->SyncFiles(callback);
-
-    return status;
-}
-
-int PollFiles(void (*callback)(int, void*))
-{
-    int status = IsLibInitialized();
-
-    if(status == ret::A_OK)
-        status = g_pTaskManager->PollFiles(callback);
-
-    return status;
-
-}
-
-int DeleteAllPosts(void (*callback)(int, void*)) {
-    int status = IsLibInitialized();
-
-    if(status == ret::A_OK)
-        status = g_pTaskManager->DeleteAllPosts(callback);
+        status = g_pTaskManager->PollFiles(NULL);
 
     return status;
 }
@@ -974,24 +948,27 @@ int FreeFileList(char** pList, int stride) {
 
 void RegisterForPullNotify(void (*callback)(int, int, const char*)) {
     if(callback)
-        g_CallbackHandler.RegisterCallback(Event::PULL, callback);
+        g_CallbackHandler.RegisterCallback(event::Event::PULL, callback);
 }
 
 void RegisterForPushNotify(void (*callback)(int, int, const char*)) {
     if(callback)
-        g_CallbackHandler.RegisterCallback(Event::PUSH, callback);
+        g_CallbackHandler.RegisterCallback(event::Event::PUSH, callback);
 }
 
 void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*)) {
     if(callback)
-        g_CallbackHandler.RegisterCallback(Event::UPLOAD_SPEED, callback);
+        g_CallbackHandler.RegisterCallback(event::Event::UPLOAD_SPEED, callback);
 }
 
 void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*)) {
     if(callback)
-        g_CallbackHandler.RegisterCallback(Event::DOWNLOAD_SPEED, callback);
-    else
-        std::cout<<" INvALID CALLBACK " << std::endl;
+        g_CallbackHandler.RegisterCallback(event::Event::DOWNLOAD_SPEED, callback);
+}
+
+void RegisterForErrorNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(event::Event::ERROR_NOTIFY, callback);
 }
 
 

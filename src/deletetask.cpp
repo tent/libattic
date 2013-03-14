@@ -7,6 +7,7 @@
 #include "fileinfo.h"
 #include "postutils.h"
 #include "netlib.h"
+#include "taskdelegate.h"
 
 DeleteTask::DeleteTask( TentApp* pApp, 
                         FileManager* pFm, 
@@ -19,7 +20,7 @@ DeleteTask::DeleteTask( TentApp* pApp,
                         const std::string& tempdir, 
                         const std::string& workingdir,
                         const std::string& configdir,
-                        void (*callback)(int, void*))
+                        const TaskDelegate* callbackDelegate)
                         :
                         TentTask( Task::DELETE,
                                   pApp,
@@ -33,7 +34,7 @@ DeleteTask::DeleteTask( TentApp* pApp,
                                   tempdir,
                                   workingdir,
                                   configdir,
-                                  callback)
+                                  callbackDelegate)
 {
 }
 
@@ -55,7 +56,7 @@ void DeleteTask::RunTask()
     status = UpdatePost(fi);
     
     // Callback
-    Callback(status, NULL);
+    Callback(status, "");
     SetFinishedState();
 }
 

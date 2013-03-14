@@ -11,7 +11,7 @@
 #include "response.h"
 #include "eventsystem.h"
 #include "filesystem.h"
-
+#include "taskdelegate.h"
 
 SyncFileTask::SyncFileTask( TentApp* pApp,
                             FileManager* pFm,
@@ -24,7 +24,7 @@ SyncFileTask::SyncFileTask( TentApp* pApp,
                             const std::string& tempdir,
                             const std::string& workingdir,
                             const std::string& configdir,
-                            void (*callback)(int, void*))
+                            const TaskDelegate* callbackDelegate)
                             :                                               
                             TentTask( Task::SYNC_FILE_TASK,
                                       pApp,                                 
@@ -38,7 +38,7 @@ SyncFileTask::SyncFileTask( TentApp* pApp,
                                       tempdir,                              
                                       workingdir,                           
                                       configdir,                            
-                                      callback)                             
+                                      callbackDelegate)                             
 {
     // TODO :: refine constructor params, FOR NOW filepath will need to have the postid
     m_PostID = filepath;
@@ -75,7 +75,7 @@ void SyncFileTask::RunTask() {
     }
 
     std::cout<<" ...sync file task finished ... " << std::endl;
-    Callback(status, (void*)m_PostID.c_str());
+    Callback(status, m_PostID);
     SetFinishedState();
 }
 
@@ -167,7 +167,7 @@ int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
             FileManager* fm = GetFileManager();
             fm->InsertToManifest(&fi);
             // pull request
-            event::RaiseEvent(Event::REQUEST_PULL, filepath, NULL);
+            event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
             m_ProcessingQueue[filepath] = true;
         }
         else {

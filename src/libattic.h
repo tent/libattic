@@ -64,11 +64,17 @@ int GetPhraseStatus();
 //    - RUNNING,                     
 //    - PAUSED,
 //    - DONE,
-
 void RegisterForPullNotify(void (*callback)(int, int, const char*));
 void RegisterForPushNotify(void (*callback)(int, int, const char*));
 void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*));
 void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*));
+void RegisterForErrorNotify(void (*callback)(int, int, const char*));
+
+
+int PushFile(const char* szFilePath);
+int PullFile(const char* szFilePath);
+int DeleteFile(const char* szFilePath);
+int PollFiles(void);
 
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)
@@ -79,21 +85,9 @@ int SaveAppToFile();
 int LoadAppFromFile();
 int LoadAccessToken();
 
-// Pushfile to tent
-int PushFile(const char* szFilePath, void (*callback)(int, void*));
-
-// Pullfile from tent
-int PullFile(const char* szFilePath, void (*callback)(int, void*));
-
-// Delete a file
-int DeleteFile(const char* szFilePath, void (*callback)(int, void*));
-
-// Pull All files in manifest
-int PullAllFiles(void (*callback)(int, void*)); // Pull into lib, don't expose
-
 // TODO :: These two methods are just temporarily exposed, to be used internally only
-int SyncFiles(void (*callback)(int, void*));
-int PollFiles(void (*callback)(int, void*));
+int SyncFiles(void);
+
 
 int SetEntityUrl(const char* szUrl);
 
@@ -109,9 +103,6 @@ int GetFileList(void(*callback)(int, char**, int, int));
 
 // Once finished with the file list, pass back here for memory cleanup
 int FreeFileList(char** pList, int stride);
-
-// Utility function <- vince, make a temporary button of some sort for this, to nuke your account
-int DeleteAllPosts(void (*callback)(int, void*));
 
 // TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
 class FileManager;

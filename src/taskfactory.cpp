@@ -3,10 +3,8 @@
 
 #include "tenttask.h"
 #include "pulltask.h"
-#include "pullalltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "deleteallpoststask.h"
 #include "synctask.h"
 #include "queryfilestask.h"
 #include "polltask.h"
@@ -21,12 +19,10 @@
 
 TaskFactory::TaskFactory()
 {
-
 }
 
 TaskFactory::~TaskFactory()
 {
-
 }
 
 int TaskFactory::Initialize() // Depricated
@@ -74,7 +70,7 @@ Task* TaskFactory::GetTentTask( Task::TaskType type,
                                 const std::string& tempdir,   
                                 const std::string& workingdir,
                                 const std::string& configdir, 
-                                void (*callback)(int, void*),
+                                const TaskDelegate* callbackDelegate,
                                 TaskFactoryDelegate* delegate)
 
 {
@@ -94,7 +90,7 @@ Task* TaskFactory::GetTentTask( Task::TaskType type,
                            tempdir,   
                            workingdir,
                            configdir, 
-                           callback); 
+                           callbackDelegate); 
 
     PushBackTask(t, delegate);
     
@@ -154,7 +150,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                       const std::string& tempdir,     
                                       const std::string& workingdir,  
                                       const std::string& configdir,   
-                                      void (*callback)(int, void*))
+                                      const TaskDelegate* callbackDelegate)
 {
 
     Task* t = NULL;
@@ -173,7 +169,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               tempdir,                   
                               workingdir,                
                               configdir,                 
-                              callback);                         
+                              callbackDelegate);                         
             break;
         }
         case Task::PULL:
@@ -189,23 +185,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               tempdir,                    
                               workingdir,                 
                               configdir,                  
-                              callback);         
-            break;
-        }
-        case Task::PULLALL:
-        {
-            t = new PullAllTask( pApp,                             
-                                 pFm,                     
-                                 pCm,          
-                                 pTa,                     
-                                 pTf,
-                                 at,
-                                 entity,                           
-                                 filepath,                         
-                                 tempdir,                    
-                                 workingdir,                 
-                                 configdir,                  
-                                 callback);   
+                              callbackDelegate);         
             break;
         }
         case Task::DELETE:
@@ -221,24 +201,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                 tempdir,                         
                                 workingdir,                      
                                 configdir,                       
-                                callback);             
-            break;
-        }
-        case Task::DELETEALLPOSTS:
-        {
-            t = new DeleteAllPostsTask( pApp,                                  
-                                        pFm,                          
-                                        pCm,          
-                                        pTa,                          
-                                        pTf,
-                                        at,
-                                        entity,                                
-                                        filepath,                              
-                                        tempdir,                         
-                                        workingdir,                      
-                                        configdir,                       
-                                        callback);     
-
+                                callbackDelegate);             
             break;
         }
         case Task::SYNC:
@@ -254,7 +217,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               tempdir,               
                               workingdir,            
                               configdir,             
-                              callback);             
+                              callbackDelegate);             
             break;
         }
         case Task::SYNC_FILE_TASK:
@@ -270,7 +233,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                   tempdir,               
                                   workingdir,            
                                   configdir,             
-                                  callback);
+                                  callbackDelegate);
 
             break;
         }
@@ -287,7 +250,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               tempdir,               
                               workingdir,            
                               configdir,             
-                              callback);             
+                              callbackDelegate);             
             break;
         }
         default:

@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "pullalltask.h"
 #include "atticpost.h"                  
 #include "urlparams.h"                  
 #include "constants.h"                  
@@ -25,7 +24,7 @@ SyncTask::SyncTask( TentApp* pApp,
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              void (*callback)(int, void*))
+              const TaskDelegate* callbackDelegate)
               :                                               
               TentTask( Task::SYNC,
                         pApp,                                 
@@ -37,9 +36,9 @@ SyncTask::SyncTask( TentApp* pApp,
                         entity,                               
                         filepath,                             
                         tempdir,                              
-                        workingdir,                           
-                        configdir,                            
-                        callback)                             
+                        workingdir,
+                        configdir,
+                        callbackDelegate)
 {
 }
 

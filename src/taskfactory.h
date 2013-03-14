@@ -17,10 +17,9 @@ class ConnectionManager;
 class CredentialsManager;
 class Credentials;
 class TaskArbiter;
+class TaskDelegate;
 
-
-class TaskFactoryDelegate
-{
+class TaskFactoryDelegate {
 public:
     TaskFactoryDelegate() {}
     ~TaskFactoryDelegate() {}
@@ -29,8 +28,7 @@ public:
     virtual void OnTaskInsert(Task* t) = 0;
 };
 
-class TaskFactory : public MutexClass
-{                                                                       
+class TaskFactory : public MutexClass {
 private:
     void TaskFinished(int code, Task* pTask);
 
@@ -46,7 +44,7 @@ private:
                              const std::string& tempdir,     
                              const std::string& workingdir,  
                              const std::string& configdir,   
-                             void (*callback)(int, void*));  
+                             const TaskDelegate* callbackDelegate);
 
     Task* CreateNewManifestTask( Task::TaskType type,
                                  FileManager* pFm,
@@ -75,7 +73,7 @@ public:
                        const std::string& tempdir,   
                        const std::string& workingdir,
                        const std::string& configdir, 
-                       void (*callback)(int, void*),
+                       const TaskDelegate* callbackDelegate,
                        TaskFactoryDelegate* delegate = NULL);
 
     Task* GetManifestTask( Task::TaskType type,

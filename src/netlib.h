@@ -130,7 +130,7 @@ static bool WriteToSSLSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                 // Raise event
                 char szSpeed[256] = {'\0'};
                 snprintf(szSpeed, 256, "%u", bps);
-                event::RaiseEvent(Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+                event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
                 std::cout<<" SPEEEEED : " << bps << std::endl;
             }
         }

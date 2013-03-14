@@ -4,6 +4,8 @@
 
 #include "tenttask.h"
 
+class TaskDelegate;
+
 class SyncTask : public TentTask
 {
     int SyncMetaData();
@@ -24,7 +26,7 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              void (*callback)(int, void*));
+              const TaskDelegate* callbackDelegate);
 
     ~SyncTask();
 

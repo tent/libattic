@@ -2,29 +2,25 @@
 #define TASK_H_
 #pragma once
 
-#include <iostream>
 #include "errorcodes.h"
 
-class Task // Inherit from this to implement specific tasks   
-{                                                             
+// Inherit from this to implement specific tasks 
+class Task {                                                             
 public:
-    enum TaskState
-    {
+    enum TaskState {
         IDLE=0,
         RUNNING,
         PAUSED,
         FINISHED
     };
 
-    enum TaskType                                                       
-    {                                                                   
+    enum TaskType {                                                                   
         // TentTask
         UNKNOWN=0,
         PUSH,
         PULL,
         PULLALL,
         DELETE,                                                         
-        DELETEALLPOSTS,
         SYNC,
         SYNC_FILE_TASK,
         ENCRYPT,
@@ -35,8 +31,7 @@ public:
         POLL
     };
 protected:
-    Task(TaskType type = UNKNOWN)
-    {
+    Task(TaskType type = UNKNOWN) {
         m_State = IDLE;
         m_Type = type;
     }                                                  
@@ -50,7 +45,7 @@ public:
 
     virtual void Reset() = 0;
 
-    TaskState GetTaskState() const { if(!this) std::cout<<" INVALID INSTANCE " << std::endl; return m_State; }
+    TaskState GetTaskState() const { return m_State; }
     TaskType GetTaskType() const { return m_Type; }
     //void GetTaskState(TaskState state) { m_State = state; }
 

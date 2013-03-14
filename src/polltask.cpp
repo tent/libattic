@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "folderpost.h"
 #include "eventsystem.h"
+#include "taskdelegate.h"
 
 namespace polltask 
 {
@@ -14,8 +15,6 @@ namespace polltask
 
     static void PollTaskCB(int a, void* b)
     {
-        if(g_pCurrentPollTask)
-            g_pCurrentPollTask->PollTaskCB(a, b);
     }
 }
 
@@ -30,7 +29,7 @@ PollTask::PollTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    void (*callback)(int, void*))
+                    const TaskDelegate* callbackDelegate)
                     :                                               
                     TentTask( Task::POLL,
                               pApp,                                 
@@ -44,21 +43,22 @@ PollTask::PollTask( TentApp* pApp,
                               tempdir,                              
                               workingdir,                           
                               configdir,                            
-                              callback)                             
+                              callbackDelegate)                             
 {
-    m_bRunning = false;
+    m_pDelegate = new PollDelegate(this);
 }
 
-PollTask::~PollTask() 
-{
+PollTask::~PollTask() {
+    if(m_pDelegate) {
+        delete m_pDelegate;
+        m_pDelegate = NULL;
+    }
 }
 
-void PollTask::OnStart()
-{
+void PollTask::OnStart(){
     if(!polltask::g_pCurrentPollTask) {
         polltask::g_pCurrentPollTask = this;
     }
-     
 }
 
 void PollTask::OnPaused()
@@ -69,23 +69,19 @@ void PollTask::OnFinished()
 {
 }
 
-void PollTask::PollTaskCB(int a, void* b)
-{
+void PollTask::PollTaskCB(int a, std::string& b) {
     std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
-    if(b) {
-        std::string returnpost = (char*)b;
-        if(m_ProcessingQueue.find(returnpost) != m_ProcessingQueue.end()) {
-            // remove it from the map
-            m_ProcessingQueue.erase(returnpost);
-        }
-        else {
-            std::cout<<" POSTID NOT FOUND IN QUEUE ?!?!? " << (char*)b << std::endl;
-        }
+    std::string returnpost = b;
+    if(m_ProcessingQueue.find(returnpost) != m_ProcessingQueue.end()) {
+        // remove it from the map
+        m_ProcessingQueue.erase(returnpost);
+    }
+    else {
+        std::cout<<" POSTID NOT FOUND IN QUEUE ?!?!? " << b << std::endl;
     }
 }
 
-void PollTask::RunTask()
-{
+void PollTask::RunTask() {
     int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
@@ -101,7 +97,6 @@ void PollTask::RunTask()
         Callback(status, NULL);
         SetFinishedState();
     }
-
 }
 
 int PollTask::SyncFolderPosts() {
@@ -181,8 +176,7 @@ int PollTask::SyncFolderPosts() {
     return status;
 }
 
-int PollTask::SyncFolder(Folder& folder)
-{
+int PollTask::SyncFolder(Folder& folder) {
     // Make sure the folder exists in the manifest
     //
     // loop through the entries make sure they exist, if there is a newer version
@@ -202,7 +196,8 @@ int PollTask::SyncFolder(Folder& folder)
                 // Check if currently in the sync queue
                 if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
                     m_ProcessingQueue[postid] = true;
-                    event::RaiseEvent(Event::REQUEST_SYNC_POST, postid, polltask::PollTaskCB);
+                    // TODO :: create TaskDelegate to pass here !
+                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, postid, m_pDelegate);
                 }
                 // If it is in the queue ignore, do not reaise an event
             }

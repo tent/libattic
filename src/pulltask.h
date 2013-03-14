@@ -8,12 +8,13 @@
 #include "response.h"
 #include "post.h"
 
+class TaskDelegate;
+
 class PullTask: public TentTask {
     int GetChunkPost(FileInfo* fi, Response& responseOut);
 
     int PullFile(const std::string& filepath);
     int RetrieveFile( const std::string filepath, 
-
                       const std::string postpath, 
                       const Credentials& fileCred,
                       Post& post,
@@ -36,7 +37,7 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              void (*callback)(int, void*));
+              const TaskDelegate* callbackDelegate);
 
     ~PullTask();
 

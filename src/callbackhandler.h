@@ -5,11 +5,10 @@
 #include <map>
 #include <deque>
 #include "eventsystem.h"
-#include "eventsystem.h"
 
-class CallbackHandler : public EventListener {
+class CallbackHandler : public event::EventListener {
 
-    void Notify(const Event& event);
+    void Notify(const event::Event& event);
 public:
     typedef void(*EventCallback)(int, int, const char*);
 
@@ -18,12 +17,12 @@ public:
 
     void Initialize();
 
-    void RegisterCallback(Event::EventType type, EventCallback cb);
-    void OnEventRaised(const Event& event);
+    void RegisterCallback(event::Event::EventType type, EventCallback cb);
+    void OnEventRaised(const event::Event& event);
 
 private:
     typedef std::deque<EventCallback> CallbackList;
-    std::map<Event::EventType, CallbackList>  m_CallbackMap;
+    std::map<event::Event::EventType, CallbackList>  m_CallbackMap;
 
 };
 

@@ -1,5 +1,7 @@
 #include "eventsystem.h"
 
+namespace event {
+
 EventSystem* EventSystem::m_pInstance = 0;
 
 EventSystem* EventSystem::GetInstance() {
@@ -63,4 +65,5 @@ void EventSystem::UnregisterFromEvent(const EventListener* pListener, Event::Eve
     Unlock();
 }
 
+}
 

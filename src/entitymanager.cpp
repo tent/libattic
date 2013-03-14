@@ -58,10 +58,6 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
             status = ret::A_FAIL_INVALID_PTR;
         }
     }
-    else {
-        alog::Log(Logger::ERROR, std::string("entitymanager->discover") +
-                  std::string("ERROR : ") + ret::ErrorToString(status));
-    }
 
     return status; 
 }

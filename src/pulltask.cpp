@@ -11,6 +11,7 @@
 #include "syncfiletask.h"
 #include "eventsystem.h"
 #include "netlib.h"
+#include "taskdelegate.h"
 
 PullTask::PullTask( TentApp* pApp, 
                     FileManager* pFm, 
@@ -23,7 +24,7 @@ PullTask::PullTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    void (*callback)(int, void*))
+                    const TaskDelegate* callbackDelegate)
                     :
                     TentTask( Task::PULL,
                               pApp,
@@ -37,14 +38,12 @@ PullTask::PullTask( TentApp* pApp,
                               tempdir,
                               workingdir,
                               configdir,
-                              callback )
+                              callbackDelegate)
 {
-
 }
 
 PullTask::~PullTask()
 {
-
 }
 
 void PullTask::RunTask()
@@ -53,13 +52,13 @@ void PullTask::RunTask()
     std::string filepath;
     GetFilepath(filepath);
 
-    event::RaiseEvent(Event::PULL, Event::START, filepath, NULL);
+    event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
     int status = PullFile(filepath);
-    event::RaiseEvent(Event::PULL, Event::DONE, filepath, NULL);
+    event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
 
     std::cout<<" PULL TASK FINISHED STATUS : " << status << std::endl;
 
-    Callback(status, (void*)filepath.c_str());
+    Callback(status, filepath);
     SetFinishedState();
 }
 
@@ -273,7 +272,7 @@ int PullTask::RetrieveFile( const std::string filepath,
                 // Raise event
                 char szSpeed[256] = {'\0'};
                 snprintf(szSpeed, 256, "%u", bps);
-                event::RaiseEvent(Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
+                event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
             }
 
             ChunkInfo* ci = fi->GetChunkInfo((*itr).Name);

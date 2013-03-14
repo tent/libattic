@@ -8,8 +8,7 @@
 #include "mutexclass.h"
 #include "eventsystem.h"
 
-class FileQueue
-{
+class FileQueue {
 public:
     FileQueue() {}
     ~FileQueue() {}
@@ -41,8 +40,7 @@ private:
     std::map<std::string, bool> m_FileQueue;
 };
 
-class CentralFileQueue : public MutexClass
-{
+class CentralFileQueue : public MutexClass {
     CentralFileQueue() {}
     CentralFileQueue(const CentralFileQueue& rhs) {}
     CentralFileQueue operator=(const CentralFileQueue& rhs) { return *this; }
@@ -53,7 +51,7 @@ public:
         bool retval = false;
         Lock();
         retval = m_FileQueue.LockFile(filepath);
-        event::RaiseEvent(Event::FILE_LOCK, filepath, NULL);
+        event::RaiseEvent(event::Event::FILE_LOCK, filepath, NULL);
         Unlock();
         return retval;
     }
@@ -62,7 +60,7 @@ public:
         bool retval = false;
         Lock();
         retval = m_FileQueue.UnlockFile(filepath);
-        event::RaiseEvent(Event::FILE_UNLOCK, filepath, NULL);
+        event::RaiseEvent(event::Event::FILE_UNLOCK, filepath, NULL);
         Unlock();
         return retval;
     }

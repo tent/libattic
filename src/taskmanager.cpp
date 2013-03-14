@@ -4,6 +4,7 @@
 #include "tentapp.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
+#include "taskdelegate.h"
 
 
 TaskManager::TaskManager( TentApp* pApp, 
@@ -30,53 +31,49 @@ TaskManager::TaskManager( TentApp* pApp,
 
 TaskManager::~TaskManager()
 {
-
 }
 
-int TaskManager::Initialize()
-{
+int TaskManager::Initialize() {
     int status = ret::A_OK;
     status = m_TaskFactory.Initialize();
 
-    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PULL);
-    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_PUSH);
-    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_DELETE);
-    EventSystem::GetInstance()->RegisterForEvent(this, Event::REQUEST_SYNC_POST);
+    event::RegisterForEvent(this, event::Event::REQUEST_PULL);
+    event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
+    event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
+    event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
 
     return status;
 }
 
-int TaskManager::Shutdown()
-{
+int TaskManager::Shutdown() {
     int status = ret::A_OK;
     status = m_TaskFactory.Shutdown();
 
     return status;
 }
 
-void TaskManager::OnEventRaised(const Event& event)
-{
+void TaskManager::OnEventRaised(const event::Event& event) {
     std::cout<<" TASK MANAGER EVENT RAISED " << std::endl;
     switch(event.type) {
-        case Event::REQUEST_PULL:
+        case event::Event::REQUEST_PULL:
             {
-                DownloadFile(event.value, event.callback);
+                DownloadFile(event.value, event.delegate);
                 break;
             }
-        case Event::REQUEST_PUSH:
+        case event::Event::REQUEST_PUSH:
             {
-                UploadFile(event.value, event.callback);
+                UploadFile(event.value, event.delegate);
                 break;
             }
-        case Event::REQUEST_DELETE:
+        case event::Event::REQUEST_DELETE:
             {
-                DeleteFile(event.value, event.callback);
+                DeleteFile(event.value, event.delegate);
                 break;
             }
-        case Event::REQUEST_SYNC_POST:
+        case event::Event::REQUEST_SYNC_POST:
             {
                 std::cout<<" creating request sync task " << std::endl;
-                SyncFile(event.value, event.callback);
+                SyncFile(event.value, event.delegate);
                 break;
             }
         default:
@@ -85,31 +82,28 @@ void TaskManager::OnEventRaised(const Event& event)
 
 }
 
-void TaskManager::OnTaskCreate(Task* t)
-{
+void TaskManager::OnTaskCreate(Task* t) {
     std::cout<<" On Task Create " << std::endl;
     // Get Task type
     // if pull or push task
     // extract curl instance ptr
 }
 
-void TaskManager::OnTaskInsert(Task* t)
-{
+void TaskManager::OnTaskInsert(Task* t) {
     std::cout<<" On Task Insert " << std::endl;
-
     // Maybe move spin off task to spin off?
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
 }
-int TaskManager::SyncFile(const std::string& postid, void (*callback)(int, void*))
-{
+
+int TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
     return CreateAndSpinOffTask( Task::SYNC_FILE_TASK,
                                  postid,
-                                 callback);
+                                 pDel);
 }
 
 int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype, 
                                        const std::string& filepath, 
-                                       void (*callback)(int, void*))
+                                       TaskDelegate* pDel)
 {
     int status = ret::A_OK;
 
@@ -125,7 +119,7 @@ int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype,
                                          m_TempDir,
                                          m_WorkingDir,
                                          m_ConfigDir,
-                                         callback,
+                                         pDel,
                                          this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
@@ -133,36 +127,27 @@ int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype,
 
 }
 
-int TaskManager::UploadFile(const std::string& filepath, void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask( Task::PUSH, filepath, callback);
+int TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
+    return CreateAndSpinOffTask( Task::PUSH, filepath, pDel);
 }
 
-int TaskManager::DownloadFile(const std::string& filepath, void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask( Task::PULL, filepath, callback);
+int TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
+    return CreateAndSpinOffTask( Task::PULL, filepath, pDel);
 }
 
-int TaskManager::DeleteFile(const std::string& filepath, void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask( Task::DELETE, filepath, callback);
+int TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
+    return CreateAndSpinOffTask( Task::DELETE, filepath, pDel);
 }
 
-int TaskManager::DownloadAllFiles(void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask(Task::PULLALL, "", callback);
+int TaskManager::SyncFiles(TaskDelegate* pDel) {
+    return CreateAndSpinOffTask(Task::SYNC, "", pDel);
 }
 
-int TaskManager::SyncFiles(void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask(Task::SYNC, "", callback);
+int TaskManager::PollFiles(TaskDelegate* pDel) {
+    return CreateAndSpinOffTask( Task::POLL, "", pDel);
 }
 
-int TaskManager::PollFiles(void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask( Task::POLL, "", callback);
-}
-
-int TaskManager::DeleteAllPosts(void (*callback)(int, void*)) {
-    return CreateAndSpinOffTask(Task::DELETEALLPOSTS, "", callback);
-}
-
-int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
-{
+int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetManifestTask( Task::QUERYMANIFEST,
@@ -174,8 +159,7 @@ int TaskManager::QueryManifest(void(*callback)(int, char**, int, int))
     return status;
 }
 
-int TaskManager::TaskCount(const Task::TaskType type)
-{
+int TaskManager::TaskCount(const Task::TaskType type) {
     return m_TaskFactory.GetNumberOfActiveTasks(type);
 }
 

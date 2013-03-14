@@ -229,11 +229,6 @@ TEST(PASSPHRASE, CHANGE)
 
 bool g_bPush = false;
 
-static void PUSHCB(int a, void* b)
-{
-    std::cout<<" PUSH CALLBACK : " << a << std::endl;
-}
-
 static void UPLOADSPEEDCB(int a, int b, const char* c) {
     if(c) {
         std::cout<<" SPEED : " << c << "b/s" << std::endl;
@@ -262,7 +257,8 @@ TEST(AFILE, PUSH)
     RegisterForUploadSpeedNotify(&UPLOADSPEEDCB);
     
     if(status == 0) {
-        status = PushFile("./data/oglisv.pdf", &PUSHCB);
+        //status = PushFile("./data/oglisv.pdf");
+        status = PushFile("./data/cassandra11.pdf");
         //status = PushFile("./data/ccf.pdf", &PUSHCB);
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
         //status = PushFile("./data/oa.pdf", &PUSHCB);
@@ -295,11 +291,6 @@ TEST(AFILE, PUSH)
 }
 
 bool g_bPull = false;
-void PULLCB(int a, void* b)
-{
-    std::cout<<" CALLBACK HIT BRAH : " << a << std::endl;
-    std::cout<<" void : " << (char*)b << std::endl;
-}
 
 static void DOWNLOADSPEEDCB(int a, int b, const char* c) {
     std::cout<<" DOWNLOADSPEEDCB HIT " << std::endl;
@@ -334,7 +325,7 @@ TEST(AFILE, PULL)
         fs::GetCanonicalPath(rel, filepath);
         filepath += "/oglisv.pdf";
 
-        status = PullFile(filepath.c_str(), &PULLCB);
+        status = PullFile(filepath.c_str());
         ASSERT_EQ(status, ret::A_OK);
     }
 
@@ -351,11 +342,6 @@ TEST(AFILE, PULL)
 }
 
 bool g_bDelete = false;
-void DELETECB(int a, void* b)
-{
-    std::cout<<" DELETE CALLBACK HIT " << a << std::endl;
-
-}
 
 TEST(AFILE, DELETE) 
 {
@@ -380,7 +366,7 @@ TEST(AFILE, DELETE)
         fs::GetCanonicalPath(rel, filepath);
         filepath += "/docs/cb.pdf";
 
-        status = DeleteFile(filepath.c_str(), &DELETECB);
+        status = DeleteFile(filepath.c_str());
         ASSERT_EQ(status, ret::A_OK);
     }
 
@@ -465,11 +451,7 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 }
 
 bool g_bSync = false;
-void SYNCCB(int a, void* b)
-{
-    std::cout<<" SYNC CALLBACK HIT : " << a << std::endl;
 
-}
 TEST(TEST, SYNC)
 {
     if(g_Entity.empty()) return;
@@ -487,7 +469,7 @@ TEST(TEST, SYNC)
         EnterPassphrase("password");
         std::cout<<"syncing..."<<std::endl;
      //   status = SyncFiles(SYNCCB);
-        status = PollFiles(SYNCCB);
+        status = PollFiles();
         std::cout<<"done calling ... " << std::endl;
     }
 
@@ -1026,7 +1008,7 @@ TEST(ATTIC, DAEMON)
     ASSERT_EQ(status, ret::A_OK);
 
     //std::cout<<" starting to poll ... " << std::endl;
-    status = PollFiles(SYNCCB);
+    status = PollFiles();
     //std::cout<<" running til interrupt ... " << std::endl;
     for(;;) {
 

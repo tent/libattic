@@ -13,18 +13,18 @@
 class TentApp;
 class FileManager;
 class CredentialsManager;
+class TaskDelegate;
 
-class TaskManager : public TaskFactoryDelegate, public EventListener
-{
+class TaskManager : public TaskFactoryDelegate, public event::EventListener {
 public:
-    TaskManager( TentApp* pApp, 
-                 FileManager* pFm, 
-                 CredentialsManager* pCm,
-                 const AccessToken& at,
-                 const Entity& entity,
-                 const std::string& tempdir, 
-                 const std::string& workingdir,
-                 const std::string& configdir
+    TaskManager(TentApp* pApp, 
+                FileManager* pFm, 
+                CredentialsManager* pCm,
+                const AccessToken& at,
+                const Entity& entity,
+                const std::string& tempdir, 
+                const std::string& workingdir,
+                const std::string& configdir
                );
 
     ~TaskManager();
@@ -32,24 +32,22 @@ public:
     int Initialize();
     int Shutdown();
 
-    virtual void OnEventRaised(const Event& event);
+    virtual void OnEventRaised(const event::Event& event);
 
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
     // Sync Tasks
-    int UploadFile(const std::string& filepath, void (*callback)(int, void*));
-    int DownloadFile(const std::string& filepath, void (*callback)(int, void*));
-    int DownloadAllFiles(void (*callback)(int, void*));
-    int PollFiles(void (*callback)(int, void*));
-    int SyncFiles(void (*callback)(int, void*));
-    int SyncFile(const std::string& postid, void (*callback)(int, void*));
-    int DeleteFile(const std::string& filepath, void (*callback)(int, void*));
-    int DeleteAllPosts(void (*callback)(int, void*));
+    int UploadFile(const std::string& filepath, TaskDelegate* pDel);
+    int DownloadFile(const std::string& filepath, TaskDelegate* pDel);
+    int PollFiles(TaskDelegate* pDel);
+    int SyncFiles(TaskDelegate* pDel);
+    int SyncFile(const std::string& postid, TaskDelegate* pDel);
+    int DeleteFile(const std::string& filepath, TaskDelegate* pDel);
 
     int CreateAndSpinOffTask( Task::TaskType tasktype, 
                               const std::string& filepath, 
-                              void (*callback)(int, void*));
+                              TaskDelegate* pDel);
 
 
     // Utility Tasks
