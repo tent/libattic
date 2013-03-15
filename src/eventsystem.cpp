@@ -10,8 +10,7 @@ EventSystem* EventSystem::GetInstance() {
     return m_pInstance;
 }
 
-void EventSystem::Shutdown()
-{
+void EventSystem::Shutdown() {
     Lock();
     ListenerMap::iterator itr = m_ListenerMap.begin();
     for(;itr != m_ListenerMap.end(); itr++) {
@@ -25,35 +24,28 @@ void EventSystem::Shutdown()
     }
     Unlock();
 }
-void EventSystem::RaiseEvent(const Event& event)
-{
+
+void EventSystem::RaiseEvent(const Event& event) {
     // TODO:: test the cost memory vs speed making local copy of map or vector and iterating through that
     // Notify listeners
-    std::cout<<" Lock event system " << std::endl;
     Lock();
     if(m_ListenerMap[event.type].size()) {
         Listeners::iterator itr = m_ListenerMap[event.type].begin();
         for(;itr != m_ListenerMap[event.type].end(); itr++) {
-            if(*itr) { 
-                std::cout<<"raising event"<<std::endl;
+            if(*itr)
                 (*itr)->OnEventRaised(event);
-            }
         }
     }
     Unlock();
-    std::cout<<" unLock event system " << std::endl;
 }
 
-void EventSystem::RegisterForEvent(EventListener* pListener, Event::EventType type)
-{
+void EventSystem::RegisterForEvent(EventListener* pListener, Event::EventType type) {
     Lock();
-    std::cout<<" REGISTERING FOR EVENT : " << type << std::endl;
     m_ListenerMap[type].push_back(pListener);
     Unlock();
 }
 
-void EventSystem::UnregisterFromEvent(const EventListener* pListener, Event::EventType type)
-{
+void EventSystem::UnregisterFromEvent(const EventListener* pListener, Event::EventType type) {
     Lock();
     Listeners::iterator itr = m_ListenerMap[type].begin();
     for(;itr != m_ListenerMap[type].end(); itr++) {
