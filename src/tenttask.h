@@ -27,7 +27,7 @@ public:
               const std::string& tempdir, 
               const std::string& workingdir,
               const std::string& configdir,
-              const TaskDelegate* callbackDelegate)
+              TaskDelegate* callbackDelegate = NULL)
               : 
               Task(type)
     {
@@ -58,6 +58,7 @@ public:
         m_pCredentialsManager   = NULL;
         m_pTaskArbiter          = NULL;
         m_pTaskFactory          = NULL;
+        m_pCallbackDelegate     = NULL;
     }
 
     /*
@@ -93,24 +94,6 @@ public:
     void SetWorkingDirectory(const std::string& workingdir)     { m_WorkingDirectory = workingdir; }
     void SetConfigDirectory(const std::string& configdir)       { m_ConfigDirectory = configdir; }
 
-
-    void Reset() {
-        m_pTentApp              = NULL;
-        m_pFileManager          = NULL;
-        m_pCredentialsManager   = NULL;
-        m_pTaskArbiter          = NULL;
-        m_pTaskFactory          = NULL;
-
-        m_At.Reset();
-        m_Entity.Reset();
-
-        m_Filepath.clear();
-        m_TempDirectory.clear();
-        m_WorkingDirectory.clear();
-        m_ConfigDirectory.clear();
-        m_pTaskFactory = NULL;
-    }
-
 protected:
     void Callback(const int code, const std::string& var) {
         if(m_pCallbackDelegate)
@@ -140,7 +123,7 @@ private:
     TaskArbiter*         m_pTaskArbiter;
     TaskFactory*         m_pTaskFactory;
 
-    const TaskDelegate* m_pCallbackDelegate;
+    TaskDelegate* m_pCallbackDelegate;
 };
 
 #endif

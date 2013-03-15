@@ -25,6 +25,10 @@ class PullTask: public TentTask {
                             const AccessToken* at, 
                             std::string& outBuffer);
 
+    int TransformChunk(const ChunkInfo* ci, 
+                       const std::string& filekey,
+                       const std::string& chunkBuffer, 
+                       std::string& out);
 public:
     PullTask( TentApp* pApp, 
               FileManager* pFm, 
@@ -37,7 +41,7 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              const TaskDelegate* callbackDelegate);
+              TaskDelegate* callbackDelegate);
 
     ~PullTask();
 
@@ -46,8 +50,6 @@ public:
     virtual void OnFinished() {}
 
     void RunTask();
-
-    int GetDownloadSpeed();
 
 private:
 };

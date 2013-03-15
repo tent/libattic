@@ -20,6 +20,12 @@ class PushTask : public TentTask {
                                     unsigned int size,
                                     std::string& out);
 
+    int DetermineChunkPostRequest(FileInfo* fi, 
+                                  Credentials& credOut, 
+                                  std::string& requestTypeOut,
+                                  std::string& urlOut,
+                                  std::string& postidOut);
+
     int InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List);
     
     int PushFile(const std::string& filepath);
@@ -60,7 +66,7 @@ public:
              const std::string& tempdir, 
              const std::string& workingdir,
              const std::string& configdir,
-             const TaskDelegate* callbackDelegate);
+             TaskDelegate* callbackDelegate);
 
     ~PushTask();
 

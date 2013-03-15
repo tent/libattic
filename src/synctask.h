@@ -2,6 +2,7 @@
 #define SYNCTASK_H_
 #pragma once 
 
+#include <memory>
 #include "tenttask.h"
 
 class TaskDelegate;
@@ -26,7 +27,7 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              const TaskDelegate* callbackDelegate);
+              TaskDelegate* callbackDelegate);
 
     ~SyncTask();
 

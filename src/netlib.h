@@ -116,9 +116,12 @@ static bool WriteToSSLSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
     int breakcount = 0;
     do {
         boost::timer::cpu_timer::cpu_timer t;
-        boost::asio::write(ssl_sock, buffer, errorcode); 
-        if(errorcode)
+        size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
+        std::cout<<" BYTES WRITTEN : " << byteswritten << std::endl;
+        if(errorcode) {
+            std::cout<<" WRITE ERROR : " << std::endl;
             std::cout<<errorcode.message()<<std::endl;
+        }
         else {
             boost::timer::cpu_times time = t.elapsed();
             long elapsed = time.user;

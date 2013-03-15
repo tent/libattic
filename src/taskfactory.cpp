@@ -70,7 +70,7 @@ Task* TaskFactory::GetTentTask( Task::TaskType type,
                                 const std::string& tempdir,   
                                 const std::string& workingdir,
                                 const std::string& configdir, 
-                                const TaskDelegate* callbackDelegate,
+                                TaskDelegate* callbackDelegate,
                                 TaskFactoryDelegate* delegate)
 
 {
@@ -150,7 +150,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                       const std::string& tempdir,     
                                       const std::string& workingdir,  
                                       const std::string& configdir,   
-                                      const TaskDelegate* callbackDelegate)
+                                      TaskDelegate* callbackDelegate)
 {
 
     Task* t = NULL;

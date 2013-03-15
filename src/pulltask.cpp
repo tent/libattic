@@ -24,7 +24,7 @@ PullTask::PullTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    const TaskDelegate* callbackDelegate)
+                    TaskDelegate* callbackDelegate)
                     :
                     TentTask( Task::PULL,
                               pApp,
@@ -46,9 +46,7 @@ PullTask::~PullTask()
 {
 }
 
-void PullTask::RunTask()
-{
-    std::cout<<" RUNNING PULL TASK " << std::endl;
+void PullTask::RunTask() {
     std::string filepath;
     GetFilepath(filepath);
 
@@ -56,14 +54,11 @@ void PullTask::RunTask()
     int status = PullFile(filepath);
     event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
 
-    std::cout<<" PULL TASK FINISHED STATUS : " << status << std::endl;
-
     Callback(status, filepath);
     SetFinishedState();
 }
 
-int PullTask::PullFile(const std::string& filepath)
-{
+int PullTask::PullFile(const std::string& filepath) {
     int status = ret::A_OK;
 
     FileManager* fm = GetFileManager();
@@ -99,11 +94,11 @@ int PullTask::PullFile(const std::string& filepath)
                     if(response.code == 200) {
                         Post p;
                         jsn::DeserializeObject(&p, response.body);
-                        status = RetrieveFile( relative_filepath, 
-                                               chunkposturl, 
-                                               fileCred, 
-                                               p, 
-                                               fi);
+                        status = RetrieveFile(relative_filepath, 
+                                              chunkposturl, 
+                                              fileCred, 
+                                              p, 
+                                              fi);
                         // File retrieval was successfull, post step
                         if(status == ret::A_OK) {
                             // Update version
@@ -168,7 +163,6 @@ int PullTask::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 // Decrypt File Key
                 std::string filekey;
                 crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-
                 //std::cout<<" FILE KEY : " << filekey << std::endl;
 
                 out.SetKey(filekey);
@@ -219,9 +213,9 @@ int PullTask::RetrieveFile( const std::string filepath,
     // check if we need to create folders
     fs::CreateDirectoryTree(path); // safer to pass canonical 
 
-    std::string fileKey;
-    fCred.GetKey(fileKey);
-    std::cout<< " file key : " << fileKey << std::endl;
+    std::string filekey;
+    fCred.GetKey(filekey);
+    std::cout<< " file key : " << filekey << std::endl;
 
     std::string temppath, randstr;
     GetTempDirectory(temppath);
@@ -233,9 +227,6 @@ int PullTask::RetrieveFile( const std::string filepath,
 
     std::ofstream ofs;
     ofs.open(temppath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
-
-    std::cout<<" FAILBIT : " << ofs.fail() << std::endl;
-    std::cout<<" TRYING TO OPEN THE FILE " << std::endl;
     if (ofs.is_open()) {
         int count = 0;
         for(;itr != av->end(); itr++) {
@@ -257,88 +248,91 @@ int PullTask::RetrieveFile( const std::string filepath,
 
             // Request attachment                                                                
             std::string buffer;
-            boost::timer::cpu_timer::cpu_timer t;
-            std::cout<<" ATTACHMENT PATH : " << attachmentpath << std::endl;
-            RetrieveAttachment(attachmentpath, at, buffer);
-            boost::timer::cpu_times time = t.elapsed();
-            long elapsed = time.user;
-            // to milliseconds
-            elapsed *= 0.000001;
-            std::cout<<" ELAPSED : "<< elapsed << std::endl;
-            if(elapsed > 0) {
-                std::cout<<" buffer size : "<< buffer.size() << std::endl;
-                unsigned int bps = (buffer.size()/elapsed);
-                std::cout<<" BPS : " << bps << std::endl;
-                // Raise event
-                char szSpeed[256] = {'\0'};
-                snprintf(szSpeed, 256, "%u", bps);
-                event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
-            }
-
-            ChunkInfo* ci = fi->GetChunkInfo((*itr).Name);
-
-            if(ci) {
-                std::string iv;
-                ci->GetIv(iv);
-                fCred.SetIv(iv);
-
-                std::cout<< " IV : " << iv << std::endl;
-                std::cout<< " SIZEOF : " << buffer.size() << std::endl;
-
-                // Base64Decode
-                std::string base64Chunk;
-                crypto::Base64DecodeString(buffer, base64Chunk);
-
-                // Decrypt
-                std::string decryptedChunk;
-                status = crypto::DecryptStringCFB(base64Chunk, fCred, decryptedChunk);
-                //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
-
+            status = RetrieveAttachment(attachmentpath, at, buffer);
+            if(status == ret::A_OK) {
+                // Transform Chunk
+                ChunkInfo* ci = fi->GetChunkInfo((*itr).Name);
+                std::string chunk;
+                status = TransformChunk(ci, filekey, buffer, chunk);
                 if(status == ret::A_OK) {
-                    // Decompress
-                    std::string decompressedChunk;
-                    compress::DecompressString(decryptedChunk, decompressedChunk);
-                    //Verify chunk Check plaintext hmac
-                    std::string local_hash, plaintexthash;
-                    crypto::GenerateHash(decompressedChunk, local_hash);
-                    ci->GetPlainTextMac(plaintexthash);
-                    std::cout<<" LOCAL HASH : " << local_hash << std::endl;
-                    std::cout<<" CI HASH : " << plaintexthash << std::endl;
-
-                    if(local_hash == plaintexthash) {
-                        std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
-                    }
-                    else
-                        std::cout<<" ---- HASHES ARE DIFFERENT ---- " << std::endl;
-
-                    
-                    // Write out
-                    ofs.write(decompressedChunk.c_str(), decompressedChunk.size());
-                }
-                else {
-                    std::cout << "FAIL TO DECRYPT : " << status << std::endl;
+                    // Append to file 
+                    ofs.write(chunk.c_str(), chunk.size());
+                    count++;
                 }
             }
 
-            else {
-                // Abort
-                status = ret::A_FAIL_INVALID_PTR;
+            if(status) // fail
                 break;
-            }
-
-            count++;
         }
 
         ofs.close();
         // Copy
         std::cout<<" moving file to : " << path << std::endl;
-        fs::MoveFile(temppath, path);
+        if(status == ret::A_OK) {
+            std::cout<<" file construction complete moving ... " << std::endl;
+            fs::MoveFile(temppath, path);
+        }
     }
     else {
         std::cout<<" FAIL TO OPEN FILE " << std::endl;
         status = ret::A_FAIL_OPEN_FILE;
     }
     
+    return status;
+}
+
+int PullTask::TransformChunk(const ChunkInfo* ci, 
+                             const std::string& filekey,
+                             const std::string& chunkBuffer, 
+                             std::string& out)
+{
+    int status = ret::A_OK;
+
+    if(ci) {
+        std::string iv;
+        ci->GetIv(iv);
+
+        Credentials cred;
+        cred.SetKey(filekey);
+        cred.SetIv(iv);
+
+        std::cout<< " IV : " << iv << std::endl;
+        std::cout<< " SIZEOF : " << chunkBuffer.size() << std::endl;
+
+        // Base64Decode
+        std::string base64Chunk;
+        crypto::Base64DecodeString(chunkBuffer, base64Chunk);
+
+        // Decrypt
+        std::string decryptedChunk;
+        status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
+        //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
+
+        if(status == ret::A_OK) {
+            // Decompress
+            std::string decompressedChunk;
+            compress::DecompressString(decryptedChunk, decompressedChunk);
+            //Verify chunk Check plaintext hmac
+            std::string local_hash, plaintexthash;
+            crypto::GenerateHash(decompressedChunk, local_hash);
+            ci->GetPlainTextMac(plaintexthash);
+
+            std::cout<<" LOCAL HASH : " << local_hash << std::endl;
+            std::cout<<" CI HASH : " << plaintexthash << std::endl;
+
+            if(local_hash == plaintexthash) {
+                std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
+                out = decompressedChunk;
+                std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
+                std::cout<<" size of chunk : " << out.size() << std::endl;
+            }
+            else
+                status = ret::A_FAIL_INVALID_CHUNK_HASH;
+        }
+    }
+    else
+        status = ret::A_FAIL_INVALID_PTR;
+
     return status;
 }
 
@@ -349,14 +343,30 @@ int PullTask::RetrieveAttachment( const std::string& url,
     int status = ret::A_OK;
 
     if(at) { 
-        std::cout<<" retrieving attachment .... : " << url << std::endl;
+        boost::timer::cpu_timer::cpu_timer t;
         Response response;
         status = netlib::HttpGetAttachment(url, NULL, at, response);
+        boost::timer::cpu_times time = t.elapsed();
+        long elapsed = time.user;
+        // to milliseconds
+        elapsed *= 0.000001;
+        std::cout<<" ELAPSED : "<< elapsed << std::endl;
+        if(elapsed > 0) {
+            std::cout<<" buffer size : "<< outBuffer.size() << std::endl;
+            unsigned int bps = (outBuffer.size()/elapsed);
+            std::cout<<" BPS : " << bps << std::endl;
+            // Raise event
+            char szSpeed[256] = {'\0'};
+            snprintf(szSpeed, 256, "%u", bps);
+            event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
+        }
 
         if(response.code == 200) {
             outBuffer = response.body;
         }
         else {
+            std::cout<<" RETREIVE ATTACHMENT FAILED " << std::endl;
+            std::cout<<" FAILED BODY : " << response.body << std::endl;
             status = ret::A_FAIL_NON_200;
         }
     }
@@ -400,12 +410,5 @@ int PullTask::GetChunkPost(FileInfo* fi, Response& responseOut) {
     }
 
     return status;
-}
-
-int PullTask::GetDownloadSpeed()
-{
-    int speed = -1;
-
-    return speed;
 }
 

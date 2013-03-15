@@ -44,7 +44,7 @@ private:
                              const std::string& tempdir,     
                              const std::string& workingdir,  
                              const std::string& configdir,   
-                             const TaskDelegate* callbackDelegate);
+                             TaskDelegate* callbackDelegate);
 
     Task* CreateNewManifestTask( Task::TaskType type,
                                  FileManager* pFm,
@@ -73,7 +73,7 @@ public:
                        const std::string& tempdir,   
                        const std::string& workingdir,
                        const std::string& configdir, 
-                       const TaskDelegate* callbackDelegate,
+                       TaskDelegate* callbackDelegate,
                        TaskFactoryDelegate* delegate = NULL);
 
     Task* GetManifestTask( Task::TaskType type,

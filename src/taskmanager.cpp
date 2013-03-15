@@ -41,6 +41,7 @@ int TaskManager::Initialize() {
     event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
     event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
     event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
+    //event::RegisterForEvent(this, event::Event::POLL);
 
     return status;
 }

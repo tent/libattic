@@ -34,7 +34,7 @@ public:
               const std::string& tempdir,
               const std::string& workingdir,
               const std::string& configdir,
-              const TaskDelegate* callbackDelegate);
+              TaskDelegate* callbackDelegate);
  
     ~PollTask();
 
@@ -66,9 +66,6 @@ public:
             std::string retval = var;
             m_pTask->PollTaskCB(code, retval);
         }
-
-        if(this)
-            delete this;
     }
 
 private:

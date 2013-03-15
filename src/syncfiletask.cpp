@@ -24,7 +24,7 @@ SyncFileTask::SyncFileTask( TentApp* pApp,
                             const std::string& tempdir,
                             const std::string& workingdir,
                             const std::string& configdir,
-                            const TaskDelegate* callbackDelegate)
+                            TaskDelegate* callbackDelegate)
                             :                                               
                             TentTask( Task::SYNC_FILE_TASK,
                                       pApp,                                 

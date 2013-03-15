@@ -1,6 +1,5 @@
 #include "polltask.h"
 
-#include <string>
 #include <iostream>
 
 #include "netlib.h"
@@ -29,7 +28,7 @@ PollTask::PollTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    const TaskDelegate* callbackDelegate)
+                    TaskDelegate* callbackDelegate)
                     :                                               
                     TentTask( Task::POLL,
                               pApp,                                 

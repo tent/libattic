@@ -257,9 +257,11 @@ TEST(AFILE, PUSH)
     RegisterForUploadSpeedNotify(&UPLOADSPEEDCB);
     
     if(status == 0) {
-        //status = PushFile("./data/oglisv.pdf");
-        status = PushFile("./data/cassandra11.pdf");
-        //status = PushFile("./data/ccf.pdf", &PUSHCB);
+        //status = PushFile("./data/videos/posa22.mp4");
+        //status = PushFile("./data/music/test.mp3");
+        status = PushFile("./data/oglisv.pdf");
+        //status = PushFile("./data/cassandra11.pdf");
+        //status = PushFile("./data/algorithmsall.pdf");
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
         //status = PushFile("./data/oa.pdf", &PUSHCB);
         //status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);

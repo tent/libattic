@@ -29,7 +29,7 @@ PushTask::PushTask( TentApp* pApp,
                     const std::string& tempdir,
                     const std::string& workingdir,
                     const std::string& configdir,
-                    const TaskDelegate* callbackDelegate)
+                    TaskDelegate* callbackDelegate)
                     :
                     TentTask ( Task::PUSH,
                                pApp,
@@ -68,6 +68,49 @@ void PushTask::RunTask() {
     SetFinishedState();
 }
 
+int PushTask::DetermineChunkPostRequest(FileInfo* fi, 
+                                        Credentials& credOut, 
+                                        std::string& requestTypeOut,
+                                        std::string& urlOut,
+                                        std::string& postidOut)
+{
+    int status = ret::A_OK;
+
+    postidOut.clear();
+    ConstructPostUrl(urlOut);
+    fi->GetChunkPostID(postidOut);
+
+    // Initiate Chunk Post request
+    if(postidOut.empty()) {
+        requestTypeOut = "POST";
+        // This is a new file
+        // Generate Credentials
+        crypto::GenerateCredentials(credOut);
+    }
+    else {
+        requestTypeOut = "PUT";
+        utils::CheckUrlAndAppendTrailingSlash(urlOut);
+        urlOut += postidOut;
+        std::string encryptedkey, fileiv; 
+
+        fi->GetEncryptedKey(encryptedkey);
+        fi->GetIv(fileiv);
+        // Decrypt file key
+        Credentials masterCred;
+        MasterKey mKey;
+        GetCredentialsManager()->GetMasterKeyCopy(mKey);
+        std::string mk;
+        mKey.GetMasterKey(mk);
+        masterCred.SetKey(mk);
+        masterCred.SetIv(fileiv);
+
+        std::string decryptedkey;
+        crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
+        fi->SetFileKey(decryptedkey);
+        fi->GetFileCredentials(credOut);
+    }
+    return status;
+}
 
 // Note* path should not be relative, let the filemanager take care of
 // all the canonical to relative path conversions
@@ -77,57 +120,23 @@ int PushTask::PushFile(const std::string& filepath) {
     // Verify file exists
     if(fs::CheckFileExists(filepath)) {
         // Begin the chunking pipeline
-        std::string posturl;
-        ConstructPostUrl(posturl);
-
         std::cout<<" PUSHING PATH : " << filepath << std::endl;
-        std::cout<<" POST URL : " << posturl << std::endl;
 
-        // Retrieve file info if already exists
         FileInfo* fi = RetrieveFileInfo(filepath);
-        std::string chunkPostId;
-        fi->GetChunkPostID(chunkPostId);
 
+        std::string requesttype, posturl, chunkpostid;
         Credentials fileCredentials;
-        // Initiate Chunk Post request
-        std::string requestType;
-        if(chunkPostId.empty()) {
-            requestType = "POST";
-            // This is a new file
-            // Generate Credentials
-            crypto::GenerateCredentials(fileCredentials);
-        }
-        else {
-            requestType = "PUT";
-            utils::CheckUrlAndAppendTrailingSlash(posturl);
-            posturl += chunkPostId;
-            std::string encryptedkey, fileiv; 
-
-            fi->GetEncryptedKey(encryptedkey);
-            fi->GetIv(fileiv);
-            // Decrypt file key
-            Credentials masterCred;
-            MasterKey mKey;
-            GetCredentialsManager()->GetMasterKeyCopy(mKey);
-            std::string mk;
-            mKey.GetMasterKey(mk);
-            masterCred.SetKey(mk);
-            masterCred.SetIv(fileiv);
-
-            std::string decryptedkey;
-            crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
-            fi->SetFileKey(decryptedkey);
-            fi->GetFileCredentials(fileCredentials);
-        }
-        
+        status = DetermineChunkPostRequest(fi, fileCredentials, requesttype, posturl, chunkpostid);
+       
         // Check for key
         if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
+            std::cout<<"FAIL " << std::endl;
             status = ret::A_FAIL_INVALID_FILE_KEY;
         }
 
         Response resp;
         if(status == ret::A_OK) {
-            status = ProcessFile( requestType,
+            status = ProcessFile( requesttype,
                                   posturl,
                                   filepath,
                                   fileCredentials,
@@ -144,13 +153,13 @@ int PushTask::PushFile(const std::string& filepath) {
                 jsn::DeserializeObject((Post*)&p, resp.body);
                 InitChunkPost(p, *pList);
                 // Setup post url
-                if(chunkPostId.empty()) {
-                    p.GetID(chunkPostId);
-                    if(chunkPostId.empty()) {
+                if(chunkpostid.empty()) {
+                    p.GetID(chunkpostid);
+                    if(chunkpostid.empty()) {
                         status = ret::A_FAIL_INVALID_POST_ID;
                     }
                     utils::CheckUrlAndAppendTrailingSlash(posturl);
-                    posturl += chunkPostId;
+                    posturl += chunkpostid;
                 }
 
                 if(status == ret::A_OK) {
@@ -186,7 +195,7 @@ int PushTask::PushFile(const std::string& filepath) {
                 mKey.GetMasterKey(mk);
 
                 // Insert File Data
-                fi->SetChunkPostID(chunkPostId);
+                fi->SetChunkPostID(chunkpostid);
                 fi->SetFilepath(filepath);
                 fi->SetFilename(filename);
                 fi->SetFileSize(filesize);
@@ -657,7 +666,7 @@ int PushTask::SendChunk( const std::string& chunk,
     if(end) {
         // Add end part
         netlib::AddEndBoundry(attachmentstream, boundary);
-
+        std::cout<<" CHUNK END PART " << std::endl;
         // Chunk the end
         boost::asio::streambuf partEnd;
         std::ostream partendstream(&partEnd);

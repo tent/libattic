@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+
 #include "tenttask.h"
 #include "atticpost.h"
 #include "fileinfo.h"
@@ -30,7 +31,7 @@ public:
                  const std::string& tempdir,
                  const std::string& workingdir,
                  const std::string& configdir,
-                 const TaskDelegate* callbackDelegate);
+                 TaskDelegate* callbackDelegate);
 
     ~SyncFileTask();
 

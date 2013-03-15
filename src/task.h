@@ -43,11 +43,8 @@ public:
     virtual void OnPaused() = 0;
     virtual void OnFinished() = 0;
 
-    virtual void Reset() = 0;
-
     TaskState GetTaskState() const { return m_State; }
     TaskType GetTaskType() const { return m_Type; }
-    //void GetTaskState(TaskState state) { m_State = state; }
 
     virtual void SetIdleState() { m_State = IDLE; }
     virtual void SetRunningState() { m_State = RUNNING; }
