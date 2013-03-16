@@ -18,6 +18,8 @@
 #include "log.h"
 #include "taskdelegate.h"
 
+#include "postfilestrategy.h"
+
 PushTask::PushTask( TentApp* pApp, 
                     FileManager* pFm, 
                     CredentialsManager* pCm,
@@ -117,8 +119,18 @@ int PushTask::DetermineChunkPostRequest(FileInfo* fi,
 int PushTask::PushFile(const std::string& filepath) {
     int status = ret::A_OK;
 
-    // Verify file exists
+
     if(fs::CheckFileExists(filepath)) {
+        /*
+        PostFileStrategy ps;
+        std::string apiroot;
+        GetApiRoot(apiroot);
+        Response resp;
+        ps.(GetFileManager(), GetCredentialsManager(), apiroot, filepath, resp);
+        */
+/**/
+    // Verify file exists
+    //if(fs::CheckFileExists(filepath)) {
         // Begin the chunking pipeline
         std::cout<<" PUSHING PATH : " << filepath << std::endl;
 
@@ -143,7 +155,9 @@ int PushTask::PushFile(const std::string& filepath) {
                                   fi,
                                   resp);
         }
+       // ^^ remove this and use the strategy
 
+       // This is the next strategy to extract and encapsulate
         if(status == ret::A_OK) {
             if(resp.code == 200) {
                 // On success 

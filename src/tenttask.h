@@ -100,10 +100,14 @@ protected:
             m_pCallbackDelegate->Callback(GetTaskType(), code, GetTaskState(), var);
     }
 
-    void ConstructPostUrl(std::string& out) {
+    void GetApiRoot(std::string& out) {
         Entity entity;
         GetEntity(entity);
         entity.GetApiRoot(out);
+    }
+
+    void ConstructPostUrl(std::string& out) {
+        GetApiRoot(out);
         out += "/posts";
     }
 
