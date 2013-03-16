@@ -10,6 +10,7 @@
 #include "credentialsmanager.h"
 #include "chunkpost.h"
 #include "rollsum.h"
+#include "postutils.h"
 
 PostFileStrategy::PostFileStrategy() {
     m_pCredentialsManager = NULL;
@@ -60,7 +61,86 @@ void PostFileStrategy::Execute(FileManager* pFileManager,
                                   resp);
         }
 
-        out = resp;
+        if(status == ret::A_OK && resp.code == 200) {
+            // On success 
+            FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+            ChunkPost p;
+            // Deserialize basic post data
+            jsn::DeserializeObject((Post*)&p, resp.body);
+            p.SetChunkInfoList(*pList);
+
+            std::cout<<" CURRENT CHUNK LIST SIZE : " << pList->size() << std::endl;
+
+            // Setup post url
+            if(chunkpostid.empty()) {
+                p.GetID(chunkpostid);
+                if(chunkpostid.empty()) {
+                    status = ret::A_FAIL_INVALID_POST_ID;
+                }
+                utils::CheckUrlAndAppendTrailingSlash(posturl);
+                posturl += chunkpostid;
+            }
+
+            if(status == ret::A_OK) {
+                // update chunk post with chunk info metadata
+                // use non multipart to just update the post body
+                // leaving existing attachment in-tact
+                std::string bodyBuffer;
+                jsn::SerializeObject(&p, bodyBuffer);
+    
+                std::cout<<" Updating chunk post metadata : " << posturl << std::endl;
+                Response metaResp;
+                status = netlib::HttpPut( posturl,
+                                          NULL,
+                                          bodyBuffer,
+                                          &m_At,
+                                          metaResp);
+
+                std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
+                std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
+
+                if(metaResp.code == 200) {
+                    out = metaResp;
+                }
+            }
+
+            std::string filename;
+            utils::ExtractFileName(filepath, filename);
+            unsigned int filesize = utils::CheckFilesize(filepath);
+
+            // Encrypt File Key
+            MasterKey mKey;
+            m_pCredentialsManager->GetMasterKeyCopy(mKey);
+
+            std::string mk;
+            mKey.GetMasterKey(mk);
+
+            // Insert File Data
+            fi->SetChunkPostID(chunkpostid);
+            fi->SetFilepath(filepath);
+            fi->SetFilename(filename);
+            fi->SetFileSize(filesize);
+            fi->SetFileCredentials(fileCredentials);
+
+            // Encrypt File Key
+            std::string fileKey, fileIv;
+            fileCredentials.GetKey(fileKey);
+            fileCredentials.GetIv(fileIv);
+
+            Credentials fCred;
+            fCred.SetKey(mk);
+            fCred.SetIv(fileIv);
+
+            std::string encryptedKey;
+            crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+
+            fi->SetIv(fileIv);
+            fi->SetFileKey(fileKey);
+            fi->SetEncryptedKey(encryptedKey);
+
+            // Insert file info to manifest
+            m_pFileManager->InsertToManifest(fi);
+        }
     }
 }
 
@@ -74,9 +154,7 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
     postidOut.clear();
     // Construct Post url
-    urlOut = m_entityApiRoot;
-    utils::CheckUrlAndAppendTrailingSlash(urlOut);
-    urlOut += "posts";
+    postutils::ConstructPostUrl(m_entityApiRoot, urlOut);
     
     fi->GetChunkPostID(postidOut);
 

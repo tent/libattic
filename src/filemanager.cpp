@@ -278,7 +278,7 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     if(last) {
         fs::GetCanonicalPath(filepath.substr(0, pos-1), canonical);
         std::cout<<"can?onical? : " << canonical << std::endl;
-        canonical += filepath.substr(pos+1);
+        //canonical += filepath.substr(pos+1);
     }
     else {
         std::cout<<" getting canonical " << std::endl;
@@ -295,6 +295,7 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     else {
         std::cout<< " could not find working directory within canonical path " << std::endl;
     }
+    std::cout<< " RELATIVE OUT : " << out << std::endl;
     return retval;
 } 
 

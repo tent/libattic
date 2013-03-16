@@ -6,54 +6,13 @@
 #include <vector>
 
 #include "tenttask.h"
-#include "atticpost.h"
-#include "chunkpost.h"
-#include "response.h"
-#include "netlib.h"
 
 class TaskDelegate;
 
 class PushTask : public TentTask {
-    int CreateAndSerializeAtticPost(bool pub,
-                                    const std::string& filepath,
-                                    const std::string& filename,
-                                    unsigned int size,
-                                    std::string& out);
-
-    int DetermineChunkPostRequest(FileInfo* fi, 
-                                  Credentials& credOut, 
-                                  std::string& requestTypeOut,
-                                  std::string& urlOut,
-                                  std::string& postidOut);
-
-    int InitChunkPost(ChunkPost& post, FileInfo::ChunkMap& List);
     
     int PushFile(const std::string& filepath);
 
-    int SendAtticPost(FileInfo* fi, const std::string& filepath);
-    int SendFolderPost(const FileInfo* fi); 
-    int ProcessFile(const std::string& requestType,
-                    const std::string& url,
-                    const std::string& filepath,
-                    const Credentials& fileCredentials,
-                    FileInfo* pFi,
-                    Response& resp);
-    
-    int TransformChunk(const std::string& chunk, 
-                       const std::string& fileKey,
-                       std::string& finalizedOut, 
-                       std::string& nameOut, 
-                       FileInfo* pFi);
-
-    int SendChunk(const std::string& chunk, 
-                  const std::string& fileKey,
-                  const std::string& boundary,
-                  boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
-                  const unsigned int count,
-                  bool end,
-                  FileInfo* pFi);
-
-    FileInfo* RetrieveFileInfo(const std::string& filepath);
 public:
     PushTask(TentApp* pApp, 
              FileManager* pFm, 

@@ -10,6 +10,7 @@
 #include "atticpost.h"
 #include "chunkpost.h"
 #include "response.h"
+#include "constants.h"
 
 namespace postutils {
 
@@ -18,6 +19,13 @@ static int DeserializeAtticPostIntoFileInfo(const AtticPost& post, FileInfo& fiO
 static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut);
 static int DeserializePostIntoFileInfo(const Post& post, FileInfo& fiOut);
 static int ExtractChunkPostsFromResponse(const Response& response, std::vector<ChunkPost>* out);
+static void ConstructPostUrl(const std::string& apiroot, std::string& out);
+
+static void ConstructPostUrl(const std::string& apiroot, std::string& out) {
+    out = apiroot;
+    utils::CheckUrlAndAppendTrailingSlash(out);
+    out += cnst::g_szPostEndpoint;
+}
 
 static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic) {
     int status = ret::A_OK;
@@ -49,7 +57,9 @@ static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic)
         postOut.PushBackChunkPostId(chunkpostid);
 
         FileInfo::ChunkMap* pList = pFi->GetChunkInfoList();
+
         if(pList) {
+            std::cout<<" CHUNK LIST SIZE : " << pList->size() << std::endl;
             FileInfo::ChunkMap::iterator itr = pList->begin();
 
             std::string identifier;
@@ -59,6 +69,10 @@ static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic)
                 postOut.PushBackChunkIdentifier(identifier);
             }
         }
+        else {
+            std::cout<<" INVALID CHUNK LIST : " << std::endl;
+        }
+
     }
     else {
         status = ret::A_FAIL_INVALID_PTR;
