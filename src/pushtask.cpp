@@ -81,7 +81,7 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.PushBack(&pmds);
         pushcontext.PushBack(&pfmds);
 
-        pushcontext.ExecuteAll();
+        status = pushcontext.ExecuteAll();
         
     }
     else {

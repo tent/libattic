@@ -16,19 +16,24 @@ class HttpStrategyInterface {
     friend class HttpStrategyContext;
     typedef std::map<std::string, std::string> ConfigMap;
 public:
-    virtual void Execute(FileManager* pFileManager,
-                         CredentialsManager* pCredentialsManager,
-                         const std::string& entityApiRoot, 
-                         const std::string& filepath, 
-                         Response& out)=0;
+    virtual int Execute(FileManager* pFileManager,
+                        CredentialsManager* pCredentialsManager,
+                        const std::string& entityApiRoot, 
+                        const std::string& filepath, 
+                        Response& out)=0;
 protected:
     ConfigMap m_ConfigMap;
+    CredentialsManager*     m_pCredentialsManager;
+    FileManager*            m_pFileManager;
+
+    AccessToken             m_At;
+    std::string             m_entityApiRoot;
 };
 
 class HttpStrategyContext {
     typedef std::list<HttpStrategyInterface*> StrategyList;
 
-    void Execute(HttpStrategyInterface* s, Response& out);
+    int Execute(HttpStrategyInterface* s, Response& out);
 public:
     typedef std::map<std::string, std::string> ConfigMap;
 
@@ -41,9 +46,13 @@ public:
 
     void PushBack(HttpStrategyInterface* pStrat);
 
-    void ExecuteAll();
-    void Step(Response& out);
+    int ExecuteAll(); // By default will stop at first failed execution
+    int Step(Response& out);
     void ResetPosition();
+
+    void SetConfigValue(const std::string& key, const std::string& value) {
+        m_ConfigMap[key] = value;
+    }
 
     std::string* operator[](const std::string& key) {
         return &m_ConfigMap[key];

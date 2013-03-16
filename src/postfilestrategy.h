@@ -34,24 +34,20 @@ class PostFileStrategy : public HttpStrategyInterface {
                        std::string& finalizedOut, 
                        std::string& nameOut, 
                        FileInfo* pFi);
-
+    void UpdateFileInfo(const Credentials& fileCred, 
+                        const std::string& filepath, 
+                        const std::string& chunkpostid,
+                        FileInfo* fi);
     FileInfo* RetrieveFileInfo(const std::string& filepath);
 public:
     PostFileStrategy();
     ~PostFileStrategy();
 
-    void Execute(FileManager* pFileManager,
-                 CredentialsManager* pCredentialsManager,
-                 const std::string& entityApiRoot, 
-                 const std::string& filepath, 
-                 Response& out);
-
-private:
-    CredentialsManager*     m_pCredentialsManager;
-    FileManager*            m_pFileManager;
-
-    AccessToken             m_At;
-    std::string             m_entityApiRoot;
+    int Execute(FileManager* pFileManager,
+                CredentialsManager* pCredentialsManager,
+                const std::string& entityApiRoot, 
+                const std::string& filepath, 
+                Response& out);
 };
 #endif
 

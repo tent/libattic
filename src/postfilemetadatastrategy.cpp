@@ -9,7 +9,7 @@
 PostFileMetadataStrategy::PostFileMetadataStrategy() {}
 PostFileMetadataStrategy::~PostFileMetadataStrategy() {}
 
-void PostFileMetadataStrategy::Execute(FileManager* pFileManager,
+int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
                                        CredentialsManager* pCredentialsManager,
                                        const std::string& entityApiRoot, 
                                        const std::string& filepath, 
@@ -19,8 +19,9 @@ void PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     m_entityApiRoot = entityApiRoot;
     m_pFileManager = pFileManager;
     m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return;
-    if(!m_pCredentialsManager) return;
+    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+
     m_pCredentialsManager->GetAccessTokenCopy(m_At);
 
     FileInfo* fi = RetrieveFileInfo(filepath);
@@ -37,6 +38,7 @@ void PostFileMetadataStrategy::Execute(FileManager* pFileManager,
         std::cout<<" INVALID FILE INFO " << std::endl;
     }
     
+    return status;
 }
 
 int PostFileMetadataStrategy::SendAtticPost( FileInfo* fi, const std::string& filepath) {

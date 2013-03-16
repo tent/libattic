@@ -13,6 +13,8 @@
 #include "netlib.h"
 #include "taskdelegate.h"
 
+#include "getfilestrategy.h"
+
 PullTask::PullTask( TentApp* pApp, 
                     FileManager* pFm, 
                     CredentialsManager* pCm,
@@ -60,6 +62,15 @@ void PullTask::RunTask() {
 
 int PullTask::PullFile(const std::string& filepath) {
     int status = ret::A_OK;
+
+    std::string apiroot;
+    GetApiRoot(apiroot);
+    Response resp;
+
+    GetFileStrategy gfs;
+    status = gfs.Execute(GetFileManager(), GetCredentialsManager(), apiroot, filepath, resp);
+    std::cout<<" RETURN STATUS : " << status << std::endl;
+    return status; 
 
     FileManager* fm = GetFileManager();
     FileInfo* fi = fm->GetFileInfo(filepath);                                        

@@ -22,7 +22,7 @@ PostFileStrategy::~PostFileStrategy() {
     m_pFileManager = NULL;
 }
 
-void PostFileStrategy::Execute(FileManager* pFileManager,
+int PostFileStrategy::Execute(FileManager* pFileManager,
                                CredentialsManager* pCredentialsManager,
                                const std::string& entityApiRoot, 
                                const std::string& filepath, 
@@ -32,8 +32,8 @@ void PostFileStrategy::Execute(FileManager* pFileManager,
     m_entityApiRoot = entityApiRoot;
     m_pFileManager = pFileManager;
     m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return;
-    if(!m_pCredentialsManager) return;
+    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     m_pCredentialsManager->GetAccessTokenCopy(m_At);
 
     // Verify file exists
@@ -101,47 +101,54 @@ void PostFileStrategy::Execute(FileManager* pFileManager,
 
                 if(metaResp.code == 200) {
                     out = metaResp;
+                    UpdateFileInfo(fileCredentials, filepath, chunkpostid, fi);
+
+                    /*
+                    std::string filename;
+                    utils::ExtractFileName(filepath, filename);
+                    unsigned int filesize = utils::CheckFilesize(filepath);
+
+                    // Encrypt File Key
+                    MasterKey mKey;
+                    m_pCredentialsManager->GetMasterKeyCopy(mKey);
+
+                    std::string mk;
+                    mKey.GetMasterKey(mk);
+
+                    // Insert File Data
+                    fi->SetChunkPostID(chunkpostid);
+                    fi->SetFilepath(filepath);
+                    fi->SetFilename(filename);
+                    fi->SetFileSize(filesize);
+                    fi->SetFileCredentials(fileCredentials);
+
+                    // Encrypt File Key
+                    std::string fileKey, fileIv;
+                    fileCredentials.GetKey(fileKey);
+                    fileCredentials.GetIv(fileIv);
+
+                    Credentials fCred;
+                    fCred.SetKey(mk);
+                    fCred.SetIv(fileIv);
+
+                    std::string encryptedKey;
+                    crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+
+                    fi->SetIv(fileIv);
+                    fi->SetFileKey(fileKey);
+                    fi->SetEncryptedKey(encryptedKey);
+
+                    // Insert file info to manifest
+                    m_pFileManager->InsertToManifest(fi);
+                    */
+                }
+                else {
+                    status = ret::A_FAIL_NON_200;
                 }
             }
-
-            std::string filename;
-            utils::ExtractFileName(filepath, filename);
-            unsigned int filesize = utils::CheckFilesize(filepath);
-
-            // Encrypt File Key
-            MasterKey mKey;
-            m_pCredentialsManager->GetMasterKeyCopy(mKey);
-
-            std::string mk;
-            mKey.GetMasterKey(mk);
-
-            // Insert File Data
-            fi->SetChunkPostID(chunkpostid);
-            fi->SetFilepath(filepath);
-            fi->SetFilename(filename);
-            fi->SetFileSize(filesize);
-            fi->SetFileCredentials(fileCredentials);
-
-            // Encrypt File Key
-            std::string fileKey, fileIv;
-            fileCredentials.GetKey(fileKey);
-            fileCredentials.GetIv(fileIv);
-
-            Credentials fCred;
-            fCred.SetKey(mk);
-            fCred.SetIv(fileIv);
-
-            std::string encryptedKey;
-            crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
-
-            fi->SetIv(fileIv);
-            fi->SetFileKey(fileKey);
-            fi->SetEncryptedKey(encryptedKey);
-
-            // Insert file info to manifest
-            m_pFileManager->InsertToManifest(fi);
         }
     }
+    return status;
 }
 
 int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi, 
@@ -474,6 +481,49 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     if(pFi) pFi->PushChunkBack(ci);
 
     return status;
+}
+
+void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred, 
+                                      const std::string& filepath, 
+                                      const std::string& chunkpostid,
+                                      FileInfo* fi) 
+{
+    std::string filename;
+    utils::ExtractFileName(filepath, filename);
+    unsigned int filesize = utils::CheckFilesize(filepath);
+
+    // Encrypt File Key
+    MasterKey mKey;
+    m_pCredentialsManager->GetMasterKeyCopy(mKey);
+
+    std::string mk;
+    mKey.GetMasterKey(mk);
+
+    // Insert File Data
+    fi->SetChunkPostID(chunkpostid);
+    fi->SetFilepath(filepath);
+    fi->SetFilename(filename);
+    fi->SetFileSize(filesize);
+    fi->SetFileCredentials(fileCred);
+
+    // Encrypt File Key
+    std::string fileKey, fileIv;
+    fileCred.GetKey(fileKey);
+    fileCred.GetIv(fileIv);
+
+    Credentials fCred;
+    fCred.SetKey(mk);
+    fCred.SetIv(fileIv);
+
+    std::string encryptedKey;
+    crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+
+    fi->SetIv(fileIv);
+    fi->SetFileKey(fileKey);
+    fi->SetEncryptedKey(encryptedKey);
+
+    // Insert file info to manifest
+    m_pFileManager->InsertToManifest(fi);
 }
 
 FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {

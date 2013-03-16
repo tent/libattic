@@ -22,33 +22,40 @@ void HttpStrategyContext::PushBack(HttpStrategyInterface* pStrat) {
     m_Strategies.push_back(pStrat);
 }
 
-void HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
+int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
     if(s) {
         // Copy context config
         s->m_ConfigMap = m_ConfigMap;
         // Execute
-        s->Execute(m_pFileManager,
-                   m_pCredentialsManager,
-                   m_EntityApiRoot,
-                   m_Filepath,
-                   out);
+        return s->Execute(m_pFileManager,
+                          m_pCredentialsManager,
+                          m_EntityApiRoot,
+                          m_Filepath,
+                          out);
     }
-
+    return ret::A_FAIL_INVALID_PTR;
 }
-void HttpStrategyContext::ExecuteAll() {
+
+int HttpStrategyContext::ExecuteAll() {
+    // Check config for anything interesting
     StrategyList::iterator itr = m_Strategies.begin();
     Response resp;
+    int status = ret::A_OK;
     for(;itr != m_Strategies.end(); itr++) {
-        Execute(*itr, resp);
+        status = Execute(*itr, resp);
+        if(status != ret::A_OK)
+            break;
     }
-
+    return status;
 }
 
-void HttpStrategyContext::Step(Response& out) {
+int HttpStrategyContext::Step(Response& out) {
+    int status = ret::A_OK;
     if(m_Itr != m_Strategies.end()) {
-        Execute(*m_Itr, out);
+        status = Execute(*m_Itr, out);
         m_Itr++;
     }
+    return status;
 }
 
 void HttpStrategyContext::ResetPosition() {
