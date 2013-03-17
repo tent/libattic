@@ -16,6 +16,16 @@ class HttpStrategyInterface {
     friend class HttpStrategyContext;
     typedef std::map<std::string, std::string> ConfigMap;
 public:
+    HttpStrategyInterface() {
+        m_pCredentialsManager = NULL;
+        m_pFileManager = NULL;
+    }
+
+    ~HttpStrategyInterface() {
+        m_pCredentialsManager = NULL;
+        m_pFileManager = NULL;
+    }
+
     virtual int Execute(FileManager* pFileManager,
                         CredentialsManager* pCredentialsManager,
                         const std::string& entityApiRoot, 

@@ -12,15 +12,8 @@
 #include "rollsum.h"
 #include "postutils.h"
 
-PostFileStrategy::PostFileStrategy() {
-    m_pCredentialsManager = NULL;
-    m_pFileManager = NULL;
-}
-
-PostFileStrategy::~PostFileStrategy() {
-    m_pCredentialsManager = NULL;
-    m_pFileManager = NULL;
-}
+PostFileStrategy::PostFileStrategy() {}
+PostFileStrategy::~PostFileStrategy() {}
 
 int PostFileStrategy::Execute(FileManager* pFileManager,
                                CredentialsManager* pCredentialsManager,
