@@ -137,7 +137,8 @@ int InitLibAttic( const char* szWorkingDirectory,
 
         status = liba::InitializeFileManager( &g_pFileManager,
                                               g_ConfigDirectory,
-                                              g_WorkingDirectory);
+                                              g_WorkingDirectory,
+                                              g_TempDirectory);
 
         status = liba::InitializeCredentialsManager( &g_pCredManager,
                                                      g_ConfigDirectory);

@@ -22,17 +22,19 @@ namespace liba
 {
     int InitializeFileManager( FileManager** pFm, 
                                const std::string& manifestDir,
-                               const std::string& workingDir)
+                               const std::string& workingDir,
+                               const std::string& tempDir)
     {
         int status = ret::A_OK;
 
         if(!(*pFm)) {
-            std::string manifest, working;
+            std::string manifest, working, temp;
             status = fs::GetCanonicalPath(manifestDir, manifest);
             status = fs::GetCanonicalPath(workingDir, working);
+            status = fs::GetCanonicalPath(tempDir, temp);
             // Construct path
             if(status == ret::A_OK) {
-                (*pFm) = new FileManager(manifest, working);
+                (*pFm) = new FileManager(manifest, working, temp);
                 status = (*pFm)->StartupFileManager();
             }
         }

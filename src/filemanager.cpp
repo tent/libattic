@@ -16,7 +16,8 @@ FileManager::FileManager() : MutexClass()
 }
 
 FileManager::FileManager( const std::string &manifestDirectory, 
-                          const std::string &workingDirectory)
+                          const std::string &workingDirectory,
+                          const std::string& tempDirectory)
 {
     // Set manifest path
     m_ManifestDirectory = manifestDirectory;
@@ -24,27 +25,22 @@ FileManager::FileManager( const std::string &manifestDirectory,
 
     // Set working directory
     m_WorkingDirectory = workingDirectory;
+    m_TempDirectory = tempDirectory;
 }
 
-FileManager::~FileManager()
-{
+FileManager::~FileManager() {}
 
-}
-
-bool FileManager::StartupFileManager()
-{
+bool FileManager::StartupFileManager() {
     m_Manifest.Initialize();
     return true;
 }
 
-bool FileManager::ShutdownFileManager()
-{
+bool FileManager::ShutdownFileManager() {
     m_Manifest.Shutdown();
     return true;
 }
 
-int FileManager::RemoveFile(const std::string &filepath)
-{
+int FileManager::RemoveFile(const std::string &filepath) {
     int status = ret::A_OK;
 
     Lock();

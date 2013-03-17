@@ -306,10 +306,14 @@ TEST(AFILE, PULL)
     if(g_Entity.empty()) return;
     if(!g_bPull) return;
 
+    std::string temppath;
+    std::string temp("./data/temp");
+    fs::GetCanonicalPath(temp, temppath);
+
     int status = InitLibAttic( 
                   "./data",
                   "./config",
-                  "./data/temp",
+                  temppath.c_str(),
                   "./config/logs",
                   g_Entity.c_str());
 

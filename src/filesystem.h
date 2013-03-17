@@ -111,8 +111,10 @@ namespace fs {
     static void CreateDirectoryTree(const std::string& filepath) {
         // Pass in full filepath /root/directory/some/other/file.txt
         try {
+            std::cout<<" incoming path : " << filepath << std::endl;
             boost::filesystem::path root(filepath);
             boost::filesystem::path parent = root.parent_path();
+            
             if(!boost::filesystem::exists(root)) {
                 std::cout<<" folder does not exist : " << parent.string() << std::endl;
                 boost::filesystem::create_directories(parent);
