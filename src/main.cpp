@@ -37,7 +37,7 @@
 #include "constants.h"
 #include "httpheader.h"
 
-#include "eventsystem.h"
+#include "event.h"
 #include "threadworker.h"
 #include "filequeue.h"
 #include "callbackhandler.h"

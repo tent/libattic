@@ -34,7 +34,7 @@
 #include "taskmanager.h"
 #include "filesystem.h"
 
-#include "eventsystem.h"
+#include "event.h"
 #include "callbackhandler.h"
 #include "passphrase.h"
 #include "tentclient.h"

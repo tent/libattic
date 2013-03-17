@@ -7,7 +7,7 @@
 #include "accesstoken.h"
 #include "entity.h"
 #include "taskfactory.h"
-#include "eventsystem.h"
+#include "event.h"
 #include "task.h"
 
 class TentApp;

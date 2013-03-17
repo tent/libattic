@@ -7,8 +7,7 @@
 class FileInfo;
 class TaskDelegate;
 
-class DeleteTask : public TentTask
-{
+class DeleteTask : public TentTask {
     int DeletePost(const std::string& szPostID); // Depricated, kept for referece
 
     int MarkFileDeleted(FileInfo* fi);

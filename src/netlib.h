@@ -32,7 +32,7 @@ using boost::asio::ip::tcp;
 #include "errorcodes.h"
 #include "accesstoken.h"
 #include "httpheader.h"
-#include "eventsystem.h"
+#include "event.h"
 
 namespace netlib {
 // Forward Declarations ******************************************************

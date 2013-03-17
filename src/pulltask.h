@@ -11,24 +11,7 @@
 class TaskDelegate;
 
 class PullTask: public TentTask {
-    int GetChunkPost(FileInfo* fi, Response& responseOut);
-
     int PullFile(const std::string& filepath);
-    int RetrieveFile( const std::string filepath, 
-                      const std::string postpath, 
-                      const Credentials& fileCred,
-                      Post& post,
-                      FileInfo* fi);
-
-    int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
-    int RetrieveAttachment( const std::string& url, 
-                            const AccessToken* at, 
-                            std::string& outBuffer);
-
-    int TransformChunk(const ChunkInfo* ci, 
-                       const std::string& filekey,
-                       const std::string& chunkBuffer, 
-                       std::string& out);
 public:
     PullTask( TentApp* pApp, 
               FileManager* pFm, 

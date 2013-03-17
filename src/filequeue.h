@@ -6,7 +6,7 @@
 #include <string>
 
 #include "mutexclass.h"
-#include "eventsystem.h"
+#include "event.h"
 
 class FileQueue {
 public:

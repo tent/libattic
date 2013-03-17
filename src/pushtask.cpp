@@ -3,7 +3,7 @@
 #include "filesystem.h"
 #include "filemanager.h"
 #include "errorcodes.h"
-#include "eventsystem.h"
+#include "event.h"
 #include "taskdelegate.h"
 
 #include "postfilestrategy.h"
@@ -61,8 +61,6 @@ void PushTask::RunTask() {
 // all the canonical to relative path conversions
 int PushTask::PushFile(const std::string& filepath) {
     int status = ret::A_OK;
-
-    std::cout<<" PUSH FILE FILEPATH : " << filepath << std::endl;
 
     if(fs::CheckFileExists(filepath)) {
         std::string apiroot;

@@ -9,7 +9,7 @@
 #include "crypto.h"
 #include "filesystem.h"
 #include "postutils.h"
-#include "eventsystem.h"
+#include "event.h"
 
 
 GetFileStrategy::GetFileStrategy() {}

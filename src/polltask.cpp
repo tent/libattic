@@ -5,7 +5,7 @@
 #include "netlib.h"
 #include "constants.h"
 #include "folderpost.h"
-#include "eventsystem.h"
+#include "event.h"
 #include "taskdelegate.h"
 
 namespace polltask 

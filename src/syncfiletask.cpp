@@ -9,7 +9,7 @@
 #include "postutils.h"
 #include "entity.h"
 #include "response.h"
-#include "eventsystem.h"
+#include "event.h"
 #include "filesystem.h"
 #include "taskdelegate.h"
 
