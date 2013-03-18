@@ -8,12 +8,6 @@ class FileInfo;
 class TaskDelegate;
 
 class DeleteTask : public TentTask {
-    int DeletePost(const std::string& szPostID); // Depricated, kept for referece
-
-    int MarkFileDeleted(FileInfo* fi);
-    int UpdatePost(FileInfo* fi);
-    int SendAtticPost(FileInfo* fi);
-    FileInfo* RetrieveFileInfo(const std::string& filepath);
 public:
     DeleteTask( TentApp* pApp, 
                 FileManager* pFm, 

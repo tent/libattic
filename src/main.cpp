@@ -370,7 +370,7 @@ TEST(AFILE, DELETE)
         std::string rel("./data");
         std::string filepath;
         fs::GetCanonicalPath(rel, filepath);
-        filepath += "/docs/cb.pdf";
+        filepath += "/oglisv.pdf";
 
         status = DeleteFile(filepath.c_str());
         ASSERT_EQ(status, ret::A_OK);
