@@ -67,9 +67,9 @@ int PushTask::PushFile(const std::string& filepath) {
         GetApiRoot(apiroot);
         Response resp;
 
-        PostFileStrategy ps;
-        PostFileMetadataStrategy pmds;
-        PostFolderMetadataStrategy pfmds;
+        PostFileStrategy ps;                // Chunk and upload
+        PostFileMetadataStrategy pmds;      // Update file post
+        PostFolderMetadataStrategy pfmds;   // Update folder post
 
         HttpStrategyContext pushcontext(GetFileManager(), 
                                         GetCredentialsManager(), 

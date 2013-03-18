@@ -17,8 +17,23 @@ int SoftDeleteStrategy::Execute(FileManager* pFileManager,
     if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     m_pCredentialsManager->GetAccessTokenCopy(m_At);
 
+    FileInfo* fi = RetrieveFileInfo(filepath);
+    if(fi) {
+        MarkFileDeleted(fi);
+    }
+    else {
+        status = ret::A_FAIL_INVLID_FILE_INFO;
+    }
 
     return status;
+}
+
+void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
+    int status = ret::A_OK;
+    std::string filepath;
+    fi->GetFilepath(filepath);
+    fi->SetDeleted(1);
+    m_pFileManager->SetFileDeleted(filepath, true);
 }
 
 FileInfo* SoftDeleteStrategy::RetrieveFileInfo(const std::string& filepath) {

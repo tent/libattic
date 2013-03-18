@@ -9,6 +9,9 @@
 #include "netlib.h"
 #include "taskdelegate.h"
 
+#include "softdeletestrategy.h"
+#include "postfilemetadatastrategy.h"
+
 DeleteTask::DeleteTask( TentApp* pApp, 
                         FileManager* pFm, 
                         CredentialsManager* pCm,
@@ -38,22 +41,33 @@ DeleteTask::DeleteTask( TentApp* pApp,
 {
 }
 
-DeleteTask::~DeleteTask()
-{
-}
+DeleteTask::~DeleteTask(){}
 
-void DeleteTask::RunTask()
-{
+void DeleteTask::RunTask() {
     // Run the task
     int status = ret::A_OK;
 
-    std::string filepath;
+    std::string filepath, apiroot;
     GetFilepath(filepath);
+    GetApiRoot(apiroot);
+
+    SoftDeleteStrategy sds;
+    PostFileMetadataStrategy pmds;
+
+    HttpStrategyContext pushcontext(GetFileManager(), 
+                                    GetCredentialsManager(), 
+                                    apiroot, 
+                                    filepath);
+ 
+
+
+    /*
     FileInfo* fi = RetrieveFileInfo(filepath);
     // Mark as deleted
     status = MarkFileDeleted(fi);
     // Update Post
     status = UpdatePost(fi);
+    */
     
     // Callback
     Callback(status, "");

@@ -21,7 +21,6 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     m_pCredentialsManager = pCredentialsManager;
     if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-
     m_pCredentialsManager->GetAccessTokenCopy(m_At);
 
     FileInfo* fi = RetrieveFileInfo(filepath);
@@ -36,6 +35,7 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     }
     else { 
         std::cout<<" INVALID FILE INFO " << std::endl;
+        status = ret::A_FAIL_INVLID_FILE_INFO;
     }
     
     return status;

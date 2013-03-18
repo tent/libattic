@@ -5,7 +5,7 @@
 #include "httpstrategy.h"
 
 class SoftDeleteStrategy : public HttpStrategyInterface {
-
+    void MarkFileDeleted(FileInfo* fi);
     FileInfo* RetrieveFileInfo(const std::string& filepath);
 public:
     SoftDeleteStrategy();
