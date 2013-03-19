@@ -8,8 +8,7 @@
 #include "jsonserializable.h"
 #include "permissions.h"
 
-class AtticProfileInfo : public JsonSerializable
-{
+class AtticProfileInfo : public JsonSerializable {
 public:
     AtticProfileInfo();
     ~AtticProfileInfo();
@@ -26,6 +25,23 @@ public:
     void SetIv(const std::string& iv) { m_Iv = iv; }
 
     bool HasMasterKey() { return !m_MasterKey.empty(); }
+
+    void SetRecoverySalt(const std::string& salt) { m_RecoverySalt = salt; }
+    void SetRecoveryMasterKey(const std::string& mk) { m_RecoveryMasterKey = mk; }
+    void SetRecoveryIv(const std::string& iv) { m_RecoveryIv = iv; }
+
+    void GetRecoverySalt(std::string& out) const { out = m_RecoverySalt; }
+    void GetRecoveryMasterKey(std::string& out) const { out = m_RecoveryMasterKey; }
+    void GetRecoveryIv(std::string& out) const { out = m_Iv; }
+
+    void SetQuestionSalt(const std::string& salt) { m_QuestionSalt = salt; }
+    void SetQuestionMasterKey(const std::string& mk) { m_QuestionMasterKey = mk; }
+    void SetQuestionIv(const std::string& iv) { m_QuestionIv = iv; }
+
+    void GetQuestionSalt(std::string& out) const { out = m_QuestionSalt; }
+    void GetQuestionMasterKey(std::string& out) const { out = m_QuestionMasterKey; }
+    void GetQuestionIv(std::string& out) const { out = m_QuestionIv; }
+
     
 private:
     Permissions m_Permissions;  // `json:"permissions"`
@@ -33,6 +49,16 @@ private:
     std::string m_MasterKey;    // `json:"mk"`    // The encrypted Master Key
     std::string m_Iv;           // `json:"mk_iv"` // The IV used to encrypt the master key
     std::string m_Salt;         // `json:"salt"`  // The encrypted salt
+
+    // Recovery Section
+    std::string m_RecoveryMasterKey; // Encrypted Recovery Master Key
+    std::string m_RecoveryIv;        // IV used to encrypt the recovery master key
+    std::string m_RecoverySalt;      // Encrypted recovery Salt
+
+    // Optional Question Recovery
+    std::string m_QuestionMasterKey;
+    std::string m_QuestionIv;
+    std::string m_QuestionSalt;
 
 };
 

@@ -9,8 +9,7 @@
 #include "jsonserializable.h"
 #include "profile.h"
 
-class Entity : public JsonSerializable
-{
+class Entity : public JsonSerializable {
     void DeleteProfiles();
 public:
     typedef std::vector<Profile> ProfileList;
@@ -35,6 +34,14 @@ public:
     ProfileList* GetProfileList(){ return &m_Profiles; }
     Profile* GetActiveProfile() const { return m_pActiveProfile; }
     Profile* GetFrontProfile() { if(m_Profiles.size()) { return &m_Profiles.front(); } return NULL; }
+
+    AtticProfileInfo* GetAtticProfile() {
+        AtticProfileInfo* pai = NULL;
+        if(HasAtticProfile())
+            pai = m_pActiveProfile->GetAtticInfo();
+        return pai;
+    }
+
     void GetEntityUrl(std::string& out) const { out = m_EntityUrl; }
     void GetApiRoot(std::string& out) const { out = m_ApiRoot; }
     unsigned int GetProfileCount() { return m_ProfileUrls.size(); }

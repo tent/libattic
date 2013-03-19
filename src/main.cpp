@@ -370,7 +370,7 @@ TEST(AFILE, DELETE)
         std::string rel("./data");
         std::string filepath;
         fs::GetCanonicalPath(rel, filepath);
-        filepath += "/oglisv.pdf";
+        filepath += "/oglisoglisvv.pdf";
 
         status = DeleteFile(filepath.c_str());
         ASSERT_EQ(status, ret::A_OK);
@@ -549,6 +549,23 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.IvEmpty(), false);
 }
 
+TEST(CRYPTO, SIZES)
+{
+    std::cout<< " MAXKEYLEN : " << CryptoPP::AES::MAX_KEYLENGTH << std::endl;
+    std::cout<< " BLOCKSIZE : " << CryptoPP::AES::BLOCKSIZE << std::endl;
+}
+
+TEST(CRYPTO, BASE32)
+{
+    std::string teststring("this is my test string, that I'm going to base32 encode");
+    std::string encoded;
+    crypto::Base32EncodeString(teststring, encoded);
+
+    std::string decoded;
+    crypto::Base32DecodeString(encoded, decoded);
+    ASSERT_EQ(teststring, decoded);
+}
+
 TEST(CRYPTO, BASE64)
 {
     std::string teststring("this is my test string, that I'm going to base64 encode");
@@ -714,6 +731,20 @@ TEST(FILESYSTEM, GETCANONICALPATH)
     std::string path("./data/oglisv.pdf");
     std::string absolute;
     fs::GetCanonicalPath(path, absolute);
+}
+
+TEST(AUTHCODE, GENERATE)
+{
+    std::string authcode;
+    utils::GenerateRandomString(authcode, 32);
+    std::cout<<" AUTH CODE : " << authcode << std::endl;
+    std::string encoded;
+    crypto::Base32EncodeString(authcode, encoded);
+    std::cout<<" ENCODED : " << encoded << std::endl;
+    std::string decoded;
+    crypto::Base32DecodeString(encoded, decoded);
+    ASSERT_EQ(decoded, authcode);
+
 }
 
 /*

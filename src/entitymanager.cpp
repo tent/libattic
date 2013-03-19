@@ -11,34 +11,20 @@
 
 #include "log.h"
 
-EntityManager::EntityManager()
-{
+EntityManager::EntityManager() {}
+EntityManager::~EntityManager() {}
 
-}
-
-EntityManager::~EntityManager()
-{
-
-}
-
-int EntityManager::Initialize()
-{
+int EntityManager::Initialize() {
     // Load entity info from somewhere ... if it exists
-
     return ret::A_OK;
 }
 
-int EntityManager::Shutdown()
-{
+int EntityManager::Shutdown() {
     // Clear out Entity vector
-
-
     return ret::A_OK;
 }
 
-
-int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut)
-{
+int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut) {
     int status = ret::A_OK;
     status = client::Discover(entityurl, &at, entOut);
 
@@ -62,16 +48,13 @@ int EntityManager::Discover(const std::string& entityurl, const AccessToken& at,
     return status; 
 }
 
-void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
-{
+void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at) {
     unsigned int profcount = ent.GetProfileCount();
-    if(profcount)
-    {
+    if(profcount) {
         const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
         Entity::UrlList::const_iterator itr = ProfUrlList->begin();
 
-        while(itr != ProfUrlList->end())
-        {
+        while(itr != ProfUrlList->end()) {
             Response response;
             netlib::HttpGet( *itr, 
                              NULL,
@@ -83,8 +66,7 @@ void EntityManager::RetrieveEntityProfiles(Entity& ent, const AccessToken& at)
             std::cout<< " code : " << response.code << std::endl;
             */
  
-            if(response.code == 200)
-            {
+            if(response.code == 200) {
                 // Deserialize into Profile Object
                 Profile* pProf = new Profile();
                 jsn::DeserializeObject(pProf, response.body);

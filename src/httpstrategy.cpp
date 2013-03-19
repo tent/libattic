@@ -1,5 +1,40 @@
 #include "httpstrategy.h"
 
+HttpStrategyInterface::HttpStrategyInterface() {
+    m_pCredentialsManager = NULL;
+    m_pFileManager = NULL;
+    m_pDelegate = NULL;
+}
+
+HttpStrategyInterface::~HttpStrategyInterface() {
+    m_pCredentialsManager = NULL;
+    m_pFileManager = NULL;
+    if(m_pDelegate) {
+        delete m_pDelegate;
+        m_pDelegate = NULL;
+    }
+}
+
+void HttpStrategyInterface::SetCallbackDelegate(TaskDelegate* pDel) { 
+    if(m_pDelegate) {
+        delete m_pDelegate;
+        m_pDelegate = NULL;
+    }
+    m_pDelegate = pDel;
+}
+
+void HttpStrategyInterface::Callback(const int tasktype, 
+                                     const int code, 
+                                     const int taskstate, 
+                                     const std::string& var) 
+{
+    if(m_pDelegate)
+        m_pDelegate->Callback(tasktype, code, taskstate, var);
+}
+
+
+
+
 HttpStrategyContext::HttpStrategyContext(FileManager* pFileManager,
                                          CredentialsManager* pCredentialsManager,
                                          const std::string& entityApiRoot, 

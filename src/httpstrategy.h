@@ -9,6 +9,7 @@
 #include "response.h"
 #include "filemanager.h"
 #include "credentialsmanager.h"
+#include "taskdelegate.h"
 
 class HttpTentContext;
 
@@ -16,21 +17,23 @@ class HttpStrategyInterface {
     friend class HttpStrategyContext;
     typedef std::map<std::string, std::string> ConfigMap;
 public:
-    HttpStrategyInterface() {
-        m_pCredentialsManager = NULL;
-        m_pFileManager = NULL;
-    }
-
-    ~HttpStrategyInterface() {
-        m_pCredentialsManager = NULL;
-        m_pFileManager = NULL;
-    }
+    HttpStrategyInterface();
+    ~HttpStrategyInterface();
 
     virtual int Execute(FileManager* pFileManager,
                         CredentialsManager* pCredentialsManager,
                         const std::string& entityApiRoot, 
                         const std::string& filepath, 
                         Response& out)=0;
+
+    // Takes ownership of the delegate.
+    // Will delete previous delegate if set more than once
+    void SetCallbackDelegate(TaskDelegate* pDel);
+
+    void Callback(const int tasktype, 
+                  const int code, 
+                  const int taskstate, 
+                  const std::string& var);
 protected:
     ConfigMap m_ConfigMap;
     CredentialsManager*     m_pCredentialsManager;
@@ -38,6 +41,8 @@ protected:
 
     AccessToken             m_At;
     std::string             m_entityApiRoot;
+
+    TaskDelegate*           m_pDelegate;
 };
 
 class HttpStrategyContext {

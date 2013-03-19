@@ -1,35 +1,67 @@
 #include "profile.h"
 
-#include <cbase64.h>
 #include "constants.h"
 #include "errorcodes.h"
+#include "crypto.h"
 
-AtticProfileInfo::AtticProfileInfo()
-{
+AtticProfileInfo::AtticProfileInfo() {
     m_Permissions.SetIsPublic(false);
 }
 
-AtticProfileInfo::~AtticProfileInfo()
-{
+AtticProfileInfo::~AtticProfileInfo() {}
 
-}
+void AtticProfileInfo::Serialize(Json::Value& root) {
+    std::string salt, mk, mk_iv;
+    crypto::Base64EncodeString(m_Salt, salt);
+    crypto::Base64EncodeString(m_MasterKey, mk);
+    crypto::Base64EncodeString(m_Iv, mk_iv);
+    root["salt"] = salt;
+    root["mk"] = mk;
+    root["mk_iv"] = mk_iv;
 
-void AtticProfileInfo::Serialize(Json::Value& root)
-{
-    root["salt"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_Salt.c_str()), m_Salt.size());
-    root["mk"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_MasterKey.c_str()), m_MasterKey.size());
-    root["mk_iv"] = cb64::base64_encode(reinterpret_cast<const unsigned char*>(m_Iv.c_str()), m_Iv.size());
+    std::string rsalt, rmk, riv;
+    crypto::Base64EncodeString(m_RecoverySalt, rsalt);
+    crypto::Base64EncodeString(m_RecoveryMasterKey, rmk);
+    crypto::Base64EncodeString(m_RecoveryIv, riv);
+    root["rsalt"] = rsalt;
+    root["rmk"] = rmk;
+    root["riv"] = riv;
+
+    std::string qsalt, qmk, qiv;
+    crypto::Base64EncodeString(m_QuestionSalt, qsalt);
+    crypto::Base64EncodeString(m_QuestionMasterKey, qmk);
+    crypto::Base64EncodeString(m_QuestionIv, qiv);
+    root["qsalt"] = qsalt;
+    root["qmk"] = qmk;
+    root["qiv"] = qiv;
 
     Json::Value perm(Json::objectValue);
     jsn::SerializeObject(&m_Permissions, perm);
     root["permissions"] = perm;
 }
 
-void AtticProfileInfo::Deserialize(Json::Value& root)
-{
-    m_Salt = cb64::base64_decode(root.get("salt", "").asString());
-    m_MasterKey = cb64::base64_decode(root.get("mk", "").asString());
-    m_Iv = cb64::base64_decode(root.get("mk_iv", "").asString());
+void AtticProfileInfo::Deserialize(Json::Value& root) {
+    std::string salt = root.get("salt", "").asString();
+    std::string mk = root.get("mk", "").asString();
+    std::string iv = root.get("mk_iv", "").asString();
+    crypto::Base64DecodeString(salt, m_Salt);
+    crypto::Base64DecodeString(mk, m_MasterKey);
+    crypto::Base64DecodeString(iv, m_Iv);
+
+    std::string rsalt = root.get("rsalt", "").asString();
+    std::string rmk = root.get("rmk", "").asString();
+    std::string riv = root.get("riv", "").asString();
+    crypto::Base64DecodeString(rsalt, m_RecoverySalt);
+    crypto::Base64DecodeString(rmk, m_RecoveryMasterKey);
+    crypto::Base64DecodeString(riv, m_RecoveryIv);
+
+    std::string qsalt = root.get("qsalt", "").asString();
+    std::string qmk = root.get("qmk", "").asString();
+    std::string qiv = root.get("qiv", "").asString();
+    crypto::Base64DecodeString(qsalt, m_QuestionSalt);
+    crypto::Base64DecodeString(qmk, m_QuestionMasterKey);
+    crypto::Base64DecodeString(qiv, m_QuestionIv);
+
     jsn::DeserializeObject(&m_Permissions, root["permissions"]);
 }
 
@@ -116,8 +148,7 @@ Profile::Profile()
     m_pBasicInfo = NULL;
 }
 
-Profile::Profile(const Profile& rhs)
-{
+Profile::Profile(const Profile& rhs) {
     m_pAtticInfo = new AtticProfileInfo();
     m_pCoreInfo = new CoreProfileInfo();
     m_pBasicInfo = new BasicProfileInfo();
@@ -127,8 +158,7 @@ Profile::Profile(const Profile& rhs)
     *m_pBasicInfo = *(rhs.m_pBasicInfo);
 }
 
-Profile Profile::operator=(const Profile& rhs)
-{
+Profile Profile::operator=(const Profile& rhs) {
     m_pAtticInfo = new AtticProfileInfo();
     m_pCoreInfo = new CoreProfileInfo();
     m_pBasicInfo = new BasicProfileInfo();
@@ -140,53 +170,44 @@ Profile Profile::operator=(const Profile& rhs)
     return *this;
 }
 
-Profile::~Profile()
-{
-    if(m_pAtticInfo)
-    {
+Profile::~Profile() {
+    if(m_pAtticInfo) {
         delete m_pAtticInfo;
         m_pAtticInfo = NULL; 
     }
 
-    if(m_pCoreInfo)
-    {
+    if(m_pCoreInfo) {
         delete m_pCoreInfo;
         m_pCoreInfo = NULL;
     }
 
-    if(m_pBasicInfo)
-    {
+    if(m_pBasicInfo) {
         delete m_pBasicInfo;
         m_pBasicInfo = NULL;
     }
 }
 
-void Profile::Serialize(Json::Value& root)
-{
-    if(m_pAtticInfo)
-    {
+void Profile::Serialize(Json::Value& root) {
+    if(m_pAtticInfo) {
         Json::Value attic(Json::objectValue);
         jsn::SerializeObject(m_pAtticInfo, attic);
         root[cnst::g_szAtticProfileType] = attic;
     }
 
-    if(m_pCoreInfo)
-    {
+    if(m_pCoreInfo) {
         Json::Value core(Json::objectValue);
         jsn::SerializeObject(m_pCoreInfo, core);
         root[cnst::g_szCoreProfileType] = core;
     }
 
-    if(m_pBasicInfo)
-    {
+    if(m_pBasicInfo) {
         Json::Value basic(Json::objectValue);
         jsn::SerializeObject(m_pBasicInfo, basic);
         root[cnst::g_szBasicProfileType] = basic;
     }
 }
 
-void Profile::Deserialize(Json::Value& root)
-{
+void Profile::Deserialize(Json::Value& root) {
     if(!m_pAtticInfo)
         m_pAtticInfo = new AtticProfileInfo();
     jsn::DeserializeObject(m_pAtticInfo, root[cnst::g_szAtticProfileType]);
@@ -200,23 +221,19 @@ void Profile::Deserialize(Json::Value& root)
     jsn::DeserializeObject(m_pBasicInfo, root[cnst::g_szBasicProfileType]);
 }
 
-int Profile::GetApiRoot(std::string& out)
-{
+int Profile::GetApiRoot(std::string& out) {
     int status = ret::A_OK;
 
-    if(m_pCoreInfo)
-    {
+    if(m_pCoreInfo) {
         CoreProfileInfo::ServerList* serverList = m_pCoreInfo->GetServerList();
         CoreProfileInfo::ServerList::iterator itr = serverList->begin();
-        for(;itr != serverList->end(); itr++)
-        {
+        for(;itr != serverList->end(); itr++) {
             out = (*itr);
             break; // TODO :: this will always get the top most server root
         }
 
     }
-    else
-    {
+    else {
         status = ret::A_FAIL_INVALID_PTR;
     }
 

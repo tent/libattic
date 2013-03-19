@@ -5,30 +5,25 @@
 #include "utils.h"
 #include "errorcodes.h"
 
-Entity::Entity()
-{
+Entity::Entity() {
     m_pActiveProfile = NULL;
 }
 
-Entity::~Entity()
-{
+Entity::~Entity(){
 }
 
-void Entity::Reset()
-{
+void Entity::Reset() {
     DeleteProfiles();
     m_ProfileUrls.clear();
     m_EntityUrl.clear();
     m_ApiRoot.clear();
 }
 
-void Entity::DeleteProfiles()
-{
+void Entity::DeleteProfiles() {
     m_Profiles.clear();
 }
  
-int Entity::WriteToFile(const std::string& filepath)
-{
+int Entity::WriteToFile(const std::string& filepath) {
     std::ofstream ofs;
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary | std::ios::trunc);
 
@@ -44,13 +39,12 @@ int Entity::WriteToFile(const std::string& filepath)
     return ret::A_OK;
 }
 
-int Entity::LoadFromFile(const std::string& filepath)
-{
+int Entity::LoadFromFile(const std::string& filepath) {
     std::ifstream ifs;                                                                            
     ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);                        
                                                                                                   
     if(!ifs.is_open())                                                                            
-        return ret::A_FAIL_OPEN_FILE;                                                                  
+        return ret::A_FAIL_OPEN_FILE;
                                                                                                   
     unsigned int size = utils::CheckIStreamSize(ifs);                                             
     char* pBuf = new char[size+1];                                                                
@@ -78,8 +72,7 @@ int Entity::LoadFromFile(const std::string& filepath)
     return ret::A_OK;    
 }
 
-void Entity::Serialize(Json::Value& root)
-{
+void Entity::Serialize(Json::Value& root) {
     root["entity_url"] = m_EntityUrl;
     root["api_root"] = m_ApiRoot;
 
@@ -91,8 +84,7 @@ void Entity::Serialize(Json::Value& root)
     ProfileList::iterator itr = m_Profiles.begin();
 
     std::string buffer;
-    for(;itr != m_Profiles.end(); itr++)
-    {
+    for(;itr != m_Profiles.end(); itr++) {
         buffer.clear();
         jsn::SerializeObject(&*itr, buffer);
         profiles.push_back(buffer);
@@ -103,8 +95,7 @@ void Entity::Serialize(Json::Value& root)
     root["profile_list"] = profilelist;
 }
 
-void Entity::Deserialize(Json::Value& root)
-{
+void Entity::Deserialize(Json::Value& root) {
     m_EntityUrl = root.get("entity_url", "").asString();
     m_ApiRoot = root.get("api_root", "").asString();
 
@@ -113,8 +104,7 @@ void Entity::Deserialize(Json::Value& root)
     jsn::DeserializeIntoVector(root["profile_list"], profiles);
 
     std::vector<std::string>::iterator itr = profiles.begin();
-    for(;itr != profiles.end(); itr++)
-    {
+    for(;itr != profiles.end(); itr++) {
         Profile p;
         jsn::DeserializeObject(&p, *itr);
         m_Profiles.push_back(p);
@@ -124,13 +114,12 @@ void Entity::Deserialize(Json::Value& root)
     m_pActiveProfile = GetFrontProfile();
 }
 
-bool Entity::HasAtticProfileMasterKey() 
-{ 
-    if(m_pActiveProfile)
-    {
+bool Entity::HasAtticProfileMasterKey() {
+    if(m_pActiveProfile) {
         AtticProfileInfo* pi = m_pActiveProfile->GetAtticInfo();
         if(pi)
             return pi->HasMasterKey();
     }
     return false;
 }
+

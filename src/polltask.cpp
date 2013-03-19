@@ -80,6 +80,7 @@ void PollTask::PollTaskCB(int a, std::string& b) {
     }
 }
 
+// TODO:: after v0.1 abstract this to sync strategy
 void PollTask::RunTask() {
     int status = ret::A_OK;
     // Spin off consumer task for checking each file meta post for newer versions

@@ -527,8 +527,7 @@ int GetMasterKeyFromProfile(std::string& out) {
     return status;
 }
 
-int DecryptMasterKey(const std::string& phraseKey, const std::string& iv)
-{
+int DecryptMasterKey(const std::string& phraseKey, const std::string& iv) {
     int status = ret::A_OK;
 
     if(!phraseKey.empty()) {
@@ -611,11 +610,13 @@ int RegisterPassphrase(const char* szPass, bool override) {
             // Enter passphrase to generate key.
             g_pCredManager->GenerateMasterKey(key); // Generate random master key
 
+            std::string recoverykey;
             status = pass::RegisterPassphraseWithAttic(std::string(szPass), 
                                                        key, // master key
-                                                       g_Pt,
                                                        g_pCredManager,
-                                                       g_Entity);
+                                                       g_Entity,
+                                                       g_Pt,
+                                                       recoverykey);
              if(status == ret::A_OK)
                 SavePhraseToken(g_Pt);
         }
@@ -685,11 +686,13 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
             std::string key;
             mk.GetMasterKey(key);
 
+            std::string recoverykey;
             status = pass::RegisterPassphraseWithAttic( std::string(szNew), 
                                                         key, // master key
-                                                        g_Pt,
                                                         g_pCredManager,
-                                                        g_Entity);
+                                                        g_Entity,
+                                                        g_Pt,
+                                                        recoverykey);
             if(status == ret::A_OK)
                 SavePhraseToken(g_Pt);
 

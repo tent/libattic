@@ -4,34 +4,23 @@
 #include "constants.h"
 #include "utils.h"
 
-CredentialsManager::CredentialsManager()
-{
+// TODO:: come back and audit this, lots of useless locking going on. after 0.1 come and clean that up
+CredentialsManager::CredentialsManager() {}
+CredentialsManager::~CredentialsManager() {}
 
-}
-
-CredentialsManager::~CredentialsManager()
-{
-
-}
-
-int CredentialsManager::Initialize()
-{
+int CredentialsManager::Initialize() {
     // Pull Profile Info to get latest data
     // Search for and load/create access token
     //
     // Search for and load/create phrase token
-
     return ret::A_OK;
 }
 
-int CredentialsManager::Shutdown()
-{
-
+int CredentialsManager::Shutdown(){
     return ret::A_OK;
 }
 
-int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)
-{
+int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer) {
     Lock();
     int status = ret::A_OK;
     if(!jsn::DeserializeObject(&m_AccessToken, buffer))
@@ -41,8 +30,7 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer)
     return status;
 }
 
-int CredentialsManager::WriteOutAccessToken()
-{
+int CredentialsManager::WriteOutAccessToken() {
     Lock();
     std::string path;
     ConstructAccessTokenPath(path);
@@ -51,8 +39,7 @@ int CredentialsManager::WriteOutAccessToken()
     return m_AccessToken.SaveToFile(path);  
 }
 
-int CredentialsManager::LoadAccessToken()
-{
+int CredentialsManager::LoadAccessToken() {
     Lock();
     std::string path;
     ConstructAccessTokenPath(path);
@@ -61,8 +48,7 @@ int CredentialsManager::LoadAccessToken()
     return m_AccessToken.LoadFromFile(path);
 }
 
-int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer)
-{
+int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer) {
     Lock();
     int status = ret::A_OK;
     if(!jsn::DeserializeObject(&m_PhraseToken, buffer))
@@ -72,8 +58,7 @@ int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer)
     return status;
 }
 
-int CredentialsManager::WriteOutPhraseToken()
-{
+int CredentialsManager::WriteOutPhraseToken() {
     Lock();
     std::string path;
     ConstructPhraseTokenPath(path);
@@ -82,8 +67,7 @@ int CredentialsManager::WriteOutPhraseToken()
     return m_PhraseToken.SaveToFile(path);
 }
 
-int CredentialsManager::LoadPhraseToken()
-{
+int CredentialsManager::LoadPhraseToken() {
     Lock();
     std::string path;
     ConstructPhraseTokenPath(path);
@@ -92,19 +76,7 @@ int CredentialsManager::LoadPhraseToken()
     return m_PhraseToken.LoadFromFile(path);
 }
 
-/*
-int CredentialsManager::EnterUserNameAndPassword(const std::string& user, const std::string& pass)
-{
-    Credentials cred;
-    m_Crypto.GenerateKeyIvFromPassphrase( user, pass, cred );
-    m_MasterKey.SetCredentials(cred);
-
-    return ret::A_OK;
-}
-*/
-
-int CredentialsManager::CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key)
-{
+int CredentialsManager::CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key) {
     Lock();
     Credentials MasterKey;
     MasterKey.SetKey(key);
@@ -114,8 +86,7 @@ int CredentialsManager::CreateMasterKeyWithPass( MasterKey& mkOut, const std::st
     return ret::A_OK;
 }
 
-int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
-{
+int CredentialsManager::GenerateMasterKey(MasterKey& mkOut) {
     Lock();
     // Create Master Key
     Credentials MasterKey;
@@ -127,8 +98,7 @@ int CredentialsManager::GenerateMasterKey( MasterKey& mkOut)
     return ret::A_OK;
 }
 
-int CredentialsManager::GenerateMasterKey( std::string& keyOut)
-{
+int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
     Lock();
     // Create Master Key
     Credentials MasterKey;
@@ -141,9 +111,7 @@ int CredentialsManager::GenerateMasterKey( std::string& keyOut)
 }
 
 //TODO:: rename this, confusing
-int CredentialsManager::RegisterPassphrase( const std::string& pass, 
-                                            PhraseToken& ptOut)
-{
+int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken& ptOut) {
     Lock();
     // TODO :: perhaps check profile if these things exist
     if(pass.empty())
@@ -155,8 +123,7 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     status = crypto::GenerateSalt(salt);
     status = crypto::CheckSalt(salt);
 
-    if(status == ret::A_OK)
-    {
+    if(status == ret::A_OK) {
         ptOut.SetSalt(salt);
 
         // Generate Passphrase Key 
@@ -170,9 +137,10 @@ int CredentialsManager::RegisterPassphrase( const std::string& pass,
     return status;
 }
 
-int CredentialsManager::EnterPassphrase( const std::string& pass, 
-                                         std::string& salt, 
-                                         std::string& keyOut)
+// Depricated
+int CredentialsManager::EnterPassphrase(const std::string& pass, 
+                                        std::string& salt, 
+                                        std::string& keyOut) 
 {
     Lock();
     Credentials cred;
@@ -184,16 +152,7 @@ int CredentialsManager::EnterPassphrase( const std::string& pass,
     return ret::A_OK;
 }
 
-int CredentialsManager::GenerateMasterKey()
-{
-    // Generate random master key that will be used to encrypt all files,
-    // This key will be encrypted itself with the passphrase - scrypt
-
-    return ret::A_OK;
-}
-
-void CredentialsManager::ConstructAccessTokenPath(std::string& out)
-{
+void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
     // do not lock, used internally
     // Construct path
     out = m_ConfigDirectory;
@@ -202,8 +161,7 @@ void CredentialsManager::ConstructAccessTokenPath(std::string& out)
 
 }
 
-void CredentialsManager::ConstructManifestPath(std::string& out)
-{
+void CredentialsManager::ConstructManifestPath(std::string& out) {
     // do not lock, used internally
     // Construct path
     out = m_ConfigDirectory;
@@ -212,8 +170,7 @@ void CredentialsManager::ConstructManifestPath(std::string& out)
 }
 
 
-void CredentialsManager::ConstructPhraseTokenPath(std::string& out)
-{
+void CredentialsManager::ConstructPhraseTokenPath(std::string& out) {
     out = m_ConfigDirectory;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szPhraseTokenName);
