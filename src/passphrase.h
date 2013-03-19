@@ -33,7 +33,7 @@ static int EnterPassphrase(const std::string& pass,
 static int EnterRecoveryKey(const std::string& recoverykey,
                             CredentialsManager* pCm,
                             Entity& entity,
-                            PhraseToken& pt);
+                            std::string& keyOut);
 
 static int DecryptKey(const std::string& encryptedkey, 
                       const std::string& phrasekey, 
@@ -172,7 +172,7 @@ static int GenerateRecoveryKey(const std::string& masterkey,
 static int EnterRecoveryKey(const std::string& recoverykey,
                             CredentialsManager* pCm,
                             Entity& entity,
-                            PhraseToken& pt)
+                            std::string& keyOut)
 {
     int status = ret::A_OK;
     AtticProfileInfo* atticProfile = entity.GetAtticProfile();
@@ -187,8 +187,8 @@ static int EnterRecoveryKey(const std::string& recoverykey,
         EnterPassphrase(unencoded_recovery_key, recovery_salt, phrasekey);
 
         if(!phrasekey.empty()) {
-            std::string decryted_masterkey;
-            status = DecryptKey(encrypted_masterkey, phrasekey, salt, decrypted_masterkey);
+            std::string decrypted_masterkey;
+            status = DecryptKey(encrypted_masterkey, phrasekey, recovery_salt, decrypted_masterkey);
         }
         
     }
@@ -203,11 +203,11 @@ static int DecryptKey(const std::string& encryptedkey,
     int status = ret::A_OK;
 
     Credentials cred;
-    cred.SetKey(phraseKey);
+    cred.SetKey(phrasekey);
     cred.SetIv(iv);
 
     std::string decrypted_key;
-    status = crypto::DecryptStringCFB(encrytedkey, cred, decrypted_key);
+    status = crypto::DecryptStringCFB(encryptedkey, cred, decrypted_key);
 
     if(status == ret::A_OK) {
         if(decrypted_key.size() >= 8) {

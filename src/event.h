@@ -32,6 +32,8 @@ struct Event {
         DOWNLOAD_SPEED,
         FILE_LOCK,
         FILE_UNLOCK,
+        RECOVERY_KEY,
+        TEMPORARY_PASS,
         ERROR_NOTIFY,
     };
 

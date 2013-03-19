@@ -695,7 +695,34 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
                                                         recoverykey);
             if(status == ret::A_OK)
                 SavePhraseToken(g_Pt);
+                event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
+        }
+    }
 
+    return status;
+}
+
+int EnterRecoveryKey(const char* szRecovery) {
+    int status = ret::A_OK;
+
+    std::string recovery_key(szRecovery);
+    status = LoadEntity(true);
+    if(status == ret::A_OK) {
+        std::string masterkey;
+        status = pass::EnterRecoveryKey(recovery_key, g_pCredManager, g_Entity, masterkey);
+        if(status == ret::A_OK) {
+            std::string temppass;
+            utils::GenerateRandomString(temppass, 16);
+            std::string new_recovery_key;
+            status = pass::RegisterPassphraseWithAttic(temppass, 
+                                                       masterkey,
+                                                       g_pCredManager,
+                                                       g_Entity,
+                                                       g_Pt,
+                                                       new_recovery_key);
+
+            if(status == ret::A_OK)
+                event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
         }
     }
 
@@ -973,6 +1000,16 @@ void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*)) {
 void RegisterForErrorNotify(void (*callback)(int, int, const char*)) {
     if(callback)
         g_CallbackHandler.RegisterCallback(event::Event::ERROR_NOTIFY, callback);
+}
+
+void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(event::Event::RECOVERY_KEY, callback);
+}
+
+void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(event::Event::TEMPORARY_PASS, callback);
 }
 
 

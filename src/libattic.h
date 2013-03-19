@@ -52,6 +52,7 @@ int ShutdownLibAttic(void (*callback)(int, void*));
 
 // Master Key
 int EnterPassphrase(const char* szPass);
+int EnterRecoveryKey(const char* szRecovery);
 int RegisterPassphrase(const char* szPass, bool override = false);
 int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
@@ -69,6 +70,8 @@ void RegisterForPushNotify(void (*callback)(int, int, const char*));
 void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*));
 void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*));
 void RegisterForErrorNotify(void (*callback)(int, int, const char*));
+void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
+void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
 
 
 int PushFile(const char* szFilePath);
