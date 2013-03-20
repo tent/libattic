@@ -917,13 +917,11 @@ static void BuildAttachmentForm( const std::string& name,
     bodystream << body;
 }
 
-static void AddEndBoundry(std::ostream& bodystream, const std::string& boundary) 
-{
+static void AddEndBoundry(std::ostream& bodystream, const std::string& boundary) {
     bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
 }
 
-static void ChunkPart(boost::asio::streambuf& part, std::ostream& outstream)
-{
+static void ChunkPart(boost::asio::streambuf& part, std::ostream& outstream) {
     std::ostringstream reqbuf;
     reqbuf << &part;
 
@@ -931,8 +929,7 @@ static void ChunkPart(boost::asio::streambuf& part, std::ostream& outstream)
     outstream << "\r\n" << reqbuf.str() << "\r\n";//\r\n0\r\n\r\n";
 }
 
-static void ChunkEnd(boost::asio::streambuf& part, std::ostream& outstream)
-{
+static void ChunkEnd(boost::asio::streambuf& part, std::ostream& outstream) {
     std::ostringstream reqbuf;
     reqbuf << &part;
     outstream << std::hex << reqbuf.str().size();

@@ -277,6 +277,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             unsigned int chunkcount = 0;
             RollSum rs;
             while(!ifs.eof()) {
+
                 char* pData = NULL;
                 unsigned int datasize = 0;
                 if(filesize >= cnst::g_unMaxBuffer) {
@@ -374,22 +375,22 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
     return status;
 }
 
-int PostFileStrategy::SendChunk( const std::string& chunk, 
-                         const std::string& fileKey,
-                         const std::string& boundary,
-                         boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
-                         const unsigned int count,
-                         bool end,
-                         FileInfo* pFi)
+int PostFileStrategy::SendChunk(const std::string& chunk, 
+                                const std::string& fileKey,
+                                const std::string& boundary,
+                                boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
+                                const unsigned int count,
+                                bool end,
+                                FileInfo* pFi)
 {
     int status = ret::A_OK;
     // Transform
     std::string finishedChunk, chunkName;
-    TransformChunk( chunk, 
-                    fileKey, 
-                    finishedChunk, 
-                    chunkName, 
-                    pFi);
+    TransformChunk(chunk, 
+                   fileKey, 
+                   finishedChunk, 
+                   chunkName, 
+                   pFi);
 
     // Build Attachment
     boost::asio::streambuf attachment;

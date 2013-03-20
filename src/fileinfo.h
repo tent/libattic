@@ -9,8 +9,7 @@
 #include "crypto.h"
 #include "chunkinfo.h"
 
-class FileInfo
-{
+class FileInfo {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
     typedef std::map<std::string, ChunkInfo> ChunkMap;

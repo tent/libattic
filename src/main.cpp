@@ -795,6 +795,27 @@ TEST(MANIFEST, REMOVEFILEINFO)
     mf.Shutdown();
 }
 */
+TEST(CHUNKINFO, SERIALIZATION) 
+{
+    ChunkInfo ci("name", "supersummmmmmm");
+    ci.SetCipherTextMac("aksdjfkasdfCIPHER");
+    ci.SetPlainTextMac("THIS IS MY PLAIN TEXT MAC MOFO ");
+    ci.SetIv("IVVV");
+
+    std::string output;
+    jsn::SerializeObject(&ci, output);
+
+    std::cout<<" SERIALIZED : " << output << std::endl;
+
+    ChunkInfo ci2;
+    jsn::DeserializeObject(&ci2, output);
+    
+
+    std::string output2;
+    jsn::SerializeObject(&ci2, output2);
+
+    ASSERT_EQ(output, output2);
+}
 
 TEST(FOLDER, SERIALIZATION)
 {
@@ -857,6 +878,7 @@ TEST(ROLLSUM, FILETEST)
     if(g_filepath.empty()) return;
     if(!g_bRollsum) return;
 
+    std::cout<<" opening file : " << g_filepath << std::endl;
     std::ifstream ifs;
     ifs.open(g_filepath.c_str(), std::ios::in  | std::ios::binary);
 
@@ -867,159 +889,128 @@ TEST(ROLLSUM, FILETEST)
 
     int buffersize = 10000000;
 
-    std::string data, remainder;
-    if(ifs.is_open()) {
-        ifs.seekg(0, std::ifstream::end);
-        totalsize = ifs.tellg();
-        ifs.seekg(0, std::ifstream::beg);
+    const unsigned int filesize = utils::CheckFilesize(g_filepath);
 
-        int totalreadcount = 0;
-        while(!ifs.eof()) { 
-            int buffsize = 3000000;
+    std::ofstream ofs;
+    ofs.open("out.mp4", std::ios::out | std::ios::binary);
+
+    if(ifs.is_open()) {
+        std::cout<<" begining read " << std::endl;
+        // Setup window buffer
+        std::string window, remainder;
+        unsigned int readcount = 0;
+        unsigned int chunkcount = 0;
+        RollSum rs;
+        while(!ifs.eof()) {
             char* pData = NULL;
-            int readcount = 0;
-            if(totalsize > buffsize) {
-                pData = new char[buffsize];
-                ifs.read(pData, buffsize);
-                readcount = buffsize;
+            unsigned int datasize = 0;
+            /*
+            if(filesize >= cnst::g_unMaxBuffer) {
+                pData = new char[filesize];
+                datasize = filesize;
             }
-            else { 
-                pData = new char[totalsize];
-                ifs.read(pData, totalsize);
-                data.append(pData, totalsize);
-                readcount = totalsize;
-            }
-            data.clear();
-            data += remainder;
+            else {
+            */
+                if((filesize - readcount) <= cnst::g_unMaxBuffer) {
+                    pData = new char[(filesize - readcount)];
+                    datasize = (filesize - readcount);
+                }
+                else {
+                    pData = new char[cnst::g_unMaxBuffer];
+                    datasize = cnst::g_unMaxBuffer;
+                }
+            //}
+            std::cout<<" datasize : " << datasize << std::endl;
+            
+            ifs.read(pData, datasize);
+            readcount += datasize;
+
+            window.clear();
+            window += remainder;
             remainder.clear();
-            data.append(pData, readcount);
-            totalreadcount += readcount;
+
+            if(datasize)
+                window.append(pData, datasize);
 
             if(pData) {
-                delete pData;
+                delete[] pData;
                 pData = NULL;
             }
-            // Go through data here with the rollsum
-            RollSum s;
 
-            int lastsplit = 0;
-            int passing = 0;
-            for(unsigned int i=0; i < data.size(); i++) {
-                char c = data[i];
-                s.Roll(c);
-                if(s.OnSplit()) { 
-                    // check min
-                    if(passing > splitmin) { 
-                        std::cout<<" found split : " << i << std::endl;
-
-                        passing = 0;
+            // find splits
+            int totalread = 0, count = 0, lastsplit = 0;
+            for(unsigned int i=0; i<window.size(); i++) {
+                char c = window[i];
+                count++;
+                rs.Roll(c);
+                if(rs.OnSplit()) {
+                    if(count >= cnst::g_unSplitMin) {
+                        std::string chunk;
+                        int diff = i - lastsplit;
+                        chunk = window.substr(lastsplit, diff);
+                        // Transform
+                     //   SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
                         lastsplit = i;
+                        count = 0;
+                        chunkcount++;
+                        totalread += chunk.size();
+
+                        std::string plaintextHash;
+                        crypto::GenerateHash(chunk, plaintextHash);
+                        std::cout<<" hash : " << plaintextHash << std::endl;
+
+                        //std::cout<<" split found at : " << totalread << std::endl;
+                        ofs.write(chunk.c_str(), chunk.size());
                     }
                 }
 
-                if(passing >= splitmax) {
-                    std::cout<< "split max : " << i << std::endl;
-
-                    passing = 0;
+                if(count >= cnst::g_unSplitMax) {
+                    std::string chunk;
+                    int diff = i - lastsplit;
+                    chunk = window.substr(lastsplit, diff);
+                    // Transform
+                    //SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
                     lastsplit = i;
+                    count = 0;
+                    chunkcount++;
+                    totalread += chunk.size();
+
+                    std::string plaintextHash;
+                    crypto::GenerateHash(chunk, plaintextHash);
+                    std::cout<<" hash : " << plaintextHash << std::endl;
+                    //std::cout<<" split found at : " << totalread << std::endl;
+                    //
+                    ofs.write(chunk.c_str(), chunk.size());
                 }
-
-
-                passing++;
             }
-            // Get the remainder and append it to remainder
-            int df = data.size() - (lastsplit+1);
-            std::cout<<" dif : " << df << std::endl;
 
-            if(totalreadcount >= totalsize) break;
+            // Set remainder
+            int wdiff = window.size() - totalread;
+            if(wdiff)
+                remainder = window.substr(lastsplit, wdiff);
+
+            if((readcount + remainder.size()) >= filesize) {
+
+                std::string plaintextHash;
+                crypto::GenerateHash(remainder, plaintextHash);
+                std::cout<<" hash : " << plaintextHash << std::endl;
+                ofs.write(remainder.c_str(), remainder.size());
+
+                std::cout<<" FILE SIZE : " << filesize << std::endl;
+                std::cout<<" READCOUNT : " << readcount << std::endl;
+                std::cout<<" REMAINDER : " << remainder.size() << std::endl;
+                
+                //std::cout<<" split found at : " << readcount +  << std::endl;
+                //SendChunk( remainder, fileKey, boundary, ssl_sock, chunkcount, true, pFi);
+                chunkcount++;
+                break;
+            }
+
         }
-             
-
-        ifs.close();
+        std::cout<<" rolling file done " << std::endl;
     }
 
-    return;
-
-    std::deque<unsigned int> splits;
-    std::cout<<" starting size : " << splits.size() << std::endl;
-    std::cout<<" data size : " << data.size() << std::endl;
-    std::cout<<" total size : " << totalsize << std::endl;
-    if(data.size()) {
-        RollSum s;
-
-        int passing = 0;
-        for(unsigned int i=0; i < data.size(); i++) {
-            char c = data[i];
-            s.Roll(c);
-            if(s.OnSplit()) { 
-                // check min
-                if(passing > splitmin) { 
-                    std::cout<<" found split : " << i << std::endl;
-                    splits.push_back(i);
-                    passing = 0;
-                }
-            }
-
-            if(passing >= splitmax) {
-                std::cout<< "split max : " << i << std::endl;
-                passing = 0;
-                splits.push_back(i);
-                passing = 0;
-            }
-
-            passing++;
-        }
-
-        std::cout<<std::endl;
-
-        ifs.open(g_filepath.c_str(), std::ios::in  | std::ios::binary);
-
-        int runningtotal = 0;
-        int last = 0;
-        int len = splits.size();
-        long long size = 0;
-        if(len) {
-            for(int j=0; j<len+1; j++) {
-                std::cout<<"split : " << splits[j] << std::endl;
-                size = 0;
-                if(j < len)
-                    size = splits[j] - last;
-                else {
-                    size = totalsize - splits[j-1];
-                    std::cout<<" end split : " << splits[j-1] << std::endl;
-                }
-
-                runningtotal += size;
-
-                std::cout << " size : " << size << std::endl;
-
-                if(size < 0) { 
-                    std::cout << "at split : " << splits[j] << std::endl;
-                    std::cout<<" end split : " << splits[len-1] << std::endl;
-                }
-
-                char* pData = new char[size];
-                ifs.read(pData, size);
-                std::string tdata;
-                tdata.append(pData, size);
-
-                delete pData;
-                pData = NULL;
-
-                std::string hash;
-                crypto::GenerateHash(tdata, hash);
-
-                std::cout<<" hash : " << hash << std::endl;
-
-                ifs.seekg(splits[j]);
-                last = splits[j];
-
-            }
-            ifs.close();
-
-            ASSERT_EQ(runningtotal, totalsize);
-        }
-    }
+    
 }
 
 bool g_bDaemon = false;
@@ -1210,6 +1201,7 @@ int main (int argc, char* argv[])
                         }
                         else
                             std::cout<<" Invalid params ";
+                        break;
                     }
                     case DAEMON:
                     {
