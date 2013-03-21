@@ -94,6 +94,21 @@ int LoadAccessToken();
 // TODO :: These two methods are just temporarily exposed, to be used internally only
 int SyncFiles(void);
 
+const char** GetQuestionList();
+
+int RegisterQuestionAnswerKey(const char* q1, 
+                              const char* q2, 
+                              const char* q3, 
+                              const char* a1, 
+                              const char* a2, 
+                              const char* a3);
+
+int EnterQuestionAnswerKey(const char* q1, 
+                           const char* q2, 
+                           const char* q3, 
+                           const char* a1, 
+                           const char* a2, 
+                           const char* a3);
 
 int SetEntityUrl(const char* szUrl);
 

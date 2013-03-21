@@ -35,6 +35,9 @@ struct Event {
         RECOVERY_KEY,
         TEMPORARY_PASS,
         ERROR_NOTIFY,
+        PAUSE_RESUME_NOTIFY,
+        PAUSE,
+        RESUME
     };
 
     EventStatus status = START;

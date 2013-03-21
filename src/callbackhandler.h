@@ -7,7 +7,6 @@
 #include "event.h"
 
 class CallbackHandler : public event::EventListener {
-
     void Notify(const event::Event& event);
 public:
     typedef void(*EventCallback)(int, int, const char*);

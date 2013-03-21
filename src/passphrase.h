@@ -20,15 +20,9 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                                        PhraseToken& pt,
                                        std::string& recoverykey);
 
-static int RegisterPassphraseProfilePost(const std::string& encryptedKey, 
-                                         const std::string& salt,
-                                         CredentialsManager* pCm,
+static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
                                          AtticProfileInfo& atticProfile,
                                          Entity& entity);
-
-static int EnterPassphrase(const std::string& pass, 
-                           std::string& salt, 
-                           std::string& keyOut);
 
 static int EnterRecoveryKey(const std::string& recoverykey,
                             CredentialsManager* pCm,
@@ -45,6 +39,10 @@ static int GenerateRecoveryKey(const std::string& masterkey,
                                AtticProfileInfo& atticProfile,
                                Entity& entity,
                                std::string& recoveryOut);
+
+void GeneratePhraseKey(const std::string& phrase, 
+                       std::string& salt,
+                       std::string& keyOut);
 
 static int ConstructMasterKey(const std::string& masterkey, 
                               CredentialsManager* pCm,
@@ -86,15 +84,16 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
         pt.SetDirtyKey(dirtykey); // Set Phrase Token
         // Enter passphrase to generate key.
         std::string phraseKey;
-        status = pCm->EnterPassphrase(pass, salt, phraseKey);
+        //status = pCm->EnterPassphrase(pass, salt, phraseKey);
+        GeneratePhraseKey(pass, salt, phraseKey);
         if(status == ret::A_OK) {
             pt.SetPhraseKey(phraseKey);
             // Setup passphrase cred to encrypt master key
             std::string encryptedkey;
-            status = EncryptKeyWithPassphrase( dirtykey, 
-                                               phraseKey, 
-                                               salt, 
-                                               encryptedkey);
+            status = EncryptKeyWithPassphrase(dirtykey, 
+                                              phraseKey, 
+                                              salt, 
+                                              encryptedkey);
 
             if(status == ret::A_OK) {
                 // MasterKey with sentinel and Salt
@@ -109,9 +108,7 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                                              entity,
                                              recoverykey);
                 if(status == ret::A_OK) {
-                    status = RegisterPassphraseProfilePost(encryptedkey, 
-                                                           salt,
-                                                           pCm,
+                    status = RegisterPassphraseProfilePost(pCm,
                                                            atticProfile,
                                                            entity);
                 }
@@ -125,6 +122,97 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
     return status; 
 }
 
+static int RegisterRecoveryQuestionsWithAttic(const std::string& masterkey,
+                                              CredentialsManager* pCm,
+                                              Entity& entity,
+                                              std::string& q1,
+                                              std::string& q2,
+                                              std::string& q3,
+                                              std::string& a1,
+                                              std::string& a2,
+                                              std::string& a3)
+{
+    int status = ret::A_OK;
+    // Store questions on entity
+    std::string compound = q1 + q2 + q3 + a1 + a2 + a3;
+
+    MasterKey backupkey;
+    PhraseToken authcodetoken;
+    ConstructMasterKey(masterkey, pCm, authcodetoken, backupkey);
+
+    // Insert sentinel value
+    backupkey.InsertSentinelIntoMasterKey();
+    // Get Salt
+    std::string salt;
+    authcodetoken.GetSalt(salt);  // Phrase Token
+    // Get Dirty Master Key (un-encrypted master key with sentinel values)
+    std::string dirtykey;
+    backupkey.GetMasterKeyWithSentinel(dirtykey);
+    authcodetoken.SetDirtyKey(dirtykey); // Set Phrase Token
+    // Enter passphrase to generate key.
+    std::string phraseKey;
+    //status = pCm->EnterPassphrase(recovery_key, salt, phraseKey);
+    GeneratePhraseKey(compound, salt, phraseKey);
+    if(status == ret::A_OK) {
+        authcodetoken.SetPhraseKey(phraseKey);
+        // Setup passphrase cred to encrypt master key
+        std::string encryptedkey;
+        status = EncryptKeyWithPassphrase( dirtykey, 
+                                           phraseKey, 
+                                           salt, 
+                                           encryptedkey);
+        if(status == ret::A_OK) {
+            AtticProfileInfo* atticProfile = entity.GetAtticProfile();
+            if(atticProfile) {
+                atticProfile->SetQuestionMasterKey(encryptedkey);
+                atticProfile->SetQuestionSalt(salt);
+                atticProfile->SetQuestionOne(q1);
+                atticProfile->SetQuestionTwo(q2);
+                atticProfile->SetQuestionThree(q3);
+                status = RegisterPassphraseProfilePost(pCm,
+                                                       *atticProfile,
+                                                       entity);
+            }
+            else {
+                status = ret::A_FAIL_INVALID_PROFILE;
+            }
+        }
+    }
+
+    return status;
+}
+static int EnterRecoveryQuestions(CredentialsManager* pCm,
+                                  Entity& entity,
+                                  std::string& q1,
+                                  std::string& q2,
+                                  std::string& q3,
+                                  std::string& a1,
+                                  std::string& a2,
+                                  std::string& a3,
+                                  std::string& keyOut)
+{
+    int status = ret::A_OK;
+    AtticProfileInfo* atticProfile = entity.GetAtticProfile();
+    if(atticProfile) {
+        std::string compound = q1 + q2 + q3 + a1 + a2 + a3;
+
+        std::string encrypted_masterkey, salt;
+        atticProfile->GetQuestionMasterKey(encrypted_masterkey);
+        atticProfile->GetQuestionSalt(salt);
+
+        std::string phraseKey;
+        GeneratePhraseKey(compound, salt, phraseKey);
+
+        if(!phraseKey.empty()) {
+            std::string decrypted_masterkey;
+            status = DecryptKey(encrypted_masterkey, phraseKey, salt, decrypted_masterkey);
+            if(status == ret::A_OK)
+                keyOut = decrypted_masterkey;
+        }
+    }
+
+    return status;
+}
 static int GenerateRecoveryKey(const std::string& masterkey,
                                CredentialsManager* pCm,
                                AtticProfileInfo& atticProfile,
@@ -143,7 +231,6 @@ static int GenerateRecoveryKey(const std::string& masterkey,
     backupkey.InsertSentinelIntoMasterKey();
     // Get Salt
     std::string salt;
-
     authcodetoken.GetSalt(salt);  // Phrase Token
     // Get Dirty Master Key (un-encrypted master key with sentinel values)
     std::string dirtykey;
@@ -151,7 +238,8 @@ static int GenerateRecoveryKey(const std::string& masterkey,
     authcodetoken.SetDirtyKey(dirtykey); // Set Phrase Token
     // Enter passphrase to generate key.
     std::string phraseKey;
-    status = pCm->EnterPassphrase(recovery_key, salt, phraseKey);
+    //status = pCm->EnterPassphrase(recovery_key, salt, phraseKey);
+    GeneratePhraseKey(recovery_key, salt, phraseKey);
     if(status == ret::A_OK) {
         authcodetoken.SetPhraseKey(phraseKey);
         // Setup passphrase cred to encrypt master key
@@ -163,7 +251,6 @@ static int GenerateRecoveryKey(const std::string& masterkey,
         if(status == ret::A_OK) {
             atticProfile.SetRecoveryMasterKey(encryptedkey);
             atticProfile.SetRecoverySalt(salt);
-
             crypto::Base32EncodeString(recovery_key, recoveryOut);
         }
     }
@@ -183,20 +270,17 @@ static int EnterRecoveryKey(const std::string& recoverykey,
         atticProfile->GetRecoveryMasterKey(encrypted_masterkey);
         atticProfile->GetRecoverySalt(recovery_salt);
 
-
         std::string unencoded_recovery_key;
         crypto::Base32DecodeString(recoverykey, unencoded_recovery_key);
         std::string phrasekey;
 
-        EnterPassphrase(unencoded_recovery_key, recovery_salt, phrasekey);
-
+        //EnterPassphrase(unencoded_recovery_key, recovery_salt, phrasekey);
+        GeneratePhraseKey(unencoded_recovery_key, recovery_salt, phrasekey);
 
         if(!phrasekey.empty()) {
-
             std::string decrypted_masterkey;
             status = DecryptKey(encrypted_masterkey, phrasekey, recovery_salt, decrypted_masterkey);
         }
-        
     }
 
     return status;
@@ -245,9 +329,18 @@ static int GenerateRecoveryQuestionsKey(const std::string& masterkey,
     return status;
 }
 
-static int RegisterPassphraseProfilePost(const std::string& encryptedKey, 
-                                         const std::string& salt,
-                                         CredentialsManager* pCm,
+void GeneratePhraseKey(const std::string& phrase, 
+                       std::string& salt,
+                       std::string& keyOut)
+{
+    Credentials cred;
+    crypto::GenerateKeyFromPassphrase(phrase, salt, cred);
+    // Create Passphrase token
+    keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
+}
+
+
+static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
                                          AtticProfileInfo& atticProfile,
                                          Entity& entity)
 {
@@ -284,9 +377,6 @@ static int RegisterPassphraseProfilePost(const std::string& encryptedKey,
 
         if(resp.code != 200) {
             status = ret::A_FAIL_NON_200;
-            alog::Log(Logger::DEBUG, "RegisterPassphraseProfilePost : \n" +
-                      resp.CodeAsString() +
-                      resp.body);
         }
     }
 
@@ -329,14 +419,6 @@ static int EncryptKeyWithPassphrase( const std::string& key,
     std::string out;
     crypto::EncryptStringCFB(key, enc, keyOut);
     
-    return status;
-}
-
-static int EnterPassphrase(const std::string& pass, std::string& salt, std::string& keyOut) {
-    int status = ret::A_OK;
-    Credentials cred;
-    status = crypto::GenerateKeyFromPassphrase(pass, salt, cred);
-    keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
     return status;
 }
 

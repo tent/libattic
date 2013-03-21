@@ -38,10 +38,17 @@ public:
     void SetQuestionMasterKey(const std::string& mk) { m_QuestionMasterKey = mk; }
     void SetQuestionIv(const std::string& iv) { m_QuestionIv = iv; }
 
+    void SetQuestionOne(const std::string& one) { m_QuestionOne = one; }
+    void SetQuestionTwo(const std::string& two) { m_QuestionTwo = two; }
+    void SetQuestionThree(const std::string& three) { m_QuestionThree = three; }
+
     void GetQuestionSalt(std::string& out) const { out = m_QuestionSalt; }
     void GetQuestionMasterKey(std::string& out) const { out = m_QuestionMasterKey; }
     void GetQuestionIv(std::string& out) const { out = m_QuestionIv; }
 
+    void GetQuestionOne(std::string& out) { out = m_QuestionOne; }
+    void GetQuestionTwo(std::string& out) { out = m_QuestionTwo; }
+    void GetQuestionThree(std::string& out) { out = m_QuestionThree; }
     
 private:
     Permissions m_Permissions;  // `json:"permissions"`
@@ -59,7 +66,9 @@ private:
     std::string m_QuestionMasterKey;
     std::string m_QuestionIv;
     std::string m_QuestionSalt;
-
+    std::string m_QuestionOne;
+    std::string m_QuestionTwo;
+    std::string m_QuestionThree;
 };
 
 class CoreProfileInfo : public JsonSerializable

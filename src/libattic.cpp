@@ -734,6 +734,103 @@ int EnterRecoveryKey(const char* szRecovery) {
     return status;
 }
 
+const char** GetQuestionList() {
+    static const char* t[]={
+                            {"What is your spirit animal?"}, 
+                            {"What is your favorite color?"},
+                            {"What is your color?"}
+                           };
+    return t;
+}
+
+int RegisterQuestionAnswerKey(const char* q1, 
+                              const char* q2, 
+                              const char* q3, 
+                              const char* a1, 
+                              const char* a2, 
+                              const char* a3)
+{
+    int status = LoadEntity(true);
+    if(status == ret::A_OK) {
+        std::string questionOne(q1);
+        std::string questionTwo(q2);
+        std::string questionThree(q3);
+        std::string answerOne(a1);
+        std::string answerTwo(a2);
+        std::string answerThree(a3);
+
+        if(g_pCredManager) {
+            MasterKey mk;
+            std::string masterkey;
+            g_pCredManager->GetMasterKeyCopy(mk);
+            mk.GetMasterKey(masterkey);
+            status = pass::RegisterRecoveryQuestionsWithAttic(masterkey, 
+                                                              g_pCredManager, 
+                                                              g_Entity, 
+                                                              questionOne,
+                                                              questionTwo,
+                                                              questionThree,
+                                                              answerOne,
+                                                              answerTwo,
+                                                              answerThree);
+        }
+        else {
+            status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+        }
+    }
+
+    return status;
+}
+
+int EnterQuestionAnswerKey(const char* q1, 
+                           const char* q2, 
+                           const char* q3, 
+                           const char* a1, 
+                           const char* a2, 
+                           const char* a3)
+{
+    int status = LoadEntity(true);
+    if(status == ret::A_OK) {
+        std::string questionOne(q1);
+        std::string questionTwo(q2);
+        std::string questionThree(q3);
+        std::string answerOne(a1);
+        std::string answerTwo(a2);
+        std::string answerThree(a3);
+
+        if(g_pCredManager) {
+            std::string mkOut;
+            status = pass::EnterRecoveryQuestions(g_pCredManager,
+                                            g_Entity,
+                                            questionOne,
+                                            questionTwo,
+                                            questionThree,
+                                            answerOne,
+                                            answerTwo,
+                                            answerThree,
+                                            mkOut);
+            if(status == ret::A_OK) {
+                std::string temppass;
+                utils::GenerateRandomString(temppass, 16);
+                std::string new_recovery_key;
+                status = pass::RegisterPassphraseWithAttic(temppass, 
+                                                           mkOut,
+                                                           g_pCredManager,
+                                                           g_Entity,
+                                                           g_Pt,
+                                                           new_recovery_key);
+
+                if(status == ret::A_OK)
+                    event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
+            }
+        }
+        else {
+            status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+        }
+    }
+    return status;
+}
+
 int LoadPhraseToken() {
     std::string ptpath;
     GetPhraseTokenFilepath(ptpath);
@@ -1018,9 +1115,17 @@ void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
 }
 
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
+    if(callback)
+        g_CallbackHandler.RegisterCallback(event::Event::PAUSE_RESUME_NOTIFY, callback);
+}
 
+int Pause(void) { 
+    event::RaiseEvent(event::Event::PAUSE, "", NULL);
+}
+
+int Resume(void) {
+    event::RaiseEvent(event::Event::RESUME, "", NULL);
 }
 
 
-int Pause(void) { }
-int Resume(void) { }
+

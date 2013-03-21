@@ -27,13 +27,19 @@ void AtticProfileInfo::Serialize(Json::Value& root) {
     root["rmk"] = rmk;
     root["riv"] = riv;
 
-    std::string qsalt, qmk, qiv;
+    std::string qsalt, qmk, qiv, q1, q2, q3;
     crypto::Base64EncodeString(m_QuestionSalt, qsalt);
     crypto::Base64EncodeString(m_QuestionMasterKey, qmk);
     crypto::Base64EncodeString(m_QuestionIv, qiv);
+    crypto::Base64EncodeString(m_QuestionOne, q1);
+    crypto::Base64EncodeString(m_QuestionTwo, q2);
+    crypto::Base64EncodeString(m_QuestionThree, q3);
     root["qsalt"] = qsalt;
     root["qmk"] = qmk;
     root["qiv"] = qiv;
+    root["q1"] = q1;
+    root["q2"] = q2;
+    root["q3"] = q3;
 
     Json::Value perm(Json::objectValue);
     jsn::SerializeObject(&m_Permissions, perm);
@@ -58,9 +64,16 @@ void AtticProfileInfo::Deserialize(Json::Value& root) {
     std::string qsalt = root.get("qsalt", "").asString();
     std::string qmk = root.get("qmk", "").asString();
     std::string qiv = root.get("qiv", "").asString();
+    std::string q1 = root.get("q1", "").asString();
+    std::string q2 = root.get("q2", "").asString(); 
+    std::string q3 = root.get("q3", "").asString();
+
     crypto::Base64DecodeString(qsalt, m_QuestionSalt);
     crypto::Base64DecodeString(qmk, m_QuestionMasterKey);
     crypto::Base64DecodeString(qiv, m_QuestionIv);
+    crypto::Base64DecodeString(q1, m_QuestionOne);
+    crypto::Base64DecodeString(q2, m_QuestionTwo);
+    crypto::Base64DecodeString(q3, m_QuestionThree);
 
     jsn::DeserializeObject(&m_Permissions, root["permissions"]);
 }

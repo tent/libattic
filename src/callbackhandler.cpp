@@ -11,6 +11,7 @@ void CallbackHandler::Initialize() {
     event::RegisterForEvent(this, event::Event::ERROR_NOTIFY);
     event::RegisterForEvent(this, event::Event::RECOVERY_KEY);
     event::RegisterForEvent(this, event::Event::TEMPORARY_PASS);
+    event::RegisterForEvent(this, event::Event::PAUSE_RESUME_NOTIFY);
 }
 
 void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallback cb) {
