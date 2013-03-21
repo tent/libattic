@@ -738,8 +738,11 @@ int EnterRecoveryKey(const char* szRecovery) {
                                                            g_Pt,
                                                            new_recovery_key);
 
-                if(status == ret::A_OK)
+                if(status == ret::A_OK) {
+                    SavePhraseToken(g_Pt);
+                    //status = EnterPassphrase(temppass); // Load phrase token, and write out to ent file
                     event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
+                }
             }
         }
     }
