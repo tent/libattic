@@ -10,7 +10,7 @@
 
 namespace client {
 
-static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
+static void RetrieveEntityProfiles(const AccessToken& at, Entity& ent) {
     unsigned int profcount = ent.GetProfileCount();
     if(profcount) {
         const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
@@ -23,10 +23,13 @@ static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
             
             netlib::HttpGet( *itr, 
                              NULL,
-                             at,
+                             &at,
                              response);
  
             if(response.code == 200) {
+                std::cout<<" RETRIEVE ENTITY PROFILES " << std::endl;
+                std::cout<<" code : " << response.code << std::endl;
+                std::cout<<" body : " << response.body << std::endl;
                 // Deserialize into Profile Object
                 Profile* pProf = new Profile();
                 jsn::DeserializeObject(pProf, response.body);
@@ -114,6 +117,9 @@ static int GetRequestEntity(const std::string& entityurl, Entity& entOut) {
                      NULL, //at
                      response); 
 
+    std::cout<<" GET REQUEST ENTITY " << std::endl;
+    std::cout<<" CODE : " << response.code << std::endl;
+    std::cout<<" BODY :"  << response.body << std::endl;
     if(response.code == 200) {
         // Parse out all link tags
         utils::taglist tags;
@@ -149,7 +155,7 @@ static int InitEntity(const std::string& entityurl, const AccessToken* at, Entit
     int status = ret::A_OK;
 
     // Grab entity api root etc
-    RetrieveEntityProfiles(at, entOut);
+    RetrieveEntityProfiles(*at, entOut);
     
     // Set Api root
     Profile* pProf = entOut.GetActiveProfile();

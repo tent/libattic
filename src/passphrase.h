@@ -279,7 +279,10 @@ static int EnterRecoveryKey(const std::string& recoverykey,
 
         if(!phrasekey.empty()) {
             std::string decrypted_masterkey;
+            std::cout<<"Encrypted Master Key : " << encrypted_masterkey << std::endl;
             status = DecryptKey(encrypted_masterkey, phrasekey, recovery_salt, decrypted_masterkey);
+            std::cout<<"Decrypted Master Key : " << decrypted_masterkey << std::endl;
+            keyOut = decrypted_masterkey;
         }
     }
 

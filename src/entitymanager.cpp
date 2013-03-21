@@ -26,6 +26,7 @@ int EntityManager::Shutdown() {
 
 int EntityManager::Discover(const std::string& entityurl, const AccessToken& at, Entity& entOut) {
     int status = ret::A_OK;
+    std::string token = at.GetAccessToken();
     status = client::Discover(entityurl, &at, entOut);
 
     if(status == ret::A_OK) {

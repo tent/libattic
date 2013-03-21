@@ -103,6 +103,7 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
         std::string posturl;
         postutils::ConstructPostUrl(m_entityApiRoot, posturl);
 
+        std::cout<<"api root : " << m_entityApiRoot << std::endl;
         std::string postid;
         fi->GetPostID(postid);
         utils::CheckUrlAndAppendTrailingSlash(posturl);
@@ -157,6 +158,7 @@ int GetFileStrategy::GetChunkPost(FileInfo* fi, Response& responseOut) {
 
     if(fi) {
         // Construct Post URL                                                                        
+
         std::string posturl;
         postutils::ConstructPostUrl(m_entityApiRoot, posturl);
 

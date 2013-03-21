@@ -242,7 +242,8 @@ int Profile::GetApiRoot(std::string& out) {
         CoreProfileInfo::ServerList::iterator itr = serverList->begin();
         for(;itr != serverList->end(); itr++) {
             out = (*itr);
-            break; // TODO :: this will always get the top most server root
+            std::cout<<" list : " << out << std::endl;
+            //break; // TODO :: this will always get the top most server root
         }
 
     }

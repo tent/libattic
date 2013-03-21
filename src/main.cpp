@@ -131,18 +131,18 @@ TEST(APP_REGISTRATION, REQUEST_AUTH_DETAILS)
 void TemporaryKeyCb(int a, int b, const char* szC) {
     std::cout<<"TEMPORARY KEY : " << szC << std::endl;
 
-    int status = EnterPassphrase(szC);
+    //int status = EnterPassphrase(szC);
 
-    std::cout<<"ENTERING PASSHPRASE : " << status << std::endl;
+    //std::cout<<"ENTERING PASSHPRASE : " << status << std::endl;
 }
 
 void RecoveryKeyCb(int a, int b, const char* szC) {
     std::cout<<"*******************************************"<<std::endl;
     std::cout<<" KEY : " << szC << std::endl;
 
-    std::cout<<" entering recovery key ... " << std::endl;
-    int status = EnterRecoveryKey(szC);
-    ASSERT_EQ(status, ret::A_OK);
+    //std::cout<<" entering recovery key ... " << std::endl;
+    //int status = EnterRecoveryKey(szC);
+    //ASSERT_EQ(status, ret::A_OK);
 }
 
 bool g_bPassphrase = false;
@@ -162,9 +162,8 @@ TEST(PASSPHRASE, REGISTER)
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
         RegisterForRecoveryKeyNotify(&RecoveryKeyCb);
         status = RegisterPassphrase("password", true);
-        ASSERT_EQ(status, ret::A_OK);
+        //ASSERT_EQ(status, ret::A_OK);
 
-   
         std::cout<< " REGISTER STATUS : " << status << std::endl;
         int count =0;
         for(;;) {
@@ -195,16 +194,11 @@ TEST(PASSPHRASE, ENTER)
 
 
     status = EnterPassphrase("password");
+
     std::cout<<" Enter passphrase status : " << status << std::endl;
     ASSERT_EQ(status, ret::A_OK);
 
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
+   sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -223,6 +217,7 @@ TEST(PASSPHRASE, CHANGE)
                   g_Entity.c_str());
 
 
+    status = ChangePassphrase("UldG3H35RSMo1jqx", "password");
     std::cout<<" Changing password to \"thispass\""<<std::endl;
     status = ChangePassphrase("password", "thispass");
     std::cout<<" Change passphrase status : " << status << std::endl;
@@ -241,6 +236,29 @@ TEST(PASSPHRASE, CHANGE)
            break;
        std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
     }
+
+    ShutdownLibAttic(NULL);
+}
+
+bool g_bRecover = false;
+std::string g_recoverykey;
+TEST(PASSPHRASE, RECOVER)
+{
+    if(g_Entity.empty()) return;
+    if(g_recoverykey.empty()) return;
+    if(!g_bRecover) return;
+
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+    RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
+    status = EnterRecoveryKey(g_recoverykey.c_str());
+
+    sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -1082,7 +1100,7 @@ int main (int argc, char* argv[])
     int status = 0;
 
     if(argc > 1) {
-        int optcount = 13;
+        int optcount = 14;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -1096,6 +1114,7 @@ int main (int argc, char* argv[])
             "QUERYMANIFEST",
             "DISCOVER",
             "SPLITTEST",
+            "RECOVER",
             "DAEMON",
             };
 
@@ -1113,6 +1132,7 @@ int main (int argc, char* argv[])
             QUERYMANIFEST,
             DISCOVER,
             SPLITTEST,
+            RECOVER,
             DAEMON
         };
 
@@ -1216,6 +1236,16 @@ int main (int argc, char* argv[])
                         if(argc > 2) {
                             g_filepath = argv[2];
                             g_bRollsum = true;
+                        }
+                        else
+                            std::cout<<" Invalid params ";
+                        break;
+                    }
+                    case RECOVER:
+                    {
+                        if(argc >2 ) {
+                            g_recoverykey = argv[2];
+                            g_bRecover = true;
                         }
                         else
                             std::cout<<" Invalid params ";

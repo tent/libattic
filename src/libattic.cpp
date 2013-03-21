@@ -618,6 +618,8 @@ int RegisterPassphrase(const char* szPass, bool override) {
             g_pCredManager->GenerateMasterKey(key); // Generate random master key
 
             std::string recoverykey;
+
+            std::cout<<" MASTER KEY : " << key << std::endl;
             status = pass::RegisterPassphraseWithAttic(std::string(szPass), 
                                                        key, // master key
                                                        g_pCredManager,
@@ -714,27 +716,31 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
 }
 
 int EnterRecoveryKey(const char* szRecovery) {
-    int status = ret::A_OK;
 
-    std::string recovery_key(szRecovery);
-    status = LoadEntity(true);
+    int status = IsLibInitialized(false);
+    if(!szRecovery) status = ret::A_FAIL_INVALID_CSTR;
     if(status == ret::A_OK) {
 
-        std::string masterkey;
-        status = pass::EnterRecoveryKey(recovery_key, g_pCredManager, g_Entity, masterkey);
+        std::string recovery_key(szRecovery);
+        status = LoadEntity(true);
         if(status == ret::A_OK) {
-            std::string temppass;
-            utils::GenerateRandomString(temppass, 16);
-            std::string new_recovery_key;
-            status = pass::RegisterPassphraseWithAttic(temppass, 
-                                                       masterkey,
-                                                       g_pCredManager,
-                                                       g_Entity,
-                                                       g_Pt,
-                                                       new_recovery_key);
+            std::string masterkey;
+            status = pass::EnterRecoveryKey(recovery_key, g_pCredManager, g_Entity, masterkey);
+            std::cout<<" MASTER KEY : " << masterkey << std::endl;
+            if(status == ret::A_OK) {
+                std::string temppass;
+                utils::GenerateRandomString(temppass, 16);
+                std::string new_recovery_key;
+                status = pass::RegisterPassphraseWithAttic(temppass, 
+                                                           masterkey,
+                                                           g_pCredManager,
+                                                           g_Entity,
+                                                           g_Pt,
+                                                           new_recovery_key);
 
-            if(status == ret::A_OK)
-                event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
+                if(status == ret::A_OK)
+                    event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
+            }
         }
     }
 
