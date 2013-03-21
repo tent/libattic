@@ -79,6 +79,9 @@ int PullFile(const char* szFilePath);
 int DeleteFile(const char* szFilePath);
 int PollFiles(void);
 
+int Pause(void);
+int Resume(void);
+
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)
 int SaveAppToFile();

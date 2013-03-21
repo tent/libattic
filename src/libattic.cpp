@@ -1018,3 +1018,5 @@ void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
 }
 
 
+int Pause(void) { }
+int Resume(void) { }
