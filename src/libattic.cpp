@@ -1017,6 +1017,10 @@ void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
         g_CallbackHandler.RegisterCallback(event::Event::TEMPORARY_PASS, callback);
 }
 
+void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
+
+}
+
 
 int Pause(void) { }
 int Resume(void) { }

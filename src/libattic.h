@@ -72,7 +72,7 @@ void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*));
 void RegisterForErrorNotify(void (*callback)(int, int, const char*));
 void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
-
+void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*));
 
 int PushFile(const char* szFilePath);
 int PullFile(const char* szFilePath);
