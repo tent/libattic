@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream>
 
 #include "entitymanager.h"
 #include "credentialsmanager.h"
@@ -412,6 +413,12 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
         }
     }
     else {
+        std::ostringstream error;
+        error << "Non 200 repsonse in RequestUserAuthorizationDetails" << std::endl;
+        error << "Code : " << response.code << std::endl;
+        error << "Body : " << response.body << std::endl;
+        event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+
         status = ret::A_FAIL_NON_200;
     }
 
