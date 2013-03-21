@@ -112,26 +112,30 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
 
 //TODO:: rename this, confusing
 int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken& ptOut) {
+
+    int status = ret::A_OK;
     Lock();
     // TODO :: perhaps check profile if these things exist
     if(pass.empty())
-        return ret::A_FAIL_EMPTY_PASSPHRASE;
-
-    int status = ret::A_OK;
-    // Generate Salt
-    std::string salt;
-    status = crypto::GenerateSalt(salt);
-    status = crypto::CheckSalt(salt);
+        status = ret::A_FAIL_EMPTY_PASSPHRASE;
 
     if(status == ret::A_OK) {
-        ptOut.SetSalt(salt);
 
-        // Generate Passphrase Key 
-        Credentials cred;
-        crypto::GenerateKeyFromPassphrase(pass, salt, cred);
-        
-        // Set the key generated from phrase
-        ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
+        // Generate Salt
+        std::string salt;
+        status = crypto::GenerateSalt(salt);
+        status = crypto::CheckSalt(salt);
+
+        if(status == ret::A_OK) {
+            ptOut.SetSalt(salt);
+
+            // Generate Passphrase Key 
+            Credentials cred;
+            crypto::GenerateKeyFromPassphrase(pass, salt, cred);
+            
+            // Set the key generated from phrase
+            ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
+        }
     }
     Unlock();
     return status;

@@ -60,6 +60,7 @@ public:
 
     static EventSystem* GetInstance();
 
+    void Initialize() {}
     void Shutdown();
 
     void RaiseEvent(const Event& event);
@@ -78,8 +79,9 @@ private:
 
 
 static void RegisterForEvent(EventListener* pListener, Event::EventType type) {
-    if(pListener)
+    if(pListener) {
         EventSystem::GetInstance()->RegisterForEvent(pListener, type);  
+    }
 }
 
 static void RaiseEvent(const Event& event) {

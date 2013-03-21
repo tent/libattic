@@ -23,7 +23,6 @@ public:
 private:
     typedef std::deque<EventCallback> CallbackList;
     std::map<event::Event::EventType, CallbackList>  m_CallbackMap;
-
 };
 
 #endif

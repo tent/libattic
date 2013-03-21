@@ -68,11 +68,13 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
     // generate random iv and salt
     // Inward facing method
     // Register a new passphrase.
+    //
 
     MasterKey mk;
     status = ConstructMasterKey(masterkey, pCm, pt, mk); // also generates salt, inserts into 
                                                 // phrase token
     if(status == ret::A_OK) {
+
         // Insert sentinel value
         mk.InsertSentinelIntoMasterKey();
         // Get Salt
@@ -181,18 +183,23 @@ static int EnterRecoveryKey(const std::string& recoverykey,
         atticProfile->GetRecoveryMasterKey(encrypted_masterkey);
         atticProfile->GetRecoverySalt(recovery_salt);
 
+
         std::string unencoded_recovery_key;
         crypto::Base32DecodeString(recoverykey, unencoded_recovery_key);
         std::string phrasekey;
+
         EnterPassphrase(unencoded_recovery_key, recovery_salt, phrasekey);
 
+
         if(!phrasekey.empty()) {
+
             std::string decrypted_masterkey;
             status = DecryptKey(encrypted_masterkey, phrasekey, recovery_salt, decrypted_masterkey);
         }
         
     }
 
+    return status;
 }
 
 static int DecryptKey(const std::string& encryptedkey, 
@@ -272,6 +279,9 @@ static int RegisterPassphraseProfilePost(const std::string& encryptedKey,
         Response resp;
         netlib::HttpPut(url, NULL, output, &at, resp);
 
+        std::cout<< "CODE : " << resp.code << std::endl;
+        std::cout<< "BODY : " << resp.body << std::endl;
+
         if(resp.code != 200) {
             status = ret::A_FAIL_NON_200;
             alog::Log(Logger::DEBUG, "RegisterPassphraseProfilePost : \n" +
@@ -289,11 +299,16 @@ static int ConstructMasterKey(const std::string& masterkey,
                               MasterKey& out)
 {
     int status = ret::A_OK;
-    // Enter passphrase to generate key.
-    pCm->RegisterPassphrase(masterkey, pt); // This generates a random salt
+    if(pCm) {
+        // Enter passphrase to generate key.
+        pCm->RegisterPassphrase(masterkey, pt); // This generates a random salt
                                                          // Sets Phrase key
-    pCm->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
-    pCm->SetMasterKey(out);
+        pCm->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
+        pCm->SetMasterKey(out);
+    }
+    else {
+        status = -1;
+    }
 
     return status;
 }

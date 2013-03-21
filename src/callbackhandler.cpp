@@ -9,6 +9,8 @@ void CallbackHandler::Initialize() {
     event::RegisterForEvent(this, event::Event::UPLOAD_SPEED);
     event::RegisterForEvent(this, event::Event::DOWNLOAD_SPEED);
     event::RegisterForEvent(this, event::Event::ERROR_NOTIFY);
+    event::RegisterForEvent(this, event::Event::RECOVERY_KEY);
+    event::RegisterForEvent(this, event::Event::TEMPORARY_PASS);
 }
 
 void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallback cb) {
@@ -16,14 +18,17 @@ void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallba
 }
 
 void CallbackHandler::OnEventRaised(const event::Event& event) {
+    std::cout<<" Notifying : " << event.type << std::endl;
+
     Notify(event);
 }
 
 void CallbackHandler::Notify(const event::Event& event) {
     CallbackList::iterator itr = m_CallbackMap[event.type].begin();
     for(;itr!=m_CallbackMap[event.type].end(); itr++) {
-        if(*itr) 
+        if(*itr) {
             (*itr)(event.type, event.status, event.value.c_str());
+        }
     }
 
 }

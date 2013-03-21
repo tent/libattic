@@ -128,6 +128,23 @@ TEST(APP_REGISTRATION, REQUEST_AUTH_DETAILS)
     ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), g_AuthCode.c_str(), "./config"), ret::A_OK);
 }
 
+void TemporaryKeyCb(int a, int b, const char* szC) {
+    std::cout<<"TEMPORARY KEY : " << szC << std::endl;
+
+    int status = EnterPassphrase(szC);
+
+    std::cout<<"ENTERING PASSHPRASE : " << status << std::endl;
+}
+
+void RecoveryKeyCb(int a, int b, const char* szC) {
+    std::cout<<"*******************************************"<<std::endl;
+    std::cout<<" KEY : " << szC << std::endl;
+
+    std::cout<<" entering recovery key ... " << std::endl;
+    int status = EnterRecoveryKey(szC);
+    ASSERT_EQ(status, ret::A_OK);
+}
+
 bool g_bPassphrase = false;
 TEST(PASSPHRASE, REGISTER)
 {
@@ -141,19 +158,20 @@ TEST(PASSPHRASE, REGISTER)
                   "./config/logs",
                   g_Entity.c_str());
    
-    if(status == ret::A_OK)
-    {
+    if(status == ret::A_OK) {
+        RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
+        RegisterForRecoveryKeyNotify(&RecoveryKeyCb);
         status = RegisterPassphrase("password", true);
-
         ASSERT_EQ(status, ret::A_OK);
+
    
         std::cout<< " REGISTER STATUS : " << status << std::endl;
-        for(;;)
-        {
-            sleep(10);
-            if(!g_ThreadCount)
+        int count =0;
+        for(;;) {
+            if(count >=15)
                 break;
-            std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
+            sleep(1);
+            count++;
         }
     }
     else

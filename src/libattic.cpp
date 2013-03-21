@@ -176,6 +176,7 @@ int InitLibAttic( const char* szWorkingDirectory,
                                               g_WorkingDirectory,
                                               g_ConfigDirectory);
 
+        event::EventSystem::GetInstance()->Initialize();
         g_CallbackHandler.Initialize();
 
 
@@ -601,7 +602,6 @@ int RegisterPassphrase(const char* szPass, bool override) {
         //            the passphrase in correctly.
         //          - obviously skip the first 8 bytes when getting the master key
         //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
-
         status = ret::A_FAIL_REGISTER_PASSPHRASE;
 
         if(!g_Entity.HasAtticProfileMasterKey() || override) {
@@ -617,8 +617,11 @@ int RegisterPassphrase(const char* szPass, bool override) {
                                                        g_Entity,
                                                        g_Pt,
                                                        recoverykey);
-             if(status == ret::A_OK)
+             if(status == ret::A_OK) {
                 SavePhraseToken(g_Pt);
+                std::cout<<" RAISING EVENT : " << recoverykey << std::endl;
+                event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
+             }
         }
 
         if(status == ret::A_OK)
@@ -693,9 +696,10 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
                                                         g_Entity,
                                                         g_Pt,
                                                         recoverykey);
-            if(status == ret::A_OK)
+            if(status == ret::A_OK){
                 SavePhraseToken(g_Pt);
                 event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
+            }
         }
     }
 
@@ -708,6 +712,7 @@ int EnterRecoveryKey(const char* szRecovery) {
     std::string recovery_key(szRecovery);
     status = LoadEntity(true);
     if(status == ret::A_OK) {
+
         std::string masterkey;
         status = pass::EnterRecoveryKey(recovery_key, g_pCredManager, g_Entity, masterkey);
         if(status == ret::A_OK) {
