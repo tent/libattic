@@ -836,8 +836,10 @@ int EnterQuestionAnswerKey(const char* q1,
                                                            g_Pt,
                                                            new_recovery_key);
 
-                if(status == ret::A_OK)
+                if(status == ret::A_OK) {
+                    SavePhraseToken(g_Pt);
                     event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
+                }
             }
         }
         else {
