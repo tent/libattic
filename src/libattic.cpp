@@ -127,7 +127,10 @@ int InitLibAttic( const char* szWorkingDirectory,
     SetTempDirectory(szTempDirectory);
 
     std::string t;
-    pClient = new Client( t,t,t,t);
+    pClient = new Client(szWorkingDirectory,
+                         szConfigDirectory,
+                         szTempDirectory,
+                         szEntityURL);
                           
                          
                          
@@ -265,12 +268,13 @@ int StartupAppInstance( const char* szAppName,
     return status;
 }
 
-int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
-{
+int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
     if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
     if(!szEntityUrl) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
+    int status = app::RegisterApp(*g_pApp, szEntityUrl, szConfigDirectory);
+/*
     std::string config_dir = szConfigDirectory;
     fs::CreateDirectory(config_dir);
 
@@ -313,7 +317,7 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory)
     else {
         status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
     }
-
+*/
     if(g_pApp) {
         delete g_pApp;
         g_pApp = NULL;
@@ -327,6 +331,10 @@ int RequestAppAuthorizationURL(const char* szEntityUrl)
     if(!pClient->GetTentApp()) return ret::A_FAIL_INVALID_APP_INSTANCE;
     if(!szEntityUrl) return ret::A_FAIL_INVALID_CSTR;
 
+    int status = app::RequestAppAuthorizationURL(*pClient->GetTentApp(), 
+                                                 szEntityUrl, 
+                                                 g_AuthorizationURL);
+/*
     std::string apiroot;
     apiroot = GetEntityApiRoot(szEntityUrl);
 //
@@ -373,6 +381,7 @@ int RequestAppAuthorizationURL(const char* szEntityUrl)
     // TODO:: encode these parameters
 
     g_AuthorizationURL.append(params);
+    */
 
     return ret::A_OK;
 }
@@ -388,7 +397,10 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
     if(!g_pApp)
         g_pApp = new TentApp();                                                
 
-    status = app::RequestUserAuthorizationDetails(*g_pApp, szEntityUrl, szCode, szConfigDirectory);
+    status = app::RequestUserAuthorizationDetails(*g_pApp, 
+                                                  szEntityUrl, 
+                                                  szCode, 
+                                                  szConfigDirectory);
 
     /*
     // Construct path

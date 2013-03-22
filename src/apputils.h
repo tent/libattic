@@ -15,8 +15,24 @@
 #include "tentclient.h"
 #include "entity.h"
 #include "libatticutils.h"
+#include "urlparams.h"
 
 namespace app {
+static int StartupAppInstance(TentApp& app,
+                              const std::string& appName,
+                              const std::string& appDescription,
+                              const std::string& url,
+                              const std::string& icon,
+                              std::vector<std::string>& uris,
+                              std::vector<std::string>& scopes);
+
+static int RegisterApp(TentApp& app, 
+                       const std::string& entityurl, 
+                       const std::string& configdir);
+
+static int RequestAppAuthorizationURL(TentApp& app, 
+                                      const std::string& entityurl,
+                                      std::string& urlout);
 
 static int LoadAppFromFile(TentApp& app, const std::string& configdir);
 static int SaveAppToFile(TentApp& app, const std::string& configdir);
@@ -43,24 +59,68 @@ static int StartupAppInstance(TentApp& app,
     return status;
 }
 
-/*
-int RequestAppAuthorizationURL(TentApp* app, std::string& entityurl) {
-    if(!pClient->GetTentApp()) return ret::A_FAIL_INVALID_APP_INSTANCE;
-    if(!szEntityUrl) return ret::A_FAIL_INVALID_CSTR;
+static int RegisterApp(TentApp& app, 
+                       const std::string& entityurl, 
+                       const std::string& configdir)
+{
+    int status = ret::A_OK;
+
+    fs::CreateDirectory(configdir);
+
+    std::string postpath;
+    postpath += GetEntityApiRoot(entityurl);
+    utils::CheckUrlAndAppendTrailingSlash(postpath);
+    postpath += "apps";
+
+    std::string serialized;
+    if(jsn::SerializeObject(&app, serialized)) {
+        Response response;
+        status = netlib::HttpPost( postpath, 
+                                   NULL,
+                                   serialized,
+                                   NULL,
+                                   response);
+
+        std::cout<< " CODE : " << response.code << std::endl;
+        std::cout<< " BODY : " << response.body << std::endl;
+        // Deserialize new data into app
+        if(response.code == 200) {
+            if(jsn::DeserializeObject(&app, response.body)) {
+                status = SaveAppToFile(app, configdir);
+            }
+            else { 
+                status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
+            }
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+    }
+    else {
+        status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
+    }
+    
+
+    return status;
+}
+
+int RequestAppAuthorizationURL(TentApp& app, 
+                               const std::string& entityurl,
+                               std::string& urlout) 
+{
+    int status = ret::A_OK;
 
     std::string apiroot;
-    apiroot = GetEntityApiRoot(szEntityUrl);
-//
+    apiroot = GetEntityApiRoot(entityurl);
+
     if(apiroot.empty())
         return ret::A_FAIL_EMPTY_STRING;
 
-
     UrlParams val;
-    //val.AddValue(std::string("client_id"), g_pApp->GetAppID());
-    val.AddValue(std::string("client_id"), g_pApp->GetAppID());
+    val.AddValue(std::string("client_id"), app.GetAppID());
 
-    if(pClient->GetTentApp()->GetRedirectURIs()) {
-        TentApp::RedirectVec* pUris = g_pApp->GetRedirectURIs();
+    if(app.GetRedirectURIs()) {
+        TentApp::RedirectVec* pUris = app.GetRedirectURIs();
         TentApp::RedirectVec::iterator itr = pUris->begin();
 
         for(;itr!=pUris->end();itr++) {
@@ -68,8 +128,8 @@ int RequestAppAuthorizationURL(TentApp* app, std::string& entityurl) {
         }
     }
 
-    if(g_pApp->GetScopes()) {
-        TentApp::ScopeVec* pScopes = g_pApp->GetScopes();
+    if(app.GetScopes()) {
+        TentApp::ScopeVec* pScopes = app.GetScopes();
         TentApp::ScopeVec::iterator itr = pScopes->begin();
 
         for(;itr!=pScopes->end();itr++) {
@@ -81,23 +141,18 @@ int RequestAppAuthorizationURL(TentApp* app, std::string& entityurl) {
     val.AddValue("tent_post_types", "all");
     //val.AddValue("tent_post_types", "https://tent.io/types/posts/status/v0.1.0");
 
-    g_AuthorizationURL.clear();
-    g_AuthorizationURL.append(apiroot);
-
-    utils::CheckUrlAndAppendTrailingSlash(g_AuthorizationURL);
-
-    g_AuthorizationURL.append("oauth/authorize");
+    urlout = apiroot;
+    utils::CheckUrlAndAppendTrailingSlash(urlout);
+    urlout.append("oauth/authorize");
 
     std::string params;
     val.SerializeToString(params);
 
     // TODO:: encode these parameters
+    urlout.append(params);
 
-    g_AuthorizationURL.append(params);
-
-    return ret::A_OK;
+    return status;
 }
-*/
 
 int RequestUserAuthorizationDetails(TentApp& app,
                                     const std::string& entityurl,
