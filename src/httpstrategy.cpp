@@ -36,14 +36,10 @@ void HttpStrategyInterface::Callback(const int tasktype,
 
 
 HttpStrategyContext::HttpStrategyContext(FileManager* pFileManager,
-                                         CredentialsManager* pCredentialsManager,
-                                         const std::string& entityApiRoot, 
-                                         const std::string& filepath)
+                                         CredentialsManager* pCredentialsManager)
 {
     m_pFileManager = pFileManager;
     m_pCredentialsManager = pCredentialsManager;
-    m_EntityApiRoot = entityApiRoot;
-    m_Filepath = filepath;
     m_Itr = m_Strategies.begin();
 }
 
@@ -64,8 +60,6 @@ int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
         // Execute
         return s->Execute(m_pFileManager,
                           m_pCredentialsManager,
-                          m_EntityApiRoot,
-                          m_Filepath,
                           out);
     }
     return ret::A_FAIL_INVALID_PTR;

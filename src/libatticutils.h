@@ -1,4 +1,3 @@
-
 #ifndef LIBATTICUTILS_H_
 #define LIBATTICUTILS_H_
 #pragma once
@@ -6,20 +5,15 @@
 #include <string>
 
 #include "utils.h"
-
 #include "constants.h"
-#include "entitymanager.h"
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "taskarbiter.h"
 #include "taskmanager.h"
-#include "log.h"
 #include "filesystem.h"
 
 // Inward facing utility methods used at libattic interface level
-
-namespace liba
-{
+namespace liba {
     int InitializeFileManager( FileManager** pFm, 
                                const std::string& manifestDir,
                                const std::string& workingDir,
@@ -40,10 +34,6 @@ namespace liba
         }
         else
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-
-        if(status != ret::A_OK) 
-            alog::Log(Logger::ERROR, "Failed to initialize filemanager");
-
         return status;
     }
 
@@ -60,27 +50,6 @@ namespace liba
         }
         else
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize credential manager");
-
-        return status;
-    }
-
-    int InitializeEntityManager( EntityManager** pEm )
-    {
-        int status = ret::A_OK;
-        if(!(*pEm))
-        {
-            (*pEm) = new EntityManager();
-            status = (*pEm)->Initialize();
-        }
-        else
-            status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize entity manager");
-
         return status;
     }
 
@@ -110,10 +79,6 @@ namespace liba
         }
         else
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize Upload Manager");
-
         return status;
     }
 
@@ -121,9 +86,6 @@ namespace liba
     {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Initialize(threadCount);
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize task arbiter");
-
         return status;
     }
 
@@ -138,8 +100,6 @@ namespace liba
         else
             status = ret::A_FAIL_ATTEMPT_TO_REINIT;
 
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to initialize TaskFactory");
         return status;
     }
 
@@ -147,8 +107,6 @@ namespace liba
     {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "failed to shutdown task arbiter");
 
         return status;
     }
@@ -166,8 +124,6 @@ namespace liba
         else
             status = ret::A_FAIL_INVALID_PTR;
 
-        if(status != ret::A_OK)
-           alog::Log(Logger::ERROR, " failed to shutdown task factory");
 
         return status;
     }
@@ -185,8 +141,6 @@ namespace liba
         else
             status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
-        if(status != ret::A_OK)
-           alog::Log(Logger::ERROR, " failed to shutdown filemanger");
 
         return status;
     }
@@ -206,29 +160,6 @@ namespace liba
         else
             status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
 
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, " failed to shutdown credentials manager");
-
-        return status;
-    }
-
-    int ShutdownEntityManager(EntityManager** pEm)
-    {
-        int status = ret::A_OK;
-        if((*pEm))
-        {
-            (*pEm)->Lock();
-            status = (*pEm)->Shutdown();
-            (*pEm)->Unlock();
-
-            delete (*pEm);
-            (*pEm) = NULL;
-        }
-        else
-            status = ret::A_FAIL_INVALID_ENTITYMANAGER_INSTANCE;
-
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, " failed to shutdown entity manager");
 
         return status;
     }
@@ -244,8 +175,6 @@ namespace liba
         else
             status = ret::A_FAIL_INVALID_APP_INSTANCE;
 
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, " failed to shutdown app instance");
 
         return status;
     }
@@ -258,8 +187,6 @@ namespace liba
         else
             status = ret::A_FAIL_INVALID_UPLOADMANAGER_INSTANCE;
 
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to Shutdown Upload Manager", status);
 
         return status;
     }

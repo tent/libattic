@@ -84,12 +84,12 @@ int Resume(void);
 
 // Save the app in json to a file (Just a utility you probably don't
 // want to use this in production)
-int SaveAppToFile();
+//int SaveAppToFile();
 
 // Load the app in json from a file (Just a utility you probably don't
 // want to use this in production)
-int LoadAppFromFile();
-int LoadAccessToken();
+//int LoadAppFromFile();
+//int LoadAccessToken();
 
 // TODO :: These two methods are just temporarily exposed, to be used internally only
 int SyncFiles(void);
@@ -126,8 +126,8 @@ int GetFileList(void(*callback)(int, char**, int, int));
 int FreeFileList(char** pList, int stride);
 
 // TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
-class FileManager;
-FileManager* GetFileManager();
+//class FileManager;
+//FileManager* GetFileManager();
 }
 
 #endif

@@ -30,14 +30,12 @@ FileManager::FileManager( const std::string &manifestDirectory,
 
 FileManager::~FileManager() {}
 
-bool FileManager::StartupFileManager() {
-    m_Manifest.Initialize();
-    return true;
+int FileManager::StartupFileManager() {
+    return m_Manifest.Initialize();
 }
 
-bool FileManager::ShutdownFileManager() {
-    m_Manifest.Shutdown();
-    return true;
+int FileManager::ShutdownFileManager() {
+    return m_Manifest.Shutdown();
 }
 
 int FileManager::RemoveFile(const std::string &filepath) {

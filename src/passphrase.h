@@ -396,7 +396,7 @@ static int ConstructMasterKey(const std::string& masterkey,
         // Enter passphrase to generate key.
         pCm->RegisterPassphrase(masterkey, pt); // This generates a random salt
                                                          // Sets Phrase key
-        pCm->CreateMasterKeyWithPass(out, masterkey); // Create Master Key with given pass
+        pCm->CreateMasterKeyWithPass(masterkey, out); // Create Master Key with given pass
         pCm->SetMasterKey(out);
     }
     else {

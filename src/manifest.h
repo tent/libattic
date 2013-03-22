@@ -37,7 +37,7 @@ class Manifest
     // TODO :: abstract table specific methods
     // SQLite specific ///////////////////////////////////
     int OpenSqliteDb();
-    void CloseSqliteDb();
+    int CloseSqliteDb();
 
     bool CreateTables();
     bool CreateInfoTable();
@@ -57,7 +57,7 @@ public:
     ~Manifest();
 
     int Initialize();
-    void Shutdown();
+    int Shutdown();
 
     bool CreateEmptyManifest();
 

@@ -16,14 +16,14 @@ class HttpTentContext;
 class HttpStrategyInterface {
     friend class HttpStrategyContext;
     typedef std::map<std::string, std::string> ConfigMap;
+protected:
+    std::string GetConfigValue(const std::string& key) { return m_ConfigMap[key]; }
 public:
     HttpStrategyInterface();
     ~HttpStrategyInterface();
 
     virtual int Execute(FileManager* pFileManager,
                         CredentialsManager* pCredentialsManager,
-                        const std::string& entityApiRoot, 
-                        const std::string& filepath, 
                         Response& out)=0;
 
     // Takes ownership of the delegate.
@@ -53,9 +53,7 @@ public:
     typedef std::map<std::string, std::string> ConfigMap;
 
     HttpStrategyContext(FileManager* pFileManager,
-                        CredentialsManager* pCredentialsManager,
-                        const std::string& entityApiRoot, 
-                        const std::string& filepath);
+                        CredentialsManager* pCredentialsManager);
 
     ~HttpStrategyContext();
 
@@ -76,8 +74,6 @@ public:
 private:
     CredentialsManager*     m_pCredentialsManager;
     FileManager*            m_pFileManager;
-    std::string             m_EntityApiRoot;
-    std::string             m_Filepath;
 
     ConfigMap   m_ConfigMap;
     StrategyList m_Strategies;

@@ -9,9 +9,6 @@ CredentialsManager::CredentialsManager() {}
 CredentialsManager::~CredentialsManager() {}
 
 int CredentialsManager::Initialize() {
-    // Pull Profile Info to get latest data
-    // Search for and load/create access token
-    //
     // Search for and load/create phrase token
     return ret::A_OK;
 }
@@ -21,8 +18,9 @@ int CredentialsManager::Shutdown(){
 }
 
 int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer) {
-    Lock();
     int status = ret::A_OK;
+
+    Lock();
     if(!jsn::DeserializeObject(&m_AccessToken, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
@@ -31,26 +29,28 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer) {
 }
 
 int CredentialsManager::WriteOutAccessToken() {
-    Lock();
     std::string path;
     ConstructAccessTokenPath(path);
-    Unlock();
 
-    return m_AccessToken.SaveToFile(path);  
+    Lock();
+    int status = m_AccessToken.SaveToFile(path);
+    Unlock();
+    return status;
 }
 
 int CredentialsManager::LoadAccessToken() {
-    Lock();
     std::string path;
     ConstructAccessTokenPath(path);
-    Unlock();
 
-    return m_AccessToken.LoadFromFile(path);
+    Lock();
+    int status = m_AccessToken.LoadFromFile(path);
+    Unlock();
+    return status;
 }
 
 int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer) {
-    Lock();
     int status = ret::A_OK;
+    Lock();
     if(!jsn::DeserializeObject(&m_PhraseToken, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
@@ -59,53 +59,44 @@ int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer) {
 }
 
 int CredentialsManager::WriteOutPhraseToken() {
-    Lock();
     std::string path;
     ConstructPhraseTokenPath(path);
-    Unlock();
 
-    return m_PhraseToken.SaveToFile(path);
+    Lock();
+    int status = m_PhraseToken.SaveToFile(path);
+    Unlock();
+    return status;
 }
 
 int CredentialsManager::LoadPhraseToken() {
-    Lock();
     std::string path;
     ConstructPhraseTokenPath(path);
+
+    Lock();
+    int status = m_PhraseToken.LoadFromFile(path);
     Unlock();
 
-    return m_PhraseToken.LoadFromFile(path);
+    return status;
 }
 
-int CredentialsManager::CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key) {
-    Lock();
+void CredentialsManager::CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut) {
     Credentials MasterKey;
     MasterKey.SetKey(key);
     mkOut.SetCredentials(MasterKey);
-    Unlock();
-
-    return ret::A_OK;
 }
 
-int CredentialsManager::GenerateMasterKey(MasterKey& mkOut) {
-    Lock();
+void CredentialsManager::GenerateMasterKey(MasterKey& mkOut) {
     // Create Master Key
     Credentials MasterKey;
     crypto::GenerateCredentials(MasterKey);
-
     mkOut.SetCredentials(MasterKey);
-    Unlock();
-
-    return ret::A_OK;
 }
 
 int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
-    Lock();
     // Create Master Key
     Credentials MasterKey;
     crypto::GenerateCredentials(MasterKey);
-
     MasterKey.GetKey(keyOut);
-    Unlock();
 
     return ret::A_OK;
 }

@@ -62,9 +62,10 @@ int PullTask::PullFile(const std::string& filepath) {
 
     GetFileStrategy gfs;
     HttpStrategyContext pullcontext(GetFileManager(), 
-                                    GetCredentialsManager(), 
-                                    apiroot, 
-                                    filepath);
+                                    GetCredentialsManager());
+
+    pullcontext.SetConfigValue("api_root", apiroot);
+    pullcontext.SetConfigValue("filepath", filepath);
 
     pullcontext.PushBack(&gfs);
 

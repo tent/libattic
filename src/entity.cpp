@@ -4,13 +4,16 @@
 
 #include "utils.h"
 #include "errorcodes.h"
+#include "netlib.h"
+#include "response.h"
+#include "accesstoken.h"
+#include "tentclient.h"
 
 Entity::Entity() {
     m_pActiveProfile = NULL;
 }
 
-Entity::~Entity(){
-}
+Entity::~Entity(){}
 
 void Entity::Reset() {
     DeleteProfiles();
@@ -123,3 +126,62 @@ bool Entity::HasAtticProfileMasterKey() {
     return false;
 }
 
+int Entity::Discover(const std::string& entityurl, const AccessToken* at) {
+    int status = ret::A_OK;
+    status = client::Discover(entityurl, at, *this);
+
+    if(status == ret::A_OK) {
+        // Grab entity api root etc
+        RetrieveProfiles(at);
+        
+        // Set Api root
+        Profile* pProf = GetActiveProfile();
+        if(pProf) {
+            std::string apiroot;
+            pProf->GetApiRoot(apiroot);
+            SetApiRoot(apiroot);
+            SetEntityUrl(entityurl);
+        }
+        else {
+            status = ret::A_FAIL_INVALID_PTR;
+        }
+    }
+
+    return status; 
+
+}
+
+void Entity::RetrieveProfiles(const AccessToken* at) {
+    unsigned int profcount = GetProfileCount();
+    if(profcount) {
+        const Entity::UrlList* ProfUrlList = GetProfileUrlList();
+        Entity::UrlList::const_iterator itr = ProfUrlList->begin();
+
+        while(itr != ProfUrlList->end()) {
+            Response response;
+            netlib::HttpGet( *itr, 
+                             NULL,
+                             at,
+                             response);
+
+            /*
+            std::cout<< " resp : " << response.body << std::endl;
+            std::cout<< " code : " << response.code << std::endl;
+            */
+ 
+            if(response.code == 200) {
+                // Deserialize into Profile Object
+                Profile* pProf = new Profile();
+                jsn::DeserializeObject(pProf, response.body);
+                
+                // Push back into entity
+                PushBackProfile(pProf);
+            }
+            itr++;
+        }
+
+        Entity::ProfileList* pProfList = GetProfileList();
+        if(pProfList)
+            SetActiveProfile(&*pProfList->begin());
+   }
+}

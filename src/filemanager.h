@@ -31,8 +31,8 @@ public:
 
     ~FileManager();
 
-    bool StartupFileManager();
-    bool ShutdownFileManager();
+    int StartupFileManager();
+    int ShutdownFileManager();
 
     void InsertToManifest (FileInfo* pFi);
     int RemoveFile(const std::string &filepath);

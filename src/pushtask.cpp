@@ -72,9 +72,10 @@ int PushTask::PushFile(const std::string& filepath) {
         PostFolderMetadataStrategy pfmds;   // Update folder post
 
         HttpStrategyContext pushcontext(GetFileManager(), 
-                                        GetCredentialsManager(), 
-                                        apiroot, 
-                                        filepath);
+                                        GetCredentialsManager());
+        pushcontext.SetConfigValue("api_root", apiroot);
+        pushcontext.SetConfigValue("filepath", filepath);
+
         pushcontext.PushBack(&ps);
         pushcontext.PushBack(&pmds);
         pushcontext.PushBack(&pfmds);

@@ -1,4 +1,3 @@
-
 #ifndef CREDENTIALSMANAGER_H_
 #define CREDENTIALSMANAGER_H_
 #pragma once
@@ -50,8 +49,8 @@ public:
                           PhraseToken& ptOut);
     
     int GenerateMasterKey( std::string& keyOut);
-    int GenerateMasterKey( MasterKey& mkOut);
-    int CreateMasterKeyWithPass( MasterKey& mkOut, const std::string& key);
+    void GenerateMasterKey( MasterKey& mkOut);
+    void CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut);
 
     // MasterKey
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }

@@ -55,9 +55,10 @@ void DeleteTask::RunTask() {
     PostFileMetadataStrategy pmds;
 
     HttpStrategyContext softdeletectx(GetFileManager(), 
-                                      GetCredentialsManager(), 
-                                      apiroot, 
-                                      filepath);
+                                      GetCredentialsManager());
+
+    softdeletectx.SetConfigValue("api_root", apiroot);
+    softdeletectx.SetConfigValue("filepath", filepath);
 
     softdeletectx.PushBack(&sds);
     softdeletectx.PushBack(&pmds);

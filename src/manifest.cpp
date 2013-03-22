@@ -47,14 +47,12 @@ void Manifest::SetDirectory(std::string &filepath)
  * - Iv (blob) // not encrypted
  */
 
-int Manifest::Initialize()
-{
+int Manifest::Initialize() {
     return OpenSqliteDb();
 }
 
-void Manifest::Shutdown()
-{
-    CloseSqliteDb();
+int Manifest::Shutdown() { 
+    return CloseSqliteDb();
 }
 
 int Manifest::OpenSqliteDb()
@@ -81,12 +79,13 @@ int Manifest::OpenSqliteDb()
     return status;
 }
 
-void Manifest::CloseSqliteDb()
+int Manifest::CloseSqliteDb()
 {
     if(m_pDb) {
         sqlite3_close(m_pDb);
         m_pDb = 0;
     }
+    return ret::A_OK;
 }
 
 bool Manifest::CreateTables()

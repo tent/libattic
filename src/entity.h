@@ -1,4 +1,3 @@
-
 #ifndef ENTITY_H_
 #define ENTITY_H_
 #pragma once
@@ -9,8 +8,11 @@
 #include "jsonserializable.h"
 #include "profile.h"
 
+class AccessToken;
 class Entity : public JsonSerializable {
     void DeleteProfiles();
+
+    void RetrieveProfiles(const AccessToken* at);
 public:
     typedef std::vector<Profile> ProfileList;
     typedef std::vector<std::string> UrlList;
@@ -56,6 +58,7 @@ public:
 
     void Reset();
 
+    int Discover(const std::string& entityurl, const AccessToken* at);
 private:
     ProfileList     m_Profiles;
     UrlList         m_ProfileUrls;

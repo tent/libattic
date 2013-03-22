@@ -18,8 +18,6 @@ public:
 
     int Execute(FileManager* pFileManager,
                 CredentialsManager* pCredentialsManager,
-                const std::string& entityApiRoot, 
-                const std::string& filepath, 
                 Response& out);
 };
 
