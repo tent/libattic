@@ -26,11 +26,11 @@ public:
     FileManager();
     ~FileManager();
 
-    int StartupFileManager(const std::string& manifestDirectory, 
-                           const std::string& workingDirectory,
-                           const std::string& tempDirectory);
+    int Initialize(const std::string& manifestDirectory, 
+                   const std::string& workingDirectory,
+                   const std::string& tempDirectory);
 
-    int ShutdownFileManager();
+    int Shutdown();
 
     void InsertToManifest (FileInfo* pFi);
     int RemoveFile(const std::string &filepath);

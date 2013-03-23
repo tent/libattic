@@ -4,9 +4,29 @@
 
 #include "tenttask.h"
 
+// This task encapsulates general purpose systems that need dt updating
+// Event system
+// - Time sensative delete queues etc (future)
+//
 class ServiceTask : public TentTask {
 public:
+    ServiceTask(FileManager* pFm,
+             CredentialsManager* pCm,
+             const AccessToken& at,
+             const Entity& entity,
+             const std::string& filepath,
+             const std::string& tempdir,
+             const std::string& workingdir,
+             const std::string& configdir,
+             TaskDelegate* callbackDelegate);
+ 
+    ~ServiceTask();
 
+    virtual void OnStart(); 
+    virtual void OnPaused(); 
+    virtual void OnFinished();
+
+    void RunTask();
 };
 
 #endif

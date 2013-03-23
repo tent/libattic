@@ -1,4 +1,3 @@
-
 #ifndef MUTEXCLASS_H_
 #define MUTEXCLASS_H_
 #pragma once
@@ -6,13 +5,12 @@
 #include <iostream>
 #include <boost/thread/thread.hpp>
 
-class MutexClass                                                                                  
-{                                                                                                 
+class MutexClass {
 public:                                                                                           
     MutexClass() {locked = false;}
     virtual ~MutexClass() {}
 
-    void Unlock() {                                                                                             
+    void Unlock() {
        m_Mtx.unlock(); 
        locked = false;
     }                                                                                             

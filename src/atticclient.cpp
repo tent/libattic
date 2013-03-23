@@ -1,5 +1,7 @@
 #include "atticclient.h"
 
+#include <iostream>
+
 #include "utils.h"
 #include "constants.h"
 #include "filesystem.h"
@@ -29,6 +31,10 @@ int Client::Initialize() {
 int Client::Shutdown() { 
     int status = ret::A_OK;
 
+    std::cout<<"shutting down file manager ... " << std::endl;
+    status = ShutdownFileManager();
+    std::cout<<"shutting down cred manager ... " << std::endl;
+    status = ShutdownCredentialsManager();
 
     return status;
 }
@@ -41,7 +47,7 @@ int Client::InitializeFileManager() {
     status = fs::GetCanonicalPath(m_TempDirectory, temp);
 
     if(status == ret::A_OK) {
-        status = m_FileManager.StartupFileManager(config, working, temp);
+        status = m_FileManager.Initialize(config, working, temp);
     }
     return status;
 }
@@ -61,7 +67,7 @@ int Client::InitializeCredentialsManager() {
 
 int Client::ShutdownFileManager() {
     int status = ret::A_OK;
-    status = m_FileManager.ShutdownFileManager();
+    status = m_FileManager.Shutdown();
     return status;
 }
 

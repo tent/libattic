@@ -13,9 +13,9 @@
 FileManager::FileManager() : MutexClass() {}
 FileManager::~FileManager() {}
 
-int FileManager::StartupFileManager(const std::string &manifestDirectory, 
-                                    const std::string &workingDirectory,
-                                    const std::string& tempDirectory)
+int FileManager::Initialize(const std::string &manifestDirectory, 
+                            const std::string &workingDirectory,
+                            const std::string& tempDirectory)
 {
     // Set manifest path
     m_ManifestDirectory = manifestDirectory;
@@ -28,7 +28,7 @@ int FileManager::StartupFileManager(const std::string &manifestDirectory,
     return m_Manifest.Initialize();
 }
 
-int FileManager::ShutdownFileManager() {
+int FileManager::Shutdown() {
     return m_Manifest.Shutdown();
 }
 

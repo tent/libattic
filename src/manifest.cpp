@@ -13,18 +13,13 @@ static const std::string g_infotable("infotable");
 static const std::string g_foldertable("foldertable");
 static const std::string g_folderentrytable("folderentrytable");
 
-Manifest::Manifest()
-{
+Manifest::Manifest() {
     m_pDb = NULL;
 }
 
-Manifest::~Manifest()
-{
+Manifest::~Manifest() {}
 
-}
-
-void Manifest::SetDirectory(std::string &filepath) 
-{ 
+void Manifest::SetDirectory(std::string &filepath)  { 
     m_Filepath = filepath; 
     utils::CheckUrlAndAppendTrailingSlash(m_Filepath);
     m_Filepath += "manifest";
@@ -52,11 +47,12 @@ int Manifest::Initialize() {
 }
 
 int Manifest::Shutdown() { 
-    return CloseSqliteDb();
+    int status = CloseSqliteDb();
+    std::cout<<" CloseDB status : " << status << std::endl;
+    return status;
 }
 
-int Manifest::OpenSqliteDb()
-{
+int Manifest::OpenSqliteDb() {
     int status = ret::A_OK;
 
     int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
@@ -65,6 +61,7 @@ int Manifest::OpenSqliteDb()
         std::cout<< "Can't open database: " << sqlite3_errmsg(m_pDb);
         std::cout<< " attempted to open : " << m_Filepath << std::endl;
         status = ret::A_FAIL_TO_LOAD_MANIFEST;
+        m_pDb = NULL;
     }
     else {
         if(!m_pDb) {
@@ -79,17 +76,18 @@ int Manifest::OpenSqliteDb()
     return status;
 }
 
-int Manifest::CloseSqliteDb()
-{
+int Manifest::CloseSqliteDb() {
+    std::cout<<" attempting to close db ... " << std::endl;
     if(m_pDb) {
-        sqlite3_close(m_pDb);
+        int err = sqlite3_close(m_pDb);
+        if(err != SQLITE_OK)
+            std::cout<<" FAILED TO CLOSE DB " << std::endl;
         m_pDb = 0;
     }
     return ret::A_OK;
 }
 
-bool Manifest::CreateTables()
-{
+bool Manifest::CreateTables() {
     if(!m_pDb)
         return false;
 
@@ -103,7 +101,7 @@ bool Manifest::CreateTables()
         return false;
     }
 
-    if(CreateFolderEntryTable()) {
+    if(!CreateFolderEntryTable()) {
         std::cout<<" Failed to create folderentrytable..."<< std::endl;
         return false;
     }
@@ -112,8 +110,7 @@ bool Manifest::CreateTables()
     return true;
 }
 
-bool Manifest::CreateInfoTable()
-{
+bool Manifest::CreateInfoTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_infotable;
@@ -131,8 +128,7 @@ bool Manifest::CreateInfoTable()
 //  * folderid - random id generate upon creation, folderid is used for various index operations in
 //    the folder entry table.
 //  * folderpostid - id of the attic-folder post containing the metadata
-bool Manifest::CreateFolderTable()
-{
+bool Manifest::CreateFolderTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_foldertable;
@@ -148,8 +144,7 @@ bool Manifest::CreateFolderTable()
 //  * type - file or folder
 //  * path - RELATIVE filepath, in relation to the working directory, if just filename assume
 //    top level directory ie: <working>/filename.txt
-bool Manifest::CreateFolderEntryTable()
-{
+bool Manifest::CreateFolderEntryTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_folderentrytable;
@@ -159,8 +154,7 @@ bool Manifest::CreateFolderEntryTable()
     return PerformQuery(exc);
 }
 
-bool Manifest::PerformQuery(const std::string& query) const
-{
+bool Manifest::PerformQuery(const std::string& query) const {
     if(!m_pDb || query.empty())
         return false;
 
@@ -192,8 +186,7 @@ bool Manifest::PerformQuery(const std::string& query) const
 //                       char **pzErrmsg       /* Error msg written here */
 //                       );
 //                      void sqlite3_free_table(char **result);
-bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const
-{
+bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const {
     if(!m_pDb || select.empty())
         return false;
 
@@ -220,8 +213,7 @@ bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const
 }
 
 
-bool Manifest::IsFileInManifest(const std::string &filepath)
-{
+bool Manifest::IsFileInManifest(const std::string &filepath) {
     std::string pexc;
     pexc += "SELECT * FROM ";
     pexc += g_infotable;
@@ -238,8 +230,7 @@ bool Manifest::IsFileInManifest(const std::string &filepath)
     return false;
 }
 
-bool Manifest::IsFolderInManifest(const std::string &folderpath)
-{
+bool Manifest::IsFolderInManifest(const std::string &folderpath) {
     std::string exc;
     exc += "SELECT * FROM ";
     exc += g_foldertable;
@@ -255,9 +246,8 @@ bool Manifest::IsFolderInManifest(const std::string &folderpath)
     return false;
 }
 
-bool Manifest::IsFolderInManifestWithID(const std::string& folderid)
-{
-std::string exc;
+bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
+    std::string exc;
     exc += "SELECT * FROM ";
     exc += g_foldertable;
     exc += " WHERE folderid=\"";
@@ -273,10 +263,8 @@ std::string exc;
     return false;
 }
 
-bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out)
-{
+bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
     char pexc[1024];
-
     snprintf( pexc,
               1024, 
               "SELECT * FROM %s WHERE filepath=\"%s\";",
@@ -323,8 +311,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out)
     return true;
 }
 
-int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
-{
+int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
     int status = ret::A_OK;
 
     std::string pexc;
@@ -380,8 +367,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out)
 
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
-bool Manifest::InsertFileInfo(const FileInfo& fi)
-{
+bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
     if(!m_pDb) {
         std::cout<<"fail db " <<std::endl;

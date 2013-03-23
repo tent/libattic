@@ -28,7 +28,9 @@ public:
         // ManifestTask
         QUERYMANIFEST,
         // Polling
-        POLL
+        POLL,
+        // Service
+        SERVICE
     };
 protected:
     Task(TaskType type = UNKNOWN) {

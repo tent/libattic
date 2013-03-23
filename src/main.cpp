@@ -269,8 +269,7 @@ TEST(AFILE, PUSH)
     if(g_Entity.empty()) return;
     if(!g_bPush) return;
     
-    int status = InitLibAttic( 
-                  "./data",
+    int status = InitLibAttic("./data",
                   "./config",
                   "./data/temp",
                   "./config/logs",
@@ -283,9 +282,12 @@ TEST(AFILE, PUSH)
     status = EnterPassphrase("password");
     ASSERT_EQ(status, ret::A_OK);
 
+    std::cout<<" register for upload speend notify " << std::endl;
     RegisterForUploadSpeedNotify(&UPLOADSPEEDCB);
     
+
     if(status == 0) {
+        std::cout<<" uploading file ... " << std::endl;
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
         status = PushFile("./data/oglisv.pdf");
@@ -301,7 +303,7 @@ TEST(AFILE, PUSH)
         ASSERT_EQ(status, ret::A_OK);
     }
 
-    sleep(30);
+    sleep(10);
    
 
     
@@ -443,7 +445,20 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     ShutdownLibAttic(NULL);
 }
 
+TEST(INIT, SHUTDOWN)
+{
 
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+    ASSERT_EQ(status, ret::A_OK);
+
+    ShutdownLibAttic(NULL);
+}
 
 bool g_bDiscover = false;
 /*
@@ -1084,7 +1099,18 @@ TEST(FILEINFO, POSTVERSION)
 
 int main (int argc, char* argv[])
 {
-    int status = 0;
+    int status = InitLibAttic( 
+                  "./data",
+                  "./config",
+                  "./data/temp",
+                  "./config/logs",
+                  g_Entity.c_str());
+
+
+    ShutdownLibAttic(NULL);
+    return 0;
+
+    //int status = 0;
 
     if(argc > 1) {
         int optcount = 14;

@@ -54,10 +54,11 @@ public:
     virtual void OnEventRaised(const Event& event) = 0;
 };
 
-class EventSystem : public MutexClass {
+class EventSystem {
     EventSystem() {}
     EventSystem(const EventSystem& rhs) {}
     EventSystem operator=(const EventSystem& rhs) { return *this; }
+    void Notify(const Event& event);
 public:
     ~EventSystem() {}
 
@@ -66,16 +67,23 @@ public:
     void Initialize() {}
     void Shutdown();
 
+    void ProcessEvents();
+
     void RaiseEvent(const Event& event);
 
     void RegisterForEvent(EventListener* pListener, Event::EventType type);
     void UnregisterFromEvent(const EventListener* pListener, Event::EventType type);
 
 private:
+    typedef std::deque<Event> EventQueue;
     typedef std::vector<EventListener*> Listeners;
     typedef std::map<Event::EventType, Listeners> ListenerMap;
 
+    MutexClass m_listenMtx;
     ListenerMap m_ListenerMap;
+
+    MutexClass m_queueMtx;
+    EventQueue m_EventQueue;
 
     static EventSystem* m_pInstance;
 };

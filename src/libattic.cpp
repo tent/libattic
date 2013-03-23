@@ -43,7 +43,7 @@ int LoadMasterKey(); // call with a valid phrase token
 int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
 int IsLibInitialized(bool checkPassphrase = true);
 
-Client* g_pClient = NULL;
+static Client* g_pClient = NULL;
 
 //////// API start
 int InitLibAttic( const char* szWorkingDirectory, 
@@ -59,6 +59,7 @@ int InitLibAttic( const char* szWorkingDirectory,
     utils::SeedRand();
 
     std::string t;
+    std::cout<<" creating new client ... " << std::endl;
     g_pClient = new Client(szWorkingDirectory,
                          szConfigDirectory,
                          szTempDirectory,
@@ -71,6 +72,7 @@ int InitLibAttic( const char* szWorkingDirectory,
     g_pClient->LoadPhraseToken();
 
     if(status == ret::A_OK)  {
+        event::EventSystem::GetInstance()->Initialize();
         // Essential
         status = liba::InitializeTaskArbiter(threadCount);
         // Try to load a master key if we have one
@@ -88,7 +90,6 @@ int InitLibAttic( const char* szWorkingDirectory,
                                              g_pClient->GetWorkingDirectory(),
                                              g_pClient->GetConfigDirectory());
 
-        event::EventSystem::GetInstance()->Initialize();
         g_CallbackHandler.Initialize();
     }
     else {
@@ -112,17 +113,21 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     g_pTaskManager = NULL;
 
     if(g_pClient) {
+        std::cout<<" shutting down client ... " << std::endl;
         g_pClient->Shutdown();
+
+        std::cout<<" cleaning up client ! ... " << std::endl;
         delete g_pClient;
         g_pClient = NULL;
     }
 
+    std::cout<<" calling back .. " << std::endl;
     if(callback)
         callback(status, NULL);
 
-    alog::ShutdownLogging();
-
     g_bLibInitialized = false;
+
+    std::cout<<" done  " << std::endl;
     return status;
 }
 // Move these two methods to apputils

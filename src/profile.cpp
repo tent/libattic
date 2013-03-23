@@ -78,29 +78,22 @@ void AtticProfileInfo::Deserialize(Json::Value& root) {
     jsn::DeserializeObject(&m_Permissions, root["permissions"]);
 }
 
-CoreProfileInfo::CoreProfileInfo()
-{
+CoreProfileInfo::CoreProfileInfo() {
     m_Permissions.SetIsPublic(true);
 }
 
-CoreProfileInfo::~CoreProfileInfo()
-{
+CoreProfileInfo::~CoreProfileInfo() {}
 
-}
-
-void CoreProfileInfo::Serialize(Json::Value& root)
-{
+void CoreProfileInfo::Serialize(Json::Value& root) {
     root["entity"] = m_Entity;
 
-    if(m_Licenses.size() > 0)
-    {
+    if(m_Licenses.size() > 0) {
         Json::Value licenses;
         jsn::SerializeVector(licenses, m_Licenses);
         root["licenses"] = licenses;
     }
 
-    if(m_Servers.size() > 0)
-    {
+    if(m_Servers.size() > 0) {
         Json::Value servers;
         jsn::SerializeVector(servers, m_Servers);
         root["servers"] = servers;
@@ -184,6 +177,7 @@ Profile Profile::operator=(const Profile& rhs) {
 }
 
 Profile::~Profile() {
+    /*
     if(m_pAtticInfo) {
         delete m_pAtticInfo;
         m_pAtticInfo = NULL; 
@@ -198,6 +192,7 @@ Profile::~Profile() {
         delete m_pBasicInfo;
         m_pBasicInfo = NULL;
     }
+    */
 }
 
 void Profile::Serialize(Json::Value& root) {
