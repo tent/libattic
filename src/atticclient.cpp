@@ -42,10 +42,7 @@ int Client::InitializeFileManager() {
     status = fs::GetCanonicalPath(m_TempDirectory, temp);
 
     if(status == ret::A_OK) {
-        m_FileManager.SetManifestDirectory(config);
-        m_FileManager.SetWorkingDirectory(working);
-        m_FileManager.SetTempDirectory(temp);
-        status = m_FileManager.StartupFileManager();
+        status = m_FileManager.StartupFileManager(config, working, temp);
     }
     return status;
 }

@@ -17,13 +17,8 @@
 
 #include "log.h"
 
-TaskFactory::TaskFactory()
-{
-}
-
-TaskFactory::~TaskFactory()
-{
-}
+TaskFactory::TaskFactory() {}
+TaskFactory::~TaskFactory() {}
 
 int TaskFactory::Initialize() // Depricated
 {
@@ -93,7 +88,6 @@ Task* TaskFactory::GetTentTask( Task::TaskType type,
                            callbackDelegate); 
 
     PushBackTask(t, delegate);
-    
     return t;
 }
 

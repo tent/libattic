@@ -133,9 +133,10 @@ int InitLibAttic( const char* szWorkingDirectory,
                          szEntityURL);
                           
                          
-                         
+    pClient->Initialize();
     pClient->LoadAppFromFile();
     pClient->LoadAccessToken();
+
 
     // Initialize logging
     alog::InitializeLogging(szLogDirectory);
@@ -274,6 +275,12 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
 
     int status = app::RegisterApp(*g_pApp, szEntityUrl, szConfigDirectory);
+    if(status == ret::A_OK) 
+        int status = app::RequestAppAuthorizationURL(*g_pApp, 
+                                                     szEntityUrl, 
+                                                     g_AuthorizationURL);
+/*
+
 /*
     std::string config_dir = szConfigDirectory;
     fs::CreateDirectory(config_dir);

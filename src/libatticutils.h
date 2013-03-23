@@ -14,29 +14,6 @@
 
 // Inward facing utility methods used at libattic interface level
 namespace liba {
-    int InitializeFileManager( FileManager** pFm, 
-                               const std::string& manifestDir,
-                               const std::string& workingDir,
-                               const std::string& tempDir)
-    {
-        int status = ret::A_OK;
-
-        if(!(*pFm)) {
-            std::string manifest, working, temp;
-            status = fs::GetCanonicalPath(manifestDir, manifest);
-            status = fs::GetCanonicalPath(workingDir, working);
-            status = fs::GetCanonicalPath(tempDir, temp);
-            // Construct path
-            if(status == ret::A_OK) {
-                (*pFm) = new FileManager(manifest, working, temp);
-                status = (*pFm)->StartupFileManager();
-            }
-        }
-        else
-            status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-        return status;
-    }
-
     int InitializeCredentialsManager( CredentialsManager** pCm,
                                       const std::string& configDir)
     {
@@ -64,16 +41,17 @@ namespace liba {
                                  const std::string& configdir)
     {
         int status = ret::A_OK;
+        if(!pFm) std::cout<<"INVALID FILEMANAGER " << std::endl;
         if(!(*pUm))
         {
             (*pUm) = new TaskManager(pApp,
-                                        pFm,
-                                        pCm,
-                                        at,
-                                        entity,
-                                        tempdir,
-                                        workingdir,
-                                        configdir);
+                                     pFm,
+                                     pCm,
+                                     at,
+                                     entity,
+                                     tempdir,
+                                     workingdir,
+                                     configdir);
 
             status = (*pUm)->Initialize();
         }
@@ -82,15 +60,13 @@ namespace liba {
         return status;
     }
 
-    int InitializeTaskArbiter(const unsigned int threadCount)
-    {
+    int InitializeTaskArbiter(const unsigned int threadCount) {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Initialize(threadCount);
         return status;
     }
 
-    int InitializeTaskFactory( TaskFactory** pTf)
-    {
+    int InitializeTaskFactory( TaskFactory** pTf) {
         int status = ret::A_OK;
         if(!(*pTf))
         {
@@ -103,16 +79,14 @@ namespace liba {
         return status;
     }
 
-    int ShutdownTaskArbiter()
-    {
+    int ShutdownTaskArbiter() {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
 
         return status;
     }
 
-    int ShutdownTaskFactory( TaskFactory* pTf )
-    {
+    int ShutdownTaskFactory( TaskFactory* pTf ) {
         int status = ret::A_OK;
         // Blind shutdown
         if(pTf)
@@ -128,25 +102,7 @@ namespace liba {
         return status;
     }
 
-    int ShutdownFileManager( FileManager** pFm )
-    {
-        int status = ret::A_OK;
-        // Blind shutdown
-        if((*pFm))
-        {
-            (*pFm)->ShutdownFileManager();
-            delete (*pFm);
-            (*pFm) = NULL;
-        }
-        else
-            status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-
-
-        return status;
-    }
-
-    int ShutdownCredentialsManager(CredentialsManager** pCm)
-    {
+    int ShutdownCredentialsManager(CredentialsManager** pCm) {
         int status = ret::A_OK;
         if((*pCm))
         {

@@ -42,6 +42,8 @@ int CredentialsManager::LoadAccessToken() {
     std::string path;
     ConstructAccessTokenPath(path);
 
+    std::cout<<" ACCESSTOKEN PATH : " << path << std::endl;
+
     Lock();
     int status = m_AccessToken.LoadFromFile(path);
     Unlock();

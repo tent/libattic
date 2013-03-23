@@ -103,7 +103,7 @@ TEST(APP_REGISTRATION, STARTAPPINST)
     }
     ASSERT_EQ(status, ret::A_OK);
 
-    status = RequestAppAuthorizationURL(g_Entity.c_str());
+    //status = RequestAppAuthorizationURL(g_Entity.c_str());
     if(status != ret::A_OK)
     {
         std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
@@ -295,7 +295,8 @@ TEST(AFILE, PUSH)
     if(status == 0) {
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
-        status = PushFile("./data/oglisv.pdf");
+        //status = PushFile("./data/oglisv.pdf");
+        status = PushFile("./data/test.txt");
         //status = PushFile("./data/cassandra11.pdf");
         //status = PushFile("./data/algorithmsall.pdf");
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
@@ -307,18 +308,8 @@ TEST(AFILE, PUSH)
         ASSERT_EQ(status, ret::A_OK);
     }
 
-    
-    for(;;)
-    {
-       //std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
-       //std::cout<< "PUSH TASK COUNT : " << GetActivePushTaskCount() << std::endl;
-       //std::cout<<" UPLOAD SPEED : " << GetActiveUploadSpeed() << std::endl;
-
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
+    sleep(30);
+   
 
     
 

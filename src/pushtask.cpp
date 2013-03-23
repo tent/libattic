@@ -70,6 +70,8 @@ int PushTask::PushFile(const std::string& filepath) {
         PostFileStrategy ps;                // Chunk and upload
         PostFileMetadataStrategy pmds;      // Update file post
         PostFolderMetadataStrategy pfmds;   // Update folder post
+        if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
+        if(!GetCredentialsManager()) std::cout<<" Invalid Cred Manager " << std::endl;
 
         HttpStrategyContext pushcontext(GetFileManager(), 
                                         GetCredentialsManager());

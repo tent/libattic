@@ -10,14 +10,12 @@
 #include "folder.h"
 #include "constants.h"
 
-FileManager::FileManager() : MutexClass()
-{
+FileManager::FileManager() : MutexClass() {}
+FileManager::~FileManager() {}
 
-}
-
-FileManager::FileManager( const std::string &manifestDirectory, 
-                          const std::string &workingDirectory,
-                          const std::string& tempDirectory)
+int FileManager::StartupFileManager(const std::string &manifestDirectory, 
+                                    const std::string &workingDirectory,
+                                    const std::string& tempDirectory)
 {
     // Set manifest path
     m_ManifestDirectory = manifestDirectory;
@@ -26,11 +24,7 @@ FileManager::FileManager( const std::string &manifestDirectory,
     // Set working directory
     m_WorkingDirectory = workingDirectory;
     m_TempDirectory = tempDirectory;
-}
 
-FileManager::~FileManager() {}
-
-int FileManager::StartupFileManager() {
     return m_Manifest.Initialize();
 }
 

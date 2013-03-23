@@ -12,8 +12,7 @@
 #include "errorcodes.h"
 #include "folder.h"
 
-class FileManager : public MutexClass
-{
+class FileManager : public MutexClass {
     FileManager(const FileManager &rhs) {}
     FileManager operator=(const FileManager &rhs) { return *this; }
 
@@ -25,13 +24,12 @@ class FileManager : public MutexClass
     bool AttemptToGetRelativePath(const std::string& filepath, std::string& out);
 public:
     FileManager();
-    FileManager( const std::string& manifestDirectory, 
-                 const std::string& workingDirectory,
-                 const std::string& tempDirectory);
-
     ~FileManager();
 
-    int StartupFileManager();
+    int StartupFileManager(const std::string& manifestDirectory, 
+                           const std::string& workingDirectory,
+                           const std::string& tempDirectory);
+
     int ShutdownFileManager();
 
     void InsertToManifest (FileInfo* pFi);

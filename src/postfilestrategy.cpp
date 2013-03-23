@@ -34,6 +34,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     if(fs::CheckFileExists(filepath)) {
         // Begin the chunking pipeline
         FileInfo* fi = RetrieveFileInfo(filepath);
+        if(!fi) std::cout<<"INVALID FILE INFO " << std::endl;
 
         std::string requesttype, posturl, chunkpostid;
         Credentials fileCredentials;
@@ -356,6 +357,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                 }
             }
             
+            std::cout<<" interpreting response " << std::endl;
             boost::asio::streambuf response;
             boost::asio::read_until(ssl_sock, response, "\r\n");
             std::string responseheaders;
@@ -399,6 +401,9 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
     //netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
     netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
 
+    int breakcount = 0;
+    int retrycount = 20;
+
     // create multipart post
     if(end) {
         // Add end part
@@ -408,7 +413,37 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         boost::asio::streambuf partEnd;
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
-        netlib::WriteToSSLSocket(ssl_sock, partEnd);
+        //netlib::WriteToSSLSocket(ssl_sock, partEnd);
+
+        unsigned int buffersize = partEnd.size();
+        
+        boost::system::error_code errorcode;
+        do {
+            boost::timer::cpu_timer::cpu_timer t;
+            size_t byteswritten = boost::asio::write(ssl_sock, partEnd, errorcode); 
+            if(errorcode) {
+                std::cout<<" WRITE ERROR : " << std::endl;
+                std::cout<<errorcode.message()<<std::endl;
+            }
+            else{
+                boost::timer::cpu_times time = t.elapsed();
+                long elapsed = time.user;
+                // To milliseconds
+                elapsed *= 0.000001; 
+                std::cout<<" ELAPSED : " << elapsed << std::endl;
+                if(elapsed > 0) {
+                    unsigned int bps = (buffersize/elapsed);
+                    // Raise event
+                    char szSpeed[256] = {'\0'};
+                    snprintf(szSpeed, 256, "%u", bps);
+                    event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+                }
+                break;
+            }
+            if(breakcount > retrycount)
+                break;
+            breakcount++;
+        }while(errorcode);
     }
     else {
         // carry on
@@ -416,11 +451,44 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         boost::asio::streambuf part;
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
-        netlib::WriteToSSLSocket(ssl_sock, part);
+        //netlib::WriteToSSLSocket(ssl_sock, part);
+
+        unsigned int buffersize = part.size();
+        boost::system::error_code errorcode;
+        do {
+            boost::timer::cpu_timer::cpu_timer t;
+            size_t byteswritten = boost::asio::write(ssl_sock, part, errorcode); 
+            if(errorcode) {
+                std::cout<<" WRITE ERROR : " << std::endl;
+                std::cout<<errorcode.message()<<std::endl;
+            }
+            else{
+                boost::timer::cpu_times time = t.elapsed();
+                long elapsed = time.user;
+                // To milliseconds
+                elapsed *= 0.000001; 
+                std::cout<<" ELAPSED : " << elapsed << std::endl;
+                if(elapsed > 0) {
+                    unsigned int bps = (buffersize/elapsed);
+                    // Raise event
+                    char szSpeed[256] = {'\0'};
+                    snprintf(szSpeed, 256, "%u", bps);
+                    event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+                }
+                break;
+            }
+            if(breakcount > retrycount)
+                break;
+            breakcount++;
+        }while(errorcode);
+
     }
+
 
     return status;
 }
+
+
 
 int PostFileStrategy::TransformChunk(const std::string& chunk, 
                                      const std::string& fileKey,
