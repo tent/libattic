@@ -414,36 +414,8 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
         //netlib::WriteToSSLSocket(ssl_sock, partEnd);
-
-        unsigned int buffersize = partEnd.size();
-        
-        boost::system::error_code errorcode;
-        do {
-            boost::timer::cpu_timer::cpu_timer t;
-            size_t byteswritten = boost::asio::write(ssl_sock, partEnd, errorcode); 
-            if(errorcode) {
-                std::cout<<" WRITE ERROR : " << std::endl;
-                std::cout<<errorcode.message()<<std::endl;
-            }
-            else{
-                boost::timer::cpu_times time = t.elapsed();
-                long elapsed = time.user;
-                // To milliseconds
-                elapsed *= 0.000001; 
-                std::cout<<" ELAPSED : " << elapsed << std::endl;
-                if(elapsed > 0) {
-                    unsigned int bps = (buffersize/elapsed);
-                    // Raise event
-                    char szSpeed[256] = {'\0'};
-                    snprintf(szSpeed, 256, "%u", bps);
-                    event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
-                }
-                break;
-            }
-            if(breakcount > retrycount)
-                break;
-            breakcount++;
-        }while(errorcode);
+        //
+        WriteToSocket(ssl_sock, partEnd);
     }
     else {
         // carry on
@@ -452,42 +424,51 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
         //netlib::WriteToSSLSocket(ssl_sock, part);
-
-        unsigned int buffersize = part.size();
-        boost::system::error_code errorcode;
-        do {
-            boost::timer::cpu_timer::cpu_timer t;
-            size_t byteswritten = boost::asio::write(ssl_sock, part, errorcode); 
-            if(errorcode) {
-                std::cout<<" WRITE ERROR : " << std::endl;
-                std::cout<<errorcode.message()<<std::endl;
-            }
-            else{
-                boost::timer::cpu_times time = t.elapsed();
-                long elapsed = time.user;
-                // To milliseconds
-                elapsed *= 0.000001; 
-                std::cout<<" ELAPSED : " << elapsed << std::endl;
-                if(elapsed > 0) {
-                    unsigned int bps = (buffersize/elapsed);
-                    // Raise event
-                    char szSpeed[256] = {'\0'};
-                    snprintf(szSpeed, 256, "%u", bps);
-                    event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
-                }
-                break;
-            }
-            if(breakcount > retrycount)
-                break;
-            breakcount++;
-        }while(errorcode);
-
+        WriteToSocket(ssl_sock, part);
     }
 
 
     return status;
 }
+int PostFileStrategy::WriteToSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
+                                    boost::asio::streambuf& buffer)
+{
+    int breakcount = 0;
+    int retrycount = 20;
 
+    int status = ret::A_OK;
+    unsigned int buffersize = buffer.size();
+    boost::system::error_code errorcode;
+    do {
+        boost::timer::cpu_timer::cpu_timer t;
+        size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
+        std::cout<<" bytes written : " << byteswritten << std::endl;
+        if(errorcode) {
+            std::cout<<" WRITE ERROR : " << std::endl;
+            std::cout<<errorcode.message()<<std::endl;
+        }
+        else{
+            boost::timer::cpu_times time = t.elapsed();
+            long elapsed = time.user;
+            // To milliseconds
+            elapsed *= 0.000001; 
+            std::cout<<" ELAPSED : " << elapsed << std::endl;
+            if(elapsed > 0) {
+                unsigned int bps = (buffersize/elapsed);
+                // Raise event
+                char szSpeed[256] = {'\0'};
+                snprintf(szSpeed, 256, "%u", bps);
+                event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
+            }
+            break;
+        }
+        if(breakcount > retrycount)
+            break;
+        breakcount++;
+    }while(errorcode);
+
+    return status;
+}
 
 
 int PostFileStrategy::TransformChunk(const std::string& chunk, 
