@@ -6,18 +6,14 @@
 #include "filemanager.h"
 #include "taskdelegate.h"
 
-
-TaskManager::TaskManager( TentApp* pApp, 
-                          FileManager* pFm, 
-                          CredentialsManager* pCm,
-                          const AccessToken& at,
-                          const Entity& entity,
-                          const std::string& tempdir, 
-                          const std::string& workingdir,
-                          const std::string& configdir
-                        )
+TaskManager::TaskManager(FileManager* pFm, 
+                         CredentialsManager* pCm,
+                         const AccessToken& at,
+                         const Entity& entity,
+                         const std::string& tempdir, 
+                         const std::string& workingdir,
+                         const std::string& configdir)
 {
-    m_pApp = pApp;
     m_pFileManager = pFm;
     m_pCredentialsManager = pCm;
 
@@ -78,14 +74,12 @@ void TaskManager::OnEventRaised(const event::Event& event) {
         default:
             std::cout<<"received unknown event"<<std::endl;
     }
-
 }
 
 void TaskManager::OnTaskCreate(Task* t) {
     std::cout<<" On Task Create " << std::endl;
     // Get Task type
     // if pull or push task
-    // extract curl instance ptr
 }
 
 void TaskManager::OnTaskInsert(Task* t) {

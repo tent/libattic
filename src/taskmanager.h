@@ -17,8 +17,7 @@ class TaskDelegate;
 
 class TaskManager : public TaskFactoryDelegate, public event::EventListener {
 public:
-    TaskManager(TentApp* pApp, 
-                FileManager* pFm, 
+    TaskManager(FileManager* pFm, 
                 CredentialsManager* pCm,
                 const AccessToken& at,
                 const Entity& entity,
@@ -58,7 +57,6 @@ public:
 private:
     TaskFactory             m_TaskFactory; // Local to upload manager
 
-    TentApp*                m_pApp;
     FileManager*            m_pFileManager;
     CredentialsManager*     m_pCredentialsManager;
 

@@ -30,22 +30,20 @@ namespace liba {
         return status;
     }
 
-    int InitializeTaskManager( TaskManager** pUm,
-                                 TentApp* pApp,
-                                 FileManager* pFm,
-                                 CredentialsManager* pCm,
-                                 const AccessToken& at,
-                                 const Entity& entity,
-                                 const std::string& tempdir,
-                                 const std::string& workingdir,
-                                 const std::string& configdir)
+    int InitializeTaskManager(TaskManager** pUm,
+                              FileManager* pFm,
+                              CredentialsManager* pCm,
+                              const AccessToken& at,
+                              const Entity& entity,
+                              const std::string& tempdir,
+                              const std::string& workingdir,
+                              const std::string& configdir)
     {
         int status = ret::A_OK;
         if(!pFm) std::cout<<"INVALID FILEMANAGER " << std::endl;
         if(!(*pUm))
         {
-            (*pUm) = new TaskManager(pApp,
-                                     pFm,
+            (*pUm) = new TaskManager(pFm,
                                      pCm,
                                      at,
                                      entity,

@@ -91,15 +91,14 @@ int InitLibAttic( const char* szWorkingDirectory,
                                             // go ahead and enter it.
         }
 
-        status = liba::InitializeTaskManager( &g_pTaskManager,
-                                              g_pClient->GetTentApp(),
-                                              g_pClient->GetFileManager(),
-                                              g_pClient->GetCredentialsManager(),
-                                              g_pClient->GetAccessTokenCopy(),
-                                              *(g_pClient->GetEntity()),
-                                              g_pClient->GetTempDirectory(),
-                                              g_pClient->GetWorkingDirectory(),
-                                              g_pClient->GetConfigDirectory());
+        status = liba::InitializeTaskManager(&g_pTaskManager,
+                                             g_pClient->GetFileManager(),
+                                             g_pClient->GetCredentialsManager(),
+                                             g_pClient->GetAccessTokenCopy(),
+                                             *(g_pClient->GetEntity()),
+                                             g_pClient->GetTempDirectory(),
+                                             g_pClient->GetWorkingDirectory(),
+                                             g_pClient->GetConfigDirectory());
 
         event::EventSystem::GetInstance()->Initialize();
         g_CallbackHandler.Initialize();
