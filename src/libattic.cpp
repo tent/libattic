@@ -46,29 +46,14 @@ static TaskManager*         g_pTaskManager = NULL;      // move to service
 static CallbackHandler      g_CallbackHandler;          // move to service
 //static TaskArbiter g_Arb;
 
-// Directories
-static std::string g_WorkingDirectory;      // move to client
-static std::string g_ConfigDirectory;// move to client
-static std::string g_TempDirectory;// move to client
-
 // var
 static std::string g_AuthorizationURL;// move to client
-static PhraseToken  g_Pt;// move to client
+//static PhraseToken  g_Pt;// move to client
 
 static bool g_bEnteredPassphrase = false;
 static bool g_bLibInitialized = false;
 
-// inward faceing functions
-int SetWorkingDirectory(const char* szDir);
-int SetConfigDirectory(const char* szDir);
-int SetTempDirectory(const char* szDir);
-
-int LoadPhraseToken();
-int SavePhraseToken(PhraseToken& pt);
 int LoadMasterKey(); // call with a valid phrase token
-
-void GetPhraseTokenFilepath(std::string& out);
-void GetEntityFilepath(std::string& out);
 
 int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
 
@@ -88,9 +73,6 @@ int InitLibAttic( const char* szWorkingDirectory,
     int status = ret::A_OK;
     // Init sequence ORDER MATTERS
     utils::SeedRand();
-    SetConfigDirectory(szConfigDirectory);
-    SetWorkingDirectory(szWorkingDirectory);
-    SetTempDirectory(szTempDirectory);
 
     std::string t;
     pClient = new Client(szWorkingDirectory,
@@ -102,16 +84,11 @@ int InitLibAttic( const char* szWorkingDirectory,
     pClient->LoadAppFromFile();
     pClient->LoadAccessToken();
     pClient->LoadEntity();
+    pClient->LoadPhraseToken();
 
-    //status = LoadAppFromFile();
     if(status == ret::A_OK)  {
         // Essential
         status = liba::InitializeTaskArbiter(threadCount);
-
-        status = LoadPhraseToken();
-        if(status != ret::A_OK)
-            alog::Log(Logger::ERROR, "Failed to load phrase token");
-
         // Try to load a master key if we have one
         if(LoadMasterKey() == ret::A_OK) {  // don't set it equal to status, because if this fails
                                             // it's really not that important, we can have the user
@@ -122,11 +99,11 @@ int InitLibAttic( const char* szWorkingDirectory,
                                               pClient->GetTentApp(),
                                               pClient->GetFileManager(),
                                               pClient->GetCredentialsManager(),
-                                              pClient->GetAccessToken(),
+                                              pClient->GetAccessTokenCopy(),
                                               *(pClient->GetEntity()),
-                                              g_TempDirectory,
-                                              g_WorkingDirectory,
-                                              g_ConfigDirectory);
+                                              pClient->GetTempDirectory(),
+                                              pClient->GetWorkingDirectory(),
+                                              pClient->GetConfigDirectory());
 
         event::EventSystem::GetInstance()->Initialize();
         g_CallbackHandler.Initialize();
@@ -224,8 +201,6 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
                                     const char* szConfigDirectory)
 {
     int status = ret::A_OK;
-    SetConfigDirectory(szConfigDirectory);// depricated
-
     if(!g_pApp)
         g_pApp = new TentApp();                                                
 
@@ -347,9 +322,8 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv) {
 
                             // Insert Into Credentials Manager
                             pClient->GetCredentialsManager()->SetMasterKey(masterKey);
-
-                            g_Pt.SetPhraseKey(phraseKey);
-                            SavePhraseToken(g_Pt);
+                            // Set the phrase key
+                            pClient->SetPhraseKey(phraseKey);
                             g_bEnteredPassphrase = true;
                         }
                         else {
@@ -399,12 +373,9 @@ int RegisterPassphrase(const char* szPass, bool override) {
             std::cout<<" MASTER KEY : " << key << std::endl;
             status = pass::RegisterPassphraseWithAttic(std::string(szPass), 
                                                        key, // master key
-                                                       pClient->GetCredentialsManager(),
-                                                       *(pClient->GetEntity()),
-                                                       g_Pt,
+                                                       pClient,
                                                        recoverykey);
              if(status == ret::A_OK) {
-                SavePhraseToken(g_Pt);
                 std::cout<<" RAISING EVENT : " << recoverykey << std::endl;
                 event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
              }
@@ -434,7 +405,7 @@ int EnterPassphrase(const char* szPass) {
         pClient->LoadEntity(true);
 
         std::string salt;
-        g_Pt.GetSalt(salt);
+        pClient->GetPhraseToken()->GetSalt(salt);
 
         std::cout<<" entering pass ... " << std::endl;
         std::string phraseKey;
@@ -478,12 +449,9 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
             std::string recoverykey;
             status = pass::RegisterPassphraseWithAttic( std::string(szNew), 
                                                         key, // master key
-                                                        pClient->GetCredentialsManager(),
-                                                        *(pClient->GetEntity()),
-                                                        g_Pt,
+                                                        pClient,
                                                         recoverykey);
             if(status == ret::A_OK){
-                SavePhraseToken(g_Pt);
                 event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
             }
         }
@@ -514,13 +482,10 @@ int EnterRecoveryKey(const char* szRecovery) {
                 std::string new_recovery_key;
                 status = pass::RegisterPassphraseWithAttic(temppass, 
                                                            masterkey,
-                                                           pClient->GetCredentialsManager(),
-                                                           *(pClient->GetEntity()),
-                                                           g_Pt,
+                                                           pClient,
                                                            new_recovery_key);
 
                 if(status == ret::A_OK) {
-                    SavePhraseToken(g_Pt);
                     //status = EnterPassphrase(temppass); // Load phrase token, and write out to ent file
                     event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
                 }
@@ -612,13 +577,10 @@ int EnterQuestionAnswerKey(const char* q1,
                 std::string new_recovery_key;
                 status = pass::RegisterPassphraseWithAttic(temppass, 
                                                            mkOut,
-                                                           pClient->GetCredentialsManager(),
-                                                           *(pClient->GetEntity()),
-                                                           g_Pt,
+                                                           pClient,
                                                            new_recovery_key);
 
                 if(status == ret::A_OK) {
-                    SavePhraseToken(g_Pt);
                     event::RaiseEvent(event::Event::TEMPORARY_PASS, temppass, NULL);
                 }
             }
@@ -628,62 +590,6 @@ int EnterQuestionAnswerKey(const char* q1,
         }
     }
     return status;
-}
-
-int LoadPhraseToken() {
-    std::string ptpath;
-    GetPhraseTokenFilepath(ptpath);
-
-    int status = g_Pt.LoadFromFile(ptpath);
-    if(status != ret::A_OK) {
-        // couldn't load from file (non existant)
-        // Extract partial info
-        // Extract Info from entity
-        Profile* prof = pClient->GetEntity()->GetFrontProfile();
-        if(prof) {
-            AtticProfileInfo* atpi = prof->GetAtticInfo();
-            if(atpi) {
-                std::string salt;
-                atpi->GetSalt(salt);
-                g_Pt.SetSalt(salt);
-
-                std::string iv;
-                atpi->GetIv(iv);
-                g_Pt.SetIv(iv);
-
-                std::string key;
-                atpi->GetMasterKey(key);
-                g_Pt.SetDirtyKey(key);
-
-                // Save token to file
-                SavePhraseToken(g_Pt);
-                g_bEnteredPassphrase = false;
-
-                //status = ret::A_FAIL_INVALID_PHRASE_TOKEN;
-                status = g_Pt.LoadFromFile(ptpath);
-            }
-        }
-        else {
-            status = ret::A_FAIL_INVALID_PTR;
-        }
-    }
-    else {
-        if(g_Pt.IsPhraseKeyEmpty())
-            g_bEnteredPassphrase = false;
-        else
-            g_bEnteredPassphrase = true;
-    }
-
-    std::string pk, dk;
-    g_Pt.GetDirtyKey(dk);
-    g_Pt.GetPhraseKey(pk);
-    return status; 
-}
-
-int SavePhraseToken(PhraseToken& pt) {
-    std::string ptpath;
-    GetPhraseTokenFilepath(ptpath);
-    return g_Pt.SaveToFile(ptpath);
 }
 
 int PhraseStatus() {
@@ -698,108 +604,27 @@ int PhraseStatus() {
 int LoadMasterKey() {
     int status = ret::A_OK;
     // Check for valid phrase token
-    if(g_Pt.IsPhraseKeyEmpty()) {
+    if(pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
         // "Enter Password"
         g_bEnteredPassphrase = false;
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
     }
     else {
         std::string phraseKey, salt;
-        g_Pt.GetPhraseKey(phraseKey);
-        g_Pt.GetSalt(salt);
-
+        pClient->GetPhraseToken()->GetPhraseKey(phraseKey);
+        pClient->GetPhraseToken()->GetSalt(salt);
         status = DecryptMasterKey(phraseKey, salt);
     }   
 
     return status;
 }
 
-void GetPhraseTokenFilepath(std::string& out) {
-    out += g_ConfigDirectory;
-    out += "/";
-    out += cnst::g_szPhraseTokenName;
-}
-
-void GetEntityFilepath(std::string& out) {
-    out += g_ConfigDirectory;
-    out += "/";
-    out += cnst::g_szEntityName;
-}
-
-/*
-int LoadEntity(bool override) {
-    std::string entpath;
-    GetEntityFilepath(entpath);
-    int status = g_Entity.LoadFromFile(entpath);
-
-    // Check for master key
-    if(!g_Entity.HasAtticProfileMasterKey())
-        status = ret::A_FAIL_INVALID_MASTERKEY;
-    
-    if(status != ret::A_OK || override){
-        if(override)
-            g_Entity.Reset();
-
-        // Load Entity
-        AccessToken at;
-        pClient->GetCredentialsManager()->GetAccessTokenCopy(at);
-
-        status = g_Entity.Discover(g_EntityUrl, &at);
-
-        if(status == ret::A_OK)
-            g_Entity.WriteToFile(entpath);
-        else
-            alog::Log(Logger::DEBUG, "LoadEntity failed discovery : " + g_EntityUrl);
-    }
-    return status;
-}
-*/
-
-int GetPhraseStatus() {
-
-    return ret::A_OK;
-}
-
-int SetWorkingDirectory(const char* szDir) {
-    if(!szDir)
-        return ret::A_FAIL_INVALID_CSTR;
-
-    g_WorkingDirectory.clear();
-    g_WorkingDirectory.append(szDir);
-
-    fs::CreateDirectory(g_WorkingDirectory);
-
-    return ret::A_OK;
-}
-
-int SetConfigDirectory(const char* szDir) {
-    if(!szDir)
-        return ret::A_FAIL_INVALID_CSTR;
-
-    g_ConfigDirectory.clear();
-    g_ConfigDirectory.append(szDir);
-
-    fs::CreateDirectory(g_ConfigDirectory);
-
-    return ret::A_OK;
-}
-
-int SetTempDirectory(const char* szDir) {
-    if(!szDir)
-        return ret::A_FAIL_INVALID_CSTR;
-
-    g_TempDirectory.clear();
-    g_TempDirectory.append(szDir);
-
-    fs::CreateDirectory(g_TempDirectory);
-
-    return ret::A_OK;
-}
-
 int IsLibInitialized(bool checkPassphrase) {
     int status = ret::A_OK;
+    if(!pClient)
+        return ret::A_FAIL_INVALID_CLIENT;
 
-    if(checkPassphrase && g_Pt.IsPhraseKeyEmpty()) {
+    if(checkPassphrase && pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
         g_bEnteredPassphrase = false;
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
     }
@@ -828,10 +653,6 @@ const char* GetEntityApiRoot(const char* szEntityUrl) {
 
     return apiroot.c_str();
 }
-
-const char* GetWorkingDirectory() { return g_WorkingDirectory.c_str(); }
-const char* GetConfigDirectory() { return g_ConfigDirectory.c_str(); }
-//const char* GetEntityUrl() { return g_EntityUrl.c_str(); }
 
 int GetFileList(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
@@ -910,6 +731,5 @@ int Pause(void) {
 int Resume(void) {
     event::RaiseEvent(event::Event::RESUME, "", NULL);
 }
-
 
 

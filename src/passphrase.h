@@ -10,14 +10,13 @@
 #include "entity.h"
 #include "masterkey.h"
 #include "crypto.h"
+#include "atticclient.h"
 
 namespace pass {
 
 static int RegisterPassphraseWithAttic(const std::string& pass, 
                                        const std::string& masterkey,
-                                       CredentialsManager* pCm,
-                                       Entity& entity,
-                                       PhraseToken& pt,
+                                       Client* pClient,
                                        std::string& recoverykey);
 
 static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
@@ -56,9 +55,7 @@ static int EncryptKeyWithPassphrase(const std::string& key,
 
 static int RegisterPassphraseWithAttic(const std::string& pass, 
                                        const std::string& masterkey,
-                                       CredentialsManager* pCm,
-                                       Entity& entity,
-                                       PhraseToken& pt,
+                                       Client* pClient,
                                        std::string& recoverykey)
 {
     int status = ret::A_OK;
@@ -66,28 +63,32 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
     // generate random iv and salt
     // Inward facing method
     // Register a new passphrase.
-    //
 
+    CredentialsManager* pCm = pClient->GetCredentialsManager();
+    PhraseToken* pt = pClient->GetPhraseToken();
+    Entity* pEntity = pClient->GetEntity();
     MasterKey mk;
-    status = ConstructMasterKey(masterkey, pCm, pt, mk); // also generates salt, inserts into 
+    status = ConstructMasterKey(masterkey, 
+                                pCm, 
+                                *pt, 
+                                mk); // also generates salt, inserts into 
                                                 // phrase token
     if(status == ret::A_OK) {
-
         // Insert sentinel value
         mk.InsertSentinelIntoMasterKey();
         // Get Salt
         std::string salt;
-        pt.GetSalt(salt);  // Phrase Token
+        pt->GetSalt(salt);  // Phrase Token
         // Get Dirty Master Key (un-encrypted master key with sentinel values)
         std::string dirtykey;
         mk.GetMasterKeyWithSentinel(dirtykey);
-        pt.SetDirtyKey(dirtykey); // Set Phrase Token
+        pt->SetDirtyKey(dirtykey); // Set Phrase Token
         // Enter passphrase to generate key.
         std::string phraseKey;
         //status = pCm->EnterPassphrase(pass, salt, phraseKey);
         GeneratePhraseKey(pass, salt, phraseKey);
         if(status == ret::A_OK) {
-            pt.SetPhraseKey(phraseKey);
+            pClient->SetPhraseKey(phraseKey);
             // Setup passphrase cred to encrypt master key
             std::string encryptedkey;
             status = EncryptKeyWithPassphrase(dirtykey, 
@@ -105,12 +106,12 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                 status = GenerateRecoveryKey(genmk,
                                              pCm,
                                              atticProfile,
-                                             entity,
+                                             *pEntity,
                                              recoverykey);
                 if(status == ret::A_OK) {
                     status = RegisterPassphraseProfilePost(pCm,
                                                            atticProfile,
-                                                           entity);
+                                                           *pEntity);
                 }
             }
         }
@@ -181,6 +182,7 @@ static int RegisterRecoveryQuestionsWithAttic(const std::string& masterkey,
 
     return status;
 }
+
 static int EnterRecoveryQuestions(CredentialsManager* pCm,
                                   Entity& entity,
                                   std::string& q1,
@@ -426,7 +428,7 @@ static int EncryptKeyWithPassphrase( const std::string& key,
 }
 
 
-};
+}
 
 #endif
 

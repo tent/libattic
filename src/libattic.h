@@ -2,9 +2,7 @@
 #define LIBATTIC_H_
 #pragma once
 
-
-extern "C"
-{
+extern "C" {
 
 /* App Registration interface :
  *      This should be done before using the lib, to generate app credentials
@@ -28,14 +26,9 @@ int StartupAppInstance( const char* szAppName,
 // Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
 int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory);
 
-// Pass the api root of the entity (ex "https://test.tent.is/tent/")
-// * Must Register app successfully before proceeding to this step
-int RequestAppAuthorizationURL(const char* szEntityUrl);
-
 int RequestUserAuthorizationDetails( const char* szEntityUrl, 
                                      const char* szCode,
                                      const char* szConfigDirectory); // Config Directory
-
 const char* GetAuthorizationURL();
 
 const char* GetEntityApiRoot(const char* szEntityUrl);
@@ -82,15 +75,6 @@ int PollFiles(void);
 int Pause(void);
 int Resume(void);
 
-// Save the app in json to a file (Just a utility you probably don't
-// want to use this in production)
-//int SaveAppToFile();
-
-// Load the app in json from a file (Just a utility you probably don't
-// want to use this in production)
-//int LoadAppFromFile();
-//int LoadAccessToken();
-
 // TODO :: These two methods are just temporarily exposed, to be used internally only
 int SyncFiles(void);
 
@@ -110,13 +94,6 @@ int EnterQuestionAnswerKey(const char* q1,
                            const char* a2, 
                            const char* a3);
 
-int SetEntityUrl(const char* szUrl);
-
-// Utility
-const char* GetWorkingDirectory();
-const char* GetConfigDirectory();
-const char* GetEntityUrl();
-
 // Returns calls back n numbers of times, with filepaths
 // callback
 // - status, array of char*, number in array, total number
@@ -124,10 +101,6 @@ int GetFileList(void(*callback)(int, char**, int, int));
 
 // Once finished with the file list, pass back here for memory cleanup
 int FreeFileList(char** pList, int stride);
-
-// TEMP FUNCTIONS REMOVE THESE FOR TESTING PURPOSES ONLY
-//class FileManager;
-//FileManager* GetFileManager();
 }
 
 #endif

@@ -1,4 +1,3 @@
-
 #ifndef PHRASETOKEN_H_
 #define PHRASETOKEN_H_
 #pragma once
@@ -6,8 +5,7 @@
 #include <string>
 #include "jsonserializable.h"
 
-class PhraseToken : public JsonSerializable
-{
+class PhraseToken : public JsonSerializable {
 public:
     PhraseToken();
     ~PhraseToken();

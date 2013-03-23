@@ -22,7 +22,7 @@ int SoftDeleteStrategy::Execute(FileManager* pFileManager,
         MarkFileDeleted(fi);
     }
     else {
-        status = ret::A_FAIL_INVLID_FILE_INFO;
+        status = ret::A_FAIL_INVALID_FILE_INFO;
     }
 
     return status;

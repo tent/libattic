@@ -83,6 +83,59 @@ int Client::LoadAccessToken() {
     return status;
 }
 
+int Client::LoadPhraseToken() { 
+    int status = ret::A_OK;
+
+    std::string path;
+    ConstructPhraseTokenFilepath(path);
+
+    status = m_PhraseToken.LoadFromFile(path);
+    if(status != ret::A_OK) {
+        // Assume no file
+        // Extract info from entity
+        status = ExtractPhraseToken(m_PhraseToken);
+        if(status == ret::A_OK) {
+            m_PhraseToken.SaveToFile(path);
+        }
+
+    }
+
+    return status;
+}
+
+void Client::SetPhraseKey(const std::string& key) {
+    std::string path;
+    ConstructPhraseTokenFilepath(path);
+    m_PhraseToken.SetPhraseKey(key);
+    m_PhraseToken.SaveToFile(path);
+}
+
+int Client::ExtractPhraseToken(PhraseToken& out) {
+    int status = ret::A_OK;
+    Profile* prof = m_Entity.GetFrontProfile();
+    if(prof) {
+        AtticProfileInfo* atpi = prof->GetAtticInfo();
+        if(atpi) {
+            std::string salt, iv, key;
+            atpi->GetSalt(salt);
+            atpi->GetIv(iv);
+            atpi->GetMasterKey(key);
+
+            out.SetSalt(salt);
+            out.SetIv(iv); // Will be empty, todo : remove iv
+            out.SetDirtyKey(key);
+        }
+        else {
+            status = ret::A_FAIL_INVALID_PROFILE;
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_PROFILE;
+    }
+
+    return status;
+}
+
 int Client::LoadAppFromFile() { 
     int status = ret::A_OK;
     std::string savepath;
@@ -154,3 +207,8 @@ void Client::ConstructEntityFilepath(std::string& out) {
     out.append(cnst::g_szEntityName);
 }
 
+void Client::ConstructPhraseTokenFilepath(std::string& out) {
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);
+    out += cnst::g_szPhraseTokenName;
+}

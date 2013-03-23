@@ -37,7 +37,7 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     }
     else { 
         std::cout<<" INVALID FILE INFO " << std::endl;
-        status = ret::A_FAIL_INVLID_FILE_INFO;
+        status = ret::A_FAIL_INVALID_FILE_INFO;
     }
     
     return status;
