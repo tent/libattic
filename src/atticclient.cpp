@@ -4,7 +4,6 @@
 #include "constants.h"
 #include "filesystem.h"
 
-Client::Client() {}
 Client::Client(const std::string& workingdir, 
                const std::string& configdir, 
                const std::string& tempdir, 
@@ -78,7 +77,6 @@ int Client::LoadAccessToken() {
     if(status == ret::A_OK)
         m_CredentialsManager.GetAccessTokenCopy(m_At);
 
-
     std::string at = m_At.GetAccessToken();
     std::cout<<" STATUS : " << status << std::endl;
     std::cout<<" ACCESS TOKEN : " << at << std::endl;
@@ -91,6 +89,29 @@ int Client::LoadAppFromFile() {
     ConstructAppPath(savepath);
     status = m_App.LoadFromFile(savepath);
 
+    return status;
+}
+
+int Client::LoadEntity(bool override) {
+    int status = ret::A_OK;
+
+    std::string entpath;
+    ConstructEntityFilepath(entpath);
+    
+    // Attempt to load from file
+    status = m_Entity.LoadFromFile(entpath);
+    // Check for master key
+    if(!m_Entity.HasAtticProfileMasterKey())
+        status = ret::A_FAIL_INVALID_MASTERKEY;
+
+    // If not or overrride, lets attempt discovery
+    if(status != ret::A_OK || override) {
+        if(override) m_Entity.Reset();
+        status = m_Entity.Discover(m_EntityUrl, &m_At);
+
+        if(status == ret::A_OK)
+            m_Entity.WriteToFile(entpath);
+    }
     return status;
 }
 
@@ -126,3 +147,10 @@ void Client::ConstructAppPath(std::string& out) {
     utils::CheckUrlAndAppendTrailingSlash(out);
     out.append(cnst::g_szAppDataName);
 }
+
+void Client::ConstructEntityFilepath(std::string& out) {
+    out = m_ConfigDirectory;
+    utils::CheckUrlAndAppendTrailingSlash(out);
+    out.append(cnst::g_szEntityName);
+}
+

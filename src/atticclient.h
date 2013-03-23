@@ -11,6 +11,7 @@
 
 class Client {
     void ConstructAppPath(std::string& out);
+    void ConstructEntityFilepath(std::string& out);
 
     int InitializeFileManager();
     int InitializeCredentialsManager();
@@ -18,7 +19,6 @@ class Client {
     int ShutdownFileManager();
     int ShutdownCredentialsManager();
 public:
-    Client();
     Client(const std::string& workingdir, 
            const std::string& configdir, 
            const std::string& tempdir, 
@@ -31,16 +31,18 @@ public:
 
     int LoadAccessToken();
     int LoadAppFromFile();
+    int LoadEntity(bool override=false);
 
     int SaveAppToFile();
 
     void SetTentApp(const TentApp& app) { m_App = app; }
     
-    TentApp* GetTentApp()                 { return &m_App; }
+    TentApp* GetTentApp()                       { return &m_App; }
     FileManager* GetFileManager()               { return &m_FileManager; }
     CredentialsManager* GetCredentialsManager() { return &m_CredentialsManager; }
     Entity* GetEntity()                         { return &m_Entity; }
-    AccessToken* GetAccessToken()               { return &m_At; }
+
+    AccessToken GetAccessToken()               { return m_At; }
 
     void SetWorkingDirectory(const std::string& dir) { m_WorkingDirectory = dir; }
     void SetConfigDirectory(const std::string& dir) { m_ConfigDirectory = dir; }

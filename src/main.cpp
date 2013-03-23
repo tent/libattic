@@ -102,18 +102,11 @@ TEST(APP_REGISTRATION, STARTAPPINST)
         std::cout<<"register app FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
-
-    //status = RequestAppAuthorizationURL(g_Entity.c_str());
-    if(status != ret::A_OK)
-    {
-        std::cout<<"Request app authorization URL FAILED : " << status << std::endl;
-    }
-    std::cout<< GetAuthorizationURL() << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
     
-    if(buf)
-    {
-        delete buf;
+    std::cout<< GetAuthorizationURL() << std::endl;
+    
+    if(buf) {
+        delete[] buf;
         buf =NULL;
     }
 }
@@ -295,8 +288,8 @@ TEST(AFILE, PUSH)
     if(status == 0) {
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
-        //status = PushFile("./data/oglisv.pdf");
-        status = PushFile("./data/test.txt");
+        status = PushFile("./data/oglisv.pdf");
+        //status = PushFile("./data/test.txt");
         //status = PushFile("./data/cassandra11.pdf");
         //status = PushFile("./data/algorithmsall.pdf");
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
