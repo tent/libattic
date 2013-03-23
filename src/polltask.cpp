@@ -17,11 +17,8 @@ namespace polltask
     }
 }
 
-PollTask::PollTask( TentApp* pApp,
-                    FileManager* pFm,
+PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,
-                    TaskArbiter* pTa,
-                    TaskFactory* pTf,
                     const AccessToken& at,
                     const Entity& entity,
                     const std::string& filepath,
@@ -31,11 +28,8 @@ PollTask::PollTask( TentApp* pApp,
                     TaskDelegate* callbackDelegate)
                     :                                               
                     TentTask( Task::POLL,
-                              pApp,                                 
                               pFm,
                               pCm,
-                              pTa,
-                              pTf,
                               at,
                               entity,                               
                               filepath,                             

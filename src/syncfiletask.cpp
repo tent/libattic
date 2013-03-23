@@ -13,52 +13,35 @@
 #include "filesystem.h"
 #include "taskdelegate.h"
 
-SyncFileTask::SyncFileTask( TentApp* pApp,
-                            FileManager* pFm,
-                            CredentialsManager* pCm,
-                            TaskArbiter* pTa,
-                            TaskFactory* pTf,
-                            const AccessToken& at,
-                            const Entity& entity,
-                            const std::string& filepath,
-                            const std::string& tempdir,
-                            const std::string& workingdir,
-                            const std::string& configdir,
-                            TaskDelegate* callbackDelegate)
-                            :                                               
-                            TentTask( Task::SYNC_FILE_TASK,
-                                      pApp,                                 
-                                      pFm,                                  
-                                      pCm,                                  
-                                      pTa,                                  
-                                      pTf,                                  
-                                      at,                                   
-                                      entity,                               
-                                      filepath,                             
-                                      tempdir,                              
-                                      workingdir,                           
-                                      configdir,                            
-                                      callbackDelegate)                             
+SyncFileTask::SyncFileTask(FileManager* pFm,
+                           CredentialsManager* pCm,
+                           const AccessToken& at,
+                           const Entity& entity,
+                           const std::string& filepath,
+                           const std::string& tempdir,
+                           const std::string& workingdir,
+                           const std::string& configdir,
+                           TaskDelegate* callbackDelegate)
+                           :                                               
+                           TentTask( Task::SYNC_FILE_TASK,
+                                     pFm,                                  
+                                     pCm,                                  
+                                     at,                                   
+                                     entity,                               
+                                     filepath,                             
+                                     tempdir,                              
+                                     workingdir,                           
+                                     configdir,                            
+                                     callbackDelegate)                             
 {
     // TODO :: refine constructor params, FOR NOW filepath will need to have the postid
     m_PostID = filepath;
 }
 
-SyncFileTask::~SyncFileTask()
-{
-}
-
-void SyncFileTask::OnStart()
-{
-}
-
-void SyncFileTask::OnPaused()
-{
-}
-
-void SyncFileTask::OnFinished()
-{
-}
+SyncFileTask::~SyncFileTask() {}
+void SyncFileTask::OnStart() {}
+void SyncFileTask::OnPaused() {}
+void SyncFileTask::OnFinished() {}
 
 void SyncFileTask::RunTask() {
     int status = ret::A_OK;

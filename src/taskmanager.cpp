@@ -29,9 +29,7 @@ TaskManager::TaskManager( TentApp* pApp,
     m_ConfigDir = configdir;
 }
 
-TaskManager::~TaskManager()
-{
-}
+TaskManager::~TaskManager() {}
 
 int TaskManager::Initialize() {
     int status = ret::A_OK;
@@ -109,11 +107,8 @@ int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype,
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetTentTask( tasktype,
-                                         m_pApp,
                                          m_pFileManager,
                                          m_pCredentialsManager,
-                                         TaskArbiter::GetInstance(),
-                                         &m_TaskFactory,
                                          m_AccessToken,
                                          m_Entity,
                                          filepath,
@@ -138,10 +133,6 @@ int TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
 
 int TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
     return CreateAndSpinOffTask( Task::DELETE, filepath, pDel);
-}
-
-int TaskManager::SyncFiles(TaskDelegate* pDel) {
-    return CreateAndSpinOffTask(Task::SYNC, "", pDel);
 }
 
 int TaskManager::PollFiles(TaskDelegate* pDel) {

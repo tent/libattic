@@ -10,38 +10,30 @@
 #include "postfilemetadatastrategy.h"
 #include "postfoldermetadatastrategy.h"
 
-PushTask::PushTask( TentApp* pApp, 
-                    FileManager* pFm, 
-                    CredentialsManager* pCm,
-                    TaskArbiter* pTa,
-                    TaskFactory* pTf,
-                    const AccessToken& at,
-                    const Entity& entity,
-                    const std::string& filepath,
-                    const std::string& tempdir,
-                    const std::string& workingdir,
-                    const std::string& configdir,
-                    TaskDelegate* callbackDelegate)
-                    :
-                    TentTask ( Task::PUSH,
-                               pApp,
-                               pFm,
-                               pCm,
-                               pTa,
-                               pTf,
-                               at,
-                               entity,
-                               filepath,
-                               tempdir,
-                               workingdir,
-                               configdir,
-                               callbackDelegate)
+PushTask::PushTask(FileManager* pFm, 
+                   CredentialsManager* pCm,
+                   const AccessToken& at,
+                   const Entity& entity,
+                   const std::string& filepath,
+                   const std::string& tempdir,
+                   const std::string& workingdir,
+                   const std::string& configdir,
+                   TaskDelegate* callbackDelegate)
+                   :
+                   TentTask (Task::PUSH,
+                             pFm,
+                             pCm,
+                             at,
+                             entity,
+                             filepath,
+                             tempdir,
+                             workingdir,
+                             configdir,
+                             callbackDelegate)
 {
 }
 
-PushTask::~PushTask()
-{
-}
+PushTask::~PushTask() {}
 
 void PushTask::RunTask() {
     // Run the task

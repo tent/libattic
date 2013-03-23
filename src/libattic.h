@@ -31,8 +31,6 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
                                      const char* szConfigDirectory); // Config Directory
 const char* GetAuthorizationURL();
 
-const char* GetEntityApiRoot(const char* szEntityUrl);
-
 // Api begin
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
@@ -74,9 +72,6 @@ int PollFiles(void);
 
 int Pause(void);
 int Resume(void);
-
-// TODO :: These two methods are just temporarily exposed, to be used internally only
-int SyncFiles(void);
 
 const char** GetQuestionList();
 

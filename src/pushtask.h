@@ -14,11 +14,8 @@ class PushTask : public TentTask {
     int PushFile(const std::string& filepath);
 
 public:
-    PushTask(TentApp* pApp, 
-             FileManager* pFm, 
+    PushTask(FileManager* pFm, 
              CredentialsManager* pCm,
-             TaskArbiter* pTa,
-             TaskFactory* pTf,
              const AccessToken& at,
              const Entity& entity,
              const std::string& filepath,

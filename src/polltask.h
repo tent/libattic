@@ -23,18 +23,15 @@ class PollTask : public TentTask {
 public:
     void PollTaskCB(int a, std::string& b);
 
-    PollTask( TentApp* pApp,
-              FileManager* pFm,
-              CredentialsManager* pCm,
-              TaskArbiter* pTa,
-              TaskFactory* pTf,
-              const AccessToken& at,
-              const Entity& entity,
-              const std::string& filepath,
-              const std::string& tempdir,
-              const std::string& workingdir,
-              const std::string& configdir,
-              TaskDelegate* callbackDelegate);
+    PollTask(FileManager* pFm,
+             CredentialsManager* pCm,
+             const AccessToken& at,
+             const Entity& entity,
+             const std::string& filepath,
+             const std::string& tempdir,
+             const std::string& workingdir,
+             const std::string& configdir,
+             TaskDelegate* callbackDelegate);
  
     ~PollTask();
 

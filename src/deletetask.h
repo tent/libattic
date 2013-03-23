@@ -9,18 +9,15 @@ class TaskDelegate;
 
 class DeleteTask : public TentTask {
 public:
-    DeleteTask( TentApp* pApp, 
-                FileManager* pFm, 
-                CredentialsManager* pCm,
-                TaskArbiter* pTa,
-                TaskFactory* pTf,
-                const AccessToken& at,
-                const Entity& entity,
-                const std::string& filepath,
-                const std::string& tempdir, 
-                const std::string& workingdir,
-                const std::string& configdir,
-                TaskDelegate* callbackDelegate);
+    DeleteTask(FileManager* pFm, 
+               CredentialsManager* pCm,
+               const AccessToken& at,
+               const Entity& entity,
+               const std::string& filepath,
+               const std::string& tempdir, 
+               const std::string& workingdir,
+               const std::string& configdir,
+               TaskDelegate* callbackDelegate);
 
     ~DeleteTask();
 

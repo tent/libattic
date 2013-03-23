@@ -33,11 +33,8 @@ private:
     void TaskFinished(int code, Task* pTask);
 
     Task* CreateNewTentTask( Task::TaskType type,                  
-                             TentApp* pApp,                  
                              FileManager* pFm,               
                              CredentialsManager* pCm,        
-                             TaskArbiter* pTa,
-                             TaskFactory* pTf,
                              const AccessToken& at,          
                              const Entity& entity,      
                              const std::string& filepath,    
@@ -62,11 +59,8 @@ public:
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
     Task* GetTentTask( Task::TaskType type,                
-                       TentApp* pApp,                
                        FileManager* pFm,             
                        CredentialsManager* pCm,      
-                       TaskArbiter* pTa,
-                       TaskFactory* pTf,
                        const AccessToken& at,        
                        const Entity& entity,    
                        const std::string& filepath,  
@@ -85,10 +79,6 @@ public:
 
     // Information methods
     int GetNumberOfActiveTasks(const Task::TaskType type); // Depricated
-
-    int GetActiveTaskUploadSpeed(); // Depricated
-    int GetActiveTaskDownloadSpeed(); // Depricated
-
 private:
     TaskPool    m_ActiveTaskPool;
     TaskPool    m_InactiveTaskPool;

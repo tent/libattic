@@ -444,7 +444,9 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 }
 
 
+
 bool g_bDiscover = false;
+/*
 TEST(DISCOVERY, OUTWARD_DISCOVERY)
 {
     if(g_Entity.empty()) return;
@@ -462,7 +464,7 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
     std::cout<<" Getting entity api root ... " << std::endl;
 
     ASSERT_EQ(status, ret::A_OK);
-    std::cout<<" ENTITY API ROOT : " << GetEntityApiRoot(g_Entity.c_str()) << std::endl;
+   // std::cout<<" ENTITY API ROOT : " << GetEntityApiRoot(g_Entity.c_str()) << std::endl;
 
     for(;;)
     {
@@ -475,6 +477,7 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
     ShutdownLibAttic(NULL);
 
 }
+*/
 
 bool g_bSync = false;
 

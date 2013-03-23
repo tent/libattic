@@ -9,11 +9,7 @@
 #include "taskqueue.h"
 #include "threadworker.h"
 
-#include "log.h"
-
-
-void NewThreadFunc(ThreadWorker *pWorker)
-{
+void NewThreadFunc(ThreadWorker *pWorker) {
     std::cout<<" thread starting " << std::endl;
     if(pWorker) {
         pWorker->Run();
@@ -23,21 +19,14 @@ void NewThreadFunc(ThreadWorker *pWorker)
     std::cout<<" thread ending " << std::endl;
 }
 
-ThreadPool::ThreadPool()
-{                                               
-}                                               
+ThreadPool::ThreadPool() {}                                               
+ThreadPool::~ThreadPool() {}
 
-ThreadPool::~ThreadPool()
-{
-}
-
-int ThreadPool::Initialize()
-{
+int ThreadPool::Initialize() {
     return ret::A_OK;
 }
 
-int ThreadPool::Shutdown()
-{
+int ThreadPool::Shutdown() {
     std::cout<<" shutting down pool " << std::endl;
     for(unsigned int i=0; i<m_Workers.size(); i++) {
         m_Workers[i]->SetThreadExit();
@@ -61,8 +50,7 @@ int ThreadPool::Shutdown()
     return ret::A_OK;
 }
 
-int ThreadPool::ExtendPool(unsigned int stride)
-{
+int ThreadPool::ExtendPool(unsigned int stride) {
     std::cout<<" extending thread pool " << std::endl;
     int status = ret::A_OK;
 
@@ -82,8 +70,7 @@ int ThreadPool::ExtendPool(unsigned int stride)
     return status;
 }
 
-int ThreadPool::AbridgePool(unsigned int stride)
-{
+int ThreadPool::AbridgePool(unsigned int stride) {
     int status = ret::A_OK;
     std::cout<<" not implemented " <<std::endl;
     /*

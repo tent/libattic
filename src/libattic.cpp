@@ -22,14 +22,12 @@
 #include "pulltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "synctask.h"
 
 #include "constants.h"
 #include "credentials.h"
 #include "profile.h"
 
 #include "libatticutils.h"
-#include "log.h"
 
 #include "taskmanager.h"
 #include "filesystem.h"
@@ -54,12 +52,10 @@ static bool g_bEnteredPassphrase = false;
 static bool g_bLibInitialized = false;
 
 int LoadMasterKey(); // call with a valid phrase token
-
 int DecryptMasterKey(const std::string& phraseKey, const std::string& iv);
-
 int IsLibInitialized(bool checkPassphrase = true);
 
-Client* pClient = NULL;
+Client* g_pClient = NULL;
 
 //////// API start
 int InitLibAttic( const char* szWorkingDirectory, 
@@ -75,16 +71,16 @@ int InitLibAttic( const char* szWorkingDirectory,
     utils::SeedRand();
 
     std::string t;
-    pClient = new Client(szWorkingDirectory,
+    g_pClient = new Client(szWorkingDirectory,
                          szConfigDirectory,
                          szTempDirectory,
                          szEntityURL);
                           
-    pClient->Initialize();
-    pClient->LoadAppFromFile();
-    pClient->LoadAccessToken();
-    pClient->LoadEntity();
-    pClient->LoadPhraseToken();
+    g_pClient->Initialize();
+    g_pClient->LoadAppFromFile();
+    g_pClient->LoadAccessToken();
+    g_pClient->LoadEntity();
+    g_pClient->LoadPhraseToken();
 
     if(status == ret::A_OK)  {
         // Essential
@@ -96,14 +92,14 @@ int InitLibAttic( const char* szWorkingDirectory,
         }
 
         status = liba::InitializeTaskManager( &g_pTaskManager,
-                                              pClient->GetTentApp(),
-                                              pClient->GetFileManager(),
-                                              pClient->GetCredentialsManager(),
-                                              pClient->GetAccessTokenCopy(),
-                                              *(pClient->GetEntity()),
-                                              pClient->GetTempDirectory(),
-                                              pClient->GetWorkingDirectory(),
-                                              pClient->GetConfigDirectory());
+                                              g_pClient->GetTentApp(),
+                                              g_pClient->GetFileManager(),
+                                              g_pClient->GetCredentialsManager(),
+                                              g_pClient->GetAccessTokenCopy(),
+                                              *(g_pClient->GetEntity()),
+                                              g_pClient->GetTempDirectory(),
+                                              g_pClient->GetWorkingDirectory(),
+                                              g_pClient->GetConfigDirectory());
 
         event::EventSystem::GetInstance()->Initialize();
         g_CallbackHandler.Initialize();
@@ -128,10 +124,10 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     event::ShutdownEventSystem();
     g_pTaskManager = NULL;
 
-    if(pClient) {
-        pClient->Shutdown();
-        delete pClient;
-        pClient = NULL;
+    if(g_pClient) {
+        g_pClient->Shutdown();
+        delete g_pClient;
+        g_pClient = NULL;
     }
 
     if(callback)
@@ -253,15 +249,6 @@ int DeleteFile(const char* szFilePath) {
     return status;
 }
 
-int SyncFiles(void) {
-    int status = IsLibInitialized();
-
-    if(status == ret::A_OK)
-        status = g_pTaskManager->SyncFiles(NULL);
-
-    return status;
-}
-
 int PollFiles(void) {
     int status = IsLibInitialized();
 
@@ -275,7 +262,7 @@ int GetMasterKeyFromProfile(std::string& out) {
     std::cout<<" Getting master key from profile ... " << std::endl;
     int status = ret::A_OK;
 
-    Profile* prof = pClient->GetEntity()->GetFrontProfile();
+    Profile* prof = g_pClient->GetEntity()->GetFrontProfile();
     if(prof) {
         AtticProfileInfo* atpi = prof->GetAtticInfo();
         if(atpi)
@@ -321,9 +308,9 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv) {
                             masterKey.SetMasterKey(keyActual);
 
                             // Insert Into Credentials Manager
-                            pClient->GetCredentialsManager()->SetMasterKey(masterKey);
+                            g_pClient->GetCredentialsManager()->SetMasterKey(masterKey);
                             // Set the phrase key
-                            pClient->SetPhraseKey(phraseKey);
+                            g_pClient->SetPhraseKey(phraseKey);
                             g_bEnteredPassphrase = true;
                         }
                         else {
@@ -362,18 +349,18 @@ int RegisterPassphrase(const char* szPass, bool override) {
         //TODO :: figure out way to check if there is a passphrase already set, then warn against overwrite
         status = ret::A_FAIL_REGISTER_PASSPHRASE;
 
-        if(!pClient->GetEntity()->HasAtticProfileMasterKey() || override) {
+        if(!g_pClient->GetEntity()->HasAtticProfileMasterKey() || override) {
             // Register a new passphrase.
             std::string key;
             // Enter passphrase to generate key.
-            pClient->GetCredentialsManager()->GenerateMasterKey(key); // Generate random master key
+            g_pClient->GetCredentialsManager()->GenerateMasterKey(key); // Generate random master key
 
             std::string recoverykey;
 
             std::cout<<" MASTER KEY : " << key << std::endl;
             status = pass::RegisterPassphraseWithAttic(std::string(szPass), 
                                                        key, // master key
-                                                       pClient,
+                                                       g_pClient,
                                                        recoverykey);
              if(status == ret::A_OK) {
                 std::cout<<" RAISING EVENT : " << recoverykey << std::endl;
@@ -402,14 +389,14 @@ int EnterPassphrase(const char* szPass) {
         // Get Information from entity
 
         // Force download entity
-        pClient->LoadEntity(true);
+        g_pClient->LoadEntity(true);
 
         std::string salt;
-        pClient->GetPhraseToken()->GetSalt(salt);
+        g_pClient->GetPhraseToken()->GetSalt(salt);
 
         std::cout<<" entering pass ... " << std::endl;
         std::string phraseKey;
-        status = pClient->GetCredentialsManager()->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
+        status = g_pClient->GetCredentialsManager()->EnterPassphrase(szPass, salt, phraseKey); // Enter passphrase to generate key.
 
         //std::cout<<" PHRASE KEY : " << phraseKey << std::endl;
         //std::cout<<" SALT : " << salt << std::endl;
@@ -440,7 +427,7 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
         if(status == ret::A_OK) {
             // Get the master key
             MasterKey mk;
-            pClient->GetCredentialsManager()->GetMasterKeyCopy(mk);
+            g_pClient->GetCredentialsManager()->GetMasterKeyCopy(mk);
 
             // Register new passphrase with attic
             std::string key;
@@ -449,7 +436,7 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
             std::string recoverykey;
             status = pass::RegisterPassphraseWithAttic( std::string(szNew), 
                                                         key, // master key
-                                                        pClient,
+                                                        g_pClient,
                                                         recoverykey);
             if(status == ret::A_OK){
                 event::RaiseEvent(event::Event::RECOVERY_KEY, recoverykey, NULL);
@@ -467,12 +454,12 @@ int EnterRecoveryKey(const char* szRecovery) {
     if(status == ret::A_OK) {
 
         std::string recovery_key(szRecovery);
-        status = pClient->LoadEntity(true);
+        status = g_pClient->LoadEntity(true);
         if(status == ret::A_OK) {
             std::string masterkey;
             status = pass::EnterRecoveryKey(recovery_key, 
-                                            pClient->GetCredentialsManager(), 
-                                            *(pClient->GetEntity()),
+                                            g_pClient->GetCredentialsManager(), 
+                                            *(g_pClient->GetEntity()),
                                             masterkey);
 
             std::cout<<" MASTER KEY : " << masterkey << std::endl;
@@ -482,7 +469,7 @@ int EnterRecoveryKey(const char* szRecovery) {
                 std::string new_recovery_key;
                 status = pass::RegisterPassphraseWithAttic(temppass, 
                                                            masterkey,
-                                                           pClient,
+                                                           g_pClient,
                                                            new_recovery_key);
 
                 if(status == ret::A_OK) {
@@ -512,7 +499,7 @@ int RegisterQuestionAnswerKey(const char* q1,
                               const char* a2, 
                               const char* a3)
 {
-    int status = pClient->LoadEntity(true);
+    int status = g_pClient->LoadEntity(true);
     if(status == ret::A_OK) {
         std::string questionOne(q1);
         std::string questionTwo(q2);
@@ -521,14 +508,14 @@ int RegisterQuestionAnswerKey(const char* q1,
         std::string answerTwo(a2);
         std::string answerThree(a3);
 
-        if(pClient->GetCredentialsManager()) {
+        if(g_pClient->GetCredentialsManager()) {
             MasterKey mk;
             std::string masterkey;
-            pClient->GetCredentialsManager()->GetMasterKeyCopy(mk);
+            g_pClient->GetCredentialsManager()->GetMasterKeyCopy(mk);
             mk.GetMasterKey(masterkey);
             status = pass::RegisterRecoveryQuestionsWithAttic(masterkey, 
-                                                              pClient->GetCredentialsManager(),
-                                                              *(pClient->GetEntity()), 
+                                                              g_pClient->GetCredentialsManager(),
+                                                              *(g_pClient->GetEntity()), 
                                                               questionOne,
                                                               questionTwo,
                                                               questionThree,
@@ -551,7 +538,7 @@ int EnterQuestionAnswerKey(const char* q1,
                            const char* a2, 
                            const char* a3)
 {
-    int status = pClient->LoadEntity(true);
+    int status = g_pClient->LoadEntity(true);
     if(status == ret::A_OK) {
         std::string questionOne(q1);
         std::string questionTwo(q2);
@@ -560,10 +547,10 @@ int EnterQuestionAnswerKey(const char* q1,
         std::string answerTwo(a2);
         std::string answerThree(a3);
 
-        if(pClient->GetCredentialsManager()) {
+        if(g_pClient->GetCredentialsManager()) {
             std::string mkOut;
-            status = pass::EnterRecoveryQuestions(pClient->GetCredentialsManager(),
-                                            *(pClient->GetEntity()),
+            status = pass::EnterRecoveryQuestions(g_pClient->GetCredentialsManager(),
+                                            *(g_pClient->GetEntity()),
                                             questionOne,
                                             questionTwo,
                                             questionThree,
@@ -577,7 +564,7 @@ int EnterQuestionAnswerKey(const char* q1,
                 std::string new_recovery_key;
                 status = pass::RegisterPassphraseWithAttic(temppass, 
                                                            mkOut,
-                                                           pClient,
+                                                           g_pClient,
                                                            new_recovery_key);
 
                 if(status == ret::A_OK) {
@@ -604,15 +591,15 @@ int PhraseStatus() {
 int LoadMasterKey() {
     int status = ret::A_OK;
     // Check for valid phrase token
-    if(pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
+    if(g_pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
         // "Enter Password"
         g_bEnteredPassphrase = false;
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
     }
     else {
         std::string phraseKey, salt;
-        pClient->GetPhraseToken()->GetPhraseKey(phraseKey);
-        pClient->GetPhraseToken()->GetSalt(salt);
+        g_pClient->GetPhraseToken()->GetPhraseKey(phraseKey);
+        g_pClient->GetPhraseToken()->GetSalt(salt);
         status = DecryptMasterKey(phraseKey, salt);
     }   
 
@@ -621,37 +608,20 @@ int LoadMasterKey() {
 
 int IsLibInitialized(bool checkPassphrase) {
     int status = ret::A_OK;
-    if(!pClient)
+    if(!g_pClient)
         return ret::A_FAIL_INVALID_CLIENT;
 
-    if(checkPassphrase && pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
+    if(checkPassphrase && g_pClient->GetPhraseToken()->IsPhraseKeyEmpty()) {
         g_bEnteredPassphrase = false;
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
     }
 
-    if(!pClient->GetTentApp()) status = ret::A_FAIL_INVALID_APP_INSTANCE;
-    if(!pClient->GetCredentialsManager()) status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    if(!pClient->GetFileManager()) status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE; 
+    if(!g_pClient->GetTentApp()) status = ret::A_FAIL_INVALID_APP_INSTANCE;
+    if(!g_pClient->GetCredentialsManager()) status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    if(!g_pClient->GetFileManager()) status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE; 
     //if(!g_bLibInitialized) status = ret::A_FAIL_LIB_INIT;
 
     return status;
-}
-
-const char* GetEntityApiRoot(const char* szEntityUrl) {
-    if(!szEntityUrl) return NULL;
-
-    Entity out;
-    std::string entityurl(szEntityUrl);
-    utils::CheckUrlAndAppendTrailingSlash(entityurl);
-    int status = client::Discover(entityurl, NULL, out);
-
-    std::string apiroot;
-    if(status == ret::A_OK)
-        out.GetApiRoot(apiroot);
-    else
-        alog::Log(Logger::ERROR, "GentEntityApiRoot, libattic.cpp", status);
-
-    return apiroot.c_str();
 }
 
 int GetFileList(void(*callback)(int, char**, int, int)) {
@@ -731,5 +701,4 @@ int Pause(void) {
 int Resume(void) {
     event::RaiseEvent(event::Event::RESUME, "", NULL);
 }
-
 

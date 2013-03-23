@@ -5,7 +5,6 @@
 #include "pulltask.h"
 #include "pushtask.h"
 #include "deletetask.h"
-#include "synctask.h"
 #include "queryfilestask.h"
 #include "polltask.h"
 #include "syncfiletask.h"
@@ -54,11 +53,8 @@ void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
 }
 
 Task* TaskFactory::GetTentTask( Task::TaskType type,                
-                                TentApp* pApp,                
                                 FileManager* pFm,             
                                 CredentialsManager* pCm,      
-                                TaskArbiter* pTa,
-                                TaskFactory* pTf,
                                 const AccessToken& at,        
                                 const Entity& entity,    
                                 const std::string& filepath,  
@@ -74,11 +70,8 @@ Task* TaskFactory::GetTentTask( Task::TaskType type,
     // Otherwise create a new task
     Task* t = NULL;
     t = CreateNewTentTask( type,
-                           pApp,      
                            pFm,       
                            pCm,
-                           pTa,
-                           pTf,
                            at,
                            entity,    
                            filepath,  
@@ -133,11 +126,8 @@ Task* TaskFactory::CreateNewManifestTask( Task::TaskType type,
 }
 
 Task* TaskFactory::CreateNewTentTask( Task::TaskType type,                  
-                                      TentApp* pApp,                  
                                       FileManager* pFm,               
                                       CredentialsManager* pCm,        
-                                      TaskArbiter* pTa,
-                                      TaskFactory* pTf,
                                       const AccessToken& at,          
                                       const Entity& entity,      
                                       const std::string& filepath,    
@@ -152,11 +142,8 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
     {
         case Task::PUSH:
         {
-            t = new PushTask( pApp,                            
-                              pFm,                    
+            t = new PushTask( pFm,
                               pCm,                    
-                              pTa,
-                              pTf,
                               at,
                               entity,                          
                               filepath,                        
@@ -168,11 +155,8 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         }
         case Task::PULL:
         {
-            t = new PullTask( pApp,                             
-                              pFm,                     
+            t = new PullTask( pFm,                     
                               pCm,          
-                              pTa,                     
-                              pTf,
                               at,
                               entity,                           
                               filepath,                         
@@ -184,11 +168,8 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         }
         case Task::DELETE:
         {
-            t = new DeleteTask( pApp,                                  
-                                pFm,                          
+            t = new DeleteTask( pFm,                          
                                 pCm,          
-                                pTa,                          
-                                pTf,
                                 at,
                                 entity,                                
                                 filepath,                              
@@ -200,27 +181,13 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         }
         case Task::SYNC:
         {
-            t = new SyncTask( pApp,                  
-                              pFm,                   
-                              pCm,                   
-                              pTa,                   
-                              pTf,
-                              at,                    
-                              entity,                
-                              filepath,              
-                              tempdir,               
-                              workingdir,            
-                              configdir,             
-                              callbackDelegate);             
+            std::cout<<" called to create sync task ...why?" << std::endl;
             break;
         }
         case Task::SYNC_FILE_TASK:
         {
-            t = new SyncFileTask( pApp,                  
-                                  pFm,                   
+            t = new SyncFileTask( pFm,                   
                                   pCm,                   
-                                  pTa,                   
-                                  pTf,
                                   at,                    
                                   entity,                
                                   filepath,              
@@ -233,11 +200,8 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
         }
         case Task::POLL:
         {
-            t = new PollTask( pApp,                  
-                              pFm,                   
+            t = new PollTask( pFm,                   
                               pCm,                   
-                              pTa,                   
-                              pTf,
                               at,                    
                               entity,                
                               filepath,              
@@ -302,35 +266,5 @@ int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type) // Depricated
     */
 
     return taskcount;
-}
-
-int TaskFactory::GetActiveTaskUploadSpeed() // Depricated
-{
-    int speed = -1;
-    
-    /*
-    m_ActiveTaskPool.Lock();
-    Task* task = m_ActiveTaskPool[Task::PUSH]->front();
-    m_ActiveTaskPool.Unlock();
-
-    if(task->GetTaskType() == Task::PUSH)
-        speed = ((PushTask*)task)->GetUploadSpeed();
-        */
-    return speed;
-}
-
-int TaskFactory::GetActiveTaskDownloadSpeed() // Depricated
-{
-    int speed = -1;
-    
-    /*
-    m_ActiveTaskPool.Lock();
-    Task* task = m_ActiveTaskPool[Task::PULL]->front();
-    m_ActiveTaskPool.Unlock();
-
-    if(task->GetTaskType() == Task::PULL)
-        speed = ((PushTask*)task)->GetUploadSpeed();
-        */
-    return speed;
 }
 

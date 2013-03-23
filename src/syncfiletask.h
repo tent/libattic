@@ -9,7 +9,6 @@
 #include "atticpost.h"
 #include "fileinfo.h"
 
-
 class TaskDelegate;
 class SyncFileTask : public TentTask {
     int SyncMetaData(AtticPost& out);
@@ -20,11 +19,8 @@ class SyncFileTask : public TentTask {
     int ProcessFileInfo(const AtticPost& p);
     int RetrieveChunkInfo(const AtticPost& post, FileInfo* fi);
 public:
-    SyncFileTask(TentApp* pApp,
-                 FileManager* pFm,
+    SyncFileTask(FileManager* pFm,
                  CredentialsManager* pCm,
-                 TaskArbiter* pTa,
-                 TaskFactory* pTf,
                  const AccessToken& at,
                  const Entity& entity,
                  const std::string& filepath,

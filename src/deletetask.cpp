@@ -12,32 +12,26 @@
 #include "softdeletestrategy.h"
 #include "postfilemetadatastrategy.h"
 
-DeleteTask::DeleteTask( TentApp* pApp, 
-                        FileManager* pFm, 
-                        CredentialsManager* pCm,
-                        TaskArbiter* pTa,
-                        TaskFactory* pTf,
-                        const AccessToken& at,
-                        const Entity& entity,
-                        const std::string& filepath,
-                        const std::string& tempdir, 
-                        const std::string& workingdir,
-                        const std::string& configdir,
-                        TaskDelegate* callbackDelegate)
-                        :
-                        TentTask( Task::DELETE,
-                                  pApp,
-                                  pFm,
-                                  pCm,
-                                  pTa,
-                                  pTf,
-                                  at,
-                                  entity,
-                                  filepath,
-                                  tempdir,
-                                  workingdir,
-                                  configdir,
-                                  callbackDelegate)
+DeleteTask::DeleteTask(FileManager* pFm, 
+                       CredentialsManager* pCm,
+                       const AccessToken& at,
+                       const Entity& entity,
+                       const std::string& filepath,
+                       const std::string& tempdir, 
+                       const std::string& workingdir,
+                       const std::string& configdir,
+                       TaskDelegate* callbackDelegate)
+                       :
+                       TentTask(Task::DELETE,
+                                pFm,
+                                pCm,
+                                at,
+                                entity,
+                                filepath,
+                                tempdir,
+                                workingdir,
+                                configdir,
+                                callbackDelegate)
 {
 }
 

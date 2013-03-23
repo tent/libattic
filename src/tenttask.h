@@ -4,38 +4,29 @@
 
 #include <string>
 
-#include "tentapp.h"
 #include "task.h"
 #include "entity.h"
 #include "filemanager.h"
 #include "credentialsmanager.h"
-#include "taskarbiter.h"
-#include "taskfactory.h"
 #include "taskdelegate.h"
 
 class TentTask : public Task {
 public:
-    TentTask( Task::TaskType type,
-              TentApp* pApp, 
-              FileManager* pFm, 
-              CredentialsManager* pCm,
-              TaskArbiter* pTa,
-              TaskFactory* pTf,
-              const AccessToken& at,
-              const Entity& entity,
-              const std::string& filepath,
-              const std::string& tempdir, 
-              const std::string& workingdir,
-              const std::string& configdir,
-              TaskDelegate* callbackDelegate = NULL)
-              : 
-              Task(type)
+    TentTask(Task::TaskType type,
+             FileManager* pFm, 
+             CredentialsManager* pCm,
+             const AccessToken& at,
+             const Entity& entity,
+             const std::string& filepath,
+             const std::string& tempdir, 
+             const std::string& workingdir,
+             const std::string& configdir,
+             TaskDelegate* callbackDelegate = NULL)
+             : 
+             Task(type)
     {
-        m_pTentApp              = pApp;
         m_pFileManager          = pFm;
         m_pCredentialsManager   = pCm;
-        m_pTaskArbiter          = pTa;
-        m_pTaskFactory          = pTf;
 
         m_At = at;
 
@@ -53,11 +44,8 @@ public:
     }                                                                       
 
     virtual ~TentTask() {
-        m_pTentApp              = NULL;
         m_pFileManager          = NULL;
         m_pCredentialsManager   = NULL;
-        m_pTaskArbiter          = NULL;
-        m_pTaskFactory          = NULL;
         m_pCallbackDelegate     = NULL;
     }
 
@@ -75,17 +63,11 @@ public:
     void GetWorkingDirectory(std::string& out)  { out = m_WorkingDirectory; }
     void GetConfigDirectory(std::string& out)   { out = m_ConfigDirectory; }
 
-    TentApp*            GetTentApp()            { return m_pTentApp; }
     FileManager*        GetFileManager()        { return m_pFileManager; } 
     CredentialsManager* GetCredentialsManager() { return m_pCredentialsManager; } 
-    TaskArbiter*        GetTaskArbiter()        { return m_pTaskArbiter; } 
-    TaskFactory*        GetTaskFactory()        { return m_pTaskFactory; }
 
-    void SetTentApp(TentApp* pApp)                        { m_pTentApp = pApp; }
     void SetFileManager(FileManager* pFm)                 { m_pFileManager = pFm; }
     void SetCredentialsManager(CredentialsManager* pCm)   { m_pCredentialsManager = pCm; }
-    void SetTaskArbiter(TaskArbiter* pTa)                 { m_pTaskArbiter = pTa; }
-    void SetTaskFactory(TaskFactory* pTf)                 { m_pTaskFactory = pTf; }
 
     void SetAccessToken(const AccessToken& at)                  { m_At = at; }
     void SetEntity(const Entity& entity)                        { m_Entity = entity; }
@@ -121,11 +103,8 @@ private:
     std::string          m_ConfigDirectory;
 
     // Shared ptrs,
-    TentApp*             m_pTentApp;  // TODO :: take a look at if this is actually being used
     FileManager*         m_pFileManager;
     CredentialsManager*  m_pCredentialsManager;
-    TaskArbiter*         m_pTaskArbiter;
-    TaskFactory*         m_pTaskFactory;
 
     TaskDelegate* m_pCallbackDelegate;
 };
