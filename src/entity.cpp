@@ -7,7 +7,7 @@
 #include "netlib.h"
 #include "response.h"
 #include "accesstoken.h"
-#include "tentclient.h"
+#include "clientutils.h"
 
 Entity::Entity() {
     m_pActiveProfile = NULL;

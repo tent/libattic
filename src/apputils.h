@@ -12,7 +12,7 @@
 #include "event.h"
 #include "netlib.h"
 #include "response.h"
-#include "tentclient.h"
+#include "clientutils.h"
 #include "entity.h"
 #include "libatticutils.h"
 #include "urlparams.h"

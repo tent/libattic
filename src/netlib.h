@@ -103,50 +103,7 @@ static int InterpretResponse( boost::asio::streambuf& response,
 
 static std::string UriEncode(const std::string & sSrc);
 
-static bool WriteToSSLSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
-                             boost::asio::streambuf& buffer,
-                             const unsigned int retrycount = 20)
-{
-    std::cout<<" WRITING SSL SOCKET " << std::endl;
-
-
-    unsigned int buffersize = buffer.size();
-    std::cout<<" BUFFERSIZE : " << buffersize << std::endl;
-    boost::system::error_code errorcode;
-    int breakcount = 0;
-    do {
-        boost::timer::cpu_timer::cpu_timer t;
-        size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
-        std::cout<<" BYTES WRITTEN : " << byteswritten << std::endl;
-        if(errorcode) {
-            std::cout<<" WRITE ERROR : " << std::endl;
-            std::cout<<errorcode.message()<<std::endl;
-        }
-        else {
-            boost::timer::cpu_times time = t.elapsed();
-            long elapsed = time.user;
-            // To milliseconds
-            elapsed *= 0.000001; 
-            std::cout<<" ELAPSED : " << elapsed << std::endl;
-            if(elapsed > 0) {
-                unsigned int bps = (buffersize/elapsed);
-                // Raise event
-                char szSpeed[256] = {'\0'};
-                snprintf(szSpeed, 256, "%u", bps);
-                event::RaiseEvent(event::Event::UPLOAD_SPEED, std::string(szSpeed), NULL);
-                std::cout<<" SPEEEEED : " << bps << std::endl;
-            }
-        }
-
-        if(breakcount > retrycount)
-            break;
-        breakcount++;
-    }
-    while(errorcode);
-}
-
-static void DeChunkString(std::string& in, std::string& out)
-{
+static void DeChunkString(std::string& in, std::string& out) {
     utils::split splitbody;
 
     // de-chunk the body

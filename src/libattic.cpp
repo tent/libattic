@@ -5,23 +5,13 @@
 #include <string>
 #include <sstream>
 
-#include "credentialsmanager.h"
-#include "filemanager.h"
-#include "entity.h"
-
 #include "utils.h"
 #include "errorcodes.h"
 #include "apputils.h"
 #include "tentapp.h"
-#include "jsonserializable.h"
-#include "urlparams.h"
-#include "post.h"
 
 #include "taskfactory.h"
 #include "taskarbiter.h"
-#include "pulltask.h"
-#include "pushtask.h"
-#include "deletetask.h"
 
 #include "constants.h"
 #include "credentials.h"
@@ -30,15 +20,13 @@
 #include "libatticutils.h"
 
 #include "taskmanager.h"
-#include "filesystem.h"
 
 #include "event.h"
 #include "callbackhandler.h"
 #include "passphrase.h"
-#include "tentclient.h"
 
-#include <cbase64.h>
 #include "atticclient.h"
+#include "clientutils.h"
 
 static TaskManager*         g_pTaskManager = NULL;      // move to service
 static CallbackHandler      g_CallbackHandler;          // move to service
