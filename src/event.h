@@ -123,10 +123,10 @@ static void RaiseEvent( const Event::EventType type,
     RaiseEvent(event);
 }
 
+
 static void ShutdownEventSystem() {
     EventSystem::GetInstance()->Shutdown();
 }
-
 
 };
 #endif

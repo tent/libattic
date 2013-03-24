@@ -177,7 +177,6 @@ Profile Profile::operator=(const Profile& rhs) {
 }
 
 Profile::~Profile() {
-    /*
     if(m_pAtticInfo) {
         delete m_pAtticInfo;
         m_pAtticInfo = NULL; 
@@ -192,7 +191,6 @@ Profile::~Profile() {
         delete m_pBasicInfo;
         m_pBasicInfo = NULL;
     }
-    */
 }
 
 void Profile::Serialize(Json::Value& root) {

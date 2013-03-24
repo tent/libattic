@@ -41,6 +41,7 @@
 #include "threadworker.h"
 #include "filequeue.h"
 #include "callbackhandler.h"
+#include "atticclient.h"
 
 // Globals
 std::string g_Entity;
@@ -1097,20 +1098,8 @@ TEST(FILEINFO, POSTVERSION)
 }
 
 
-int main (int argc, char* argv[])
-{
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  "./config/logs",
-                  g_Entity.c_str());
-
-
-    ShutdownLibAttic(NULL);
-    return 0;
-
-    //int status = 0;
+int main (int argc, char* argv[]) {
+   int status = 0;
 
     if(argc > 1) {
         int optcount = 14;

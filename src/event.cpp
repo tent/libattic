@@ -17,12 +17,16 @@ void EventSystem::Shutdown() {
         itr->second.clear();
     }
     m_ListenerMap.clear();
+    m_listenMtx.Unlock();
+    m_queueMtx.Lock();
+    m_EventQueue.clear();
+    m_queueMtx.Unlock();
 
     if(m_pInstance) {
         delete m_pInstance;
         m_pInstance = NULL;
     }
-    m_listenMtx.Unlock();
+
 }
 
 void EventSystem::ProcessEvents() {

@@ -20,6 +20,7 @@ static void RetrieveEntityProfiles(const AccessToken& at, Entity& ent) {
         Entity::UrlList::const_iterator itr = ProfUrlList->begin();
 
         std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
+        std::cout<<" TOKEN : " << at.GetAccessToken() << std::endl;
 
         while(itr != ProfUrlList->end()) {
             Response response;
