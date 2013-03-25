@@ -24,7 +24,6 @@ using boost::asio::ip::tcp;
 #include <sha.h>
 #include <base64.h>     // cryptopp
  
-#include "log.h"
 #include "url.h"
 #include "urlparams.h"
 #include "utils.h"
@@ -205,7 +204,6 @@ static int HttpGet( const std::string& url,
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
-        alog::Log(Logger::ERROR, e.what());
         status = ret::A_FAIL_EXCEPTION;
     }
 
@@ -604,7 +602,6 @@ static int HttpDelete( const std::string& url,
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
-        alog::Log(Logger::ERROR, e.what());
         status = ret::A_FAIL_EXCEPTION;
     }
 
@@ -921,9 +918,6 @@ static int ResolveHost( boost::asio::io_service& io_service,
     if (error) {
         std::cout<<" Resolve host error : " << boost::system::system_error(error).what() << std::endl;
         //throw boost::system::system_error(error); 
-        alog::Log( Logger::ERROR, 
-                   boost::system::system_error(error).what(), 
-                   ret::A_FAIL_TCP_ENDPOINT_NOT_FOUND);
         status = ret::A_FAIL_TCP_ENDPOINT_NOT_FOUND;
     }
 
@@ -1123,7 +1117,6 @@ static int HttpAsioMultipartRequest( const std::string& requestType, // POST, PU
         errexception += "netlib exception ";
         errexception += e.what();
 
-        alog::Log(Logger::ERROR, errexception , ret::A_FAIL_EXCEPTION);
         status = ret::A_FAIL_EXCEPTION;
     }
 

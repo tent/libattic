@@ -49,7 +49,6 @@ static Client* g_pClient = NULL;
 int InitLibAttic( const char* szWorkingDirectory, 
                   const char* szConfigDirectory,
                   const char* szTempDirectory,
-                  const char* szLogDirectory,
                   const char* szEntityURL,
                   unsigned int threadCount)
 {
@@ -312,7 +311,6 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv) {
                         }
                         else {
                             status = ret::A_FAIL_SENTINEL_MISMATCH;
-                            alog::Log(Logger::ERROR, " Failed to decrypt master key : ", status);
                         }
                     }
                     else {

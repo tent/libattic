@@ -227,9 +227,6 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 
         ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
         if (error) {
-            alog::Log( Logger::ERROR, 
-                       boost::system::system_error(error).what(), 
-                       ret::A_FAIL_SSL_HANDSHAKE);
             status = ret::A_FAIL_SSL_HANDSHAKE;
         }
         if(status != ret::A_OK)

@@ -23,7 +23,6 @@
 #include "url.h"
 #include "threading.h"
 #include "rollsum.h"
-#include "log.h"
 
 #include "netlib.h"
 #include "compression.h"
@@ -149,7 +148,6 @@ TEST(PASSPHRASE, REGISTER)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
    
     if(status == ret::A_OK) {
@@ -183,7 +181,6 @@ TEST(PASSPHRASE, ENTER)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     status = EnterPassphrase("password");
@@ -206,7 +203,6 @@ TEST(PASSPHRASE, CHANGE)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
 
@@ -245,7 +241,6 @@ TEST(PASSPHRASE, RECOVER)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
@@ -272,7 +267,6 @@ TEST(AFILE, PUSH)
     int status = InitLibAttic("./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
     
     std::cout<<" INIT STATUS : " << status << std::endl;
@@ -336,7 +330,6 @@ TEST(AFILE, PULL)
                   "./data",
                   "./config",
                   temppath.c_str(),
-                  "./config/logs",
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
@@ -380,7 +373,6 @@ TEST(AFILE, DELETE)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
@@ -428,7 +420,6 @@ TEST(MANIFEST, QUERY_ALL_FILES)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
@@ -452,7 +443,6 @@ TEST(INIT, SHUTDOWN)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     ASSERT_EQ(status, ret::A_OK);
@@ -473,7 +463,6 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     std::cout<<" Getting entity api root ... " << std::endl;
@@ -505,7 +494,6 @@ TEST(TEST, SYNC)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
 
     if(status == ret::A_OK) {
@@ -1063,7 +1051,6 @@ TEST(ATTIC, DAEMON)
                   "./data",
                   "./config",
                   "./data/temp",
-                  "./config/logs",
                   g_Entity.c_str());
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, ret::A_OK);

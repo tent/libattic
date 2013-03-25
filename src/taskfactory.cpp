@@ -14,8 +14,6 @@
 #include "taskarbiter.h"
 #include "tentapp.h"
 
-#include "log.h"
-
 TaskFactory::TaskFactory() {}
 TaskFactory::~TaskFactory() {}
 
@@ -228,8 +226,6 @@ void TaskFactory::LogUnknownTaskType(Task::TaskType type)
     sprintf(buf, "%d", type);
     std::string a = "Unknown task type : ";
     a.append(buf);
-
-    alog::Log(Logger::ERROR, a);
 }
 
 int TaskFactory::RemoveActiveTask(Task* pTask) // Depricated
