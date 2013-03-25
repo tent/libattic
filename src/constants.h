@@ -44,6 +44,13 @@ namespace cnst {
     static const unsigned int g_unSplitMax = 1 << 23; // ~8 mbs 
     static const unsigned int g_unMaxBuffer = 1 << 26; // ~67 mbs <-- this needs to be at least 2mbs
 
+    // Config values
+    static const char* g_szConfigTrashPath = "trash_path";      // filepath to trash or recycling bin
+    static const char* g_szConfigUploadLimit = "upload_limit";  // upload limit in mbs
+    static const char* g_szConfigWorkingDir = "working_dir";    // filepath to working directory
+    static const char* g_szConfigTempDir = "temp_dir";          // filepath to temproray directory
+    static const char* g_szConfigConfigDir = "config_dir";      // filepath to config directory
+    static const char* g_szConfigEntityURL = "entity_url";      // entity url
 };
 
 

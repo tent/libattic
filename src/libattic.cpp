@@ -27,6 +27,7 @@
 
 #include "atticclient.h"
 #include "clientutils.h"
+#include "configmanager.h"
 
 static TaskManager*         g_pTaskManager = NULL;      // move to service
 static CallbackHandler      g_CallbackHandler;          // move to service
@@ -46,28 +47,32 @@ int IsLibInitialized(bool checkPassphrase = true);
 static Client* g_pClient = NULL;
 
 //////// API start
-int InitLibAttic( const char* szWorkingDirectory, 
-                  const char* szConfigDirectory,
-                  const char* szTempDirectory,
-                  const char* szEntityURL,
-                  unsigned int threadCount)
-{
+int InitLibAttic(unsigned int threadCount) {
 
     int status = ret::A_OK;
     // Init sequence ORDER MATTERS
     utils::SeedRand();
 
+    // Get config values
+    std::string workingdir, configdir, tempdir, entityurl;
+    ConfigManager::GetInstance()->GetValue(cnst::g_szConfigWorkingDir, workingdir);
+    ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, configdir);
+    ConfigManager::GetInstance()->GetValue(cnst::g_szConfigTempDir, tempdir);
+    ConfigManager::GetInstance()->GetValue(cnst::g_szConfigEntityURL, entityurl);
+
     std::string t;
     std::cout<<" creating new client ... " << std::endl;
-    fs::CreateDirectory(szWorkingDirectory);
-    fs::CreateDirectory(szConfigDirectory);
-    fs::CreateDirectory(szTempDirectory);
-
+    if(!workingdir.empty())
+        fs::CreateDirectory(workingdir);
+    if(!configdir.empty())
+        fs::CreateDirectory(configdir);
+    if(!tempdir.empty())
+        fs::CreateDirectory(tempdir);
     
-    g_pClient = new Client(szWorkingDirectory,
-                         szConfigDirectory,
-                         szTempDirectory,
-                         szEntityURL);
+    g_pClient = new Client(workingdir,
+                           configdir,
+                           tempdir,
+                           entityurl);
                           
     g_pClient->Initialize();
     g_pClient->LoadAppFromFile();
@@ -695,5 +700,11 @@ int Pause(void) {
 
 int Resume(void) {
     event::RaiseEvent(event::Event::RESUME, "", NULL);
+}
+
+void SetConfigValue(const char* szKey, const char* szValue) {
+    std::string key(szKey);
+    std::string value(szValue);
+    ConfigManager::GetInstance()->SetValue(key, value);
 }
 

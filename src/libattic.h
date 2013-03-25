@@ -32,11 +32,7 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 const char* GetAuthorizationURL();
 
 // Api begin
-int InitLibAttic(const char* szWorkingDirectory, 
-                 const char* szConfigDirectory,
-                 const char* szTempDirectory,
-                 const char* szEntityURL,
-                 unsigned int threadCount = 5);
+int InitLibAttic(unsigned int threadCount = 5);
 
 int ShutdownLibAttic(void (*callback)(int, void*));
 
@@ -63,6 +59,8 @@ void RegisterForErrorNotify(void (*callback)(int, int, const char*));
 void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*));
+
+
 
 int PushFile(const char* szFilePath);
 int PullFile(const char* szFilePath);
@@ -95,6 +93,11 @@ int GetFileList(void(*callback)(int, char**, int, int));
 
 // Once finished with the file list, pass back here for memory cleanup
 int FreeFileList(char** pList, int stride);
+
+// Current used values - see constants.h for more
+// thrash_path | <filepath>
+// upload_limit | <limit> (mbs)
+void SetConfigValue(const char* szKey, const char* szValue);
 }
 
 #endif

@@ -144,11 +144,11 @@ TEST(PASSPHRASE, REGISTER)
     if(g_Entity.empty()) return;
     if(!g_bPassphrase) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
    
     if(status == ret::A_OK) {
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
@@ -177,12 +177,11 @@ TEST(PASSPHRASE, ENTER)
     if(g_Entity.empty()) return;
     if(!g_bEnterPass) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
-
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
     status = EnterPassphrase("password");
 
     std::cout<<" Enter passphrase status : " << status << std::endl;
@@ -199,11 +198,11 @@ TEST(PASSPHRASE, CHANGE)
     if(g_Entity.empty()) return;
     if(!g_bChangePass) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
 
     status = ChangePassphrase("UldG3H35RSMo1jqx", "password");
@@ -237,11 +236,11 @@ TEST(PASSPHRASE, RECOVER)
     if(g_recoverykey.empty()) return;
     if(!g_bRecover) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
     status = EnterRecoveryKey(g_recoverykey.c_str());
@@ -264,10 +263,12 @@ TEST(AFILE, PUSH)
     if(g_Entity.empty()) return;
     if(!g_bPush) return;
     
-    int status = InitLibAttic("./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
+
     
     std::cout<<" INIT STATUS : " << status << std::endl;
 
@@ -326,11 +327,11 @@ TEST(AFILE, PULL)
     std::string temp("./data/temp");
     fs::GetCanonicalPath(temp, temppath);
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  temppath.c_str(),
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     ASSERT_EQ(status, ret::A_OK);
 
@@ -369,11 +370,11 @@ TEST(AFILE, DELETE)
     if(g_Entity.empty()) return;
     if(!g_bDelete) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     ASSERT_EQ(status, ret::A_OK);
 
@@ -416,11 +417,11 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     if(g_Entity.empty()) return;
     if(!g_bManifest) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     ASSERT_EQ(status, ret::A_OK);
     GetFileList(Filecb);
@@ -439,11 +440,11 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 TEST(INIT, SHUTDOWN)
 {
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     ASSERT_EQ(status, ret::A_OK);
 
@@ -490,11 +491,11 @@ TEST(TEST, SYNC)
     if(g_Entity.empty()) return;
     if(!g_bSync) return;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     if(status == ret::A_OK) {
 
@@ -1047,11 +1048,12 @@ TEST(ATTIC, DAEMON)
 
     std::cout<<" Initializing daemon ... " << std::endl;
     
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
+
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, ret::A_OK);
 
