@@ -13,21 +13,22 @@
 
 namespace client {
 
-static void RetrieveEntityProfiles(const AccessToken& at, Entity& ent) {
+static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
     unsigned int profcount = ent.GetProfileCount();
     if(profcount) {
         const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
         Entity::UrlList::const_iterator itr = ProfUrlList->begin();
 
         std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
-        std::cout<<" TOKEN : " << at.GetAccessToken() << std::endl;
+        if(at)
+            std::cout<<" TOKEN : " << at->GetAccessToken() << std::endl;
 
         while(itr != ProfUrlList->end()) {
             Response response;
             
             netlib::HttpGet( *itr, 
                              NULL,
-                             &at,
+                             at,
                              response);
  
             if(response.code == 200) {
@@ -159,7 +160,7 @@ static int InitEntity(const std::string& entityurl, const AccessToken* at, Entit
     int status = ret::A_OK;
 
     // Grab entity api root etc
-    RetrieveEntityProfiles(*at, entOut);
+    RetrieveEntityProfiles(at, entOut);
     
     // Set Api root
     Profile* pProf = entOut.GetActiveProfile();

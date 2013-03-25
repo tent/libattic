@@ -186,7 +186,6 @@ TEST(PASSPHRASE, ENTER)
                   "./config/logs",
                   g_Entity.c_str());
 
-
     status = EnterPassphrase("password");
 
     std::cout<<" Enter passphrase status : " << status << std::endl;

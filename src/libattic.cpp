@@ -60,6 +60,11 @@ int InitLibAttic( const char* szWorkingDirectory,
 
     std::string t;
     std::cout<<" creating new client ... " << std::endl;
+    fs::CreateDirectory(szWorkingDirectory);
+    fs::CreateDirectory(szConfigDirectory);
+    fs::CreateDirectory(szTempDirectory);
+
+    
     g_pClient = new Client(szWorkingDirectory,
                          szConfigDirectory,
                          szTempDirectory,

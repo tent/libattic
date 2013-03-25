@@ -23,6 +23,7 @@ int Client::Initialize() {
     int status = ret::A_OK;
     if(!status)
         status = InitializeFileManager();
+    std::cout << " file manager init status : " << status << std::endl;
     if(!status)
         status = InitializeCredentialsManager();
     return status;
@@ -47,6 +48,7 @@ int Client::InitializeFileManager() {
     status = fs::GetCanonicalPath(m_TempDirectory, temp);
 
     if(status == ret::A_OK) {
+        std::cout<<" Initializing file manager ... " << std::endl;
         status = m_FileManager.Initialize(config, working, temp);
     }
     return status;
@@ -55,6 +57,7 @@ int Client::InitializeFileManager() {
 int Client::InitializeCredentialsManager() {
     int status = ret::A_OK;
     std::string config;
+    std::cout<<" config directory : " << m_ConfigDirectory << std::endl;
     status = fs::GetCanonicalPath(m_ConfigDirectory, config);
 
     if(status == ret::A_OK) {

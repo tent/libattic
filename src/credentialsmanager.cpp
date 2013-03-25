@@ -152,6 +152,7 @@ int CredentialsManager::EnterPassphrase(const std::string& pass,
 void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
     // do not lock, used internally
     // Construct path
+    std::cout<<" cred manager config dir : " << m_ConfigDirectory << std::endl;
     out = m_ConfigDirectory;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szAuthTokenName);                       
