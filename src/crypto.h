@@ -114,7 +114,7 @@ static void GenerateIv(std::string& out) {
 }
 
 static bool GenerateHash( const std::string& source, std::string& hashOut) {
-    CryptoPP::SHA256 hash;
+    CryptoPP::SHA512 hash;
 
     CryptoPP::StringSource src( source.c_str(), 
                                 true,
@@ -332,7 +332,7 @@ static int GenerateHMACForString( const std::string& input,
     int status = ret::A_OK;
     std::string mac;
     try {
-        CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+        CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.m_Key, cred.GetKeySize());
         CryptoPP::StringSource( input,
                                 true,
                                 new CryptoPP::HashFilter( hmac,
@@ -384,7 +384,7 @@ static int VerifyHMACForString( const std::string& input,
 
         if(!decoded.empty()) {
 
-            CryptoPP::HMAC<CryptoPP::SHA256> hmac(cred.m_Key, cred.GetKeySize());
+            CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.m_Key, cred.GetKeySize());
 
             const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
         
