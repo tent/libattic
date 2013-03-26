@@ -260,9 +260,10 @@ int PollFiles(void) {
 }
 
 int GetMasterKeyFromProfile(std::string& out) {
+    
     std::cout<<" Getting master key from profile ... " << std::endl;
     int status = ret::A_OK;
-
+/*
     Profile* prof = g_pClient->GetEntity()->GetFrontProfile();
     if(prof) {
         AtticProfileInfo* atpi = prof->GetAtticInfo();
@@ -271,6 +272,7 @@ int GetMasterKeyFromProfile(std::string& out) {
     }
     else
         status = ret::A_FAIL_INVALID_PROFILE;
+        */
 
     return status;
 }
@@ -339,6 +341,7 @@ int DecryptMasterKey(const std::string& phraseKey, const std::string& iv) {
 int RegisterPassphrase(const char* szPass, bool override) {
     int status = IsLibInitialized(false);
 
+    /*
     if(status == ret::A_OK) {
         // TODO :: probably should check if a passphrase already exists
         // TODO :: probably should include static test case to detect if the passphrase entered was wrong.
@@ -371,6 +374,7 @@ int RegisterPassphrase(const char* szPass, bool override) {
         if(status == ret::A_OK)
             EnterPassphrase(szPass); // Load phrase token, and write out to ent file
     }
+    */
 
     return status;
 }
@@ -378,6 +382,7 @@ int RegisterPassphrase(const char* szPass, bool override) {
 int EnterPassphrase(const char* szPass) {
     int status = IsLibInitialized(false);
 
+   /* 
     if(status == ret::A_OK) {
         // Enter the passphrase and generate phrase token
         // TODO :: when entering the passphrase always check against the master key with sentinel
@@ -414,13 +419,13 @@ int EnterPassphrase(const char* szPass) {
             }
         }
     }
-
+*/
     return status;
 }
 
 int ChangePassphrase(const char* szOld, const char* szNew) {
     int status = IsLibInitialized(false);
-
+/*
     if(status == ret::A_OK) {
         status = EnterPassphrase(szOld);
 
@@ -443,6 +448,7 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
             }
         }
     }
+    */
 
     return status;
 }
@@ -450,6 +456,8 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
 int EnterRecoveryKey(const char* szRecovery) {
 
     int status = IsLibInitialized(false);
+/*
+
     if(!szRecovery) status = ret::A_FAIL_INVALID_CSTR;
     if(status == ret::A_OK) {
 
@@ -479,7 +487,7 @@ int EnterRecoveryKey(const char* szRecovery) {
             }
         }
     }
-
+*/
     return status;
 }
 

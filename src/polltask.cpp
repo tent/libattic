@@ -102,7 +102,7 @@ int PollTask::SyncFolderPosts() {
         Entity entity;
         GetEntity(entity);
         std::string url;                                                                   
-        entity.GetApiRoot(url);
+        //entity.GetApiRoot(url); // UPDATE THIS V03
         utils::CheckUrlAndAppendTrailingSlash(url);
         url += "posts";
 

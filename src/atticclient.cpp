@@ -120,29 +120,10 @@ void Client::SetPhraseKey(const std::string& key) {
 }
 
 int Client::ExtractPhraseToken(PhraseToken& out) {
-    int status = ret::A_OK;
-    Profile* prof = m_Entity.GetFrontProfile();
-    if(prof) {
-        AtticProfileInfo* atpi = prof->GetAtticInfo();
-        if(atpi) {
-            std::string salt, iv, key;
-            atpi->GetSalt(salt);
-            atpi->GetIv(iv);
-            atpi->GetMasterKey(key);
+   // TODO :: this with app post 
 
-            out.SetSalt(salt);
-            out.SetIv(iv); // Will be empty, todo : remove iv
-            out.SetDirtyKey(key);
-        }
-        else {
-            status = ret::A_FAIL_INVALID_PROFILE;
-        }
-    }
-    else {
-        status = ret::A_FAIL_INVALID_PROFILE;
-    }
-
-    return status;
+    //return status;
+    return -1;
 }
 
 int Client::LoadAppFromFile() { 
@@ -157,23 +138,22 @@ int Client::LoadAppFromFile() {
 int Client::LoadEntity(bool override) {
     int status = ret::A_OK;
 
+    //VO3
+    /*
     std::string entpath;
     ConstructEntityFilepath(entpath);
     
     // Attempt to load from file
     status = m_Entity.LoadFromFile(entpath);
-    // Check for master key
-    if(!m_Entity.HasAtticProfileMasterKey())
-        status = ret::A_FAIL_INVALID_MASTERKEY;
 
     // If not or overrride, lets attempt discovery
     if(status != ret::A_OK || override) {
-        if(override) m_Entity.Reset();
         status = m_Entity.Discover(m_EntityUrl, &m_At);
 
         if(status == ret::A_OK)
             m_Entity.WriteToFile(entpath);
     }
+    */
     return status;
 }
 

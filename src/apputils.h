@@ -237,8 +237,8 @@ static std::string GetEntityApiRoot(const std::string& entityurl) {
     int status = client::Discover(enturl, NULL, out);
 
     std::string apiroot;
-    if(status == ret::A_OK)
-        out.GetApiRoot(apiroot);
+    //if(status == ret::A_OK)
+        //out.GetApiRoot(apiroot);
 
     return apiroot;
 }

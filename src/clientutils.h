@@ -9,11 +9,13 @@
 #include "constants.h"
 #include "entity.h"
 #include "accesstoken.h"
-#include "profile.h"
 
 namespace client {
 
+
+    // UPDATE ALL OF THIS V03
 static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
+    /*
     unsigned int profcount = ent.GetProfileCount();
     if(profcount) {
         const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
@@ -49,12 +51,14 @@ static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
         if(pProfList)
             ent.SetActiveProfile(&*pProfList->begin());
    }
+   */
 }
 
 static int ExtractProfile( const std::string& entityurl, 
                            Response& response, 
                            Entity& entOut)
 {
+    /*
     int status = ret::A_OK;
 
     if(response.code == 200) {
@@ -95,6 +99,7 @@ static int ExtractProfile( const std::string& entityurl,
     }
 
     return status;
+    */
 }
 
 static int HeadRequestEntity(const std::string& entityurl, Entity& entOut) {
@@ -145,7 +150,7 @@ static int GetRequestEntity(const std::string& entityurl, Entity& entOut) {
                 str.clear();
                 str = tags[i].substr(b, diff);
 
-                entOut.PushBackProfileUrl(str);
+                //entOut.PushBackProfileUrl(str);
             }
         }
     }
@@ -162,6 +167,7 @@ static int InitEntity(const std::string& entityurl, const AccessToken* at, Entit
     // Grab entity api root etc
     RetrieveEntityProfiles(at, entOut);
     
+    /*
     // Set Api root
     Profile* pProf = entOut.GetActiveProfile();
     if(pProf) {
@@ -173,6 +179,7 @@ static int InitEntity(const std::string& entityurl, const AccessToken* at, Entit
     else {
         status = ret::A_FAIL_INVALID_PTR;
     }
+    */
 
     return status;
 }

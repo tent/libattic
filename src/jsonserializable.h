@@ -6,8 +6,7 @@
 #include <iostream>
 #include <json/json.h>
 
-class JsonSerializable
-{
+class JsonSerializable {
 public:
     JsonSerializable() {};
     virtual ~JsonSerializable(){};
@@ -16,15 +15,14 @@ public:
     virtual void Deserialize(Json::Value& root) = 0;
 };
 
-namespace jsn
-{
+namespace jsn {
     static void PrintOutJsonValue(Json::Value* val);
 
     static bool SerializeObject(JsonSerializable* pObj, std::string& output);
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val);
     static bool SerializeJsonValue(Json::Value& root, std::string& output);
     static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec);
-    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec);
+    static void SerializeVector(const std::vector<std::string> &vec, Json::Value &val);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m);
     static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, Json::Value> &m);
@@ -133,9 +131,8 @@ namespace jsn
         }                                                                                       
     }                                                                                           
                                                                                                 
-    static void SerializeVector(Json::Value &val, std::vector<std::string> &vec)
-    {                                                                                           
-        std::vector<std::string>::iterator itr = vec.begin();                                   
+    static void SerializeVector(const std::vector<std::string> &vec, Json::Value &val) {
+        std::vector<std::string>::const_iterator itr = vec.begin();                                   
         for(; itr != vec.end(); itr++)                                                          
             val.append(*itr);                                                                   
     }                                                                                           

@@ -56,7 +56,7 @@ public:
     AccessToken* GetAccessToken()       { return &m_At; }
     AccessToken  GetAccessTokenCopy()   { return m_At; }
     
-    void GetEntityUrl(std::string& out)         { m_Entity.GetEntityUrl(out); }
+    void GetEntityUrl(std::string& out)         { out = m_Entity.entity(); } // refactor this to conform with const string & V03
     void GetEntity(Entity& out)                 { out = m_Entity; }
     void GetFilepath(std::string& out)          { out = m_Filepath; }
     void GetTempDirectory(std::string& out)     { out = m_TempDirectory; } 
@@ -85,7 +85,7 @@ protected:
     void GetApiRoot(std::string& out) {
         Entity entity;
         GetEntity(entity);
-        entity.GetApiRoot(out);
+        //entity.GetApiRoot(out); // UPDATE THIS V03
     }
 
     void ConstructPostUrl(std::string& out) {

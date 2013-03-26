@@ -85,7 +85,7 @@ void Folder::SerializeContents(std::string& out)
     }
 
     Json::Value folderval;
-    jsn::SerializeVector(folderval, serializedList);
+    jsn::SerializeVector(serializedList, folderval);
     jsn::SerializeJsonValue(folderval, out);
 }
 

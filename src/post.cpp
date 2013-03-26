@@ -62,13 +62,13 @@ void Post::Serialize(Json::Value& root)
 
     if(m_Mentions.size() > 0) {
         Json::Value mentions;
-        jsn::SerializeVector(mentions, m_Mentions);
+        jsn::SerializeVector(m_Mentions, mentions);
         root["mentions"] = mentions;
     }
     
     if(m_Licenses.size() > 0) {
         Json::Value licenses;
-        jsn::SerializeVector(licenses, m_Licenses);
+        jsn::SerializeVector(m_Licenses, licenses);
         root["licenses"] = licenses;
     }
 

@@ -66,7 +66,7 @@ void TentApp::Serialize(Json::Value& root)
     if((m_RedirectURIs.size() > 0))
     {
         Json::Value redirecturis;
-        jsn::SerializeVector(redirecturis, m_RedirectURIs);
+        jsn::SerializeVector(m_RedirectURIs, redirecturis);
         root["redirect_uris"] = redirecturis;
     }
 
@@ -80,7 +80,7 @@ void TentApp::Serialize(Json::Value& root)
     if(m_Authorizations.size() > 0)
     {
         Json::Value authorizations;
-        jsn::SerializeVector(authorizations, m_Authorizations);
+        jsn::SerializeVector(m_Authorizations, authorizations);
         root["authorizations"] = authorizations;
     }
 }

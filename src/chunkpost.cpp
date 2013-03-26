@@ -48,7 +48,7 @@ void ChunkPost::Serialize(Json::Value& root)
 
         //std::string cval;
         Json::Value chunkval;
-        jsn::SerializeVector(chunkval, serializedList);
+        jsn::SerializeVector(serializedList, chunkval);
         //jsn::SerializeJsonValue(chunkval, cval);
 
         //root["chunks"] = chunkval;

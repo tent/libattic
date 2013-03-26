@@ -36,12 +36,12 @@ void AtticPost::Serialize(Json::Value& root)
     content["deleted"] = del;
     
     Json::Value chunkposts;//(Json::objectValue);
-    jsn::SerializeVector(chunkposts, m_ChunkPosts);
+    jsn::SerializeVector(m_ChunkPosts, chunkposts);
    
     content["chunk_posts"] = chunkposts;
 
     Json::Value chunkids;
-    jsn::SerializeVector(chunkids, m_ChunkIds);
+    jsn::SerializeVector(m_ChunkIds, chunkids);
     content["chunk_ids"] = chunkids;
     std::string key_data = cb64::base64_encode( reinterpret_cast<const unsigned char*>(m_KeyData.c_str()), 
                                      m_KeyData.size());

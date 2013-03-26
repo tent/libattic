@@ -103,7 +103,7 @@ void FileInfo::GetSerializedChunkData(std::string& out) const
 
     if(chunkList.size() > 0) {
         Json::Value val;
-        jsn::SerializeVector(val, chunkList);
+        jsn::SerializeVector(chunkList, val);
 
         Json::StyledWriter writer;
         out = writer.write(val);

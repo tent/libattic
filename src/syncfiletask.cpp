@@ -180,9 +180,10 @@ int SyncFileTask::RetrieveChunkInfo(const AtticPost& post, FileInfo* fi) {
         std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
         std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
 
+        // TODO :: update this with with new logic V03
         std::string chunkposturl;
-        entity.GetApiRoot(chunkposturl);
-        chunkposturl += "/posts/";
+        //entity.GetApiRoot(chunkposturl);
+        //chunkposturl += "/posts/";
 
         std::vector<std::string>::iterator itr = chunkPosts.begin();
         std::string postid;

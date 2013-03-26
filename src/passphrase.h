@@ -19,9 +19,11 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                                        Client* pClient,
                                        std::string& recoverykey);
 
+/*
 static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
                                          AtticProfileInfo& atticProfile,
                                          Entity& entity);
+                                         */
 
 static int EnterRecoveryKey(const std::string& recoverykey,
                             CredentialsManager* pCm,
@@ -33,11 +35,13 @@ static int DecryptKey(const std::string& encryptedkey,
                       const std::string& iv, 
                       std::string& out);
 
+/*
 static int GenerateRecoveryKey(const std::string& masterkey,
                                CredentialsManager* pCm,
                                AtticProfileInfo& atticProfile,
                                Entity& entity,
                                std::string& recoveryOut);
+                               */
 
 void GeneratePhraseKey(const std::string& phrase, 
                        std::string& salt,
@@ -97,7 +101,10 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                                               encryptedkey);
 
             if(status == ret::A_OK) {
+                // UPDATE THIS V03 NO MORE PROFILES
                 // MasterKey with sentinel and Salt
+                //
+                /*
                 AtticProfileInfo atticProfile;
                 atticProfile.SetMasterKey(encryptedkey);
                 atticProfile.SetSalt(salt);
@@ -113,6 +120,7 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                                                            atticProfile,
                                                            *pEntity);
                 }
+                */
             }
         }
     }
@@ -163,6 +171,8 @@ static int RegisterRecoveryQuestionsWithAttic(const std::string& masterkey,
                                            salt, 
                                            encryptedkey);
         if(status == ret::A_OK) {
+            //UPDATE V03
+            /*
             AtticProfileInfo* atticProfile = entity.GetAtticProfile();
             if(atticProfile) {
                 atticProfile->SetQuestionMasterKey(encryptedkey);
@@ -177,6 +187,7 @@ static int RegisterRecoveryQuestionsWithAttic(const std::string& masterkey,
             else {
                 status = ret::A_FAIL_INVALID_PROFILE;
             }
+            */
         }
     }
 
@@ -194,6 +205,7 @@ static int EnterRecoveryQuestions(CredentialsManager* pCm,
                                   std::string& keyOut)
 {
     int status = ret::A_OK;
+    /*
     AtticProfileInfo* atticProfile = entity.GetAtticProfile();
     if(atticProfile) {
         std::string compound = q1 + q2 + q3 + a1 + a2 + a3;
@@ -212,9 +224,11 @@ static int EnterRecoveryQuestions(CredentialsManager* pCm,
                 keyOut = decrypted_masterkey;
         }
     }
+    */
 
     return status;
 }
+/*
 static int GenerateRecoveryKey(const std::string& masterkey,
                                CredentialsManager* pCm,
                                AtticProfileInfo& atticProfile,
@@ -259,13 +273,14 @@ static int GenerateRecoveryKey(const std::string& masterkey,
 
     return status;
 }
-
+*/
 static int EnterRecoveryKey(const std::string& recoverykey,
                             CredentialsManager* pCm,
                             Entity& entity,
                             std::string& keyOut)
 {
     int status = ret::A_OK;
+    /*
     AtticProfileInfo* atticProfile = entity.GetAtticProfile();
     if(atticProfile) {
         std::string encrypted_masterkey, recovery_salt;
@@ -287,6 +302,7 @@ static int EnterRecoveryKey(const std::string& recoverykey,
             keyOut = decrypted_masterkey;
         }
     }
+    */
 
     return status;
 }
@@ -344,7 +360,7 @@ void GeneratePhraseKey(const std::string& phrase,
     keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
 }
 
-
+/*
 static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
                                          AtticProfileInfo& atticProfile,
                                          Entity& entity)
@@ -387,6 +403,7 @@ static int RegisterPassphraseProfilePost(CredentialsManager* pCm,
 
     return status;
 }
+*/
 
 static int ConstructMasterKey(const std::string& masterkey, 
                               CredentialsManager* pCm,
