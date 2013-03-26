@@ -96,7 +96,7 @@ int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
     postutils::DeserializeAtticPostIntoFileInfo(p, fi);
 
     // Check if file is in manifest
-    int version = p.GetVersion();
+    //int version = p.GetVersion();
     FileManager* fm = GetFileManager();
 
     // Get Local file info
@@ -113,13 +113,16 @@ int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
             std::cout<<" FILE DELETED " << std::endl;
             bPull = false;
         }
+        //TODO VO3
         // compare versions
+        /*
         else if(pLocal_fi->GetPostVersion() < version) {
             std::cout<<" VERSION : " << version << std::endl;
             std::cout<<" LOCAL VERSION " << pLocal_fi->GetPostVersion() << std::endl;
             // if version on the server is newer, pull
             bPull = true;
         }
+        */
         // check if file exists
         else if(!fs::CheckFileExists(canonical_path)) { 
             std::cout<<" checking if file exists --- " << std::endl;
@@ -142,8 +145,8 @@ int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
         // retreive chunk info
         status = RetrieveChunkInfo(p, &fi);
         if(status == ret::A_OK) {
-            std::cout<<" GET FILEINFO VERSION : " << fi.GetPostVersion() << std::endl;
-            std::cout<<" GET POST VERSION : " << version << std::endl;
+            //std::cout<<" GET FILEINFO VERSION : " << fi.GetPostVersion() << std::endl;
+            //std::cout<<" GET POST VERSION : " << version << std::endl;
             std::cout<<" INSERTING " << std::endl;
 
             // insert to file manager

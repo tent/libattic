@@ -12,7 +12,14 @@ void ServerUrls::Serialize(Json::Value& root) {
 }
 
 void ServerUrls::Deserialize(Json::Value& root) {
-
+    app_auth_request  = root.get("app_auth_request", "").asString();
+    app_token_request = root.get("app_token_request", "").asString();
+    posts_feed = root.get("posts_feed", "").asString();
+    new_post = root.get("new_post", "").asString();
+    post = root.get("post", "").asString();
+    post_attachment = root.get("post_attachment", "").asString();
+    batch = root.get("batch", "").asString();
+    server_info = root.get("server_info", "").asString();
 }
 
 EntityServer::EntityServer() {}
@@ -30,6 +37,7 @@ void EntityServer::Serialize(Json::Value& root) {
 void EntityServer::Deserialize(Json::Value& root) {
     version_ = root.get("version", "").asString();
     preference_ = root.get("preference", "").asString();
+
     urls_.Deserialize(root["urls"]);
 }
 

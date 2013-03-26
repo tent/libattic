@@ -131,7 +131,6 @@ static int HttpGet( const std::string& url,
     int status = ret::A_OK;
     using namespace boost::asio::ssl;
     try {
-        // Parse the url, separate the root from the path
         std::string local_url = url;
         if(pParams)
             EncodeAndAppendUrlParams(pParams, local_url);
@@ -161,11 +160,11 @@ static int HttpGet( const std::string& url,
         ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
         boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        if(bSSL)
+        if(bSSL) { 
             ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-
-        if (error) 
-            throw boost::system::system_error(error); 
+            if (error) 
+                throw boost::system::system_error(error); 
+        }
 
         std::string authheader;
         if(at) {
@@ -186,9 +185,7 @@ static int HttpGet( const std::string& url,
             request_stream << "Authorization: " << authheader <<"\r\n";
         request_stream << "Connection: close\r\n\r\n";
 
-        // Send the request.
-        boost::asio::write(ssl_sock, request);
-
+        // Send the request
         boost::asio::streambuf response;
         std::string returnheaders;
         if(bSSL) { 
@@ -310,6 +307,7 @@ static int HttpHead( const std::string& url,
         if(status != ret::A_OK)
             return status;
 
+        std::cout<<" here " << std::endl;
         boost::system::error_code error = boost::asio::error::host_not_found; 
         // setup an ssl context 
         boost::asio::ssl::context ctx( io_service, 
@@ -317,11 +315,11 @@ static int HttpHead( const std::string& url,
         ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
         boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        if(bSSL)
+        if(bSSL) {
             ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-
-        if (error) 
-            throw boost::system::system_error(error); 
+            if (error)
+                throw boost::system::system_error(error); 
+        }
 
         std::string authheader;
         if(at) {
@@ -890,12 +888,22 @@ static void ChunkEnd(boost::asio::streambuf& part, std::ostream& outstream) {
     outstream << "\r\n" << reqbuf.str() << "\r\n0\r\n\r\n";
 }
 
-static int ResolveHost( boost::asio::io_service& io_service, 
-                        tcp::socket& socket,
-                        const std::string& host,
-                        const bool ssl)
+static int ResolveHost(boost::asio::io_service& io_service, 
+                       tcp::socket& socket,
+                       const std::string& host,
+                       const bool ssl)
 {
     int status = ret::A_OK;
+
+    std::cout<<" host " << host << std::endl;
+    std::string resolve_host = host;
+    // Extract port (if one exists)
+    std::string port;
+    int pos = host.find(":");
+    if(pos != std::string::npos) { 
+        port = host.substr(pos+1);
+        resolve_host = host.substr(0, pos);
+    }
 
     boost::system::error_code error = boost::asio::error::host_not_found; 
 
@@ -905,8 +913,15 @@ static int ResolveHost( boost::asio::io_service& io_service,
     std::string protocol("https");
     if(!ssl)
         protocol = "http";
-    tcp::resolver::query query(host, protocol.c_str());
 
+    if(port.empty())
+        port = protocol;
+    
+    std::cout<<" HOST : " << resolve_host << std::endl;
+    std::cout<<" PORT : " << port << std::endl;
+
+    tcp::resolver::query query(resolve_host, port);
+    //tcp::resolver::query query(host, protocol, boost::asio::ip::resolver_query_base::numeric_service);
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query); 
     tcp::resolver::iterator end; 
     

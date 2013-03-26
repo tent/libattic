@@ -451,8 +451,8 @@ TEST(INIT, SHUTDOWN)
     ShutdownLibAttic(NULL);
 }
 
+#include "clientutils.h"
 bool g_bDiscover = false;
-/*
 TEST(DISCOVERY, OUTWARD_DISCOVERY)
 {
     if(g_Entity.empty()) return;
@@ -460,11 +460,15 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 
     std::cout<<" init ? " << std::endl;
 
-    int status = InitLibAttic( 
-                  "./data",
-                  "./config",
-                  "./data/temp",
-                  g_Entity.c_str());
+    Entity ent;
+    client::Discover(g_Entity, NULL, ent);
+
+    /*
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
 
     std::cout<<" Getting entity api root ... " << std::endl;
 
@@ -480,9 +484,9 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
     }
 
     ShutdownLibAttic(NULL);
+    */
 
 }
-*/
 
 bool g_bSync = false;
 

@@ -1,26 +1,22 @@
 #include "post.h"
 
+#include <stdio.h>
 #include "tentapp.h"
 
-Post::Post()
-{
+Post::Post() {
     m_TentApp = 0;
     m_PublishedAt = 0;
     m_ReceivedAt = 0;
-    m_Version = 0;
 }
 
-Post::~Post()
-{
-    if(m_Attachments.size() > 0)
-    {
+Post::~Post() {
+    if(m_Attachments.size() > 0) {
         std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
 
         AttachmentVec::iterator itr = m_Attachments.begin();
 
         Attachment* pAtch=0;
-        for(;itr != m_Attachments.end();)
-        {
+        for(;itr != m_Attachments.end();) {
             //pAtch = *itr;
             itr++;
             /*
@@ -36,21 +32,16 @@ Post::~Post()
 
         m_Attachments.clear();
         std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
-
-
     }
 }
 
-//void Post::GetContent(const std::string& key, std::string& out)
-void Post::GetContent(const std::string& key, Json::Value& out)
-{
+void Post::GetContent(const std::string& key, Json::Value& out) {
     ContentMap::iterator itr = m_Content.find(key);
     if(itr != m_Content.end())
         out = itr->second;
 }
 
-void Post::Serialize(Json::Value& root)
-{
+void Post::Serialize(Json::Value& root) {
     // General Post
     if(!m_ID.empty())
         root["id"] = m_ID;
@@ -105,14 +96,16 @@ void Post::Serialize(Json::Value& root)
     //root["version"] = m_Version;
 }
 
-void Post::Deserialize(Json::Value& root)
-{
+void Post::Deserialize(Json::Value& root) {
     // General Post
     m_ID            = root.get("id", "").asString();
     m_Entity        = root.get("entity", "").asString();
-    m_PublishedAt   = root.get("published_at", 0).asInt(); 
-    m_ReceivedAt    = root.get("received_at", 0).asInt();
-    m_Version       = root.get("version", 0).asUInt();
+    std::string pub = root.get("published_at", "").asString();
+    m_PublishedAt = atoi(pub.c_str());
+    std::string rec = root.get("received_at", "").asString();
+    m_ReceivedAt = atoi(rec.c_str());
+
+    jsn::DeserializeObject(&version_, root["version"]);
 
     jsn::DeserializeIntoVector(root["mentions"], m_Mentions);
     jsn::DeserializeIntoVector(root["licenses"], m_Licenses);

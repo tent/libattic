@@ -57,27 +57,44 @@ int Entity::LoadFromFile(const std::string& filepath) {
 
 void Entity::Serialize(Json::Value& root) {
     root["entity"] = entity_;
-
     
-    ServerList::iterator itr = server_list_.begin();
-
     Json::Value server_arr(Json::arrayValue);
-    for(;itr!= server_list_.end(); itr++) {
-        Json::Value serv(Json::objectValue);
-        (*itr).Serialize(serv);
-        server_arr.append(serv);
-    }
+    SerializeServerList(server_arr);
     root["servers"] = server_arr;
 
     Json::Value prev_arr(Json::arrayValue);
-    jsn::SerializeVector(previous_entities_, prev_arr);
+    SerializePreviousEntities(prev_arr);
     root["previous_entities"] = prev_arr;
+}
 
+void Entity::SerializeServerList(Json::Value& val) {
+    ServerList::iterator itr = server_list_.begin();
+    for(;itr!= server_list_.end(); itr++) {
+        Json::Value serv(Json::objectValue);
+        (*itr).Serialize(serv);
+        val.append(serv);
+    }
+}
 
-
+void Entity::SerializePreviousEntities(Json::Value& val) {
+    jsn::SerializeVector(previous_entities_, val);
 }
 
 void Entity::Deserialize(Json::Value& root) {
-   
+    entity_ = root.get("entity", "").asString();
+    DeserializeServerList(root["servers"]);
+    DeserializePreviousEntities(root["previous_entities"]);
 }
 
+void Entity::DeserializeServerList(Json::Value& val) {
+    Json::ValueIterator itr = val.begin();
+    for(;itr!= val.end(); itr++) {
+        EntityServer server;
+        jsn::DeserializeObject(&server, (*itr));
+        server_list_.push_back(server);
+    }
+}
+
+void Entity::DeserializePreviousEntities(Json::Value& val) {
+    jsn::DeserializeObjectValueIntoVector(val, previous_entities_);
+}

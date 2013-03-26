@@ -69,8 +69,9 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         if(status == ret::A_OK) {
                             // Update version
                             char szVer[256] = {'\0'};
-                            snprintf(szVer, 256, "%d", p.GetVersion());
-                            m_pFileManager->SetFileVersion(relative_filepath, std::string(szVer));
+                            std::cout<<" FIX THIS IN GETFILESTRATEGY " << std::endl;
+                            //snprintf(szVer, 256, "%d", p.GetVersion());
+                            //m_pFileManager->SetFileVersion(relative_filepath, std::string(szVer));
                         }
 
                     }

@@ -114,7 +114,8 @@ static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut) {
         post->GetID(postid);
 
         fiOut.SetPostID(postid);
-        fiOut.SetPostVersion(post->GetVersion());
+        //TODO V03
+        //fiOut.SetPostVersion(post->GetVersion());
     }
     else {
         status = ret::A_FAIL_INVALID_PTR;

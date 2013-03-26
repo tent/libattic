@@ -51,6 +51,9 @@ namespace cnst {
     static const char* g_szConfigTempDir = "temp_dir";          // filepath to temproray directory
     static const char* g_szConfigConfigDir = "config_dir";      // filepath to config directory
     static const char* g_szConfigEntityURL = "entity_url";      // entity url
+
+    // Link rel Types
+    static const char* g_szMetaRel = "https://tent.io/rels/meta-post"; // Meta post rel
 };
 
 
