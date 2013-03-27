@@ -10,26 +10,29 @@
 #include "jsonserializable.h"
 #include "accesstoken.h"
 
-class RedirectCode : public JsonSerializable
-{
+class RedirectCode : public JsonSerializable {
 public:
-    RedirectCode();
-    ~RedirectCode();
+    RedirectCode() {}
+    ~RedirectCode() {}
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    std::string GetCode() { return m_Code; }
-    std::string GetTokenType() { return m_TokenType; }
+    const std::string& code() const         { return code_; }
+    const std::string& token_type() const   { return token_type_; }
 
-    void SetCode(const std::string& code) { m_Code = code; }
-    void SetTokenType (const std::string& type) { m_TokenType = type; }
+    void set_code(const std::string& code) { code_ = code; }
+    void set_token_type(const std::string& type) { token_type_ = type; }
 private:
-    std::string m_Code;
-    std::string m_TokenType;
+    std::string code_;
+    std::string token_type_;
 };
 
 class TentApp : public JsonSerializable {
 public:
+    typedef std::vector<std::string> ScopeVec;
+    typedef std::vector<std::string> RedirectVec;
+    typedef std::vector<std::string> AuthVec;
+
     TentApp() {}
     ~TentApp() {}
 
@@ -39,52 +42,46 @@ public:
     ret::eCode SaveToFile(const std::string& filepath);
     ret::eCode LoadFromFile(const std::string& filepath);
 
-    const std::string& GetAppID() const            { return m_AppID; }
-    const std::string& GetAppName() const          { return m_AppName; }
-    const std::string& GetAppDescription() const   { return m_AppDescription; }
-    const std::string& GetAppURL() const           { return m_AppURL; }
-    const std::string& GetAppIcon() const          { return m_AppIcon; }
-    const std::string& GetMacAlgorithm() const     { return m_MacAlgorithm; }
-    const std::string& GetMacKeyID() const         { return m_MacKeyID; }
-    const std::string& GetMacKey() const           { return m_MacKey; }
+    const std::string& app_id() const            { return app_id_; }
+    const std::string& app_name() const          { return app_name_; }
+    const std::string& app_description() const   { return app_description_; }
+    const std::string& app_url() const           { return app_url_; }
+    const std::string& app_icon() const          { return app_icon_; }
+    const std::string& mac_algorithm() const     { return mac_algorithm_; }
+    const std::string& mac_key_id() const        { return mac_key_id_; }
+    const std::string& mac_key() const           { return mac_key_; }
+    ScopeVec* scopes()                           { return &scopes_; }
+    RedirectVec* redirect_uris()                 { return &redirect_uris_;}
+    AuthVec* authorizations()                    { return &authorizations_;}
     
-    typedef std::vector<std::string> ScopeVec;
-    typedef std::vector<std::string> RedirectVec;
-    typedef std::vector<std::string> AuthVec;
+    void set_app_id(const std::string &id)                      { app_id_ = id; }
+    void set_app_name(const std::string &name)                  { app_name_ = name; }
+    void set_app_description(const std::string &description)    { app_description_ = description; }
+    void set_app_url(const std::string &url)                    { app_url_ = url; }
+    void set_app_icon(const std::string &icon)                  { app_icon_ = icon; }
+    void set_mac_algorithm(const std::string &alg)              { mac_algorithm_ = alg; }
+    void set_mac_key_id(const std::string &id)                  { mac_key_id_ = id; }
+    void set_mac_key(const std::string &key)                    { mac_key_ = key; }
+    void set_scopes(const std::vector<std::string>& scopes)         { scopes_ = scopes; }
+    void set_redirect_uris(const std::vector<std::string>& uris)    { redirect_uris_ = uris; }
+    void set_authorizations(const std::vector<std::string>& auth)   { authorizations_ = auth; }
 
-    ScopeVec* GetScopes()           { return &m_Scopes; }
-    RedirectVec* GetRedirectURIs()  { return &m_RedirectURIs;}
-    AuthVec* GetAuthorizations()    { return &m_Authorizations;}
-    
-    void SetAppID(const std::string &szID)                      { m_AppID = szID; }
-    void SetAppName(const std::string &szName)                  { m_AppName = szName; }
-    void SetAppDescription(const std::string &szDescription)    { m_AppDescription = szDescription; }
-    void SetAppURL(const std::string &szURL)                    { m_AppURL = szURL; }
-    void SetAppIcon(const std::string &szIcon)                  { m_AppIcon = szIcon; }
-    void SetMacAlgorithm(const std::string &szAlg)              { m_MacAlgorithm = szAlg; }
-    void SetMacKeyID(const std::string &szID)                   { m_MacKeyID = szID; }
-    void SetMacKey(const std::string &szKey)                    { m_MacKey = szKey; }
-
-    void SetScopes(const std::vector<std::string>& scopes) { m_Scopes = scopes; }
-    void PushBackScope(const std::string &szScope)      { m_Scopes.push_back(szScope); }
-    void SetRedirectUris(const std::vector<std::string>& uris) { m_RedirectURIs = uris; }
-    void PushBackRedirectUri(const std::string &szURI)  { m_RedirectURIs.push_back(szURI); }
-    void SetAuthorizations(const std::vector<std::string>& auth) { m_Authorizations = auth; }
-    void PushBackAuthorization(const std::string &szAuth) { m_Authorizations.push_back(szAuth); }
-
+    void PushBackScope(const std::string &szScope)          { scopes_.push_back(szScope); }
+    void PushBackRedirectUri(const std::string &szURI)      { redirect_uris_.push_back(szURI); }
+    void PushBackAuthorization(const std::string &szAuth)   { authorizations_.push_back(szAuth); }
 private:
-    std::vector<std::string> m_Scopes;
-    std::vector<std::string> m_RedirectURIs;
-    std::vector<std::string> m_Authorizations;
+    std::vector<std::string> scopes_;
+    std::vector<std::string> redirect_uris_;
+    std::vector<std::string> authorizations_;
 
-    std::string m_AppID;
-    std::string m_AppName;
-    std::string m_AppDescription;
-    std::string m_AppURL;
-    std::string m_AppIcon;
-    std::string m_MacAlgorithm;
-    std::string m_MacKeyID;
-    std::string m_MacKey;
+    std::string app_id_;
+    std::string app_name_;
+    std::string app_description_;
+    std::string app_url_;
+    std::string app_icon_;
+    std::string mac_algorithm_;
+    std::string mac_key_id_;
+    std::string mac_key_;
 };
 
 #endif

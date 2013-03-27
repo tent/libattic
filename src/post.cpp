@@ -1,7 +1,6 @@
 #include "post.h"
 
 #include <stdio.h>
-#include "tentapp.h"
 
 void Version::Serialize(Json::Value& root) {
     root["id"] = id;
@@ -50,7 +49,6 @@ void Attachment::Deserialize(Json::Value& root) {
 
 
 Post::Post() {
-    tent_app_ = 0;
     published_at_ = 0;
     received_at_ = 0;
     set_public(false);
@@ -123,11 +121,9 @@ void Post::Serialize(Json::Value& root) {
         // TODO::this
     }
 
-    if(tent_app_) {
-        Json::Value app;
-        tent_app_->Serialize(app); 
-        root["app"] = app;
-    }
+    Json::Value app;
+    tent_app_.Serialize(app); 
+    root["app"] = app;
 
     if(views_.size() > 0) {
         Json::Value views(Json::objectValue);
@@ -186,10 +182,7 @@ void Post::Deserialize(Json::Value& root) {
 
 
     if(!root["app"].isNull()) {
-        std::cout<<" Post deserialize, APP section not null IMPLEMENT THIS PLEASE " << std::endl;
-        //tent_app_ = new TentApp();
-        // TODO :: this
-        //tent_app_->Deserialize(root["app"].asObject());
+        tent_app_.Deserialize(root["app"]);
     }
 
     jsn::DeserializeObjectValueIntoMap(root["views"], views_);

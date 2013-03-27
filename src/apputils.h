@@ -79,12 +79,12 @@ static void InitAppInstance(TentApp& app,
                            std::vector<std::string>& uris,
                            std::vector<std::string>& scopes)
 {
-    app.SetAppName(appName);
-    app.SetAppDescription(appDescription);
-    app.SetAppURL(url);
-    app.SetAppIcon(icon);
-    app.SetRedirectUris(uris);
-    app.SetScopes(scopes);
+    app.set_app_name(appName);
+    app.set_app_description(appDescription);
+    app.set_app_url(url);
+    app.set_app_icon(icon);
+    app.set_redirect_uris(uris);
+    app.set_scopes(scopes);
 }
 
 static int RegisterApp(TentApp& app, 
@@ -150,10 +150,10 @@ int RequestAppAuthorizationURL(TentApp& app,
         return ret::A_FAIL_EMPTY_STRING;
 
     UrlParams val;
-    val.AddValue(std::string("client_id"), app.GetAppID());
+    val.AddValue(std::string("client_id"), app.app_id());
 
-    if(app.GetRedirectURIs()) {
-        TentApp::RedirectVec* pUris = app.GetRedirectURIs();
+    if(app.redirect_uris()) {
+        TentApp::RedirectVec* pUris = app.redirect_uris();
         TentApp::RedirectVec::iterator itr = pUris->begin();
 
         for(;itr!=pUris->end();itr++) {
@@ -161,8 +161,8 @@ int RequestAppAuthorizationURL(TentApp& app,
         }
     }
 
-    if(app.GetScopes()) {
-        TentApp::ScopeVec* pScopes = app.GetScopes();
+    if(app.scopes()) {
+        TentApp::ScopeVec* pScopes = app.scopes();
         TentApp::ScopeVec::iterator itr = pScopes->begin();
 
         for(;itr!=pScopes->end();itr++) {
@@ -203,13 +203,13 @@ int RequestUserAuthorizationDetails(TentApp& app,
 
     // Build redirect code
     RedirectCode rcode;
-    rcode.SetCode(code);
-    rcode.SetTokenType(std::string("mac"));
+    rcode.set_code(code);
+    rcode.set_token_type(std::string("mac"));
 
     std::string path(apiroot);
     utils::CheckUrlAndAppendTrailingSlash(path);
     path.append("apps/");
-    path.append(app.GetAppID());
+    path.append(app.app_id());
     path.append("/authorizations");
 
     // serialize RedirectCode
@@ -220,9 +220,9 @@ int RequestUserAuthorizationDetails(TentApp& app,
     Response response;
 
     AccessToken at;
-    at.m_MacAlgorithm = app.GetMacAlgorithm();
-    at.m_AccessToken = app.GetMacKeyID();
-    at.m_MacKey = app.GetMacKey();
+    at.m_MacAlgorithm = app.mac_algorithm();
+    at.m_AccessToken = app.mac_key_id();
+    at.m_MacKey = app.mac_key();
 
     netlib::HttpPost(path, NULL, serialized, &at, response);
 

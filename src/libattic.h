@@ -13,18 +13,17 @@ extern "C" {
  *      - RequestAppAuthorizationURL
  *      - RequestAppAuthorizationDetails
  */
+int RegisterAtticApp(const char* szEntityurl,
+                     const char* szAppName, 
+                     const char* szAppDescription, 
+                     const char* szUrl, 
+                     const char* szIcon, 
+                     char* redirectUris[], 
+                     unsigned int uriCount, 
+                     char* scopes[], 
+                     unsigned int scopeCount, 
+                     const char* szConfigDir);
 
-int StartupAppInstance( const char* szAppName, 
-                        const char* szAppDescription, 
-                        const char* szUrl, 
-                        const char* szIcon, 
-                        char* redirectUris[], 
-                        unsigned int uriCount, 
-                        char* scopes[], 
-                        unsigned int scopeCount);
-
-// Pass the uri to the api path for apps (ex "https://test.tent.is/tent/app")
-int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory);
 
 int RequestUserAuthorizationDetails( const char* szEntityUrl, 
                                      const char* szCode,

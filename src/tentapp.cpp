@@ -3,68 +3,63 @@
 #include <fstream>
 #include "utils.h"
 
-RedirectCode::RedirectCode() {}
-RedirectCode::~RedirectCode() {}
-
 void RedirectCode::Serialize(Json::Value& root) {
-    root["code"] = m_Code;
-    root["token_type"] = m_TokenType;
+    root["code"] = code_;
+    root["token_type"] = token_type_;
 }
 
 void RedirectCode::Deserialize(Json::Value& root) {
-    m_Code = root.get("code", "").asString();
-    m_TokenType = root.get("token_type", "").asString();
+    code_ = root.get("code", "").asString();
+    token_type_ = root.get("token_type", "").asString();
 }
 
 void TentApp::Serialize(Json::Value& root) {
-    root["id"] = m_AppID;
-    root["name"] = m_AppName;
-    root["description"] = m_AppDescription;
-    root["url"] = m_AppURL;
-    root["icon"] = m_AppIcon;
+    root["id"] = app_id_;
+    root["name"] = app_name_;
+    root["description"] = app_description_;
+    root["url"] = app_url_;
+    root["icon"] = app_icon_;
     
-    if(m_Scopes.size() > 0) {
+    if(scopes_.size() > 0) {
         Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
         //Json::Value scopes(Json::nullValue);
-        jsn::SerializeVectorIntoObjectValue(scopes, m_Scopes);
-       // jsn::SerializeVector(scopes, m_Scopes);
+        jsn::SerializeVectorIntoObjectValue(scopes, scopes_);
+       // jsn::SerializeVector(scopes, scopes_);
         root["scopes"] = scopes;
     }
 
-    if((m_RedirectURIs.size() > 0))
+    if((redirect_uris_.size() > 0))
     {
         Json::Value redirecturis;
-        jsn::SerializeVector(m_RedirectURIs, redirecturis);
+        jsn::SerializeVector(redirect_uris_, redirecturis);
         root["redirect_uris"] = redirecturis;
     }
 
-    root["mac_algorithm"] = m_MacAlgorithm;
-    root["mac_key_id"] = m_MacKeyID;
-    root["mac_key"] = m_MacKey;
+    root["mac_algorithm"] = mac_algorithm_;
+    root["mac_key_id"] = mac_key_id_;
+    root["mac_key"] = mac_key_;
 
-    if(m_Authorizations.size() > 0) {
+    if(authorizations_.size() > 0) {
         Json::Value authorizations;
-        jsn::SerializeVector(m_Authorizations, authorizations);
+        jsn::SerializeVector(authorizations_, authorizations);
         root["authorizations"] = authorizations;
     }
 }
 
-void TentApp::Deserialize(Json::Value& root)
-{
-    // TODO :: armor this
-    m_AppID = root.get("id", "").asString();
-    m_AppName = root.get("name", "").asString();
-    m_AppDescription = root.get("description", "").asString();
-    m_AppURL = root.get("url", "").asString(); 
-    m_AppIcon = root.get("icon", "").asString(); 
+void TentApp::Deserialize(Json::Value& root) {
+    app_id_ = root.get("id", "").asString();
+    app_name_ = root.get("name", "").asString();
+    app_description_ = root.get("description", "").asString();
+    app_url_ = root.get("url", "").asString(); 
+    app_icon_ = root.get("icon", "").asString(); 
  
-    m_MacAlgorithm = root.get("mac_algorithm", "").asString();
-    m_MacKeyID = root.get("mac_key_id", "").asString();
-    m_MacKey = root.get("mac_key", "").asString();
+    mac_algorithm_ = root.get("mac_algorithm", "").asString();
+    mac_key_id_ = root.get("mac_key_id", "").asString();
+    mac_key_ = root.get("mac_key", "").asString();
 
-    jsn::DeserializeObjectValueIntoVector(root["scopes"], m_Scopes);
-    jsn::DeserializeIntoVector(root["redirect_uris"], m_RedirectURIs);
-    jsn::DeserializeIntoVector(root["authorizations"], m_Authorizations);
+    jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
+    jsn::DeserializeIntoVector(root["redirect_uris"], redirect_uris_);
+    jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& filepath) {

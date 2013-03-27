@@ -10,8 +10,7 @@
 
 #include "jsonserializable.h"
 #include "permissions.h"
-
-class TentApp;
+#include "tentapp.h"
 
 struct Version : public JsonSerializable {
     std::string id;
@@ -76,7 +75,7 @@ private:
     std::vector<std::string>            licenses_;
     ContentMap                          content_;
     AttachmentVec                       attachments_;
-    TentApp*                            tent_app_;
+    TentApp                             tent_app_;
     std::map<std::string, std::string>  views_;
     Permissions                         permissions_;
     Version                             version_;

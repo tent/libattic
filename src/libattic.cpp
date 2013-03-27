@@ -151,6 +151,7 @@ int RegisterAtticApp(const char* szEntityurl,
                      char* scopes[], 
                      unsigned int scopeCount, 
                      const char* szConfigDir) {
+
     int status = ret::A_OK;
 
     std::vector<std::string> uris;
@@ -173,19 +174,6 @@ int RegisterAtticApp(const char* szEntityurl,
 }
 
 static TentApp* g_pApp = NULL;
-int StartupAppInstance( const char* szAppName, 
-                        const char* szAppDescription, 
-                        const char* szUrl, 
-                        const char* szIcon, 
-                        char* redirectUris[], 
-                        unsigned int uriCount, 
-                        char* scopes[], 
-                        unsigned int scopeCount)
-{
-    int status = ret::A_OK;
-
-    return status;
-}
 
 int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
     if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;

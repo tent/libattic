@@ -46,8 +46,7 @@ std::string g_Entity;
 
 std::string g_appName;
 bool g_bRegApp = false;
-TEST(APP_REGISTRATION, STARTAPPINST)
-{
+TEST(APP_REGISTRATION, STARTAPPINST) {
     if(g_Entity.empty()) return;
     if(!g_bRegApp) return;
 
@@ -82,25 +81,30 @@ TEST(APP_REGISTRATION, STARTAPPINST)
     name += " ";
     name += g_appName;
 
-    int status = StartupAppInstance( name.c_str(), 
-                                     "LibAttic Test Suite", 
-                                     "www.tent.is", 
-                                     "", 
-                                     p,
-                                     1, 
-                                     s, 
-                                     18);
+    int status = RegisterAtticApp(g_Entity.c_str(),
+                                  name.c_str(), 
+                                  "LibAttic Test Suite", 
+                                  "www.tent.is", 
+                                  "", 
+                                  p,
+                                  1, 
+                                  s, 
+                                  18,
+                                  "./config");
+
     if(status != ret::A_OK) {
         std::cout<<"Startup app instance FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
 
+    /*
     status = RegisterApp(g_Entity.c_str(), "./config");
     if(status != ret::A_OK)
     {
         std::cout<<"register app FAILED : " << status << std::endl;
     }
     ASSERT_EQ(status, ret::A_OK);
+    */
     
     std::cout<< GetAuthorizationURL() << std::endl;
     
