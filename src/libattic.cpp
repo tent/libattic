@@ -140,6 +140,38 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     return status;
 }
 // Move these two methods to apputils
+
+int RegisterAtticApp(const char* szEntityurl,
+                     const char* szAppName, 
+                     const char* szAppDescription, 
+                     const char* szUrl, 
+                     const char* szIcon, 
+                     char* redirectUris[], 
+                     unsigned int uriCount, 
+                     char* scopes[], 
+                     unsigned int scopeCount, 
+                     const char* szConfigDir) {
+    int status = ret::A_OK;
+
+    std::vector<std::string> uris;
+    for(unsigned int i=0; i < uriCount; i++)
+        uris.push_back(redirectUris[i]);
+
+    std::vector<std::string> scopesVec;
+    for(unsigned int i=0;i<scopeCount; i++)
+        scopesVec.push_back(scopes[i]);
+
+    status = app::RegisterAttic(szEntityurl,
+                                szAppName,
+                                szAppDescription,
+                                szUrl,
+                                szIcon,
+                                uris,
+                                scopesVec,
+                                szConfigDir);
+    return status;
+}
+
 static TentApp* g_pApp = NULL;
 int StartupAppInstance( const char* szAppName, 
                         const char* szAppDescription, 
@@ -152,24 +184,6 @@ int StartupAppInstance( const char* szAppName,
 {
     int status = ret::A_OK;
 
-    if(!g_pApp)
-        g_pApp = new TentApp();                                                
-
-    std::vector<std::string> uris;
-    for(unsigned int i=0; i < uriCount; i++)
-        uris.push_back(redirectUris[i]);
-
-    std::vector<std::string> scopesVec;
-    for(unsigned int i=0;i<scopeCount; i++)
-        scopesVec.push_back(scopes[i]);
-
-    status = app::StartupAppInstance( *g_pApp,
-                                      szAppName,
-                                      szAppDescription,
-                                      szUrl,
-                                      szIcon,
-                                      uris,
-                                      scopesVec);
     return status;
 }
 
@@ -197,7 +211,10 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
                                     const char* szCode, 
                                     const char* szConfigDirectory)
 {
+
     int status = ret::A_OK;
+
+    /*
     if(!g_pApp)
         g_pApp = new TentApp();                                                
 
@@ -210,6 +227,7 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
         delete g_pApp;
         g_pApp = NULL;
     }
+    */
 
     return status;
 }

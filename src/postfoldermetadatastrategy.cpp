@@ -86,8 +86,6 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
                                       postBuffer,
                                       &m_At,
                                       response );
-
-            // Set outgoing response
             out = response;
         }
 
@@ -102,8 +100,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
             jsn::SerializeObject(&p, buffer);
             std::cout<<" retreived body : " << buffer << std::endl;
             
-            std::string postid;
-            p.GetID(postid);
+            std::string postid = p.id();
 
             if(!postid.empty()) {
                 if(bPost) {

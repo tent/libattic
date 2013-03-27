@@ -5,25 +5,19 @@
 #include "errorcodes.h"
 #include "chunkinfo.h"
 
-ChunkPost::ChunkPost()
-{
-    SetPostType(cnst::g_szChunkStorePostType);
+ChunkPost::ChunkPost() {
+    set_type(cnst::g_attic_chunk_type);
 }
 
-ChunkPost::~ChunkPost()
-{
-
-}
+ChunkPost::~ChunkPost() { }
 
 // TODO :: rethink how chunk info objects are handled as a whole,
 //         there are going to be alot of copies with this strategy
-int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List)
-{
+int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List) {
     int status = ret::A_OK;
 
     std::map<std::string, ChunkInfo>::iterator itr = List.begin();
-    for(;itr != List.end(); itr++)
-    {
+    for(;itr != List.end(); itr++) {
         // copy
         m_ChunkList.push_back(itr->second);
     }
@@ -31,10 +25,8 @@ int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List)
     return status;
 }
 
-void ChunkPost::Serialize(Json::Value& root)
-{
-    if(m_ChunkList.size() > 0)
-    {
+void ChunkPost::Serialize(Json::Value& root) {
+    if(m_ChunkList.size() > 0) {
         std::vector<std::string> serializedList;
         std::vector<ChunkInfo>::iterator itr = m_ChunkList.begin();
 
@@ -52,23 +44,21 @@ void ChunkPost::Serialize(Json::Value& root)
         //jsn::SerializeJsonValue(chunkval, cval);
 
         //root["chunks"] = chunkval;
-        SetContent("chunks", chunkval);
+        set_content("chunks", chunkval);
     }
 
     Post::Serialize(root);
 }
 
-void ChunkPost::Deserialize(Json::Value& root)
-{
+void ChunkPost::Deserialize(Json::Value& root) {
     Post::Deserialize(root);
 
     //std::string cval;
     Json::Value chunkval;
     std::vector<std::string> serializedList;
 
-    GetContent("chunks", chunkval);
+    get_content("chunks", chunkval);
 
-    //jsn::DeserializeJsonValue(chunkval, cval);
     jsn::DeserializeIntoVector(chunkval, serializedList);
 
     if(serializedList.size() > 0)

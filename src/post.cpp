@@ -3,20 +3,67 @@
 #include <stdio.h>
 #include "tentapp.h"
 
+void Version::Serialize(Json::Value& root) {
+    root["id"] = id;
+    root["type"] = type;
+}
+
+void Version::Deserialize(Json::Value& root) {
+    id = root.get("id", "").asString();
+    type = root.get("type", "").asString();
+    published_at = root.get("published_at", "").asString();
+    received_at = root.get("received_at", "").asString();
+}
+
+void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) {
+    if(key == std::string("type")) {
+        type = val.asString();
+        return;
+    }
+    if(key == std::string("category")) {
+        category = val.asString();
+        return;
+    }
+    if(key == std::string("name")) {
+        name = val.asString();
+        return;
+    }
+    if(key == std::string("size")) {
+        size = val.asUInt();
+        return;
+    }
+    
+    std::cout<< "Uknown key : " << key << std::endl;
+}
+
+void Attachment::Serialize(Json::Value& root) {
+    // TODO :: this, later
+    std::cout<<" attatchment serialize UNIMPLEMENTED " << std::endl;
+}
+
+void Attachment::Deserialize(Json::Value& root) {
+    type = root.get("type", "").asString();
+    category = root.get("category", "").asString();
+    name = root.get("name", "").asString();
+    size = root.get("size", 0).asUInt();
+}
+
+
 Post::Post() {
-    m_TentApp = 0;
-    m_PublishedAt = 0;
-    m_ReceivedAt = 0;
+    tent_app_ = 0;
+    published_at_ = 0;
+    received_at_ = 0;
+    set_public(false);
 }
 
 Post::~Post() {
-    if(m_Attachments.size() > 0) {
-        std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
+    if(attachments_.size() > 0) {
+        std::cout<<" # attachments : " << attachments_.size() << std::endl;
 
-        AttachmentVec::iterator itr = m_Attachments.begin();
+        AttachmentVec::iterator itr = attachments_.begin();
 
         Attachment* pAtch=0;
-        for(;itr != m_Attachments.end();) {
+        for(;itr != attachments_.end();) {
             //pAtch = *itr;
             itr++;
             /*
@@ -30,91 +77,84 @@ Post::~Post() {
             */
         }
 
-        m_Attachments.clear();
-        std::cout<<" # attachments : " << m_Attachments.size() << std::endl;
+        attachments_.clear();
+        std::cout<<" # attachments : " << attachments_.size() << std::endl;
     }
 }
 
-void Post::GetContent(const std::string& key, Json::Value& out) {
-    ContentMap::iterator itr = m_Content.find(key);
-    if(itr != m_Content.end())
+void Post::get_content(const std::string& key, Json::Value& out) {
+    ContentMap::iterator itr = content_.find(key);
+    if(itr != content_.end())
         out = itr->second;
 }
 
 void Post::Serialize(Json::Value& root) {
     // General Post
-    if(!m_ID.empty())
-        root["id"] = m_ID;
-    if(!m_Entity.empty())
-        root["entity"] = m_Entity;
+    if(!id_.empty())
+        root["id"] = id_;
+    if(!entity_.empty())
+        root["entity"] = entity_;
 
-    if(m_PublishedAt > 0)
-        root["published_at"] = m_PublishedAt;
+    if(published_at_ > 0)
+        root["published_at"] = published_at_;
 
-    if(m_Mentions.size() > 0) {
+    if(mentions_.size() > 0) {
         Json::Value mentions;
-        jsn::SerializeVector(m_Mentions, mentions);
+        jsn::SerializeVector(mentions_, mentions);
         root["mentions"] = mentions;
     }
     
-    if(m_Licenses.size() > 0) {
+    if(licenses_.size() > 0) {
         Json::Value licenses;
-        jsn::SerializeVector(m_Licenses, licenses);
+        jsn::SerializeVector(licenses_, licenses);
         root["licenses"] = licenses;
     }
 
-    if(!m_Type.empty())
-        root["type"] = m_Type;
+    if(!type_.empty())
+        root["type"] = type_;
    
-    if(m_Content.size() > 0) {
-        // TODO::this
-        Json::Value content(Json::objectValue); // We want scopes to be an object {}// vs []
-        jsn::SerializeMapIntoObject(content, m_Content);
+    if(content_.size() > 0) {
+        Json::Value content(Json::objectValue);
+        jsn::SerializeMapIntoObject(content, content_);
         root["content"] = content;
     }
 
-    if(m_Attachments.size() > 0) {
+    if(attachments_.size() > 0) {
         // TODO::this
     }
 
-    if(m_TentApp) {
+    if(tent_app_) {
         Json::Value app;
-        m_TentApp->Serialize(app); 
+        tent_app_->Serialize(app); 
         root["app"] = app;
     }
 
-    if(m_Views.size() > 0) {
-        Json::Value views(Json::objectValue); // We want scopes to be an object {}// vs []
-        jsn::SerializeMapIntoObject(views, m_Views);
+    if(views_.size() > 0) {
+        Json::Value views(Json::objectValue);
+        jsn::SerializeMapIntoObject(views, views_);
         root["views"] = views;
     }
 
-    Json::Value permissions(Json::objectValue); // We want scopes to be an object {}// vs []
-    jsn::SerializeObject(&m_Permissions, permissions);
+    Json::Value permissions(Json::objectValue);
+    jsn::SerializeObject(&permissions_, permissions);
     root["permissions"] = permissions;
-
-    //root["version"] = m_Version;
 }
 
 void Post::Deserialize(Json::Value& root) {
     // General Post
-    m_ID            = root.get("id", "").asString();
-    m_Entity        = root.get("entity", "").asString();
+    id_             = root.get("id", "").asString();
+    entity_         = root.get("entity", "").asString();
     std::string pub = root.get("published_at", "").asString();
-    m_PublishedAt = atoi(pub.c_str());
+    published_at_   = atoi(pub.c_str());
     std::string rec = root.get("received_at", "").asString();
-    m_ReceivedAt = atoi(rec.c_str());
+
+    received_at_    = atoi(rec.c_str());
 
     jsn::DeserializeObject(&version_, root["version"]);
+    jsn::DeserializeIntoVector(root["mentions"], mentions_);
+    jsn::DeserializeIntoVector(root["licenses"], licenses_);
 
-    jsn::DeserializeIntoVector(root["mentions"], m_Mentions);
-    jsn::DeserializeIntoVector(root["licenses"], m_Licenses);
-
-    // TODO :: content is dynamic, and can be a variety of things
-    //         serialization and deserialization is more complex than
-    //         just a map of strings
-   
-    jsn::DeserializeObjectValueIntoMap(root["content"], m_Content);
+    jsn::DeserializeObjectValueIntoMap(root["content"], content_);
     
     // Deserialize this into an array of objects
     Json::Value atch(Json::arrayValue);
@@ -139,20 +179,21 @@ void Post::Deserialize(Json::Value& root) {
                 }
             }
 
-            m_Attachments.push_back(pAtch);
+            attachments_.push_back(pAtch);
         }
 
     }
 
 
     if(!root["app"].isNull()) {
-        //m_TentApp = new TentApp();
+        std::cout<<" Post deserialize, APP section not null IMPLEMENT THIS PLEASE " << std::endl;
+        //tent_app_ = new TentApp();
         // TODO :: this
-        //m_TentApp->Deserialize(root["app"].asObject());
+        //tent_app_->Deserialize(root["app"].asObject());
     }
 
-    jsn::DeserializeObjectValueIntoMap(root["views"], m_Views);
-    jsn::DeserializeObject(&m_Permissions,root["permissions"]);
+    jsn::DeserializeObjectValueIntoMap(root["views"], views_);
+    jsn::DeserializeObject(&permissions_,root["permissions"]);
 }
 
 

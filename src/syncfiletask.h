@@ -6,18 +6,18 @@
 #include <map>
 
 #include "tenttask.h"
-#include "atticpost.h"
+#include "filepost.h"
 #include "fileinfo.h"
 
 class TaskDelegate;
 class SyncFileTask : public TentTask {
-    int SyncMetaData(AtticPost& out);
+    int SyncMetaData(FilePost& out);
     /*
     int AssessFileInfo(const FileInfo& local_fi, const FileInfo& meta_fi);
     int Pull(const AtticPost& p, const FileInfo& meta_fi);
     */
-    int ProcessFileInfo(const AtticPost& p);
-    int RetrieveChunkInfo(const AtticPost& post, FileInfo* fi);
+    int ProcessFileInfo(const FilePost& p);
+    int RetrieveChunkInfo(const FilePost& post, FileInfo* fi);
 public:
     SyncFileTask(FileManager* pFm,
                  CredentialsManager* pCm,

@@ -6,8 +6,7 @@
 #include "post.h"
 #include "folder.h"
 
-class FolderPost : public Post
-{
+class FolderPost : public Post {
 public:
     FolderPost();
     FolderPost(const Folder& folder);
@@ -16,20 +15,18 @@ public:
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    int PushBackFolderPost(FolderPost& post);
+    const Folder& folder() const                { return folder_; }
+    const std::string& relative_path() const    { return relative_path_; }
+    const std::string& file_type() const        { return file_type_; }
 
-    void GetFileType(std::string& out) { out = m_FileType; }
-    void GetRelativePath(std::string& out) { out = m_RelativePath; }
-    
-    void SetFileType(const std::string& type) { m_FileType = type; }
-    void SetRelativePath(const std::string& path) { m_RelativePath = path; }
-
-    void GetFolder(Folder& folder) const { folder = m_Folder; }
+    void set_folder(const Folder& folder)           { folder_ = folder; }
+    void set_relative_path(const std::string& path) { relative_path_ = path; }
+    void set_file_type(const std::string& type)     { file_type_ = type; }
 
 private:
-    Folder  m_Folder;
-    std::string m_RelativePath; // Relative path to file or folder
-    std::string m_FileType;     // File or Folder
+    Folder  folder_;
+    std::string relative_path_; // Relative path to file or folder
+    std::string file_type_;     // File or Folder
 };
 
 #endif

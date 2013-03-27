@@ -28,8 +28,8 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     FileInfo* fi = RetrieveFileInfo(filepath);
     if(fi) {
         int trycount = 0;
-        for(status = SendAtticPost(fi, filepath); status != ret::A_OK; trycount++) {
-            status = SendAtticPost(fi, filepath);
+        for(status = SendFilePost(fi, filepath); status != ret::A_OK; trycount++) {
+            status = SendFilePost(fi, filepath);
             std::cout<<" RETRYING .................................." << std::endl;
             if(trycount > 2)
                 break;
@@ -43,7 +43,7 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     return status;
 }
 
-int PostFileMetadataStrategy::SendAtticPost( FileInfo* fi, const std::string& filepath) {
+int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& filepath) {
     std::cout<<" send attic post filepath : " << filepath << std::endl;
     int status = ret::A_OK;
     std::cout<<" SEND ATTIC POST " << std::endl;
@@ -70,8 +70,8 @@ int PostFileMetadataStrategy::SendAtticPost( FileInfo* fi, const std::string& fi
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
         unsigned int size = utils::CheckFilesize(filepath);
-        AtticPost p;
-        postutils::InitializeAtticPost(fi, p, false);
+        FilePost p;
+        postutils::InitializeFilePost(fi, p, false);
         
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
@@ -93,9 +93,9 @@ int PostFileMetadataStrategy::SendAtticPost( FileInfo* fi, const std::string& fi
         std::cout<< " PUT URL : " << posturl << std::endl;
         
         unsigned int size = utils::CheckFilesize(filepath);
-        AtticPost p;
+        FilePost p;
 
-        postutils::InitializeAtticPost(fi, p, false);
+        postutils::InitializeFilePost(fi, p, false);
         
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
@@ -109,11 +109,10 @@ int PostFileMetadataStrategy::SendAtticPost( FileInfo* fi, const std::string& fi
 
     // Handle Response
     if(response.code == 200) {
-        AtticPost p;
+        FilePost p;
         jsn::DeserializeObject(&p, response.body);
 
-        std::string postid;
-        p.GetID(postid);
+        std::string postid = p.id();
 
         if(!postid.empty()) {
             fi->SetPostID(postid); 

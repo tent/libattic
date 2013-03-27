@@ -1,4 +1,3 @@
-
 #ifndef TENTAPP_H_
 #define TENTAPP_H_
 #pragma once
@@ -29,28 +28,25 @@ private:
     std::string m_TokenType;
 };
 
-class TentApp : public JsonSerializable
-{
-    public:
-    TentApp();
-    ~TentApp();
+class TentApp : public JsonSerializable {
+public:
+    TentApp() {}
+    ~TentApp() {}
 
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    // TODO :: move this to some other place, the file manager could 
-    //         be in charge of saving state to disk
-    ret::eCode SaveToFile(const std::string& szFilePath);
-    ret::eCode LoadFromFile(const std::string& szFilePath);
+    ret::eCode SaveToFile(const std::string& filepath);
+    ret::eCode LoadFromFile(const std::string& filepath);
 
-    std::string GetAppID() const            { return m_AppID; }
-    std::string GetAppName() const          { return m_AppName; }
-    std::string GetAppDescription() const   { return m_AppDescription; }
-    std::string GetAppURL() const           { return m_AppURL; }
-    std::string GetAppIcon() const          { return m_AppIcon; }
-    std::string GetMacAlgorithm() const     { return m_MacAlgorithm; }
-    std::string GetMacKeyID() const         { return m_MacKeyID; }
-    std::string GetMacKey() const           { return m_MacKey; }
+    const std::string& GetAppID() const            { return m_AppID; }
+    const std::string& GetAppName() const          { return m_AppName; }
+    const std::string& GetAppDescription() const   { return m_AppDescription; }
+    const std::string& GetAppURL() const           { return m_AppURL; }
+    const std::string& GetAppIcon() const          { return m_AppIcon; }
+    const std::string& GetMacAlgorithm() const     { return m_MacAlgorithm; }
+    const std::string& GetMacKeyID() const         { return m_MacKeyID; }
+    const std::string& GetMacKey() const           { return m_MacKey; }
     
     typedef std::vector<std::string> ScopeVec;
     typedef std::vector<std::string> RedirectVec;

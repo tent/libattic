@@ -3,50 +3,31 @@
 #include "constants.h"
 #include "errorcodes.h"
 
-
-FolderPost::FolderPost()
-{
-    SetPostType(cnst::g_szFolderPostType);
-    SetPublic(false);
+FolderPost::FolderPost() {
+    set_type(cnst::g_attic_folder_type);
+    set_public(false);
 }
 
-FolderPost::FolderPost(const Folder& folder)
-{
-    SetPostType(cnst::g_szFolderPostType);
-    SetPublic(false);
-
-    m_Folder = folder;
+FolderPost::FolderPost(const Folder& folder) {
+    FolderPost::FolderPost();
+    folder_ = folder;
 }
 
-FolderPost::~FolderPost()
-{
+FolderPost::~FolderPost() {}
 
-}
-
-void FolderPost::Serialize(Json::Value& root)
-{
+void FolderPost::Serialize(Json::Value& root) {
     Json::Value folder(Json::objectValue);
-    jsn::SerializeObject(&m_Folder, folder);
+    jsn::SerializeObject(&folder_, folder);
 
-    SetContent("children", folder);
+    set_content("children", folder);
 
     Post::Serialize(root);
 }
 
-void FolderPost::Deserialize(Json::Value& root)
-{
+void FolderPost::Deserialize(Json::Value& root) {
     Post::Deserialize(root);
     Json::Value folder;
-    GetContent("children", folder);
-    jsn::DeserializeObject(&m_Folder, folder);
+    get_content("children", folder);
+    jsn::DeserializeObject(&folder_, folder);
 }
 
-int FolderPost::PushBackFolderPost(FolderPost& post)
-{
-    int status = ret::A_OK;
-
-
-
-
-    return status;
-}

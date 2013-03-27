@@ -32,7 +32,6 @@
 #include "folderpost.h"
 
 #include "rollsum.h"
-#include "atticpost.h"
 #include "constants.h"
 #include "httpheader.h"
 
@@ -872,7 +871,7 @@ TEST(FOLDER, SERIALIZATION)
     std::string tt; 
     jsn::SerializeObject(&folder, tt);
 }
-
+/*
 TEST(PARAMS, ENCODE) 
 {
     UrlParams params;                                                                  
@@ -900,6 +899,7 @@ TEST(PARAMS, ENCODE)
     crypto::GenerateRandomString(random, 4);
     std::cout<<" RANDOM STRING : " << random << std::endl;
 }
+*/
 
 
 bool g_bRollsum = false;

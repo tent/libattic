@@ -121,7 +121,7 @@ int PollTask::SyncFolderPosts() {
             snprintf(countBuff, 256, "%d", request_count);
 
             UrlParams params;                                                                  
-            params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType));  
+            params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));  
             params.AddValue(std::string("limit"), std::string(countBuff));                         
             if(!lastid.empty())
                 params.AddValue(std::string("last_id"), lastid);
@@ -157,7 +157,7 @@ int PollTask::SyncFolderPosts() {
                     FolderPost fp;
                     jsn::DeserializeObject(&fp, *itr);
                     Folder folder;
-                    fp.GetFolder(folder);
+                    fp.set_folder(folder);
                     folders.push_back(folder);
                     SyncFolder(folder);
                 }
@@ -213,7 +213,7 @@ int PollTask::GetFolderPostCount() {
     std::cout<<" URL : " << url << std::endl;
 
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType));             
+    params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));             
 
     Response response;                                                                            
     AccessToken* at = GetAccessToken();                                                           

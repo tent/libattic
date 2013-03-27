@@ -7,27 +7,28 @@
 
 #include "jsonserializable.h"
 #include "post.h"
-#include "atticpost.h"
+#include "filepost.h"
 #include "chunkpost.h"
 #include "response.h"
 #include "constants.h"
 
 namespace postutils {
 
-static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic);
-static int DeserializeAtticPostIntoFileInfo(const AtticPost& post, FileInfo& fiOut);
+static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic);
+static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut);
 static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut);
 static int DeserializePostIntoFileInfo(const Post& post, FileInfo& fiOut);
 static int ExtractChunkPostsFromResponse(const Response& response, std::vector<ChunkPost>* out);
 static void ConstructPostUrl(const std::string& apiroot, std::string& out);
 
-static void ConstructPostUrl(const std::string& apiroot, std::string& out) {
+static void ConstructPostUrl(const std::string& apiroot, std::string& out) { // Depricated
+    std::cout<<" REDO ConstructPostUrl " << std::endl;
     out = apiroot;
     utils::CheckUrlAndAppendTrailingSlash(out);
-    out += cnst::g_szPostEndpoint;
+    //out += cnst::g_szPostEndpoint;
 }
 
-static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic) {
+static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic) {
     int status = ret::A_OK;
     if(pFi) {
         std::string filepath, filename;
@@ -36,19 +37,19 @@ static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic)
         unsigned int size = pFi->GetFileSize();
 
         // Set Basic attic post info
-        postOut.SetPublic(isPublic);
-        postOut.AtticPostSetFilepath(filepath);
-        postOut.AtticPostSetFilename(filename);
-        postOut.AtticPostSetSize(size);
-        postOut.AtticPostSetDeleted(pFi->GetDeleted());
+        postOut.set_public(isPublic);
+        postOut.set_relative_path(filepath);
+        postOut.set_name(filename);
+        postOut.set_file_size(size);
+        postOut.set_deleted(pFi->GetDeleted());
 
         // Set Attic post key info
         std::string encryptedkey, iv;
         pFi->GetEncryptedKey(encryptedkey);
         pFi->GetIv(iv);
 
-        postOut.AtticPostSetKeyData(encryptedkey);
-        postOut.AtticPostSetIvData(iv);
+        postOut.set_key_data(encryptedkey);
+        postOut.set_iv_data(iv);
         
         // Set Chunk info
         std::string chunkpostid;
@@ -81,20 +82,17 @@ static int InitializeAtticPost(FileInfo* pFi, AtticPost& postOut, bool isPublic)
     return status;
 }
 
-static int DeserializeAtticPostIntoFileInfo(const AtticPost& post, FileInfo& fiOut) {
+static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut) {
     int status = ret::A_OK;
     
     // Attic Post specific
-    std::string name, path, chunkname, key, iv;
-    post.GetAtticPostFilename(name);
-    post.GetAtticPostFilepath(path);
-    post.GetAtticPostChunkName(chunkname);
-    post.GetAtticPostKeyData(key);
-    post.GetAtticPostIvData(iv);
+    std::string name = post.name();
+    std::string path = post.relative_path();
+    std::string key = post.key_data();
+    std::string iv = post.iv_data();
 
     fiOut.SetFilename(name);
     fiOut.SetFilepath(path);
-    fiOut.SetChunkName(chunkname);
     fiOut.SetEncryptedKey(key);
     fiOut.SetIv(iv);
 
@@ -110,8 +108,7 @@ static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut) {
     int status = ret::A_OK;
 
     if(post) {
-        std::string postid;
-        post->GetID(postid);
+        std::string postid = post->id();
 
         fiOut.SetPostID(postid);
         //TODO V03

@@ -117,11 +117,11 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
         std::cout<<" BODY : " << resp.body << std::endl;
 
         if(resp.code == 200) {
-            AtticPost ap;
-            if(jsn::DeserializeObject(&ap, resp.body)) {
+            FilePost fp;
+            if(jsn::DeserializeObject(&fp, resp.body)) {
                 std::string key, iv;
-                ap.GetAtticPostKeyData(key);
-                ap.GetAtticPostIvData(iv);
+                fp.set_key_data(key);
+                fp.set_iv_data(iv);
 
                 MasterKey mKey;
                 m_pCredentialsManager->GetMasterKeyCopy(mKey);
@@ -235,20 +235,20 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
             char szCount[256]={'\0'};
             snprintf(szCount, 256, "%d", count);
 
-            attachmentpath += (*itr).Name;
+            attachmentpath += (*itr).name;
 
             outpath.clear();
             m_pFileManager->GetTempDirectory(outpath);
 
             utils::CheckUrlAndAppendTrailingSlash(outpath);
-            outpath += (*itr).Name;
+            outpath += (*itr).name;
 
             // Request attachment                                                                
             std::string buffer;
             status = RetrieveAttachment(attachmentpath, buffer);
             if(status == ret::A_OK) {
                 // Transform Chunk
-                ChunkInfo* ci = fi->GetChunkInfo((*itr).Name);
+                ChunkInfo* ci = fi->GetChunkInfo((*itr).name);
                 std::string chunk;
                 status = TransformChunk(ci, filekey, buffer, chunk);
                 if(status == ret::A_OK) {

@@ -13,65 +13,25 @@
 
 class TentApp;
 
-
 struct Version : public JsonSerializable {
     std::string id;
     std::string type;
     std::string published_at;
     std::string received_at;
 
-    void Serialize(Json::Value& root) {
-        root["id"] = id;
-        root["type"] = type;
-    }
-
-    void Deserialize(Json::Value& root) {
-        id = root.get("id", "").asString();
-        type = root.get("type", "").asString();
-        published_at = root.get("published_at", "").asString();
-        received_at = root.get("received_at", "").asString();
-    }
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
 };
 
 struct Attachment : public JsonSerializable {
-    std::string Type;      // `json:"type"`
-    std::string Category;  // `json:"category"`
-    std::string Name;      // `json:"name"`
-    unsigned int Size;     // `json:"size"`
+    std::string type;      // `json:"type"`
+    std::string category;  // `json:"category"`
+    std::string name;      // `json:"name"`
+    unsigned int size;     // `json:"size"`
 
-    void AssignKeyValue(const std::string &key, const Json::Value &val) {
-        if(key == std::string("type")) {
-            Type = val.asString();
-            return;
-        }
-        if(key == std::string("category")) {
-            Category = val.asString();
-            return;
-        }
-        if(key == std::string("name")) {
-            Name = val.asString();
-            return;
-        }
-        if(key == std::string("size")) {
-            Size = val.asUInt();
-            return;
-        }
-        
-        std::cout<< "Uknown key : " << key << std::endl;
-    }
-
-    virtual void Serialize(Json::Value& root) {
-        // TODO :: this, later
-        std::cout<<" attatchment serialize UNIMPLEMENTED " << std::endl;
-    }
-
-    virtual void Deserialize(Json::Value& root) {
-        Type = root.get("type", "").asString();
-        Category = root.get("category", "").asString();
-        Name = root.get("name", "").asString();
-        Size = root.get("size", 0).asUInt();
-    }
-    
+    void AssignKeyValue(const std::string &key, const Json::Value &val);
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
 };
 
 class Post : public JsonSerializable {
@@ -84,46 +44,42 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void GetID(std::string& out) const          { out = m_ID; }
-    void GetPostType(std::string& out) const    { out = m_Type; }
-    void GetContent(const std::string& key, Json::Value& out);
-    unsigned int GetAttachmentCount()           { return m_Attachments.size(); }
-    AttachmentVec* GetAttachments()             { return &m_Attachments; }
+    void get_content(const std::string& key, Json::Value& out);
 
-    void SetID(const std::string &id)           { m_ID = id; }
-    void setEntity(const std::string &entity)   { m_Entity = entity; }
-    void SetPublishedAt(unsigned int uUnixTime) { m_PublishedAt = uUnixTime; }
-    void SetPostType(const std::string &type)   { m_Type = type; }
+    unsigned int GetAttachmentCount()           { return attachments_.size(); }
+    AttachmentVec* GetAttachments()             { return &attachments_; }
 
-    void SetContent(const std::string &type, Json::Value &val) { m_Content[type] = val; }
+    const std::string& id() const       { return id_; }
+    const std::string& entity() const   { return entity_; }
+    const std::string& type() const     { return type_; }
+    unsigned int published_at() const   { return published_at_; }
+    unsigned int received_at() const    { return received_at_; }
 
-    void SetPublic(const bool pub) { m_Permissions.SetIsPublic(pub); }
+    void set_id(const std::string &id)              { id_ = id; }
+    void set_entity(const std::string &entity)      { entity_ = entity; }
+    void set_published_at(unsigned int uUnixTime)   { published_at_ = uUnixTime; }
+    void set_type(const std::string &type)          { type_ = type; }
+    void set_content(const std::string &type, Json::Value &val) { content_[type] = val; }
+    void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
-    void PushBackAttachment(Attachment& pAtch) { m_Attachments.push_back(pAtch); }
+    void PushBackAttachment(Attachment& pAtch) { attachments_.push_back(pAtch); }
 
 private:
-    std::string                         m_ID;
-    std::string                         m_Entity;
-    unsigned int                        m_PublishedAt;
-    unsigned int                        m_ReceivedAt;
-    std::vector<std::string>            m_Mentions;
-    std::vector<std::string>            m_Licenses;
-    std::string                         m_Type;
-
-    //typedef std::map<std::string, std::string> ContentMap;
     typedef std::map<std::string, Json::Value> ContentMap;
-    ContentMap                          m_Content;
 
-    AttachmentVec                       m_Attachments;
-
-    TentApp*                            m_TentApp;
-    std::map<std::string, std::string>  m_Views;
-    //std::map<std::string, bool>         m_Permissions;
-    Permissions m_Permissions;
-
-    Version version_;
-
-
+    std::string                         id_;
+    std::string                         entity_;
+    std::string                         type_;
+    unsigned int                        published_at_;
+    unsigned int                        received_at_;
+    std::vector<std::string>            mentions_;
+    std::vector<std::string>            licenses_;
+    ContentMap                          content_;
+    AttachmentVec                       attachments_;
+    TentApp*                            tent_app_;
+    std::map<std::string, std::string>  views_;
+    Permissions                         permissions_;
+    Version                             version_;
 };
 
 #endif

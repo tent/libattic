@@ -48,7 +48,7 @@ void SyncFileTask::RunTask() {
     std::cout << ".... Syncing file task ... " << std::endl;
 
     // Retrieve metadata
-    AtticPost p;
+    FilePost p;
     status = SyncMetaData(p);
     if(status == ret::A_OK) {
         status = ProcessFileInfo(p);
@@ -62,7 +62,7 @@ void SyncFileTask::RunTask() {
     SetFinishedState();
 }
 
-int SyncFileTask::SyncMetaData(AtticPost& out) {
+int SyncFileTask::SyncMetaData(FilePost& out) {
     int status = ret::A_OK;
 
     std::string url;
@@ -85,15 +85,14 @@ int SyncFileTask::SyncMetaData(AtticPost& out) {
     return status;
 }
 
-int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
+int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     int status = ret::A_OK;
 
-    std::string filepath;
-    p.GetAtticPostFilepath(filepath);
+    std::string filepath = p.relative_path();
     std::cout<<" POST FILEPATH : " << filepath << std::endl;
 
     FileInfo fi;
-    postutils::DeserializeAtticPostIntoFileInfo(p, fi);
+    postutils::DeserializeFilePostIntoFileInfo(p, fi);
 
     // Check if file is in manifest
     //int version = p.GetVersion();
@@ -167,7 +166,7 @@ int SyncFileTask::ProcessFileInfo(const AtticPost& p) {
     return status;
 }
 
-int SyncFileTask::RetrieveChunkInfo(const AtticPost& post, FileInfo* fi) {
+int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
     int status = ret::A_OK;
 
     Entity entity;

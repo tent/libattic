@@ -1,61 +1,29 @@
-
 #include "tentapp.h"
 
 #include <fstream>
-
 #include "utils.h"
 
+RedirectCode::RedirectCode() {}
+RedirectCode::~RedirectCode() {}
 
-
-
-RedirectCode::RedirectCode()
-{
-
-}
-
-RedirectCode::~RedirectCode()
-{
-
-}
-
-void RedirectCode::Serialize(Json::Value& root)
-{
+void RedirectCode::Serialize(Json::Value& root) {
     root["code"] = m_Code;
     root["token_type"] = m_TokenType;
 }
 
-void RedirectCode::Deserialize(Json::Value& root)
-{
+void RedirectCode::Deserialize(Json::Value& root) {
     m_Code = root.get("code", "").asString();
     m_TokenType = root.get("token_type", "").asString();
 }
 
-
-TentApp::TentApp()
-{
-
-}
-
-TentApp::~TentApp()
-{
-
-}
-
-void TentApp::Serialize(Json::Value& root)
-{
-    if(!m_AppID.empty())
-        root["id"] = m_AppID;
-    if(!m_AppName.empty())
-        root["name"] = m_AppName;
-    if(!m_AppDescription.empty())
-        root["description"] = m_AppDescription;
-    if(!m_AppURL.empty())
-        root["url"] = m_AppURL;
-    if(!m_AppIcon.empty())
-        root["icon"] = m_AppIcon;
+void TentApp::Serialize(Json::Value& root) {
+    root["id"] = m_AppID;
+    root["name"] = m_AppName;
+    root["description"] = m_AppDescription;
+    root["url"] = m_AppURL;
+    root["icon"] = m_AppIcon;
     
-    if(m_Scopes.size() > 0)
-    {
+    if(m_Scopes.size() > 0) {
         Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
         //Json::Value scopes(Json::nullValue);
         jsn::SerializeVectorIntoObjectValue(scopes, m_Scopes);
@@ -70,15 +38,11 @@ void TentApp::Serialize(Json::Value& root)
         root["redirect_uris"] = redirecturis;
     }
 
-    if(!m_MacAlgorithm.empty())
-        root["mac_algorithm"] = m_MacAlgorithm;
-    if(!m_MacKeyID.empty())
-        root["mac_key_id"] = m_MacKeyID;
-    if(!m_MacKey.empty())
-        root["mac_key"] = m_MacKey;
+    root["mac_algorithm"] = m_MacAlgorithm;
+    root["mac_key_id"] = m_MacKeyID;
+    root["mac_key"] = m_MacKey;
 
-    if(m_Authorizations.size() > 0)
-    {
+    if(m_Authorizations.size() > 0) {
         Json::Value authorizations;
         jsn::SerializeVector(m_Authorizations, authorizations);
         root["authorizations"] = authorizations;
@@ -103,11 +67,10 @@ void TentApp::Deserialize(Json::Value& root)
     jsn::DeserializeIntoVector(root["authorizations"], m_Authorizations);
 }
 
-ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
-{
+ret::eCode TentApp::SaveToFile(const std::string& filepath) {
     std::ofstream ofs;
 
-    ofs.open(szFilePath.c_str(), std::ofstream::out | std::ofstream::binary); 
+    ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary); 
 
     if(!ofs.is_open())
         return ret::A_FAIL_OPEN_FILE;
@@ -121,10 +84,9 @@ ret::eCode TentApp::SaveToFile(const std::string& szFilePath)
     return ret::A_OK;
 }
 
-ret::eCode TentApp::LoadFromFile(const std::string& szFilePath)
-{
+ret::eCode TentApp::LoadFromFile(const std::string& filepath) {
     std::ifstream ifs;
-    ifs.open(szFilePath.c_str(), std::ifstream::in | std::ifstream::binary);
+    ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
     if(!ifs.is_open())
         return ret::A_FAIL_OPEN_FILE;

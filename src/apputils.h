@@ -29,7 +29,13 @@ static int StartupAppInstance(TentApp& app,
 static int RegisterApp(TentApp& app, 
                        const std::string& entityurl, 
                        const std::string& configdir);
-
+static void InitAppInstance(TentApp& app,
+                           const std::string& appName,
+                           const std::string& appDescription,
+                           const std::string& url,
+                           const std::string& icon,
+                           std::vector<std::string>& uris,
+                           std::vector<std::string>& scopes);
 static int RequestAppAuthorizationURL(TentApp& app, 
                                       const std::string& entityurl,
                                       std::string& urlout);
@@ -38,25 +44,47 @@ static int LoadAppFromFile(TentApp& app, const std::string& configdir);
 static int SaveAppToFile(TentApp& app, const std::string& configdir);
 static std::string GetEntityApiRoot(const std::string& entityurl);
 
-static int StartupAppInstance(TentApp& app,
-                              const std::string& appName,
-                              const std::string& appDescription,
-                              const std::string& url,
-                              const std::string& icon,
-                              std::vector<std::string>& uris,
-                              std::vector<std::string>& scopes)
-{
+
+static int RegisterAttic(const std::string& entityurl,
+                         const std::string& name, 
+                         const std::string& description, 
+                         const std::string& url,
+                         const std::string& icon,
+                         std::vector<std::string>& uris,
+                         std::vector<std::string>& scopes,
+                         const std::string& configdir) {
+
     int status = ret::A_OK;
 
+    Entity ent;
+    status = client::Discover(entityurl, NULL, ent);
+    if(status == ret::A_OK) {
+        TentApp app;
+        InitAppInstance(app, name, description, url, icon, uris, scopes);
+        status = RegisterApp(app, entityurl, configdir);
+        if(status == ret::A_OK) {
+
+        }
+    
+    }
+    
+    return status;
+}
+
+static void InitAppInstance(TentApp& app,
+                           const std::string& appName,
+                           const std::string& appDescription,
+                           const std::string& url,
+                           const std::string& icon,
+                           std::vector<std::string>& uris,
+                           std::vector<std::string>& scopes)
+{
     app.SetAppName(appName);
     app.SetAppDescription(appDescription);
     app.SetAppURL(url);
     app.SetAppIcon(icon);
-
     app.SetRedirectUris(uris);
     app.SetScopes(scopes);
-
-    return status;
 }
 
 static int RegisterApp(TentApp& app, 
@@ -64,8 +92,13 @@ static int RegisterApp(TentApp& app,
                        const std::string& configdir)
 {
     int status = ret::A_OK;
-
     fs::CreateDirectory(configdir);
+
+    Post app_post;
+    app_post.set_type(cnst::g_attic_app_type);
+    
+    Json::Value val;
+    jsn::SerializeObject(&app, val);
 
     std::string postpath;
     postpath += GetEntityApiRoot(entityurl);

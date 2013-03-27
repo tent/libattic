@@ -9,8 +9,7 @@
 #include "post.h"
 #include "chunkinfo.h"
 
-class ChunkPost : public Post
-{
+class ChunkPost : public Post {
 public:
     ChunkPost();
     ~ChunkPost();

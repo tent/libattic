@@ -17,8 +17,7 @@ PostFileStrategy::~PostFileStrategy() {}
 
 int PostFileStrategy::Execute(FileManager* pFileManager,
                                CredentialsManager* pCredentialsManager,
-                               Response& out)
-{
+                               Response& out){
     int status = ret::A_OK;
     m_pFileManager = pFileManager;
     m_pCredentialsManager = pCredentialsManager;
@@ -68,7 +67,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
             // Setup post url
             if(chunkpostid.empty()) {
-                p.GetID(chunkpostid);
+                chunkpostid = p.id();
                 if(chunkpostid.empty()) {
                     status = ret::A_FAIL_INVALID_POST_ID;
                 }

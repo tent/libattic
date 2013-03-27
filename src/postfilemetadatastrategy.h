@@ -10,7 +10,7 @@ class CredentialsManager;
 class FileInfo;
 
 class PostFileMetadataStrategy : public HttpStrategyInterface {
-    int SendAtticPost( FileInfo* fi, const std::string& filepath);
+    int SendFilePost( FileInfo* fi, const std::string& filepath);
     FileInfo* RetrieveFileInfo(const std::string& filepath);
 public:
     PostFileMetadataStrategy();
