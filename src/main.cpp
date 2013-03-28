@@ -56,27 +56,6 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
     memset(buf, '\0', g_Entity.size()+1);
     memcpy(buf, g_Entity.c_str(), g_Entity.size());
 
-    char* p[] = { buf };
-    char* s[] = { "read_posts", 
-                  "write_posts",
-                  "import_posts",
-                  "read_profile",
-                  "write_profile",
-                  "read_followers",
-                  "write_followers",
-                  "read_followings",
-                  "write_followings",
-                  "read_groups",
-                  "write_groups",
-                  "read_permissions",
-                  "write_permissions",
-                  "read_apps",
-                  "write_apps",
-                  "follow_ui",
-                  "read_secrets",
-                  "write_secrets"};
-
-
     std::string name("libattic");
     name += " ";
     name += g_appName;
@@ -87,8 +66,6 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
                                   "www.tent.is", 
                                   "", 
                                   g_Entity.c_str(),
-                                  s, 
-                                  18,
                                   "./config");
 
     if(status != ret::A_OK) {
@@ -105,12 +82,8 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
     ASSERT_EQ(status, ret::A_OK);
     */
     
-//    std::cout<< GetAuthorizationURL() << std::endl;
+    std::cout<< GetAuthorizationURL() << std::endl;
     
-    if(buf) {
-        delete[] buf;
-        buf =NULL;
-    }
 }
 
 std::string g_AuthCode;

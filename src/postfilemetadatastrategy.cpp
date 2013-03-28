@@ -78,12 +78,12 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
 
         std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
 
-        status = netlib::HttpPost( posturl,
-                                   p.type(),
-                                   NULL,
-                                   postBuffer,
-                                   &m_At,
-                                   response );
+        status = netlib::HttpPost(posturl,
+                                  p.type(),
+                                  NULL,
+                                  postBuffer,
+                                  &m_At,
+                                  response );
     }
     else {
         post = false;
@@ -101,11 +101,12 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
 
-        status = netlib::HttpPut( posturl,
-                                  NULL,
-                                  postBuffer,
-                                  &m_At,
-                                  response );
+        status = netlib::HttpPut(posturl,
+                                 p.type(),
+                                 NULL,
+                                 postBuffer,
+                                 &m_At,
+                                 response );
    }
 
     // Handle Response

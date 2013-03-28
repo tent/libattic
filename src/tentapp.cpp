@@ -40,20 +40,22 @@ void TentApp::Serialize(Json::Value& root) {
 }
 
 void TentApp::Deserialize(Json::Value& root) {
-    app_id_ = root.get("id", "").asString();
-    app_name_ = root.get("name", "").asString();
-    app_description_ = root.get("description", "").asString();
-    app_url_ = root.get("url", "").asString(); 
-    app_icon_ = root.get("icon", "").asString(); 
+    if(!root["id"].empty()) app_id_ = root.get("id", "").asString();
+    if(!root["name"].empty()) app_name_ = root.get("name", "").asString();
+    if(!root["description"].empty()) app_description_ = root.get("description", "").asString();
+    if(!root["url"].empty()) app_url_ = root.get("url", "").asString(); 
+    if(!root["icon"].empty()) app_icon_ = root.get("icon", "").asString(); 
  
-    mac_algorithm_ = root.get("mac_algorithm", "").asString();
-    mac_key_id_ = root.get("mac_key_id", "").asString();
-    mac_key_ = root.get("mac_key", "").asString();
+    if(!root["mac_algorithm"].empty()) mac_algorithm_ = root.get("mac_algorithm", "").asString();
+    if(!root["mac_key_id"].empty()) mac_key_id_ = root.get("mac_key_id", "").asString();
+    if(!root["mac_key"].empty()) mac_key_ = root.get("mac_key", "").asString();
 
-    redirect_uri_ = root.get("redirect_uri", "").asString();
+    if(!root["redirect_uri"].empty()) redirect_uri_ = root.get("redirect_uri", "").asString();
 
-    jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
-    jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
+    if(!root["scopes"].empty())
+        jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
+    if(!root["authorizations"].empty())
+        jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& filepath) {

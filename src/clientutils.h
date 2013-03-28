@@ -14,9 +14,9 @@
 namespace client {
 
 static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut);
-static void ExtractMetaLink(const std::string& entityurl, 
-                            Response& response, 
-                            std::string& linkOut);
+static void ExtractMetaLink(Response& response, std::string& linkOut);
+static void ExtractLink(const std::string& link, std::string& out);
+
 static void ConstructMetaPath(const std::string& entityurl,
                               const std::string& metaendpoint,
                               std::string& out);
@@ -106,7 +106,7 @@ static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut)
 
     if(response.code == 200) {
         std::string link;
-        ExtractMetaLink(entityurl, response, link);
+        ExtractMetaLink(response, link);
         std::string metapath;
         ConstructMetaPath(entityurl, link, metapath);
         linkOut = metapath;
@@ -134,19 +134,19 @@ static void ConstructMetaPath(const std::string& entityurl,
     }
 }
 
-static void ExtractMetaLink(const std::string& entityurl, 
-                            Response& response, 
-                            std::string& linkOut) {
-
+static void ExtractMetaLink(Response& response, std::string& linkOut) {
     std::string link_header = response.header["Link"];
     if(!link_header.empty()){
-        if(link_header.find(cnst::g_szMetaRel) != std::string::npos) {
-            size_t begin = link_header.find("<");
-            size_t end = link_header.find(">");
-            size_t diff = (end - (begin+1));
-            linkOut = link_header.substr(begin+1, diff);
-        }
+        if(link_header.find(cnst::g_meta_rel) != std::string::npos)
+            ExtractLink(link_header, linkOut);
     }
+}
+
+static void ExtractLink(const std::string& link, std::string& out) {
+    size_t begin = link.find("<");
+    size_t end = link.find(">");
+    size_t diff = (end - (begin+1));
+    out = link.substr(begin+1, diff);
 }
 
 static int InitEntity(const std::string& entityurl, const AccessToken* at, Entity& entOut) {

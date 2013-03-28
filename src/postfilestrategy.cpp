@@ -84,11 +84,12 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     
                 std::cout<<" Updating chunk post metadata : " << posturl << std::endl;
                 Response metaResp;
-                status = netlib::HttpPut( posturl,
-                                          NULL,
-                                          bodyBuffer,
-                                          &m_At,
-                                          metaResp);
+                status = netlib::HttpPut(posturl,
+                                         p.type(),
+                                         NULL,
+                                         bodyBuffer,
+                                         &m_At,
+                                         metaResp);
 
                 std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
                 std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;

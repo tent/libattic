@@ -1,42 +1,40 @@
-
 #ifndef URL_H_
 #define URL_H_
 #pragma once
 
 #include <string>
 
-class Url
-{
+class Url {
     void ExtractInfo(); // From url
 public:
     Url();
-    Url(const std::string& szUrl);
+    Url(const std::string& url);
     ~Url();
     
-    std::string GetUrl()        { return m_Url; }
-    std::string GetScheme()     { return m_Scheme; }
-    std::string GetHost()       { return m_Host; }
-    std::string GetPath()       { return m_Path; }
-    std::string GetPort()       { return m_Port; }
-    std::string GetQuery()      { return m_Query; }
+    const std::string& url() const       { return url_; }
+    const std::string& scheme() const    { return scheme_; }
+    const std::string& host() const      { return host_; }
+    const std::string& path() const      { return path_; }
+    const std::string& port() const      { return port_; }
+    const std::string& query() const     { return query_; }
 
-    void GetRequestURI(std::string &out); // Similar to that of GO's standard lib
+    void GetRequestURI(std::string &out);
 
-    bool HasUrl()       { return !m_Url.empty(); }
-    bool HasScheme()    { return !m_Scheme.empty(); }
-    bool HasHost()      { return !m_Host.empty(); }
-    bool HasPath()      { return !m_Path.empty(); }
-    bool HasPort()      { return !m_Port.empty(); }
-    bool HasQuery()     { return !m_Query.empty(); }
+    bool HasUrl()       { return !url_.empty(); }
+    bool HasScheme()    { return !scheme_.empty(); }
+    bool HasHost()      { return !host_.empty(); }
+    bool HasPath()      { return !path_.empty(); }
+    bool HasPort()      { return !port_.empty(); }
+    bool HasQuery()     { return !query_.empty(); }
 
-    void SetUrl(const std::string &url) { m_Url = url; ExtractInfo(); }
+    void set_url(const std::string &url) { url_ = url; ExtractInfo(); }
 private:
-    std::string m_Url;
-    std::string m_Scheme;   // ex: http https
-    std::string m_Host;     // www.example.com sans scheme
-    std::string m_Path;
-    std::string m_Port;     // may or may not have a port, if not leave empty
-    std::string m_Query;
+    std::string url_;
+    std::string scheme_;   // ex: http https
+    std::string host_;     // www.example.com sans scheme
+    std::string path_;
+    std::string port_;     // may or may not have a port, if not leave empty
+    std::string query_;
 };
 
 #endif

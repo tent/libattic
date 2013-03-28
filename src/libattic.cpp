@@ -139,7 +139,6 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     std::cout<<" done  " << std::endl;
     return status;
 }
-// Move these two methods to apputils
 
 int RegisterAtticApp(const char* szEntityurl,
                      const char* szAppName, 
@@ -147,79 +146,33 @@ int RegisterAtticApp(const char* szEntityurl,
                      const char* szUrl, 
                      const char* szIcon, 
                      const char* szRedirectUri, 
-                     char* scopes[], 
-                     unsigned int scopeCount, 
                      const char* szConfigDir) {
-    int status = ret::A_OK;
-
-    std::vector<std::string> scopesVec;
-    for(unsigned int i=0;i<scopeCount; i++)
-        scopesVec.push_back(scopes[i]);
-
-    status = app::RegisterAttic(szEntityurl,
+    int status = app::RegisterAttic(szEntityurl,
                                 szAppName,
                                 szAppDescription,
                                 szUrl,
                                 szIcon,
                                 szRedirectUri,
-                                scopesVec,
-                                szConfigDir);
-    return status;
-}
-
-static TentApp* g_pApp = NULL;
-
-int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
-    /*
-    if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
-    if(!szEntityUrl) return ret::A_FAIL_INVALID_PTR;
-    if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
-
-    int status = app::RegisterApp(*g_pApp, szEntityUrl, szConfigDirectory);
-    if(status == ret::A_OK) 
-        int status = app::RequestAppAuthorizationURL(*g_pApp, 
-                                                     szEntityUrl, 
-                                                     g_AuthorizationURL);
-
-    if(g_pApp) {
-        delete g_pApp;
-        g_pApp = NULL;
-    }
-    */
-    int status = 0;
-
-    return status;
-}
-
-// Move to apputils
-int RequestUserAuthorizationDetails(const char* szEntityUrl,
-                                    const char* szCode, 
-                                    const char* szConfigDirectory)
-{
-
-    int status = ret::A_OK;
-
-    /*
-    if(!g_pApp)
-        g_pApp = new TentApp();                                                
-
-    status = app::RequestUserAuthorizationDetails(*g_pApp, 
-                                                  szEntityUrl, 
-                                                  szCode, 
-                                                  szConfigDirectory);
-
-    if(g_pApp) {
-        delete g_pApp;
-        g_pApp = NULL;
-    }
-    */
-
+                                szConfigDir,
+                                g_AuthorizationURL);
     return status;
 }
 
 const char* GetAuthorizationURL() {
     return g_AuthorizationURL.c_str();
 }
+
+int RequestUserAuthorizationDetails(const char* szEntityUrl,
+                                    const char* szCode, 
+                                    const char* szConfigDirectory) {
+
+    int status = ret::A_OK;
+    status = app::RequestUserAuthorizationDetails(szEntityUrl,
+                                                  szCode, 
+                                                  szConfigDirectory);
+    return status;
+}
+
 
 int PushFile(const char* szFilePath) {
     int status = IsLibInitialized();

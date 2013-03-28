@@ -82,11 +82,12 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
             posturl += postid;
             std::cout<<"FOLDER PUT URL : " << posturl << std::endl;
 
-            status = netlib::HttpPut( posturl,
-                                      NULL,
-                                      postBuffer,
-                                      &m_At,
-                                      response );
+            status = netlib::HttpPut(posturl,
+                                     p.type(),
+                                     NULL,
+                                     postBuffer,
+                                     &m_At,
+                                     response );
             out = response;
         }
 

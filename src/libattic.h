@@ -19,15 +19,13 @@ int RegisterAtticApp(const char* szEntityurl,
                      const char* szUrl, 
                      const char* szIcon, 
                      const char* szRedirectUri, 
-                     char* scopes[], 
-                     unsigned int scopeCount, 
                      const char* szConfigDir);
-
+const char* GetAuthorizationURL();
 
 int RequestUserAuthorizationDetails( const char* szEntityUrl, 
                                      const char* szCode,
                                      const char* szConfigDirectory); // Config Directory
-const char* GetAuthorizationURL();
+
 
 // Api begin
 int InitLibAttic(unsigned int threadCount = 5);
