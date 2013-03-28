@@ -4,11 +4,15 @@
 
 namespace cnst {
 // Types
-static const char* g_attic_app_type = "https://tent.io/types/app/v0#";
+static const char* g_app_type = "https://tent.io/types/app/v0#";
+
+static const char* g_attic_cred_type = "https://attic.is/types/cred/v0";
 static const char* g_attic_folder_type = "https://attic.is/types/folder/v0";
 static const char* g_attic_file_type = "https://attic.is/types/file/v0";
 static const char* g_attic_chunk_type = "https://attic.is/types/chunk/v0";
+
 static const char* g_basic_profile_type = "https://tent.io/types/basic-profile/v0";
+
 
 // Filenames
 static const char* g_szAppDataName = "app";                                              

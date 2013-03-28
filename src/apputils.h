@@ -107,10 +107,11 @@ static int SendAppRegRequest(const std::string& app_path,
     int status = ret::A_OK;
     // Constrcut post body
     AppPost app_post;
-    app_post.set_type(cnst::g_attic_app_type);
+    app_post.set_type(cnst::g_app_type);
     app_post.PushBackWriteType(cnst::g_attic_chunk_type);
     app_post.PushBackWriteType(cnst::g_attic_file_type);
     app_post.PushBackWriteType(cnst::g_attic_folder_type);
+    app_post.PushBackWriteType(cnst::g_attic_cred_type);
     app_post.PushBackReadType(cnst::g_basic_profile_type);
 
     app_post.set_name(app.app_name());
@@ -196,10 +197,11 @@ static int RegisterApp(const std::string& app_path,
 
     // Constrcut post body
     AppPost app_post;
-    app_post.set_type(cnst::g_attic_app_type);
+    app_post.set_type(cnst::g_app_type);
     app_post.PushBackWriteType(cnst::g_attic_chunk_type);
     app_post.PushBackWriteType(cnst::g_attic_file_type);
     app_post.PushBackWriteType(cnst::g_attic_folder_type);
+    app_post.PushBackWriteType(cnst::g_attic_cred_type);
     app_post.PushBackReadType(cnst::g_basic_profile_type);
 
     app_post.set_name(app.app_name());
