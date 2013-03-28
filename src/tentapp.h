@@ -50,8 +50,8 @@ public:
     const std::string& mac_algorithm() const     { return mac_algorithm_; }
     const std::string& mac_key_id() const        { return mac_key_id_; }
     const std::string& mac_key() const           { return mac_key_; }
+    const std::string& redirect_uri() const      { return redirect_uri_; }
     ScopeVec* scopes()                           { return &scopes_; }
-    RedirectVec* redirect_uris()                 { return &redirect_uris_;}
     AuthVec* authorizations()                    { return &authorizations_;}
     
     void set_app_id(const std::string &id)                      { app_id_ = id; }
@@ -62,16 +62,14 @@ public:
     void set_mac_algorithm(const std::string &alg)              { mac_algorithm_ = alg; }
     void set_mac_key_id(const std::string &id)                  { mac_key_id_ = id; }
     void set_mac_key(const std::string &key)                    { mac_key_ = key; }
-    void set_scopes(const std::vector<std::string>& scopes)         { scopes_ = scopes; }
-    void set_redirect_uris(const std::vector<std::string>& uris)    { redirect_uris_ = uris; }
+    void set_scopes(const std::vector<std::string>& scopes)     { scopes_ = scopes; }
+    void set_redirect_uri(const std::string& uri)               { redirect_uri_ = uri; }
     void set_authorizations(const std::vector<std::string>& auth)   { authorizations_ = auth; }
 
     void PushBackScope(const std::string &szScope)          { scopes_.push_back(szScope); }
-    void PushBackRedirectUri(const std::string &szURI)      { redirect_uris_.push_back(szURI); }
     void PushBackAuthorization(const std::string &szAuth)   { authorizations_.push_back(szAuth); }
 private:
     std::vector<std::string> scopes_;
-    std::vector<std::string> redirect_uris_;
     std::vector<std::string> authorizations_;
 
     std::string app_id_;
@@ -82,6 +80,7 @@ private:
     std::string mac_algorithm_;
     std::string mac_key_id_;
     std::string mac_key_;
+    std::string redirect_uri_;
 };
 
 #endif

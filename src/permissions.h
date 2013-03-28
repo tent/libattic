@@ -63,7 +63,7 @@ public:
 
         root["groups"] = groups;
 
-        Json::Value entities(Json::objectValue);
+        Json::Value entities(Json::arrayValue);
         jsn::SerializeMapIntoObject(entities, m_EntityPermissionMap);
 
         root["entities"] = entities;

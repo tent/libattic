@@ -5,8 +5,7 @@
 #include <map>
 #include <string>
 
-class HttpHeader
-{
+class HttpHeader {
     typedef std::map<std::string, std::string> HttpHeaderMap;
 public:
     HttpHeader();

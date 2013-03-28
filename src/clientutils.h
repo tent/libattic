@@ -67,6 +67,7 @@ static int Discover(const std::string& entityurl, const AccessToken* at, Entity&
     int status = ret::A_OK;
 
     std::string meta_link;
+    std::cout<<" head request : " << entityurl << std::endl;
     status = HeadRequestEntity(entityurl, meta_link);
     std::cout<<" META LINK : " << meta_link << std::endl;
     if(status == ret::A_OK) {
@@ -136,23 +137,14 @@ static void ConstructMetaPath(const std::string& entityurl,
 static void ExtractMetaLink(const std::string& entityurl, 
                             Response& response, 
                             std::string& linkOut) {
-    utils::split s;
-    utils::SplitString(response.body, '\n', s);
 
-    utils::split::iterator itr = s.begin();
-    for(;itr != s.end(); itr++) {
-        size_t link_pos = (*itr).find("Link");
-        if(link_pos != std::string::npos) {
-            size_t rel_pos = (*itr).find(cnst::g_szMetaRel);
-            if(rel_pos != std::string::npos) {
-                // this is the correct link
-                size_t begin = (*itr).find("<");
-                if(begin != std::string::npos) {
-                    size_t end = (*itr).find(">");
-                    size_t diff = (end - (begin+1));
-                    linkOut = (*itr).substr(begin+1, diff);
-                }
-            }
+    std::string link_header = response.header["Link"];
+    if(!link_header.empty()){
+        if(link_header.find(cnst::g_szMetaRel) != std::string::npos) {
+            size_t begin = link_header.find("<");
+            size_t end = link_header.find(">");
+            size_t diff = (end - (begin+1));
+            linkOut = link_header.substr(begin+1, diff);
         }
     }
 }

@@ -68,6 +68,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
         if(postid.empty()) { // POST
             std::cout<< "FOLDER POST URL : " << posturl << std::endl;
             status = netlib::HttpPost( posturl,
+                                       p.type(),
                                        NULL,
                                        postBuffer,
                                        &m_At,

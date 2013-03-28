@@ -3,13 +3,10 @@
 #pragma once
 
 #include <string>
-
 #include <stdio.h>
-
 #include "httpheader.h"
 
-class Response                              
-{                                            
+class Response {
 public:
     std::string CodeAsString() {
         char buf[256]={'\0'};                

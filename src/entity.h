@@ -15,8 +15,10 @@ public:
     typedef std::vector<EntityServer> ServerList;
     typedef std::vector<std::string> UrlList;
 
-    Entity();
-    ~Entity();
+    Entity() {}
+    ~Entity() {}
+
+    EntityServer GetPreferredServer();
 
     int WriteToFile(const std::string& filepath);
     int LoadFromFile(const std::string& filepath);

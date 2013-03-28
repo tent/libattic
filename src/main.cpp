@@ -86,8 +86,7 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
                                   "LibAttic Test Suite", 
                                   "www.tent.is", 
                                   "", 
-                                  p,
-                                  1, 
+                                  g_Entity.c_str(),
                                   s, 
                                   18,
                                   "./config");
@@ -106,7 +105,7 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
     ASSERT_EQ(status, ret::A_OK);
     */
     
-    std::cout<< GetAuthorizationURL() << std::endl;
+//    std::cout<< GetAuthorizationURL() << std::endl;
     
     if(buf) {
         delete[] buf;

@@ -33,6 +33,9 @@ using boost::asio::ip::tcp;
 #include "httpheader.h"
 #include "event.h"
 
+
+// TODO :: all requests are basically the same, consolidate them, reduce code duplication
+
 namespace netlib {
 // Forward Declarations ******************************************************
 static int HttpGet( const std::string& url, 
@@ -46,9 +49,10 @@ static int HttpHead( const std::string& url,
                      Response& out);
 
 static int HttpPost( const std::string& url, 
+                     const std::string& post_type,
                      const UrlParams* pParams,
+                     const std::string& requestbody,
                      const AccessToken* at, 
-                     std::string& body,
                      Response& out);
 
 static int HttpPut( const std::string& url, 
@@ -89,6 +93,7 @@ static int ResolveHost( boost::asio::io_service& io_service,
                         const std::string& host,
                         const bool ssl = true);
 
+/*
 static int InterpretResponse( boost::asio::streambuf& response, 
                               boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
                               Response& resp,
@@ -98,9 +103,21 @@ static int InterpretResponse( boost::asio::streambuf& response,
                               tcp::socket& socket, 
                               Response& resp,
                               std::string& returnHeaders);
+                              */
 
 
 static std::string UriEncode(const std::string & sSrc);
+
+
+static void InterpretResponse(tcp::socket* socket, Response& resp);
+static void InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, Response& resp);
+
+static int GetStatusCode(boost::asio::streambuf& buf);
+static void ProcessResponseHeaders(boost::asio::streambuf& buf, Response& resp);
+static void ProcessResponseBody(boost::asio::streambuf& buf, 
+                                tcp::socket* socket, 
+                                bool chunked,
+                                Response& resp);
 
 static void DeChunkString(std::string& in, std::string& out) {
     utils::split splitbody;
@@ -188,16 +205,16 @@ static int HttpGet( const std::string& url,
         // Send the request
         boost::asio::streambuf response;
         std::string returnheaders;
-        if(bSSL) { 
+        if(bSSL) {
             boost::asio::write(ssl_sock, request);
-            boost::asio::read_until(ssl_sock, response, "\r\n");
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            InterpretResponse(&ssl_sock, out);
         }
-        else { 
+        else {
             boost::asio::write(socket, request);
-            boost::asio::read_until(socket, response, "\r\n");
-            status = InterpretResponse(response, socket, out, returnheaders);
+            InterpretResponse(&socket, out);
         }
+
+
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
@@ -262,12 +279,7 @@ static int HttpGetAttachment ( const std::string& url,
 
         // Send the request.
         boost::asio::write(ssl_sock, request);
-
-        boost::asio::streambuf response;
-        boost::asio::read_until(ssl_sock, response, "\r\n");
-
-        std::string responseheaders;
-        status = InterpretResponse(response, ssl_sock, out, responseheaders);
+        InterpretResponse(&ssl_sock, out);
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
@@ -343,15 +355,13 @@ static int HttpHead( const std::string& url,
         // Send the request.
         boost::asio::streambuf response;
         std::string returnheaders;
-        if(bSSL) { 
+        if(bSSL) {
             boost::asio::write(ssl_sock, request);
-            boost::asio::read_until(ssl_sock, response, "\r\n");
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            InterpretResponse(&ssl_sock, out);
         }
-        else { 
+        else {
             boost::asio::write(socket, request);
-            boost::asio::read_until(socket, response, "\r\n");
-            status = InterpretResponse(response, socket, out, returnheaders);
+            InterpretResponse(&socket, out);
         }
 
         out.body = returnheaders;
@@ -364,11 +374,13 @@ static int HttpHead( const std::string& url,
 }
 
 static int HttpPost( const std::string& url, 
+                     const std::string& post_type,
                      const UrlParams* pParams,
                      const std::string& requestbody,
                      const AccessToken* at, 
                      Response& out)
 {
+    std::cout<<" POSTING " << std::endl;
     int status = ret::A_OK;
     using namespace boost::asio::ssl;
     try {
@@ -382,8 +394,16 @@ static int HttpPost( const std::string& url,
 
         boost::asio::io_service io_service; 
         tcp::socket socket(io_service); 
-        
-        status = ResolveHost(io_service, socket, host); 
+
+        bool bSSL = false;
+        if(protocol == "https") {
+            status = ResolveHost(io_service, socket, host, true);
+            bSSL = true;
+        }
+        else {
+            status = ResolveHost(io_service, socket, host, false);
+        }
+
         if(status != ret::A_OK)
             return status;
 
@@ -394,9 +414,11 @@ static int HttpPost( const std::string& url,
         ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
         boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
 
-        ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-        if (error) 
-            throw boost::system::system_error(error); 
+        if(bSSL) {
+            ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
+            if (error) 
+                throw boost::system::system_error(error); 
+        }
 
         std::string authheader;
         if(at) {
@@ -415,7 +437,10 @@ static int HttpPost( const std::string& url,
         request_stream << "POST " << path << " HTTP/1.1\r\n";
         request_stream << "Host: " << host << "\r\n";
         request_stream << "Accept: application/vnd.tent.v0+json\r\n";
-        request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+        request_stream << "Content-Type: application/vnd.tent.post.v0+json;";
+        request_stream << " type=\"";
+        request_stream << post_type;
+        request_stream << "\"\r\n";
         request_stream << "Content-Length: " << len << "\r\n";
         if(!authheader.empty())
             request_stream << "Authorization: " << authheader <<"\r\n";
@@ -430,13 +455,17 @@ static int HttpPost( const std::string& url,
         */
 
         // Send the request.
-        boost::asio::write(ssl_sock, request);
-
+        //
         boost::asio::streambuf response;
-        boost::asio::read_until(ssl_sock, response, "\r\n");
+        if(bSSL) {
+            boost::asio::write(ssl_sock, request);
+            InterpretResponse(&ssl_sock, out);
+        }
+        else {
+            boost::asio::write(socket, request);
+            InterpretResponse(&socket, out);
+        }
 
-        std::string returnheaders;
-        status = InterpretResponse(response, ssl_sock, out, returnheaders);
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
@@ -507,11 +536,7 @@ static int HttpPut( const std::string& url,
 
         // Send the request.
         boost::asio::write(ssl_sock, request);
-
-        boost::asio::streambuf response;
-        boost::asio::read_until(ssl_sock, response, "\r\n");
-        std::string returnheaders;
-        status = InterpretResponse(response, ssl_sock, out, returnheaders);
+        InterpretResponse(&ssl_sock, out);
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
@@ -586,16 +611,13 @@ static int HttpDelete( const std::string& url,
         boost::asio::write(ssl_sock, request);
 
         boost::asio::streambuf response;
-        std::string returnheaders;
         if(bSSL) { 
             boost::asio::write(ssl_sock, request);
-            boost::asio::read_until(ssl_sock, response, "\r\n");
-            status = InterpretResponse(response, ssl_sock, out, returnheaders);
+            InterpretResponse(&ssl_sock, out);
         }
         else { 
             boost::asio::write(socket, request);
-            boost::asio::read_until(socket, response, "\r\n");
-            status = InterpretResponse(response, socket, out, returnheaders);
+            InterpretResponse(&socket, out);
         }
     }
     catch (std::exception& e) {
@@ -646,6 +668,7 @@ static void ExtractHostAndPath( const std::string& url,
     path = uri.substr(right);
 }
 
+/*
 static int InterpretResponse( boost::asio::streambuf& response, 
                               boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
                               Response& resp,
@@ -722,7 +745,126 @@ static int InterpretResponse( boost::asio::streambuf& response,
 
     return ret::A_OK;
 }
+*/
 
+static void InterpretResponse(tcp::socket* socket, Response& resp) {
+    boost::asio::streambuf response;
+    boost::asio::read_until(*socket, response, "\r\n");
+    resp.code = GetStatusCode(response);
+
+    // Read the response headers, which are terminated by a blank line.
+    boost::asio::read_until(*socket, response, "\r\n\r\n");
+
+    ProcessResponseHeaders(response, resp);
+    bool chunked = false;
+    if(resp.header["transfer-encoding"].find("chunked") != std::string::npos)
+        chunked = true;
+
+    boost::system::error_code error;
+    std::string output_buffer;
+    // Write whatever content we already have to output.
+    if (response.size() > 0) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer = strbuf.str();
+    }
+
+    // Read until EOF, writing data to output as we go.
+    //boost::system::error_code error;
+    while (boost::asio::read(*socket, 
+                             response,
+                             boost::asio::transfer_at_least(1), 
+                             error)) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer += strbuf.str();
+    }
+
+    std::string dechunked;
+    if(chunked){
+        DeChunkString(output_buffer, dechunked);
+        output_buffer = dechunked;
+    }
+
+    resp.body = output_buffer;
+
+    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+        throw boost::system::system_error(error);
+
+}
+
+static void InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, Response& resp) {
+    boost::asio::streambuf response;
+    boost::asio::read_until(*socket, response, "\r\n");
+    resp.code = GetStatusCode(response);
+
+    // Read the response headers, which are terminated by a blank line.
+    boost::asio::read_until(*socket, response, "\r\n\r\n");
+
+    ProcessResponseHeaders(response, resp);
+    bool chunked = false;
+    if(resp.header["transfer-encoding"].find("chunked") != std::string::npos)
+        chunked = true;
+
+    boost::system::error_code error;
+    std::string output_buffer;
+    // Write whatever content we already have to output.
+    if (response.size() > 0) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer = strbuf.str();
+    }
+
+    // Read until EOF, writing data to output as we go.
+    //boost::system::error_code error;
+    while (boost::asio::read(*socket, 
+                             response,
+                             boost::asio::transfer_at_least(1), 
+                             error)) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer += strbuf.str();
+    }
+
+    std::string dechunked;
+    if(chunked){
+        DeChunkString(output_buffer, dechunked);
+        output_buffer = dechunked;
+    }
+
+    resp.body = output_buffer;
+
+    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+        throw boost::system::system_error(error);
+}
+
+static int GetStatusCode(boost::asio::streambuf& buf) {
+    std::istream response_stream(&buf);
+    std::string http_version;
+    response_stream >> http_version;
+
+    unsigned int status_code;
+    response_stream >> status_code;
+    std::string status_message;
+    std::getline(response_stream, status_message);
+
+    if (!response_stream || http_version.substr(0, 5) != "HTTP/")
+        std::cout<<" Invalid stream or NON http : http_version : " << http_version << std::endl;
+
+    return status_code;
+}
+
+static void ProcessResponseHeaders(boost::asio::streambuf& buf, Response& resp) {
+    // Process the response headers.
+    std::istream response_stream(&buf);
+    std::string header;
+    while (std::getline(response_stream, header) && header != "\r") {
+        resp.ConsumeHeader(header + "\n");
+        //std::cout << header << "\n";
+    }
+}
+
+/*
 static int InterpretResponse( boost::asio::streambuf& response, 
                               tcp::socket& socket, 
                               Response& resp,
@@ -740,6 +882,8 @@ static int InterpretResponse( boost::asio::streambuf& response,
     std::getline(response_stream, status_message);
 
     resp.code = status_code;
+
+    std::cout<<"http version : " << http_version << std::endl;
 
     if (!response_stream || http_version.substr(0, 5) != "HTTP/")
         return ret::A_FAIL_HTTP_RESPONSE;
@@ -764,6 +908,8 @@ static int InterpretResponse( boost::asio::streambuf& response,
                 bChunked = true;
         }
     }
+
+    std::cout<<" return headers : " << returnHeaders << std::endl;
 
     std::string output_buffer;
     // Write whatever content we already have to output.
@@ -798,7 +944,7 @@ static int InterpretResponse( boost::asio::streambuf& response,
 
     return ret::A_OK;
 }
-
+*/
 static void BuildRequestHeader( const std::string& requestMethod,
                                 const std::string& url,
                                 const std::string& boundary,
@@ -1125,7 +1271,8 @@ static int HttpAsioMultipartRequest( const std::string& requestType, // POST, PU
         boost::asio::streambuf response;
         boost::asio::read_until(ssl_sock, response, "\r\n");
         std::string returnheaders;
-        status = InterpretResponse(response, ssl_sock, resp, returnheaders);
+        //status = InterpretResponse(response, ssl_sock, resp, returnheaders);
+        InterpretResponse(&ssl_sock, resp);
     }
     catch (std::exception& e) {
         std::string errexception;

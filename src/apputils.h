@@ -16,6 +16,7 @@
 #include "entity.h"
 #include "libatticutils.h"
 #include "urlparams.h"
+#include "apppost.h"
 
 namespace app {
 static int StartupAppInstance(TentApp& app,
@@ -26,16 +27,19 @@ static int StartupAppInstance(TentApp& app,
                               std::vector<std::string>& uris,
                               std::vector<std::string>& scopes);
 
-static int RegisterApp(TentApp& app, 
+static int RegisterApp(const std::string& app_path,
+                       TentApp& app, 
                        const std::string& entityurl, 
                        const std::string& configdir);
+
 static void InitAppInstance(TentApp& app,
                            const std::string& appName,
                            const std::string& appDescription,
                            const std::string& url,
                            const std::string& icon,
-                           std::vector<std::string>& uris,
+                           const std::string& redirect_uri,
                            std::vector<std::string>& scopes);
+
 static int RequestAppAuthorizationURL(TentApp& app, 
                                       const std::string& entityurl,
                                       std::string& urlout);
@@ -50,7 +54,7 @@ static int RegisterAttic(const std::string& entityurl,
                          const std::string& description, 
                          const std::string& url,
                          const std::string& icon,
-                         std::vector<std::string>& uris,
+                         const std::string& redirect_uri,
                          std::vector<std::string>& scopes,
                          const std::string& configdir) {
 
@@ -60,8 +64,9 @@ static int RegisterAttic(const std::string& entityurl,
     status = client::Discover(entityurl, NULL, ent);
     if(status == ret::A_OK) {
         TentApp app;
-        InitAppInstance(app, name, description, url, icon, uris, scopes);
-        status = RegisterApp(app, entityurl, configdir);
+        InitAppInstance(app, name, description, url, icon, redirect_uri, scopes);
+        std::string path = ent.GetPreferredServer().new_post();
+        status = RegisterApp(path, app, entityurl, configdir);
         if(status == ret::A_OK) {
 
         }
@@ -72,47 +77,52 @@ static int RegisterAttic(const std::string& entityurl,
 }
 
 static void InitAppInstance(TentApp& app,
-                           const std::string& appName,
-                           const std::string& appDescription,
+                           const std::string& app_name,
+                           const std::string& app_description,
                            const std::string& url,
                            const std::string& icon,
-                           std::vector<std::string>& uris,
-                           std::vector<std::string>& scopes)
-{
-    app.set_app_name(appName);
-    app.set_app_description(appDescription);
+                           const std::string& redirect_uri,
+                           std::vector<std::string>& scopes) {
+    app.set_app_name(app_name);
+    app.set_app_description(app_description);
     app.set_app_url(url);
     app.set_app_icon(icon);
-    app.set_redirect_uris(uris);
+    app.set_redirect_uri(redirect_uri);
     app.set_scopes(scopes);
 }
 
-static int RegisterApp(TentApp& app, 
+static int RegisterApp(const std::string& app_path,
+                       TentApp& app, 
                        const std::string& entityurl, 
-                       const std::string& configdir)
-{
+                       const std::string& configdir) {
     int status = ret::A_OK;
     fs::CreateDirectory(configdir);
 
-    Post app_post;
+    // Constrcut post body
+    AppPost app_post;
     app_post.set_type(cnst::g_attic_app_type);
-    
-    Json::Value val;
-    jsn::SerializeObject(&app, val);
+    app_post.PushBackWriteType(cnst::g_attic_chunk_type);
+    app_post.PushBackWriteType(cnst::g_attic_file_type);
+    app_post.PushBackWriteType(cnst::g_attic_folder_type);
+    app_post.PushBackReadType(cnst::g_basic_profile_type);
 
-    std::string postpath;
-    postpath += GetEntityApiRoot(entityurl);
-    utils::CheckUrlAndAppendTrailingSlash(postpath);
-    postpath += "apps";
+    app_post.set_name(app.app_name());
+    app_post.set_url(app.app_url());
+    app_post.set_redirect_uri(app.redirect_uri());
+    
+    std::cout<<" APP PATH : " << app_path << std::endl;
 
     std::string serialized;
-    if(jsn::SerializeObject(&app, serialized)) {
+    if(jsn::SerializeObject(&app_post, serialized)) {
+
+        std::cout<<" SERIALIZED : " << serialized << std::endl;
         Response response;
-        status = netlib::HttpPost( postpath, 
-                                   NULL,
-                                   serialized,
-                                   NULL,
-                                   response);
+        status = netlib::HttpPost(app_path, 
+                                  app_post.type(),
+                                  NULL,
+                                  serialized,
+                                  NULL,
+                                  response);
 
         std::cout<< " CODE : " << response.code << std::endl;
         std::cout<< " BODY : " << response.body << std::endl;
@@ -143,6 +153,7 @@ int RequestAppAuthorizationURL(TentApp& app,
 {
     int status = ret::A_OK;
 
+    /*
     std::string apiroot;
     apiroot = GetEntityApiRoot(entityurl);
 
@@ -183,6 +194,7 @@ int RequestAppAuthorizationURL(TentApp& app,
 
     // TODO:: encode these parameters
     urlout.append(params);
+    */
 
     return status;
 }
@@ -193,6 +205,7 @@ int RequestUserAuthorizationDetails(TentApp& app,
                                     const std::string& configdir) 
 {
     int status = ret::A_OK;
+    /*
     LoadAppFromFile(app, configdir);
 
     std::string apiroot;
@@ -242,7 +255,7 @@ int RequestUserAuthorizationDetails(TentApp& app,
 
         status = ret::A_FAIL_NON_200;
     }
-
+*/
     return status;
 }
 static int LoadAppFromFile(TentApp& app, const std::string& configdir) {

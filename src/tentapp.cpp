@@ -19,25 +19,18 @@ void TentApp::Serialize(Json::Value& root) {
     root["description"] = app_description_;
     root["url"] = app_url_;
     root["icon"] = app_icon_;
-    
-    if(scopes_.size() > 0) {
-        Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
-        //Json::Value scopes(Json::nullValue);
-        jsn::SerializeVectorIntoObjectValue(scopes, scopes_);
-       // jsn::SerializeVector(scopes, scopes_);
-        root["scopes"] = scopes;
-    }
-
-    if((redirect_uris_.size() > 0))
-    {
-        Json::Value redirecturis;
-        jsn::SerializeVector(redirect_uris_, redirecturis);
-        root["redirect_uris"] = redirecturis;
-    }
 
     root["mac_algorithm"] = mac_algorithm_;
     root["mac_key_id"] = mac_key_id_;
     root["mac_key"] = mac_key_;
+
+    root["redirect_uri"] = redirect_uri_;
+    
+    if(scopes_.size() > 0) {
+        Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
+        jsn::SerializeVectorIntoObjectValue(scopes, scopes_);
+        root["scopes"] = scopes;
+    }
 
     if(authorizations_.size() > 0) {
         Json::Value authorizations;
@@ -57,8 +50,9 @@ void TentApp::Deserialize(Json::Value& root) {
     mac_key_id_ = root.get("mac_key_id", "").asString();
     mac_key_ = root.get("mac_key", "").asString();
 
+    redirect_uri_ = root.get("redirect_uri", "").asString();
+
     jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
-    jsn::DeserializeIntoVector(root["redirect_uris"], redirect_uris_);
     jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
 }
 

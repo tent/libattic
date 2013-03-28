@@ -354,10 +354,11 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             }
             
             std::cout<<" interpreting response " << std::endl;
-            boost::asio::streambuf response;
-            boost::asio::read_until(ssl_sock, response, "\r\n");
-            std::string responseheaders;
-            netlib::InterpretResponse(response, ssl_sock, resp, responseheaders);
+            //boost::asio::streambuf response;
+            //boost::asio::read_until(ssl_sock, response, "\r\n");
+            //std::string responseheaders;
+            //netlib::InterpretResponse(response, ssl_sock, resp, responseheaders);
+            netlib::InterpretResponse(&ssl_sock, resp);
         }
         else {
             status = ret::A_FAIL_OPEN_FILE;

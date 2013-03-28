@@ -121,9 +121,11 @@ void Post::Serialize(Json::Value& root) {
         // TODO::this
     }
 
+    /*
     Json::Value app;
     tent_app_.Serialize(app); 
     root["app"] = app;
+    */
 
     if(views_.size() > 0) {
         Json::Value views(Json::objectValue);

@@ -79,6 +79,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
 
         status = netlib::HttpPost( posturl,
+                                   p.type(),
                                    NULL,
                                    postBuffer,
                                    &m_At,

@@ -146,17 +146,11 @@ int RegisterAtticApp(const char* szEntityurl,
                      const char* szAppDescription, 
                      const char* szUrl, 
                      const char* szIcon, 
-                     char* redirectUris[], 
-                     unsigned int uriCount, 
+                     const char* szRedirectUri, 
                      char* scopes[], 
                      unsigned int scopeCount, 
                      const char* szConfigDir) {
-
     int status = ret::A_OK;
-
-    std::vector<std::string> uris;
-    for(unsigned int i=0; i < uriCount; i++)
-        uris.push_back(redirectUris[i]);
 
     std::vector<std::string> scopesVec;
     for(unsigned int i=0;i<scopeCount; i++)
@@ -167,7 +161,7 @@ int RegisterAtticApp(const char* szEntityurl,
                                 szAppDescription,
                                 szUrl,
                                 szIcon,
-                                uris,
+                                szRedirectUri,
                                 scopesVec,
                                 szConfigDir);
     return status;
@@ -176,6 +170,7 @@ int RegisterAtticApp(const char* szEntityurl,
 static TentApp* g_pApp = NULL;
 
 int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
+    /*
     if(!szConfigDirectory) return ret::A_FAIL_INVALID_PTR;
     if(!szEntityUrl) return ret::A_FAIL_INVALID_PTR;
     if(!g_pApp) return ret::A_FAIL_INVALID_APP_INSTANCE;
@@ -190,6 +185,8 @@ int RegisterApp(const char* szEntityUrl, const char* szConfigDirectory) {
         delete g_pApp;
         g_pApp = NULL;
     }
+    */
+    int status = 0;
 
     return status;
 }

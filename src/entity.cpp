@@ -9,8 +9,17 @@
 #include "accesstoken.h"
 #include "clientutils.h"
 
-Entity::Entity() {}
-Entity::~Entity(){}
+
+EntityServer Entity::GetPreferredServer() {
+    ServerList::iterator itr = server_list_.begin();
+    ServerList::iterator last_itr = itr;
+    int last_preferred = 1000;
+    for(;itr != server_list_.end(); itr++) {
+        if(atoi((*itr).preference().c_str()) < last_preferred)
+            last_itr = itr;
+    }
+    return (*last_itr);
+}
 
 int Entity::WriteToFile(const std::string& filepath) {
     std::ofstream ofs;
@@ -98,3 +107,5 @@ void Entity::DeserializeServerList(Json::Value& val) {
 void Entity::DeserializePreviousEntities(Json::Value& val) {
     jsn::DeserializeObjectValueIntoVector(val, previous_entities_);
 }
+
+

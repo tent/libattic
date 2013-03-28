@@ -62,7 +62,6 @@ public:
     void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
     void PushBackAttachment(Attachment& pAtch) { attachments_.push_back(pAtch); }
-
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
 
