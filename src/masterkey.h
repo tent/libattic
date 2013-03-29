@@ -1,5 +1,3 @@
-
-
 #ifndef MASTERKEY_H_
 #define MASTERKEY_H_
 #pragma once
@@ -10,11 +8,10 @@
 #include "jsonserializable.h"
 #include "crypto.h"
 
-class MasterKey : JsonSerializable
-{
+class MasterKey : JsonSerializable {
 public:
-    MasterKey();
-    ~MasterKey();
+    MasterKey() {}
+    ~MasterKey() {}
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
@@ -25,26 +22,20 @@ public:
     bool InsertDirtyKey(const std::string& key); // sets and verifies master key from dirty key
     void InsertSentinelIntoMasterKey();
 
-    void GetMasterKeyCredentials(Credentials& out)          { out = m_Cred; }
-    void GetMasterKey(std::string& out)                     { m_Cred.GetKey(out); }
-    void GetMasterKeyWithSentinel(std::string& out) const   { out = m_KeyWithSentinel; }
-    time_t GetTimeCreated() const                           { return m_Created; }
-    time_t GetExpires() const                               { return m_Expires; }
+    const void GetMasterKey(std::string& out) const         { credentials_.GetKey(out); }
+    const Credentials& credentials() const                  { return credentials_; }
+    const std::string& key_with_sentinel() const            { return key_with_sentinel_; }
     
-    void SetTimeCreated(const time_t time)          { m_Created = time; }
-    void SetTimeExpires(const time_t time)          { m_Expires = time; }
-    void SetCredentials(const Credentials& cred)    { m_Cred = cred; }
-    void SetMasterKey(const std::string& key)       { m_Cred.SetKey(key); } 
-    void SetIv(const std::string& iv)               { m_Cred.SetIv(iv); }
+    void SetCredentials(const Credentials& cred)    { credentials_ = cred; }
+    void SetMasterKey(const std::string& key)       { credentials_.SetKey(key); } 
+    void SetIv(const std::string& iv)               { credentials_.SetIv(iv); }
     
 
-    bool IsEmpty() { return m_KeyWithSentinel.empty(); }
+    bool IsEmpty() { return key_with_sentinel_.empty(); }
 
 private:
-    Credentials  m_Cred;
-    std::string  m_KeyWithSentinel;
-    time_t m_Created; // Time created
-    time_t m_Expires; // Time set to expire by
+    Credentials  credentials_;
+    std::string  key_with_sentinel_;
 
 };
 
