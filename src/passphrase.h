@@ -11,8 +11,58 @@
 #include "masterkey.h"
 #include "crypto.h"
 #include "atticclient.h"
+#include "atticpost.h"
 
 namespace pass {
+
+class Passphrase {
+    int GetCredentialsPost(AtticPost& out);
+    int GetCredentialsPostCount();
+
+    int PushAtticCredentials(const AtticPost& post);
+
+    int ConstructMasterKey(const std::string& passphrase, 
+                           const std::string& masterkey,
+                           std::string& encrypted_masterkey,
+                           std::string& salt);
+
+    int CreatePhraseToken(const std::string& master_key, PhraseToken& out);
+    int CreateMasterKey(const std::string& master_key, MasterKey& out);
+
+    void GeneratePhraseKey(const std::string& passphrase, 
+                           const std::string& salt,
+                           std::string& key_out);
+
+    int GenerateRecoveryKey(const std::string& masterkey, 
+                            std::string& encrypted_masterkey,
+                            std::string& salt,
+                            std::string& recovery_key);
+
+    void EncryptKeyWithPassphrase(const std::string& key, 
+                                  const std::string& phrasekey, 
+                                  const std::string& salt,
+                                  std::string& key_out);
+public:
+    Passphrase(const Entity& entity, const AccessToken& at);
+    ~Passphrase();
+
+    int RegisterPassphrase(const std::string& passphrase,
+                           const std::string& masterkey,
+                           std::string& recoverykey);
+
+    int EnterPassphrase(const std::string& passphrase,
+                        std::string& key_out);
+
+    int ChangePassphrase(const std::string& old_passphrase,
+                         const std::string& new_passphrase,
+                         std::string& recoverykey);
+
+    int EnterRecoveryKey(const std::string& recoverykey);
+
+private:
+    AccessToken access_token_;
+    Entity entity_;
+};
 
 static int RegisterPassphraseWithAttic(const std::string& pass, 
                                        const std::string& masterkey,
@@ -43,7 +93,7 @@ static int GenerateRecoveryKey(const std::string& masterkey,
                                std::string& recoveryOut);
                                */
 
-void GeneratePhraseKey(const std::string& phrase, 
+static void GeneratePhraseKey(const std::string& phrase, 
                        std::string& salt,
                        std::string& keyOut);
 
@@ -68,31 +118,29 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
     // Inward facing method
     // Register a new passphrase.
 
-    CredentialsManager* pCm = pClient->GetCredentialsManager();
-    PhraseToken* pt = pClient->GetPhraseToken();
-    Entity* pEntity = pClient->GetEntity();
+    CredentialsManager* pCm = pClient->credentials_manager();
+    PhraseToken pt = pClient->phrase_token();
+    Entity entity = pClient->entity();
     MasterKey mk;
     status = ConstructMasterKey(masterkey, 
                                 pCm, 
-                                *pt, 
+                                pt, 
                                 mk); // also generates salt, inserts into 
                                                 // phrase token
     if(status == ret::A_OK) {
         // Insert sentinel value
         mk.InsertSentinelIntoMasterKey();
         // Get Salt
-        std::string salt;
-        pt->GetSalt(salt);  // Phrase Token
+        std::string salt = pt.salt();
         // Get Dirty Master Key (un-encrypted master key with sentinel values)
-        std::string dirtykey;
-        mk.GetMasterKeyWithSentinel(dirtykey);
-        pt->SetDirtyKey(dirtykey); // Set Phrase Token
+        std::string dirtykey =  mk.key_with_sentinel();
+        pt.set_dirty_key(dirtykey); // Set Phrase Token
         // Enter passphrase to generate key.
         std::string phraseKey;
         //status = pCm->EnterPassphrase(pass, salt, phraseKey);
         GeneratePhraseKey(pass, salt, phraseKey);
         if(status == ret::A_OK) {
-            pClient->SetPhraseKey(phraseKey);
+            pClient->set_phrase_key(phraseKey);
             // Setup passphrase cred to encrypt master key
             std::string encryptedkey;
             status = EncryptKeyWithPassphrase(dirtykey, 
@@ -107,7 +155,7 @@ static int RegisterPassphraseWithAttic(const std::string& pass,
                 /*
                 AtticProfileInfo atticProfile;
                 atticProfile.SetMasterKey(encryptedkey);
-                atticProfile.SetSalt(salt);
+                atticProfile.set_salt(salt);
 
                 std::string genmk; mk.GetMasterKey(genmk);
                 status = GenerateRecoveryKey(genmk,
@@ -152,18 +200,16 @@ static int RegisterRecoveryQuestionsWithAttic(const std::string& masterkey,
     // Insert sentinel value
     backupkey.InsertSentinelIntoMasterKey();
     // Get Salt
-    std::string salt;
-    authcodetoken.GetSalt(salt);  // Phrase Token
+    std::string salt = authcodetoken.salt();  // Phrase Token
     // Get Dirty Master Key (un-encrypted master key with sentinel values)
-    std::string dirtykey;
-    backupkey.GetMasterKeyWithSentinel(dirtykey);
-    authcodetoken.SetDirtyKey(dirtykey); // Set Phrase Token
+    std::string dirtykey = backupkey.key_with_sentinel();
+    authcodetoken.set_dirty_key(dirtykey); // Set Phrase Token
     // Enter passphrase to generate key.
     std::string phraseKey;
     //status = pCm->EnterPassphrase(recovery_key, salt, phraseKey);
     GeneratePhraseKey(compound, salt, phraseKey);
     if(status == ret::A_OK) {
-        authcodetoken.SetPhraseKey(phraseKey);
+        authcodetoken.set_phrase_key(phraseKey);
         // Setup passphrase cred to encrypt master key
         std::string encryptedkey;
         status = EncryptKeyWithPassphrase( dirtykey, 
@@ -247,17 +293,17 @@ static int GenerateRecoveryKey(const std::string& masterkey,
     backupkey.InsertSentinelIntoMasterKey();
     // Get Salt
     std::string salt;
-    authcodetoken.GetSalt(salt);  // Phrase Token
+    authcodetoken.salt(salt);  // Phrase Token
     // Get Dirty Master Key (un-encrypted master key with sentinel values)
     std::string dirtykey;
     backupkey.GetMasterKeyWithSentinel(dirtykey);
-    authcodetoken.SetDirtyKey(dirtykey); // Set Phrase Token
+    authcodetoken.set_dirty_key(dirtykey); // Set Phrase Token
     // Enter passphrase to generate key.
     std::string phraseKey;
     //status = pCm->EnterPassphrase(recovery_key, salt, phraseKey);
     GeneratePhraseKey(recovery_key, salt, phraseKey);
     if(status == ret::A_OK) {
-        authcodetoken.SetPhraseKey(phraseKey);
+        authcodetoken.set_phrase_key(phraseKey);
         // Setup passphrase cred to encrypt master key
         std::string encryptedkey;
         status = EncryptKeyWithPassphrase( dirtykey, 
@@ -350,7 +396,7 @@ static int GenerateRecoveryQuestionsKey(const std::string& masterkey,
     return status;
 }
 
-void GeneratePhraseKey(const std::string& phrase, 
+static void GeneratePhraseKey(const std::string& phrase, 
                        std::string& salt,
                        std::string& keyOut)
 {
@@ -445,7 +491,6 @@ static int EncryptKeyWithPassphrase( const std::string& key,
 }
 
 
-}
-
+} //namespace
 #endif
 
