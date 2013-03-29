@@ -41,42 +41,39 @@ public:
     int SaveAppToFile();
     int SavePhraseToken();
 
-    void SetTentApp(const TentApp& app) { m_App = app; }
+    FileManager* file_manager()                 { return &file_manager_; }
+    CredentialsManager* credentials_manager()   { return &credentials_manager_; }
 
-    void SetPhraseKey(const std::string& key);
-    
-    TentApp* GetTentApp()                       { return &m_App; }
-    FileManager* GetFileManager()               { return &m_FileManager; }
-    CredentialsManager* GetCredentialsManager() { return &m_CredentialsManager; }
-    Entity* GetEntity()                         { return &m_Entity; }
-    PhraseToken* GetPhraseToken()               { return &m_PhraseToken; }
+    const TentApp& tent_app() const             { return tent_app_; }
+    const Entity& entity() const                { return entity_; }
+    const PhraseToken& phrase_token() const     { return phrase_token_; }
+    const AccessToken& access_token() const     { return access_token_; }
 
-    // Return copies
-    AccessToken GetAccessTokenCopy()                { return m_At; }
-    PhraseToken GetPhraseTokenCopy()                { return m_PhraseToken; }
+    void set_tent_app(const TentApp& app) { tent_app_ = app; }
+    void set_phrase_key(const std::string& key);
 
-    void SetWorkingDirectory(const std::string& dir) { m_WorkingDirectory = dir; }
-    void SetConfigDirectory(const std::string& dir) { m_ConfigDirectory = dir; }
-    void SetTempDirectory(const std::string& dir) { m_TempDirectory = dir; }
-    void SetEntityUrl(const std::string& url) { m_EntityUrl = url; }
+    const std::string& working_directory() const { return working_directory_; }
+    const std::string& config_directory() const  { return config_directory_; }
+    const std::string& temp_directory() const    { return temp_directory_; } 
+    const std::string& entity_url() const        { return entity_url_; }
 
-    std::string GetWorkingDirectory() const { return m_WorkingDirectory; }
-    std::string GetConfigDirectory() const  { return m_ConfigDirectory; }
-    std::string GetTempDirectory() const    { return m_TempDirectory; } 
-    std::string GetEntityUrl() const        { return m_EntityUrl; }
+    void set_working_directory(const std::string& dir) { working_directory_ = dir; }
+    void set_config_directory(const std::string& dir) { config_directory_ = dir; }
+    void set_temp_directory(const std::string& dir) { temp_directory_ = dir; }
+    void set_entity_url(const std::string& url) { entity_url_ = url; }
 
 private:
-    TentApp             m_App;
-    FileManager         m_FileManager;
-    CredentialsManager  m_CredentialsManager;
-    Entity              m_Entity;
-    AccessToken         m_At;
-    PhraseToken         m_PhraseToken;
+    TentApp             tent_app_;
+    FileManager         file_manager_;
+    CredentialsManager  credentials_manager_;
+    Entity              entity_;
+    AccessToken         access_token_;
+    PhraseToken         phrase_token_;
 
-    std::string m_WorkingDirectory;
-    std::string m_ConfigDirectory;
-    std::string m_TempDirectory;
-    std::string m_EntityUrl;
+    std::string working_directory_;
+    std::string config_directory_;
+    std::string temp_directory_;
+    std::string entity_url_;
 };
 
 #endif

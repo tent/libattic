@@ -8,8 +8,8 @@
 class HttpHeader {
     typedef std::map<std::string, std::string> HttpHeaderMap;
 public:
-    HttpHeader();
-    ~HttpHeader();
+    HttpHeader() {}
+    ~HttpHeader() {}
 
     std::string& operator[](const std::string& index);
     void AddValue(const std::string& key, const std::string& value);
@@ -19,10 +19,11 @@ public:
 
     void ParseString(const std::string& in);
     void ReturnAsString(std::string& out);
-    std::string ReturnAsString(void);
+
+    std::string asString(void);
 
 private:
-    HttpHeaderMap m_Values;
+    HttpHeaderMap values_;
 };
 
 

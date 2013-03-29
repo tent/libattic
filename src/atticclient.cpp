@@ -5,16 +5,17 @@
 #include "utils.h"
 #include "constants.h"
 #include "filesystem.h"
+#include "clientutils.h"
 
 Client::Client(const std::string& workingdir, 
                const std::string& configdir, 
                const std::string& tempdir, 
                const std::string& entityurl) 
 {
-    m_WorkingDirectory = workingdir;
-    m_ConfigDirectory = configdir;
-    m_TempDirectory = tempdir;
-    m_EntityUrl = entityurl;
+    working_directory_ = workingdir;
+    config_directory_ = configdir;
+    temp_directory_ = tempdir;
+    entity_url_ = entityurl;
 }
 
 Client::~Client() {}
@@ -43,13 +44,13 @@ int Client::Shutdown() {
 int Client::InitializeFileManager() {
     int status = ret::A_OK;
     std::string config, working, temp;
-    status = fs::GetCanonicalPath(m_ConfigDirectory, config);
-    status = fs::GetCanonicalPath(m_WorkingDirectory, working);
-    status = fs::GetCanonicalPath(m_TempDirectory, temp);
+    status = fs::GetCanonicalPath(config_directory_, config);
+    status = fs::GetCanonicalPath(working_directory_, working);
+    status = fs::GetCanonicalPath(temp_directory_, temp);
 
     if(status == ret::A_OK) {
         std::cout<<" Initializing file manager ... " << std::endl;
-        status = m_FileManager.Initialize(config, working, temp);
+        status = file_manager_.Initialize(config, working, temp);
     }
     return status;
 }
@@ -57,12 +58,12 @@ int Client::InitializeFileManager() {
 int Client::InitializeCredentialsManager() {
     int status = ret::A_OK;
     std::string config;
-    std::cout<<" config directory : " << m_ConfigDirectory << std::endl;
-    status = fs::GetCanonicalPath(m_ConfigDirectory, config);
+    std::cout<<" config directory : " << config_directory_ << std::endl;
+    status = fs::GetCanonicalPath(config_directory_, config);
 
     if(status == ret::A_OK) {
-        m_CredentialsManager.SetConfigDirectory(config);
-        status = m_CredentialsManager.Initialize();
+        credentials_manager_.SetConfigDirectory(config);
+        status = credentials_manager_.Initialize();
     }
 
     return status;
@@ -70,23 +71,23 @@ int Client::InitializeCredentialsManager() {
 
 int Client::ShutdownFileManager() {
     int status = ret::A_OK;
-    status = m_FileManager.Shutdown();
+    status = file_manager_.Shutdown();
     return status;
 }
 
 int Client::ShutdownCredentialsManager() {
     int status = ret::A_OK;
-    m_CredentialsManager.Shutdown();
+    credentials_manager_.Shutdown();
     return status;
 }
 
 int Client::LoadAccessToken() { 
     int status = ret::A_OK;
-    status = m_CredentialsManager.LoadAccessToken();
+    status = credentials_manager_.LoadAccessToken();
     if(status == ret::A_OK)
-        m_CredentialsManager.GetAccessTokenCopy(m_At);
+        credentials_manager_.GetAccessTokenCopy(access_token_);
 
-    std::string at = m_At.GetAccessToken();
+    std::string at = access_token_.GetAccessToken();
     std::cout<<" STATUS : " << status << std::endl;
     std::cout<<" ACCESS TOKEN : " << at << std::endl;
     return status;
@@ -98,13 +99,13 @@ int Client::LoadPhraseToken() {
     std::string path;
     ConstructPhraseTokenFilepath(path);
 
-    status = m_PhraseToken.LoadFromFile(path);
+    status = phrase_token_.LoadFromFile(path);
     if(status != ret::A_OK) {
         // Assume no file
         // Extract info from entity
-        status = ExtractPhraseToken(m_PhraseToken);
+        status = ExtractPhraseToken(phrase_token_);
         if(status == ret::A_OK) {
-            m_PhraseToken.SaveToFile(path);
+            phrase_token_.SaveToFile(path);
         }
 
     }
@@ -112,11 +113,11 @@ int Client::LoadPhraseToken() {
     return status;
 }
 
-void Client::SetPhraseKey(const std::string& key) {
+void Client::set_phrase_key(const std::string& key) {
     std::string path;
     ConstructPhraseTokenFilepath(path);
-    m_PhraseToken.SetPhraseKey(key);
-    m_PhraseToken.SaveToFile(path);
+    phrase_token_.set_phrase_key(key);
+    phrase_token_.SaveToFile(path);
 }
 
 int Client::ExtractPhraseToken(PhraseToken& out) {
@@ -130,7 +131,7 @@ int Client::LoadAppFromFile() {
     int status = ret::A_OK;
     std::string savepath;
     ConstructAppPath(savepath);
-    status = m_App.LoadFromFile(savepath);
+    status = tent_app_.LoadFromFile(savepath);
 
     return status;
 }
@@ -138,22 +139,20 @@ int Client::LoadAppFromFile() {
 int Client::LoadEntity(bool override) {
     int status = ret::A_OK;
 
-    //VO3
-    /*
+
     std::string entpath;
     ConstructEntityFilepath(entpath);
     
     // Attempt to load from file
-    status = m_Entity.LoadFromFile(entpath);
+    status = entity_.LoadFromFile(entpath);
 
     // If not or overrride, lets attempt discovery
     if(status != ret::A_OK || override) {
-        status = m_Entity.Discover(m_EntityUrl, &m_At);
-
+        status = client::Discover(entity_url_, &access_token_, entity_);
         if(status == ret::A_OK)
-            m_Entity.WriteToFile(entpath);
+            entity_.WriteToFile(entpath);
     }
-    */
+
     return status;
 }
 
@@ -161,7 +160,7 @@ int Client::SaveAppToFile() {
     int status = ret::A_OK;
     std::string savepath;
     ConstructAppPath(savepath);
-    status = m_App.SaveToFile(savepath);
+    status = tent_app_.SaveToFile(savepath);
 
     return status;
 }
@@ -173,31 +172,31 @@ void Client::StartupAppInstance(const std::string& appName,
                                 std::vector<std::string>& uris,
                                 std::vector<std::string>& scopes)
 {
-    m_App.SetAppName(appName);
-    m_App.SetAppDescription(appDescription);
-    m_App.SetAppURL(url);
-    m_App.SetAppIcon(icon);
+    tent_app_.SetAppName(appName);
+    tent_app_.SetAppDescription(appDescription);
+    tent_app_.SetAppURL(url);
+    tent_app_.SetAppIcon(icon);
 
-    m_App.SetRedirectUris(uris);
-    m_App.SetScopes(scopes);
+    tent_app_.SetRedirectUris(uris);
+    tent_app_.SetScopes(scopes);
 }
 */
 
 void Client::ConstructAppPath(std::string& out) {
     // Construct path
-    out = m_ConfigDirectory;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);
     out.append(cnst::g_szAppDataName);
 }
 
 void Client::ConstructEntityFilepath(std::string& out) {
-    out = m_ConfigDirectory;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);
     out.append(cnst::g_szEntityName);
 }
 
 void Client::ConstructPhraseTokenFilepath(std::string& out) {
-    out = m_ConfigDirectory;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);
     out += cnst::g_szPhraseTokenName;
 }

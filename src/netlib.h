@@ -221,6 +221,12 @@ static int HttpHead(const std::string& url,
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
 
+    /*
+    std::ostringstream ss;
+    ss << &request;
+    std::cout <<"ss : " <<  ss.str() << std::endl;
+    */
+
     status = HttpRequest(local_url, request, out);
     return status;
 }
@@ -267,6 +273,12 @@ static int HttpPost(const std::string& url,
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
     request_stream << requestbody;
+
+    /*
+    std::ostringstream ss;
+    ss << &request;
+    std::cout <<"ss : " <<  ss.str() << std::endl;
+    */
 
     status = HttpRequest(local_url, request, out);
     return status;

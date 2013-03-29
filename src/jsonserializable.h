@@ -18,6 +18,8 @@ public:
 namespace jsn {
     static void PrintOutJsonValue(Json::Value* val);
 
+    // TODO :: const correctness for input variables, will also need to mark serialize member
+    // functions as const, save this for a slow day
     static bool SerializeObject(JsonSerializable* pObj, std::string& output);
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val);
     static bool SerializeJsonValue(Json::Value& root, std::string& output);

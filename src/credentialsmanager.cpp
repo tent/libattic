@@ -104,7 +104,7 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
 }
 
 //TODO:: rename this, confusing
-int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken& ptOut) {
+int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken& ptOut) { // Depricated
 
     int status = ret::A_OK;
     Lock();
@@ -120,14 +120,14 @@ int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken&
         status = crypto::CheckSalt(salt);
 
         if(status == ret::A_OK) {
-            ptOut.SetSalt(salt);
+            ptOut.set_salt(salt);
 
             // Generate Passphrase Key 
             Credentials cred;
             crypto::GenerateKeyFromPassphrase(pass, salt, cred);
             
             // Set the key generated from phrase
-            ptOut.SetPhraseKey(reinterpret_cast<char*>(cred.m_Key));
+            ptOut.set_phrase_key(reinterpret_cast<char*>(cred.m_Key));
         }
     }
     Unlock();

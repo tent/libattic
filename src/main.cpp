@@ -124,6 +124,9 @@ TEST(PASSPHRASE, REGISTER)
     SetConfigValue("temp_dir", "./data/temp");
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
+    
+    std::cout<<" LIB INITIALIZED " << std::endl;
+    ASSERT_EQ(status, ret::A_OK);
    
     if(status == ret::A_OK) {
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
