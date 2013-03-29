@@ -15,12 +15,8 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
                                    std::string& recoverykey) {
     int status = ret::A_OK;
     if(GetCredentialsPostCount() > 0 ) {
-
-        std::cout<<" passphrase over " << std::endl;
-        // Check for credentials post
-        //  If it exists, check if there is a passphrase registered
-        //      If not, register and update
-        //      else return already registered  
+        status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
+        // Already registered a passphrase, go enter it...
     }
     else {
         std::string encrypted_masterkey, salt;
@@ -32,31 +28,17 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
                                          encrypted_recovery_masterkey,
                                          recovery_salt,
                                          recovery_key);
-
-            std::cout<<" passphrase : " << passphrase << std::endl;
-            std::cout<<" master key : " << masterkey << std::endl;
-            std::cout<<" encrypted master key : " << encrypted_masterkey << std::endl;
-            std::cout<<" salt : " << salt << std::endl;
-            std::cout<<" encrypted recovery mk : " << encrypted_recovery_masterkey << std::endl;
-            std::cout<<" recovery salt : " << recovery_salt << std::endl;
-            std::cout<<" recovery key : " << recovery_key << std::endl;
-
             recoverykey = recovery_key;
 
             AtticPost ap;
             ap.set_salt(salt);
             ap.set_master_key(encrypted_masterkey);
-
             ap.set_recovery_salt(recovery_salt);
             ap.set_recovery_master_key(encrypted_recovery_masterkey);
-
+            // Write Out To Post
             PushAtticCredentials(ap);
-
         }
 
-        // Write Out To Post
-        //
-        // write out phrase token?
     }
 
     return status;
@@ -65,11 +47,22 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
 int Passphrase::EnterPassphrase(const std::string& passphrase,
                                 std::string& key_out) {
     int status = ret::A_OK;
-
     // Get Credentials post
-    //  extract master key (encrypted) and salt
-    //  generate phrase key 
-    //  decrypt master key
+    AtticPost p;
+    status = RetrieveCredentialsPost(p);
+    if(status == ret::A_OK) {
+        //  extract master key (encrypted) and salt
+        std::string masterkey = p.master_key();
+        std::string salt = p.salt();
+
+        std::cout<< " MASTER KEY : " << masterkey << std::endl;
+        std::cout<< " SALT : " << salt << std::endl;
+        //  generate phrase key 
+        std::string phrase_key;
+        GeneratePhraseKey(passphrase, salt, phrase_key);
+        
+        //  decrypt master key
+    }
 
     return status;
 }
@@ -88,6 +81,20 @@ int Passphrase::EnterRecoveryKey(const std::string& recoverykey) {
 
     return status;
 }
+
+int Passphrase::DecryptKey(const std::string& key, 
+                           const std::string& phrasekey, 
+                           const std::string& salt,
+                           std::string& key_out) {
+    int status = ret::A_OK;
+
+    Credentials cred;
+
+
+
+    return status;
+}
+
 
 int Passphrase::ConstructMasterKey(const std::string& passphrase, 
                                    const std::string& masterkey,
@@ -214,12 +221,44 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
     if(response.code == 200) {
 
     }
+    else { 
+        status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }
 
-int Passphrase::GetCredentialsPost(AtticPost& out) {
-    return 0;
+int Passphrase::RetrieveCredentialsPost(AtticPost& out) { 
+    int status = ret::A_OK;
+    std::string url = entity_.GetPreferredServer().posts_feed();
+
+    UrlParams params;
+    params.AddValue(std::string("post_types"), std::string(cnst::g_attic_cred_type));
+
+    Response response;
+    netlib::HttpGet(url,
+                   &params,
+                   &access_token_,
+                   response);
+
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" header : " << response.header.asString() << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
+
+    if(response.code == 200) {
+        // There should be only one, either way, take the top most in the array
+        //  - later do this to sort by newest
+        Json::Value arr(Json::arrayValue);
+        jsn::DeserializeJson(response.body, arr);
+        Json::ValueIterator itr = arr.begin();
+        if(itr!= arr.end())
+            jsn::DeserializeObject(&out, *itr);
+    }
+    else { 
+        status = ret::A_FAIL_NON_200; 
+    }
+
+    return status;
 }
 
 int Passphrase::GetCredentialsPostCount() {
@@ -235,7 +274,7 @@ int Passphrase::GetCredentialsPostCount() {
                     response);
 
     std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" header count : " << response.header.asString() << std::endl;
+    std::cout<<" header : " << response.header.asString() << std::endl;
     std::cout<<" body : " << response.body << std::endl;
 
     int count = -1;

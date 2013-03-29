@@ -16,9 +16,6 @@
 namespace pass {
 
 class Passphrase {
-    int GetCredentialsPost(AtticPost& out);
-    int GetCredentialsPostCount();
-
     int PushAtticCredentials(const AtticPost& post);
 
     int ConstructMasterKey(const std::string& passphrase, 
@@ -42,6 +39,15 @@ class Passphrase {
                                   const std::string& phrasekey, 
                                   const std::string& salt,
                                   std::string& key_out);
+
+    int DecryptKey(const std::string& key, 
+                   const std::string& phrasekey, 
+                   const std::string& salt,
+                   std::string& key_out);
+
+    int RetrieveCredentialsPost(AtticPost& out);
+    int GetCredentialsPostCount();
+
 public:
     Passphrase(const Entity& entity, const AccessToken& at);
     ~Passphrase();

@@ -299,10 +299,8 @@ int RegisterPassphrase(const char* szPass, bool override) {
     int status = IsLibInitialized(false);
     if(status == ret::A_OK) {
         status = ret::A_FAIL_REGISTER_PASSPHRASE;
-
         // Discover Entity, get access token
         pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
-
         // Generate Master Key
         std::string master_key;
         g_pClient->credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
@@ -319,7 +317,20 @@ int RegisterPassphrase(const char* szPass, bool override) {
 }
 
 int EnterPassphrase(const char* szPass) {
+    if(!szPass) return ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
+    if(status == ret::A_OK) {
+        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+        // Discover Entity, get access token
+        pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+
+        std::string phrase_key;
+        status = ps.EnterPassphrase(szPass, phrase_key);
+
+        if(status == ret::A_OK) {
+        }
+    }
+    return status;
 
    /* 
     if(status == ret::A_OK) {
