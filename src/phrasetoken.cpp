@@ -5,32 +5,19 @@
 #include "utils.h"
 #include "errorcodes.h"
 
-PhraseToken::PhraseToken()
-{
-
+void PhraseToken::Serialize(Json::Value& root) {
+    root["phrase_key"] = phrase_key_;
+    root["salt"] = salt_;
+    root["iv"] = iv_;
 }
 
-PhraseToken::~PhraseToken()
-{
-
+void PhraseToken::Deserialize(Json::Value& root) {
+    phrase_key_ = root.get("phrase_key", "").asString();
+    salt_ = root.get("salt", "").asString();
+    iv_ = root.get("iv", "").asString();
 }
 
-void PhraseToken::Serialize(Json::Value& root)
-{
-    root["phrase_key"] = m_PhraseKey;
-    root["salt"] = m_Salt;
-    root["iv"] = m_Iv;
-}
-
-void PhraseToken::Deserialize(Json::Value& root)
-{
-    m_PhraseKey = root.get("phrase_key", "").asString();
-    m_Salt = root.get("salt", "").asString();
-    m_Iv = root.get("iv", "").asString();
-}
-
-int PhraseToken::SaveToFile(const std::string& filepath)
-{
+int PhraseToken::SaveToFile(const std::string& filepath) {
     std::ofstream ofs;
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
 
@@ -46,29 +33,27 @@ int PhraseToken::SaveToFile(const std::string& filepath)
     return ret::A_OK;
 }
 
-int PhraseToken::LoadFromFile(const std::string& filepath)
-{
+int PhraseToken::LoadFromFile(const std::string& filepath) {
     std::ifstream ifs;                                                                            
     ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);                        
                                                                                                   
-    if(!ifs.is_open())                                                                            
-        return ret::A_FAIL_OPEN_FILE;                                                                  
+    if(!ifs.is_open())
+        return ret::A_FAIL_OPEN_FILE;
                                                                                                   
-    unsigned int size = utils::CheckIStreamSize(ifs);                                             
-    char* pBuf = new char[size+1];                                                                
-    pBuf[size] = '\0';                                                                            
+    unsigned int size = utils::CheckIStreamSize(ifs);
+    char* pBuf = new char[size+1];
+    pBuf[size] = '\0';
                                                                                                   
     ifs.read(pBuf, size);                                                                         
                                                                                                   
     // sanity check size and readcount should be the same                                         
-    int readcount = ifs.gcount();                                                                 
-    if(readcount != size)                                                                         
+    int readcount = ifs.gcount();
+    if(readcount != size)
         std::cout<<"READCOUNT NOT EQUAL TO SIZE\n";                                               
     
     std::string loaded(pBuf);                                                                     
     
-    if(pBuf)                                                                                      
-    {                                                                                             
+    if(pBuf) {
         delete[] pBuf;                                                                            
         pBuf = 0;                                                                                 
     }                                                                                             
@@ -77,6 +62,4 @@ int PhraseToken::LoadFromFile(const std::string& filepath)
     
     return ret::A_OK;                                                                             
 }
-
-
 

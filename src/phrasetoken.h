@@ -7,8 +7,8 @@
 
 class PhraseToken : public JsonSerializable {
 public:
-    PhraseToken();
-    ~PhraseToken();
+    PhraseToken() {}
+    ~PhraseToken() {}
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
@@ -16,25 +16,24 @@ public:
     int SaveToFile(const std::string& filepath);
     int LoadFromFile(const std::string& filepath);
     
-    bool IsPhraseKeyEmpty() { return m_PhraseKey.empty(); }
-    bool IsSaltEmpty() { return m_Salt.empty(); }
+    bool IsPhraseKeyEmpty() { return phrase_key_.empty(); }
+    bool IsSaltEmpty() { return salt_.empty(); }
 
-    void GetDirtyKey(std::string& out) const { out = m_DirtyKey; }
-    void GetPhraseKey(std::string& out) const { out = m_PhraseKey; }
-    void GetSalt(std::string& out) const { out = m_Salt; }
-    void GetIv(std::string& out) const { out = m_Iv; }
+    const std::string& dirty_key() const    { return dirty_key_; }
+    const std::string& phrase_key() const   { return phrase_key_; }
+    const std::string& salt() const         { return salt_; }
+    const std::string& iv() const           { return iv_; }
 
-    void SetDirtyKey(const std::string& key) { m_DirtyKey = key; }
-    void SetPhraseKey(const std::string& key) { m_PhraseKey = key; }
-    void SetSalt(const std::string& salt) { m_Salt = salt; }
-    void SetIv(const std::string& iv) { m_Iv = iv; }
+    void set_dirty_key(const std::string& key)  { dirty_key_ = key; }
+    void set_phrase_key(const std::string& key) { phrase_key_ = key; }
+    void set_salt(const std::string& salt)      { salt_ = salt; }
+    void set_iv(const std::string& iv)          { iv_ = iv; }
 
 private:
-    std::string m_DirtyKey; // Key generated from passphrase, encrypted, with sentinel values
-    std::string m_PhraseKey; // Key generated from passphrase, unencrypted
-    std::string m_Salt;
-    std::string m_Iv; // Iv used to encrypt master key
-
+    std::string dirty_key_; // Key generated from passphrase, encrypted, with sentinel values
+    std::string phrase_key_; // Key generated from passphrase, unencrypted
+    std::string salt_;
+    std::string iv_; // Iv used to encrypt master key
 };
 
 #endif
