@@ -5,8 +5,9 @@
 #include "manifesttask.h"
 #include "fileinfo.h"
 
-class QueryFilesTask : public ManifestTask
-{
+namespace attic { 
+
+class QueryFilesTask : public ManifestTask {
     int CreateCStringListsAndCallBack(std::vector<FileInfo>& vec);
 public:
     QueryFilesTask( Task::TaskType type,                    
@@ -22,9 +23,8 @@ public:
     void RunTask();
 private:
     int m_Stride;
-
-
 };
 
+}//namespace
 #endif
 

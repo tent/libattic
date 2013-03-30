@@ -5,6 +5,8 @@
 #include "post.h"
 #include "entity.h"
 
+namespace attic { 
+
 class EntityPost : public Post {
 public:
     EntityPost();
@@ -19,5 +21,6 @@ private:
     Entity entity_;
 };
 
+}//namespace
 #endif
 

@@ -10,6 +10,8 @@
 #include "jsonserializable.h"
 #include "accesstoken.h"
 
+namespace attic {
+
 class RedirectCode : public JsonSerializable {
 public:
     RedirectCode() {}
@@ -83,5 +85,6 @@ private:
     std::string redirect_uri_;
 };
 
+}//namespace
 #endif
 

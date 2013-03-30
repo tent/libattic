@@ -7,6 +7,8 @@
 
 #include "post.h"
 
+namespace attic { 
+
 class FileInfo;
 
 class FilePost : public Post {
@@ -57,6 +59,6 @@ private:
     int deleted_;
 };
 
-
+}//namespace
 #endif
 

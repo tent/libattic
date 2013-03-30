@@ -6,6 +6,8 @@
 #include <deque>
 #include "event.h"
 
+namespace attic { 
+
 class CallbackHandler : public event::EventListener {
     void Notify(const event::Event& event);
 public:
@@ -24,8 +26,5 @@ private:
     std::map<event::Event::EventType, CallbackList>  m_CallbackMap;
 };
 
+} //namespace
 #endif
-
-
-
-

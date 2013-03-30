@@ -7,6 +7,8 @@
 #include "filesystem.h"
 #include "clientutils.h"
 
+namespace attic { 
+
 Client::Client(const std::string& workingdir, 
                const std::string& configdir, 
                const std::string& tempdir, 
@@ -207,4 +209,6 @@ void Client::ConstructPhraseTokenFilepath(std::string& out) {
     out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);
     out += cnst::g_szPhraseTokenName;
+}
+
 }

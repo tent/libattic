@@ -8,6 +8,7 @@
 
 #include "jsonserializable.h"
 
+namespace attic { 
 
 class Group : public JsonSerializable
 {
@@ -98,8 +99,6 @@ private:
     bool    m_Public;
 };
 
-
-
-
+}//namespace
 #endif
 

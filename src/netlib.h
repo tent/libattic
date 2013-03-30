@@ -32,7 +32,8 @@ using boost::asio::ip::tcp;
 #include "httpheader.h"
 #include "event.h"
 
-namespace netlib {
+namespace attic { namespace netlib {
+
 static int HttpRequest(const std::string& url, 
                        boost::asio::streambuf& request,
                        Response& out);
@@ -1077,6 +1078,6 @@ static std::string UriEncode(const std::string & sSrc) {
 }
 
 
-};
+}} //namespace
 #endif
 

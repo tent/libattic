@@ -7,6 +7,8 @@
 #include "postutils.h"
 #include "folderpost.h"
 
+namespace attic { 
+
 PostFolderMetadataStrategy::PostFolderMetadataStrategy() {}
 PostFolderMetadataStrategy::~PostFolderMetadataStrategy() {}
 
@@ -124,3 +126,5 @@ FileInfo* PostFolderMetadataStrategy::RetrieveFileInfo(const std::string& filepa
         fi = m_pFileManager->CreateFileInfo();
     return fi;
 }
+
+}// namespace

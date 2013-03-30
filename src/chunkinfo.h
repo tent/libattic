@@ -7,6 +7,8 @@
 
 #include "jsonserializable.h"
 
+namespace attic {
+
 class ChunkInfo : public JsonSerializable {
 public:
     ChunkInfo();
@@ -42,5 +44,6 @@ private:
     unsigned int m_Position;        // Position in the order of chunks
 };
 
+} // namespace
 #endif
 

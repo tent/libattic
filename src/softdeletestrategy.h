@@ -4,6 +4,8 @@
 
 #include "httpstrategy.h"
 
+namespace attic { 
+
 class SoftDeleteStrategy : public HttpStrategyInterface {
     void MarkFileDeleted(FileInfo* fi);
     FileInfo* RetrieveFileInfo(const std::string& filepath);
@@ -16,5 +18,6 @@ public:
                 Response& out);
 };
 
+}//namespace
 #endif
 

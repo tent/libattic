@@ -6,11 +6,12 @@
 #include <string.h>
 #include <stdint.h>
 
+namespace attic { 
+
 static const int windowSize = 64;
 static const int charOffset = 31;
 
-class RollSum
-{
+class RollSum {
 public:
     RollSum(int bits = 22)
     {   
@@ -66,9 +67,7 @@ private:
     int         m_BlobSize;
 };
 
-namespace roll
-{
-
+namespace roll {
     // Example usage
     static void CalculateSplits(const std::string& data)
     {
@@ -83,10 +82,10 @@ namespace roll
 
     static void CaclulateSplitsForFile(const std::string& filepath, std::deque<unsigned int> out)
     {
-
-
     }
 
 }
+
+}//namespace
 #endif
 

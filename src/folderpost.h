@@ -6,6 +6,8 @@
 #include "post.h"
 #include "folder.h"
 
+namespace attic { 
+
 class FolderPost : public Post {
 public:
     FolderPost();
@@ -29,5 +31,6 @@ private:
     std::string file_type_;     // File or Folder
 };
 
+} //namespace
 #endif
 

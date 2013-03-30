@@ -4,6 +4,8 @@
 
 #include <string>
 
+namespace attic { 
+
 class TaskDelegate {
 public:                                                         
     TaskDelegate() {}
@@ -15,5 +17,6 @@ public:
                           const std::string& var) const = 0;
 };
 
+}//namespace
 #endif
 

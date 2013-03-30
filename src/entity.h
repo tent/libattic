@@ -9,6 +9,8 @@
 #include "jsonserializable.h"
 #include "entityserver.h"
 
+namespace attic { 
+
 class AccessToken;
 class Entity : public JsonSerializable {
 public:
@@ -46,5 +48,6 @@ private:
     std::string     entity_;
 };
 
+}//namespace
 #endif
 

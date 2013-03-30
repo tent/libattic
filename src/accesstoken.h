@@ -1,4 +1,3 @@
-
 #ifndef ACCESSTOKEN_H_
 #define ACCESSTOKEN_H_
 #pragma once
@@ -7,11 +6,11 @@
 #include "errorcodes.h"
 #include "jsonserializable.h"
 
-class AccessToken : public JsonSerializable
-{
+namespace attic { 
+class AccessToken : public JsonSerializable {
 public:
-    AccessToken();
-    ~AccessToken();
+    AccessToken() {}
+    ~AccessToken() {}
 
     // TODO :: move this to some other place, the file manager could 
     //         be in charge of saving state to disk
@@ -26,8 +25,7 @@ public:
     std::string GetMacAlgorithm() const  { return m_MacAlgorithm; }
     std::string GetTokenType() const     { return m_TokenType; }
 
-    void Reset()
-    {
+    void Reset() {
         m_AccessToken.clear();
         m_MacKey.clear();
         m_MacAlgorithm.clear();
@@ -43,5 +41,6 @@ public:
 };
 
 
+}//namespace
 #endif
 

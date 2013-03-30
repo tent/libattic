@@ -1,5 +1,7 @@
 #include "callbackhandler.h"
 
+namespace attic { 
+
 CallbackHandler::CallbackHandler() {}
 CallbackHandler::~CallbackHandler() {}
 
@@ -34,3 +36,4 @@ void CallbackHandler::Notify(const event::Event& event) {
 
 }
 
+} //namespace

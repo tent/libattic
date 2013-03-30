@@ -9,7 +9,7 @@
 #include "mutexclass.h"
 #include "taskdelegate.h"
 
-namespace event {
+namespace attic { namespace event {
 
 struct Event {
     enum EventStatus {
@@ -128,6 +128,6 @@ static void ShutdownEventSystem() {
     EventSystem::GetInstance()->Shutdown();
 }
 
-};
+}}//namesapce
 #endif
 

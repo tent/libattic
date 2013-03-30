@@ -1,5 +1,7 @@
 #include "httpheader.h"
 
+namespace attic { 
+
 void HttpHeader::AddValue(const std::string& key, const std::string& value) {
     values_[key] = value;
 }
@@ -87,3 +89,4 @@ std::string& HttpHeader::operator[](const std::string& index) {
     return values_[index];
 }
 
+}//namespace

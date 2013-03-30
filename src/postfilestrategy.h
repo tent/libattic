@@ -6,6 +6,8 @@
 #include "netlib.h"
 #include "credentials.h"
 
+namespace attic {
+
 class FileInfo;
 class FileManager;
 
@@ -55,5 +57,7 @@ public:
                 CredentialsManager* pCredentialsManager,
                 Response& out);
 };
+
+}//namespace
 #endif
 

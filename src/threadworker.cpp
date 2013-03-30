@@ -6,6 +6,8 @@
 #include "task.h"
 #include "taskqueue.h"
 
+namespace attic {
+
 ThreadWorker::ThreadWorker()
 {
     m_State = ThreadWorker::IDLE;
@@ -108,3 +110,5 @@ void ThreadWorker::SetThreadExit()
     m_State = ThreadWorker::EXIT;
     Unlock();
 }
+
+}//namespace

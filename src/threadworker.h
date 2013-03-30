@@ -4,6 +4,8 @@
 
 #include "mutexclass.h"
 
+namespace attic {
+
 class Task;
 
 class ThreadWorker : public MutexClass
@@ -31,5 +33,7 @@ private:
 
     ThreadState m_State;
 };
+
+}//namespace
 #endif
 

@@ -6,6 +6,8 @@
 #include "credentials.h"
 #include "post.h"
 
+namespace attic { 
+
 class GetFileStrategy : public HttpStrategyInterface {
     int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
     int GetChunkPost(FileInfo* fi, Response& responseOut);
@@ -29,5 +31,6 @@ public:
                 Response& out);
 };
 
+}//namespace
 #endif
 

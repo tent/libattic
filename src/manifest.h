@@ -18,8 +18,9 @@
 #include "fileinfo.h"
 #include "folder.h"
 
-class SelectResult
-{ 
+namespace attic { 
+
+class SelectResult { 
 public:
     SelectResult() 
     {
@@ -108,5 +109,6 @@ private:
     std::string         m_Filepath;     // path to manifest file
 };
 
+} //namespace
 #endif
 

@@ -1,5 +1,7 @@
 #include "entitypost.h"
 
+namespace attic { 
+
 EntityPost::EntityPost() {}
 EntityPost::~EntityPost() {}
 
@@ -37,3 +39,4 @@ void EntityPost::Deserialize(Json::Value& root) {
     entity_.DeserializePreviousEntities(prev_ent);
 }
 
+}//namespace

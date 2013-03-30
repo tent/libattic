@@ -2,23 +2,14 @@
 
 #include "netlib.h"
 
+namespace attic {
 
-UrlParams::UrlParams()
-{
-}
-
-UrlParams::~UrlParams()
-{
-}
-
-void UrlParams::AddValue(const std::string& key, const std::string &value)
-{
+void UrlParams::AddValue(const std::string& key, const std::string &value) {
     // Note* adding multiple values to the same key pill push back the value
     m_Values[key].push_back(value);
 }
 
-std::vector<std::string> UrlParams::GetValue(const std::string& key)
-{
+std::vector<std::string> UrlParams::GetValue(const std::string& key) {
     UrlParam value;
     UrlParamMap::iterator itr = m_Values.find(key);
     if(itr != m_Values.end()) {
@@ -27,8 +18,7 @@ std::vector<std::string> UrlParams::GetValue(const std::string& key)
     return value;
 }
 
-void UrlParams::SerializeToString(std::string &out) const
-{
+void UrlParams::SerializeToString(std::string &out) const {
     // Note * will serialize values to http format,
     // appendable to a url
     out.append("?");
@@ -53,8 +43,7 @@ void UrlParams::SerializeToString(std::string &out) const
     }
 }
 
-void UrlParams::SerializeAndEncodeToString(std::string &out) const
-{
+void UrlParams::SerializeAndEncodeToString(std::string &out) const {
     out.append("?");
 
     UrlParamMap::const_iterator itr = m_Values.begin();
@@ -81,4 +70,4 @@ void UrlParams::SerializeAndEncodeToString(std::string &out) const
     }
 }
 
-
+}//namespace

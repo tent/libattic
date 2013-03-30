@@ -5,6 +5,7 @@
 #include <string>
 #include "post.h"
 
+namespace attic { 
 class AtticPost : public Post { 
 public:
     AtticPost();
@@ -48,5 +49,7 @@ private:
     std::string question_two_;
     std::string question_three_;
 };
+
+} // namespace
 #endif
 

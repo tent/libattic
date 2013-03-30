@@ -6,6 +6,8 @@
 #include "filemanager.h"
 #include "taskdelegate.h"
 
+namespace attic {
+
 TaskManager::TaskManager(FileManager* pFm, 
                          CredentialsManager* pCm,
                          const AccessToken& at,
@@ -149,3 +151,4 @@ int TaskManager::TaskCount(const Task::TaskType type) {
     return m_TaskFactory.GetNumberOfActiveTasks(type);
 }
 
+}//namespace

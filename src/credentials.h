@@ -8,6 +8,8 @@
 
 #include "jsonserializable.h"
 
+namespace attic { 
+
 class Credentials : public JsonSerializable {
 public:
     Credentials();
@@ -44,5 +46,6 @@ private:
     byte byte_iv_[CryptoPP::AES::BLOCKSIZE+1]; 
 };
 
+} //namespace
 #endif
 

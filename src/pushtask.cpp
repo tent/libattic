@@ -10,6 +10,8 @@
 #include "postfilemetadatastrategy.h"
 #include "postfoldermetadatastrategy.h"
 
+namespace attic {
+
 PushTask::PushTask(FileManager* pFm, 
                    CredentialsManager* pCm,
                    const AccessToken& at,
@@ -84,3 +86,4 @@ int PushTask::PushFile(const std::string& filepath) {
     return status;
 }
 
+}//namespace

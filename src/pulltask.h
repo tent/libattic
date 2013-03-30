@@ -8,6 +8,8 @@
 #include "response.h"
 #include "post.h"
 
+namespace attic { 
+
 class TaskDelegate;
 
 class PullTask: public TentTask {
@@ -34,5 +36,6 @@ public:
 private:
 };
 
+}//namespace
 #endif
 

@@ -6,6 +6,8 @@
 #include <iostream>
 #include <json/json.h>
 
+namespace attic { 
+
 class JsonSerializable {
 public:
     JsonSerializable() {};
@@ -265,7 +267,6 @@ namespace jsn {
     }
 
 
-};
-
+}}//namespace
 #endif
 

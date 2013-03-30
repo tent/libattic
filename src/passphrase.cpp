@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "crypto.h"
 
-namespace pass {
+namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
     entity_ = entity;
     access_token_ = at;
@@ -367,4 +367,4 @@ int Passphrase::GetCredentialsPostCount() {
 }
 
 
-} //namespace
+}} //namespace

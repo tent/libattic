@@ -4,17 +4,8 @@
 
 #include "utils.h"
 
-AccessToken::AccessToken()
-{
-
-}
-AccessToken::~AccessToken()
-{
-
-}
-
-ret::eCode AccessToken::SaveToFile(const std::string& filepath)
-{
+namespace attic {
+ret::eCode AccessToken::SaveToFile(const std::string& filepath) {
     std::ofstream ofs;
 
     ofs.open(filepath.c_str(), std::ofstream::out | std::ofstream::binary); 
@@ -31,8 +22,7 @@ ret::eCode AccessToken::SaveToFile(const std::string& filepath)
     return ret::A_OK;
 }
 
-ret::eCode AccessToken::LoadFromFile(const std::string& filepath)
-{
+ret::eCode AccessToken::LoadFromFile(const std::string& filepath) {
     std::ifstream ifs;
     ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
@@ -64,19 +54,18 @@ ret::eCode AccessToken::LoadFromFile(const std::string& filepath)
     return ret::A_OK;
 }
 
-void AccessToken::Serialize(Json::Value& root)
-{
+void AccessToken::Serialize(Json::Value& root) {
     root["access_token"] = m_AccessToken;
     root["mac_key"] = m_MacKey;
     root["mac_algorithm"] = m_MacAlgorithm;
     root["token_type"] = m_TokenType;
 }
 
-void AccessToken::Deserialize(Json::Value& root)
-{
+void AccessToken::Deserialize(Json::Value& root) {
     m_AccessToken = root.get("access_token", "").asString();
     m_MacKey = root.get("mac_key", "").asString();
     m_MacAlgorithm = root.get("mac_algorithm", "").asString();
     m_TokenType = root.get("token_type", "").asString();
 }
 
+} // namespace

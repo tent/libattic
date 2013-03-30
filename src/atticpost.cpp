@@ -3,6 +3,8 @@
 #include "crypto.h"
 #include "constants.h"
 
+namespace attic { 
+
 AtticPost::AtticPost() {
     set_type(cnst::g_attic_cred_type);
 }
@@ -71,4 +73,5 @@ void AtticPost::Deserialize(Json::Value& root) {
     crypto::Base64DecodeString(q3, question_three_);
 }
 
+} // namespace 
 

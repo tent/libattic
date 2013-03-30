@@ -12,6 +12,8 @@
 #include "rollsum.h"
 #include "postutils.h"
 
+namespace attic { 
+
 PostFileStrategy::PostFileStrategy() {}
 PostFileStrategy::~PostFileStrategy() {}
 
@@ -573,3 +575,4 @@ FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
     return fi;
 }
 
+}//namespace

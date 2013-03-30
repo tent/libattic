@@ -7,6 +7,8 @@
 #include "errorcodes.h"
 #include "crypto.h"
 
+namespace attic { 
+
 FilePost::FilePost(){
     set_type(cnst::g_attic_file_type);
 }
@@ -86,3 +88,4 @@ void FilePost::DeserializeChunkIds(Json::Value& val) {
     jsn::DeserializeIntoVector(val, chunk_ids_);
 }
 
+} //namespace

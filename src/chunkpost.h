@@ -9,6 +9,8 @@
 #include "post.h"
 #include "chunkinfo.h"
 
+namespace attic { 
+
 class ChunkPost : public Post {
 public:
     ChunkPost();
@@ -27,6 +29,6 @@ private:
 
 };
 
-
+}//namespace
 #endif
 

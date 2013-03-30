@@ -10,6 +10,8 @@
 
 #include "getfilestrategy.h"
 
+namespace attic { 
+
 PullTask::PullTask(FileManager* pFm, 
                    CredentialsManager* pCm,
                    const AccessToken& at,
@@ -68,4 +70,6 @@ int PullTask::PullFile(const std::string& filepath) {
  
     return status; 
 }
+
+}//namespace
 

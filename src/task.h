@@ -4,6 +4,8 @@
 
 #include "errorcodes.h"
 
+namespace attic {
+
 // Inherit from this to implement specific tasks 
 class Task {                                                             
 public:
@@ -58,6 +60,6 @@ private:
     TaskState   m_State;
 };                                                            
 
-
+}//namespace 
 #endif
 

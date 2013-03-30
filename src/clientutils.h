@@ -11,7 +11,7 @@
 #include "entitypost.h"
 #include "accesstoken.h"
 
-namespace client {
+namespace attic { namespace client {
 
 static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut);
 static void ExtractMetaLink(Response& response, std::string& linkOut);
@@ -175,6 +175,6 @@ static int InitEntity(const std::string& entityurl, const AccessToken* at, Entit
 
 
 
-}
+}} //namespace
 #endif
 

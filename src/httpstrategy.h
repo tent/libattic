@@ -11,6 +11,8 @@
 #include "credentialsmanager.h"
 #include "taskdelegate.h"
 
+namespace attic {
+
 class HttpTentContext;
 
 class HttpStrategyInterface {
@@ -80,5 +82,6 @@ private:
     StrategyList::iterator m_Itr;
 };
 
+}//namespace
 #endif
 

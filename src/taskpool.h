@@ -8,8 +8,9 @@
 #include "mutexclass.h"
 #include "task.h"
 
-class TaskPool : public MutexClass
-{
+namespace attic {
+
+class TaskPool : public MutexClass {
     typedef std::deque<Task*> TaskQueue;
     typedef std::map<Task::TaskType, TaskQueue> TaskMap;
 
@@ -31,6 +32,6 @@ private:
     TaskMap m_TaskMap;
 };
 
-
+}//namespace
 #endif
 

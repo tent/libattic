@@ -9,6 +9,8 @@
 #include "filepost.h"
 #include "fileinfo.h"
 
+namespace attic { 
+
 class TaskDelegate;
 class SyncFileTask : public TentTask {
     int SyncMetaData(FilePost& out);
@@ -44,5 +46,6 @@ private:
     std::string m_PostID;
 };
 
+}//namespace
 #endif
 

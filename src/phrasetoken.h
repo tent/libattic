@@ -5,6 +5,8 @@
 #include <string>
 #include "jsonserializable.h"
 
+namespace attic { 
+
 class PhraseToken : public JsonSerializable {
 public:
     PhraseToken() {}
@@ -36,5 +38,6 @@ private:
     std::string iv_; // Iv used to encrypt master key
 };
 
+}//namespace
 #endif
 

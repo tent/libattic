@@ -7,6 +7,8 @@
 
 #include "jsonserializable.h"
 
+namespace attic { 
+
 class FolderEntry : public JsonSerializable
 {
 public:
@@ -60,5 +62,6 @@ private:
     EntryList m_Entries;
 };
 
+}//namespace
 #endif
 

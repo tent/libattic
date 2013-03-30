@@ -10,6 +10,8 @@
 #include "folder.h"
 #include "constants.h"
 
+namespace attic {
+
 FileManager::FileManager() : MutexClass() {}
 FileManager::~FileManager() {}
 
@@ -359,3 +361,4 @@ int FileManager::GetAllFileInfo(std::vector<FileInfo>& out)
     return status;
 }
 
+}//namespace

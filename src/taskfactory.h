@@ -11,6 +11,8 @@
 #include "task.h"
 #include "taskpool.h"
 
+namespace attic { 
+
 class TentApp;
 class FileManager;
 class ConnectionManager;
@@ -84,5 +86,6 @@ private:
     TaskPool    m_InactiveTaskPool;
 };                                                                      
 
+}//namespace
 #endif
 

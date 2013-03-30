@@ -4,6 +4,8 @@
 
 #include <string>
 
+namespace attic {
+
 class Url {
     void ExtractInfo(); // From url
 public:
@@ -37,5 +39,6 @@ private:
     std::string query_;
 };
 
+}//namespace
 #endif
 

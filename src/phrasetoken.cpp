@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "errorcodes.h"
 
+namespace attic {
+
 void PhraseToken::Serialize(Json::Value& root) {
     root["phrase_key"] = phrase_key_;
     root["salt"] = salt_;
@@ -63,3 +65,4 @@ int PhraseToken::LoadFromFile(const std::string& filepath) {
     return ret::A_OK;                                                                             
 }
 
+}//namespace

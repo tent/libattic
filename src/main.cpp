@@ -68,18 +68,18 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
                                   g_Entity.c_str(),
                                   "./config");
 
-    if(status != ret::A_OK) {
+    if(status != attic::ret::A_OK) {
         std::cout<<"Startup app instance FAILED : " << status << std::endl;
     }
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     /*
     status = RegisterApp(g_Entity.c_str(), "./config");
-    if(status != ret::A_OK)
+    if(status != attic::ret::A_OK)
     {
         std::cout<<"register app FAILED : " << status << std::endl;
     }
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
     */
     
     std::cout<< GetAuthorizationURL() << std::endl;
@@ -93,7 +93,7 @@ TEST(APP_REGISTRATION, REQUEST_AUTH_DETAILS)
     if(g_Entity.empty()) return;
     if(!g_bReqAuthDetails) return;
     
-    ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), g_AuthCode.c_str(), "./config"), ret::A_OK);
+    ASSERT_EQ(RequestUserAuthorizationDetails(g_Entity.c_str(), g_AuthCode.c_str(), "./config"), attic::ret::A_OK);
 }
 
 void TemporaryKeyCb(int a, int b, const char* szC) {
@@ -110,7 +110,7 @@ void RecoveryKeyCb(int a, int b, const char* szC) {
 
     //std::cout<<" entering recovery key ... " << std::endl;
     //int status = EnterRecoveryKey(szC);
-    //ASSERT_EQ(status, ret::A_OK);
+    //ASSERT_EQ(status, attic::ret::A_OK);
 }
 
 bool g_bPassphrase = false;
@@ -126,13 +126,13 @@ TEST(PASSPHRASE, REGISTER)
     int status = InitLibAttic();
     
     std::cout<<" LIB INITIALIZED " << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
    
-    if(status == ret::A_OK) {
+    if(status == attic::ret::A_OK) {
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
         RegisterForRecoveryKeyNotify(&RecoveryKeyCb);
         status = RegisterPassphrase("password", true);
-        //ASSERT_EQ(status, ret::A_OK);
+        //ASSERT_EQ(status, attic::ret::A_OK);
 
         std::cout<< " REGISTER STATUS : " << status << std::endl;
         int count =0;
@@ -163,7 +163,7 @@ TEST(PASSPHRASE, ENTER)
     status = EnterPassphrase("password");
 
     std::cout<<" Enter passphrase status : " << status << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
    sleep(10);
 
@@ -187,21 +187,16 @@ TEST(PASSPHRASE, CHANGE)
     std::cout<<" Changing password to \"thispass\""<<std::endl;
     status = ChangePassphrase("password", "thispass");
     std::cout<<" Change passphrase status : " << status << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
     status = EnterPassphrase("thispass");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
     std::cout<<" Changing password back " << std::endl;
     status = ChangePassphrase("thispass", "password");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
     status = EnterPassphrase("password");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
-    for(;;) {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
+   sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -250,10 +245,10 @@ TEST(AFILE, PUSH)
     
     std::cout<<" INIT STATUS : " << status << std::endl;
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     status = EnterPassphrase("password");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;
     RegisterForUploadSpeedNotify(&UPLOADSPEEDCB);
@@ -273,7 +268,7 @@ TEST(AFILE, PUSH)
         //status = PushFile("./data/cpp/isoiec.pdf", &PUSHCB);
 
 
-        ASSERT_EQ(status, ret::A_OK);
+        ASSERT_EQ(status, attic::ret::A_OK);
     }
 
     sleep(10);
@@ -284,7 +279,7 @@ TEST(AFILE, PUSH)
     std::cout<<"shutting down " << std::endl;
     status = ShutdownLibAttic(NULL);
     std::cout<<" shutdown status : " << status << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 }
 
 bool g_bPull = false;
@@ -303,7 +298,7 @@ TEST(AFILE, PULL)
 
     std::string temppath;
     std::string temp("./data/temp");
-    fs::GetCanonicalPath(temp, temppath);
+    attic::fs::GetCanonicalPath(temp, temppath);
 
     SetConfigValue("working_dir", "./data");
     SetConfigValue("config_dir", "./config");
@@ -311,31 +306,25 @@ TEST(AFILE, PULL)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" DOWNLOAD SPEED NOTIFY ... " << std::endl;
     RegisterForDownloadSpeedNotify(&DOWNLOADSPEEDCB);
 
     status = EnterPassphrase("password");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
-    if(status == ret::A_OK) {
+    if(status == attic::ret::A_OK) {
         std::string rel("./data");
         std::string filepath;
-        fs::GetCanonicalPath(rel, filepath);
+        attic::fs::GetCanonicalPath(rel, filepath);
         filepath += "/oglisv.pdf";
 
         status = PullFile(filepath.c_str());
-        ASSERT_EQ(status, ret::A_OK);
+        ASSERT_EQ(status, attic::ret::A_OK);
     }
 
-    for(;;)
-    {
        sleep(15);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
 
     ShutdownLibAttic(NULL);
 
@@ -354,27 +343,22 @@ TEST(AFILE, DELETE)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     status = EnterPassphrase("password");
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
-    if(status == ret::A_OK) {
+    if(status == attic::ret::A_OK) {
         std::string rel("./data");
         std::string filepath;
-        fs::GetCanonicalPath(rel, filepath);
+        attic::fs::GetCanonicalPath(rel, filepath);
         filepath += "/oglisoglisvv.pdf";
 
         status = DeleteFile(filepath.c_str());
-        ASSERT_EQ(status, ret::A_OK);
+        ASSERT_EQ(status, attic::ret::A_OK);
     }
 
-    for(;;) {
        sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
 
     ShutdownLibAttic(NULL);
 }
@@ -401,16 +385,10 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
     GetFileList(Filecb);
 
-    for(;;)
-    {
-       sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
+   sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -424,7 +402,7 @@ TEST(INIT, SHUTDOWN)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     ShutdownLibAttic(NULL);
 }
@@ -438,8 +416,8 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 
     std::cout<<" init ? " << std::endl;
 
-    Entity ent;
-    client::Discover(g_Entity, NULL, ent);
+    attic::Entity ent;
+    attic::client::Discover(g_Entity, NULL, ent);
 
     /*
     SetConfigValue("working_dir", "./data");
@@ -450,7 +428,7 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 
     std::cout<<" Getting entity api root ... " << std::endl;
 
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
    // std::cout<<" ENTITY API ROOT : " << GetEntityApiRoot(g_Entity.c_str()) << std::endl;
 
     for(;;)
@@ -479,7 +457,7 @@ TEST(TEST, SYNC)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
-    if(status == ret::A_OK) {
+    if(status == attic::ret::A_OK) {
 
         EnterPassphrase("password");
         std::cout<<"syncing..."<<std::endl;
@@ -488,12 +466,7 @@ TEST(TEST, SYNC)
         std::cout<<"done calling ... " << std::endl;
     }
 
-    for(;;) {
        sleep(10);
-       if(!g_ThreadCount)
-           break;
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
 
     ShutdownLibAttic(NULL);
 }
@@ -506,17 +479,17 @@ TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
 
     // Compress
     std::string compressed;
-    compress::CompressString(test, compressed);
+    attic::compress::CompressString(test, compressed);
     // Encrypt
-    Credentials cred = crypto::GenerateCredentials();
+    attic::Credentials cred = attic::crypto::GenerateCredentials();
     std::string encrypted;
-    crypto::EncryptStringCFB(compressed, cred, encrypted);
+    attic::crypto::EncryptStringCFB(compressed, cred, encrypted);
     // Decrypt
     std::string decrypted;
-    crypto::DecryptStringCFB(encrypted, cred, decrypted);
+    attic::crypto::DecryptStringCFB(encrypted, cred, decrypted);
     // Decompress
     std::string decompressed;
-    compress::DecompressString(decrypted, decompressed);
+    attic::compress::DecompressString(decrypted, decompressed);
 
     ASSERT_EQ(test, decompressed);
 
@@ -527,10 +500,10 @@ TEST(COMPRESS, COMPRESSSTRING)
     std::string in("this is my test string it is a pretty decent test string");
     std::string out;
 
-    compress::CompressString(in, out);
+    attic::compress::CompressString(in, out);
 
     std::string decomp;
-    compress::DecompressString(out, decomp);
+    attic::compress::DecompressString(out, decomp);
 
     ASSERT_EQ(in, decomp);
 }
@@ -540,19 +513,19 @@ TEST(NETLIB, EXTRACTHOSTANDPATH)
     std::string url = "https://manuel.tent.is/tent/posts";
     std::string protocol, host, path;
 
-    netlib::ExtractHostAndPath(url, protocol, host, path);
+    attic::netlib::ExtractHostAndPath(url, protocol, host, path);
     ASSERT_EQ(host, std::string("manuel.tent.is"));
     ASSERT_EQ(path, std::string("/tent/posts"));
 }
 
 TEST(CREDENTIALS, ISEMPTY)
 {
-    Credentials cred;
+    attic::Credentials cred;
 
     ASSERT_EQ(cred.KeyEmpty(), true);
     ASSERT_EQ(cred.IvEmpty(), true);
 
-    cred = crypto::GenerateCredentials();
+    cred = attic::crypto::GenerateCredentials();
 
     ASSERT_EQ(cred.KeyEmpty(), false);
     ASSERT_EQ(cred.IvEmpty(), false);
@@ -568,10 +541,10 @@ TEST(CRYPTO, BASE32)
 {
     std::string teststring("this is my test string, that I'm going to base32 encode");
     std::string encoded;
-    crypto::Base32EncodeString(teststring, encoded);
+    attic::crypto::Base32EncodeString(teststring, encoded);
 
     std::string decoded;
-    crypto::Base32DecodeString(encoded, decoded);
+    attic::crypto::Base32DecodeString(encoded, decoded);
     ASSERT_EQ(teststring, decoded);
 }
 
@@ -579,62 +552,62 @@ TEST(CRYPTO, BASE64)
 {
     std::string teststring("this is my test string, that I'm going to base64 encode");
     std::string encoded;
-    crypto::Base64EncodeString(teststring, encoded);
+    attic::crypto::Base64EncodeString(teststring, encoded);
     std::string decoded;
-    crypto::Base64DecodeString(encoded, decoded);
+    attic::crypto::Base64DecodeString(encoded, decoded);
     ASSERT_EQ(teststring, decoded);
 }
 
 TEST(CRYPTO, HMAC)
 {
-    int status = ret::A_OK;
-    Credentials cred = crypto::GenerateCredentials();
+    int status = attic::ret::A_OK;
+    attic::Credentials cred = attic::crypto::GenerateCredentials();
 
     std::string plaintext("this is my plain text");
 
     std::string macout;
-    status = crypto::GenerateHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, ret::A_OK);
+    status = attic::crypto::GenerateHMACForString( plaintext, cred, macout);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
-    status = crypto::VerifyHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, ret::A_OK);
+    status = attic::crypto::VerifyHMACForString( plaintext, cred, macout);
+    ASSERT_EQ(status, attic::ret::A_OK);
 }
 
 TEST(CRYPTO, ENCRYPTIONCFB)
 {
-    Credentials cred = crypto::GenerateCredentials();
+    attic::Credentials cred = attic::crypto::GenerateCredentials();
 
     std::string plaintext("this is my plain text");
 
     std::string cyphertext;
-    crypto::EncryptStringCFB(plaintext, cred, cyphertext);
+    attic::crypto::EncryptStringCFB(plaintext, cred, cyphertext);
 
     std::string decryptedtext;
-    crypto::DecryptStringCFB(cyphertext, cred, decryptedtext);
+    attic::crypto::DecryptStringCFB(cyphertext, cred, decryptedtext);
 
     ASSERT_EQ(plaintext, decryptedtext);
 }
 
 TEST(CRYPTO, CREDENCRYPTIONGCM)
 {
-    Credentials masterkey;
+    attic::Credentials masterkey;
 
     std::string phrase("this is a test");
     std::string iv;
-    crypto::GenerateSalt(iv);
+    attic::crypto::GenerateSalt(iv);
 
     // Genterate key from passphrase
-    int status = crypto::GenerateKeyFromPassphrase(phrase,
+    int status = attic::crypto::GenerateKeyFromPassphrase(phrase,
                                                    iv,
                                                    masterkey);
     ASSERT_EQ(status, 0);
 
-    Credentials cred; // Credentials to encrypt
-    cred = crypto::GenerateCredentials();
+    attic::Credentials cred; // Credentials to encrypt
+    cred = attic::crypto::GenerateCredentials();
 
     std::string key = cred.key();
 
-    Credentials intercred; // credentials used to encrypt file key
+    attic::Credentials intercred; // credentials used to encrypt file key
                            // master key
                            // file specific iv
 
@@ -645,24 +618,24 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     intercred.set_iv(fileiv);
 
     std::string enckey;
-    status = crypto::EncryptStringGCM(key, intercred, enckey);
+    status = attic::crypto::EncryptStringGCM(key, intercred, enckey);
     ASSERT_EQ(status, 0);
 
     // Generate key again for good measure
-    Credentials mkcopy;
-    status = crypto::GenerateKeyFromPassphrase(phrase,
+    attic::Credentials mkcopy;
+    status = attic::crypto::GenerateKeyFromPassphrase(phrase,
                                                iv,
                                                mkcopy);
     ASSERT_EQ(status, 0);
 
-    Credentials intercred1;
+    attic::Credentials intercred1;
     std::string mk1 = mkcopy.key();
 
     intercred1.set_key(mk1);
     intercred1.set_iv(fileiv);
 
     std::string deckey;
-    status = crypto::DecryptStringGCM(enckey, intercred1, deckey);
+    status = attic::crypto::DecryptStringGCM(enckey, intercred1, deckey);
 
     ASSERT_EQ(status, 0);
     ASSERT_EQ(key, deckey);
@@ -670,18 +643,18 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
 
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {
-    Credentials cred, cred1;
+    attic::Credentials cred, cred1;
 
     std::string pw("password");
     std::string iv;
-    crypto::GenerateSalt(iv); 
+    attic::crypto::GenerateSalt(iv); 
 
-    int status = crypto::GenerateKeyFromPassphrase( pw,
+    int status = attic::crypto::GenerateKeyFromPassphrase( pw,
                                                iv,
                                                cred);
     
     ASSERT_EQ(status, 0);
-    status = crypto::GenerateKeyFromPassphrase( pw ,
+    status = attic::crypto::GenerateKeyFromPassphrase( pw ,
                                   iv,
                                   cred1);
 
@@ -695,11 +668,11 @@ TEST(SCRYPT, ENCODE)
     std::string input("thisistestinput");
     std::string iv;
 
-    crypto::GenerateSalt(iv); 
+    attic::crypto::GenerateSalt(iv); 
 
     std::string out, out1;
-    crypto::ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
-    crypto::ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
+    attic::crypto::ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
+    attic::crypto::ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
 
     int res =  strcmp(out.c_str(), out1.c_str());
     ASSERT_EQ(res, 0);
@@ -728,7 +701,7 @@ TEST(REINTERPREST, CAST)
 TEST(FILESYSTEM, RELATIVETO)
 {
     std::string relative;
-    fs::MakePathRelative("foo/bar", "this/foo/test/something/what.txt", relative);
+    attic::fs::MakePathRelative("foo/bar", "this/foo/test/something/what.txt", relative);
     ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
 }
 
@@ -736,19 +709,19 @@ TEST(FILESYSTEM, GETCANONICALPATH)
 {
     std::string path("./data/oglisv.pdf");
     std::string absolute;
-    fs::GetCanonicalPath(path, absolute);
+    attic::fs::GetCanonicalPath(path, absolute);
 }
 
 TEST(AUTHCODE, GENERATE)
 {
     std::string authcode;
-    utils::GenerateRandomString(authcode, 32);
+    attic::utils::GenerateRandomString(authcode, 32);
     std::cout<<" AUTH CODE : " << authcode << std::endl;
     std::string encoded;
-    crypto::Base32EncodeString(authcode, encoded);
+    attic::crypto::Base32EncodeString(authcode, encoded);
     std::cout<<" ENCODED : " << encoded << std::endl;
     std::string decoded;
-    crypto::Base32DecodeString(encoded, decoded);
+    attic::crypto::Base32DecodeString(encoded, decoded);
     ASSERT_EQ(decoded, authcode);
 
 }
@@ -756,7 +729,7 @@ TEST(AUTHCODE, GENERATE)
 /*
 TEST(MANIFEST, INSERTFILEINFO)
 {
-    FileInfo fi( "somefile.pdf",
+    attic::FileInfo fi( "somefile.pdf",
                  "foo/bar/somefile.pdf",
                  "kjsadkfj-3412",
                  "ASDFf=342jf#-_");
@@ -765,9 +738,9 @@ TEST(MANIFEST, INSERTFILEINFO)
     std::string dir("");
     mf.SetDirectory(dir);
     int status = mf.Initialize();
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
-    ASSERT_EQ(mf.InsertFileInfo(fi), true);
+    ASSERT_EQ(mf.Insertattic::FileInfo(fi), true);
 
     mf.Shutdown();
 }
@@ -778,7 +751,7 @@ TEST(MANIFEST, INSERTFILEPOSTID)
     std::string dir("");
     mf.SetDirectory(dir);
     int status = mf.Initialize();
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     std::string filepath("foo/bar/somefile.pdf");
     std::string postid("ksjAF934-dsaf#_=");
@@ -793,65 +766,65 @@ TEST(MANIFEST, REMOVEFILEINFO)
     std::string dir("");
     mf.SetDirectory(dir);
     int status = mf.Initialize();
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     std::string filepath("foo/bar/somefile.pdf");
-    ASSERT_EQ(mf.RemoveFileInfo(filepath), true);
+    ASSERT_EQ(mf.Removeattic::FileInfo(filepath), true);
 
     mf.Shutdown();
 }
 */
 TEST(CHUNKINFO, SERIALIZATION) 
 {
-    ChunkInfo ci("name", "supersummmmmmm");
+    attic::ChunkInfo ci("name", "supersummmmmmm");
     ci.SetCipherTextMac("aksdjfkasdfCIPHER");
     ci.SetPlainTextMac("THIS IS MY PLAIN TEXT MAC MOFO ");
     ci.SetIv("IVVV");
 
     std::string output;
-    jsn::SerializeObject(&ci, output);
+    attic::jsn::SerializeObject(&ci, output);
 
     std::cout<<" SERIALIZED : " << output << std::endl;
 
-    ChunkInfo ci2;
-    jsn::DeserializeObject(&ci2, output);
+    attic::ChunkInfo ci2;
+    attic::jsn::DeserializeObject(&ci2, output);
     
 
     std::string output2;
-    jsn::SerializeObject(&ci2, output2);
+    attic::jsn::SerializeObject(&ci2, output2);
 
     ASSERT_EQ(output, output2);
 }
 
 TEST(FOLDER, SERIALIZATION)
 {
-    Folder folder;
-    FolderEntry one("dasf", "file", "adsfae");
-    FolderEntry two("einen", "file", "914891284192jfkjadkfe");
+    attic::Folder folder;
+    attic::FolderEntry one("dasf", "file", "adsfae");
+    attic::FolderEntry two("einen", "file", "914891284192jfkjadkfe");
     folder.PushBackEntry(one);
     folder.PushBackEntry(two);
 
     std::string output;
-    jsn::SerializeObject(&folder, output);
+    attic::jsn::SerializeObject(&folder, output);
 
-    Folder other;
-    jsn::DeserializeObject(&other, output);
+    attic::Folder other;
+    attic::jsn::DeserializeObject(&other, output);
 
     std::string output2;
-    jsn::SerializeObject(&other, output2);
+    attic::jsn::SerializeObject(&other, output2);
 
     ASSERT_EQ(output, output2);
 
-    FolderEntry three("fdasfsad", "1111", "2222222");
+    attic::FolderEntry three("fdasfsad", "1111", "2222222");
     folder.PushBackEntry(three);
     std::string tt; 
-    jsn::SerializeObject(&folder, tt);
+    attic::jsn::SerializeObject(&folder, tt);
 }
 /*
 TEST(PARAMS, ENCODE) 
 {
     UrlParams params;                                                                  
-    params.AddValue(std::string("post_types"), std::string(cnst::g_szFolderPostType)); 
+    params.AddValue(std::string("post_types"), std::string(attic::cnst::g_szFolderPostType)); 
     params.AddValue(std::string("limit"), std::string("200"));                     
 
     std::string enc;                           
@@ -872,7 +845,7 @@ TEST(PARAMS, ENCODE)
     head["TEST"] = "testing operator overloading, do i still remember?";
 
     std::string random;
-    crypto::GenerateRandomString(random, 4);
+    attic::crypto::GenerateRandomString(random, 4);
     std::cout<<" RANDOM STRING : " << random << std::endl;
 }
 */
@@ -896,7 +869,7 @@ TEST(ROLLSUM, FILETEST)
 
     int buffersize = 10000000;
 
-    const unsigned int filesize = utils::CheckFilesize(g_filepath);
+    const unsigned int filesize = attic::utils::CheckFilesize(g_filepath);
 
     std::ofstream ofs;
     ofs.open("out.mp4", std::ios::out | std::ios::binary);
@@ -907,24 +880,24 @@ TEST(ROLLSUM, FILETEST)
         std::string window, remainder;
         unsigned int readcount = 0;
         unsigned int chunkcount = 0;
-        RollSum rs;
+        attic::RollSum rs;
         while(!ifs.eof()) {
             char* pData = NULL;
             unsigned int datasize = 0;
             /*
-            if(filesize >= cnst::g_unMaxBuffer) {
+            if(filesize >= attic::cnst::g_unMaxBuffer) {
                 pData = new char[filesize];
                 datasize = filesize;
             }
             else {
             */
-                if((filesize - readcount) <= cnst::g_unMaxBuffer) {
+                if((filesize - readcount) <= attic::cnst::g_unMaxBuffer) {
                     pData = new char[(filesize - readcount)];
                     datasize = (filesize - readcount);
                 }
                 else {
-                    pData = new char[cnst::g_unMaxBuffer];
-                    datasize = cnst::g_unMaxBuffer;
+                    pData = new char[attic::cnst::g_unMaxBuffer];
+                    datasize = attic::cnst::g_unMaxBuffer;
                 }
             //}
             std::cout<<" datasize : " << datasize << std::endl;
@@ -951,7 +924,7 @@ TEST(ROLLSUM, FILETEST)
                 count++;
                 rs.Roll(c);
                 if(rs.OnSplit()) {
-                    if(count >= cnst::g_unSplitMin) {
+                    if(count >= attic::cnst::g_unSplitMin) {
                         std::string chunk;
                         int diff = i - lastsplit;
                         chunk = window.substr(lastsplit, diff);
@@ -963,7 +936,7 @@ TEST(ROLLSUM, FILETEST)
                         totalread += chunk.size();
 
                         std::string plaintextHash;
-                        crypto::GenerateHash(chunk, plaintextHash);
+                        attic::crypto::GenerateHash(chunk, plaintextHash);
                         std::cout<<" hash : " << plaintextHash << std::endl;
 
                         //std::cout<<" split found at : " << totalread << std::endl;
@@ -971,7 +944,7 @@ TEST(ROLLSUM, FILETEST)
                     }
                 }
 
-                if(count >= cnst::g_unSplitMax) {
+                if(count >= attic::cnst::g_unSplitMax) {
                     std::string chunk;
                     int diff = i - lastsplit;
                     chunk = window.substr(lastsplit, diff);
@@ -983,7 +956,7 @@ TEST(ROLLSUM, FILETEST)
                     totalread += chunk.size();
 
                     std::string plaintextHash;
-                    crypto::GenerateHash(chunk, plaintextHash);
+                    attic::crypto::GenerateHash(chunk, plaintextHash);
                     std::cout<<" hash : " << plaintextHash << std::endl;
                     //std::cout<<" split found at : " << totalread << std::endl;
                     //
@@ -999,7 +972,7 @@ TEST(ROLLSUM, FILETEST)
             if((readcount + remainder.size()) >= filesize) {
 
                 std::string plaintextHash;
-                crypto::GenerateHash(remainder, plaintextHash);
+                attic::crypto::GenerateHash(remainder, plaintextHash);
                 std::cout<<" hash : " << plaintextHash << std::endl;
                 ofs.write(remainder.c_str(), remainder.size());
 
@@ -1035,28 +1008,24 @@ TEST(ATTIC, DAEMON)
     int status = InitLibAttic();
 
     std::cout<<" status : " << status << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" entering passphrase ... " << std::endl;
     status = EnterPassphrase("password");
     std::cout<<" status : " << status << std::endl;
-    ASSERT_EQ(status, ret::A_OK);
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     //std::cout<<" starting to poll ... " << std::endl;
     status = PollFiles();
     //std::cout<<" running til interrupt ... " << std::endl;
-    for(;;) {
-
        sleep(10);
-       std::cout<<"MAIN Thread count : " << g_ThreadCount << std::endl;
-    }
 
     ShutdownLibAttic(NULL);
 }
 
 TEST(FILEINFO, POSTVERSION)
 {
-    FileInfo fi;
+    attic::FileInfo fi;
     std::cout<<" POST VERSION : " << fi.GetPostVersion() << std::endl;
 
     fi.SetPostVersion("12");

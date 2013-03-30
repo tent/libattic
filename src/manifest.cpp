@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "crypto.h"
 
+namespace attic {
 
 static const std::string g_infotable("infotable");
 static const std::string g_foldertable("foldertable");
@@ -891,3 +892,4 @@ bool Manifest::RemoveFolderData(const std::string& folderpath)
     return false;
 }
 
+}//namespace

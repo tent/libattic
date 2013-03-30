@@ -1,5 +1,7 @@
 #include "taskpool.h"
 
+namespace attic {
+
 TaskPool::TaskPool() 
 {
 }
@@ -64,3 +66,4 @@ TaskPool::TaskQueue::iterator TaskPool::FindTask(Task* pTask, Task::TaskType typ
     return itr;
 }
 
+}//namespace

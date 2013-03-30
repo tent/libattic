@@ -9,6 +9,7 @@
 #include "accesstoken.h"
 #include "clientutils.h"
 
+namespace attic { 
 
 EntityServer Entity::GetPreferredServer() {
     ServerList::iterator itr = server_list_.begin();
@@ -108,4 +109,4 @@ void Entity::DeserializePreviousEntities(Json::Value& val) {
     jsn::DeserializeObjectValueIntoVector(val, previous_entities_);
 }
 
-
+} //namespace

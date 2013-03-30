@@ -5,6 +5,7 @@
 
 #include "errorcodes.h"
 
+namespace attic { 
 
 QueryFilesTask::QueryFilesTask( Task::TaskType type,                    
                                 FileManager* pFm,                       
@@ -17,13 +18,9 @@ QueryFilesTask::QueryFilesTask( Task::TaskType type,
     m_Stride = 0;
 }
 
-QueryFilesTask::~QueryFilesTask()
-{
+QueryFilesTask::~QueryFilesTask() {}
 
-}
-
-void QueryFilesTask::RunTask()
-{
+void QueryFilesTask::RunTask() {
     std::vector<FileInfo> vec;                          
     GetFileManager()->GetAllFileInfo(vec); // blocking
     CreateCStringListsAndCallBack(vec);
@@ -31,8 +28,7 @@ void QueryFilesTask::RunTask()
     SetFinishedState();
 }
 
-int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec)
-{
+int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec) {
     int status = ret::A_OK;
 
     unsigned int size = vec.size();
@@ -50,4 +46,4 @@ int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec)
     Callback(status, buf, size, size);
 }
 
-
+} //namespace

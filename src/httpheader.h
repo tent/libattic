@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+namespace attic { 
+
 class HttpHeader {
     typedef std::map<std::string, std::string> HttpHeaderMap;
 public:
@@ -26,6 +28,6 @@ private:
     HttpHeaderMap values_;
 };
 
-
+}//namespace
 #endif
 

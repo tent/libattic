@@ -4,6 +4,8 @@
 
 #include "post.h"
 
+namespace attic {
+
 class AppPost: public Post {
 public:
     AppPost(){}
@@ -32,7 +34,6 @@ private:
     std::string redirect_uri_;
 };
 
-
-
+} // namespace
 #endif
 

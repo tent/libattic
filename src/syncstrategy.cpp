@@ -1,5 +1,7 @@
 #include "syncstrategy.h"
 
+namespace attic { 
+
 SyncStrategy::SyncStrategy() {}
 SyncStrategy::~SyncStrategy() {}
 
@@ -22,4 +24,6 @@ int SyncStrategy::Execute(FileManager* pFileManager,
 
     return status;
 }
+
+}//namespace
 

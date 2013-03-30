@@ -9,6 +9,8 @@
 #include "crypto.h"
 #include "chunkinfo.h"
 
+namespace attic { 
+
 class FileInfo {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
@@ -99,5 +101,6 @@ private:
     int    m_Deleted; // Is the file deleted? // soft delete
 };
 
+}//namespace
 #endif
 

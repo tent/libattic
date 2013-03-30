@@ -5,6 +5,8 @@
 #include "errorcodes.h"
 #include "chunkinfo.h"
 
+namespace attic { 
+
 ChunkPost::ChunkPost() {
     set_type(cnst::g_attic_chunk_type);
 }
@@ -31,8 +33,7 @@ void ChunkPost::Serialize(Json::Value& root) {
         std::vector<ChunkInfo>::iterator itr = m_ChunkList.begin();
 
         std::string val;
-        for(;itr != m_ChunkList.end(); itr++)
-        {
+        for(;itr != m_ChunkList.end(); itr++) {
             val.clear();
             jsn::SerializeObject(&(*itr), val);
             serializedList.push_back(val);
@@ -58,21 +59,17 @@ void ChunkPost::Deserialize(Json::Value& root) {
     std::vector<std::string> serializedList;
 
     get_content("chunks", chunkval);
-
     jsn::DeserializeIntoVector(chunkval, serializedList);
 
-    if(serializedList.size() > 0)
-    {
+    if(serializedList.size() > 0) {
         std::vector<std::string>::iterator itr = serializedList.begin();
 
-        for(;itr != serializedList.end(); itr++)
-        {
+        for(;itr != serializedList.end(); itr++) {
             ChunkInfo ci;
             jsn::DeserializeObject(&ci, (*itr));
             m_ChunkList.push_back(ci); // copy
         }
     }
-
 }
 
-
+} //namespace

@@ -2,7 +2,7 @@
 #define ERROR_CODES_H_
 #pragma once
 
-namespace ret {
+namespace attic { namespace ret {
 
 enum eCode {
     A_OK = 0,
@@ -78,6 +78,6 @@ enum eCode {
 };
 
 
-};
+}} //namespace
 #endif
 

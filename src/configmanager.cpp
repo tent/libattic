@@ -1,5 +1,7 @@
 #include "configmanager.h"
 
+namespace attic { 
+
 ConfigManager* ConfigManager::m_pInstance = 0;
 
 ConfigManager::ConfigManager(){}
@@ -47,3 +49,4 @@ void ConfigManager::SetValue(const std::string& key, const std::string& value) {
     Unlock();
 }
 
+} //namespace

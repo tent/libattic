@@ -5,6 +5,8 @@
 #include <iostream>
 #include <boost/thread/thread.hpp>
 
+namespace attic { 
+
 class MutexClass {
 public:                                                                                           
     MutexClass() {locked = false;}
@@ -36,5 +38,6 @@ private:
 
 };                                                                                                
 
+}//namespace
 #endif
 

@@ -9,6 +9,8 @@
 #include "taskqueue.h"
 #include "threadworker.h"
 
+namespace attic {
+
 void NewThreadFunc(ThreadWorker *pWorker) {
     std::cout<<" thread starting " << std::endl;
     if(pWorker) {
@@ -86,3 +88,4 @@ int ThreadPool::AbridgePool(unsigned int stride) {
     return status;
 }
 
+}//namespace

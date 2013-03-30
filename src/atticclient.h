@@ -10,6 +10,8 @@
 #include "accesstoken.h"
 #include "phrasetoken.h"
 
+namespace attic { 
+
 class Client {
     void ConstructAppPath(std::string& out);
     void ConstructEntityFilepath(std::string& out);
@@ -77,5 +79,6 @@ private:
     std::string entity_url_;
 };
 
+} // namespace
 #endif
 

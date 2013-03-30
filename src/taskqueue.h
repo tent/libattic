@@ -1,16 +1,16 @@
-
-
 #ifndef TASKQUEUE_H_
 #define TASKQUEUE_H_
 #pragma once
 
 #include <deque>
+#include <iostream>
+
 #include "mutexclass.h"
 #include "task.h"
 
-#include <iostream>
-class TaskQueue : public MutexClass                                                
-{                                                                                  
+namespace attic {
+
+class TaskQueue : public MutexClass {
 public:                                                                            
     TaskQueue(){m_TaskQueue.clear();}
 
@@ -83,5 +83,6 @@ private:
     static CentralTaskQueue* m_pInstance;
 };
 
+}//namespace
 #endif
 

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include "httpheader.h"
 
+namespace attic { 
+
 class Response {
 public:
     std::string CodeAsString() {
@@ -30,6 +32,6 @@ public:
     HttpHeader header;  // Response Header
 };                                           
 
-
+}//namespace
 #endif
 

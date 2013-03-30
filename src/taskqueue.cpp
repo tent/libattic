@@ -1,5 +1,6 @@
 #include "taskqueue.h"
 
-//DUMMY FILE
+namespace attic {
 CentralTaskQueue* CentralTaskQueue::m_pInstance = 0;
+}//namespace
 

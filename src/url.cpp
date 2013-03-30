@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+namespace attic {
+
 Url::Url() {}
 Url::Url(const std::string& url){
     set_url(url);
@@ -57,3 +59,5 @@ void Url::GetRequestURI(std::string &out) {
     out.clear();
     out += path_ + query_;
 }
+
+}//namespace

@@ -1,5 +1,7 @@
 #include "apppost.h"
 
+namespace attic {
+
 void AppPost::Serialize(Json::Value& root) {
     Json::Value name, url, redirect_uri;
     name = name_;
@@ -46,3 +48,4 @@ void AppPost::PushBackReadType(const std::string& type) {
     post_types_["read"].push_back(type);
 }
 
+} // namespace

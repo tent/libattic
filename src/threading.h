@@ -1,4 +1,3 @@
-
 #ifndef THREADING_H_
 #define THREADING_H_
 #pragma once
@@ -8,6 +7,8 @@
 #include <boost/thread/thread.hpp>
 
 #include "mutexclass.h"
+
+namespace attic {
 
 class ThreadWorker;
 class TaskQueue;
@@ -32,8 +33,6 @@ private:
 };                                                                                               
 
 
-// TODO :: remove this, just for testing
-volatile static unsigned int g_ThreadCount = 0;
-
+}//namespace
 #endif
 

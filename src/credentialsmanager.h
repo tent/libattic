@@ -11,6 +11,7 @@
 #include "phrasetoken.h"
 #include "crypto.h"
 
+namespace attic { 
 
 // TODO :: the necessity of this whole class needs to be re-thought,
 //          alot of generic methods are here that can be abstracted to 
@@ -97,5 +98,7 @@ private:
 
     std::string     m_ConfigDirectory;
 };
+
+} //namespace
 #endif
 

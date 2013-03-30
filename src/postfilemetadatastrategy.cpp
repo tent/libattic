@@ -6,6 +6,8 @@
 #include "filemanager.h"
 #include "credentialsmanager.h"
 
+namespace attic { 
+
 PostFileMetadataStrategy::PostFileMetadataStrategy() {}
 PostFileMetadataStrategy::~PostFileMetadataStrategy() {}
 
@@ -150,3 +152,5 @@ FileInfo* PostFileMetadataStrategy::RetrieveFileInfo(const std::string& filepath
         fi = m_pFileManager->CreateFileInfo();
     return fi;
 }
+
+}//namespace

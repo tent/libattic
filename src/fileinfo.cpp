@@ -7,17 +7,17 @@
 
 #include "utils.h"
 
-FileInfo::FileInfo()
-{
+namespace attic { 
+
+FileInfo::FileInfo() {
     m_PostVersion = 0;
     m_Deleted = 0;
 }
 
-FileInfo::FileInfo( const std::string& filename,
-                    const std::string& filepath,
-                    const std::string& postid,
-                    const std::string& chunkpostid)
-{
+FileInfo::FileInfo(const std::string& filename,
+                   const std::string& filepath,
+                   const std::string& postid,
+                   const std::string& chunkpostid) {
     FileInfo::FileInfo();
 
     m_Filename = filename;
@@ -157,3 +157,4 @@ bool FileInfo::HasEncryptedKey()
     return true;
 }
 
+}//namespace

@@ -1,5 +1,7 @@
 #include "httpstrategy.h"
 
+namespace attic { 
+
 HttpStrategyInterface::HttpStrategyInterface() {
     m_pCredentialsManager = NULL;
     m_pFileManager = NULL;
@@ -90,3 +92,5 @@ int HttpStrategyContext::Step(Response& out) {
 void HttpStrategyContext::ResetPosition() {
     m_Itr = m_Strategies.begin();
 }
+
+}//namespace

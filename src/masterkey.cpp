@@ -3,6 +3,8 @@
 #include <fstream>
 #include "utils.h"
 
+namespace attic { 
+
 void MasterKey::Serialize(Json::Value& root) {
     // Credentials
     root["key"] = credentials_.key();
@@ -80,3 +82,4 @@ void MasterKey::InsertSentinelIntoMasterKey() {
     key_with_sentinel_ += key;
 }
 
+}//namespace

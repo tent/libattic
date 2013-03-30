@@ -1,5 +1,7 @@
 #include "softdeletestrategy.h"
 
+namespace attic { 
+
 SoftDeleteStrategy::SoftDeleteStrategy() {}
 SoftDeleteStrategy::~SoftDeleteStrategy() {}
 
@@ -42,3 +44,5 @@ FileInfo* SoftDeleteStrategy::RetrieveFileInfo(const std::string& filepath) {
         fi = m_pFileManager->CreateFileInfo();
     return fi;
 }
+
+}//namespace

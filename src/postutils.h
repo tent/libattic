@@ -12,7 +12,7 @@
 #include "response.h"
 #include "constants.h"
 
-namespace postutils {
+namespace attic { namespace postutils {
 
 static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic);
 static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut);
@@ -143,7 +143,7 @@ static int ExtractChunkPostsFromResponse(const Response& response, std::vector<C
     return status;
 }
 
-};
+}}//namespace
 #endif
 
 

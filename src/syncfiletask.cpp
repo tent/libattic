@@ -13,6 +13,8 @@
 #include "filesystem.h"
 #include "taskdelegate.h"
 
+namespace attic { 
+
 SyncFileTask::SyncFileTask(FileManager* pFm,
                            CredentialsManager* pCm,
                            const AccessToken& at,
@@ -233,3 +235,5 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
 
     return status;
 }
+
+}//namespace

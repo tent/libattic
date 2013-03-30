@@ -11,6 +11,7 @@
 #include "postutils.h"
 #include "event.h"
 
+namespace attic { 
 
 GetFileStrategy::GetFileStrategy() {}
 GetFileStrategy::~GetFileStrategy() {}
@@ -364,3 +365,5 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
 
     return status;
 }
+
+}//namespace

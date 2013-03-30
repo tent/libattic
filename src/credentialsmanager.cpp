@@ -4,6 +4,8 @@
 #include "constants.h"
 #include "utils.h"
 
+namespace attic { 
+
 // TODO:: come back and audit this, lots of useless locking going on. after 0.1 come and clean that up
 CredentialsManager::CredentialsManager() {}
 CredentialsManager::~CredentialsManager() {}
@@ -174,3 +176,4 @@ void CredentialsManager::ConstructPhraseTokenPath(std::string& out) {
     out.append(cnst::g_szPhraseTokenName);
 }
 
+} //namespace

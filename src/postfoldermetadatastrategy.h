@@ -5,6 +5,8 @@
 #include <string>
 #include "httpstrategy.h"
 
+namespace attic { 
+
 class FileManager;
 class CredentialsManager;
 class FileInfo;
@@ -21,5 +23,6 @@ public:
                 Response& out);
 };
 
+}//namespace
 #endif
 

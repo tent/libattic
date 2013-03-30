@@ -12,6 +12,8 @@
 #include "softdeletestrategy.h"
 #include "postfilemetadatastrategy.h"
 
+namespace attic { 
+
 DeleteTask::DeleteTask(FileManager* pFm, 
                        CredentialsManager* pCm,
                        const AccessToken& at,
@@ -64,3 +66,4 @@ void DeleteTask::RunTask() {
     SetFinishedState();
 }
 
+}//namespace

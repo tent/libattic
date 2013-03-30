@@ -5,6 +5,8 @@
 #include <string>
 #include "httpstrategy.h"
 
+namespace attic { 
+
 class SyncStrategy : public HttpStrategyInterface {
 public:
     SyncStrategy();
@@ -17,6 +19,6 @@ public:
                 Response& out);
 };
 
+}//namespace
 #endif
-
 

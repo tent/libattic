@@ -4,6 +4,8 @@
 
 #include "mutexclass.h"
 
+namespace attic { 
+
 class Task;
 class ThreadPool;
 
@@ -29,6 +31,6 @@ private:
     ThreadPool*            m_pPool;
 };
 
-
+}//namespace
 #endif
 

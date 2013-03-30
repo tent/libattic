@@ -1,5 +1,7 @@
 #include "entityserver.h"
 
+namespace attic { 
+
 void ServerUrls::Serialize(Json::Value& root) {
     root["app_auth_request"] = app_auth_request;
     root["app_token_request"] = app_token_request;
@@ -41,3 +43,4 @@ void EntityServer::Deserialize(Json::Value& root) {
     urls_.Deserialize(root["urls"]);
 }
 
+}//namespace

@@ -10,6 +10,8 @@
 #include "credentialsmanager.h"
 #include "taskdelegate.h"
 
+namespace attic { 
+
 class TentTask : public Task {
 public:
     TentTask(Task::TaskType type,
@@ -109,5 +111,6 @@ private:
     TaskDelegate* m_pCallbackDelegate;
 };
 
+}//namespace
 #endif
 

@@ -8,6 +8,8 @@
 #include "event.h"
 #include "taskdelegate.h"
 
+namespace attic {
+
 namespace polltask 
 {
     static PollTask* g_pCurrentPollTask = NULL;
@@ -245,3 +247,4 @@ bool PollTask::IsFileInQueue(const std::string& filepath) {
 }
 
 
+}//namespace

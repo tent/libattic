@@ -2,24 +2,19 @@
 
 #include "constants.h"
 
+namespace attic { 
 
-FolderEntry::FolderEntry()
-{
-}
+FolderEntry::FolderEntry() {}
 
-FolderEntry::FolderEntry( const std::string& postid,
-                          const std::string& type,
-                          const std::string& path)
-{
+FolderEntry::FolderEntry(const std::string& postid,
+                         const std::string& type,
+                         const std::string& path) {
     m_Postid = postid;
     m_Type = type;
     m_Path = path;
 }
 
-FolderEntry::~FolderEntry()
-{
-}
-
+FolderEntry::~FolderEntry() {}
 
 void FolderEntry::Serialize(Json::Value& root)
 {
@@ -140,3 +135,4 @@ bool Folder::GetFolderEntry(const std::string& path, FolderEntry& entry)
     return false;
 }
 
+} //namespace

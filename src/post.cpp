@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+namespace attic {
+
 void Version::Serialize(Json::Value& root) {
     root["id"] = id;
     root["type"] = type;
@@ -191,4 +193,4 @@ void Post::Deserialize(Json::Value& root) {
     jsn::DeserializeObject(&permissions_,root["permissions"]);
 }
 
-
+}//namespace

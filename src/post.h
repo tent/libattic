@@ -12,6 +12,8 @@
 #include "permissions.h"
 #include "tentapp.h"
 
+namespace attic {
+
 struct Version : public JsonSerializable {
     std::string id;
     std::string type;
@@ -80,5 +82,6 @@ private:
     Version                             version_;
 };
 
+}//namespace
 #endif
 

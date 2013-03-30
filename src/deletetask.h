@@ -4,6 +4,8 @@
 
 #include "tenttask.h"
 
+namespace attic { 
+
 class FileInfo;
 class TaskDelegate;
 
@@ -28,5 +30,6 @@ public:
     virtual void OnFinished() { }
 };
 
+} //namespace
 #endif
 

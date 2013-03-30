@@ -3,6 +3,8 @@
 #include <string.h>
 #include "errorcodes.h"
 
+namespace attic {
+
 Credentials::Credentials() {
     memset(byte_key_, '\0', CryptoPP::AES::MAX_KEYLENGTH+1);
     memset(byte_iv_, '\0', CryptoPP::AES::BLOCKSIZE+1);
@@ -102,3 +104,5 @@ bool Credentials::IvEmpty() {
     return true;
 }
 
+
+}//namespace

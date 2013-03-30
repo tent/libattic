@@ -1,6 +1,6 @@
 #include "event.h"
 
-namespace event {
+namespace attic { namespace event {
 
 EventSystem* EventSystem::m_pInstance = 0;
 
@@ -102,5 +102,4 @@ void EventSystem::UnregisterFromEvent(const EventListener* pListener, Event::Eve
     m_listenMtx.Unlock();
 }
 
-}
-
+}} //namespace

@@ -2,7 +2,7 @@
 #define CONSTANTS_H_
 #pragma once
 
-namespace cnst {
+namespace attic { namespace cnst {
 // Types
 static const char* g_app_type = "https://tent.io/types/app/v0#";
 
@@ -45,8 +45,7 @@ static const char* g_szConfigEntityURL = "entity_url";      // entity url
 // Link rel Types
 static const char* g_meta_rel = "https://tent.io/rels/meta-post"; // Meta post rel
 static const char* g_cred_rel = "https://tent.io/rels/credentials"; // Credentials rel
-};
 
-
+}} //namespace
 #endif
 

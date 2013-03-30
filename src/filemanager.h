@@ -12,6 +12,8 @@
 #include "errorcodes.h"
 #include "folder.h"
 
+namespace attic { 
+
 class FileManager : public MutexClass {
     FileManager(const FileManager &rhs) {}
     FileManager operator=(const FileManager &rhs) { return *this; }
@@ -66,5 +68,5 @@ private:
     std::string         m_TempDirectory;    // Location where file copies will be made and manipulated
 };
 
-
+} //namespace
 #endif

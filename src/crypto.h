@@ -32,7 +32,7 @@ extern "C"
                        size_t);
 }
 
-namespace crypto {
+namespace attic { namespace crypto {
 
 static const int TAG_SIZE = 16;
 static const int SALT_SIZE = 16;
@@ -442,6 +442,6 @@ static void GenerateRandomString(std::string& out, const unsigned int size = 16)
     Base64EncodeString(intermed, out);
 }
 
-};
+}} //namespace
 #endif
 

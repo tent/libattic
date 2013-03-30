@@ -13,7 +13,7 @@
 #include "filesystem.h"
 
 // Inward facing utility methods used at libattic interface level
-namespace liba {
+namespace attic { namespace liba {
     int InitializeCredentialsManager( CredentialsManager** pCm,
                                       const std::string& configDir)
     {
@@ -167,7 +167,7 @@ namespace liba {
     }
 
 
-}
+}}//namespace
 
 #endif
 

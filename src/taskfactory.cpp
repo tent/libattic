@@ -14,6 +14,8 @@
 #include "taskarbiter.h"
 #include "tentapp.h"
 
+namespace attic { 
+
 TaskFactory::TaskFactory() {}
 TaskFactory::~TaskFactory() {}
 
@@ -263,4 +265,6 @@ int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type) // Depricated
 
     return taskcount;
 }
+
+}//namespace
 

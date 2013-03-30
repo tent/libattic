@@ -8,6 +8,8 @@
 #include "mutexclass.h"
 #include "event.h"
 
+namespace attic { 
+
 class FileQueue {
 public:
     FileQueue() {}
@@ -84,6 +86,7 @@ private:
     static CentralFileQueue* m_pInstance;
 };
 
+}//namespace
 #endif
 
 

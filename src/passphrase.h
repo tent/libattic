@@ -13,7 +13,7 @@
 #include "atticclient.h"
 #include "atticpost.h"
 
-namespace pass {
+namespace attic { namespace pass {
 
 class Passphrase {
     int PushAtticCredentials(const AtticPost& post);
@@ -502,6 +502,6 @@ static int EncryptKeyWithPassphrase( const std::string& key,
 }
 
 
-} //namespace
+}} //namespace
 #endif
 

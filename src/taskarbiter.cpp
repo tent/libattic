@@ -5,6 +5,8 @@
 #include "pulltask.h"
 #include "threading.h"
 
+namespace attic { 
+
 TaskArbiter* TaskArbiter::m_pInstance = 0;
 bool TaskArbiter::m_bInitialized = false;
 
@@ -77,4 +79,4 @@ int TaskArbiter::SpinOffTask(Task* pTask)
     return status;
 }
 
-
+}//namespace

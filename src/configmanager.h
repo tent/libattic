@@ -7,6 +7,8 @@
 
 #include "mutexclass.h"
 
+namespace attic { 
+
 class ConfigManager : public MutexClass {
     ConfigManager();
     ConfigManager(const ConfigManager& rhs);
@@ -29,4 +31,5 @@ private:
     static ConfigManager* m_pInstance;
 };
 
+} //namespace
 #endif 

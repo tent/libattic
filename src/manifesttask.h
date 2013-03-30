@@ -5,6 +5,8 @@
 #include "task.h"
 #include "filemanager.h"
 
+namespace attic { 
+
 class ManifestTask : public Task
 {
 public:
@@ -44,5 +46,6 @@ private:
     void(*mCallback)(int, char**, int, int);
 };
 
+}//namespace
 #endif
 

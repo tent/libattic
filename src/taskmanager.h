@@ -10,6 +10,8 @@
 #include "event.h"
 #include "task.h"
 
+namespace attic { 
+
 class TentApp;
 class FileManager;
 class CredentialsManager;
@@ -68,5 +70,6 @@ private:
     std::string             m_ConfigDir;
 };
 
+}//namespace
 #endif
 

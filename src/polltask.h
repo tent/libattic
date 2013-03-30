@@ -9,6 +9,8 @@
 #include "folder.h"
 #include "taskdelegate.h"
 
+namespace attic { 
+
 class PollDelegate;
 
 class PollTask : public TentTask {
@@ -69,5 +71,6 @@ private:
     PollTask* m_pTask;
 };
 
+}//namespace
 #endif
 

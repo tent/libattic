@@ -8,6 +8,8 @@
 #include "jsonserializable.h"
 #include "crypto.h"
 
+namespace attic { 
+
 class MasterKey : JsonSerializable {
 public:
     MasterKey() {}
@@ -39,5 +41,6 @@ private:
 
 };
 
+}//namespace
 #endif
 

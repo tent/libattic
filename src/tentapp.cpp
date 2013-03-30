@@ -3,6 +3,8 @@
 #include <fstream>
 #include "utils.h"
 
+namespace attic {
+
 void RedirectCode::Serialize(Json::Value& root) {
     root["code"] = code_;
     root["token_type"] = token_type_;
@@ -106,3 +108,6 @@ ret::eCode TentApp::LoadFromFile(const std::string& filepath) {
 
     return ret::A_OK;
 }
+
+
+}//namespace

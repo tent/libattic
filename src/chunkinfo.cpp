@@ -2,9 +2,9 @@
 
 #include "crypto.h"
 
-ChunkInfo::ChunkInfo() {
+namespace attic {
 
-}
+ChunkInfo::ChunkInfo() {}
 
 ChunkInfo::ChunkInfo(const std::string& chunkName, const std::string& checkSum) {
     m_Position = 0;
@@ -48,3 +48,4 @@ void ChunkInfo::Deserialize(Json::Value& root) {
     m_Position = atoi(decodepos.c_str());
 }
 
+} //namespace

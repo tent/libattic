@@ -2,6 +2,8 @@
 
 #include "fileinfo.h"
 
+namespace attic { 
+
 FileInfoFactory::FileInfoFactory()
 {
 
@@ -33,3 +35,4 @@ FileInfo* FileInfoFactory::CreateFileInfoObject()
     return fp;
 }
 
+}//namespace

@@ -7,6 +7,8 @@
 
 #include "tenttask.h"
 
+namespace attic { 
+
 class TaskDelegate;
 
 class PushTask : public TentTask {
@@ -37,5 +39,6 @@ public:
 private:
 };
 
+}//namespace
 #endif
 

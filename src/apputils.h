@@ -18,7 +18,7 @@
 #include "urlparams.h"
 #include "apppost.h"
 
-namespace app {
+namespace attic { namespace app {
 static int StartupAppInstance(TentApp& app,
                               const std::string& appName,
                               const std::string& appDescription,
@@ -328,6 +328,6 @@ static int SaveAppToFile(TentApp& app, const std::string& configdir) {
     return status;
 }
 
-}
+}}//namespace
 #endif
 

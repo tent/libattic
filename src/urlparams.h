@@ -6,13 +6,14 @@
 #include <vector>
 #include <string>
 
-class UrlParams
-{
+namespace attic {
+
+class UrlParams {
     typedef std::vector<std::string> UrlParam;
     typedef std::map<std::string, UrlParam> UrlParamMap;
 public:
-    UrlParams();
-    ~UrlParams();
+    UrlParams() {}
+    ~UrlParams() {}
     void AddValue(const std::string& key, const std::string &value);
     UrlParam GetValue(const std::string& key);
 
@@ -22,5 +23,6 @@ private:
     UrlParamMap m_Values;
 };
 
+}//namespace
 #endif
 

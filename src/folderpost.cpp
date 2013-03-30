@@ -3,6 +3,8 @@
 #include "constants.h"
 #include "errorcodes.h"
 
+namespace attic { 
+
 FolderPost::FolderPost() {
     set_type(cnst::g_attic_folder_type);
     set_public(false);
@@ -31,3 +33,4 @@ void FolderPost::Deserialize(Json::Value& root) {
     jsn::DeserializeObject(&folder_, folder);
 }
 
+}//namespace

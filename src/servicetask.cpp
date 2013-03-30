@@ -1,5 +1,7 @@
 #include "servicetask.h"
 
+namespace attic { 
+
 ServiceTask::ServiceTask(FileManager* pFm,
                          CredentialsManager* pCm,
                          const AccessToken& at,
@@ -32,8 +34,6 @@ void ServiceTask::OnStart() {
 void ServiceTask::OnPaused() {}
 void ServiceTask::OnFinished() {}
 
-void ServiceTask::RunTask() {
+void ServiceTask::RunTask() {}
 
-}
-
-
+} //namespace

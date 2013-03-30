@@ -5,6 +5,8 @@
 #include <string>
 #include "jsonserializable.h"
 
+namespace attic { 
+
 struct ServerUrls : public JsonSerializable {
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
@@ -43,5 +45,6 @@ private:
     std::string preference_;
 };
 
+} //namespace
 #endif
 
