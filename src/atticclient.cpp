@@ -164,6 +164,14 @@ int Client::SaveAppToFile() {
 
     return status;
 }
+
+int Client::SavePhraseToken() { 
+    int status = ret::A_OK;
+    std::string path;
+    ConstructPhraseTokenFilepath(path);
+    status = phrase_token_.SaveToFile(path);
+    return status;
+}
 /*
 void Client::StartupAppInstance(const std::string& appName,
                                 const std::string& appDescription,

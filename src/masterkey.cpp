@@ -5,8 +5,8 @@
 
 void MasterKey::Serialize(Json::Value& root) {
     // Credentials
-    root["key"] = credentials_.GetKey();
-    root["iv" ] = credentials_.GetIv();    // This is obsolete, probably won't exist in the future
+    root["key"] = credentials_.key();
+    root["iv" ] = credentials_.iv(); 
 }
 
 void MasterKey::Deserialize(Json::Value& root) {
@@ -14,10 +14,10 @@ void MasterKey::Deserialize(Json::Value& root) {
     std::string iv = root.get("iv", "").asString();
 
     if(!key.empty())
-        credentials_.SetKey(key);
+        credentials_.set_key(key);
 
     if(!iv.empty())
-        credentials_.SetIv(iv);
+        credentials_.set_iv(iv);
 }
 
 void MasterKey::WriteToFile(const std::string& filepath) {

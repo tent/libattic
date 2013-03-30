@@ -17,8 +17,7 @@ GetFileStrategy::~GetFileStrategy() {}
 
 int GetFileStrategy::Execute(FileManager* pFileManager,
                              CredentialsManager* pCredentialsManager,
-                             Response& out)
-{
+                             Response& out) {
     int status = ret::A_OK;
     m_pFileManager = pFileManager;
     m_pCredentialsManager = pCredentialsManager;
@@ -129,16 +128,16 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 std::string mk;
                 mKey.GetMasterKey(mk);
                 Credentials FileKeyCred;
-                FileKeyCred.SetKey(mk);
-                FileKeyCred.SetIv(iv);
+                FileKeyCred.set_key(mk);
+                FileKeyCred.set_iv(iv);
 
                 // Decrypt File Key
                 std::string filekey;
                 crypto::DecryptStringCFB(key, FileKeyCred, filekey);
                 //std::cout<<" FILE KEY : " << filekey << std::endl;
 
-                out.SetKey(filekey);
-                out.SetIv(iv);
+                out.set_key(filekey);
+                out.set_iv(iv);
             }
         }
         else {
@@ -210,8 +209,7 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     // check if we need to create folders
     fs::CreateDirectoryTree(path); // safer to pass canonical 
 
-    std::string filekey;
-    fCred.GetKey(filekey);
+    std::string filekey =  fCred.key();
     std::cout<< " file key : " << filekey << std::endl;
 
     std::string temppath, randstr;
@@ -324,8 +322,8 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
         ci->GetIv(iv);
 
         Credentials cred;
-        cred.SetKey(filekey);
-        cred.SetIv(iv);
+        cred.set_key(filekey);
+        cred.set_iv(iv);
 
         std::cout<< " IV : " << iv << std::endl;
         std::cout<< " SIZEOF : " << chunkBuffer.size() << std::endl;

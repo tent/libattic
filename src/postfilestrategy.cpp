@@ -181,8 +181,8 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
         m_pCredentialsManager->GetMasterKeyCopy(mKey);
         std::string mk;
         mKey.GetMasterKey(mk);
-        masterCred.SetKey(mk);
-        masterCred.SetIv(fileiv);
+        masterCred.set_key(mk);
+        masterCred.set_iv(fileiv);
 
         std::string decryptedkey;
         crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
@@ -235,8 +235,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         std::string boundary;
         utils::GenerateRandomString(boundary, 20);
 
-        std::string fileKey;
-        fileCredentials.GetKey(fileKey);
+        std::string fileKey = fileCredentials.key();
 
         // Build request
         boost::asio::streambuf request;
@@ -478,7 +477,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     int status = ret::A_OK;
 
     Credentials chunkCred;
-    chunkCred.SetKey(fileKey);
+    chunkCred.set_key(fileKey);
 
     // Calculate plaintext hash
     std::string plaintextHash;
@@ -496,7 +495,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     std::string encryptedChunk;
     std::string iv;
     crypto::GenerateIv(iv);
-    chunkCred.SetIv(iv);
+    chunkCred.set_iv(iv);
 
     std::cout<< " IV : " << iv << std::endl;
     crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
@@ -549,13 +548,12 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     fi->SetFileCredentials(fileCred);
 
     // Encrypt File Key
-    std::string fileKey, fileIv;
-    fileCred.GetKey(fileKey);
-    fileCred.GetIv(fileIv);
+    std::string fileKey = fileCred.key();
+    std::string fileIv = fileCred.iv();
 
     Credentials fCred;
-    fCred.SetKey(mk);
-    fCred.SetIv(fileIv);
+    fCred.set_key(mk);
+    fCred.set_iv(fileIv);
 
     std::string encryptedKey;
     crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);

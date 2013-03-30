@@ -1,4 +1,3 @@
-
 #ifndef UTILS_H_
 #define UTILS_H_
 
@@ -238,6 +237,17 @@ static void ExtractFromHeader( const std::string& delim,
     size_t found = content.find(delim);
     std::cout<<" found : " << found << std::endl;
 } 
+
+static void FindAndReplace(const std::string& in,
+                           const std::string& delim, 
+                           const std::string& replace_with,
+                           std::string& out) {
+    out = in;
+    for(size_t pos = out.find(delim); pos != std::string::npos;) {
+        out.erase(pos+1, delim.size());
+        out.insert(pos+1, replace_with);
+    }
+}
 
 }
 

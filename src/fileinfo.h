@@ -43,9 +43,9 @@ public:
     void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; } // Depricated 
 
     void SetFileCredentials(const Credentials& cred)    { m_FileCredentials = cred; }
-    void SetFileKey(const std::string &key)             { m_FileCredentials.SetKey(key); }
+    void SetFileKey(const std::string &key)             { m_FileCredentials.set_key(key); }
     void SetEncryptedKey(const std::string& key)        { m_EncryptedKey = key; } 
-    void SetIv(const std::string &iv)                   { m_FileCredentials.SetIv(iv); }
+    void SetIv(const std::string &iv)                   { m_FileCredentials.set_iv(iv); }
     void SetDeleted(const std::string& deleted)         { m_Deleted = atoi(deleted.c_str()); }
     void SetDeleted(const int deleted)                 { m_Deleted = deleted; }
 
@@ -56,9 +56,9 @@ public:
     void GetChunkName(std::string& out) const   { out = m_ChunkName; }
 
     void GetFileCredentials(Credentials& cred) const    { cred = m_FileCredentials; }
-    void GetFileKey(std::string &out) const             { m_FileCredentials.GetKey(out); }
+    void GetFileKey(std::string &out) const             { out = m_FileCredentials.key(); }
     void GetEncryptedKey(std::string& out) const        { out = m_EncryptedKey; }
-    void GetIv(std::string &out) const                  { m_FileCredentials.GetIv(out); }
+    void GetIv(std::string &out) const                  { out = m_FileCredentials.iv(); }
     int GetDeleted() const                              { return m_Deleted; }
 
     unsigned int GetChunkCount() const      { return m_ChunkCount; }

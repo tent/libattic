@@ -84,6 +84,12 @@ public:
         Unlock();
     }
 
+    void set_master_key(const std::string& masterkey) {
+        MasterKey mk;
+        mk.SetMasterKey(masterkey);
+        SetMasterKey(mk);
+    }
+
 private:
     MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb
     AccessToken     m_AccessToken;  // Access Token used to auth during tent posts

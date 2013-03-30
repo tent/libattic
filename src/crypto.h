@@ -98,46 +98,44 @@ static void GenerateCredentials(Credentials& cred) {
     byte key[CryptoPP::AES::MAX_KEYLENGTH+1];
     byte iv[CryptoPP::AES::BLOCKSIZE+1]; 
 
-    g_Rnd.GenerateBlock( key, cred.GetKeySize());   // Generate a random key
-    g_Rnd.GenerateBlock( iv, cred.GetIvSize());     // Generate a random IV
+    g_Rnd.GenerateBlock(key, cred.GetKeySize());   // Generate a random key
+    g_Rnd.GenerateBlock(iv, cred.GetIvSize());     // Generate a random IV
 
-    cred.SetKey(key, CryptoPP::AES::MAX_KEYLENGTH);
-    cred.SetIv(iv, CryptoPP::AES::BLOCKSIZE);
+    cred.set_key(key, CryptoPP::AES::MAX_KEYLENGTH);
+    cred.set_iv(iv, CryptoPP::AES::BLOCKSIZE);
 }
 
 static void GenerateIv(std::string& out) {
     byte iv[CryptoPP::AES::BLOCKSIZE];
     memset(iv, 0, CryptoPP::AES::BLOCKSIZE);
     g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE); 
-
     out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
 }
 
-static bool GenerateHash( const std::string& source, std::string& hashOut) {
+static bool GenerateHash(const std::string& source, std::string& hashOut) {
     CryptoPP::SHA512 hash;
 
-    CryptoPP::StringSource src( source.c_str(), 
-                                true,
-                                new CryptoPP::HashFilter( hash,
-                                    new CryptoPP::Base64Encoder (
-                                        new CryptoPP::StringSink(hashOut)
-                                        )
-                                    )
-                             );
+    CryptoPP::StringSource src(source.c_str(), 
+                               true,
+                               new CryptoPP::HashFilter( hash,
+                                   new CryptoPP::Base64Encoder (
+                                       new CryptoPP::StringSink(hashOut)
+                                       )
+                                   )
+                              );
     return true;
 }
 
-static int EncryptStringCFB( const std::string& data,
-                             const Credentials& cred,
-                             std::string& out)
-{
+static int EncryptStringCFB(const std::string& data,
+                            const Credentials& cred,
+                            std::string& out) {
     int status = ret::A_OK;
 
     try {
         std::string cipher;
 
         CryptoPP::CFB_Mode<CryptoPP::AES>::Encryption e;
-        e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+        e.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
 
         CryptoPP::StringSource( data,  // Plaintext
                                 true, 
@@ -153,15 +151,14 @@ static int EncryptStringCFB( const std::string& data,
     return status;
 }
 
-static int DecryptStringCFB( const std::string& cipher,
-                             const Credentials& cred,
-                             std::string& out)
-{
+static int DecryptStringCFB(const std::string& cipher,
+                            const Credentials& cred,
+                            std::string& out) {
     int status = ret::A_OK;
 
     try {
         CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption d;        
-        d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+        d.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
 
         CryptoPP::StringSource( cipher, 
                                 true, 
@@ -177,14 +174,13 @@ static int DecryptStringCFB( const std::string& cipher,
     return status;
 }
 
-static int EncryptStringGCM( const std::string& data,
-                             const Credentials& cred,
-                             std::string& out)
-{
+static int EncryptStringGCM(const std::string& data,
+                            const Credentials& cred,
+                            std::string& out) {
     int status = ret::A_OK;
     try {
         CryptoPP::GCM<CryptoPP::AES>::Encryption e;
-        e.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+        e.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
 
         CryptoPP::StringSource( data,
                                 true,
@@ -201,13 +197,12 @@ static int EncryptStringGCM( const std::string& data,
     return status;
 }
 
-static int DecryptStringGCM( const std::string& cipher,
-                             const Credentials& cred,
-                             std::string& out)
-{
+static int DecryptStringGCM(const std::string& cipher,
+                            const Credentials& cred,
+                            std::string& out) {
     try {
         CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
-        d.SetKeyWithIV(cred.m_Key, cred.GetKeySize(), cred.m_Iv, cred.GetIvSize());
+        d.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
 
         // Recovered Plain Data                                                             
         std::string rpdata;                                                                 
@@ -223,8 +218,7 @@ static int DecryptStringGCM( const std::string& cipher,
 
         // If the object does not throw, here's the only                 
         //  opportunity to check the data's integrity                    
-        if (df.GetLastResult() == true )                                 
-        {                                                                
+        if (df.GetLastResult() == true ) {
             //std::cout<< "recovered text : " << rpdata << "\n";           
             // Write out data to ofstream
             out = rpdata;
@@ -240,10 +234,9 @@ static int DecryptStringGCM( const std::string& cipher,
 
 
 
-static int GenerateKeyFromPassphrase( const std::string& pass, 
-                                      const std::string& salt,
-                                      Credentials& out)
-{
+static int GenerateKeyFromPassphrase(const std::string& pass, 
+                                     const std::string& salt,
+                                     Credentials& out) {
     int status = ret::A_OK;
     std::string outKey; //, outIv;
 
@@ -252,18 +245,24 @@ static int GenerateKeyFromPassphrase( const std::string& pass,
     if(status == ret::A_OK) {
         ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH); // MAX_KEYLENGTH for AES is 32
         //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
-        memcpy(out.m_Key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
-        memcpy(out.m_Iv, salt.c_str(), salt.size());
+        byte key[CryptoPP::AES::MAX_KEYLENGTH+1];
+        memset(key, '\0', CryptoPP::AES::MAX_KEYLENGTH+1);
+        memcpy(key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
+        out.set_key(key, CryptoPP::AES::MAX_KEYLENGTH);
+
+        byte iv[CryptoPP::AES::BLOCKSIZE+1];
+        memset(iv, '\0', CryptoPP::AES::BLOCKSIZE+1);
+        memcpy(iv, salt.c_str(), salt.size());
+        out.set_iv(iv, salt.size());
     }
 
     return status;
 }
 
-static bool ScryptEncode( const std::string &input, 
-                          const std::string &salt,
-                          std::string &out,
-                          unsigned int size)
-{
+static bool ScryptEncode(const std::string &input, 
+                         const std::string &salt,
+                         std::string &out,
+                         unsigned int size) {
     // Note* pass in 16 bit salt
     //uint8_t salt[32]; // 16 <- do 16, 64 or 128
 
@@ -325,14 +324,14 @@ static int GenerateSalt(std::string& out) {
     return status;
 }
 
-static int GenerateHMACForString( const std::string& input,
-                                  const Credentials& cred,
-                                  std::string& macOut)
+static int GenerateHMACForString(const std::string& input,
+                                 const Credentials& cred,
+                                 std::string& macOut)
 {
     int status = ret::A_OK;
     std::string mac;
     try {
-        CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.m_Key, cred.GetKeySize());
+        CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.byte_key(), cred.GetKeySize());
         CryptoPP::StringSource( input,
                                 true,
                                 new CryptoPP::HashFilter( hmac,
@@ -375,22 +374,21 @@ static int VerifyHMACForString( const std::string& input,
     try {
         // Decode hmac
         std::string decoded;
-        CryptoPP::StringSource ss( mac,
-                                   true,
-                                   new CryptoPP::HexDecoder(
-                                        new CryptoPP::StringSink(decoded)
+        CryptoPP::StringSource ss(mac,
+                                  true,
+                                  new CryptoPP::HexDecoder(
+                                       new CryptoPP::StringSink(decoded)
                             ) // HexDecoder
         ); // StringSource
 
         if(!decoded.empty()) {
-
-            CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.m_Key, cred.GetKeySize());
+            CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.byte_key(), cred.GetKeySize());
 
             const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
         
-            CryptoPP::StringSource( input + decoded, 
-                                    true, 
-                                    new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
+            CryptoPP::StringSource(input + decoded, 
+                                   true, 
+                                   new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
                                    ); // StringSource
         }
         else {

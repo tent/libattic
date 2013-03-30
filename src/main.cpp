@@ -183,7 +183,7 @@ TEST(PASSPHRASE, CHANGE)
     int status = InitLibAttic();
 
 
-    status = ChangePassphrase("UldG3H35RSMo1jqx", "password");
+    //status = ChangePassphrase("UldG3H35RSMo1jqx", "password");
     std::cout<<" Changing password to \"thispass\""<<std::endl;
     status = ChangePassphrase("password", "thispass");
     std::cout<<" Change passphrase status : " << status << std::endl;
@@ -624,27 +624,25 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     crypto::GenerateSalt(iv);
 
     // Genterate key from passphrase
-    int status = crypto::GenerateKeyFromPassphrase( phrase,
-                                               iv,
-                                               masterkey);
+    int status = crypto::GenerateKeyFromPassphrase(phrase,
+                                                   iv,
+                                                   masterkey);
     ASSERT_EQ(status, 0);
 
     Credentials cred; // Credentials to encrypt
     cred = crypto::GenerateCredentials();
 
-    std::string key;
-    cred.GetKey(key);
+    std::string key = cred.key();
 
     Credentials intercred; // credentials used to encrypt file key
                            // master key
                            // file specific iv
 
-    std::string mk, fileiv;
-    masterkey.GetKey(mk);
-    cred.GetIv(fileiv);
+    std::string mk = masterkey.key();
+    std::string fileiv = cred.iv();
 
-    intercred.SetKey(mk);
-    intercred.SetIv(fileiv);
+    intercred.set_key(mk);
+    intercred.set_iv(fileiv);
 
     std::string enckey;
     status = crypto::EncryptStringGCM(key, intercred, enckey);
@@ -652,22 +650,21 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
 
     // Generate key again for good measure
     Credentials mkcopy;
-    status = crypto::GenerateKeyFromPassphrase( phrase,
-                                           iv,
-                                           mkcopy);
+    status = crypto::GenerateKeyFromPassphrase(phrase,
+                                               iv,
+                                               mkcopy);
     ASSERT_EQ(status, 0);
 
     Credentials intercred1;
-    std::string mk1;
-    mkcopy.GetKey(mk1);
+    std::string mk1 = mkcopy.key();
 
-    intercred1.SetKey(mk1);
-    intercred1.SetIv(fileiv);
+    intercred1.set_key(mk1);
+    intercred1.set_iv(fileiv);
 
     std::string deckey;
     status = crypto::DecryptStringGCM(enckey, intercred1, deckey);
-    ASSERT_EQ(status, 0);
 
+    ASSERT_EQ(status, 0);
     ASSERT_EQ(key, deckey);
 }
 
@@ -689,8 +686,8 @@ TEST(SCRYPT, ENTER_PASSPHRASE)
                                   cred1);
 
     ASSERT_EQ(status, 0);
-    ASSERT_EQ(cred.GetKey(), cred1.GetKey());
-    ASSERT_EQ(cred.GetIv(), cred1.GetIv());
+    ASSERT_EQ(cred.key(), cred1.key());
+    ASSERT_EQ(cred.iv(), cred1.iv());
 }
 
 TEST(SCRYPT, ENCODE)

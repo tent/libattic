@@ -1,4 +1,3 @@
-
 #ifndef CREDENTIALS_H_
 #define CREDENTIALS_H_
 #pragma once
@@ -9,8 +8,7 @@
 
 #include "jsonserializable.h"
 
-class Credentials : public JsonSerializable
-{
+class Credentials : public JsonSerializable {
 public:
     Credentials();
     ~Credentials();
@@ -23,27 +21,28 @@ public:
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
 
-    void GetKey(std::string& out) const;
-    std::string GetKey() const;
+    const std::string& key() const { return key_; }
+    const std::string& iv() const { return iv_; }
 
-    void GetIv(std::string& out) const;
-    std::string GetIv() const;
-    
+    const byte* byte_key() const { return byte_key_; }
+    const byte* byte_iv() const { return byte_iv_; }
 
-    int SetKey(const std::string& key);
-    int SetKey(const byte* pKey, const unsigned int length);
+    int set_key(const std::string& key);
+    int set_key(const byte* pKey, const unsigned int length);
 
-    int SetIv(const std::string& iv); 
-    int SetIv(const byte* pIv, const unsigned int length);
+    int set_iv(const std::string& iv); 
+    int set_iv(const byte* pIv, const unsigned int length);
 
     bool KeyEmpty();
     bool IvEmpty();
 
-    // TODO :: make this private
-    byte m_Key[CryptoPP::AES::MAX_KEYLENGTH+1];
-    byte m_Iv[CryptoPP::AES::BLOCKSIZE+1]; // TODO :: this is probably going to be removed in the future.
-};
+private:
+    std::string key_;
+    std::string iv_;
 
+    byte byte_key_[CryptoPP::AES::MAX_KEYLENGTH+1];
+    byte byte_iv_[CryptoPP::AES::BLOCKSIZE+1]; 
+};
 
 #endif
 

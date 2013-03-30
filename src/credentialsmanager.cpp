@@ -83,7 +83,7 @@ int CredentialsManager::LoadPhraseToken() {
 
 void CredentialsManager::CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut) {
     Credentials MasterKey;
-    MasterKey.SetKey(key);
+    MasterKey.set_key(key);
     mkOut.SetCredentials(MasterKey);
 }
 
@@ -98,7 +98,7 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
     // Create Master Key
     Credentials MasterKey;
     crypto::GenerateCredentials(MasterKey);
-    MasterKey.GetKey(keyOut);
+    keyOut = MasterKey.key();
 
     return ret::A_OK;
 }
@@ -127,7 +127,7 @@ int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken&
             crypto::GenerateKeyFromPassphrase(pass, salt, cred);
             
             // Set the key generated from phrase
-            ptOut.set_phrase_key(reinterpret_cast<char*>(cred.m_Key));
+            ptOut.set_phrase_key(cred.key());
         }
     }
     Unlock();
@@ -143,7 +143,7 @@ int CredentialsManager::EnterPassphrase(const std::string& pass,
     Credentials cred;
     crypto::GenerateKeyFromPassphrase(pass, salt, cred);
     // Create Passphrase token
-    keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
+    keyOut = cred.key();
     Unlock();
 
     return ret::A_OK;

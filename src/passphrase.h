@@ -48,22 +48,27 @@ class Passphrase {
     int RetrieveCredentialsPost(AtticPost& out);
     int GetCredentialsPostCount();
 
+    bool CheckSentinelBytes(const std::string& in);
+
 public:
     Passphrase(const Entity& entity, const AccessToken& at);
     ~Passphrase();
 
     int RegisterPassphrase(const std::string& passphrase,
                            const std::string& masterkey,
-                           std::string& recoverykey);
+                           std::string& recoverykey,
+                           bool override = false);
 
     int EnterPassphrase(const std::string& passphrase,
-                        std::string& key_out);
+                        PhraseToken& token_out,
+                        std::string& master_key_out);
 
     int ChangePassphrase(const std::string& old_passphrase,
                          const std::string& new_passphrase,
                          std::string& recoverykey);
 
-    int EnterRecoveryKey(const std::string& recoverykey);
+    int EnterRecoveryKey(const std::string& recoverykey,
+                         std::string& temp_out);
 
 private:
     AccessToken access_token_;
@@ -367,8 +372,8 @@ static int DecryptKey(const std::string& encryptedkey,
     int status = ret::A_OK;
 
     Credentials cred;
-    cred.SetKey(phrasekey);
-    cred.SetIv(iv);
+    cred.set_key(phrasekey);
+    cred.set_iv(iv);
 
     std::string decrypted_key;
     status = crypto::DecryptStringCFB(encryptedkey, cred, decrypted_key);
@@ -409,7 +414,7 @@ static void GeneratePhraseKey(const std::string& phrase,
     Credentials cred;
     crypto::GenerateKeyFromPassphrase(phrase, salt, cred);
     // Create Passphrase token
-    keyOut.append(reinterpret_cast<char*>(cred.m_Key), cred.GetKeySize()); 
+    keyOut = cred.key();
 }
 
 /*
@@ -486,8 +491,8 @@ static int EncryptKeyWithPassphrase( const std::string& key,
 
     // encryption credentials
     Credentials enc;
-    enc.SetKey(phrasekey);
-    enc.SetIv(salt);
+    enc.set_key(phrasekey);
+    enc.set_iv(salt);
 
     // Encrypt MasterKey with passphrase key
     std::string out;

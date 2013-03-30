@@ -51,6 +51,7 @@ public:
 
     void set_tent_app(const TentApp& app) { tent_app_ = app; }
     void set_phrase_key(const std::string& key);
+    void set_phrase_token(const PhraseToken& pt) { phrase_token_ = pt; }
 
     const std::string& working_directory() const { return working_directory_; }
     const std::string& config_directory() const  { return config_directory_; }
