@@ -20,7 +20,7 @@ public:
     Entity() {}
     ~Entity() {}
 
-    EntityServer GetPreferredServer();
+    const EntityServer GetPreferredServer() const;
 
     int WriteToFile(const std::string& filepath);
     int LoadFromFile(const std::string& filepath);

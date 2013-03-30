@@ -3,65 +3,60 @@
 namespace attic { 
 
 HttpStrategyInterface::HttpStrategyInterface() {
-    m_pCredentialsManager = NULL;
-    m_pFileManager = NULL;
-    m_pDelegate = NULL;
+    credentials_manager_ = NULL;
+    file_manager_ = NULL;
+    task_delegate_ = NULL;
 }
 
 HttpStrategyInterface::~HttpStrategyInterface() {
-    m_pCredentialsManager = NULL;
-    m_pFileManager = NULL;
-    if(m_pDelegate) {
-        delete m_pDelegate;
-        m_pDelegate = NULL;
+    credentials_manager_ = NULL;
+    file_manager_ = NULL;
+    if(task_delegate_) {
+        delete task_delegate_;
+        task_delegate_ = NULL;
     }
 }
 
-void HttpStrategyInterface::SetCallbackDelegate(TaskDelegate* pDel) { 
-    if(m_pDelegate) {
-        delete m_pDelegate;
-        m_pDelegate = NULL;
+void HttpStrategyInterface::set_task_delegate(TaskDelegate* del) {
+    if(task_delegate_) {
+        delete task_delegate_;
+        task_delegate_ = NULL;
     }
-    m_pDelegate = pDel;
+    task_delegate_ = del;
 }
 
 void HttpStrategyInterface::Callback(const int tasktype, 
                                      const int code, 
                                      const int taskstate, 
-                                     const std::string& var) 
-{
-    if(m_pDelegate)
-        m_pDelegate->Callback(tasktype, code, taskstate, var);
+                                     const std::string& var) {
+    if(task_delegate_)
+        task_delegate_->Callback(tasktype, code, taskstate, var);
 }
-
-
-
 
 HttpStrategyContext::HttpStrategyContext(FileManager* pFileManager,
-                                         CredentialsManager* pCredentialsManager)
-{
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    m_Itr = m_Strategies.begin();
+                                         CredentialsManager* pCredentialsManager) {
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    strategy_itr_ = strategies_.begin();
 }
 
-HttpStrategyContext::~HttpStrategyContext(){
-    m_pFileManager = NULL;
-    m_pCredentialsManager = NULL;
-    m_Strategies.clear();
+HttpStrategyContext::~HttpStrategyContext() {
+    file_manager_ = NULL;
+    credentials_manager_ = NULL;
+    strategies_.clear();
 }
 
 void HttpStrategyContext::PushBack(HttpStrategyInterface* pStrat) { 
-    m_Strategies.push_back(pStrat);
+    strategies_.push_back(pStrat);
 }
 
 int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
     if(s) {
         // Copy context config
-        s->m_ConfigMap = m_ConfigMap;
+        s->config_map_ = config_map_;
         // Execute
-        return s->Execute(m_pFileManager,
-                          m_pCredentialsManager,
+        return s->Execute(file_manager_,
+                          credentials_manager_,
                           out);
     }
     return ret::A_FAIL_INVALID_PTR;
@@ -69,10 +64,10 @@ int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
 
 int HttpStrategyContext::ExecuteAll() {
     // Check config for anything interesting
-    StrategyList::iterator itr = m_Strategies.begin();
+    StrategyList::iterator itr = strategies_.begin();
     Response resp;
     int status = ret::A_OK;
-    for(;itr != m_Strategies.end(); itr++) {
+    for(;itr != strategies_.end(); itr++) {
         status = Execute(*itr, resp);
         if(status != ret::A_OK)
             break;
@@ -82,15 +77,15 @@ int HttpStrategyContext::ExecuteAll() {
 
 int HttpStrategyContext::Step(Response& out) {
     int status = ret::A_OK;
-    if(m_Itr != m_Strategies.end()) {
-        status = Execute(*m_Itr, out);
-        m_Itr++;
+    if(strategy_itr_ != strategies_.end()) {
+        status = Execute(*strategy_itr_, out);
+        strategy_itr_++;
     }
     return status;
 }
 
 void HttpStrategyContext::ResetPosition() {
-    m_Itr = m_Strategies.begin();
+    strategy_itr_ = strategies_.begin();
 }
 
 }//namespace

@@ -12,12 +12,12 @@ int SyncStrategy::Execute(FileManager* pFileManager,
                           Response& out) 
 {
     int status = ret::A_OK;
-    m_entityApiRoot = entityApiRoot;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    post_path_ = entityApiRoot;
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
     // TODO :: this, later
 

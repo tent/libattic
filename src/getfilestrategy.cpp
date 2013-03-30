@@ -20,16 +20,16 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                              CredentialsManager* pCredentialsManager,
                              Response& out) {
     int status = ret::A_OK;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    m_entityApiRoot = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
 
-    FileInfo* fi = m_pFileManager->GetFileInfo(filepath);                                        
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
         if(fi->GetDeleted())
             return ret::A_FAIL_PULL_DELETED_FILE;
@@ -43,7 +43,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
             if(!chunkpostid.empty()) {
                 // Construct Post URL
                 std::string posturl;
-                postutils::ConstructPostUrl(m_entityApiRoot, posturl);
+                postutils::ConstructPostUrl(post_path_, posturl);
 
                 std::string chunkposturl = posturl;
                 utils::CheckUrlAndAppendTrailingSlash(chunkposturl);
@@ -71,7 +71,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                             char szVer[256] = {'\0'};
                             std::cout<<" FIX THIS IN GETFILESTRATEGY " << std::endl;
                             //snprintf(szVer, 256, "%d", p.GetVersion());
-                            //m_pFileManager->SetFileVersion(relative_filepath, std::string(szVer));
+                            //file_manager_->SetFileVersion(relative_filepath, std::string(szVer));
                         }
 
                     }
@@ -100,17 +100,13 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
     if(fi) {
         std::cout<<"RETRIEVING CREDENTIALS " << std::endl;
         std::string posturl;
-        postutils::ConstructPostUrl(m_entityApiRoot, posturl);
-
-        std::cout<<"api root : " << m_entityApiRoot << std::endl;
         std::string postid;
         fi->GetPostID(postid);
-        utils::CheckUrlAndAppendTrailingSlash(posturl);
-        posturl += postid;
+        utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
         // Get Metadata post
         Response resp;
-        netlib::HttpGet(posturl, NULL, &m_At, resp);
+        netlib::HttpGet(posturl, NULL, &access_token_, resp);
 
         std::cout<<" POST URL : "<< posturl << std::endl;
         std::cout<<" CODE : " << resp.code << std::endl;
@@ -124,7 +120,7 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 fp.set_iv_data(iv);
 
                 MasterKey mKey;
-                m_pCredentialsManager->GetMasterKeyCopy(mKey);
+                credentials_manager_->GetMasterKeyCopy(mKey);
 
                 std::string mk;
                 mKey.GetMasterKey(mk);
@@ -159,15 +155,13 @@ int GetFileStrategy::GetChunkPost(FileInfo* fi, Response& responseOut) {
         // Construct Post URL                                                                        
 
         std::string posturl;
-        postutils::ConstructPostUrl(m_entityApiRoot, posturl);
 
         std::string postid;                                                            
         fi->GetChunkPostID(postid);
-        utils::CheckUrlAndAppendTrailingSlash(posturl);
-        posturl += postid;
+        utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
         std::cout<<" Post path : " << posturl << std::endl;
-        status = netlib::HttpGetAttachment( posturl, NULL, &m_At, responseOut);
+        status = netlib::HttpGetAttachment( posturl, NULL, &access_token_, responseOut);
 
         if(status == ret::A_OK) {
             if(responseOut.code != 200)
@@ -204,7 +198,7 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     std::cout<< " filename : " << filename << std::endl;
 
     std::string path;
-    m_pFileManager->GetCanonicalFilepath(filepath, path);
+    file_manager_->GetCanonicalFilepath(filepath, path);
 
     std::cout<< " path : " << path << std::endl;
     // check if we need to create folders
@@ -214,7 +208,7 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     std::cout<< " file key : " << filekey << std::endl;
 
     std::string temppath, randstr;
-    m_pFileManager->GetTempDirectory(temppath);
+    file_manager_->GetTempDirectory(temppath);
     //crypto::GenerateRandomString(randstr, 4);
     utils::GenerateRandomString(randstr, 16);
     temppath += "/" + filename + "_" + randstr;
@@ -237,7 +231,7 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
             attachmentpath += (*itr).name;
 
             outpath.clear();
-            m_pFileManager->GetTempDirectory(outpath);
+            file_manager_->GetTempDirectory(outpath);
 
             utils::CheckUrlAndAppendTrailingSlash(outpath);
             outpath += (*itr).name;
@@ -284,7 +278,7 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
 
     boost::timer::cpu_timer::cpu_timer t;
     Response response;
-    status = netlib::HttpGetAttachment(url, NULL, &m_At, response);
+    status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
     long elapsed = time.user;
     // to milliseconds

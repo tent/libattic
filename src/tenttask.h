@@ -15,8 +15,8 @@ namespace attic {
 class TentTask : public Task {
 public:
     TentTask(Task::TaskType type,
-             FileManager* pFm, 
-             CredentialsManager* pCm,
+             FileManager* fm, 
+             CredentialsManager* cm,
              const AccessToken& at,
              const Entity& entity,
              const std::string& filepath,
@@ -27,18 +27,17 @@ public:
              : 
              Task(type)
     {
-        m_pFileManager          = pFm;
-        m_pCredentialsManager   = pCm;
+        file_manager_          = fm;
+        credentials_manager_   = cm;
+        access_token_ = at;
 
-        m_At = at;
+        entity_ = entity;
+        filepath_ = filepath;
+        temp_directory_ = tempdir;
+        working_directory_ = workingdir;
+        config_directory_ = configdir;
 
-        m_Entity = entity;
-        m_Filepath = filepath;
-        m_TempDirectory = tempdir;
-        m_WorkingDirectory = workingdir;
-        m_ConfigDirectory = configdir;
-
-        m_pCallbackDelegate = callbackDelegate;
+        callback_delegate_ = callbackDelegate;
     }
 
     virtual void SetFinishedState() {
@@ -46,69 +45,65 @@ public:
     }                                                                       
 
     virtual ~TentTask() {
-        m_pFileManager          = NULL;
-        m_pCredentialsManager   = NULL;
-        m_pCallbackDelegate     = NULL;
+        file_manager_          = NULL;
+        credentials_manager_   = NULL;
+        callback_delegate_     = NULL;
     }
 
     /*
     virtual void RunTask() {}
     */
 
-    AccessToken* GetAccessToken()       { return &m_At; }
-    AccessToken  GetAccessTokenCopy()   { return m_At; }
-    
-    void GetEntityUrl(std::string& out)         { out = m_Entity.entity(); } // refactor this to conform with const string & V03
-    void GetEntity(Entity& out)                 { out = m_Entity; }
-    void GetFilepath(std::string& out)          { out = m_Filepath; }
-    void GetTempDirectory(std::string& out)     { out = m_TempDirectory; } 
-    void GetWorkingDirectory(std::string& out)  { out = m_WorkingDirectory; }
-    void GetConfigDirectory(std::string& out)   { out = m_ConfigDirectory; }
+    const AccessToken& access_token() const { return access_token_; }
+    const Entity& entity() const { return entity_; }
 
-    FileManager*        GetFileManager()        { return m_pFileManager; } 
-    CredentialsManager* GetCredentialsManager() { return m_pCredentialsManager; } 
+    const std::string& filepath()           const { return filepath_; }
+    const std::string& temp_directory()     const { return temp_directory_; }
+    const std::string& wokring_directory()  const { return working_directory_; }
+    const std::string& config_directory()   const { return config_directory_; }
 
-    void SetFileManager(FileManager* pFm)                 { m_pFileManager = pFm; }
-    void SetCredentialsManager(CredentialsManager* pCm)   { m_pCredentialsManager = pCm; }
+    FileManager*        GetFileManager()        { return file_manager_; } 
+    CredentialsManager* GetCredentialsManager() { return credentials_manager_; } 
 
-    void SetAccessToken(const AccessToken& at)                  { m_At = at; }
-    void SetEntity(const Entity& entity)                        { m_Entity = entity; }
-    void SetFilepath(const std::string& filepath)               { m_Filepath = filepath; }
-    void SetTempDirectory(const std::string& tempdir)           { m_TempDirectory = tempdir; }
-    void SetWorkingDirectory(const std::string& workingdir)     { m_WorkingDirectory = workingdir; }
-    void SetConfigDirectory(const std::string& configdir)       { m_ConfigDirectory = configdir; }
+    void set_file_manager(FileManager* fm)                  { file_manager_ = fm; }
+    void credentials_manager(CredentialsManager* cm)     { credentials_manager_ = cm; }
+
+    void set_access_token(const AccessToken& at)                 { access_token_ = at; }
+    void set_entity(const Entity& entity)                        { entity_ = entity; }
+    void set_filepath(const std::string& filepath)               { filepath_ = filepath; }
+    void set_temp_directory(const std::string& tempdir)          { temp_directory_ = tempdir; }
+    void set_working_directory(const std::string& workingdir)    { working_directory_ = workingdir; }
+    void set_config_directory(const std::string& configdir)      { config_directory_ = configdir; }
 
 protected:
     void Callback(const int code, const std::string& var) {
-        if(m_pCallbackDelegate)
-            m_pCallbackDelegate->Callback(GetTaskType(), code, GetTaskState(), var);
+        if(callback_delegate_)
+            callback_delegate_->Callback(GetTaskType(), code, GetTaskState(), var);
     }
 
-    void GetApiRoot(std::string& out) {
-        Entity entity;
-        GetEntity(entity);
-        //entity.GetApiRoot(out); // UPDATE THIS V03
-    }
-
-    void ConstructPostUrl(std::string& out) {
-        GetApiRoot(out);
-        out += "/posts";
+    std::string GetPostPath() {
+        std::string post_path;
+        utils::FindAndReplace(entity_.GetPreferredServer().post(), 
+                              "{entity}", 
+                              entity_.entity(), 
+                              post_path);
+        return post_path;
     }
 
 private:
-    AccessToken          m_At;
-    Entity               m_Entity;
+    AccessToken          access_token_;
+    Entity               entity_;
 
-    std::string          m_Filepath;
-    std::string          m_TempDirectory;
-    std::string          m_WorkingDirectory;
-    std::string          m_ConfigDirectory;
+    std::string          filepath_;     // TODO :: figure out a way to remove this
+    std::string          temp_directory_;
+    std::string          working_directory_;
+    std::string          config_directory_;
 
     // Shared ptrs,
-    FileManager*         m_pFileManager;
-    CredentialsManager*  m_pCredentialsManager;
+    FileManager*         file_manager_;
+    CredentialsManager*  credentials_manager_;
 
-    TaskDelegate* m_pCallbackDelegate;
+    TaskDelegate* callback_delegate_;
 };
 
 }//namespace

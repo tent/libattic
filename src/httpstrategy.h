@@ -19,7 +19,7 @@ class HttpStrategyInterface {
     friend class HttpStrategyContext;
     typedef std::map<std::string, std::string> ConfigMap;
 protected:
-    std::string GetConfigValue(const std::string& key) { return m_ConfigMap[key]; }
+    std::string GetConfigValue(const std::string& key) { return config_map_[key]; }
 public:
     HttpStrategyInterface();
     ~HttpStrategyInterface();
@@ -30,21 +30,22 @@ public:
 
     // Takes ownership of the delegate.
     // Will delete previous delegate if set more than once
-    void SetCallbackDelegate(TaskDelegate* pDel);
+    void set_task_delegate(TaskDelegate* del);
 
     void Callback(const int tasktype, 
                   const int code, 
                   const int taskstate, 
                   const std::string& var);
 protected:
-    ConfigMap m_ConfigMap;
-    CredentialsManager*     m_pCredentialsManager;
-    FileManager*            m_pFileManager;
+    ConfigMap               config_map_;
+    CredentialsManager*     credentials_manager_;
+    FileManager*            file_manager_;
 
-    AccessToken             m_At;
-    std::string             m_entityApiRoot;
+    AccessToken             access_token_;
+    std::string             post_path_;
+    std::string             new_post_path_;
 
-    TaskDelegate*           m_pDelegate;
+    TaskDelegate*           task_delegate_;
 };
 
 class HttpStrategyContext {
@@ -66,20 +67,20 @@ public:
     void ResetPosition();
 
     void SetConfigValue(const std::string& key, const std::string& value) {
-        m_ConfigMap[key] = value;
+        config_map_[key] = value;
     }
 
     std::string* operator[](const std::string& key) {
-        return &m_ConfigMap[key];
+        return &config_map_[key];
     }
 
 private:
-    CredentialsManager*     m_pCredentialsManager;
-    FileManager*            m_pFileManager;
+    CredentialsManager*     credentials_manager_;
+    FileManager*            file_manager_;
 
-    ConfigMap   m_ConfigMap;
-    StrategyList m_Strategies;
-    StrategyList::iterator m_Itr;
+    ConfigMap       config_map_;
+    StrategyList    strategies_;
+    StrategyList::iterator strategy_itr_;
 };
 
 }//namespace

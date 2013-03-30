@@ -10,13 +10,13 @@ int SoftDeleteStrategy::Execute(FileManager* pFileManager,
                                 Response& out)
 {
     int status = ret::A_OK;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    m_entityApiRoot = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
 
     FileInfo* fi = RetrieveFileInfo(filepath);
@@ -35,13 +35,13 @@ void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
     std::string filepath;
     fi->GetFilepath(filepath);
     fi->SetDeleted(1);
-    m_pFileManager->SetFileDeleted(filepath, true);
+    file_manager_->SetFileDeleted(filepath, true);
 }
 
 FileInfo* SoftDeleteStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = m_pFileManager->GetFileInfo(filepath);
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);
     if(!fi)
-        fi = m_pFileManager->CreateFileInfo();
+        fi = file_manager_->CreateFileInfo();
     return fi;
 }
 

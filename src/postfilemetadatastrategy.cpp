@@ -16,16 +16,14 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
                                        Response& out)
 {
     int status = ret::A_OK;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    m_entityApiRoot = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
-
-
 
     FileInfo* fi = RetrieveFileInfo(filepath);
     if(fi) {
@@ -59,7 +57,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
 
     // Construct post url
     std::string posturl;
-    posturl = m_entityApiRoot;
+    posturl = post_path_;
     utils::CheckUrlAndAppendTrailingSlash(posturl);
     posturl += "posts";
 
@@ -84,7 +82,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
                                   p.type(),
                                   NULL,
                                   postBuffer,
-                                  &m_At,
+                                  &access_token_,
                                   response );
     }
     else {
@@ -107,7 +105,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
                                  p.type(),
                                  NULL,
                                  postBuffer,
-                                 &m_At,
+                                 &access_token_,
                                  response );
    }
 
@@ -125,10 +123,10 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
                 //fi->SetPostVersion(p.GetVersion()); // TODO update this in the manifest
                 fi->GetFilepath(fi_filepath);
 
-                m_pFileManager->SetFilePostId(fi_filepath, postid);
+                file_manager_->SetFilePostId(fi_filepath, postid);
                 //char szVer[256] = {'\0'};
                 //snprintf(szVer, 256, "%d", p.GetVersion());
-                //m_pFileManager->SetFileVersion(fi_filepath, std::string(szVer));
+                //file_manager_->SetFileVersion(fi_filepath, std::string(szVer));
                 // set post version
                 // Send Folder Post
                 std::cout<<" sending folder post to filepath : " << fi_filepath << std::endl;
@@ -147,9 +145,9 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
 }
 
 FileInfo* PostFileMetadataStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = m_pFileManager->GetFileInfo(filepath);
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);
     if(!fi)
-        fi = m_pFileManager->CreateFileInfo();
+        fi = file_manager_->CreateFileInfo();
     return fi;
 }
 

@@ -11,15 +11,19 @@
 
 namespace attic { 
 
-EntityServer Entity::GetPreferredServer() {
-    ServerList::iterator itr = server_list_.begin();
-    ServerList::iterator last_itr = itr;
-    int last_preferred = 1000;
-    for(;itr != server_list_.end(); itr++) {
-        if(atoi((*itr).preference().c_str()) < last_preferred)
-            last_itr = itr;
+const EntityServer Entity::GetPreferredServer() const {
+    EntityServer srv;
+    if(server_list_.size()) {
+        ServerList::const_iterator itr = server_list_.begin();
+        ServerList::const_iterator last_itr = itr;
+        int last_preferred = 1000;
+        for(;itr != server_list_.end(); itr++) {
+            if(atoi((*itr).preference().c_str()) < last_preferred)
+                last_itr = itr;
+        }
+        return (*last_itr);
     }
-    return (*last_itr);
+    return srv;
 }
 
 int Entity::WriteToFile(const std::string& filepath) {

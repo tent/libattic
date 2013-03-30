@@ -38,8 +38,7 @@ PullTask::PullTask(FileManager* pFm,
 PullTask::~PullTask() {}
 
 void PullTask::RunTask() {
-    std::string filepath;
-    GetFilepath(filepath);
+    std::string filepath = TentTask::filepath();
 
     event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
     int status = PullFile(filepath);
@@ -52,15 +51,14 @@ void PullTask::RunTask() {
 int PullTask::PullFile(const std::string& filepath) {
     int status = ret::A_OK;
 
-    std::string apiroot;
-    GetApiRoot(apiroot);
+    std::string post_path = GetPostPath();
     Response resp;
 
     GetFileStrategy gfs;
     HttpStrategyContext pullcontext(GetFileManager(), 
                                     GetCredentialsManager());
 
-    pullcontext.SetConfigValue("api_root", apiroot);
+    pullcontext.SetConfigValue("post_path",post_path);
     pullcontext.SetConfigValue("filepath", filepath);
 
     pullcontext.PushBack(&gfs);

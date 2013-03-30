@@ -39,8 +39,7 @@ PushTask::~PushTask() {}
 
 void PushTask::RunTask() {
     // Run the task
-    std::string filepath;
-    GetFilepath(filepath);
+    std::string filepath = TentTask::filepath();
 
     event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
     int status = PushFile(filepath);
@@ -57,8 +56,7 @@ int PushTask::PushFile(const std::string& filepath) {
     int status = ret::A_OK;
 
     if(fs::CheckFileExists(filepath)) {
-        std::string apiroot;
-        GetApiRoot(apiroot);
+        std::string post_path = GetPostPath();
         Response resp;
 
         PostFileStrategy ps;                // Chunk and upload
@@ -69,7 +67,7 @@ int PushTask::PushFile(const std::string& filepath) {
 
         HttpStrategyContext pushcontext(GetFileManager(), 
                                         GetCredentialsManager());
-        pushcontext.SetConfigValue("api_root", apiroot);
+        pushcontext.SetConfigValue("post_path", post_path);
         pushcontext.SetConfigValue("filepath", filepath);
 
         pushcontext.PushBack(&ps);

@@ -68,15 +68,13 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     int status = ret::A_OK;
 
     std::string url;
-    GetEntityUrl(url);
-    utils::CheckUrlAndAppendTrailingSlash(url);
-    url += "posts/" + m_PostID;
+    utils::FindAndReplace(GetPostPath(), "{post}", m_PostID, url);
 
     Response response;
-    AccessToken* at = GetAccessToken();                                                
+    AccessToken at = access_token();
     netlib::HttpGet( url,
                      NULL,
-                     at,
+                     &at,
                      response); 
 
     if(response.code == 200) 
@@ -171,10 +169,8 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
 int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
     int status = ret::A_OK;
 
-    Entity entity;
-    GetEntity(entity);
-
-    AccessToken* at = GetAccessToken();                                                
+    Entity entity = TentTask::entity();
+    AccessToken at = access_token();                                                
          
     // Get Chunk info
     std::vector<std::string> chunkPosts;
@@ -203,7 +199,7 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
             Response response;
             netlib::HttpGet( url, 
                              NULL,
-                             at,
+                             &at,
                              response); 
 
             //std::cout<< " CODE : " << response.code << std::endl;

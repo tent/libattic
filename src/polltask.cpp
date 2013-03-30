@@ -101,14 +101,13 @@ int PollTask::SyncFolderPosts() {
     // Get Folder Posts
     int postcount = GetFolderPostCount();
     if(postcount > 0) {
-        Entity entity;
-        GetEntity(entity);
+        Entity entity = TentTask::entity();
         std::string url;                                                                   
         //entity.GetApiRoot(url); // UPDATE THIS V03
         utils::CheckUrlAndAppendTrailingSlash(url);
         url += "posts";
 
-        AccessToken* at = GetAccessToken();
+        AccessToken at = access_token();
         int cap = 200;
         std::string lastid;
         for(int i=0; i < postcount; i+=cap) {
@@ -129,10 +128,10 @@ int PollTask::SyncFolderPosts() {
                 params.AddValue(std::string("last_id"), lastid);
 
             Response resp;
-            netlib::HttpGet( url,
-                             &params,
-                             at,
-                             resp);
+            netlib::HttpGet(url,
+                            &params,
+                            &at,
+                            resp);
 
             std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
             //std::cout<<" response code : " << resp.code << std::endl;
@@ -207,26 +206,27 @@ int PollTask::SyncFolder(Folder& folder) {
 }
 
 int PollTask::GetFolderPostCount() {
-    std::string url;
-    GetEntityUrl(url);
-    utils::CheckUrlAndAppendTrailingSlash(url);
-    url += "posts/count";
-
+    std::string url = entity().GetPreferredServer().posts_feed();
     std::cout<<" URL : " << url << std::endl;
 
     UrlParams params;
     params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));             
 
     Response response;                                                                            
-    AccessToken* at = GetAccessToken();                                                           
-    netlib::HttpGet( url,
-                     &params,
-                     at,
-                     response);
+    AccessToken at = access_token();                                                           
+    netlib::HttpHead(url,
+                    &params,
+                    &at,
+                    response);
+
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" header : " << response.header.asString() << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
 
     int count = -1;                                                                               
     if(response.code == 200) {
-        count = atoi(response.body.c_str());
+        if(response.header.HasValue("Count"))
+            count = atoi(response.header["Count"].c_str());
     }
 
     return count;

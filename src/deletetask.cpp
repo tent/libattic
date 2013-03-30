@@ -43,9 +43,8 @@ void DeleteTask::RunTask() {
     // Run the task
     int status = ret::A_OK;
 
-    std::string filepath, apiroot;
-    GetFilepath(filepath);
-    GetApiRoot(apiroot);
+    std::string filepath = TentTask::filepath();
+    std::string post_path = TentTask::GetPostPath(); 
 
     SoftDeleteStrategy sds;
     PostFileMetadataStrategy pmds;
@@ -53,7 +52,7 @@ void DeleteTask::RunTask() {
     HttpStrategyContext softdeletectx(GetFileManager(), 
                                       GetCredentialsManager());
 
-    softdeletectx.SetConfigValue("api_root", apiroot);
+    softdeletectx.SetConfigValue("post_path", post_path);
     softdeletectx.SetConfigValue("filepath", filepath);
 
     softdeletectx.PushBack(&sds);

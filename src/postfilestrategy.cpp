@@ -21,13 +21,13 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                                CredentialsManager* pCredentialsManager,
                                Response& out){
     int status = ret::A_OK;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    m_entityApiRoot = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("api_root");
     std::string filepath = GetConfigValue("filepath");
 
 
@@ -90,7 +90,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                                          p.type(),
                                          NULL,
                                          bodyBuffer,
-                                         &m_At,
+                                         &access_token_,
                                          metaResp);
 
                 std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
@@ -107,7 +107,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
                     // Encrypt File Key
                     MasterKey mKey;
-                    m_pCredentialsManager->GetMasterKeyCopy(mKey);
+                    credentials_manager_->GetMasterKeyCopy(mKey);
 
                     std::string mk;
                     mKey.GetMasterKey(mk);
@@ -136,7 +136,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                     fi->SetEncryptedKey(encryptedKey);
 
                     // Insert file info to manifest
-                    m_pFileManager->InsertToManifest(fi);
+                    file_manager_->InsertToManifest(fi);
                     */
                 }
                 else {
@@ -158,7 +158,7 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
     postidOut.clear();
     // Construct Post url
-    postutils::ConstructPostUrl(m_entityApiRoot, urlOut);
+    postutils::ConstructPostUrl(post_path_, urlOut);
     
     fi->GetChunkPostID(postidOut);
 
@@ -180,7 +180,7 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
         // Decrypt file key
         Credentials masterCred;
         MasterKey mKey;
-        m_pCredentialsManager->GetMasterKeyCopy(mKey);
+        credentials_manager_->GetMasterKeyCopy(mKey);
         std::string mk;
         mKey.GetMasterKey(mk);
         masterCred.set_key(mk);
@@ -242,7 +242,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         // Build request
         boost::asio::streambuf request;
         std::ostream request_stream(&request);
-        netlib::BuildRequestHeader(requestType, url, boundary, &m_At, request_stream); 
+        netlib::BuildRequestHeader(requestType, url, boundary, &access_token_, request_stream); 
 
         // Build Body Form header
         ChunkPost p;
@@ -537,7 +537,7 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
 
     // Encrypt File Key
     MasterKey mKey;
-    m_pCredentialsManager->GetMasterKeyCopy(mKey);
+    credentials_manager_->GetMasterKeyCopy(mKey);
 
     std::string mk;
     mKey.GetMasterKey(mk);
@@ -565,13 +565,13 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     fi->SetEncryptedKey(encryptedKey);
 
     // Insert file info to manifest
-    m_pFileManager->InsertToManifest(fi);
+    file_manager_->InsertToManifest(fi);
 }
 
 FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = m_pFileManager->GetFileInfo(filepath);
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);
     if(!fi)
-        fi = m_pFileManager->CreateFileInfo();
+        fi = file_manager_->CreateFileInfo();
     return fi;
 }
 

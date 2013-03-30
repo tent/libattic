@@ -17,16 +17,14 @@ int PostFolderMetadataStrategy::Execute(FileManager* pFileManager,
                                         Response& out) 
 {
     int status = ret::A_OK;
-    m_pFileManager = pFileManager;
-    m_pCredentialsManager = pCredentialsManager;
-    if(!m_pFileManager) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!m_pCredentialsManager) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    m_pCredentialsManager->GetAccessTokenCopy(m_At);
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    m_entityApiRoot = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
-
-
 
     FileInfo* fi = RetrieveFileInfo(filepath);
     status = SendFolderPost(fi, out);
@@ -49,7 +47,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
 
     Folder folder;
     std::cout<<"PARENT RELATIVE : " << parent_relative << std::endl;
-    if(m_pFileManager->GetFolderInfo(parent_relative, folder)) {
+    if(file_manager_->GetFolderInfo(parent_relative, folder)) {
         // serialize and send
         FolderPost p(folder);
         std::string postid;
@@ -57,7 +55,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
         std::cout<<" FOLDER POST : " << postid << std::endl;
 
         std::string posturl;
-        postutils::ConstructPostUrl(m_entityApiRoot, posturl);
+        postutils::ConstructPostUrl(post_path_, posturl);
 
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
@@ -73,7 +71,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
                                        p.type(),
                                        NULL,
                                        postBuffer,
-                                       &m_At,
+                                       &access_token_,
                                        response);
 
             out = response;
@@ -88,7 +86,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
                                      p.type(),
                                      NULL,
                                      postBuffer,
-                                     &m_At,
+                                     &access_token_,
                                      response );
             out = response;
         }
@@ -108,7 +106,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
 
             if(!postid.empty()) {
                 if(bPost) {
-                    m_pFileManager->SetFolderPostId(parent_relative, postid);
+                    file_manager_->SetFolderPostId(parent_relative, postid);
                 }
             }
         }
@@ -121,9 +119,9 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
 }
 
 FileInfo* PostFolderMetadataStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = m_pFileManager->GetFileInfo(filepath);
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);
     if(!fi)
-        fi = m_pFileManager->CreateFileInfo();
+        fi = file_manager_->CreateFileInfo();
     return fi;
 }
 
