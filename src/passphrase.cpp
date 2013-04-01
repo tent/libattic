@@ -388,14 +388,14 @@ int Passphrase::DeleteCredentialsPost(AtticPost& post) {
     Response resp;
     netlib::HttpDelete(url,
                        NULL,
-                       access_token_,
+                       &access_token_,
                        resp);
 
     if(resp.code == 200) {
 
     }
     else {
-        log::LogHttpResponse("C3289AF", response);
+        log::LogHttpResponse("C3289AF", resp);
         status = ret::A_FAIL_NON_200;
     }
 

@@ -20,9 +20,9 @@ public:
     void GetValue(const std::string& key, std::string& out);
 
     void ParseString(const std::string& in);
-    void ReturnAsString(std::string& out);
+    void ReturnAsString(std::string& out) const ;
 
-    std::string asString(void);
+    std::string asString() const;
 
 private:
     HttpHeaderMap values_;

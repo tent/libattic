@@ -68,8 +68,8 @@ void HttpHeader::ParseString(const std::string& in) {
     }
 }
 
-void HttpHeader::ReturnAsString(std::string& out) {
-    HttpHeaderMap::iterator itr = values_.begin();
+void HttpHeader::ReturnAsString(std::string& out) const {
+    HttpHeaderMap::const_iterator itr = values_.begin();
    
     for(;itr!= values_.end(); itr++) {
         out += itr->first;
@@ -79,7 +79,7 @@ void HttpHeader::ReturnAsString(std::string& out) {
     }
 }
 
-std::string HttpHeader::asString(void) {
+std::string HttpHeader::asString() const {
     std::string out;
     ReturnAsString(out);
     return out;
