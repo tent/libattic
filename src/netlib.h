@@ -31,7 +31,7 @@ using boost::asio::ip::tcp;
 #include "accesstoken.h"
 #include "httpheader.h"
 #include "event.h"
-#include "atticsocket.h"
+#include "connection.h"
 #include "constants.h"
 
 
@@ -383,47 +383,10 @@ static int HttpRequest(const std::string& url,
     try {
         boost::asio::io_service io_service; 
 
-        AtticSocket sock(&io_service);
+        Connection sock(&io_service);
         sock.Initialize(url);
         sock.Write(request);
         sock.InterpretResponse(out);
-
-/*
-        // Parse the url, separate the root from the path
-        std::string protocol, host, path;
-        ExtractHostAndPath(url, protocol, host, path);
-
-        boost::asio::io_service io_service; 
-        tcp::socket socket(io_service); 
-
-        bool bSSL = false;
-        if(protocol == "https")
-            bSSL = true;
-        status = ResolveHost(io_service, socket, host, bSSL);
-
-        if(status == ret::A_OK) {
-            boost::system::error_code error = boost::asio::error::host_not_found; 
-            boost::asio::ssl::context ctx( io_service, 
-                                           boost::asio::ssl::context::sslv23_client); 
-            ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
-            boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
-
-            if(bSSL) {
-                ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-                if (error) 
-                    throw boost::system::system_error(error); 
-            }
-
-            if(bSSL) {
-                boost::asio::write(ssl_sock, request);
-                InterpretResponse(&ssl_sock, out);
-            }
-            else {
-                boost::asio::write(socket, request);
-                InterpretResponse(&socket, out);
-            }
-        }
-        */
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";

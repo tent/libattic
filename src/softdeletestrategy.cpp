@@ -7,8 +7,7 @@ SoftDeleteStrategy::~SoftDeleteStrategy() {}
 
 int SoftDeleteStrategy::Execute(FileManager* pFileManager,
                                 CredentialsManager* pCredentialsManager,
-                                Response& out)
-{
+                                Response& out) {
     int status = ret::A_OK;
     file_manager_ = pFileManager;
     credentials_manager_ = pCredentialsManager;

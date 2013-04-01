@@ -16,7 +16,6 @@ FilePost::FilePost(){
 FilePost::~FilePost() {}
 
 void FilePost::Serialize(Json::Value& root) {
-
     Json::Value content;
     content["name"] = name_;
     content["path"] = relative_path_;

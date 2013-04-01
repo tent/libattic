@@ -1,5 +1,5 @@
-#ifndef ATTICSOCKET_H_
-#define ATTICSOCKET_H_
+#ifndef CONNECTION_H_
+#define CONNECTION_H_ 
 #pragma once
 
 #include <string>
@@ -12,13 +12,13 @@
 
 namespace attic { 
 
-class AtticSocket {
+class Connection {
     int InitializeSSLSocket();
 
 
 public:
-    AtticSocket(boost::asio::io_service* io_service);
-    ~AtticSocket();
+    Connection(boost::asio::io_service* io_service);
+    ~Connection();
 
     int Initialize(const std::string& url);
 

@@ -176,7 +176,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
     netlib::ExtractHostAndPath(url, protocol, host, path);
             
     boost::asio::io_service io_service; 
-    AtticSocket socket(&io_service);
+    Connection socket(&io_service);
     //tcp::socket socket(io_service); 
     socket.Initialize(url);
             
@@ -357,7 +357,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 int PostFileStrategy::SendChunk(const std::string& chunk, 
                                 const std::string& fileKey,
                                 const std::string& boundary,
-                                AtticSocket& socket,
+                                Connection& socket,
                                 //boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                                 const unsigned int count,
                                 bool end,
@@ -408,7 +408,7 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
 
     return status;
 }
-int PostFileStrategy::WriteToSocket(AtticSocket& socket,
+int PostFileStrategy::WriteToSocket(Connection& socket,
                                     boost::asio::streambuf& buffer) {
     int breakcount = 0;
     int retrycount = 20;

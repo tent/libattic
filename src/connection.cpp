@@ -1,11 +1,11 @@
-#include "atticsocket.h"
+#include "connection.h"
 
 #include "errorcodes.h"
 #include "netlib.h"
 
 namespace attic { 
 
-AtticSocket::AtticSocket(boost::asio::io_service* io_service) {
+Connection::Connection(boost::asio::io_service* io_service) {
     io_service_ = io_service;
     socket_ = NULL;
     ssl_socket_ = NULL;
@@ -13,7 +13,7 @@ AtticSocket::AtticSocket(boost::asio::io_service* io_service) {
     ssl_ = false;
 }
 
-AtticSocket::~AtticSocket() {
+Connection::~Connection() {
     if(socket_) {
         delete socket_;
         socket_ = NULL;
@@ -29,10 +29,11 @@ AtticSocket::~AtticSocket() {
         ctx_ = NULL;
     }
 
+    io_service_ = NULL;
     ssl_ = false;
 }
 
-int AtticSocket::Initialize(const std::string& url) {
+int Connection::Initialize(const std::string& url) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
     if(io_service_) {
@@ -57,7 +58,7 @@ int AtticSocket::Initialize(const std::string& url) {
 }
 
 
-int AtticSocket::InitializeSSLSocket() {
+int Connection::InitializeSSLSocket() {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
 
@@ -77,7 +78,7 @@ int AtticSocket::InitializeSSLSocket() {
     return status;
 }
 
-unsigned int AtticSocket::Write(boost::asio::streambuf& request) {
+unsigned int Connection::Write(boost::asio::streambuf& request) {
     unsigned int bytes_written = 0;
     boost::system::error_code error;
     if(ssl_) 
@@ -91,7 +92,7 @@ unsigned int AtticSocket::Write(boost::asio::streambuf& request) {
     return bytes_written;
 }
 
-void AtticSocket::InterpretResponse(Response& out) {
+void Connection::InterpretResponse(Response& out) {
     if(ssl_)
         netlib::InterpretResponse(ssl_socket_, out);
     else
