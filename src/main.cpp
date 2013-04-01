@@ -473,6 +473,7 @@ TEST(TEST, SYNC)
 TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
 {
     std::string test("This is a test string, of some sort of data, it's pretty great");
+    std::cout<<" TESTING COMPRESSION " << std::endl;
 
     // Compress
     std::string compressed;

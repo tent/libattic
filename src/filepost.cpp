@@ -73,11 +73,11 @@ void FilePost::Deserialize(Json::Value& root) {
     DeserializeChunkPosts(content["chunk_posts"]);
     DeserializeChunkIds(content["chunk_ids"]);
 
-    key_data_ = content["kdata"].asString();
-    iv_data_ = content["vdata"].asString();
+    std::string key_data = content["kdata"].asString();
+    std::string iv_data = content["vdata"].asString();
 
-    crypto::Base64DecodeString(key_data_, key_data_);
-    crypto::Base64DecodeString(iv_data_, iv_data_);
+    crypto::Base64DecodeString(key_data, key_data_);
+    crypto::Base64DecodeString(iv_data, iv_data_);
 }
 
 void FilePost::DeserializeChunkPosts(Json::Value& val) {

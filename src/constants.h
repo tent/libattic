@@ -47,7 +47,9 @@ static const char* g_meta_rel = "https://tent.io/rels/meta-post"; // Meta post r
 static const char* g_cred_rel = "https://tent.io/rels/credentials"; // Credentials rel
 
 // Headers
+
 static const char* g_accept_header = "application/vnd.tent.v0+json";
+static const char* g_accept_octet_header = "application/octet-stream";
 static const char* g_content_type_header = "application/vnd.tent.post.v0+json";
 
 }} //namespace

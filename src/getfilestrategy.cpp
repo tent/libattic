@@ -117,8 +117,8 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
             FilePost fp;
             if(jsn::DeserializeObject(&fp, resp.body)) {
                 std::string key, iv;
-                fp.set_key_data(key);
-                fp.set_iv_data(iv);
+                key = fp.key_data();
+                iv = fp.iv_data();
 
                 MasterKey mKey;
                 credentials_manager_->GetMasterKeyCopy(mKey);
@@ -132,7 +132,7 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 // Decrypt File Key
                 std::string filekey;
                 crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-                //std::cout<<" FILE KEY : " << filekey << std::endl;
+                std::cout<<" FILE KEY : " << filekey << std::endl;
 
                 out.set_key(filekey);
                 out.set_iv(iv);
@@ -281,6 +281,16 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     Response response;
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
+
+    if(response.code == 200) {
+        outBuffer = response.body;
+    }
+    else {
+        std::cout<<" RETREIVE ATTACHMENT FAILED " << std::endl;
+        std::cout<<" FAILED BODY : " << response.body << std::endl;
+        status = ret::A_FAIL_NON_200;
+    }
+    
     long elapsed = time.user;
     // to milliseconds
     elapsed *= 0.000001;
@@ -295,14 +305,7 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
         event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
     }
 
-    if(response.code == 200) {
-        outBuffer = response.body;
-    }
-    else {
-        std::cout<<" RETREIVE ATTACHMENT FAILED " << std::endl;
-        std::cout<<" FAILED BODY : " << response.body << std::endl;
-        status = ret::A_FAIL_NON_200;
-    }
+    
     return status;                                                                        
 }
 
@@ -321,13 +324,21 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
         cred.set_key(filekey);
         cred.set_iv(iv);
 
+        std::cout<< " key : " << filekey << std::endl;;
         std::cout<< " IV : " << iv << std::endl;
         std::cout<< " SIZEOF : " << chunkBuffer.size() << std::endl;
+
+        std::string rawhash;
+        crypto::GenerateHash(chunkBuffer, rawhash);
+        std::cout<<" RAW HASH : " << rawhash << std::endl;
 
         // Base64Decode
         std::string base64Chunk;
         crypto::Base64DecodeString(chunkBuffer, base64Chunk);
 
+        std::string cipherhash;
+        crypto::GenerateHash(base64Chunk, cipherhash);
+        std::cout<<" CIPHER HASH : " << cipherhash << std::endl;
         // Decrypt
         std::string decryptedChunk;
         status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
@@ -335,24 +346,30 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
 
         if(status == ret::A_OK) {
             // Decompress
+            std::string decryptedHash;
+            crypto::GenerateHash(decryptedChunk, decryptedHash);
+            std::cout<<" DECRYPTED HASH : " << decryptedHash << std::endl;
+            std::cout<<" DECRYPTED SIZE : " << decryptedChunk.size() << std::endl;
             std::string decompressedChunk;
-            compress::DecompressString(decryptedChunk, decompressedChunk);
-            //Verify chunk Check plaintext hmac
-            std::string local_hash, plaintexthash;
-            crypto::GenerateHash(decompressedChunk, local_hash);
-            ci->GetPlainTextMac(plaintexthash);
+            status = compress::DecompressString(decryptedChunk, decompressedChunk);
+            if(status == ret::A_OK) { 
+                //Verify chunk Check plaintext hmac
+                std::string local_hash, plaintexthash;
+                crypto::GenerateHash(decompressedChunk, local_hash);
+                ci->GetPlainTextMac(plaintexthash);
 
-            std::cout<<" LOCAL HASH : " << local_hash << std::endl;
-            std::cout<<" CI HASH : " << plaintexthash << std::endl;
+                std::cout<<" LOCAL HASH : " << local_hash << std::endl;
+                std::cout<<" CI HASH : " << plaintexthash << std::endl;
 
-            if(local_hash == plaintexthash) {
-                std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
-                out = decompressedChunk;
-                std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
-                std::cout<<" size of chunk : " << out.size() << std::endl;
+                if(local_hash == plaintexthash) {
+                    std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
+                    out = decompressedChunk;
+                    std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
+                    std::cout<<" size of chunk : " << out.size() << std::endl;
+                }
+                else
+                    status = ret::A_FAIL_INVALID_CHUNK_HASH;
             }
-            else
-                status = ret::A_FAIL_INVALID_CHUNK_HASH;
         }
     }
     else

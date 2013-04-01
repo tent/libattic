@@ -56,13 +56,9 @@ void PollTask::OnStart(){
     }
 }
 
-void PollTask::OnPaused()
-{
-}
+void PollTask::OnPaused() {}
 
-void PollTask::OnFinished()
-{
-}
+void PollTask::OnFinished() {}
 
 void PollTask::PollTaskCB(int a, std::string& b) {
     std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
@@ -102,10 +98,7 @@ int PollTask::SyncFolderPosts() {
     int postcount = GetFolderPostCount();
     if(postcount > 0) {
         Entity entity = TentTask::entity();
-        std::string url;                                                                   
-        //entity.GetApiRoot(url); // UPDATE THIS V03
-        utils::CheckUrlAndAppendTrailingSlash(url);
-        url += "posts";
+        std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
 
         AccessToken at = access_token();
         int cap = 200;
@@ -128,7 +121,7 @@ int PollTask::SyncFolderPosts() {
                 params.AddValue(std::string("last_id"), lastid);
 
             Response resp;
-            netlib::HttpGet(url,
+            netlib::HttpGet(posts_feed,
                             &params,
                             &at,
                             resp);
@@ -157,8 +150,7 @@ int PollTask::SyncFolderPosts() {
                 for(; itr != root.end(); itr++) {
                     FolderPost fp;
                     jsn::DeserializeObject(&fp, *itr);
-                    Folder folder;
-                    fp.set_folder(folder);
+                    Folder folder = fp.folder();
                     folders.push_back(folder);
                     SyncFolder(folder);
                 }

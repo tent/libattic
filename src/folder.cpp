@@ -16,32 +16,26 @@ FolderEntry::FolderEntry(const std::string& postid,
 
 FolderEntry::~FolderEntry() {}
 
-void FolderEntry::Serialize(Json::Value& root)
-{
+void FolderEntry::Serialize(Json::Value& root) {
     root["postid"] = m_Postid;
     root["type"] = m_Type;
     root["path"] = m_Path;
 }
 
-void FolderEntry::Deserialize(Json::Value& root)
-{
+void FolderEntry::Deserialize(Json::Value& root) {
     m_Postid = root.get("postid", "").asString();
     m_Type = root.get("type", "").asString();
     m_Path = root.get("path", "").asString();
 }
 
 
-Folder::Folder()
-{
+Folder::Folder() {
     SetType(cnst::g_szFolderType);
 }
 
-Folder::~Folder()
-{
-}
+Folder::~Folder() {}
 
-void Folder::Serialize(Json::Value& root)
-{
+void Folder::Serialize(Json::Value& root) {
     /*
     std::string sval;
     SerializeContents(sval);

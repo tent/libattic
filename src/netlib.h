@@ -188,7 +188,7 @@ static int HttpGetAttachment (const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "GET " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_octet_header <<"\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
@@ -332,7 +332,6 @@ static int HttpPut(const std::string& url,
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
     request_stream << requestbody;
-
 /*
     std::ostringstream ss;
     ss << &request;

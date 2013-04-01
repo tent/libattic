@@ -46,9 +46,7 @@ void Attachment::Serialize(Json::Value& root) {
     root["category"] = category;
     root["name"] = name;
     root["hash"] = hash;
-    char szSize[256] = {'\0'};
-    snprintf(szSize, 256, "%u", size);
-    root["size"] = std::string(szSize);
+    //root["size"] = size; no need to send the size, the server calculates this
 }
 
 void Attachment::Deserialize(Json::Value& root) {

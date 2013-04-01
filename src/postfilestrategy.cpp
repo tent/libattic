@@ -453,13 +453,14 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
                                      FileInfo* pFi)
 {
     int status = ret::A_OK;
-
     Credentials chunkCred;
     chunkCred.set_key(fileKey);
 
     // Calculate plaintext hash
     std::string plaintextHash;
     crypto::GenerateHash(chunk, plaintextHash);
+
+    std::cout<<" PLAINTEXT : " << plaintextHash << std::endl;
 
     // create chunk name (hex encoded plaintext hash)
     std::string chunkName;
@@ -469,12 +470,17 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     std::string compressedChunk;
     compress::CompressString(chunk, compressedChunk);
 
+    std::string compressedHash;
+    crypto::GenerateHash(compressedChunk, compressedHash);
+    std::cout<<" COMPRESSED HASH : " << compressedHash << std::endl;
+
     // Encrypt
     std::string encryptedChunk;
     std::string iv;
     crypto::GenerateIv(iv);
     chunkCred.set_iv(iv);
 
+    std::cout<<" FILE KEY : " << fileKey << std::endl;
     std::cout<< " IV : " << iv << std::endl;
     crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
     //crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
@@ -486,6 +492,8 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 
     std::string ciphertextHash;
     crypto::GenerateHash(encryptedChunk, ciphertextHash);
+
+    std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
 
     // Fill Out Chunk info object
     ChunkInfo ci;
