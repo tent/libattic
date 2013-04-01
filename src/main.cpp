@@ -224,6 +224,7 @@ TEST(PASSPHRASE, RECOVER)
 }
 
 bool g_bPush = false;
+std::string g_File;
 
 static void UPLOADSPEEDCB(int a, int b, const char* c) {
     if(c) {
@@ -255,10 +256,12 @@ TEST(AFILE, PUSH)
     
 
     if(status == 0) {
+        std::string path = "./data/" + g_File;
+        status = PushFile(path.c_str());
         std::cout<<" uploading file ... " << std::endl;
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
-        status = PushFile("./data/oglisv.pdf");
+        //status = PushFile("./data/oglisv.pdf");
         //status = PushFile("./data/test.txt");
         //status = PushFile("./data/cassandra11.pdf");
         //status = PushFile("./data/algorithmsall.pdf");
@@ -315,7 +318,8 @@ TEST(AFILE, PULL)
         std::string rel("./data");
         std::string filepath;
         attic::fs::GetCanonicalPath(rel, filepath);
-        filepath += "/oglisv.pdf";
+       // filepath += "/oglisv.pdf";
+        filepath += "/" + g_File;
 
         status = PullFile(filepath.c_str());
         ASSERT_EQ(status, attic::ret::A_OK);
@@ -1139,12 +1143,24 @@ int main (int argc, char* argv[]) {
                     }
                     case PULL:
                     {
-                        g_bPull = true;
+                        if(argc > 3) {
+                            g_bPull = true;
+                            g_File = argv[2];
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic PUSH <filename> (file is relative to data dir) " << std::endl;
+                        }
                         break;
                     }
                     case PUSH:
                     {
-                        g_bPush = true;
+                        if(argc > 3) {
+                            g_bPush = true;
+                            g_File = argv[2];
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic PUSH <filename> (file is relative to data dir) " << std::endl;
+                        }
                         break;
                     }
                     case DELETE:

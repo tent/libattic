@@ -95,6 +95,13 @@ static void RegisterForEvent(EventListener* pListener, Event::EventType type) {
     }
 }
 
+static void UnregisterFromEvent(EventListener* pListener, Event::EventType type) {
+    if(pListener) {
+        EventSystem::GetInstance()->UnregisterFromEvent(pListener, type);  
+    }
+
+}
+
 static void RaiseEvent(const Event& event) {
     EventSystem::GetInstance()->RaiseEvent(event);
 }

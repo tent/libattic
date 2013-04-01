@@ -41,6 +41,7 @@ PollTask::PollTask( FileManager* pFm,
                               callbackDelegate)                             
 {
     m_pDelegate = new PollDelegate(this);
+    running_ = true;
 }
 
 PollTask::~PollTask() {
@@ -54,12 +55,30 @@ void PollTask::OnStart(){
     if(!polltask::g_pCurrentPollTask) {
         polltask::g_pCurrentPollTask = this;
     }
+
+    event::RegisterForEvent(this, event::Event::PAUSE);
+    event::RegisterForEvent(this, event::Event::RESUME);
 }
 
 void PollTask::OnPaused() {}
 
-void PollTask::OnFinished() {}
+void PollTask::OnFinished() {
+    event::UnregisterFromEvent(this, event::Event::PAUSE);
+    event::UnregisterFromEvent(this, event::Event::RESUME);
+}
 
+void PollTask::OnEventRaised(const event::Event& event){
+    switch(event.type){
+        case event::Event::PAUSE:
+            running_ = false;
+            break;
+        case event::Event::RESUME:
+            running_ = true;
+            break;
+        default:
+            std::cout<<" Unknown event : " << event.type << std::endl;
+    };
+}
 void PollTask::PollTaskCB(int a, std::string& b) {
     std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
     std::string returnpost = b;
@@ -75,13 +94,16 @@ void PollTask::PollTaskCB(int a, std::string& b) {
 // TODO:: after v0.1 abstract this to sync strategy
 void PollTask::RunTask() {
     int status = ret::A_OK;
+
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
-        std::cout<<" starting to poll ... " << std::endl;
-        status = SyncFolderPosts();
-        if(status != ret::A_OK)
-            std::cout<<" POLLING ERR : " << status << std::endl;
-        sleep(3);
+        if(running_) {
+            std::cout<<" starting to poll ... " << std::endl;
+            status = SyncFolderPosts();
+            if(status != ret::A_OK)
+                std::cout<<" POLLING ERR : " << status << std::endl;
+            sleep(3);
+        }
     }
     else {
         std::cout<<" FAIL MULTI INSTANCE " << std::endl;

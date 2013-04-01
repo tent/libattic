@@ -10,7 +10,7 @@
 namespace attic { 
 
 FileInfo::FileInfo() {
-    m_Deleted = 0;
+    deleted_ = 0;
 }
 
 FileInfo::FileInfo(const std::string& filename,
@@ -19,10 +19,10 @@ FileInfo::FileInfo(const std::string& filename,
                    const std::string& chunkpostid) {
     FileInfo::FileInfo();
 
-    m_Filename = filename;
-    m_Filepath = filepath;
-    m_PostID = postid;
-    m_ChunkPostID = chunkpostid;
+    filename_ = filename;
+    filepath_ = filepath;
+    post_id_ = postid;
+   chunk_post_id_ = chunkpostid;
 }
 
 FileInfo::~FileInfo() {}
@@ -31,13 +31,13 @@ bool FileInfo::InitializeFile(const std::string &filepath) {
     // Check if Valid File
     //
     // Set filepath
-    m_Filepath = filepath;
+    filepath_ = filepath;
     // Extract Filename
-    ExtractFilename(filepath, m_Filename); 
+    ExtractFilename(filepath, filename_); 
     // Check file size
-    m_FileSize = utils::CheckFilesize(filepath);
+    file_size_ = utils::CheckFilesize(filepath);
 
-    if(!m_FileSize)
+    if(!file_size_)
         return false;
 
     return true;
@@ -67,26 +67,26 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk) {
     std::string chunkname;
     Chunk.GetChunkName(chunkname);
 
-    m_Chunks[chunkname] = Chunk;
-    m_ChunkCount = m_Chunks.size();
+    chunks_[chunkname] = Chunk;
+    chunk_count_ = chunks_.size();
 
 
     return status;
 }
 
 ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname) {
-    std::cout<<" FI CHUNK COUNT : " << m_Chunks.size() << std::endl;
-    if(m_Chunks.find(chunkname) != m_Chunks.end()) 
-        return &m_Chunks[chunkname];
+    std::cout<<" FI CHUNK COUNT : " << chunks_.size() << std::endl;
+    if(chunks_.find(chunkname) != chunks_.end()) 
+        return &chunks_[chunkname];
     return NULL;
 }
 
 void FileInfo::GetSerializedChunkData(std::string& out) const {
-    ChunkMap::const_iterator itr = m_Chunks.begin();
+    ChunkMap::const_iterator itr = chunks_.begin();
     std::vector<std::string> chunkList;
 
     std::string chunk;
-    for(;itr != m_Chunks.end(); itr++) {
+    for(;itr != chunks_.end(); itr++) {
         ChunkInfo ci = itr->second;
         chunk.clear();
         jsn::SerializeObject(&ci, chunk);
@@ -106,7 +106,7 @@ void FileInfo::GetSerializedChunkData(std::string& out) const {
 bool FileInfo::LoadSerializedChunkData(const std::string& data) {
     // only deserialize into empty vector
     std::cout<<" LOADING SERIALIZED CHUNK DATA " << std::endl;
-    if(m_Chunks.size() != 0)
+    if(chunks_.size() != 0)
         return false;
 
 
@@ -132,8 +132,8 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
 
         std::string name;
         ci->GetChunkName(name);
-        if(m_Chunks.find(name) == m_Chunks.end()) {
-            m_Chunks[name] = *ci;
+        if(chunks_.find(name) == chunks_.end()) {
+            chunks_[name] = *ci;
         }
 
         delete ci;
@@ -150,7 +150,7 @@ bool FileInfo::LoadSerializedChunkPost(const std::string& data) {
 
 bool FileInfo::HasEncryptedKey()
 {
-    if(m_EncryptedKey.empty())
+    if(encrypted_key_.empty())
         return false;
     return true;
 }

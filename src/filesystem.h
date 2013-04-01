@@ -23,6 +23,8 @@ static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
 static bool CheckFileExists(const std::string& filepath);
 
+static bool DeleteFile(const std::string& filepath);
+
 static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
                                                  boost::filesystem::path a_To )
 {
@@ -136,6 +138,21 @@ static void MoveFile(const std::string& originalpath, const std::string& newpath
     CreateDirectoryTree(newpath);
     boost::filesystem::path to_fp(newpath);
     boost::filesystem::rename(from_fp, to_fp);
+}
+
+static bool DeleteFile(const std::string& filepath) { 
+    if(CheckFileExists(filepath)) {
+        boost::filesystem::path root(filepath);
+        boost::system::error_code ec;
+        boost::filesystem::remove(root, ec);
+        if(ec) {
+            boost::system::system_error error(ec);
+            std::cout<<" FILESYSTEM ERROR : " << error.what() << std::endl;
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 }}//namespace

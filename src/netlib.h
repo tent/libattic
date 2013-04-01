@@ -733,10 +733,11 @@ static void BuildAuthHeader(const std::string &url,
     if(u.HasPort())
         port = u.port();
     else {
-        if(u.scheme().compare(std::string("https")))
+        std::cout<<" scheme : " << u.scheme() << std::endl;
+        if(u.scheme() == std::string("https"))
             port.append("443");
         else
-            port.append("443");
+            port.append("80");
     }
 
     std::string requestString;
@@ -762,8 +763,8 @@ static void BuildAuthHeader(const std::string &url,
     out.append(signedreq.c_str());
     out.append("\"");
     
-    //std::cout << "REQUEST_STRING : " << requestString << std::endl;
-    //std::cout << "AUTH_HEADER : " << out << std::endl;
+    std::cout << "REQUEST_STRING : " << requestString << std::endl;
+    std::cout << "AUTH_HEADER : " << out << std::endl;
 }
 
 static void GenerateNonce(std::string &out)

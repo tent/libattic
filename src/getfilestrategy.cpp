@@ -267,6 +267,10 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
             std::cout<<" file construction complete moving ... " << std::endl;
             fs::MoveFile(temppath, path);
         }
+
+        // Cleanup temppath
+        fs::DeleteFile(temppath);
+
     }
     else {
         std::cout<<" FAIL TO OPEN FILE " << std::endl;

@@ -8,12 +8,13 @@
 #include "tenttask.h"
 #include "folder.h"
 #include "taskdelegate.h"
+#include "event.h"
 
 namespace attic { 
 
 class PollDelegate;
 
-class PollTask : public TentTask {
+class PollTask : public TentTask, public event::EventListener {
     int SyncFolderPosts();
     int SyncFolder(Folder& folder);
     int GetFolderPostCount();
@@ -41,12 +42,15 @@ public:
     virtual void OnPaused(); 
     virtual void OnFinished();
 
+    virtual void OnEventRaised(const event::Event& event);
     void RunTask();
 
 private:
     std::map<std::string, bool> m_ProcessingQueue; // Files currently being processed
 
     PollDelegate* m_pDelegate;
+
+    bool running_;
 };
 
 class PollDelegate : public TaskDelegate {
@@ -66,6 +70,7 @@ public:
             m_pTask->PollTaskCB(code, retval);
         }
     }
+
 
 private:
     PollTask* m_pTask;
