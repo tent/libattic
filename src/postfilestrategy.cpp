@@ -23,13 +23,15 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     int status = ret::A_OK;
     file_manager_ = pFileManager;
     credentials_manager_ = pCredentialsManager;
-    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     credentials_manager_->GetAccessTokenCopy(access_token_);
 
-    post_path_ = GetConfigValue("api_root");
+    post_path_ = GetConfigValue("post_path");
+    posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
 
+    std::cout<<" POST PATH : " << post_path_ << std::endl;
+    std::cout<<" FILE PATH : " << filepath << std::endl;
 
     // Verify file exists
     if(fs::CheckFileExists(filepath)) {
@@ -73,8 +75,8 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                 if(chunkpostid.empty()) {
                     status = ret::A_FAIL_INVALID_POST_ID;
                 }
-                utils::CheckUrlAndAppendTrailingSlash(posturl);
-                posturl += chunkpostid;
+                else 
+                    utils::FindAndReplace(post_path_, "{post}", chunkpostid, posturl);
             }
 
             if(status == ret::A_OK) {
@@ -99,45 +101,6 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                 if(metaResp.code == 200) {
                     out = metaResp;
                     UpdateFileInfo(fileCredentials, filepath, chunkpostid, fi);
-
-                    /*
-                    std::string filename;
-                    utils::ExtractFileName(filepath, filename);
-                    unsigned int filesize = utils::CheckFilesize(filepath);
-
-                    // Encrypt File Key
-                    MasterKey mKey;
-                    credentials_manager_->GetMasterKeyCopy(mKey);
-
-                    std::string mk;
-                    mKey.GetMasterKey(mk);
-
-                    // Insert File Data
-                    fi->SetChunkPostID(chunkpostid);
-                    fi->SetFilepath(filepath);
-                    fi->SetFilename(filename);
-                    fi->SetFileSize(filesize);
-                    fi->SetFileCredentials(fileCredentials);
-
-                    // Encrypt File Key
-                    std::string fileKey, fileIv;
-                    fileCredentials.GetKey(fileKey);
-                    fileCredentials.GetIv(fileIv);
-
-                    Credentials fCred;
-                    fCred.SetKey(mk);
-                    fCred.SetIv(fileIv);
-
-                    std::string encryptedKey;
-                    crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
-
-                    fi->SetIv(fileIv);
-                    fi->SetFileKey(fileKey);
-                    fi->SetEncryptedKey(encryptedKey);
-
-                    // Insert file info to manifest
-                    file_manager_->InsertToManifest(fi);
-                    */
                 }
                 else {
                     status = ret::A_FAIL_NON_200;
@@ -156,25 +119,26 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 {
     int status = ret::A_OK;
 
+    // check for post id
     postidOut.clear();
-    // Construct Post url
-    postutils::ConstructPostUrl(post_path_, urlOut);
-    
     fi->GetChunkPostID(postidOut);
 
     // Initiate Chunk Post request
     if(postidOut.empty()) {
         requestTypeOut = "POST";
+        urlOut = posts_feed_;
         // This is a new file
         // Generate Credentials
         crypto::GenerateCredentials(credOut);
     }
     else {
+        std::cout<<" putting ... " << std::endl;
         requestTypeOut = "PUT";
-        utils::CheckUrlAndAppendTrailingSlash(urlOut);
-        urlOut += postidOut;
-        std::string encryptedkey, fileiv; 
+        utils::FindAndReplace(post_path_, "{post}", postidOut, urlOut);
 
+        std::cout<<" url out : " << urlOut << std::endl;
+       
+        std::string encryptedkey, fileiv; 
         fi->GetEncryptedKey(encryptedkey);
         fi->GetIv(fileiv);
         // Decrypt file key
@@ -205,20 +169,27 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 
     std::cout<< "processing file ... " <<std::endl;
     std::cout<< "filepath : " << filepath << std::endl;
+    std::cout<< " request type : " << requestType << std::endl;
+    std::cout<<" url : " << url << std::endl;
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);
             
     boost::asio::io_service io_service; 
-    tcp::socket socket(io_service); 
+    AtticSocket socket(&io_service);
+    //tcp::socket socket(io_service); 
+    socket.Initialize(url);
             
+            /*
     status = netlib::ResolveHost(io_service, socket, host); 
     std::cout<<" Resolve host : " << status << std::endl;
     std::cout<<" protocol : " << protocol << std::endl;
     std::cout<<" host : " << host << std::endl;
     std::cout<<" path : " << path << std::endl;
     std::cout<<" connection status : " << status << std::endl;
+    */
     if(status == ret::A_OK) {
+        /*
         // Setup SSL handshake
         boost::system::error_code error = boost::asio::error::host_not_found; 
         // setup an ssl context 
@@ -233,10 +204,10 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         }
         if(status != ret::A_OK)
             return status;
+            */
 
         std::string boundary;
         utils::GenerateRandomString(boundary, 20);
-
         std::string fileKey = fileCredentials.key();
 
         // Build request
@@ -251,7 +222,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 
         boost::asio::streambuf requestBody;
         std::ostream part_stream(&requestBody);
-        netlib::BuildBodyForm(body, boundary, part_stream);
+        netlib::BuildBodyForm(p.type(), body, boundary, part_stream);
 
         // Chunk the Body 
         boost::asio::streambuf chunkedBody;
@@ -259,8 +230,10 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         netlib::ChunkPart(requestBody, partbuf);
 
         // Start the request
-        boost::asio::write(ssl_sock, request); 
-        boost::asio::write(ssl_sock, chunkedBody);
+        socket.Write(request);
+        socket.Write(chunkedBody);
+        //boost::asio::write(ssl_sock, request); 
+        //boost::asio::write(ssl_sock, chunkedBody);
 
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
@@ -322,7 +295,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                             int diff = i - lastsplit;
                             chunk = window.substr(lastsplit, diff);
                             // Transform
-                            SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
+                            SendChunk( chunk, fileKey, boundary, socket, count, false, pFi);
                             lastsplit = i;
                             count = 0;
                             chunkcount++;
@@ -335,7 +308,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                         int diff = i - lastsplit;
                         chunk = window.substr(lastsplit, diff);
                         // Transform
-                        SendChunk( chunk, fileKey, boundary, ssl_sock, count, false, pFi);
+                        SendChunk( chunk, fileKey, boundary, socket, count, false, pFi);
                         lastsplit = i;
                         count = 0;
                         chunkcount++;
@@ -349,7 +322,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                     remainder = window.substr(lastsplit, wdiff);
 
                 if((readcount + remainder.size()) >= filesize) {
-                    SendChunk( remainder, fileKey, boundary, ssl_sock, chunkcount, true, pFi);
+                    SendChunk( remainder, fileKey, boundary, socket, chunkcount, true, pFi);
                     chunkcount++;
                     break;
                 }
@@ -360,12 +333,16 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             //boost::asio::read_until(ssl_sock, response, "\r\n");
             //std::string responseheaders;
             //netlib::InterpretResponse(response, ssl_sock, resp, responseheaders);
-            netlib::InterpretResponse(&ssl_sock, resp);
+            //netlib::InterpretResponse(&ssl_sock, resp);
+            socket.InterpretResponse(resp);
         }
         else {
             status = ret::A_FAIL_OPEN_FILE;
         }
     }
+
+    std::cout<<" code : " << resp.code << std::endl;
+    std::cout<<" body : " << resp.body << std::endl;
 
     if(resp.code != 200) { 
         std::cout<<" FAILED TO CONNECT : " << resp.code << std::endl;
@@ -380,7 +357,8 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 int PostFileStrategy::SendChunk(const std::string& chunk, 
                                 const std::string& fileKey,
                                 const std::string& boundary,
-                                boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
+                                AtticSocket& socket,
+                                //boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                                 const unsigned int count,
                                 bool end,
                                 FileInfo* pFi)
@@ -413,8 +391,8 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
         //netlib::WriteToSSLSocket(ssl_sock, partEnd);
-        //
-        WriteToSocket(ssl_sock, partEnd);
+        //WriteToSocket(ssl_sock, partEnd);
+        status = WriteToSocket(socket, partEnd);
     }
     else {
         // carry on
@@ -423,30 +401,27 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
         //netlib::WriteToSSLSocket(ssl_sock, part);
-        WriteToSocket(ssl_sock, part);
+        //WriteToSocket(ssl_sock, part);
+        status = WriteToSocket(socket, part);
     }
 
 
     return status;
 }
-int PostFileStrategy::WriteToSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
-                                    boost::asio::streambuf& buffer)
-{
+int PostFileStrategy::WriteToSocket(AtticSocket& socket,
+                                    boost::asio::streambuf& buffer) {
     int breakcount = 0;
     int retrycount = 20;
 
     int status = ret::A_OK;
     unsigned int buffersize = buffer.size();
-    boost::system::error_code errorcode;
-    do {
-        boost::timer::cpu_timer::cpu_timer t;
-        size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
-        std::cout<<" bytes written : " << byteswritten << std::endl;
-        if(errorcode) {
-            std::cout<<" WRITE ERROR : " << std::endl;
-            std::cout<<errorcode.message()<<std::endl;
-        }
-        else{
+    for(unsigned int i=0; i < retrycount; i++) {
+        try {
+            status = ret::A_OK;
+            boost::timer::cpu_timer::cpu_timer t;
+            //size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
+            size_t byteswritten = socket.Write(buffer);
+            std::cout<<" bytes written : " << byteswritten << std::endl;
             boost::timer::cpu_times time = t.elapsed();
             long elapsed = time.user;
             // To milliseconds
@@ -461,10 +436,11 @@ int PostFileStrategy::WriteToSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_
             }
             break;
         }
-        if(breakcount > retrycount)
-            break;
-        breakcount++;
-    }while(errorcode);
+        catch(boost::system::system_error& err) {
+            std::cout<<" Write Socket error : " << err.what() << std::endl;
+            status = ret::A_FAIL_SOCKET_WRITE;
+        }
+    }
 
     return status;
 }

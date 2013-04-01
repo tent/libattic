@@ -31,8 +31,13 @@ using boost::asio::ip::tcp;
 #include "accesstoken.h"
 #include "httpheader.h"
 #include "event.h"
+#include "atticsocket.h"
+#include "constants.h"
+
 
 namespace attic { namespace netlib {
+
+
 
 static int HttpRequest(const std::string& url, 
                        boost::asio::streambuf& request,
@@ -149,8 +154,8 @@ static int HttpGet(const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "GET " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
-    request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << "\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
@@ -183,7 +188,7 @@ static int HttpGetAttachment (const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "GET " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: application/octet-stream\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
@@ -216,8 +221,8 @@ static int HttpHead(const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "HEAD " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
-    request_stream << "Content-Type: application/vnd.tent.v0+json\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << "\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
@@ -261,8 +266,8 @@ static int HttpPost(const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "POST " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
-    request_stream << "Content-Type: application/vnd.tent.post.v0+json;";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << ";";
     if(!post_type.empty()) {
         request_stream << " type=\"";
         request_stream << post_type;
@@ -292,6 +297,8 @@ static int HttpPut(const std::string& url,
                    const AccessToken* at, 
                    Response& out) {
     int status = ret::A_OK;
+
+    std::cout<<" type : " << post_type << std::endl;
     std::string local_url = url;
     if(pParams) EncodeAndAppendUrlParams(pParams, local_url);
 
@@ -312,8 +319,8 @@ static int HttpPut(const std::string& url,
     std::ostream request_stream(&request);
     request_stream << "PUT " << path << " HTTP/1.1\r\n";
     request_stream << "Host: " << host << "\r\n";
-    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
-    request_stream << "Content-Type: application/vnd.tent.v0+json;";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << ";";
     if(!post_type.empty()) {
         request_stream << " type=\"";
         request_stream << post_type;
@@ -325,6 +332,12 @@ static int HttpPut(const std::string& url,
         request_stream << "Authorization: " << authheader <<"\r\n";
     request_stream << "Connection: close\r\n\r\n";
     request_stream << requestbody;
+
+/*
+    std::ostringstream ss;
+    ss << &request;
+    std::cout <<"ss : " <<  ss.str() << std::endl;
+    */
 
     status = HttpRequest(local_url, request, out);
     return status;
@@ -369,6 +382,14 @@ static int HttpRequest(const std::string& url,
     int status = ret::A_OK;
     using namespace boost::asio::ssl;
     try {
+        boost::asio::io_service io_service; 
+
+        AtticSocket sock(&io_service);
+        sock.Initialize(url);
+        sock.Write(request);
+        sock.InterpretResponse(out);
+
+/*
         // Parse the url, separate the root from the path
         std::string protocol, host, path;
         ExtractHostAndPath(url, protocol, host, path);
@@ -403,6 +424,7 @@ static int HttpRequest(const std::string& url,
                 InterpretResponse(&socket, out);
             }
         }
+        */
     }
     catch (std::exception& e) {
         std::cout << "Exception: " << e.what() << "\n";
@@ -603,12 +625,23 @@ static void BuildRequestHeader( const std::string& requestMethod,
     requeststream << "Authorization: " << authheader <<"\r\n\r\n";
 }
 
-static void BuildBodyForm( const std::string& body, 
+static void BuildBodyForm( const std::string& post_type,
+                           const std::string& body, 
                            const std::string& boundary, 
                            std::ostream& bodystream) {
     bodystream <<"\r\n--" << boundary << "\r\n";
+    char szSize[256] = {'\0'};
+    snprintf(szSize, 256, "%lu", body.size());
     bodystream << "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"\r\n";
-    bodystream << "Content-Type: application/vnd.tent.v0+json\r\n";
+    bodystream << "Content-Length: " << szSize << "\r\n";
+    bodystream << "Content-Type: " << cnst::g_content_type_header << ";";
+    if(!post_type.empty()) {
+        bodystream << " type=\"";
+        bodystream << post_type;
+        bodystream << "\""; 
+    }
+    bodystream << "\r\n";
+
     bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
     bodystream << body;
 }
@@ -618,14 +651,14 @@ static void BuildAttachmentForm( const std::string& name,
                                  const std::string& boundary,
                                  unsigned int attachmentnumber,
                                  std::ostream& bodystream) {
+
     std::cout<<" ATTACHMENT NAME : " << name << std::endl;
+    std::cout<<" BODY SIZE : " << body.size() << std::endl;
     char szSize[256] = {'\0'};
     snprintf(szSize, 256, "%lu", body.size());
     char szAttachmentCount[256] = {'\0'};
     snprintf(szAttachmentCount, 256, "%d", attachmentnumber);
-
     std::cout<<" attachment count : " << szAttachmentCount << std::endl;
-    std::cout<<" filename : " << name << std::endl;
 
     bodystream << "\r\n--" << boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
@@ -704,207 +737,6 @@ static int ResolveHost(boost::asio::io_service& io_service,
     }
 
     return status;
-}
-
-// Leave this in as a reference implementation
-static int HttpAsioMultipartRequest( const std::string& requestType, // POST, PUT
-                                  const std::string& url,
-                                  const UrlParams* pParams,
-                                  const std::string& body,
-                                  const AccessToken* at,
-                                  std::list<std::string>& paths,
-                                  Response& resp)
-{
-    int status = ret::A_OK;
-    using namespace boost::asio::ssl;
-    try {
-        std::cout<<"URL : " << url << std::endl;
-        // Parse the url, separate the root from the path
-        std::string protocol, host, path;
-        ExtractHostAndPath(url, protocol, host, path);
-        
-        boost::asio::io_service io_service; 
-        tcp::socket socket(io_service); 
-        
-        status = ResolveHost(io_service, socket, host); 
-        if(status != ret::A_OK)
-            return status;
-        
-        boost::system::error_code error = boost::asio::error::host_not_found; 
-        // setup an ssl context 
-        boost::asio::ssl::context ctx( io_service, 
-                                       boost::asio::ssl::context::sslv23_client); 
-        ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
-        boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
-
-        ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-        if (error) 
-            throw boost::system::system_error(error); 
-
-        std::string boundary;
-        utils::GenerateRandomString(boundary, 20);
-        //boundary = "Bask33420asdfv";
-
-        // Build request
-        boost::asio::streambuf request;
-        std::ostream request_stream(&request);
-        //BuildRequestHeader("POST", url, boundary, at, request_stream); 
-        BuildRequestHeader(requestType, url, boundary, at, request_stream); 
-
-        // Build Body Form header
-        boost::asio::streambuf requestPart;
-        std::ostream part_stream(&requestPart);
-        BuildBodyForm(body, boundary, part_stream);
-
-        // Chunk the part
-        boost::asio::streambuf one;
-        std::ostream partbuf(&one);
-        ChunkPart(requestPart, partbuf);
-
-/*
-        // attachment 1
-        std::string test = "this is a test buffer";
-        boost::asio::streambuf attachmentPart;
-        std::ostream attch_stream(&attachmentPart);
-        BuildAttachmentForm( "testattachment", 
-                             test,
-                             boundary,
-                             attch_stream);
-
-        // Chunk the part
-        boost::asio::streambuf two;
-        std::ostream partbuftwo(&two);
-        ChunkPart(attachmentPart, partbuftwo);
-
-        // attachment 2
-        boost::asio::streambuf attachmentPartTwo;
-        std::ostream attch_stream_two(&attachmentPartTwo);
-        BuildAttachmentForm( "anothertestattachment",
-                             test,
-                             boundary,
-                             attch_stream_two);
-
-        AddEndBoundry(attch_stream_two, boundary);
-        
-        // Chunk the end
-        boost::asio::streambuf requestEnd;
-        std::ostream endstream(&requestEnd);
-        ChunkEnd(attachmentPartTwo, endstream);
-        
-        // Write the request to the socket
-        boost::asio::write(ssl_sock, request); 
-        boost::asio::write(ssl_sock, one);
-        boost::asio::write(ssl_sock, two);
-        boost::asio::write(ssl_sock, requestEnd);
-
-        // Get Response
-        std::cout<< "getting response " << std::endl;
-        boost::asio::streambuf response;
-        boost::asio::read_until(ssl_sock, response, "\r\n");
-        std::cout<< "enterpreting response ... " << std::endl;
-        InterpretResponse(response, ssl_sock, resp);
-
-        return 0;
-
-
-        */
-        boost::asio::write(ssl_sock, request); 
-        boost::asio::write(ssl_sock, one);
-
-        // Read the response status line. The response streambuf will automatically
-        // grow to accommodate the entire line. The growth may be limited by passing
-        // a maximum size to the streambuf constructor.
-
-        unsigned int count = 0;
-        std::list<std::string>::iterator itr = paths.begin(); 
-        unsigned int path_count = paths.size();
-        std::cout<<" PATH COUNT : " << path_count << std::endl;
-        for(;itr!= paths.end(); itr++) {
-            std::cout<< " create chunk part " << std::endl;
-            unsigned int size = utils::CheckFilesize(*itr);
-                                                                                  
-            // Open and load file into memory                                         
-            std::ifstream ifs;                                                        
-            ifs.open((*itr).c_str(), std::ifstream::in | std::ifstream::binary);      
-            
-            char* pBuf = new char[size];                                              
-            ifs.read(pBuf, size);                                                     
-            ifs.close();                                                              
-            
-            std::string strBuf;                                                       
-            strBuf.append(pBuf, size);                                                
-            
-            delete[] pBuf;                                                            
-            pBuf = NULL;                                                              
-
-            std::string filename;
-            utils::ExtractFileName((*itr), filename);
-            
-            /*
-            char num[256]={'\0'};
-            snprintf(num, 256, "%d", count);
-            filename += "_";
-            filename += num;
-            */
-
-            std::cout<<" filename : " << filename << std::endl;
-            // Build attachment
-            boost::asio::streambuf attachment;
-            std::ostream attachmentstream(&attachment);
-            BuildAttachmentForm(filename, strBuf, boundary, count, attachmentstream);
-
-            if(count == path_count-1) {
-                std::cout<<" Adding end stream " << std::endl;
-
-                AddEndBoundry(attachmentstream, boundary);
-
-                // Chunk the end
-                boost::asio::streambuf partEnd;
-                std::ostream partendstream(&partEnd);
-                ChunkEnd(attachment, partendstream);
-
-                std::cout<<" write end to socket " << std::endl;
-
-                boost::system::error_code errorcode;
-
-                do {
-                    boost::asio::write(ssl_sock, partEnd, errorcode); 
-                    if(errorcode)
-                        std::cout<<errorcode.message()<<std::endl;
-                }
-                while(errorcode);
-                break;
-            }
-            else {
-                // Chunk the part
-                boost::asio::streambuf part;
-                std::ostream chunkpartbuf(&part);
-                ChunkPart(attachment, chunkpartbuf);
-                
-                std::cout<<" write to socket " << std::endl;
-                boost::asio::write(ssl_sock, part); 
-            }
-
-            count++;
-        }                                                                             
-
-        std::cout<<" getting response " << std::endl;
-        boost::asio::streambuf response;
-        boost::asio::read_until(ssl_sock, response, "\r\n");
-        std::string returnheaders;
-        //status = InterpretResponse(response, ssl_sock, resp, returnheaders);
-        InterpretResponse(&ssl_sock, resp);
-    }
-    catch (std::exception& e) {
-        std::string errexception;
-        errexception += "netlib exception ";
-        errexception += e.what();
-
-        status = ret::A_FAIL_EXCEPTION;
-    }
-
-
-    return status; 
 }
 
 static void BuildAuthHeader(const std::string &url, 

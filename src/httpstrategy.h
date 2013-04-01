@@ -43,7 +43,7 @@ protected:
 
     AccessToken             access_token_;
     std::string             post_path_;
-    std::string             new_post_path_;
+    std::string             posts_feed_;
 
     TaskDelegate*           task_delegate_;
 };

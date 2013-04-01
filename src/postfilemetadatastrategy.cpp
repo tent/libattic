@@ -13,8 +13,7 @@ PostFileMetadataStrategy::~PostFileMetadataStrategy() {}
 
 int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
                                        CredentialsManager* pCredentialsManager,
-                                       Response& out)
-{
+                                       Response& out) {
     int status = ret::A_OK;
     file_manager_ = pFileManager;
     credentials_manager_ = pCredentialsManager;
@@ -23,6 +22,7 @@ int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
     credentials_manager_->GetAccessTokenCopy(access_token_);
 
     post_path_ = GetConfigValue("post_path");
+    posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
 
     FileInfo* fi = RetrieveFileInfo(filepath);
@@ -52,14 +52,9 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         std::cout<<"invalid file info"<<std::endl;
 
     // Check for existing post
+    std::string posturl;
     std::string postid;
     fi->GetPostID(postid);
-
-    // Construct post url
-    std::string posturl;
-    posturl = post_path_;
-    utils::CheckUrlAndAppendTrailingSlash(posturl);
-    posturl += "posts";
 
     std::string relative_path;
     fi->GetFilepath(relative_path);
@@ -67,6 +62,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
     bool post = true;
     Response response;
     if(postid.empty()) {
+        posturl = posts_feed_;
         // New Post
         std::cout<< " POST URL : " << posturl << std::endl;
         unsigned int size = utils::CheckFilesize(filepath);
@@ -86,11 +82,8 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
                                   response );
     }
     else {
+        utils::FindAndReplace(post_path_, "{post}", postid, posturl);
         post = false;
-        // Modify Post
-        posturl += "/";
-        posturl += postid;
-
         std::cout<< " PUT URL : " << posturl << std::endl;
         
         unsigned int size = utils::CheckFilesize(filepath);
@@ -138,6 +131,9 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         }
     }
     else {
+        std::cout<<" FAIL " << std::endl;
+        std::cout<<" code : " << response.code << std::endl;
+        std::cout<<" body : " << response.body << std::endl;
         status = ret::A_FAIL_NON_200;
     }
 

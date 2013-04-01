@@ -243,9 +243,9 @@ static void FindAndReplace(const std::string& in,
                            const std::string& replace_with,
                            std::string& out) {
     out = in;
-    for(size_t pos = out.find(delim); pos != std::string::npos;) {
-        out.erase(pos+1, delim.size());
-        out.insert(pos+1, replace_with);
+    for(size_t pos = out.find(delim); pos != std::string::npos; pos = out.find(delim)) {
+        out.erase(pos, delim.size());
+        out.insert(pos, replace_with);
     }
 }
 

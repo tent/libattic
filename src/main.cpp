@@ -272,9 +272,6 @@ TEST(AFILE, PUSH)
     }
 
     sleep(10);
-   
-
-    
 
     std::cout<<"shutting down " << std::endl;
     status = ShutdownLibAttic(NULL);

@@ -77,12 +77,18 @@ int AtticSocket::InitializeSSLSocket() {
     return status;
 }
 
-void AtticSocket::WriteRequest(boost::asio::streambuf& request) {
+unsigned int AtticSocket::Write(boost::asio::streambuf& request) {
+    unsigned int bytes_written = 0;
+    boost::system::error_code error;
     if(ssl_) 
-        boost::asio::write(*ssl_socket_, request);
+        bytes_written = boost::asio::write(*ssl_socket_, request, error);
     else
-        boost::asio::write(*socket_, request);
+        bytes_written = boost::asio::write(*socket_, request, error);
 
+    if(error)
+        throw boost::system::system_error(error); 
+
+    return bytes_written;
 }
 
 void AtticSocket::InterpretResponse(Response& out) {

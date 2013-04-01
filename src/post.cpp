@@ -17,8 +17,8 @@ void Version::Deserialize(Json::Value& root) {
 }
 
 void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) {
-    if(key == std::string("type")) {
-        type = val.asString();
+    if(key == std::string("content_type")) {
+        content_type = val.asString();
         return;
     }
     if(key == std::string("category")) {
@@ -33,6 +33,10 @@ void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) 
         size = val.asUInt();
         return;
     }
+    if(key == "hash") {
+        hash = val.asString();
+        return;
+    }
     
     std::cout<< "Uknown key : " << key << std::endl;
 }
@@ -43,10 +47,11 @@ void Attachment::Serialize(Json::Value& root) {
 }
 
 void Attachment::Deserialize(Json::Value& root) {
-    type = root.get("type", "").asString();
+    content_type = root.get("content_type", "").asString();
     category = root.get("category", "").asString();
     name = root.get("name", "").asString();
     size = root.get("size", 0).asUInt();
+    hash = root.get("hash", "").asString();
 }
 
 

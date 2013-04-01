@@ -47,8 +47,7 @@ public:
     typedef std::map<std::string, bool> EntityMap;
     typedef std::vector<Group> GroupList;
 
-    Permissions()
-    {
+    Permissions() {
         m_Public = false;
     }
 

@@ -14,8 +14,7 @@ PostFolderMetadataStrategy::~PostFolderMetadataStrategy() {}
 
 int PostFolderMetadataStrategy::Execute(FileManager* pFileManager,
                                         CredentialsManager* pCredentialsManager,
-                                        Response& out) 
-{
+                                        Response& out) {
     int status = ret::A_OK;
     file_manager_ = pFileManager;
     credentials_manager_ = pCredentialsManager;
@@ -24,6 +23,7 @@ int PostFolderMetadataStrategy::Execute(FileManager* pFileManager,
     credentials_manager_->GetAccessTokenCopy(access_token_);
 
     post_path_ = GetConfigValue("post_path");
+    posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
 
     FileInfo* fi = RetrieveFileInfo(filepath);
@@ -50,12 +50,10 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
     if(file_manager_->GetFolderInfo(parent_relative, folder)) {
         // serialize and send
         FolderPost p(folder);
+        std::string posturl;
         std::string postid;
         folder.GetPostID(postid);
         std::cout<<" FOLDER POST : " << postid << std::endl;
-
-        std::string posturl;
-        postutils::ConstructPostUrl(post_path_, posturl);
 
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
@@ -66,7 +64,9 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
 
         bool bPost = true;
         if(postid.empty()) { // POST
+            posturl = posts_feed_;
             std::cout<< "FOLDER POST URL : " << posturl << std::endl;
+            std::cout<< " type : " << p.type() << std::endl;
             status = netlib::HttpPost( posturl,
                                        p.type(),
                                        NULL,
@@ -78,8 +78,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
         }
         else { // PUT
             bPost = false;
-            posturl += "/";
-            posturl += postid;
+            utils::FindAndReplace(post_path_, "{post}", postid, posturl);
             std::cout<<"FOLDER PUT URL : " << posturl << std::endl;
 
             status = netlib::HttpPut(posturl,

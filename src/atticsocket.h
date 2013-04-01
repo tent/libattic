@@ -22,7 +22,7 @@ public:
 
     int Initialize(const std::string& url);
 
-    void WriteRequest(boost::asio::streambuf& request);
+    unsigned int Write(boost::asio::streambuf& request);
     void InterpretResponse(Response& out);
 
 private:

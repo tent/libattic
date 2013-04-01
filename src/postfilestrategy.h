@@ -5,6 +5,7 @@
 #include "httpstrategy.h"
 #include "netlib.h"
 #include "credentials.h"
+#include "atticsocket.h"
 
 namespace attic {
 
@@ -28,12 +29,13 @@ class PostFileStrategy : public HttpStrategyInterface {
     int SendChunk(const std::string& chunk, 
                   const std::string& fileKey,
                   const std::string& boundary,
-                  boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
+                  AtticSocket& socket,
+                  //boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                   const unsigned int count,
                   bool end,
                   FileInfo* pFi);
 
-    int WriteToSocket(boost::asio::ssl::stream<tcp::socket&>& ssl_sock, 
+    int WriteToSocket(AtticSocket& socket,
                       boost::asio::streambuf& buffer);
 
     int TransformChunk(const std::string& chunk, 

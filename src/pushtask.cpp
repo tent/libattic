@@ -53,21 +53,25 @@ void PushTask::RunTask() {
 // Note* path should not be relative, let the filemanager take care of
 // all the canonical to relative path conversions
 int PushTask::PushFile(const std::string& filepath) {
+
     int status = ret::A_OK;
 
     if(fs::CheckFileExists(filepath)) {
-        std::string post_path = GetPostPath();
-        Response resp;
-
         PostFileStrategy ps;                // Chunk and upload
         PostFileMetadataStrategy pmds;      // Update file post
         PostFolderMetadataStrategy pfmds;   // Update folder post
+
         if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
         if(!GetCredentialsManager()) std::cout<<" Invalid Cred Manager " << std::endl;
 
         HttpStrategyContext pushcontext(GetFileManager(), 
                                         GetCredentialsManager());
+
+        std::string post_path = GetPostPath();
+        std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+
         pushcontext.SetConfigValue("post_path", post_path);
+        pushcontext.SetConfigValue("posts_feed", posts_feed);
         pushcontext.SetConfigValue("filepath", filepath);
 
         pushcontext.PushBack(&ps);
@@ -80,6 +84,8 @@ int PushTask::PushFile(const std::string& filepath) {
     else {
         status = ret::A_FAIL_OPEN_FILE;
     }
+
+    std::cout<<" end push task status : " << status << std::endl;
 
     return status;
 }

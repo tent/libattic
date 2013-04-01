@@ -7,11 +7,10 @@ namespace attic {
 
 FolderPost::FolderPost() {
     set_type(cnst::g_attic_folder_type);
-    set_public(false);
 }
 
 FolderPost::FolderPost(const Folder& folder) {
-    FolderPost::FolderPost();
+    set_type(cnst::g_attic_folder_type);
     folder_ = folder;
 }
 
