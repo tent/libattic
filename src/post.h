@@ -58,6 +58,8 @@ public:
     unsigned int published_at() const   { return published_at_; }
     unsigned int received_at() const    { return received_at_; }
 
+    const std::string& version_id() const { return version_.id; }
+
     void set_id(const std::string &id)              { id_ = id; }
     void set_entity(const std::string &entity)      { entity_ = entity; }
     void set_published_at(unsigned int uUnixTime)   { published_at_ = uUnixTime; }

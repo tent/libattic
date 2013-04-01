@@ -52,6 +52,11 @@ int PullTask::PullFile(const std::string& filepath) {
     int status = ret::A_OK;
 
     std::string post_path = GetPostPath();
+    std::string post_attachment;
+    utils::FindAndReplace(TentTask::entity().GetPreferredServer().post_attachment(),
+                          "{entity}",
+                          TentTask::entity().entity(),
+                          post_attachment);
     Response resp;
 
     GetFileStrategy gfs;
@@ -59,6 +64,7 @@ int PullTask::PullFile(const std::string& filepath) {
                                     GetCredentialsManager());
 
     pullcontext.SetConfigValue("post_path",post_path);
+    pullcontext.SetConfigValue("post_attachment", post_attachment);
     pullcontext.SetConfigValue("filepath", filepath);
 
     pullcontext.PushBack(&gfs);

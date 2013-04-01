@@ -41,8 +41,7 @@ public:
 
     void SetPostID(const std::string &szID)         { m_PostID = szID; }
     void SetChunkPostID(const std::string &szID)    { m_ChunkPostID = szID; }
-    void SetPostVersion(const std::string& version) { m_PostVersion = atoi(version.c_str()); }
-    void SetPostVersion(const unsigned int unVer)   { m_PostVersion = unVer; } // Depricated 
+    void SetPostVersion(const std::string& version) { m_PostVersion = version; }
 
     void SetFileCredentials(const Credentials& cred)    { m_FileCredentials = cred; }
     void SetFileKey(const std::string &key)             { m_FileCredentials.set_key(key); }
@@ -68,7 +67,7 @@ public:
 
     Credentials GetCredentialsCopy() const  { return m_FileCredentials; }
 
-    unsigned int GetPostVersion() const { return m_PostVersion ; }
+    const std::string& GetPostVersion() const { return m_PostVersion ; }
 
     int PushChunkBack(ChunkInfo& Chunk);
     ChunkInfo* GetChunkInfo(const std::string& chunkname);
@@ -95,7 +94,7 @@ private:
     std::string     m_PostID; // Id of the post the file is potentially attached to
     std::string     m_ChunkPostID; // Id of the chunk post
 
-    unsigned int    m_PostVersion; // Version of the post the file is attached to
+    std::string     m_PostVersion; // Version of the post the file is attached to
     unsigned int    m_ChunkCount; // depricated
     unsigned int    m_FileSize;   // Filesize, not compressed
     int    m_Deleted; // Is the file deleted? // soft delete

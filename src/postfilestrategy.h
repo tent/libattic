@@ -47,6 +47,7 @@ class PostFileStrategy : public HttpStrategyInterface {
     void UpdateFileInfo(const Credentials& fileCred, 
                         const std::string& filepath, 
                         const std::string& chunkpostid,
+                        const std::string& post_version,
                         FileInfo* fi);
 
     FileInfo* RetrieveFileInfo(const std::string& filepath);

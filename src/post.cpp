@@ -42,8 +42,13 @@ void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) 
 }
 
 void Attachment::Serialize(Json::Value& root) {
-    // TODO :: this, later
-    std::cout<<" attatchment serialize UNIMPLEMENTED " << std::endl;
+    root["content_type"] = content_type;
+    root["category"] = category;
+    root["name"] = name;
+    root["hash"] = hash;
+    char szSize[256] = {'\0'};
+    snprintf(szSize, 256, "%u", size);
+    root["size"] = std::string(szSize);
 }
 
 void Attachment::Deserialize(Json::Value& root) {
@@ -53,7 +58,6 @@ void Attachment::Deserialize(Json::Value& root) {
     size = root.get("size", 0).asUInt();
     hash = root.get("hash", "").asString();
 }
-
 
 Post::Post() {
     published_at_ = 0;
@@ -125,7 +129,15 @@ void Post::Serialize(Json::Value& root) {
     }
 
     if(attachments_.size() > 0) {
-        // TODO::this
+        Json::Value attachment_arr(Json::arrayValue);
+        AttachmentVec::iterator itr = attachments_.begin();
+        for(;itr!= attachments_.end(); itr++) {
+            Json::Value attachment(Json::objectValue);
+            (*itr).Serialize(attachment);
+            attachment_arr.append(attachment);
+        }
+
+        root["attachments"] = attachment_arr;
     }
 
     /*

@@ -28,6 +28,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
     post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
+    std::string post_attachment = GetConfigValue("post_attachment");
 
     FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
@@ -43,11 +44,9 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
             if(!chunkpostid.empty()) {
                 // Construct Post URL
                 std::string posturl;
-                postutils::ConstructPostUrl(post_path_, posturl);
-
-                std::string chunkposturl = posturl;
-                utils::CheckUrlAndAppendTrailingSlash(chunkposturl);
-                chunkposturl += chunkpostid;
+                utils::FindAndReplace(post_path_, "{post}", chunkpostid, posturl);
+                std::string attachurl;
+                utils::FindAndReplace(post_attachment, "{post}", chunkpostid, attachurl);
 
                 Response response;
                 status = GetChunkPost(fi, response);
@@ -58,10 +57,12 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         std::string relative_filepath;
                         fi->GetFilepath(relative_filepath);
 
+                        std::cout<<" chunk post : " << response.body << std::endl;
+
                         Post p;
                         jsn::DeserializeObject(&p, response.body);
                         status = RetrieveFile(relative_filepath, 
-                                              chunkposturl, 
+                                              attachurl,
                                               fileCred, 
                                               p, 
                                               fi);
@@ -219,16 +220,16 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     ofs.open(temppath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
     if (ofs.is_open()) {
         int count = 0;
+        std::cout<<" ATTACHMENT COUNT : " << av->size() << std::endl;
         for(;itr != av->end(); itr++) {
             // Construct attachment path
-            attachmentpath.clear();
-            attachmentpath += postpath;
-            attachmentpath.append("/attachments/");
+
+            utils::FindAndReplace(postpath, "{version}", post.version_id(), attachmentpath);
+            utils::FindAndReplace(attachmentpath, "{name}", (*itr).name, attachmentpath);
+            std::cout<<" attachment path : " << attachmentpath << std::endl;
 
             char szCount[256]={'\0'};
             snprintf(szCount, 256, "%d", count);
-
-            attachmentpath += (*itr).name;
 
             outpath.clear();
             file_manager_->GetTempDirectory(outpath);

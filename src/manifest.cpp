@@ -117,7 +117,7 @@ bool Manifest::CreateInfoTable() {
     exc += g_infotable;
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
-    exc += " postversion INT, encryptedkey BLOB, iv BLOB,";
+    exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, PRIMARY KEY(filepath ASC));";
 
     return PerformQuery(exc);
@@ -455,7 +455,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 8, fi.GetPostVersion());
+            ret = sqlite3_bind_text(stmt, 8, fi.GetPostVersion().c_str(), fi.GetPostVersion().size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("version Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;

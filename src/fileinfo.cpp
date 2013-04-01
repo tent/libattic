@@ -10,7 +10,6 @@
 namespace attic { 
 
 FileInfo::FileInfo() {
-    m_PostVersion = 0;
     m_Deleted = 0;
 }
 

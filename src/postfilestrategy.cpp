@@ -100,7 +100,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
                 if(metaResp.code == 200) {
                     out = metaResp;
-                    UpdateFileInfo(fileCredentials, filepath, chunkpostid, fi);
+                    UpdateFileInfo(fileCredentials, filepath, chunkpostid, p.version_id(), fi);
                 }
                 else {
                     status = ret::A_FAIL_NON_200;
@@ -505,6 +505,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred, 
                                       const std::string& filepath, 
                                       const std::string& chunkpostid,
+                                      const std::string& post_version,
                                       FileInfo* fi) 
 {
     std::string filename;
@@ -517,6 +518,8 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
 
     std::string mk;
     mKey.GetMasterKey(mk);
+
+    fi->SetPostVersion(post_version);
 
     // Insert File Data
     fi->SetChunkPostID(chunkpostid);
