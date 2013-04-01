@@ -160,7 +160,8 @@ TEST(PASSPHRASE, ENTER)
     SetConfigValue("temp_dir", "./data/temp");
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
-    status = EnterPassphrase("password");
+    //status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
 
     std::cout<<" Enter passphrase status : " << status << std::endl;
     ASSERT_EQ(status, attic::ret::A_OK);
@@ -248,7 +249,8 @@ TEST(AFILE, PUSH)
 
     ASSERT_EQ(status, attic::ret::A_OK);
 
-    status = EnterPassphrase("password");
+    //status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;

@@ -1,6 +1,7 @@
 #include "passphrase.h"
 #include "constants.h"
 #include "crypto.h"
+#include "logutils.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -21,8 +22,11 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
         if(override) {
             // Retrieve Attic Post
-            if(RetrieveCredentialsPost(ap) == ret::A_OK)
+            if(RetrieveCredentialsPost(ap) == ret::A_OK) {
                 reg = true;
+                // TODO :: when delete is implemented delete the old version
+                //status = DeleteCredentialsPost(ap);
+            }
         }
     }
     else {
@@ -304,6 +308,7 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
     }
     else { 
         status = ret::A_FAIL_NON_200;
+        log::LogHttpResponse("PSSSHCB8210", response);
     }
 
     return status;
@@ -337,6 +342,7 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     }
     else { 
         status = ret::A_FAIL_NON_200; 
+        log::LogHttpResponse("FNDNL329Q", response);
     }
 
     return status;
@@ -363,7 +369,37 @@ int Passphrase::GetCredentialsPostCount() {
         if(response.header.HasValue("Count"))
             count = atoi(response.header["Count"].c_str());
     }
+    else {
+        log::LogHttpResponse("41935", response);
+    }
     return count;
+}
+
+int Passphrase::DeleteCredentialsPost(AtticPost& post) { 
+    int status = ret::A_OK;
+
+    std::string postid = post.id();
+    std::string url = entity_.GetPreferredServer().post();
+    utils::FindAndReplace(url, "{entity}", entity_.entity(), url);
+    utils::FindAndReplace(url, "{post}", post.id(), url);
+
+    std::cout << " DELETE POST PATH : " << url << std::endl;
+
+    Response resp;
+    netlib::HttpDelete(url,
+                       NULL,
+                       access_token_,
+                       resp);
+
+    if(resp.code == 200) {
+
+    }
+    else {
+        log::LogHttpResponse("C3289AF", response);
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
 }
 
 

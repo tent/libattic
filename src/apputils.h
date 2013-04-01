@@ -300,7 +300,7 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
         }
         else {
             std::ostringstream error;
-            error << "Non 200 repsonse in RequestUserAuthorizationDetails" << std::endl;
+            error << "NC4218_4RQ Non 200 repsonse" << std::endl;
             error << "Code : " << response.code << std::endl;
             error << "Body : " << response.body << std::endl;
             event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);

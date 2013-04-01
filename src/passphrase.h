@@ -50,6 +50,8 @@ class Passphrase {
 
     bool CheckSentinelBytes(const std::string& in);
 
+    int DeleteCredentialsPost(AtticPost& post);
+
 public:
     Passphrase(const Entity& entity, const AccessToken& at);
     ~Passphrase();
