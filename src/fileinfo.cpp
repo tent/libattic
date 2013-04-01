@@ -25,13 +25,9 @@ FileInfo::FileInfo(const std::string& filename,
     m_ChunkPostID = chunkpostid;
 }
 
-FileInfo::~FileInfo()
-{
+FileInfo::~FileInfo() {}
 
-}
-
-bool FileInfo::InitializeFile(const std::string &filepath)
-{
+bool FileInfo::InitializeFile(const std::string &filepath) {
     // Check if Valid File
     //
     // Set filepath
@@ -47,8 +43,7 @@ bool FileInfo::InitializeFile(const std::string &filepath)
     return true;
 }
 
-void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
-{
+void FileInfo::ExtractFilename(const std::string &filepath, std::string &out) {
     std::string name;
     unsigned int size = filepath.size();
     if(size) {
@@ -64,8 +59,7 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out)
     out = name;
 }
 
-int FileInfo::PushChunkBack(ChunkInfo& Chunk)
-{
+int FileInfo::PushChunkBack(ChunkInfo& Chunk) {
     // Will overwrite what was already in there.
     int status = ret::A_OK;
 
@@ -80,15 +74,14 @@ int FileInfo::PushChunkBack(ChunkInfo& Chunk)
     return status;
 }
 
-ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname)
-{
+ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname) {
+    std::cout<<" FI CHUNK COUNT : " << m_Chunks.size() << std::endl;
     if(m_Chunks.find(chunkname) != m_Chunks.end()) 
         return &m_Chunks[chunkname];
     return NULL;
 }
 
-void FileInfo::GetSerializedChunkData(std::string& out) const
-{
+void FileInfo::GetSerializedChunkData(std::string& out) const {
     ChunkMap::const_iterator itr = m_Chunks.begin();
     std::vector<std::string> chunkList;
 
@@ -110,21 +103,27 @@ void FileInfo::GetSerializedChunkData(std::string& out) const
 
 }
 
-bool FileInfo::LoadSerializedChunkData(const std::string& data)
-{
+bool FileInfo::LoadSerializedChunkData(const std::string& data) {
     // only deserialize into empty vector
+    std::cout<<" LOADING SERIALIZED CHUNK DATA " << std::endl;
     if(m_Chunks.size() != 0)
         return false;
+
+
+    std::cout<<" RAW DATA : " << data << std::endl;
 
     Json::Value root;
     Json::Reader reader;
 
-    if(!reader.parse(data, root))
+    if(!reader.parse(data, root)) {
+        std::cout<<" FAILED TO PARSE " << std::endl;
         return false;
+    }
 
     std::vector<std::string> chunkList;
     jsn::DeserializeIntoVector(root, chunkList);
 
+    std::cout<<" CHUNK LIST SIZE : " << chunkList.size() << std::endl;
     std::vector<std::string>::iterator itr = chunkList.begin();
 
     for(;itr != chunkList.end(); itr++) {
@@ -143,8 +142,8 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data)
     return true;
 }
 
-bool FileInfo::LoadSerializedChunkPost(const std::string& data)
-{
+bool FileInfo::LoadSerializedChunkPost(const std::string& data) {
+    std::cout<<" Loading Serialize Chunk Post POST " << std::endl;
 
     return true;
 }

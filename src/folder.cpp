@@ -49,8 +49,7 @@ void Folder::Serialize(Json::Value& root) {
     FolderEntry::Serialize(root);
 }
 
-void Folder::SerializeContents(Json::Value& root)
-{
+void Folder::SerializeContents(Json::Value& root) {
     EntryList::iterator itr = m_Entries.begin();
 
     for(;itr!=m_Entries.end(); itr++) {
@@ -61,8 +60,7 @@ void Folder::SerializeContents(Json::Value& root)
 
 }
 
-void Folder::SerializeContents(std::string& out)
-{
+void Folder::SerializeContents(std::string& out) {
     EntryList::iterator itr = m_Entries.begin();
 
     std::vector<std::string> serializedList;
@@ -78,8 +76,7 @@ void Folder::SerializeContents(std::string& out)
     jsn::SerializeJsonValue(folderval, out);
 }
 
-void Folder::Deserialize(Json::Value& root)
-{
+void Folder::Deserialize(Json::Value& root) {
     FolderEntry::Deserialize(root);
     //std::string sval = root.get("foldercontents", "").asString();
     //DeserializeContents(sval);
@@ -89,8 +86,7 @@ void Folder::Deserialize(Json::Value& root)
 
 }
 
-void Folder::DeserializeContents(Json::Value& root)
-{
+void Folder::DeserializeContents(Json::Value& root) {
     Json::ValueIterator itr = root.begin();
 
     for(; itr != root.end(); itr++) {
@@ -100,8 +96,7 @@ void Folder::DeserializeContents(Json::Value& root)
     }
 }
 
-void Folder::DeserializeContents(const std::string& in)
-{
+void Folder::DeserializeContents(const std::string& in) {
     Json::Value folderval;
     std::vector<std::string> serializedList;                              
 
@@ -118,8 +113,7 @@ void Folder::DeserializeContents(const std::string& in)
     }     
 }
 
-bool Folder::GetFolderEntry(const std::string& path, FolderEntry& entry)
-{
+bool Folder::GetFolderEntry(const std::string& path, FolderEntry& entry) {
     EntryList::iterator itr = m_Entries.find(path);
     if( itr != m_Entries.end()) {
        entry = itr->second; 

@@ -70,6 +70,8 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     std::string url;
     utils::FindAndReplace(GetPostPath(), "{post}", m_PostID, url);
 
+    std::cout<<" SYNC META DATA URL : " << url << std::endl;
+
     Response response;
     AccessToken at = access_token();
     netlib::HttpGet( url,
@@ -180,20 +182,14 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
         std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
         std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
 
-        // TODO :: update this with with new logic V03
-        std::string chunkposturl;
-        //entity.GetApiRoot(chunkposturl);
-        //chunkposturl += "/posts/";
-
         std::vector<std::string>::iterator itr = chunkPosts.begin();
         std::string postid;
-
         for(;itr != chunkPosts.end(); itr++) {
             fi->SetChunkPostID(*itr);
             postid.clear();
             postid = *itr;
-            std::string url = chunkposturl;
-            url += postid;
+            std::string url;
+            utils::FindAndReplace(GetPostPath(), "{post}", postid, url);
 
             std::cout<<" getting : " << url << std::endl;
             Response response;
@@ -202,7 +198,7 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
                              &at,
                              response); 
 
-            //std::cout<< " CODE : " << response.code << std::endl;
+            std::cout<< " CODE : " << response.code << std::endl;
             //std::cout<< " RESP : " << response.body << std::endl;
 
             if(response.code == 200) {

@@ -180,10 +180,8 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
                                   const std::string& postpath, 
                                   const Credentials& fileCred,
                                   Post& post,
-                                  FileInfo* fi)
-{
+                                  FileInfo* fi) {
     int status = ret::A_OK;
-
     // Construct list of attachments                                                             
     Post::AttachmentVec* av = post.GetAttachments();                                             
     Post::AttachmentVec::iterator itr = av->begin();                                             
@@ -250,6 +248,9 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
                     ofs.write(chunk.c_str(), chunk.size());
                     count++;
                 }
+                else {
+                    std::cout<<" FAILED TO TRANSFORM CHUNK : " << status; 
+                }
             }
 
             if(status) // fail
@@ -258,8 +259,9 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
 
         ofs.close();
         // Copy
-        std::cout<<" moving file to : " << path << std::endl;
+
         if(status == ret::A_OK) {
+            std::cout<<" moving file to : " << path << std::endl;
             // TODO :: this can be moved up the chain a bit, perhaps perform some other checks
             // before moving
             std::cout<<" file construction complete moving ... " << std::endl;
