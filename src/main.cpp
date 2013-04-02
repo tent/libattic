@@ -249,8 +249,8 @@ TEST(AFILE, PUSH)
 
     ASSERT_EQ(status, attic::ret::A_OK);
 
-    //status = EnterPassphrase("password");
-    status = EnterPassphrase("asdf");
+    status = EnterPassphrase("password");
+   // status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;
