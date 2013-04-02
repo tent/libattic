@@ -47,7 +47,7 @@ void SyncFileTask::OnFinished() {}
 
 void SyncFileTask::RunTask() {
     int status = ret::A_OK;
-    std::cout << ".... Syncing file task ... " << std::endl;
+//    std::cout << ".... Syncing file task ... " << std::endl;
 
     // Retrieve metadata
     FilePost p;
@@ -59,7 +59,7 @@ void SyncFileTask::RunTask() {
         std::cout<<" ...failed to get metadata ... status : " << status << std::endl;
     }
 
-    std::cout<<" ...sync file task finished ... " << std::endl;
+    //std::cout<<" ...sync file task finished ... " << std::endl;
     Callback(status, m_PostID);
     SetFinishedState();
 }
@@ -70,7 +70,7 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     std::string url;
     utils::FindAndReplace(GetPostPath(), "{post}", m_PostID, url);
 
-    std::cout<<" SYNC META DATA URL : " << url << std::endl;
+    //std::cout<<" SYNC META DATA URL : " << url << std::endl;
 
     Response response;
     AccessToken at = access_token();
@@ -91,7 +91,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     int status = ret::A_OK;
 
     std::string filepath = p.relative_path();
-    std::cout<<" POST FILEPATH : " << filepath << std::endl;
+    //std::cout<<" POST FILEPATH : " << filepath << std::endl;
 
     FileInfo fi;
     postutils::DeserializeFilePostIntoFileInfo(p, fi);
@@ -108,10 +108,10 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
         std::string canonical_path;
         fm->GetCanonicalFilepath(filepath, canonical_path);
 
-        std::cout<< "checking file....." << std::endl;
+        //std::cout<< "checking file....." << std::endl;
         // Is file marked as deleted?
         if(pLocal_fi->GetDeleted()) {
-            std::cout<<" FILE DELETED " << std::endl;
+            //std::cout<<" FILE DELETED " << std::endl;
             bPull = false;
         }
         //TODO VO3
@@ -126,19 +126,19 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
         */
         // check if file exists
         else if(!fs::CheckFileExists(canonical_path)) { 
-            std::cout<<" checking if file exists --- " << std::endl;
-            std::cout<<" maybe use path ? : " << filepath << std::endl;
-            std::cout<<" or ? : " << canonical_path << std::endl;
-            std::cout<<" file does not exist pulling ... " << std::endl;
+            //std::cout<<" checking if file exists --- " << std::endl;
+            //std::cout<<" maybe use path ? : " << filepath << std::endl;
+            //std::cout<<" or ? : " << canonical_path << std::endl;
+            //std::cout<<" file does not exist pulling ... " << std::endl;
             bPull= true;
         }
 
-        std::cout<<" pullling ? : " << bPull << std::endl;
+       // std::cout<<" pullling ? : " << bPull << std::endl;
         // Update and insert to manifest
     }
     else {
-        std::cout<< " NULL local file info " << std::endl;
-        std::cout<< " just pull ... " << std::endl;
+        //std::cout<< " NULL local file info " << std::endl;
+        //std::cout<< " just pull ... " << std::endl;
         bPull = true;
     }
 
@@ -148,7 +148,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
         if(status == ret::A_OK) {
             //std::cout<<" GET FILEINFO VERSION : " << fi.GetPostVersion() << std::endl;
             //std::cout<<" GET POST VERSION : " << version << std::endl;
-            std::cout<<" INSERTING " << std::endl;
+            //std::cout<<" INSERTING " << std::endl;
 
             // insert to file manager
             FileManager* fm = GetFileManager();
@@ -162,7 +162,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
         }
     }
     else {
-        std::cout<<" not pulling ... " << std::endl;
+        //std::cout<<" not pulling ... " << std::endl;
     }
 
     return status;
@@ -179,8 +179,8 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
     chunkPosts = post.GetChunkPosts();
 
     if(chunkPosts.size()) {
-        std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
-        std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
+        //std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
+        //std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
 
         std::vector<std::string>::iterator itr = chunkPosts.begin();
         std::string postid;
@@ -191,14 +191,14 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
             std::string url;
             utils::FindAndReplace(GetPostPath(), "{post}", postid, url);
 
-            std::cout<<" getting : " << url << std::endl;
+            //std::cout<<" getting : " << url << std::endl;
             Response response;
             netlib::HttpGet( url, 
                              NULL,
                              &at,
                              response); 
 
-            std::cout<< " CODE : " << response.code << std::endl;
+            //std::cout<< " CODE : " << response.code << std::endl;
             //std::cout<< " RESP : " << response.body << std::endl;
 
             if(response.code == 200) {
@@ -215,7 +215,7 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
 
                 }
 
-                std::cout<<" CHUNK COUNT : " << fi->GetChunkCount() << std::endl;
+                //std::cout<<" CHUNK COUNT : " << fi->GetChunkCount() << std::endl;
                 //fileInfoList.push_back(fi);
                 //InsertFileInfoToManager(fileInfoList);
             }
