@@ -240,6 +240,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
         std::cout<<" attempting to open filepath : " << filepath << std::endl;
+        std::cout<<" file size : " << filesize << std::endl;
         std::ifstream ifs;
         ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
@@ -297,7 +298,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                             int diff = i - lastsplit;
                             chunk = window.substr(lastsplit, diff);
                             // Transform
-                            SendChunk( chunk, fileKey, boundary, socket, count, false, pFi);
+                            SendChunk(chunk, fileKey, boundary, socket, count, false, pFi);
                             lastsplit = i;
                             count = 0;
                             chunkcount++;
@@ -365,6 +366,7 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
 {
     int status = ret::A_OK;
     // Transform
+    
     std::string finishedChunk, chunkName;
     TransformChunk(chunk, 
                    fileKey, 
@@ -372,6 +374,8 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
                    chunkName, 
                    pFi);
 
+    std::cout<<" chunk size : " << chunk.size() << std::endl;
+    std::cout<<" trans size : " << finishedChunk.size() << std::endl;
     // Build Attachment
     boost::asio::streambuf attachment;
     std::ostream attachmentstream(&attachment);
