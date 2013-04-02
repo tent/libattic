@@ -215,7 +215,7 @@ int DeleteFile(const char* szFilePath) {
             attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
         }
         catch(std::exception& e) {
-
+            attic::log::LogException("TOP1349", e);
         }
     }
 
