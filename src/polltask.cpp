@@ -20,7 +20,7 @@ namespace polltask {
 }
 
 static long total_elapsed = 0;
-static boost::timer::nanosecond_type const limit(3 * 1000000000LL); // 3 seconds in nanoseconds
+static boost::timer::nanosecond_type const limit(10 * 1000000000LL); // 10 seconds in nanoseconds
 
 PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,
@@ -108,8 +108,11 @@ void PollTask::RunTask() {
             total_elapsed += elapsed;
         }
 
-        std::cout<<" total elapsed : " << total_elapsed << "limit " << limit << std::endl;
+        //std::cout<<" total elapsed : " << total_elapsed << "limit " << limit << std::endl;
         if(total_elapsed > limit) {
+            std::cout<<" ********************************************************" << std::endl;
+            std::cout<<" POLLING - ELAPSED : " << total_elapsed << std::endl;
+            std::cout<<" ********************************************************" << std::endl;
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
@@ -117,7 +120,7 @@ void PollTask::RunTask() {
                 if(status != ret::A_OK)
                     std::cout<<" POLLING ERR : " << status << std::endl;
             }
-            timer_.resume();
+            timer_.start();
         }
     }
     else {
@@ -127,7 +130,7 @@ void PollTask::RunTask() {
         SetFinishedState();
     }
 
-    //sleep::sleep_milliseconds(1000*30);
+    sleep::sleep_milliseconds(100);
     //sleep::sleep_seconds(2);
 }
 

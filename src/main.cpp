@@ -1018,14 +1018,17 @@ TEST(ATTIC, DAEMON)
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" entering passphrase ... " << std::endl;
-    status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
+
+    //status = EnterPassphrase("password");
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, attic::ret::A_OK);
 
     //std::cout<<" starting to poll ... " << std::endl;
     status = PollFiles();
     //std::cout<<" running til interrupt ... " << std::endl;
-       sleep(10);
+    while(true)
+        sleep(10);
 
     ShutdownLibAttic(NULL);
 }
