@@ -407,7 +407,9 @@ static int VerifyHMACForString( const std::string& input,
 static void Base64EncodeString(const std::string& input, std::string& output) {
     CryptoPP::StringSource( input, 
                             true, 
-                            new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output)));
+                            new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
+                                                        false) // Insert line breaks false
+                          );
 }
 
 static void Base64DecodeString(const std::string& input, std::string& output) {
@@ -419,7 +421,9 @@ static void Base64DecodeString(const std::string& input, std::string& output) {
 static void Base32EncodeString(const std::string& input, std::string& output) {
     CryptoPP::StringSource(input,
                            true,
-                           new CryptoPP::Base32Encoder(new CryptoPP::StringSink(output)));
+                           new CryptoPP::Base32Encoder(new CryptoPP::StringSink(output), 
+                                                       false) // Insert line breaks false
+                          );
 }
 
 static void Base32DecodeString(const std::string& input, std::string& output) {

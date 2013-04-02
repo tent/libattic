@@ -25,6 +25,9 @@ void ChunkInfo::Serialize(Json::Value& root) {
     snprintf(pos, 256, "%u", m_Position);
     crypto::Base64EncodeString(std::string(pos), position);
 
+    std::cout<<" chunkname : " << chunkname << std::endl;
+    std::cout<<" plaintextmac : " << plaintextmac << std::endl;
+
     root["chunk_name"] = chunkname;
     root["plaintext_mac"] = plaintextmac;
     root["ciphertext_mac"] = ciphertextmac; 
