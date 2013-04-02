@@ -13,6 +13,8 @@
 #include "postutils.h"
 #include "logutils.h"
 
+#include "sleep.h"
+
 namespace attic { 
 
 PostFileStrategy::PostFileStrategy() {}
@@ -236,11 +238,17 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         socket.Write(chunkedBody);
         //boost::asio::write(ssl_sock, request); 
         //boost::asio::write(ssl_sock, chunkedBody);
+        //
 
+        sleep::sleep_seconds(5);
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
         std::cout<<" attempting to open filepath : " << filepath << std::endl;
         std::cout<<" file size : " << filesize << std::endl;
+
+
+
+
         std::ifstream ifs;
         ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
 
