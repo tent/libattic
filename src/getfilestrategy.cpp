@@ -238,6 +238,11 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
             // Request attachment                                                                
             std::string buffer;
             status = RetrieveAttachment(attachmentpath, buffer);
+
+            if(buffer.size() <= 0) {
+                status = ret::A_FAIL_ZERO_SIZE;
+            }
+
             if(status == ret::A_OK) {
                 // Transform Chunk
                 ChunkInfo* ci = fi->GetChunkInfo((*itr).name);
