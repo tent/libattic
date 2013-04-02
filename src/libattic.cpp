@@ -29,6 +29,8 @@
 #include "clientutils.h"
 #include "configmanager.h"
 
+#include "logutils.h"
+
 static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
 //static TaskArbiter g_Arb;
@@ -177,8 +179,13 @@ int PushFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK){
-        std::string filepath(szFilePath);
-        attic::event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+        try {
+            std::string filepath(szFilePath);
+            attic::event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("TOP#!FKDA", e);
+        }
     }
     return status;
 }
@@ -187,8 +194,13 @@ int PullFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK){
-        std::string filepath(szFilePath);
-        attic::event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+        try {
+            std::string filepath(szFilePath);
+            attic::event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("TOP1414", e);
+        }
     }
 
     return attic::ret::A_OK;
@@ -198,8 +210,13 @@ int DeleteFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) {
-        std::string filepath(szFilePath);
-        attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+        try { 
+            std::string filepath(szFilePath);
+            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+        }
+        catch(std::exception& e) {
+
+        }
     }
 
     return status;
@@ -208,8 +225,17 @@ int DeleteFile(const char* szFilePath) {
 int PollFiles(void) {
     int status = IsLibInitialized();
 
-    if(status == attic::ret::A_OK)
-        status = g_pTaskManager->PollFiles(NULL);
+    if(status == attic::ret::A_OK) {
+        try { 
+            if(status == attic::ret::A_OK)
+                status = g_pTaskManager->PollFiles(NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("TOP12341", e);
+        }
+    }
+
+
 
     return status;
 }

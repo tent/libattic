@@ -58,9 +58,7 @@ void SyncFileTask::RunTask() {
             status = ProcessFileInfo(p);
         }
         catch(std::exception &e) {
-            std::string excp = e.what();
-            std::string err = " Process File Error : " + excp + "\n"; 
-            log::LogException("UJaoe3234", err);
+            log::LogException("UJaoe3234", e);
         }
     }
     else {

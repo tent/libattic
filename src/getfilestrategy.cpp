@@ -68,11 +68,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                                                   fi);
                         }
                         catch(std::exception& e) {
-                            std::string excp = e.what();
-                            std::string err = " Exception get file strategy exception : " + excp + "\n";
-                            
-                            log::LogException("SFN#985412", err); 
-
+                            log::LogException("SFN#985412", e); 
                         }
                         // File retrieval was successfull, post step
                         if(status == ret::A_OK) {
@@ -329,8 +325,7 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
 int GetFileStrategy::TransformChunk(const ChunkInfo* ci, 
                                     const std::string& filekey,
                                     const std::string& chunkBuffer, 
-                                    std::string& out)
-{
+                                    std::string& out) {
     int status = ret::A_OK;
 
     if(ci) {
@@ -355,37 +350,46 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
         std::string cipherhash;
         crypto::GenerateHash(base64Chunk, cipherhash);
         std::cout<<" CIPHER HASH : " << cipherhash << std::endl;
-        // Decrypt
-        std::string decryptedChunk;
-        status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
-        //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
+        std::string ci_cipherhash = ci->ciphertext_mac();
+        if(ci_cipherhash == cipherhash) {
+            // Decrypt
+            std::string decryptedChunk;
+            status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
+            //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
 
-        if(status == ret::A_OK) {
-            // Decompress
-            std::string decryptedHash;
-            crypto::GenerateHash(decryptedChunk, decryptedHash);
-            std::cout<<" DECRYPTED HASH : " << decryptedHash << std::endl;
-            std::cout<<" DECRYPTED SIZE : " << decryptedChunk.size() << std::endl;
-            std::string decompressedChunk;
-            status = compress::DecompressString(decryptedChunk, decompressedChunk);
-            if(status == ret::A_OK) { 
-                //Verify chunk Check plaintext hmac
-                std::string local_hash;
-                crypto::GenerateHash(decompressedChunk, local_hash);
-                std::string plaintexthash = ci->plaintext_mac();
+            if(status == ret::A_OK) {
+                // Decompress
+                std::string decryptedHash;
+                crypto::GenerateHash(decryptedChunk, decryptedHash);
+                std::cout<<" DECRYPTED HASH : " << decryptedHash << std::endl;
+                std::cout<<" DECRYPTED SIZE : " << decryptedChunk.size() << std::endl;
+                std::string decompressedChunk;
+                status = compress::DecompressString(decryptedChunk, decompressedChunk);
+                if(status == ret::A_OK) { 
+                    //Verify chunk Check plaintext hmac
+                    std::string local_hash;
+                    crypto::GenerateHash(decompressedChunk, local_hash);
+                    std::string plaintexthash = ci->plaintext_mac();
 
-                std::cout<<" LOCAL HASH : " << local_hash << std::endl;
-                std::cout<<" CI HASH : " << plaintexthash << std::endl;
+                    std::cout<<" LOCAL HASH : " << local_hash << std::endl;
+                    std::cout<<" CI HASH : " << plaintexthash << std::endl;
 
-                if(local_hash == plaintexthash) {
-                    std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
-                    out = decompressedChunk;
-                    std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
-                    std::cout<<" size of chunk : " << out.size() << std::endl;
+                    if(local_hash == plaintexthash) {
+                        std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
+                        out = decompressedChunk;
+                        std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
+                        std::cout<<" size of chunk : " << out.size() << std::endl;
+                    }
+                    else
+                        status = ret::A_FAIL_INVALID_CHUNK_HASH;
                 }
-                else
-                    status = ret::A_FAIL_INVALID_CHUNK_HASH;
             }
+        }
+        else {
+            std::string message("Invalid Ciphertext hash compare\n");
+            message += " chunk hash : " + ci_cipherhash + "\n";
+            message += " local hash : " + cipherhash + "\n";
+            log::LogString("1PRF123X", message);
         }
     }
     else

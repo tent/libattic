@@ -17,10 +17,17 @@ static void LogHttpResponse(const std::string& error_ident, const Response& resp
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
 }
 
-static void LogException(const std::string& error_ident, std::string& e) {
+static void LogException(const std::string& error_ident, std::exception& e) {
     std::ostringstream error;
     error << error_ident << std::endl;
-    error << "Exception thrown : " << e << std::endl;
+    error << "Exception thrown : " << e.what() << std::endl;
+    event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+}
+
+static void LogString(const std::string& error_ident, std::string& buffer) {
+    std::ostringstream error;
+    error << error_ident << std::endl;
+    error << buffer << std::endl;
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
 }
 
