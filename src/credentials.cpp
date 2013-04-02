@@ -35,17 +35,14 @@ int Credentials::set_key(const std::string& key) {
     int status = ret::A_OK;
 
     if(key.size() <= GetKeySize()) {
-        std::cout<<"incoming key : " << key << std::endl;
         memset(byte_key_, '\0', GetKeySize()+1);
         memcpy(byte_key_, key.c_str(), key.size());
         key_ = key;
-        std::cout<<" KEY_ : " << key_ << std::endl;
     }
     else {
         status = ret::A_FAIL_KEYSIZE_MISMATCH;
     }
 
-    std::cout<<" SET KEY STATUS : " << status << std::endl;
 
     return status;
 }
@@ -54,7 +51,6 @@ int Credentials::set_key(const byte* pKey, const unsigned int length) {
     int status = ret::A_OK;
 
     if(length <= GetKeySize()) {
-        std::cout<<"incoming byte key : " << pKey << std::endl;
         memset(byte_key_, '\0', GetKeySize()+1);
         memcpy(byte_key_, pKey, length);
         key_.clear();
