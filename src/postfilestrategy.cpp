@@ -240,14 +240,10 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         //boost::asio::write(ssl_sock, chunkedBody);
         //
 
-        sleep::sleep_seconds(5);
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
         std::cout<<" attempting to open filepath : " << filepath << std::endl;
         std::cout<<" file size : " << filesize << std::endl;
-
-
-
 
         std::ifstream ifs;
         ifs.open(filepath.c_str(), std::ifstream::in | std::ifstream::binary);
