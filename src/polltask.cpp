@@ -112,7 +112,8 @@ void PollTask::RunTask() {
         SetFinishedState();
     }
 
-    sleep::sleep_milliseconds(1000*30);
+    //sleep::sleep_milliseconds(1000*30);
+    sleep::sleep_seconds(2);
 }
 
 int PollTask::SyncFolderPosts() {

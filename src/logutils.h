@@ -17,6 +17,13 @@ static void LogHttpResponse(const std::string& error_ident, const Response& resp
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
 }
 
+static void LogException(const std::string& error_ident, std::string& e) {
+    std::ostringstream error;
+    error << error_ident << std::endl;
+    error << "Exception thrown : " << e << std::endl;
+    event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+}
+
 
 }}//namespace
 #endif

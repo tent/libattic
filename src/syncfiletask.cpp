@@ -12,6 +12,7 @@
 #include "event.h"
 #include "filesystem.h"
 #include "taskdelegate.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -53,7 +54,14 @@ void SyncFileTask::RunTask() {
     FilePost p;
     status = SyncMetaData(p);
     if(status == ret::A_OK) {
-        status = ProcessFileInfo(p);
+        try {
+            status = ProcessFileInfo(p);
+        }
+        catch(std::exception &e) {
+            std::string excp = e.what();
+            std::string err = " Process File Error : " + excp + "\n"; 
+            log::LogException("UJaoe3234", err);
+        }
     }
     else {
         std::cout<<" ...failed to get metadata ... status : " << status << std::endl;

@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include "postutils.h"
 #include "event.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -61,11 +62,21 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
                         Post p;
                         jsn::DeserializeObject(&p, response.body);
-                        status = RetrieveFile(relative_filepath, 
-                                              attachurl,
-                                              fileCred, 
-                                              p, 
-                                              fi);
+
+                        try{
+                            status = RetrieveFile(relative_filepath, 
+                                                  attachurl,
+                                                  fileCred, 
+                                                  p, 
+                                                  fi);
+                        }
+                        catch(std::exception& e) {
+                            std::string excp = e.what();
+                            std::string err = " Exception get file strategy exception : " + excp + "\n";
+                            
+                            log::LogException("SFN#985412", err); 
+
+                        }
                         // File retrieval was successfull, post step
                         if(status == ret::A_OK) {
                             // Update version
