@@ -31,29 +31,26 @@ static void ConstructPostUrl(const std::string& apiroot, std::string& out) { // 
 static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic) {
     int status = ret::A_OK;
     if(pFi) {
-        std::string filepath, filename;
-        pFi->GetFilepath(filepath);
-        pFi->GetFilename(filename);
-        unsigned int size = pFi->GetFileSize();
+        std::string filepath = pFi->filepath();
+        std::string filename = pFi->filename();
+        unsigned int size = pFi->file_size();
 
         // Set Basic attic post info
         postOut.set_public(isPublic);
         postOut.set_relative_path(filepath);
         postOut.set_name(filename);
         postOut.set_file_size(size);
-        postOut.set_deleted(pFi->GetDeleted());
+        postOut.set_deleted(pFi->deleted());
 
         // Set Attic post key info
-        std::string encryptedkey, iv;
-        pFi->GetEncryptedKey(encryptedkey);
-        pFi->GetIv(iv);
+        std::string encryptedkey = pFi->encrypted_key();
+        std::string iv = pFi->file_credentials_iv();
 
         postOut.set_key_data(encryptedkey);
         postOut.set_iv_data(iv);
         
         // Set Chunk info
-        std::string chunkpostid;
-        pFi->GetChunkPostID(chunkpostid);
+        std::string chunkpostid = pFi->chunk_post_id();
 
         postOut.PushBackChunkPostId(chunkpostid);
 
@@ -91,10 +88,10 @@ static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut
     std::string key = post.key_data();
     std::string iv = post.iv_data();
 
-    fiOut.SetFilename(name);
-    fiOut.SetFilepath(path);
-    fiOut.SetEncryptedKey(key);
-    fiOut.SetIv(iv);
+    fiOut.set_filename(name);
+    fiOut.set_filepath(path);
+    fiOut.set_encrypted_key(key);
+    fiOut.set_file_credentials_iv(iv);
 
     status = DeserializePostIntoFileInfo(post, fiOut);
     return status;
@@ -109,8 +106,8 @@ static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut) {
 
     if(post) {
         std::string postid = post->id();
-
-        fiOut.SetPostID(postid);
+        fiOut.set_post_id(postid);
+        std::cout<<" IMPLEMENT DESERIALIZEPOSTINTOFILEINFO VO3" << std::endl;
         //TODO V03
         //fiOut.SetPostVersion(post->GetVersion());
     }

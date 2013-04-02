@@ -125,7 +125,7 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
     // check for post id
     postidOut.clear();
-    fi->GetChunkPostID(postidOut);
+    postidOut = fi->chunk_post_id();
 
     // Initiate Chunk Post request
     if(postidOut.empty()) {
@@ -142,9 +142,8 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
         std::cout<<" url out : " << urlOut << std::endl;
        
-        std::string encryptedkey, fileiv; 
-        fi->GetEncryptedKey(encryptedkey);
-        fi->GetIv(fileiv);
+        std::string encryptedkey =  fi->encrypted_key();
+        std::string fileiv = fi->file_credentials_iv();
         // Decrypt file key
         Credentials masterCred;
         MasterKey mKey;
@@ -156,8 +155,8 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
         std::string decryptedkey;
         crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
-        fi->SetFileKey(decryptedkey);
-        fi->GetFileCredentials(credOut);
+        fi->set_file_credentials_key(decryptedkey);
+        credOut = fi->file_credentials();
     }
     return status;
 }
@@ -522,8 +521,7 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
                                       const std::string& filepath, 
                                       const std::string& chunkpostid,
                                       const std::string& post_version,
-                                      FileInfo* fi) 
-{
+                                      FileInfo* fi) {
     std::string filename;
     utils::ExtractFileName(filepath, filename);
     unsigned int filesize = utils::CheckFilesize(filepath);
@@ -535,14 +533,14 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     std::string mk;
     mKey.GetMasterKey(mk);
 
-    fi->SetPostVersion(post_version);
+    fi->set_post_version(post_version);
 
     // Insert File Data
-    fi->SetChunkPostID(chunkpostid);
-    fi->SetFilepath(filepath);
-    fi->SetFilename(filename);
-    fi->SetFileSize(filesize);
-    fi->SetFileCredentials(fileCred);
+    fi->set_chunk_post_id(chunkpostid);
+    fi->set_filepath(filepath);
+    fi->set_filename(filename);
+    fi->set_file_size(filesize);
+    fi->set_file_credentials(fileCred);
 
     // Encrypt File Key
     std::string fileKey = fileCred.key();
@@ -555,9 +553,9 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     std::string encryptedKey;
     crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
 
-    fi->SetIv(fileIv);
-    fi->SetFileKey(fileKey);
-    fi->SetEncryptedKey(encryptedKey);
+    fi->set_file_credentials_iv(fileIv);
+    fi->set_file_credentials_key(fileKey);
+    fi->set_encrypted_key(encryptedKey);
 
     // Insert file info to manifest
     file_manager_->InsertToManifest(fi);

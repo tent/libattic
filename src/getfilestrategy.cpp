@@ -33,14 +33,13 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
     FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
-        if(fi->GetDeleted())
+        if(fi->deleted())
             return ret::A_FAIL_PULL_DELETED_FILE;
 
         Credentials fileCred;
         status = RetrieveFileCredentials(fi, fileCred);
 
-        std::string chunkpostid;
-        fi->GetChunkPostID(chunkpostid);
+        std::string chunkpostid = fi->chunk_post_id();
         if(status == ret::A_OK) {
             if(!chunkpostid.empty()) {
                 // Construct Post URL
@@ -55,9 +54,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 if(status == ret::A_OK) {
                     if(response.code == 200) {
                         // Get relative filepath
-                        std::string relative_filepath;
-                        fi->GetFilepath(relative_filepath);
-
+                        std::string relative_filepath = fi->filepath();
                         std::cout<<" chunk post : " << response.body << std::endl;
 
                         Post p;
@@ -112,8 +109,7 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
     if(fi) {
         std::cout<<"RETRIEVING CREDENTIALS " << std::endl;
         std::string posturl;
-        std::string postid;
-        fi->GetPostID(postid);
+        std::string postid = fi->post_id();
         utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
         // Get Metadata post
@@ -168,8 +164,7 @@ int GetFileStrategy::GetChunkPost(FileInfo* fi, Response& responseOut) {
 
         std::string posturl;
 
-        std::string postid;                                                            
-        fi->GetChunkPostID(postid);
+        std::string postid = fi->chunk_post_id();
         utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
         std::cout<<" Post path : " << posturl << std::endl;
@@ -199,9 +194,9 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     std::string attachmentpath, outpath;
     
     Credentials fCred = fileCred;
-    std::string fp, filename;
-    fi->GetFilename(filename);
-    fi->GetFilepath(fp);
+    std::string fp = fi->filepath();
+    std::string filename = fi->filename();
+
     // This should be relative ie: <working>/some/path/file.txt
     std::cout<< " filepath : " << filepath << std::endl;
     std::cout<< " filepath from fi : " << fp << std::endl;

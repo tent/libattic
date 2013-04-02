@@ -290,17 +290,17 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
         */
 
         if(step > 0) {
-            out.SetFilename(res.results[0+step]);
-            out.SetFilepath(res.results[1+step]);
-            out.SetChunkCount(res.results[2+step]);
+            out.set_filename(res.results[0+step]);
+            out.set_filepath(res.results[1+step]);
+            out.set_chunk_count(res.results[2+step]);
             out.LoadSerializedChunkData(res.results[3+step]);
-            out.SetFileSize(res.results[4+step]);
-            out.SetPostID(res.results[5+step]);
-            out.SetChunkPostID(res.results[6+step]);
-            out.SetPostVersion(res.results[7+step]);
-            out.SetEncryptedKey(res.results[8+step]);
-            out.SetIv(res.results[9+step]);
-            out.SetDeleted(res.results[10+step]);
+            out.set_file_size(res.results[4+step]);
+            out.set_post_id(res.results[5+step]);
+            out.set_chunk_post_id(res.results[6+step]);
+            out.set_post_version(res.results[7+step]);
+            out.set_encrypted_key(res.results[8+step]);
+            out.set_file_credentials_iv(res.results[9+step]);
+            out.set_deleted(res.results[10+step]);
         }
     }
 
@@ -341,17 +341,17 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
 
             if(step > 0) {
                 FileInfo fi;
-                fi.SetFilename(res.results[0+step]);
-                fi.SetFilepath(res.results[1+step]);
-                fi.SetChunkCount(res.results[2+step]);
+                fi.set_filename(res.results[0+step]);
+                fi.set_filepath(res.results[1+step]);
+                fi.set_chunk_count(res.results[2+step]);
                 fi.LoadSerializedChunkData(res.results[3+step]);
-                fi.SetFileSize(res.results[4+step]);
-                fi.SetPostID(res.results[5+step]);
-                fi.SetChunkPostID(res.results[6+step]);
-                fi.SetPostVersion(res.results[7+step]);
-                fi.SetEncryptedKey(res.results[8+step]);
-                fi.SetIv(res.results[9+step]);
-                fi.SetDeleted(res.results[10+step]);
+                fi.set_file_size(res.results[4+step]);
+                fi.set_post_id(res.results[5+step]);
+                fi.set_chunk_post_id(res.results[6+step]);
+                fi.set_post_version(res.results[7+step]);
+                fi.set_encrypted_key(res.results[8+step]);
+                fi.set_file_credentials_iv(res.results[9+step]);
+                fi.set_deleted(res.results[10+step]);
 
                 out.push_back(fi);
             }
@@ -375,15 +375,15 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
         return false;
     }
 
-    std::string filename, filepath, chunkdata, metapostid, chunkpostid, encryptedkey, iv;
-
-    fi.GetFilename(filename);
-    fi.GetFilepath(filepath);
+    std::string filename = fi.filename();
+    std::string filepath = fi.filepath();
+    std::string metapostid = fi.post_id();
+    std::string chunkpostid = fi.chunk_post_id();
+    std::string encryptedkey = fi.encrypted_key();
+    std::string iv = fi.file_credentials_iv();
+    
+    std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
-    fi.GetPostID(metapostid);
-    fi.GetChunkPostID(chunkpostid);
-    fi.GetEncryptedKey(encryptedkey);
-    fi.GetIv(iv);
 
     /*
     std::cout<< " name : " << filename << std::endl;
@@ -425,7 +425,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 3, fi.GetChunkCount());
+            ret = sqlite3_bind_int(stmt, 3, fi.chunk_count());
             if(ret != SQLITE_OK) {
                 printf("chunk count Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -437,7 +437,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 5, fi.GetFileSize());
+            ret = sqlite3_bind_int(stmt, 5, fi.file_size());
             if(ret != SQLITE_OK) {
                 printf("filesize Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -455,7 +455,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 8, fi.GetPostVersion().c_str(), fi.GetPostVersion().size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 8, fi.post_version().c_str(), fi.post_version().size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("version Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
@@ -473,7 +473,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_int(stmt, 11, fi.GetDeleted());
+            ret = sqlite3_bind_int(stmt, 11, fi.deleted());
             if(ret != SQLITE_OK) {
                 printf(" deleted Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;

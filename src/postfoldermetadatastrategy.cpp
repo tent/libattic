@@ -36,9 +36,9 @@ int PostFolderMetadataStrategy::Execute(FileManager* pFileManager,
 int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out) {
     int status = ret::A_OK;
 
-    std::string filepath, filename, parent_relative;
-    fi->GetFilepath(filepath);
-    fi->GetFilename(filename);
+    std::string filepath = fi->filepath();
+    std::string filename = fi->filename();
+    std::string parent_relative;
     int pos = filepath.find(filename);
     if(pos == std::string::npos) { 
         std::cout<<"MALFORMED FILEPATH " << filepath << std::endl;

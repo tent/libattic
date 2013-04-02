@@ -34,8 +34,7 @@ int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec) {
     unsigned int size = vec.size();
     char** buf = new char*[size];
     for(int j=0; j<size; j++) {
-        std::string fp;
-        vec[j].GetFilepath(fp);
+        std::string fp = vec[j].filepath();
 
         std::cout<< " pushing back : " << fp << std::endl; 
         buf[j] = new char[fp.size()+1];

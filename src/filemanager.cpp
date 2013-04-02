@@ -17,8 +17,7 @@ FileManager::~FileManager() {}
 
 int FileManager::Initialize(const std::string &manifestDirectory, 
                             const std::string &workingDirectory,
-                            const std::string& tempDirectory)
-{
+                            const std::string& tempDirectory) {
     // Set manifest path
     m_ManifestDirectory = manifestDirectory;
     m_Manifest.SetDirectory(m_ManifestDirectory);
@@ -47,10 +46,9 @@ int FileManager::RemoveFile(const std::string &filepath) {
 
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
                                        std::string& relative_out, 
-                                       std::string& parent_relative_out)
-{
-    std::string filepath, relative, canonical;
-    pFi->GetFilepath(filepath);
+                                       std::string& parent_relative_out) {
+    std::string filepath = pFi->filepath();
+    std::string relative, canonical;
 
     // If filepath is already relative
     if(IsPathRelative(filepath)) {
@@ -75,8 +73,7 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
         }
     }
     // Extract parent relative :
-    std::string filename;
-    pFi->GetFilename(filename);
+    std::string filename = pFi->filename();
     int pos = relative.find(filename);
     std::string parent_relative;
     if(pos != std::string::npos)
@@ -97,8 +94,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     // Calculate relative path
     std::string relative, parent;
     ExtractRelativePaths(pFi, relative, parent);
-
-    pFi->SetFilepath(relative);
+    pFi->set_filepath(relative);
     Lock();
     // Insert into infotable
     m_Manifest.InsertFileInfo(*pFi);
@@ -119,8 +115,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
         std::cout<<" failed to find folder post " << std::endl;
     }
 
-    std::string postid;
-    pFi->GetPostID(postid);
+    std::string postid = pFi->post_id();
     if(!m_Manifest.IsFolderEntryInManifest(relative)) {
        m_Manifest.InsertFolderEnrty(folderid,   
                                     postid, 

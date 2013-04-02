@@ -118,7 +118,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
 
         //std::cout<< "checking file....." << std::endl;
         // Is file marked as deleted?
-        if(pLocal_fi->GetDeleted()) {
+        if(pLocal_fi->deleted()) {
             //std::cout<<" FILE DELETED " << std::endl;
             bPull = false;
         }
@@ -193,7 +193,7 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
         std::vector<std::string>::iterator itr = chunkPosts.begin();
         std::string postid;
         for(;itr != chunkPosts.end(); itr++) {
-            fi->SetChunkPostID(*itr);
+            fi->set_chunk_post_id(*itr);
             postid.clear();
             postid = *itr;
             std::string url;

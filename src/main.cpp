@@ -114,6 +114,7 @@ void RecoveryKeyCb(int a, int b, const char* szC) {
 }
 
 bool g_bPassphrase = false;
+std::string g_Passphrase;
 TEST(PASSPHRASE, REGISTER)
 {
     if(g_Entity.empty()) return;
@@ -131,7 +132,7 @@ TEST(PASSPHRASE, REGISTER)
     if(status == attic::ret::A_OK) {
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
         RegisterForRecoveryKeyNotify(&RecoveryKeyCb);
-        status = RegisterPassphrase("password", true);
+        status = RegisterPassphrase(g_Passphrase.c_str(), true);
         //ASSERT_EQ(status, attic::ret::A_OK);
 
         std::cout<< " REGISTER STATUS : " << status << std::endl;
@@ -150,6 +151,7 @@ TEST(PASSPHRASE, REGISTER)
 }
 
 bool g_bEnterPass = false;
+
 TEST(PASSPHRASE, ENTER)
 {
     if(g_Entity.empty()) return;
@@ -161,7 +163,8 @@ TEST(PASSPHRASE, ENTER)
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
     //status = EnterPassphrase("password");
-    status = EnterPassphrase("asdf");
+    //status = EnterPassphrase("asdf");
+    status = EnterPassphrase(g_Passphrase.c_str());
 
     std::cout<<" Enter passphrase status : " << status << std::endl;
     ASSERT_EQ(status, attic::ret::A_OK);
@@ -1030,12 +1033,10 @@ TEST(ATTIC, DAEMON)
 TEST(FILEINFO, POSTVERSION)
 {
     attic::FileInfo fi;
-    std::cout<<" POST VERSION : " << fi.GetPostVersion() << std::endl;
+    std::cout<<" POST VERSION : " << fi.post_version() << std::endl;
 
-    fi.SetPostVersion("12");
-    std::cout<<" POST VERSION : " << fi.GetPostVersion() << std::endl;
-
-
+    fi.set_post_version("12");
+    std::cout<<" POST VERSION : " << fi.post_version() << std::endl;
 }
 
 
@@ -1130,12 +1131,24 @@ int main (int argc, char* argv[]) {
                     }
                     case REGISTERPASS:
                     {
-                        g_bPassphrase = true;
+                        if(argc > 3) {
+                            g_Passphrase = argv[2];
+                            g_bPassphrase = true;
+                        }
+                        else
+                            std::cout<<" Invalid params, ./attic REGISTERPASS <password> <entity> " << std::endl;
+
                         break;
                     }
                     case ENTERPASS:
                     {
-                        g_bEnterPass = true;
+                        if(argc > 3) {
+                            g_Passphrase = argv[2];
+                            g_bEnterPass = true;
+                        }
+                        else
+                            std::cout<<" Invalid params, ./attic ENTERPASS <password> <entity> " << std::endl;
+
                         break;
                     }
                     case CHANGEPASS:

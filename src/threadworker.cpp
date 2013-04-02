@@ -43,9 +43,7 @@ void ThreadWorker::Run()
     std::cout<<" thread  worker ending ... " << std::endl;
 }
 
-void ThreadWorker::PollTask(Task* pTask)
-{
-    std::cout<<"polling task " << std::endl;
+void ThreadWorker::PollTask(Task* pTask) {
     switch(pTask->GetTaskState()) {
         case Task::IDLE:
             {
@@ -57,7 +55,7 @@ void ThreadWorker::PollTask(Task* pTask)
             }
         case Task::RUNNING:
             {
-                std::cout<<" running task " << std::endl;
+                //std::cout<<" running task " << std::endl;
                 pTask->RunTask();
                 break;
             }

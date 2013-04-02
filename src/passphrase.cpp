@@ -22,9 +22,9 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
         if(override) {
             // Retrieve Attic Post
-            status = RetrieveCredentialsPost(ap);
+            //status = RetrieveCredentialsPost(ap);
             if(status == ret::A_OK) {
-                reg = true;
+                //reg = true;
                 // TODO :: when delete is implemented delete the old version
                 //status = DeleteCredentialsPost(ap);
             }

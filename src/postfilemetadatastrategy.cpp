@@ -54,11 +54,9 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
 
     // Check for existing post
     std::string posturl;
-    std::string postid;
-    fi->GetPostID(postid);
+    std::string postid = fi->post_id();
 
-    std::string relative_path;
-    fi->GetFilepath(relative_path);
+    std::string relative_path = fi->filepath();
     std::cout<<" INSERTING RELATIVE PATH TO POST : " << relative_path << std::endl;
     bool post = true;
     Response response;
@@ -109,13 +107,11 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         jsn::DeserializeObject(&p, response.body);
 
         std::string postid = p.id();
-
         if(!postid.empty()) {
-            fi->SetPostID(postid); 
+            fi->set_post_id(postid); 
             if(post){
-                std::string fi_filepath;
+                std::string fi_filepath = fi->filepath();
                 //fi->SetPostVersion(p.GetVersion()); // TODO update this in the manifest
-                fi->GetFilepath(fi_filepath);
 
                 file_manager_->SetFilePostId(fi_filepath, postid);
                 //char szVer[256] = {'\0'};

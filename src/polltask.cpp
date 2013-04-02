@@ -11,14 +11,16 @@
 
 namespace attic {
 
-namespace polltask 
-{
+namespace polltask {
     static PollTask* g_pCurrentPollTask = NULL;
 
     static void PollTaskCB(int a, void* b)
     {
     }
 }
+
+static long total_elapsed = 0;
+static boost::timer::nanosecond_type const limit(3 * 1000000000LL); // 3 seconds in nanoseconds
 
 PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,
@@ -59,6 +61,7 @@ void PollTask::OnStart(){
 
     event::RegisterForEvent(this, event::Event::PAUSE);
     event::RegisterForEvent(this, event::Event::RESUME);
+    timer_.start();
 }
 
 void PollTask::OnPaused() {}
@@ -66,6 +69,7 @@ void PollTask::OnPaused() {}
 void PollTask::OnFinished() {
     event::UnregisterFromEvent(this, event::Event::PAUSE);
     event::UnregisterFromEvent(this, event::Event::RESUME);
+    timer_.stop();
 }
 
 void PollTask::OnEventRaised(const event::Event& event){
@@ -98,11 +102,22 @@ void PollTask::RunTask() {
 
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
-        if(running_) {
-            status = SyncFolderPosts();
-            if(status != ret::A_OK)
-                std::cout<<" POLLING ERR : " << status << std::endl;
+        if(!timer_.is_stopped()) {
+            boost::timer::cpu_times time = timer_.elapsed();
+            boost::timer::nanosecond_type const elapsed(time.system + time.user);
+            total_elapsed += elapsed;
+        }
 
+        std::cout<<" total elapsed : " << total_elapsed << "limit " << limit << std::endl;
+        if(total_elapsed > limit) {
+            total_elapsed = 0;
+            timer_.stop();
+            if(running_) {
+                status = SyncFolderPosts();
+                if(status != ret::A_OK)
+                    std::cout<<" POLLING ERR : " << status << std::endl;
+            }
+            timer_.resume();
         }
     }
     else {
@@ -113,7 +128,7 @@ void PollTask::RunTask() {
     }
 
     //sleep::sleep_milliseconds(1000*30);
-    sleep::sleep_seconds(2);
+    //sleep::sleep_seconds(2);
 }
 
 int PollTask::SyncFolderPosts() {
