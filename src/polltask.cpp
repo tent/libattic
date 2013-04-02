@@ -80,7 +80,7 @@ void PollTask::OnEventRaised(const event::Event& event){
     };
 }
 void PollTask::PollTaskCB(int a, std::string& b) {
-    std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
+    //std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
     std::string returnpost = b;
     if(m_ProcessingQueue.find(returnpost) != m_ProcessingQueue.end()) {
         // remove it from the map
@@ -98,11 +98,10 @@ void PollTask::RunTask() {
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
         if(running_) {
-            std::cout<<" starting to poll ... " << std::endl;
             status = SyncFolderPosts();
             if(status != ret::A_OK)
                 std::cout<<" POLLING ERR : " << status << std::endl;
-            sleep(3);
+
         }
     }
     else {
@@ -114,7 +113,6 @@ void PollTask::RunTask() {
 }
 
 int PollTask::SyncFolderPosts() {
-    std::cout<<" sync folder posts ... " << std::endl;
     int status = ret::A_OK;
     // Get Folder Posts
     int postcount = GetFolderPostCount();
@@ -148,7 +146,7 @@ int PollTask::SyncFolderPosts() {
                             &at,
                             resp);
 
-            std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
+          //  std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
             //std::cout<<" response code : " << resp.code << std::endl;
             //std::cout<<" response body : " << resp.body << std::endl;
 
@@ -166,7 +164,7 @@ int PollTask::SyncFolderPosts() {
 
                 jsn::PrintOutJsonValue(&root);
 
-                std::cout<<" entries : " << root.size() << std::endl;
+           //     std::cout<<" entries : " << root.size() << std::endl;
                 // extract since id
                 Json::ValueIterator itr = root.begin();
                 for(; itr != root.end(); itr++) {
@@ -190,17 +188,17 @@ int PollTask::SyncFolder(Folder& folder) {
     //
     // loop through the entries make sure they exist, if there is a newer version
     // spin off a pull command
-    std::cout<<" Syncing ... folder ... " << std::endl;
+    //std::cout<<" Syncing ... folder ... " << std::endl;
     int status = ret::A_OK;
     Folder::EntryList* pList = folder.GetEntryList();
 
     if(pList) { 
-        std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
+        //std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
         Folder::EntryList::iterator itr = pList->begin();
         for(;itr != pList->end(); itr++) {
             std::string postid;
             itr->second.GetPostID(postid);
-            std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
+            //std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
             if(!postid.empty()) { 
                 // Check if currently in the sync queue
                 if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
@@ -221,7 +219,7 @@ int PollTask::SyncFolder(Folder& folder) {
 
 int PollTask::GetFolderPostCount() {
     std::string url = entity().GetPreferredServer().posts_feed();
-    std::cout<<" URL : " << url << std::endl;
+    //std::cout<<" URL : " << url << std::endl;
 
     UrlParams params;
     params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));             
@@ -233,9 +231,9 @@ int PollTask::GetFolderPostCount() {
                     &at,
                     response);
 
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" header : " << response.header.asString() << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
+    //std::cout<<" code : " << response.code << std::endl;
+    //std::cout<<" header : " << response.header.asString() << std::endl;
+    //std::cout<<" body : " << response.body << std::endl;
 
     int count = -1;                                                                               
     if(response.code == 200) {

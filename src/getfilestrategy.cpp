@@ -254,7 +254,7 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
                     count++;
                 }
                 else {
-                    std::cout<<" FAILED TO TRANSFORM CHUNK : " << status; 
+                    std::cout<<" FAILED TO TRANSFORM CHUNK : " << status << std::endl;
                 }
             }
 
