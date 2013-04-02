@@ -421,8 +421,7 @@ static void Base64DecodeString(const std::string& input, std::string& output) {
 static void Base32EncodeString(const std::string& input, std::string& output) {
     CryptoPP::StringSource(input,
                            true,
-                           new CryptoPP::Base32Encoder(new CryptoPP::StringSink(output), 
-                                                       false) // Insert line breaks false
+                           new CryptoPP::Base32Encoder(new CryptoPP::StringSink(output))
                           );
 }
 
