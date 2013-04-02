@@ -7,6 +7,7 @@
 #include "folderpost.h"
 #include "event.h"
 #include "taskdelegate.h"
+#include "sleep.h"
 
 namespace attic {
 
@@ -110,6 +111,8 @@ void PollTask::RunTask() {
         Callback(status, NULL);
         SetFinishedState();
     }
+
+    sleep::sleep_milliseconds(1000*30);
 }
 
 int PollTask::SyncFolderPosts() {
