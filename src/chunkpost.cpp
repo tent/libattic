@@ -28,23 +28,19 @@ int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List) {
 }
 
 void ChunkPost::Serialize(Json::Value& root) {
+    std::cout<<" Serializing chunk post " << std::endl;
     if(m_ChunkList.size() > 0) {
         std::vector<std::string> serializedList;
         std::vector<ChunkInfo>::iterator itr = m_ChunkList.begin();
 
-        std::string val;
+        Json::Value chunkval(Json::objectValue);
         for(;itr != m_ChunkList.end(); itr++) {
-            val.clear();
+            Json::Value val(Json::objectValue);
             jsn::SerializeObject(&(*itr), val);
-            serializedList.push_back(val);
+            std::string chunkname; 
+            (*itr).GetChunkName(chunkname);
+            chunkval[chunkname] = val;
         }
-
-        //std::string cval;
-        Json::Value chunkval;
-        jsn::SerializeVector(serializedList, chunkval);
-        //jsn::SerializeJsonValue(chunkval, cval);
-
-        //root["chunks"] = chunkval;
         set_content("chunks", chunkval);
     }
 

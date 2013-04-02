@@ -22,10 +22,15 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
         if(override) {
             // Retrieve Attic Post
-            if(RetrieveCredentialsPost(ap) == ret::A_OK) {
+            status = RetrieveCredentialsPost(ap);
+            if(status == ret::A_OK) {
                 reg = true;
                 // TODO :: when delete is implemented delete the old version
                 //status = DeleteCredentialsPost(ap);
+            }
+            else {
+                std::cout<< " RETRIEVE CRED : " << status << std::endl;
+
             }
         }
     }
@@ -34,6 +39,7 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
     }
 
     if(reg) {
+        std::cout<<" HERE " << std::endl;
         std::string encrypted_masterkey, salt;
         status = ConstructMasterKey(passphrase, masterkey, encrypted_masterkey, salt);
         if(status == ret::A_OK) {
@@ -290,6 +296,7 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
 
     std::cout<<" access token : " << access_token_.GetMacKey() << std::endl;
     std::cout<<" post type :" << post.type() << std::endl;
+    std::cout<< " credentials url " << url << std::endl;
 
     Response response;
     status = netlib::HttpPost(url, 

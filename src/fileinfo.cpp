@@ -22,7 +22,7 @@ FileInfo::FileInfo(const std::string& filename,
     filename_ = filename;
     filepath_ = filepath;
     post_id_ = postid;
-   chunk_post_id_ = chunkpostid;
+    chunk_post_id_ = chunkpostid;
 }
 
 FileInfo::~FileInfo() {}
