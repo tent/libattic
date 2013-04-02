@@ -293,12 +293,22 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
     std::cout<<" credentials url " << url << std::endl;
 
     Response response;
-    status = netlib::HttpPost(url, 
-                              post.type(),
-                              NULL,
-                              body,
-                              &access_token_,
-                              response);
+    if(post.id().empty()) {
+        status = netlib::HttpPost(url, 
+                                  post.type(),
+                                  NULL,
+                                  body,
+                                  &access_token_,
+                                  response);
+    } 
+    else {
+         status = netlib::HttpPut(url, 
+                                  post.type(),
+                                  NULL,
+                                  body,
+                                  &access_token_,
+                                  response);
+    }
 
     std::cout<<" code : " << response.code << std::endl;
     std::cout<<" header count : " << response.header.asString() << std::endl;
