@@ -69,7 +69,7 @@ public:
 
     const std::string& GetPostVersion() const { return post_version_ ; }
 
-    int PushChunkBack(ChunkInfo& Chunk);
+    int PushChunkBack(ChunkInfo& chunk);
     ChunkInfo* GetChunkInfo(const std::string& chunkname);
 
     ChunkMap* GetChunkInfoList() { return &chunks_; }

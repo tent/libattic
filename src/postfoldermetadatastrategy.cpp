@@ -6,6 +6,7 @@
 #include "credentialsmanager.h"
 #include "postutils.h"
 #include "folderpost.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -108,6 +109,10 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
                     file_manager_->SetFolderPostId(parent_relative, postid);
                 }
             }
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("591230MA", response);
         }
     }
     else {

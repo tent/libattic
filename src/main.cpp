@@ -781,9 +781,9 @@ TEST(MANIFEST, REMOVEFILEINFO)
 TEST(CHUNKINFO, SERIALIZATION) 
 {
     attic::ChunkInfo ci("name", "supersummmmmmm");
-    ci.SetCipherTextMac("aksdjfkasdfCIPHER");
-    ci.SetPlainTextMac("THIS IS MY PLAIN TEXT MAC MOFO ");
-    ci.SetIv("IVVV");
+    ci.set_ciphertext_mac("aksdjfkasdfCIPHER");
+    ci.set_plaintext_mac("THIS IS MY PLAIN TEXT MAC MOFO ");
+    ci.set_iv("IVVV");
 
     std::string output;
     attic::jsn::SerializeObject(&ci, output);

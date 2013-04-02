@@ -6,23 +6,22 @@ namespace attic {
 
 ChunkInfo::ChunkInfo() {}
 
-ChunkInfo::ChunkInfo(const std::string& chunkName, const std::string& checkSum) {
-    m_Position = 0;
-    m_ChunkName = chunkName;
-    m_CheckSum = checkSum;
+ChunkInfo::ChunkInfo(const std::string& chunkname, const std::string& checksum) {
+    position_ = 0;
+    chunk_name_ = chunkname;
+    checksum_ = checksum;
 }
 
-ChunkInfo::~ChunkInfo() {
-}
+ChunkInfo::~ChunkInfo() {}
 
 void ChunkInfo::Serialize(Json::Value& root) {
     std::string chunkname, plaintextmac, ciphertextmac, iv, position;
-    crypto::Base64EncodeString(m_ChunkName, chunkname);
-    crypto::Base64EncodeString(m_PlainTextMac, plaintextmac);
-    crypto::Base64EncodeString(m_CipherTextMac, ciphertextmac);
-    crypto::Base64EncodeString(m_Iv, iv);
+    crypto::Base64EncodeString(chunk_name_, chunkname);
+    crypto::Base64EncodeString(plaintext_mac_, plaintextmac);
+    crypto::Base64EncodeString(ciphertext_mac_, ciphertextmac);
+    crypto::Base64EncodeString(iv_, iv);
     char pos[256] = {'\0'};
-    snprintf(pos, 256, "%u", m_Position);
+    snprintf(pos, 256, "%u", position_);
     crypto::Base64EncodeString(std::string(pos), position);
 
     std::cout<<" chunkname : " << chunkname << std::endl;
@@ -42,13 +41,13 @@ void ChunkInfo::Deserialize(Json::Value& root) {
     std::string iv = root.get("iv", "").asString();
     std::string position = root.get("position", "").asString();
 
-    crypto::Base64DecodeString(chunkname, m_ChunkName);
-    crypto::Base64DecodeString(plaintextmac, m_PlainTextMac);
-    crypto::Base64DecodeString(ciphertextmac, m_CipherTextMac);
-    crypto::Base64DecodeString(iv, m_Iv);
+    crypto::Base64DecodeString(chunkname, chunk_name_);
+    crypto::Base64DecodeString(plaintextmac, plaintext_mac_);
+    crypto::Base64DecodeString(ciphertextmac, ciphertext_mac_);
+    crypto::Base64DecodeString(iv, iv_);
     std::string decodepos;
     crypto::Base64DecodeString(position, decodepos);
-    m_Position = atoi(decodepos.c_str());
+    position_ = atoi(decodepos.c_str());
 }
 
 } //namespace

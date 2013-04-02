@@ -59,17 +59,15 @@ void FileInfo::ExtractFilename(const std::string &filepath, std::string &out) {
     out = name;
 }
 
-int FileInfo::PushChunkBack(ChunkInfo& Chunk) {
+int FileInfo::PushChunkBack(ChunkInfo& chunk) {
     // Will overwrite what was already in there.
     int status = ret::A_OK;
 
     // Check if entry exists
-    std::string chunkname;
-    Chunk.GetChunkName(chunkname);
+    std::string chunkname = chunk.chunk_name();
 
-    chunks_[chunkname] = Chunk;
+    chunks_[chunkname] = chunk;
     chunk_count_ = chunks_.size();
-
 
     return status;
 }
@@ -130,8 +128,7 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
         ChunkInfo* ci = new ChunkInfo();
         jsn::DeserializeObject(ci, *itr);
 
-        std::string name;
-        ci->GetChunkName(name);
+        std::string name = ci->chunk_name();
         if(chunks_.find(name) == chunks_.end()) {
             chunks_[name] = *ci;
         }

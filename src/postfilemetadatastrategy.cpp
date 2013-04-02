@@ -5,6 +5,7 @@
 #include "postutils.h"
 #include "filemanager.h"
 #include "credentialsmanager.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -131,9 +132,7 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         }
     }
     else {
-        std::cout<<" FAIL " << std::endl;
-        std::cout<<" code : " << response.code << std::endl;
-        std::cout<<" body : " << response.body << std::endl;
+        log::LogHttpResponse("MOP129409", response);
         status = ret::A_FAIL_NON_200;
     }
 

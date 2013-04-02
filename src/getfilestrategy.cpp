@@ -323,8 +323,7 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
     int status = ret::A_OK;
 
     if(ci) {
-        std::string iv;
-        ci->GetIv(iv);
+        std::string iv = ci->iv();
 
         Credentials cred;
         cred.set_key(filekey);
@@ -360,9 +359,9 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
             status = compress::DecompressString(decryptedChunk, decompressedChunk);
             if(status == ret::A_OK) { 
                 //Verify chunk Check plaintext hmac
-                std::string local_hash, plaintexthash;
+                std::string local_hash;
                 crypto::GenerateHash(decompressedChunk, local_hash);
-                ci->GetPlainTextMac(plaintexthash);
+                std::string plaintexthash = ci->plaintext_mac();
 
                 std::cout<<" LOCAL HASH : " << local_hash << std::endl;
                 std::cout<<" CI HASH : " << plaintexthash << std::endl;

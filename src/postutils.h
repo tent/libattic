@@ -66,7 +66,7 @@ static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic) {
             std::string identifier;
             for(;itr != pList->end(); itr++) {
                 identifier.clear();
-                itr->second.GetChecksum(identifier);
+                identifier = itr->second.checksum();
                 postOut.PushBackChunkIdentifier(identifier);
             }
         }

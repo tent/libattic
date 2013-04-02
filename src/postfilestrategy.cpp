@@ -11,6 +11,7 @@
 #include "chunkpost.h"
 #include "rollsum.h"
 #include "postutils.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -103,6 +104,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                     UpdateFileInfo(fileCredentials, filepath, chunkpostid, p.version_id(), fi);
                 }
                 else {
+                    log::LogHttpResponse("nam#k923", metaResp);
                     status = ret::A_FAIL_NON_200;
                 }
             }
@@ -345,9 +347,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
     std::cout<<" body : " << resp.body << std::endl;
 
     if(resp.code != 200) { 
-        std::cout<<" FAILED TO CONNECT : " << resp.code << std::endl;
-        std::cout<<" body : " << resp.body << std::endl;
-        std::cout<<" status : " << status << std::endl;
+        log::LogHttpResponse("MAN#12409", resp);
         status = ret::A_FAIL_NON_200;
     }
 
@@ -497,10 +497,10 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 
     // Fill Out Chunk info object
     ChunkInfo ci;
-    ci.SetChunkName(chunkName);
-    ci.SetPlainTextMac(plaintextHash);
-    ci.SetCipherTextMac(ciphertextHash);
-    ci.SetIv(iv);
+    ci.set_chunk_name(chunkName);
+    ci.set_plaintext_mac(plaintextHash);
+    ci.set_ciphertext_mac(ciphertextHash);
+    ci.set_iv(iv);
 
     nameOut = chunkName;
 

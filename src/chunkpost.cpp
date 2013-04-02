@@ -37,8 +37,7 @@ void ChunkPost::Serialize(Json::Value& root) {
         for(;itr != m_ChunkList.end(); itr++) {
             Json::Value val(Json::objectValue);
             jsn::SerializeObject(&(*itr), val);
-            std::string chunkname; 
-            (*itr).GetChunkName(chunkname);
+            std::string chunkname = (*itr).chunk_name();
             chunkval.append(val);
         }
         set_content("chunks", chunkval);
