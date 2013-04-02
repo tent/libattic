@@ -1,7 +1,3 @@
-#DEPENDENCIES
-# - libcurl
-# - pthreads
-
 cmake_minimum_required (VERSION 2.8)
 
 option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
@@ -11,8 +7,15 @@ option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
-set(CMAKE_CXX_FLAGS "-g")
+if(ATTIC_STATIC_LIB)
+    message(STATUS "Bulding Attic Static library")
+    set(CMAKE_CXX_FLAGS "-w")
+endif(ATTIC_STATIC_LIB)
 
+if(ATTIC_BINARY)
+    message(STATUS "Bulding Attic Test Binary")
+    set(CMAKE_CXX_FLAGS "-w -g3 -ggdb -Wall -Wextra")
+endif(ATTIC_BINARY)
 
 # Build dependencies
 # Build gtest libs
@@ -31,14 +34,15 @@ endif(ATTIC_BINARY)
 # Set additional include directories
 if(ATTIC_BINARY)
     message(STATUS " including googletest includes")
-    INCLUDE_DIRECTORIES(vendor/googletest/include)
+    include_directories(vendor/googletest/include)
 endif(ATTIC_BINARY)
 
-INCLUDE_DIRECTORIES(vendor/cryptopp)
-INCLUDE_DIRECTORIES(vendor/jsoncpp/include)
-INCLUDE_DIRECTORIES(vendor/sqlite)
-INCLUDE_DIRECTORIES(vendor/scrypt)
-INCLUDE_DIRECTORIES(vendor/base64)
+include_directories(src)
+include_directories(vendor/cryptopp)
+include_directories(vendor/jsoncpp/include)
+include_directories(vendor/sqlite)
+include_directories(vendor/scrypt)
+include_directories(vendor/base64)
 
 if(ATTIC_BINARY)
     # This is where binary files will go
@@ -63,9 +67,6 @@ if(ATTIC_STATIC_LIB)
     file(GLOB MAIN_CPP "src/main.cpp")
     LIST(REMOVE_ITEM libattic_SOURCE ${MAIN_CPP})
 endif(ATTIC_STATIC_LIB)
-
-file(GLOB_RECURSE libattic_HEADERS
-    "src/*.h")
 
 set(libattic_INCLUDE_DIRS "")
 
@@ -97,7 +98,7 @@ ExternalProject_Add(boost
 
 ExternalProject_Get_Property(boost INSTALL_DIR)
 set(BOOST_DIR ${INSTALL_DIR})
-INCLUDE_DIRECTORIES(${BOOST_DIR}/include)
+include_directories(${BOOST_DIR}/include)
 
 
 add_library(boost_thread STATIC IMPORTED)
