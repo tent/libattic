@@ -4,6 +4,8 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
+
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 
@@ -22,12 +24,12 @@ static int GetParentPath(const std::string& path, std::string& out);
 static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
 static bool CheckFilepathExists(const std::string& filepath);
-
 static bool DeleteFile(const std::string& filepath);
+static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out);
+
 
 static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
-                                                 boost::filesystem::path a_To )
-{
+                                                 boost::filesystem::path a_To ) {
     a_From = boost::filesystem::absolute( a_From ); a_To = boost::filesystem::absolute( a_To );
     boost::filesystem::path ret;
     boost::filesystem::path::const_iterator itrFrom( a_From.begin() ), itrTo( a_To.begin() );
@@ -153,6 +155,21 @@ static bool DeleteFile(const std::string& filepath) {
         return true;
     }
     return false;
+}
+
+static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out) {
+    boost::filesystem::path root(folderpath);
+    if(boost::filesystem::exists(root)){
+        boost::filesystem::directory_iterator itr(root);
+        for(;itr != boost::filesystem::directory_iterator(); itr++ ){
+            if(itr->status().type() == boost::filesystem::regular_file){
+                paths_out.push_back(itr->path().string());
+            }
+            else if(itr->status().type() == boost::filesystem::directory_file) {
+                ScanDirectory(itr->path().string(), paths_out);
+            }
+        }
+    }
 }
 
 }}//namespace
