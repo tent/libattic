@@ -11,6 +11,7 @@ namespace attic {
 
 FilePost::FilePost(){
     set_type(cnst::g_attic_file_type);
+    deleted_ = 0;
 }
 
 FilePost::~FilePost() {}

@@ -44,6 +44,9 @@ public:
     void set_checksum(const std::string& checksum)  { checksum_ = checksum; }
     void set_file_size(unsigned int size)           { file_size_ = size; }
     void set_deleted(int del)                       { deleted_ = del; }
+    // not deleted = 0;
+    // deleted = 1;
+    // other deleted states 2...n
 private:
     std::vector<std::string> chunk_posts_;
     std::vector<std::string> chunk_ids_;

@@ -261,17 +261,17 @@ TEST(AFILE, PUSH)
     
 
     if(status == 0) {
-        std::string path = "./data/" + g_File;
-        status = PushFile(path.c_str());
+        //std::string path = "./data/" + g_File;
+        //status = PushFile(path.c_str());
         std::cout<<" uploading file ... " << std::endl;
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
-        //status = PushFile("./data/oglisv.pdf");
+        status = PushFile("./data/oglisv.pdf");
         //status = PushFile("./data/test.txt");
-        //status = PushFile("./data/cassandra11.pdf");
-        //status = PushFile("./data/algorithmsall.pdf");
+        status = PushFile("./data/cassandra11.pdf");
+        status = PushFile("./data/algorithmsall.pdf");
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
-        //status = PushFile("./data/oa.pdf", &PUSHCB);
+        status = PushFile("./data/oa.pdf");
         //status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/cpp/isoiec.pdf", &PUSHCB);
 
@@ -1018,9 +1018,9 @@ TEST(ATTIC, DAEMON)
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" entering passphrase ... " << std::endl;
-    status = EnterPassphrase("asdf");
+    //status = EnterPassphrase("asdf");
 
-    //status = EnterPassphrase("password");
+    status = EnterPassphrase("password");
     std::cout<<" status : " << status << std::endl;
     ASSERT_EQ(status, attic::ret::A_OK);
 

@@ -19,7 +19,8 @@ class SyncFileTask : public TentTask {
     int Pull(const AtticPost& p, const FileInfo& meta_fi);
     */
     int ProcessFileInfo(const FilePost& p);
-    int RetrieveChunkInfo(const FilePost& post, FileInfo* fi);
+    int RaisePullRequest(const FilePost& p, FileInfo& fi);
+    int RetrieveChunkInfo(const FilePost& post, FileInfo& fi);
 public:
     SyncFileTask(FileManager* pFm,
                  CredentialsManager* pCm,

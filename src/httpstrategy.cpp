@@ -16,6 +16,16 @@ HttpStrategyInterface::~HttpStrategyInterface() {
         task_delegate_ = NULL;
     }
 }
+int HttpStrategyInterface::InitInstance(FileManager* pFileManager,
+                                        CredentialsManager* pCredentialsManager) {
+    int status = ret::A_OK;
+    file_manager_ = pFileManager;
+    credentials_manager_ = pCredentialsManager;
+    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+    credentials_manager_->GetAccessTokenCopy(access_token_);
+    return status;
+}
 
 void HttpStrategyInterface::set_task_delegate(TaskDelegate* del) {
     if(task_delegate_) {

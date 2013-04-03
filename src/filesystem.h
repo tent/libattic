@@ -21,7 +21,7 @@ static int GetCanonicalPath(const std::string& path, std::string& out);
 static int GetParentPath(const std::string& path, std::string& out);
 static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
-static bool CheckFileExists(const std::string& filepath);
+static bool CheckFilepathExists(const std::string& filepath);
 
 static bool DeleteFile(const std::string& filepath);
 
@@ -127,7 +127,7 @@ static void CreateDirectoryTree(const std::string& filepath) {
     }
 }
 
-static bool CheckFileExists(const std::string& filepath) {
+static bool CheckFilepathExists(const std::string& filepath) {
     if(boost::filesystem::exists(filepath))
         return true;
     return false;
@@ -141,7 +141,7 @@ static void MoveFile(const std::string& originalpath, const std::string& newpath
 }
 
 static bool DeleteFile(const std::string& filepath) { 
-    if(CheckFileExists(filepath)) {
+    if(CheckFilepathExists(filepath)) {
         boost::filesystem::path root(filepath);
         boost::system::error_code ec;
         boost::filesystem::remove(root, ec);

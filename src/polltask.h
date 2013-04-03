@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include <deque>
 
 #include "tenttask.h"
 #include "folder.h"
@@ -15,6 +16,7 @@ namespace attic {
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
+    int RetrieveFolderPosts(std::deque<Folder>& folders);
     int SyncFolderPosts();
     int SyncFolder(Folder& folder);
     int GetFolderPostCount();

@@ -8,6 +8,7 @@
 #include "event.h"
 #include "taskdelegate.h"
 #include "sleep.h"
+#include "logutils.h"
 
 namespace attic {
 
@@ -20,7 +21,7 @@ namespace polltask {
 }
 
 static long total_elapsed = 0;
-static boost::timer::nanosecond_type const limit(10 * 1000000000LL); // 10 seconds in nanoseconds
+static boost::timer::nanosecond_type const limit(3 * 1000000000LL); // 3 seconds in nanoseconds
 
 PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,
@@ -41,8 +42,7 @@ PollTask::PollTask( FileManager* pFm,
                               tempdir,                              
                               workingdir,                           
                               configdir,                            
-                              callbackDelegate)                             
-{
+                              callbackDelegate) {
     m_pDelegate = new PollDelegate(this);
     running_ = true;
 }
@@ -134,9 +134,66 @@ void PollTask::RunTask() {
     //sleep::sleep_seconds(2);
 }
 
+
 int PollTask::SyncFolderPosts() {
     int status = ret::A_OK;
-    // Get Folder Posts
+
+    std::deque<Folder> folders;
+    status = RetrieveFolderPosts(folders);
+    if(status == ret::A_OK) {
+        std::deque<Folder>::iterator itr = folders.begin();
+        for(;itr != folders.end(); itr++) {
+            status = SyncFolder(*itr);
+            if(status != ret::A_OK) {
+                // Some kind of logging
+                std::cout<<" FAILED TO SYNC FOLDER : " << status << std::endl;
+            }
+        }
+    }
+
+    return status;
+}
+
+int PollTask::SyncFolder(Folder& folder) {
+    // Make sure the folder exists in the manifest
+    //
+    // loop through the entries make sure they exist, if there is a newer version
+    // spin off a pull command
+    //std::cout<<" Syncing ... folder ... " << std::endl;
+    int status = ret::A_OK;
+    Folder::EntryList* pList = folder.GetEntryList();
+
+    if(pList) { 
+        //std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
+        Folder::EntryList::iterator itr = pList->begin();
+        for(;itr != pList->end(); itr++) {
+            std::string postid;
+            itr->second.GetPostID(postid);
+            //std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
+            if(!postid.empty()) { 
+                // Check if currently in the sync queue
+                if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
+                    // TODO :: check if file exists locally, 
+
+                    //         check if file is marked as deleted
+                    //          - if it exists and is marked move to trash
+                    m_ProcessingQueue[postid] = true;
+                    // TODO :: create TaskDelegate to pass here !
+                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, postid, m_pDelegate);
+                }
+                // If it is in the queue ignore, do not reaise an event
+            }
+        }
+    }
+    else {
+        std::cout<<" invalid entry list " << std::endl;
+    }
+
+    return status;
+}
+
+int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
+    int status = ret::A_OK;
     int postcount = GetFolderPostCount();
     if(postcount > 0) {
         Entity entity = TentTask::entity();
@@ -168,77 +225,33 @@ int PollTask::SyncFolderPosts() {
                             &at,
                             resp);
 
-          //  std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
+            //std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
             //std::cout<<" response code : " << resp.code << std::endl;
             //std::cout<<" response body : " << resp.body << std::endl;
 
             if(resp.code == 200) { 
-                // Loop through all the responses
-                // For each folder post spin off a sync task for now, just do it serially
-                // TODO :: make sure to spin off a task after new threading and message passing 
-                //         framework is in place.
-
-                // Parse json
-                std::deque<Folder> folders;
                 Json::Value root;
                 Json::Reader reader;
                 reader.parse(resp.body, root);
+                //jsn::PrintOutJsonValue(&root);
 
-                jsn::PrintOutJsonValue(&root);
-
-           //     std::cout<<" entries : " << root.size() << std::endl;
-                // extract since id
                 Json::ValueIterator itr = root.begin();
                 for(; itr != root.end(); itr++) {
                     FolderPost fp;
                     jsn::DeserializeObject(&fp, *itr);
                     Folder folder = fp.folder();
                     folders.push_back(folder);
-                    SyncFolder(folder);
                 }
             }
             else {
+                log::LogHttpResponse("AMM23812", resp);
+                status = ret::A_FAIL_NON_200;
                 break;
             }
         }
     }
     return status;
 }
-
-int PollTask::SyncFolder(Folder& folder) {
-    // Make sure the folder exists in the manifest
-    //
-    // loop through the entries make sure they exist, if there is a newer version
-    // spin off a pull command
-    //std::cout<<" Syncing ... folder ... " << std::endl;
-    int status = ret::A_OK;
-    Folder::EntryList* pList = folder.GetEntryList();
-
-    if(pList) { 
-        //std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
-        Folder::EntryList::iterator itr = pList->begin();
-        for(;itr != pList->end(); itr++) {
-            std::string postid;
-            itr->second.GetPostID(postid);
-            //std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
-            if(!postid.empty()) { 
-                // Check if currently in the sync queue
-                if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
-                    m_ProcessingQueue[postid] = true;
-                    // TODO :: create TaskDelegate to pass here !
-                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, postid, m_pDelegate);
-                }
-                // If it is in the queue ignore, do not reaise an event
-            }
-        }
-    }
-    else {
-        std::cout<<" invalid entry list " << std::endl;
-    }
-
-    return status;
-}
-
 int PollTask::GetFolderPostCount() {
     std::string url = entity().GetPreferredServer().posts_feed();
     //std::cout<<" URL : " << url << std::endl;

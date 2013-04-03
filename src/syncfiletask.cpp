@@ -13,6 +13,7 @@
 #include "filesystem.h"
 #include "taskdelegate.h"
 #include "logutils.h"
+#include "configmanager.h"
 
 namespace attic { 
 
@@ -48,8 +49,6 @@ void SyncFileTask::OnFinished() {}
 
 void SyncFileTask::RunTask() {
     int status = ret::A_OK;
-//    std::cout << ".... Syncing file task ... " << std::endl;
-
     // Retrieve metadata
     FilePost p;
     status = SyncMetaData(p);
@@ -95,86 +94,81 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
 
 int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     int status = ret::A_OK;
-
-    std::string filepath = p.relative_path();
-    //std::cout<<" POST FILEPATH : " << filepath << std::endl;
-
-    FileInfo fi;
-    postutils::DeserializeFilePostIntoFileInfo(p, fi);
-
-    // Check if file is in manifest
-    //int version = p.GetVersion();
     FileManager* fm = GetFileManager();
+    if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+    std::string filepath = p.relative_path();
 
-    // Get Local file info
-    FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
+    if(!p.deleted()) {
+        FileInfo fi;
+        postutils::DeserializeFilePostIntoFileInfo(p, fi);
+        // Check if file is in manifest
+        //int version = p.GetVersion();
 
-    bool bPull = false;
-    if(pLocal_fi) {
-        std::string canonical_path;
-        fm->GetCanonicalFilepath(filepath, canonical_path);
+        // Get Local file info
+        FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
 
-        //std::cout<< "checking file....." << std::endl;
-        // Is file marked as deleted?
-        if(pLocal_fi->deleted()) {
-            //std::cout<<" FILE DELETED " << std::endl;
-            bPull = false;
-        }
-        //TODO VO3
-        // compare versions
-        /*
-        else if(pLocal_fi->GetPostVersion() < version) {
-            std::cout<<" VERSION : " << version << std::endl;
-            std::cout<<" LOCAL VERSION " << pLocal_fi->GetPostVersion() << std::endl;
-            // if version on the server is newer, pull
-            bPull = true;
-        }
-        */
-        // check if file exists
-        else if(!fs::CheckFileExists(canonical_path)) { 
-            //std::cout<<" checking if file exists --- " << std::endl;
-            //std::cout<<" maybe use path ? : " << filepath << std::endl;
-            //std::cout<<" or ? : " << canonical_path << std::endl;
-            //std::cout<<" file does not exist pulling ... " << std::endl;
-            bPull= true;
-        }
+        bool bPull = false;
+        if(pLocal_fi) {
+            std::string canonical_path;
+            fm->GetCanonicalFilepath(filepath, canonical_path);
 
-       // std::cout<<" pullling ? : " << bPull << std::endl;
-        // Update and insert to manifest
-    }
-    else {
-        //std::cout<< " NULL local file info " << std::endl;
-        //std::cout<< " just pull ... " << std::endl;
-        bPull = true;
-    }
-
-    if(bPull) {
-        // retreive chunk info
-        status = RetrieveChunkInfo(p, &fi);
-        if(status == ret::A_OK) {
-            //std::cout<<" GET FILEINFO VERSION : " << fi.GetPostVersion() << std::endl;
-            //std::cout<<" GET POST VERSION : " << version << std::endl;
-            //std::cout<<" INSERTING " << std::endl;
-
-            // insert to file manager
-            FileManager* fm = GetFileManager();
-            fm->InsertToManifest(&fi);
-            // pull request
-            event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
-            m_ProcessingQueue[filepath] = true;
+            if(pLocal_fi->deleted())
+                bPull = false;
+            //TODO VO3
+            // compare versions
+            // check if file exists, locally
+            else if( !fs::CheckFilepathExists(canonical_path))
+                bPull= true;
         }
         else {
-            std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
+            // Doesn't exist in the manifest
+            bPull = true;
         }
+        if(bPull) RaisePullRequest(p, fi);
     }
     else {
-        //std::cout<<" not pulling ... " << std::endl;
+        std::string canonical_path;
+        fm->GetCanonicalFilepath(filepath, canonical_path);
+        if(fs::CheckFilepathExists(canonical_path)){
+            // Move to trash
+            std::string trash_path;
+            ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
+            if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
+                // Move to trash;
+                fs::MoveFile(canonical_path, trash_path);
+            }
+            else {
+                std::string msg = "Invalid trash_path";
+                log::LogString("MOA1349", msg);
+            }
+        }
     }
 
     return status;
 }
 
-int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
+int SyncFileTask::RaisePullRequest(const FilePost& p, FileInfo& fi) {
+    int status = ret::A_OK;
+
+    // retreive chunk info
+    status = RetrieveChunkInfo(p, fi);
+    if(status == ret::A_OK) {
+        std::string filepath = p.relative_path();
+        // insert to file manager
+        FileManager* fm = GetFileManager();
+        fm->InsertToManifest(&fi);
+        // pull request
+        event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
+        m_ProcessingQueue[filepath] = true;
+    }
+    else {
+        std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
+    }
+
+    return status;
+}
+
+int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo& fi) {
     int status = ret::A_OK;
 
     Entity entity = TentTask::entity();
@@ -185,24 +179,20 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
     chunkPosts = post.GetChunkPosts();
 
     if(chunkPosts.size()) {
-        //std::cout<<" number of chunk posts : " << chunkPosts.size() << std::endl;
-        //std::cout<<" chunk post : " << chunkPosts[0] << std::endl;
-
         std::vector<std::string>::iterator itr = chunkPosts.begin();
         std::string postid;
         for(;itr != chunkPosts.end(); itr++) {
-            fi->set_chunk_post_id(*itr);
+            fi.set_chunk_post_id(*itr);
             postid.clear();
             postid = *itr;
             std::string url;
             utils::FindAndReplace(GetPostPath(), "{post}", postid, url);
 
-            //std::cout<<" getting : " << url << std::endl;
             Response response;
-            netlib::HttpGet( url, 
-                             NULL,
-                             &at,
-                             response); 
+            netlib::HttpGet(url, 
+                            NULL,
+                            &at,
+                            response); 
 
             //std::cout<< " CODE : " << response.code << std::endl;
             //std::cout<< " RESP : " << response.body << std::endl;
@@ -216,19 +206,18 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo* fi) {
                     std::vector<ChunkInfo>::iterator itr = ciList->begin();
 
                     for(;itr != ciList->end(); itr++) {
-                        fi->PushChunkBack(*itr);
+                        fi.PushChunkBack(*itr);
                     }
-
                 }
-
-                //std::cout<<" CHUNK COUNT : " << fi->GetChunkCount() << std::endl;
-                //fileInfoList.push_back(fi);
-                //InsertFileInfoToManager(fileInfoList);
+            }
+            else {
+                status = ret::A_FAIL_NON_200;
+                log::LogHttpResponse("MNB889RFA", response);
             }
         }
     }
     else {
-        std::cout<<" NO CHUNKS ... : " << chunkPosts.size() << std::endl;
+        status = ret::A_FAIL_EMPTY_CHUNK_POST;
     }
 
     return status;

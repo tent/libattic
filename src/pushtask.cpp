@@ -56,7 +56,7 @@ int PushTask::PushFile(const std::string& filepath) {
 
     int status = ret::A_OK;
 
-    if(fs::CheckFileExists(filepath)) {
+    if(fs::CheckFilepathExists(filepath)) {
         PostFileStrategy ps;                // Chunk and upload
         PostFileMetadataStrategy pmds;      // Update file post
         PostFolderMetadataStrategy pfmds;   // Update folder post

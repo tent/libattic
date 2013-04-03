@@ -13,14 +13,10 @@ PostFileMetadataStrategy::PostFileMetadataStrategy() {}
 PostFileMetadataStrategy::~PostFileMetadataStrategy() {}
 
 int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
-                                       CredentialsManager* pCredentialsManager,
-                                       Response& out) {
+                                      CredentialsManager* pCredentialsManager,
+                                      Response& out) {
     int status = ret::A_OK;
-    file_manager_ = pFileManager;
-    credentials_manager_ = pCredentialsManager;
-    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    credentials_manager_->GetAccessTokenCopy(access_token_);
+    status = InitInstance(pFileManager, pCredentialsManager);
 
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");

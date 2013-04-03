@@ -20,6 +20,9 @@ class HttpStrategyInterface {
     typedef std::map<std::string, std::string> ConfigMap;
 protected:
     std::string GetConfigValue(const std::string& key) { return config_map_[key]; }
+
+    int InitInstance(FileManager* pFileManager,
+                     CredentialsManager* pCredentialsManager);
 public:
     HttpStrategyInterface();
     ~HttpStrategyInterface();

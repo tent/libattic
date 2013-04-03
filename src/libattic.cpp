@@ -231,11 +231,10 @@ int PollFiles(void) {
                 status = g_pTaskManager->PollFiles(NULL);
         }
         catch(std::exception& e) {
+            std::cout<<" caught : " << e.what() << std::endl;
             attic::log::LogException("TOP12341", e);
         }
     }
-
-
 
     return status;
 }

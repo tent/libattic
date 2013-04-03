@@ -37,7 +37,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     std::cout<<" FILE PATH : " << filepath << std::endl;
 
     // Verify file exists
-    if(fs::CheckFileExists(filepath)) {
+    if(fs::CheckFilepathExists(filepath)) {
         // Begin the chunking pipeline
         FileInfo* fi = RetrieveFileInfo(filepath);
         if(!fi) std::cout<<"INVALID FILE INFO " << std::endl;
