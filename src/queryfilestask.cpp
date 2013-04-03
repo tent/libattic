@@ -7,14 +7,12 @@
 
 namespace attic { 
 
-QueryFilesTask::QueryFilesTask( Task::TaskType type,                    
-                                FileManager* pFm,                       
-                                void (*callback)(int, char**, int, int))
-                                :
-                                ManifestTask( type,
-                                              pFm,
-                                              callback)
-{
+QueryFilesTask::QueryFilesTask(FileManager* pFm,                       
+                               void (*callback)(int, char**, int, int))
+                               :
+                               ManifestTask(Task::QUERYMANIFEST,
+                                            pFm,
+                                            callback) {
     m_Stride = 0;
 }
 
@@ -22,7 +20,7 @@ QueryFilesTask::~QueryFilesTask() {}
 
 void QueryFilesTask::RunTask() {
     std::vector<FileInfo> vec;                          
-    GetFileManager()->GetAllFileInfo(vec); // blocking
+    file_manager()->GetAllFileInfo(vec); // blocking
     CreateCStringListsAndCallBack(vec);
 
     SetFinishedState();

@@ -29,6 +29,7 @@ public:
         DECRYPT,
         // ManifestTask
         QUERYMANIFEST,
+        SCANDIRECTORY,
         // Polling
         POLL,
         // Service

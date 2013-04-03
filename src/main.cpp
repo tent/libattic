@@ -1042,6 +1042,15 @@ TEST(FILEINFO, POSTVERSION)
     std::cout<<" POST VERSION : " << fi.post_version() << std::endl;
 }
 
+TEST(FILESYSTEM, SCAN)
+{
+    std::vector<std::string> paths;
+    attic::fs::ScanDirectory("./data", paths);
+    for(unsigned int i=0; i<paths.size(); i++) {
+        std::cout<<paths[i]<<std::endl;
+    }
+}
+
 
 int main (int argc, char* argv[]) {
    int status = 0;

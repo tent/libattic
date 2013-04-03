@@ -530,11 +530,22 @@ void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
 }
 
 int Pause(void) { 
+    int status = attic::ret::A_OK;
     attic::event::RaiseEvent(attic::event::Event::PAUSE, "", NULL);
+    return status;
 }
 
 int Resume(void) {
+    int status = attic::ret::A_OK;
     attic::event::RaiseEvent(attic::event::Event::RESUME, "", NULL);
+    status = g_pTaskManager->ScanAtticFolder(NULL);
+    return status;
+}
+
+int ScanAtticFolder() { 
+    int status attic::ret::A_OK;
+    status = g_pTaskManager->ScanAtticFolder(NULL);
+    return status;
 }
 
 void SetConfigValue(const char* szKey, const char* szValue) {

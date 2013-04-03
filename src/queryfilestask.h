@@ -10,9 +10,7 @@ namespace attic {
 class QueryFilesTask : public ManifestTask {
     int CreateCStringListsAndCallBack(std::vector<FileInfo>& vec);
 public:
-    QueryFilesTask( Task::TaskType type,                    
-                    FileManager* pFm,                       
-                    void (*callback)(int, char**, int, int));
+    QueryFilesTask(FileManager* pFm, void (*callback)(int, char**, int, int));
 
     ~QueryFilesTask();
 

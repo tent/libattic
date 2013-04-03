@@ -89,7 +89,6 @@ protected:
                               post_path);
         return post_path;
     }
-
 private:
     AccessToken          access_token_;
     Entity               entity_;

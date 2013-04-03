@@ -430,9 +430,10 @@ int PostFileStrategy::WriteToSocket(Connection& socket,
             size_t byteswritten = socket.Write(buffer);
             std::cout<<" bytes written : " << byteswritten << std::endl;
             boost::timer::cpu_times time = t.elapsed();
-            long elapsed = time.user;
-            // To milliseconds
-            elapsed *= 0.000001; 
+            boost::timer::nanosecond_type elapsed = (time.system + time.user);
+
+            // To seconds
+            elapsed *= 0.0000000001; 
             std::cout<<" ELAPSED : " << elapsed << std::endl;
             if(elapsed > 0) {
                 unsigned int bps = (buffersize/elapsed);

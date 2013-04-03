@@ -56,7 +56,7 @@ void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*));
 
-
+int ScanAtticFolder();
 
 int PushFile(const char* szFilePath);
 int PullFile(const char* szFilePath);

@@ -96,10 +96,9 @@ int TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
                                  pDel);
 }
 
-int TaskManager::CreateAndSpinOffTask( Task::TaskType tasktype, 
-                                       const std::string& filepath, 
-                                       TaskDelegate* pDel)
-{
+int TaskManager::CreateAndSpinOffTask(Task::TaskType tasktype, 
+                                      const std::string& filepath, 
+                                      TaskDelegate* pDel) {
     int status = ret::A_OK;
 
     Task* t = m_TaskFactory.GetTentTask( tasktype,
@@ -137,11 +136,21 @@ int TaskManager::PollFiles(TaskDelegate* pDel) {
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
-
     Task* t = m_TaskFactory.GetManifestTask( Task::QUERYMANIFEST,
                                              m_pFileManager,
                                              callback,
                                              this);
+
+    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+    return status;
+}
+
+int TaskManager::ScanAtticFolder(void(*callback)(int, char**, int, int)) {
+    int status = ret::A_OK;
+    Task* t = m_TaskFactory.GetManifestTask(Task::SCANDIRECTORY,
+                                            m_pFileManager,
+                                            callback,
+                                            this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;

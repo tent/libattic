@@ -53,6 +53,7 @@ public:
 
     // Utility Tasks
     int QueryManifest(void(*callback)(int, char**, int, int));
+    int ScanAtticFolder(void(*callback)(int, char**, int, int) = NULL);
 
     // Info tasks
     int TaskCount(const Task::TaskType);

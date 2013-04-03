@@ -37,12 +37,12 @@ public:
 
 private:
     std::string chunk_name_;        // Name of this particular chunk
-    std::string checksum_;         // Hash of the chunk before encryption
+    std::string checksum_;          // Hash of the chunk before encryption
     std::string plaintext_mac_;     // Hash of the chunk
     std::string ciphertext_mac_;    // Hash of the Iv
-    std::string iv_;               // Iv used to encrypt chunk
+    std::string iv_;                // Iv used to encrypt chunk
 
-    unsigned int position_;        // Position in the order of chunks
+    unsigned int position_;         // Position in the order of chunks
 };
 
 } // namespace

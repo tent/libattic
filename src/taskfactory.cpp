@@ -13,6 +13,7 @@
 #include "credentialsmanager.h"
 #include "taskarbiter.h"
 #include "tentapp.h"
+#include "scandirectorytask.h"
 
 namespace attic { 
 
@@ -106,13 +107,17 @@ Task* TaskFactory::CreateNewManifestTask( Task::TaskType type,
                                           void (*callback)(int, char**, int, int))
 {
     Task* t = NULL;
-    switch(type)
-    {
+    switch(type) {
         case Task::QUERYMANIFEST:
         {
-            t = new QueryFilesTask( type,
-                                    pFm,
-                                    callback);
+            t = new QueryFilesTask(pFm,
+                                   callback);
+            break;
+        }
+        case Task::SCANDIRECTORY:
+        {
+            t = new ScanDirectoryTask(pFm, callback);
+
             break;
         }
         default:
