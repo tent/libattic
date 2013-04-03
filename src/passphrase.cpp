@@ -139,6 +139,27 @@ int Passphrase::EnterRecoveryKey(const std::string& recoverykey, std::string& te
 
     return status;
 }
+int Passphrase::RegisterRecoveryQuestions(const std::string& question_one,
+                                          const std::string& question_two,
+                                          const std::string& question_three,
+                                          const std::string& answer_one,
+                                          const std::string& answer_two,
+                                          const std::string& answer_three) {
+    int status = ret::A_OK;
+
+    return status;
+}
+
+int Passphrase::EnterQuestionAnswerKey(const std::string& question_one,
+                                       const std::string& question_two,
+                                       const std::string& question_three,
+                                       const std::string& answer_one,
+                                       const std::string& answer_two,
+                                       const std::string& answer_three) {
+    int status = ret::A_OK;
+
+    return status;
+}
 
 int Passphrase::DecryptKey(const std::string& key, 
                            const std::string& phrasekey, 

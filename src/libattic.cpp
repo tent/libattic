@@ -332,8 +332,10 @@ int RegisterQuestionAnswerKey(const char* q1,
                               const char* q3, 
                               const char* a1, 
                               const char* a2, 
-                              const char* a3)
-{
+                              const char* a3) {
+
+    int status = IsLibInitialized(false);
+    /*
     int status = g_pClient->LoadEntity(true);
     if(status == attic::ret::A_OK) {
         std::string questionOne(q1);
@@ -364,6 +366,7 @@ int RegisterQuestionAnswerKey(const char* q1,
         }
     }
 
+    */
     return status;
 }
 
@@ -372,8 +375,10 @@ int EnterQuestionAnswerKey(const char* q1,
                            const char* q3, 
                            const char* a1, 
                            const char* a2, 
-                           const char* a3)
-{
+                           const char* a3) {
+
+    int status = attic::ret::A_OK;
+    /*
     int status = g_pClient->LoadEntity(true);
     if(status == attic::ret::A_OK) {
         std::string questionOne(q1);
@@ -413,6 +418,7 @@ int EnterQuestionAnswerKey(const char* q1,
             status = attic::ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
         }
     }
+*/
     return status;
 }
 
