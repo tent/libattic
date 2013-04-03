@@ -52,13 +52,16 @@ class PostFileStrategy : public HttpStrategyInterface {
 
     FileInfo* RetrieveFileInfo(const std::string& filepath);
 
+    int UpdateChunkPostMetadata(FileInfo* fi, 
+                                const Response& resp, 
+                                const Credentials& file_cred);
+
 public:
     PostFileStrategy();
     ~PostFileStrategy();
 
     int Execute(FileManager* pFileManager,
-                CredentialsManager* pCredentialsManager,
-                Response& out);
+                CredentialsManager* pCredentialsManager);
 };
 
 }//namespace

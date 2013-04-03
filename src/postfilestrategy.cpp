@@ -21,13 +21,9 @@ PostFileStrategy::PostFileStrategy() {}
 PostFileStrategy::~PostFileStrategy() {}
 
 int PostFileStrategy::Execute(FileManager* pFileManager,
-                               CredentialsManager* pCredentialsManager,
-                               Response& out){
+                               CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
-    file_manager_ = pFileManager;
-    credentials_manager_ = pCredentialsManager;
-    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    credentials_manager_->GetAccessTokenCopy(access_token_);
+    status = InitInstance(pFileManager, pCredentialsManager);
 
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
@@ -54,62 +50,71 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
         Response resp;
         if(status == ret::A_OK) {
-            status = ProcessFile( requesttype,
-                                  posturl,
-                                  filepath,
-                                  fileCredentials,
-                                  fi,
-                                  resp);
+            status = ProcessFile(requesttype,
+                                 posturl,
+                                 filepath,
+                                 fileCredentials,
+                                 fi,
+                                 resp);
         }
 
         if(status == ret::A_OK && resp.code == 200) {
             // On success 
-            FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
-            ChunkPost p;
-            // Deserialize basic post data
-            jsn::DeserializeObject((Post*)&p, resp.body);
-            p.SetChunkInfoList(*pList);
+            status = UpdateChunkPostMetadata(fi, resp, fileCredentials);
+        }
+        else if(resp.code!= 200) {
+            log::LogHttpResponse("FORTY333", resp);
+        }
+    }
+    return status;
+}
 
-            std::cout<<" CURRENT CHUNK LIST SIZE : " << pList->size() << std::endl;
+int PostFileStrategy::UpdateChunkPostMetadata(FileInfo* fi, 
+                                              const Response& resp,
+                                              const Credentials& file_cred) {
+    int status = ret::A_OK;
+    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+    ChunkPost p;
+    // Deserialize basic post data
+    jsn::DeserializeObject((Post*)&p, resp.body);
+    p.SetChunkInfoList(*pList);
 
-            // Setup post url
-            if(chunkpostid.empty()) {
-                chunkpostid = p.id();
-                if(chunkpostid.empty()) {
-                    status = ret::A_FAIL_INVALID_POST_ID;
-                }
-                else 
-                    utils::FindAndReplace(post_path_, "{post}", chunkpostid, posturl);
-            }
+    std::cout<<" CURRENT CHUNK LIST SIZE : " << pList->size() << std::endl;
 
-            if(status == ret::A_OK) {
-                // update chunk post with chunk info metadata
-                // use non multipart to just update the post body
-                // leaving existing attachment in-tact
-                std::string bodyBuffer;
-                jsn::SerializeObject(&p, bodyBuffer);
-    
-                std::cout<<" Updating chunk post metadata : " << posturl << std::endl;
-                Response metaResp;
-                status = netlib::HttpPut(posturl,
-                                         p.type(),
-                                         NULL,
-                                         bodyBuffer,
-                                         &access_token_,
-                                         metaResp);
+    // Setup post url
+    std::string post_url;
+    std::string chunk_post_id = p.id();
+    if(chunk_post_id.empty())
+        status = ret::A_FAIL_INVALID_POST_ID;
+    else 
+        utils::FindAndReplace(post_path_, "{post}", chunk_post_id, post_url);
 
-                std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
-                std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
+    if(status == ret::A_OK) {
+        // update chunk post with chunk info metadata
+        // use non multipart to just update the post body
+        // leaving existing attachment in-tact
+        std::string bodyBuffer;
+        jsn::SerializeObject(&p, bodyBuffer);
 
-                if(metaResp.code == 200) {
-                    out = metaResp;
-                    UpdateFileInfo(fileCredentials, filepath, chunkpostid, p.version_id(), fi);
-                }
-                else {
-                    log::LogHttpResponse("nam#k923", metaResp);
-                    status = ret::A_FAIL_NON_200;
-                }
-            }
+        std::cout<<" Updating chunk post metadata : " << post_url << std::endl;
+        Response metaResp;
+        status = netlib::HttpPut(post_url,
+                                 p.type(),
+                                 NULL,
+                                 bodyBuffer,
+                                 &access_token_,
+                                 metaResp);
+
+        std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
+        std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
+
+        if(metaResp.code == 200) {
+            std::string filepath = GetConfigValue("filepath");
+            UpdateFileInfo(file_cred, filepath, chunk_post_id, p.version_id(), fi);
+        }
+        else {
+            log::LogHttpResponse("nam#k923", metaResp);
+            status = ret::A_FAIL_NON_200;
         }
     }
     return status;
@@ -119,8 +124,7 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
                                                 Credentials& credOut, 
                                                 std::string& requestTypeOut,
                                                 std::string& urlOut,
-                                                std::string& postidOut)
-{
+                                                std::string& postidOut) {
     int status = ret::A_OK;
 
     // check for post id

@@ -60,14 +60,13 @@ void HttpStrategyContext::PushBack(HttpStrategyInterface* pStrat) {
     strategies_.push_back(pStrat);
 }
 
-int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
+int HttpStrategyContext::Execute(HttpStrategyInterface* s) {
     if(s) {
         // Copy context config
         s->config_map_ = config_map_;
         // Execute
         return s->Execute(file_manager_,
-                          credentials_manager_,
-                          out);
+                          credentials_manager_);
     }
     return ret::A_FAIL_INVALID_PTR;
 }
@@ -75,20 +74,19 @@ int HttpStrategyContext::Execute(HttpStrategyInterface* s, Response& out) {
 int HttpStrategyContext::ExecuteAll() {
     // Check config for anything interesting
     StrategyList::iterator itr = strategies_.begin();
-    Response resp;
     int status = ret::A_OK;
     for(;itr != strategies_.end(); itr++) {
-        status = Execute(*itr, resp);
+        status = Execute(*itr);
         if(status != ret::A_OK)
             break;
     }
     return status;
 }
 
-int HttpStrategyContext::Step(Response& out) {
+int HttpStrategyContext::Step() {
     int status = ret::A_OK;
     if(strategy_itr_ != strategies_.end()) {
-        status = Execute(*strategy_itr_, out);
+        status = Execute(*strategy_itr_);
         strategy_itr_++;
     }
     return status;

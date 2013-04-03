@@ -19,8 +19,7 @@ public:
     ~PostFileMetadataStrategy();
 
     int Execute(FileManager* pFileManager,
-                CredentialsManager* pCredentialsManager,
-                Response& out);
+                CredentialsManager* pCredentialsManager);
 };
 
 }//namespace

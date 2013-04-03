@@ -28,8 +28,7 @@ public:
     ~HttpStrategyInterface();
 
     virtual int Execute(FileManager* pFileManager,
-                        CredentialsManager* pCredentialsManager,
-                        Response& out)=0;
+                        CredentialsManager* pCredentialsManager)=0;
 
     // Takes ownership of the delegate.
     // Will delete previous delegate if set more than once
@@ -54,7 +53,7 @@ protected:
 class HttpStrategyContext {
     typedef std::list<HttpStrategyInterface*> StrategyList;
 
-    int Execute(HttpStrategyInterface* s, Response& out);
+    int Execute(HttpStrategyInterface* s);
 public:
     typedef std::map<std::string, std::string> ConfigMap;
 
@@ -66,7 +65,7 @@ public:
     void PushBack(HttpStrategyInterface* pStrat);
 
     int ExecuteAll(); // By default will stop at first failed execution
-    int Step(Response& out);
+    int Step();
     void ResetPosition();
 
     void SetConfigValue(const std::string& key, const std::string& value) {

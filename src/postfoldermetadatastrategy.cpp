@@ -14,21 +14,17 @@ PostFolderMetadataStrategy::PostFolderMetadataStrategy() {}
 PostFolderMetadataStrategy::~PostFolderMetadataStrategy() {}
 
 int PostFolderMetadataStrategy::Execute(FileManager* pFileManager,
-                                        CredentialsManager* pCredentialsManager,
-                                        Response& out) {
+                                        CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
-    file_manager_ = pFileManager;
-    credentials_manager_ = pCredentialsManager;
-    if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
-    credentials_manager_->GetAccessTokenCopy(access_token_);
+    status = InitInstance(pFileManager, pCredentialsManager);
 
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
 
     FileInfo* fi = RetrieveFileInfo(filepath);
-    status = SendFolderPost(fi, out);
+    Response response;
+    status = SendFolderPost(fi, response);
 
     return status;
 }

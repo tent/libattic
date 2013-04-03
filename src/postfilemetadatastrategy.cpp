@@ -13,8 +13,7 @@ PostFileMetadataStrategy::PostFileMetadataStrategy() {}
 PostFileMetadataStrategy::~PostFileMetadataStrategy() {}
 
 int PostFileMetadataStrategy::Execute(FileManager* pFileManager,
-                                      CredentialsManager* pCredentialsManager,
-                                      Response& out) {
+                                      CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
     status = InitInstance(pFileManager, pCredentialsManager);
 

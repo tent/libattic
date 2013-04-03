@@ -543,7 +543,7 @@ int Resume(void) {
 }
 
 int ScanAtticFolder() { 
-    int status attic::ret::A_OK;
+    int status = attic::ret::A_OK;
     status = g_pTaskManager->ScanAtticFolder(NULL);
     return status;
 }
