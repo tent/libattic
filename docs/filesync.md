@@ -14,7 +14,7 @@ A---->B---->C--->D
 
 * A conflict can be detected by traversing each post trees leaf nodes. 
     * Paying specific attention to multiple leafs with the same parent. When this happens, there is a potential conflict.
-        * A conflict will arise if the two files share a parent, and have the same name.
+        * A conflict will arise if the two or more files share a common parent, and have the same name.
         * All versions of the file will be dowlnoaded locally and  will be renamed. 
         * The file(s) that will be renamed will be the file that was created by the non originitating entity or device.
     * Files in conflict can be resolved by the user renaming either of the files.
