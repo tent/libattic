@@ -30,7 +30,6 @@ class PostFileStrategy : public HttpStrategyInterface {
                   const std::string& fileKey,
                   const std::string& boundary,
                   Connection& socket,
-                  //boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                   const unsigned int count,
                   bool end,
                   FileInfo* pFi);

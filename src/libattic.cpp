@@ -30,6 +30,7 @@
 #include "configmanager.h"
 
 #include "logutils.h"
+#include "filesystem.h"
 
 static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
@@ -209,14 +210,19 @@ int PullFile(const char* szFilePath) {
 int DeleteFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
-    if(status == attic::ret::A_OK) {
-        try { 
-            std::string filepath(szFilePath);
-            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+    if(attic::fs::CheckFilepathExists(szFilePath)){ 
+        if(status == attic::ret::A_OK) {
+            try { 
+                std::string filepath(szFilePath);
+                attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+            }
+            catch(std::exception& e) {
+                attic::log::LogException("TOP1349", e);
+            }
         }
-        catch(std::exception& e) {
-            attic::log::LogException("TOP1349", e);
-        }
+    }
+    else {
+        status = attic::ret::A_FAIL_INVALID_FILEPATH;
     }
 
     return status;

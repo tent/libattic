@@ -648,6 +648,13 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     ASSERT_EQ(key, deckey);
 }
 
+TEST(CRYPTO, FILEHASH) {
+   std::string filepath = "./data/m4.mp4";
+   std::string hash_out;
+   attic::crypto::GenerateFileHash(filepath, hash_out);
+   std::cout<<" FILE HASH : " << hash_out << std::endl;
+}
+
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {
     attic::Credentials cred, cred1;

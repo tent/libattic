@@ -174,45 +174,30 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
 {
     int status = ret::A_OK;
 
+    // Hash file
+    //  Check if there is a previous version's metadata.
+    //      compare hashes, if it is the same, don't do anything.
+    //      if it is different, begin chunking process
+    //          if the file is new, just linearly chunk
+    //          if the file is versioned 
+    //              compare each chunk 
+    //              only upload new chunks 
+    //              reference old chunks
+
     std::cout<< "processing file ... " <<std::endl;
     std::cout<< "filepath : " << filepath << std::endl;
-    std::cout<< " request type : " << requestType << std::endl;
-    std::cout<<" url : " << url << std::endl;
+    std::cout<< "request type : " << requestType << std::endl;
+    std::cout<< "url : " << url << std::endl;
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);
             
     boost::asio::io_service io_service; 
     Connection socket(&io_service);
-    //tcp::socket socket(io_service); 
     socket.Initialize(url);
+    // spin off thread to hash file
             
-            /*
-    status = netlib::ResolveHost(io_service, socket, host); 
-    std::cout<<" Resolve host : " << status << std::endl;
-    std::cout<<" protocol : " << protocol << std::endl;
-    std::cout<<" host : " << host << std::endl;
-    std::cout<<" path : " << path << std::endl;
-    std::cout<<" connection status : " << status << std::endl;
-    */
     if(status == ret::A_OK) {
-        /*
-        // Setup SSL handshake
-        boost::system::error_code error = boost::asio::error::host_not_found; 
-        // setup an ssl context 
-        boost::asio::ssl::context ctx( io_service, 
-                                       boost::asio::ssl::context::sslv23_client); 
-        ctx.set_verify_mode(boost::asio::ssl::context::verify_none);
-        boost::asio::ssl::stream<tcp::socket&> ssl_sock(socket, ctx);
-
-        ssl_sock.handshake(boost::asio::ssl::stream_base::client, error);
-        if (error) {
-            status = ret::A_FAIL_SSL_HANDSHAKE;
-        }
-        if(status != ret::A_OK)
-            return status;
-            */
-
         std::string boundary;
         utils::GenerateRandomString(boundary, 20);
         std::string fileKey = fileCredentials.key();
@@ -239,9 +224,6 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         // Start the request
         socket.Write(request);
         socket.Write(chunkedBody);
-        //boost::asio::write(ssl_sock, request); 
-        //boost::asio::write(ssl_sock, chunkedBody);
-        //
 
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
@@ -339,11 +321,6 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             }
             
             std::cout<<" interpreting response " << std::endl;
-            //boost::asio::streambuf response;
-            //boost::asio::read_until(ssl_sock, response, "\r\n");
-            //std::string responseheaders;
-            //netlib::InterpretResponse(response, ssl_sock, resp, responseheaders);
-            //netlib::InterpretResponse(&ssl_sock, resp);
             socket.InterpretResponse(resp);
         }
         else {
@@ -386,7 +363,6 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
     // Build Attachment
     boost::asio::streambuf attachment;
     std::ostream attachmentstream(&attachment);
-    //netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
     netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
 
     int breakcount = 0;
@@ -401,8 +377,6 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         boost::asio::streambuf partEnd;
         std::ostream partendstream(&partEnd);
         netlib::ChunkEnd(attachment, partendstream);
-        //netlib::WriteToSSLSocket(ssl_sock, partEnd);
-        //WriteToSocket(ssl_sock, partEnd);
         status = WriteToSocket(socket, partEnd);
     }
     else {
@@ -411,8 +385,6 @@ int PostFileStrategy::SendChunk(const std::string& chunk,
         boost::asio::streambuf part;
         std::ostream chunkpartbuf(&part);
         netlib::ChunkPart(attachment, chunkpartbuf);
-        //netlib::WriteToSSLSocket(ssl_sock, part);
-        //WriteToSocket(ssl_sock, part);
         status = WriteToSocket(socket, part);
     }
 
@@ -462,8 +434,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
                                      const std::string& fileKey,
                                      std::string& finalizedOut, 
                                      std::string& nameOut, 
-                                     FileInfo* pFi)
-{
+                                     FileInfo* pFi) {
     int status = ret::A_OK;
     Credentials chunkCred;
     chunkCred.set_key(fileKey);

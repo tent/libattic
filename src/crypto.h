@@ -13,6 +13,7 @@
 #include <osrng.h>
 #include <base32.h>
 #include <base64.h>
+#include <files.h>
 
 #include "errorcodes.h"
 #include "credentials.h"
@@ -43,7 +44,8 @@ static unsigned int                    g_Stride = 400000;    // Size of stride u
 static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
 static void GenerateIv(std::string& out);
-static bool GenerateHash( const std::string& source, std::string& hashOut);
+static bool GenerateHash( const std::string& source, std::string& hash_out);
+static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
 static void GenerateRandomString(std::string& out, const unsigned int size);
 
 static int EncryptStringCFB( const std::string& data,
@@ -74,15 +76,13 @@ static bool ScryptEncode( const std::string &input,
 static int CheckSalt(const std::string& salt);
 static int GenerateSalt(std::string& out);
 
-static int GenerateHMACForString( const std::string& input,
-                                  const Credentials& cred,
-                                  std::string& macOut);
+static int GenerateHMACForString(const std::string& input,
+                                 const Credentials& cred,
+                                 std::string& macOut);
 
-static int VerifyHMACForString( const std::string& input,
-                                const Credentials& cred,
-                                const std::string& mac);
-
-
+static int VerifyHMACForString(const std::string& input,
+                               const Credentials& cred,
+                               const std::string& mac);
 
 static Credentials GenerateCredentials() {
     // This is returning a copy on purpose, 
@@ -112,19 +112,33 @@ static void GenerateIv(std::string& out) {
     out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
 }
 
-static bool GenerateHash(const std::string& source, std::string& hashOut) {
+static bool GenerateHash(const std::string& source, std::string& hash_out) {
     CryptoPP::SHA512 hash;
 
     CryptoPP::StringSource src(source.c_str(), 
                                true,
                                new CryptoPP::HashFilter( hash,
                                    new CryptoPP::Base64Encoder (
-                                       new CryptoPP::StringSink(hashOut)
+                                       new CryptoPP::StringSink(hash_out),
+                                       false
                                        )
                                    )
                               );
     return true;
 }
+
+static void GenerateFileHash(const std::string& filepath, std::string& hash_out) {
+    CryptoPP::SHA512 hash;
+    CryptoPP::FileSource src(filepath.c_str(),
+                             true,
+                             new CryptoPP::HashFilter( hash,
+                                   new CryptoPP::Base64Encoder (
+                                       new CryptoPP::StringSink(hash_out),
+                                       false
+                                       )
+                                   )
+                              );
+} 
 
 static int EncryptStringCFB(const std::string& data,
                             const Credentials& cred,

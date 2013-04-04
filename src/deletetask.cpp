@@ -8,6 +8,7 @@
 #include "postutils.h"
 #include "netlib.h"
 #include "taskdelegate.h"
+#include "filesystem.h"
 
 #include "softdeletestrategy.h"
 #include "postfilemetadatastrategy.h"
@@ -44,21 +45,23 @@ void DeleteTask::RunTask() {
     int status = ret::A_OK;
 
     std::string filepath = TentTask::filepath();
-    std::string post_path = TentTask::GetPostPath(); 
+    if(fs::CheckFilepathExists(filepath)) { 
+        std::string post_path = TentTask::GetPostPath(); 
 
-    SoftDeleteStrategy sds;
-    PostFileMetadataStrategy pmds;
+        SoftDeleteStrategy sds;
+        PostFileMetadataStrategy pmds;
 
-    HttpStrategyContext softdeletectx(GetFileManager(), 
-                                      GetCredentialsManager());
+        HttpStrategyContext softdeletectx(GetFileManager(), 
+                                          GetCredentialsManager());
 
-    softdeletectx.SetConfigValue("post_path", post_path);
-    softdeletectx.SetConfigValue("filepath", filepath);
+        softdeletectx.SetConfigValue("post_path", post_path);
+        softdeletectx.SetConfigValue("filepath", filepath);
 
-    softdeletectx.PushBack(&sds);
-    softdeletectx.PushBack(&pmds);
+        softdeletectx.PushBack(&sds);
+        softdeletectx.PushBack(&pmds);
 
-    status = softdeletectx.ExecuteAll();
+        status = softdeletectx.ExecuteAll();
+    }
     
     // Callback
     Callback(status, "");
