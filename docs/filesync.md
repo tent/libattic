@@ -7,13 +7,16 @@ A---->B---->C--->D
     
 ## Conflicts
 ### Detecting conflicts
+
 A---->B---->C--->D
+
              `-->D(2)
+
 * A conflict can be detected by traversing each post trees leaf nodes. 
     * Paying specific attention to multiple leafs with the same parent. When this happens, there is a potential conflict.
         * A conflict will arise if the two files share a parent, and have the same name.
-        * Both versions of the file will be dowlnoaded locally and one will be renamed. 
-        * The file that will be renamed will be the file that was created by the non originitating entity or device.
+        * All versions of the file will be dowlnoaded locally and  will be renamed. 
+        * The file(s) that will be renamed will be the file that was created by the non originitating entity or device.
     * Files in conflict can be resolved by the user renaming either of the files.
         * This will create a new meta-post, referencing the original parent
             * Still a fork, but with no name conflicts there are no problems.
@@ -23,5 +26,5 @@ A---->B---->C--->D
     * This is to detect renames.
         * Primarily for OSX, OSX filesystem currently does not support file modification events. 
             * Note* this will have to be handled differently on linux, which does support these notification events.
-* Libattic, will have to regularly traverse a file's lineage looking for potential conflicts, typically before downloading.
-
+* Libattic, will have to be able to traverse a file's lineage to detect possible conflicts. 
+    * This will probably mostly be done with partial upwards traversals.
