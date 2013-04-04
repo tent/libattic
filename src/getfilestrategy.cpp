@@ -183,6 +183,8 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
     Post::AttachmentVec* av = post.GetAttachments();                                             
     Post::AttachmentVec::iterator itr = av->begin();                                             
     std::string attachmentpath, outpath;
+
+    // TODO :: sort attachments by position, or rather copy them into a map with key position then just iterate and assemble.
     
     Credentials fCred = fileCred;
     std::string fp = fi->filepath();
@@ -242,6 +244,8 @@ int GetFileStrategy::RetrieveFile(const std::string& filepath,
 
             if(status == ret::A_OK) {
                 // Transform Chunk
+                std::cout<< " looking for chunk : " << (*itr).name << std::endl;
+                std::cout<< " SIZE : " << fi->GetChunkInfoList()->size() << std::endl;
                 ChunkInfo* ci = fi->GetChunkInfo((*itr).name);
                 std::string chunk;
                 status = TransformChunk(ci, filekey, buffer, chunk);

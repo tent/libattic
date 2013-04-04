@@ -126,6 +126,7 @@ void Post::Serialize(Json::Value& root) {
         root["content"] = content;
     }
 
+    std::cout<<" ATTACHMENT SERIALIZE SIZE : " << attachments_.size() << std::endl;
     if(attachments_.size() > 0) {
         Json::Value attachment_arr(Json::arrayValue);
         AttachmentVec::iterator itr = attachments_.begin();

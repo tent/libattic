@@ -210,15 +210,13 @@ int PullFile(const char* szFilePath) {
 int DeleteFile(const char* szFilePath) {
     int status = IsLibInitialized();
 
-    if(attic::fs::CheckFilepathExists(szFilePath)){ 
-        if(status == attic::ret::A_OK) {
-            try { 
-                std::string filepath(szFilePath);
-                attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
-            }
-            catch(std::exception& e) {
-                attic::log::LogException("TOP1349", e);
-            }
+    if(status == attic::ret::A_OK) {
+        try { 
+            std::string filepath(szFilePath);
+            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("TOP1349", e);
         }
     }
     else {

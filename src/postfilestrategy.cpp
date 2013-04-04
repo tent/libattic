@@ -8,7 +8,7 @@
 #include "fileinfo.h"
 #include "filesystem.h"
 #include "credentialsmanager.h"
-#include "chunkpost.h"
+
 #include "rollsum.h"
 #include "postutils.h"
 #include "logutils.h"
@@ -73,17 +73,22 @@ int PostFileStrategy::UpdateChunkPostMetadata(FileInfo* fi,
                                               const Response& resp,
                                               const Credentials& file_cred) {
     int status = ret::A_OK;
-    FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+    //FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
     ChunkPost p;
     // Deserialize basic post data
     jsn::DeserializeObject((Post*)&p, resp.body);
-    p.SetChunkInfoList(*pList);
-
-    std::cout<<" CURRENT CHUNK LIST SIZE : " << pList->size() << std::endl;
 
     // Setup post url
     std::string post_url;
     std::string chunk_post_id = p.id();
+
+    std::cout<<" CHUNK COUNT : " << fi->GetChunkInfoList()->size();
+
+    std::string filepath = GetConfigValue("filepath");
+    UpdateFileInfo(file_cred, filepath, chunk_post_id, p.version_id(), fi);
+
+    return status;
+
     if(chunk_post_id.empty())
         status = ret::A_FAIL_INVALID_POST_ID;
     else 
@@ -170,8 +175,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                                   const std::string& filepath,
                                   const Credentials& fileCredentials,
                                   FileInfo* pFi,
-                                  Response& resp)
-{
+                                  Response& resp) {
     int status = ret::A_OK;
 
     // Hash file
@@ -184,10 +188,23 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
     //              only upload new chunks 
     //              reference old chunks
 
+
     std::cout<< "processing file ... " <<std::endl;
     std::cout<< "filepath : " << filepath << std::endl;
     std::cout<< "request type : " << requestType << std::endl;
     std::cout<< "url : " << url << std::endl;
+
+    ChunkPost old_post;
+    if(requestType == "PUT") {
+        std::cout<<" GETTING OLD POST : " << std::endl;
+        Response response;
+        netlib::HttpGet(url, NULL, &access_token_, response);
+        if(response.code == 200) {
+            jsn::DeserializeObject(&old_post, response.body);
+        }
+
+        std::cout<<" CODE :" << response.code << std::endl;
+    }
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);
@@ -206,24 +223,10 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         boost::asio::streambuf request;
         std::ostream request_stream(&request);
         netlib::BuildRequestHeader(requestType, url, boundary, &access_token_, request_stream); 
-
-        // Build Body Form header
-        ChunkPost p;
-        std::string body; // we send an empty body for now
-        jsn::SerializeObject(&p, body);
-
-        boost::asio::streambuf requestBody;
-        std::ostream part_stream(&requestBody);
-        netlib::BuildBodyForm(p.type(), body, boundary, part_stream);
-
-        // Chunk the Body 
-        boost::asio::streambuf chunkedBody;
-        std::ostream partbuf(&chunkedBody);
-        netlib::ChunkPart(requestBody, partbuf);
-
+        
         // Start the request
         socket.Write(request);
-        socket.Write(chunkedBody);
+        //socket.Write(chunkedBody);
 
         const unsigned int filesize = utils::CheckFilesize(filepath);
         // start the process
@@ -236,6 +239,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         unsigned int count = 0;
         unsigned int totalread = 0; // total read count
         if (ifs.is_open()) {
+            std::vector<std::string> chunk_list;
             // Setup window buffer
             std::string window, remainder;
             unsigned int readcount = 0;
@@ -286,8 +290,9 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                             std::string chunk;
                             int diff = i - lastsplit;
                             chunk = window.substr(lastsplit, diff);
-                            // Transform
-                            SendChunk(chunk, fileKey, boundary, socket, count, false, pFi);
+                            std::string chunk_name;
+                            ProcessChunk(chunk, fileKey, boundary, chunkcount, socket, pFi, chunk_name);
+                            chunk_list.push_back(chunk_name);
                             lastsplit = i;
                             count = 0;
                             chunkcount++;
@@ -299,8 +304,9 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                         std::string chunk;
                         int diff = i - lastsplit;
                         chunk = window.substr(lastsplit, diff);
-                        // Transform
-                        SendChunk( chunk, fileKey, boundary, socket, count, false, pFi);
+                        std::string chunk_name;
+                        ProcessChunk(chunk, fileKey, boundary, chunkcount, socket, pFi, chunk_name);
+                        chunk_list.push_back(chunk_name);
                         lastsplit = i;
                         count = 0;
                         chunkcount++;
@@ -314,12 +320,37 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
                     remainder = window.substr(lastsplit, wdiff);
 
                 if((readcount + remainder.size()) >= filesize) {
-                    SendChunk( remainder, fileKey, boundary, socket, chunkcount, true, pFi);
+                    std::string chunk_name;
+                    ProcessChunk(remainder, fileKey, boundary, chunkcount, socket, pFi, chunk_name);
+                    chunk_list.push_back(chunk_name);
                     chunkcount++;
                     break;
                 }
             }
-            
+
+            // Send body
+            std::cout<<" SENDING BODY AFTER CHUNKS " << std::endl; 
+            std::cout<<" CHUNKS? : " << pFi->GetChunkInfoList()->size() << std::endl;
+                    // Build Body Form header
+            ChunkPost p;
+            PrepareChunkPost(chunk_list, old_post, pFi, p);
+            std::string body; // we send an empty body for now
+            jsn::SerializeObject(&p, body);
+
+            std::cout<<" OUTGOING : " << body << std::endl;
+
+            boost::asio::streambuf requestBody;
+            std::ostream part_stream(&requestBody);
+            netlib::BuildBodyForm(p.type(), body, boundary, part_stream);
+            netlib::AddEndBoundry(part_stream, boundary);
+
+            // Chunk the Body 
+            boost::asio::streambuf chunkedBody;
+            std::ostream partbuf(&chunkedBody);
+
+            netlib::ChunkEnd(requestBody, partbuf);
+            socket.Write(chunkedBody);
+
             std::cout<<" interpreting response " << std::endl;
             socket.InterpretResponse(resp);
         }
@@ -336,34 +367,107 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         status = ret::A_FAIL_NON_200;
     }
 
+
+
+    return status;
+}
+
+int PostFileStrategy::PrepareChunkPost(std::vector<std::string>& chunk_list, 
+                                       ChunkPost& prev_post,
+                                       FileInfo* fi, 
+                                       ChunkPost& out) {
+    int status = ret::A_OK;
+
+    FileInfo::ChunkMap cm;
+    std::cout<<" CURRENT CHUNK COUNT : " << fi->GetChunkInfoList()->size() << std::endl;
+    for(unsigned int i=0; i<chunk_list.size(); i++) {
+        std::cout<<" checking : " << chunk_list[i] << std::endl;
+        // Run through chunks
+        if(fi->DoesChunkExist(chunk_list[i])) {
+            std::cout<<" EXISTS BRO " << std::endl;
+            //  - determine which ones still exist update them
+            //      - update order numbers
+            //  - remove old ones
+            ChunkInfo ci = *(fi->GetChunkInfo(chunk_list[i]));
+            ci.set_position(i);
+            cm[chunk_list[i]] = ci;
+            std::cout<<" CI name : " << chunk_list[i] << std::endl;
+        }
+    }
+
+    fi->set_chunks(cm);
+    out.SetChunkInfoList(cm);
+
+    // Copy over previous attachments that are still relevant
+    Post::AttachmentVec* pvec = prev_post.GetAttachments();
+    if(pvec) {
+        for(unsigned int i=0; i<pvec->size(); i++){
+            std::cout<<" ATTACHEMNT NAME : " << (*pvec)[i].name << std::endl;
+            if(fi->DoesChunkExist((*pvec)[i].name)) {
+                // copy attachemnt
+                out.PushBackAttachment((*pvec)[i]);
+                std::cout<<" PUSHED BACK ATTACHMENT " << std::endl;
+            }
+        }
+
+    }
+
+
+    std::cout<<" NEW CHUNK COUNT : " << fi->GetChunkInfoList()->size();
+    return status;
+}
+
+int PostFileStrategy::ProcessChunk(const std::string& chunk, 
+                                   const std::string& file_key, 
+                                   const std::string& request_boundary,
+                                   const unsigned int chunk_count,
+                                   Connection& socket,
+                                   FileInfo* fi,
+                                   std::string& name_out) {
+    int status = ret::A_OK;
+
+    std::string finished_chunk, chunk_name;
+    ChunkInfo ci;
+    TransformChunk(chunk, 
+                   file_key, 
+                   finished_chunk, 
+                   chunk_name, 
+                   ci);
+
+    if(fi && !fi->DoesChunkExist(chunk_name)) {
+        std::cout<<" SENDING " << std::endl;
+        std::cout<<" CHUNK NAME : " << chunk_name << std::endl;
+        //FileInfo::ChunkMap* pList = fi->GetChunkInfoList();
+        // Push chunk back into fileinfo
+        std::cout<<" PUSHING BACK " << std::endl;
+        fi->PushChunkBack(ci);
+        std::cout<<" SIZE NOW : " << fi->GetChunkInfoList()->size() << std::endl;
+
+        SendChunk(finished_chunk, 
+                  chunk_name, 
+                  request_boundary, 
+                  socket, 
+                  chunk_count, 
+                  false);
+    }
+
+    name_out = chunk_name;
+
     return status;
 }
 
 int PostFileStrategy::SendChunk(const std::string& chunk, 
-                                const std::string& fileKey,
+                                const std::string& chunk_name,
                                 const std::string& boundary,
                                 Connection& socket,
                                 //boost::asio::ssl::stream<tcp::socket&>& ssl_sock,
                                 const unsigned int count,
-                                bool end,
-                                FileInfo* pFi)
-{
+                                bool end) {
     int status = ret::A_OK;
-    // Transform
-    
-    std::string finishedChunk, chunkName;
-    TransformChunk(chunk, 
-                   fileKey, 
-                   finishedChunk, 
-                   chunkName, 
-                   pFi);
-
-    std::cout<<" chunk size : " << chunk.size() << std::endl;
-    std::cout<<" trans size : " << finishedChunk.size() << std::endl;
     // Build Attachment
     boost::asio::streambuf attachment;
     std::ostream attachmentstream(&attachment);
-    netlib::BuildAttachmentForm(chunkName, finishedChunk, boundary, count, attachmentstream);
+    netlib::BuildAttachmentForm(chunk_name, chunk, boundary, count, attachmentstream);
 
     int breakcount = 0;
     int retrycount = 20;
@@ -434,7 +538,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
                                      const std::string& fileKey,
                                      std::string& finalizedOut, 
                                      std::string& nameOut, 
-                                     FileInfo* pFi) {
+                                     ChunkInfo& out) {
     int status = ret::A_OK;
     Credentials chunkCred;
     chunkCred.set_key(fileKey);
@@ -479,16 +583,12 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
 
     // Fill Out Chunk info object
-    ChunkInfo ci;
-    ci.set_chunk_name(chunkName);
-    ci.set_plaintext_mac(plaintextHash);
-    ci.set_ciphertext_mac(ciphertextHash);
-    ci.set_iv(iv);
+    out.set_chunk_name(chunkName);
+    out.set_plaintext_mac(plaintextHash);
+    out.set_ciphertext_mac(ciphertextHash);
+    out.set_iv(iv);
 
     nameOut = chunkName;
-
-    // Push chunk back into fileinfo
-    if(pFi) pFi->PushChunkBack(ci);
 
     return status;
 }

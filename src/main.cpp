@@ -261,17 +261,17 @@ TEST(AFILE, PUSH)
     
 
     if(status == 0) {
-        //std::string path = "./data/" + g_File;
-        //status = PushFile(path.c_str());
+        std::string path = "./data/" + g_File;
+        status = PushFile(path.c_str());
         std::cout<<" uploading file ... " << std::endl;
         //status = PushFile("./data/videos/posa22.mp4");
         //status = PushFile("./data/music/test.mp3");
-        status = PushFile("./data/oglisv.pdf");
+        //status = PushFile("./data/oglisv.pdf");
         //status = PushFile("./data/test.txt");
-        status = PushFile("./data/cassandra11.pdf");
-        status = PushFile("./data/algorithmsall.pdf");
+        //status = PushFile("./data/cassandra11.pdf");
+        //status = PushFile("./data/algorithmsall.pdf");
         //status = PushFile("./data/freenet.pdf", &PUSHCB);
-        status = PushFile("./data/oa.pdf");
+        //status = PushFile("./data/oa.pdf");
         //status = PushFile("./data/docs/oglisv.pdf", &PUSHCB);
         //status = PushFile("./data/cpp/isoiec.pdf", &PUSHCB);
 
@@ -358,7 +358,7 @@ TEST(AFILE, DELETE)
         std::string rel("./data");
         std::string filepath;
         attic::fs::GetCanonicalPath(rel, filepath);
-        filepath += "/oglisoglisvv.pdf";
+        filepath += "/oglisv.pdf";
 
         status = DeleteFile(filepath.c_str());
         ASSERT_EQ(status, attic::ret::A_OK);
@@ -648,12 +648,15 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     ASSERT_EQ(key, deckey);
 }
 
+/*
 TEST(CRYPTO, FILEHASH) {
+
    std::string filepath = "./data/m4.mp4";
    std::string hash_out;
    attic::crypto::GenerateFileHash(filepath, hash_out);
    std::cout<<" FILE HASH : " << hash_out << std::endl;
 }
+*/
 
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {

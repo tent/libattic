@@ -30,6 +30,8 @@ public:
     ChunkInfo* GetChunkInfo(const std::string& chunkname);
     ChunkMap* GetChunkInfoList() { return &chunks_; }
 
+    bool DoesChunkExist(const std::string& chunk_name);
+
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
     bool LoadSerializedChunkPost(const std::string& data);
@@ -54,6 +56,7 @@ public:
 
     void set_filename(const std::string &filename)          { filename_ = filename; }
     void set_filepath(const std::string &filepath)          { filepath_ = filepath; }
+    void set_chunks(const ChunkMap& chunk_map)             { chunks_ = chunk_map; }
     void set_chunk_count(const std::string& count)          { chunk_count_ = atoi(count.c_str()); }
     void set_chunk_count(const unsigned int unChunkCount)   { chunk_count_ = unChunkCount; }
     void set_file_size(const std::string& file)             { file_size_ = atoi(file.c_str()); }

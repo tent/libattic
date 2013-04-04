@@ -603,16 +603,15 @@ static void BuildBodyForm( const std::string& post_type,
         bodystream << "\""; 
     }
     bodystream << "\r\n";
-
     bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
     bodystream << body;
 }
 
-static void BuildAttachmentForm( const std::string& name, 
-                                 const std::string& body,
-                                 const std::string& boundary,
-                                 unsigned int attachmentnumber,
-                                 std::ostream& bodystream) {
+static void BuildAttachmentForm(const std::string& name, 
+                                const std::string& body,
+                                const std::string& boundary,
+                                unsigned int attachmentnumber,
+                                std::ostream& bodystream) {
 
     std::cout<<" ATTACHMENT NAME : " << name << std::endl;
     std::cout<<" BODY SIZE : " << body.size() << std::endl;
@@ -625,9 +624,9 @@ static void BuildAttachmentForm( const std::string& name,
     bodystream << "\r\n--" << boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
     bodystream << "Content-Length: " << szSize << "\r\n";
-    bodystream << "Content-Type: application/octet-stream\r\n";
+    bodystream << "Content-Type: application/octet-stream ";
+    bodystream << "\r\n";
     bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
-
     bodystream << body;
 }
 

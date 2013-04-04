@@ -152,4 +152,10 @@ bool FileInfo::HasEncryptedKey()
     return true;
 }
 
+bool FileInfo::DoesChunkExist(const std::string& chunk_name) {
+    if(chunks_.find(chunk_name) != chunks_.end())
+        return true;
+    return false;
+}
+
 }//namespace

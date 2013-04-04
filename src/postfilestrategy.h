@@ -6,6 +6,7 @@
 #include "netlib.h"
 #include "credentials.h"
 #include "connection.h"
+#include "chunkpost.h"
 
 namespace attic {
 
@@ -26,13 +27,25 @@ class PostFileStrategy : public HttpStrategyInterface {
                     FileInfo* pFi,
                     Response& resp);
 
+    int ProcessChunk(const std::string& chunk, 
+                     const std::string& file_key, 
+                     const std::string& request_boundary,
+                     const unsigned int chunk_count,
+                     Connection& socket,
+                     FileInfo* fi,
+                     std::string& name_out);
+
+    int PrepareChunkPost(std::vector<std::string>& chunk_list, 
+                         ChunkPost& prev_post,
+                         FileInfo* fi, 
+                         ChunkPost& out);
+
     int SendChunk(const std::string& chunk, 
-                  const std::string& fileKey,
+                  const std::string& chunk_name,
                   const std::string& boundary,
                   Connection& socket,
                   const unsigned int count,
-                  bool end,
-                  FileInfo* pFi);
+                  bool end);
 
     int WriteToSocket(Connection& socket,
                       boost::asio::streambuf& buffer);
@@ -41,7 +54,7 @@ class PostFileStrategy : public HttpStrategyInterface {
                        const std::string& fileKey,
                        std::string& finalizedOut, 
                        std::string& nameOut, 
-                       FileInfo* pFi);
+                       ChunkInfo& out);
 
     void UpdateFileInfo(const Credentials& fileCred, 
                         const std::string& filepath, 
