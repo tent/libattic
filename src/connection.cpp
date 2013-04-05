@@ -46,6 +46,9 @@ int Connection::Initialize(const std::string& url) {
             ssl_ = true;
 
         status = netlib::ResolveHost(*io_service_, *socket_, host, ssl_);
+
+        if(ssl_)
+            status = InitializeSSLSocket(host);
         if(status == ret::A_OK) {
 
         }
@@ -58,7 +61,7 @@ int Connection::Initialize(const std::string& url) {
 }
 
 
-int Connection::InitializeSSLSocket() {
+int Connection::InitializeSSLSocket(const std::string& host) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
 
@@ -66,8 +69,13 @@ int Connection::InitializeSSLSocket() {
     ctx_ = new boost::asio::ssl::context(*io_service_,
                                          boost::asio::ssl::context::sslv23_client);
 
-    ctx_->set_verify_mode(boost::asio::ssl::context::verify_none);
+    // Load Cert
+    SSLLoadCerts();
+
+    //ctx_->set_verify_mode(boost::asio::ssl::context::verify_none);
+    ctx_->set_verify_mode(boost::asio::ssl::context::verify_peer);
     ssl_socket_ = new boost::asio::ssl::stream<tcp::socket&>(*socket_, *ctx_);
+    ssl_socket_->set_verify_callback(boost::asio::ssl::rfc2818_verification(host.c_str()));
     ssl_socket_->handshake(boost::asio::ssl::stream_base::client, error);
 
     if(error) {
@@ -97,6 +105,53 @@ void Connection::InterpretResponse(Response& out) {
         netlib::InterpretResponse(ssl_socket_, out);
     else
         netlib::InterpretResponse(socket_, out);
+}
+
+
+void Connection::SSLLoadCerts() { // Move to connection pool, load once give to all connections
+    std::cout<<" LOADING CERTS " << std::endl;
+    std::string data;
+
+    std::ifstream ifs;
+    ifs.open("config/cacert.pem", std::ios::binary);
+
+    if(ifs.is_open()) {
+        ifs.seekg(0, std::ifstream::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg(0, std::ifstream::beg);
+        
+        char* szData = new char[size];
+        ifs.read(szData, size);
+        data.append(szData, size);
+
+        if(szData) {
+            delete[] szData;
+            szData = NULL;
+        }
+        ifs.close();
+    }
+    else {
+        std::cout<<" COULD NOT LOAD SSL CERT" << std::endl;
+    }
+
+    // Load Certificate
+    BIO *bio;
+    X509 *certificate;
+
+    bio = BIO_new(BIO_s_mem());
+    BIO_puts(bio, data.c_str());
+    certificate = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+
+    // Insert into X509 store
+    X509_STORE* ca_store = X509_STORE_new();
+    X509_STORE_add_cert(ca_store, certificate);
+
+    X509_free(certificate);
+    BIO_free(bio);
+
+    // Load store into context // boost/asio/ssl/context->implementation
+    SSL_CTX_set_cert_store(ctx_->impl(), ca_store); // ca_store will be freed when context is destroyed
+    //voila
 }
 
 } // namespace

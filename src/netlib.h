@@ -652,8 +652,7 @@ static void ChunkEnd(boost::asio::streambuf& part, std::ostream& outstream) {
 static int ResolveHost(boost::asio::io_service& io_service, 
                        tcp::socket& socket,
                        const std::string& host,
-                       const bool ssl)
-{
+                       const bool ssl) {
     int status = ret::A_OK;
 
     std::cout<<" host " << host << std::endl;
@@ -678,6 +677,7 @@ static int ResolveHost(boost::asio::io_service& io_service,
     if(port.empty())
         port = protocol;
     
+    std::cout<<" PROT : " << protocol << std::endl;
     std::cout<<" HOST : " << resolve_host << std::endl;
     std::cout<<" PORT : " << port << std::endl;
 

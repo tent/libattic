@@ -1061,6 +1061,18 @@ TEST(FILESYSTEM, SCAN)
     }
 }
 
+TEST(SOCKET, CONNECTION) {
+    boost::asio::io_service io_service;
+    attic::Connection con(&io_service);
+    try {
+        con.Initialize("https://www.pcwebshop.co.uk/");
+    }
+    catch(std::exception& e) {
+        std::cout<<e.what()<< std::endl;
+    }
+
+}
+
 
 int main (int argc, char* argv[]) {
    int status = 0;

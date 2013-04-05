@@ -13,9 +13,8 @@
 namespace attic { 
 
 class Connection {
-    int InitializeSSLSocket();
-
-
+    int InitializeSSLSocket(const std::string& host);
+    void SSLLoadCerts();
 public:
     Connection(boost::asio::io_service* io_service);
     ~Connection();
