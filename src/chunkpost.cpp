@@ -11,17 +11,17 @@ ChunkPost::ChunkPost() {
     set_type(cnst::g_attic_chunk_type);
 }
 
-ChunkPost::~ChunkPost() { }
+ChunkPost::~ChunkPost() {}
 
 // TODO :: rethink how chunk info objects are handled as a whole,
 //         there are going to be alot of copies with this strategy
-int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List) {
+int ChunkPost::set_chunk_info_list(FileInfo::ChunkMap& list) {
     int status = ret::A_OK;
 
-    std::map<std::string, ChunkInfo>::iterator itr = List.begin();
-    for(;itr != List.end(); itr++) {
+    std::map<std::string, ChunkInfo>::iterator itr = list.begin();
+    for(;itr != list.end(); itr++) {
         // copy
-        m_ChunkList.push_back(itr->second);
+        chunk_info_list_[itr->second.position()] = itr->second;
     }
 
     return status;
@@ -29,15 +29,15 @@ int ChunkPost::SetChunkInfoList(std::map<std::string, ChunkInfo>& List) {
 
 void ChunkPost::Serialize(Json::Value& root) {
     std::cout<<" Serializing chunk post " << std::endl;
-    if(m_ChunkList.size() > 0) {
+    if(chunk_info_list_.size() > 0) {
         std::vector<std::string> serializedList;
-        std::vector<ChunkInfo>::iterator itr = m_ChunkList.begin();
+        ChunkInfoList::iterator itr = chunk_info_list_.begin();
 
         Json::Value chunkval(Json::arrayValue);
-        for(;itr != m_ChunkList.end(); itr++) {
+        for(;itr != chunk_info_list_.end(); itr++) {
             Json::Value val(Json::objectValue);
-            jsn::SerializeObject(&(*itr), val);
-            std::string chunkname = (*itr).chunk_name();
+            jsn::SerializeObject(&(itr->second), val);
+            std::string chunkname = itr->second.chunk_name();
             chunkval.append(val);
         }
         set_content("chunks", chunkval);
@@ -58,10 +58,8 @@ void ChunkPost::Deserialize(Json::Value& root) {
     for(; itr != chunkval.end(); itr++) {
         ChunkInfo ci;
         jsn::DeserializeObject(&ci, (*itr));
-        m_ChunkList.push_back(ci);
+        chunk_info_list_[ci.position()] = ci;
     }
 }
-
-
 
 } //namespace

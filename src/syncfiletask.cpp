@@ -201,12 +201,12 @@ int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo& fi) {
                 ChunkPost cp;
                 jsn::DeserializeObject(&cp, response.body);
 
-                if(cp.GetChunkSize()) {
-                    std::vector<ChunkInfo>* ciList = cp.GetChunkList();
-                    std::vector<ChunkInfo>::iterator itr = ciList->begin();
+                if(cp.chunk_info_list_size()) {
+                    ChunkPost::ChunkInfoList* ciList = cp.chunk_info_list();
+                    ChunkPost::ChunkInfoList::iterator itr = ciList->begin();
 
                     for(;itr != ciList->end(); itr++) {
-                        fi.PushChunkBack(*itr);
+                        fi.PushChunkBack(itr->second);
                     }
                 }
             }

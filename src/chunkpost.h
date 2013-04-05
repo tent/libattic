@@ -8,24 +8,26 @@
 
 #include "post.h"
 #include "chunkinfo.h"
+#include "fileinfo.h"
 
 namespace attic { 
 
 class ChunkPost : public Post {
 public:
+    typedef std::map<unsigned int, ChunkInfo> ChunkInfoList;
     ChunkPost();
     ~ChunkPost();
 
     virtual void Serialize(Json::Value& root);  
     virtual void Deserialize(Json::Value& root);
 
-    int SetChunkInfoList(std::map<std::string, ChunkInfo>& pList);
+    unsigned int chunk_info_list_size() { return chunk_info_list_.size(); }
+    ChunkInfoList* chunk_info_list() { return &chunk_info_list_; }
 
-    int GetChunkSize() { return m_ChunkList.size(); }
-    std::vector<ChunkInfo>* GetChunkList() { return &m_ChunkList; }
+    int set_chunk_info_list(FileInfo::ChunkMap& list);
 
 private:
-    std::vector<ChunkInfo>  m_ChunkList;
+    ChunkInfoList chunk_info_list_;
 
 };
 

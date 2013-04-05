@@ -396,22 +396,20 @@ int PostFileStrategy::PrepareChunkPost(std::vector<std::string>& chunk_list,
     }
 
     fi->set_chunks(cm);
-    out.SetChunkInfoList(cm);
+    out.set_chunk_info_list(cm);
 
     // Copy over previous attachments that are still relevant
-    Post::AttachmentVec* pvec = prev_post.GetAttachments();
+    Post::AttachmentMap* pvec = prev_post.attachments();
+    Post::AttachmentMap::iterator itr = prev_post.attachments()->begin();
     if(pvec) {
-        for(unsigned int i=0; i<pvec->size(); i++){
-            std::cout<<" ATTACHEMNT NAME : " << (*pvec)[i].name << std::endl;
-            if(fi->DoesChunkExist((*pvec)[i].name)) {
+        for(;itr != prev_post.attachments()->end(); itr++) {
+            if(fi->DoesChunkExist(itr->second.name)) {
                 // copy attachemnt
-                out.PushBackAttachment((*pvec)[i]);
+                out.PushBackAttachment(itr->second);
                 std::cout<<" PUSHED BACK ATTACHMENT " << std::endl;
             }
         }
-
     }
-
 
     std::cout<<" NEW CHUNK COUNT : " << fi->GetChunkInfoList()->size();
     return status;

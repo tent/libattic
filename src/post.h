@@ -39,7 +39,7 @@ struct Attachment : public JsonSerializable {
 
 class Post : public JsonSerializable {
 public:
-    typedef std::vector<Attachment> AttachmentVec;
+    typedef std::map<std::string, Attachment> AttachmentMap;
 
     Post();
     ~Post();
@@ -49,8 +49,11 @@ public:
 
     void get_content(const std::string& key, Json::Value& out);
 
-    unsigned int GetAttachmentCount()           { return attachments_.size(); }
-    AttachmentVec* GetAttachments()             { return &attachments_; }
+    unsigned int attachments_count()           { return attachments_.size(); }
+    AttachmentMap* attachments()                { return &attachments_; }
+
+    bool has_attachment(const std::string& name);
+    const Attachment& get_attachment(const std::string& name);
 
     const std::string& id() const       { return id_; }
     const std::string& entity() const   { return entity_; }
@@ -67,7 +70,7 @@ public:
     void set_content(const std::string &type, Json::Value &val) { content_[type] = val; }
     void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
-    void PushBackAttachment(Attachment& pAtch) { attachments_.push_back(pAtch); }
+    void PushBackAttachment(Attachment& att) { attachments_[att.name] = att; }
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
 
@@ -79,7 +82,7 @@ private:
     std::vector<std::string>            mentions_;
     std::vector<std::string>            licenses_;
     ContentMap                          content_;
-    AttachmentVec                       attachments_;
+    AttachmentMap                       attachments_;
     TentApp                             tent_app_;
     std::map<std::string, std::string>  views_;
     Permissions                         permissions_;

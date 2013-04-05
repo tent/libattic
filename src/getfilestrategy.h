@@ -4,18 +4,25 @@
 
 #include "httpstrategy.h"
 #include "credentials.h"
-#include "post.h"
+#include "chunkpost.h"
 
 namespace attic { 
 
 class GetFileStrategy : public HttpStrategyInterface {
     int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
     int GetChunkPost(FileInfo* fi, Response& responseOut);
-    int RetrieveFile(const std::string& filepath, 
-                     const std::string& postpath, 
-                     const Credentials& fileCred,
-                     Post& post,
+
+    int AssembleFile(const std::string& filepath,
+                     const std::string& url,
+                     const Credentials& file_cred,
+                     ChunkPost& post,
                      FileInfo* fi);
+                     
+    int RetrieveAttachments(const std::string& filepath,
+                            const std::string& attacment_url,
+                            const Credentials& cred,
+                            ChunkPost& post,
+                            FileInfo* fi);
 
     int RetrieveAttachment(const std::string& url, std::string& outBuffer);
     int TransformChunk(const ChunkInfo* ci, 

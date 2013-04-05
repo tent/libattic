@@ -64,29 +64,7 @@ Post::Post() {
 }
 
 Post::~Post() {
-    if(attachments_.size() > 0) {
-        std::cout<<" # attachments : " << attachments_.size() << std::endl;
-
-        AttachmentVec::iterator itr = attachments_.begin();
-
-        Attachment* pAtch=0;
-        for(;itr != attachments_.end();) {
-            //pAtch = *itr;
-            itr++;
-            /*
-            if(pAtch)
-            {
-                std::cout<<"Name : " << pAtch->Name << std::endl;
-                std::cout<<"deleting ... " << std::endl;
-                delete pAtch;
-                pAtch = NULL;
-            }
-            */
-        }
-
-        attachments_.clear();
-        std::cout<<" # attachments : " << attachments_.size() << std::endl;
-    }
+    attachments_.clear();
 }
 
 void Post::get_content(const std::string& key, Json::Value& out) {
@@ -129,10 +107,10 @@ void Post::Serialize(Json::Value& root) {
     std::cout<<" ATTACHMENT SERIALIZE SIZE : " << attachments_.size() << std::endl;
     if(attachments_.size() > 0) {
         Json::Value attachment_arr(Json::arrayValue);
-        AttachmentVec::iterator itr = attachments_.begin();
+        AttachmentMap::iterator itr = attachments_.begin();
         for(;itr!= attachments_.end(); itr++) {
             Json::Value attachment(Json::objectValue);
-            (*itr).Serialize(attachment);
+            itr->second.Serialize(attachment);
             attachment_arr.append(attachment);
         }
 
@@ -173,31 +151,27 @@ void Post::Deserialize(Json::Value& root) {
     jsn::DeserializeObjectValueIntoMap(root["content"], content_);
     
     // Deserialize this into an array of objects
-    Json::Value atch(Json::arrayValue);
-    atch = root["attachments"];
+    Json::Value jsn_attch(Json::arrayValue);
+    jsn_attch = root["attachments"];
 
-    if(atch.size() > 0) {
-        Json::ValueIterator itr = atch.begin();           
-
-        for(; itr != atch.end(); itr++) {
+    if(jsn_attch.size() > 0) {
+        Json::ValueIterator itr = jsn_attch.begin();           
+        for(; itr != jsn_attch.end(); itr++) {
             //Attachment* pAtch = new Attachment;
-            Attachment pAtch;
+            Attachment attch;
             Json::Value aobj(Json::objectValue);
             aobj = (*itr);
 
             if(aobj.isObject()) {
                 if(aobj.size() >= 4) {
                     Json::ValueIterator ii = aobj.begin();
-
                     for(; ii != aobj.end(); ii++) {
-                        pAtch.AssignKeyValue(ii.key().asString(), (*ii));
+                        attch.AssignKeyValue(ii.key().asString(), (*ii));
                     }
                 }
             }
-
-            attachments_.push_back(pAtch);
+            PushBackAttachment(attch);
         }
-
     }
 
 
@@ -208,5 +182,17 @@ void Post::Deserialize(Json::Value& root) {
     jsn::DeserializeObjectValueIntoMap(root["views"], views_);
     jsn::DeserializeObject(&permissions_,root["permissions"]);
 }
+
+bool Post::has_attachment(const std::string& name) {
+    if(attachments_.find(name) != attachments_.end())
+        return true;
+    return false;
+}
+
+const Attachment& Post::get_attachment(const std::string& name) {
+    return attachments_[name];
+}
+
+
 
 }//namespace

@@ -52,31 +52,26 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         std::string relative_filepath = fi->filepath();
                         std::cout<<" chunk post : " << response.body << std::endl;
 
-                        Post p;
+                        ChunkPost p;
                         jsn::DeserializeObject(&p, response.body);
 
                         try{
-                            status = RetrieveFile(relative_filepath, 
+                            status = AssembleFile(relative_filepath,
                                                   attachurl,
-                                                  fileCred, 
-                                                  p, 
+                                                  fileCred,
+                                                  p,
                                                   fi);
                         }
                         catch(std::exception& e) {
                             log::LogException("SFN#985412", e); 
                         }
-                        // File retrieval was successfull, post step
-                        if(status == ret::A_OK) {
-                            // Update version
-                            char szVer[256] = {'\0'};
-                            std::cout<<" FIX THIS IN GETFILESTRATEGY " << std::endl;
-                            //snprintf(szVer, 256, "%d", p.GetVersion());
-                            //file_manager_->SetFileVersion(relative_filepath, std::string(szVer));
-                        }
 
+                        if(status == ret::A_OK) {
+                        }
                     }
                     else {
                         status = ret::A_FAIL_NON_200;
+                        log::LogHttpResponse("14MGFS80", response);
                     }
                 }
             }
@@ -173,116 +168,95 @@ int GetFileStrategy::GetChunkPost(FileInfo* fi, Response& responseOut) {
     return status;
 }
 
-int GetFileStrategy::RetrieveFile(const std::string& filepath, 
-                                  const std::string& postpath, 
-                                  const Credentials& fileCred,
-                                  Post& post,
+int GetFileStrategy::AssembleFile(const std::string& filepath,
+                                  const std::string& url,
+                                  const Credentials& file_cred,
+                                  ChunkPost& post,
                                   FileInfo* fi) {
     int status = ret::A_OK;
-    // Construct list of attachments                                                             
-    Post::AttachmentVec* av = post.GetAttachments();                                             
-    Post::AttachmentVec::iterator itr = av->begin();                                             
-    std::string attachmentpath, outpath;
 
-    // TODO :: sort attachments by position, or rather copy them into a map with key position then just iterate and assemble.
-    
-    Credentials fCred = fileCred;
-    std::string fp = fi->filepath();
+    // Create temp path
+    std::string fp = fi->filepath(); // filepath of file within attic dir
     std::string filename = fi->filename();
 
-    // This should be relative ie: <working>/some/path/file.txt
-    std::cout<< " filepath : " << filepath << std::endl;
-    std::cout<< " filepath from fi : " << fp << std::endl;
-    std::cout<< " filename : " << filename << std::endl;
-
-    std::string path;
-    file_manager_->GetCanonicalFilepath(filepath, path);
-
-    std::cout<< " path : " << path << std::endl;
-    // check if we need to create folders
-    fs::CreateDirectoryTree(path); // safer to pass canonical 
-
-    std::string filekey =  fCred.key();
-    std::cout<< " file key : " << filekey << std::endl;
-
-    std::string temppath, randstr;
-    file_manager_->GetTempDirectory(temppath);
-    //crypto::GenerateRandomString(randstr, 4);
+    std::string temp_path;
+    file_manager_->GetTempDirectory(temp_path);
+    utils::CheckUrlAndAppendTrailingSlash(temp_path);
+    std::string randstr;
     utils::GenerateRandomString(randstr, 16);
-    temppath += "/" + filename + "_" + randstr;
+    temp_path += filename + "_" + randstr;
 
-    std::cout<<" TEMPPATH : " << temppath << std::endl;
+    status = RetrieveAttachments(temp_path, url, file_cred, post, fi);
+    if(status == ret::A_OK) {
+        std::string path;
+        file_manager_->GetCanonicalFilepath(filepath, path);
+        fs::MoveFile(temp_path, path);
+    }
 
-    std::ofstream ofs;
-    ofs.open(temppath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
-    if (ofs.is_open()) {
-        int count = 0;
-        std::cout<<" ATTACHMENT COUNT : " << av->size() << std::endl;
-        for(;itr != av->end(); itr++) {
-            // Construct attachment path
+    // delete temp file 
+    fs::DeleteFile(temp_path);
+    return status;
+}
+ 
+int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
+                                         const std::string& attachment_url,
+                                         const Credentials& cred,
+                                         ChunkPost& post,
+                                         FileInfo* fi) {
+    int status = ret::A_OK;
+    if(post.chunk_info_list()->size()) {
+        Post::AttachmentMap* av = post.attachments();                                             
 
-            utils::FindAndReplace(postpath, "{version}", post.version_id(), attachmentpath);
-            utils::FindAndReplace(attachmentpath, "{name}", (*itr).name, attachmentpath);
-            std::cout<<" attachment path : " << attachmentpath << std::endl;
+        std::ofstream ofs;
+        ofs.open(filepath.c_str(),  std::ios::out | std::ios::trunc | std::ios::binary);
+        
+        if (ofs.is_open()) {
+            unsigned int count = post.chunk_info_list_size();
+            for(unsigned int i=0; i < count; i++) {
+                ChunkPost::ChunkInfoList::iterator itr = post.chunk_info_list()->find(i);
+                if(itr != post.chunk_info_list()->end()) {
+                    // Get attachment
+                    if(post.has_attachment(itr->second.chunk_name())) {
+                        Attachment attch = post.get_attachment(itr->second.chunk_name());
+                        std::string attachment_path;
+                        utils::FindAndReplace(attachment_url, 
+                                              "{version}", 
+                                              post.version_id(), 
+                                              attachment_path);
+                        utils::FindAndReplace(attachment_path, 
+                                              "{name}", 
+                                              itr->second.chunk_name(), 
+                                              attachment_path);
 
-            char szCount[256]={'\0'};
-            snprintf(szCount, 256, "%d", count);
-
-            outpath.clear();
-            file_manager_->GetTempDirectory(outpath);
-
-            utils::CheckUrlAndAppendTrailingSlash(outpath);
-            outpath += (*itr).name;
-
-            // Request attachment                                                                
-            std::string buffer;
-            status = RetrieveAttachment(attachmentpath, buffer);
-
-            if(buffer.size() <= 0) {
-                status = ret::A_FAIL_ZERO_SIZE;
-            }
-
-            if(status == ret::A_OK) {
-                // Transform Chunk
-                std::cout<< " looking for chunk : " << (*itr).name << std::endl;
-                std::cout<< " SIZE : " << fi->GetChunkInfoList()->size() << std::endl;
-                ChunkInfo* ci = fi->GetChunkInfo((*itr).name);
-                std::string chunk;
-                status = TransformChunk(ci, filekey, buffer, chunk);
-                if(status == ret::A_OK) {
-                    // Append to file 
-                    ofs.write(chunk.c_str(), chunk.size());
-                    count++;
+                        std::cout<<" attachment path : " << attachment_path << std::endl;
+                        // Request attachment
+                        std::string buffer;
+                        status = RetrieveAttachment(attachment_path, buffer);
+                        if(status == ret::A_OK) {
+                            ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                            std::string chunk;
+                            status = TransformChunk(ci, cred.key(), buffer, chunk);
+                            if(status == ret::A_OK) {
+                                // Append to file 
+                                ofs.write(chunk.c_str(), chunk.size());
+                            }
+                            else {
+                                std::cout<<" FAILED TRANSFORM " << std::endl;
+                                break;
+                            }
+                        }
+                    }
                 }
                 else {
-                    std::cout<<" FAILED TO TRANSFORM CHUNK : " << status << std::endl;
+                    std::cout<<" Out of sequence chunk " << std::endl;
                 }
             }
-
-            if(status) // fail
-                break;
+            ofs.close();
         }
-
-        ofs.close();
-        // Copy
-
-        if(status == ret::A_OK) {
-            std::cout<<" moving file to : " << path << std::endl;
-            // TODO :: this can be moved up the chain a bit, perhaps perform some other checks
-            // before moving
-            std::cout<<" file construction complete moving ... " << std::endl;
-            fs::MoveFile(temppath, path);
-        }
-
-        // Cleanup temppath
-        fs::DeleteFile(temppath);
-
     }
     else {
-        std::cout<<" FAIL TO OPEN FILE " << std::endl;
-        status = ret::A_FAIL_OPEN_FILE;
+        status = ret::A_FAIL_EMPTY_CHUNK_POST;
     }
-    
     return status;
 }
 
@@ -389,6 +363,7 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
             message += " chunk hash : " + ci_cipherhash + "\n";
             message += " local hash : " + cipherhash + "\n";
             log::LogString("1PRF123X", message);
+            status = ret::A_FAIL_INVALID_CHUNK_HASH;
         }
     }
     else
