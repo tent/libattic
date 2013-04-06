@@ -4,9 +4,34 @@
 
 namespace attic {
 
+void Parent::Serialize(Json::Value& root) {
+    root["version"] = version;
+    root["entity"] = entity;
+    root["original_entity"] = original_entity;
+    root["post"] = post;
+}
+
+void Parent::Deserialize(Json::Value& root) {
+    version = root.get("version", "").asString();
+    entity = root.get("entity", "").asString();
+    original_entity = root.get("original_entity", "").asString();
+    post = root.get("post", "").asString();
+}
+
 void Version::Serialize(Json::Value& root) {
     root["id"] = id;
     root["type"] = type;
+
+    if(parents.size()) {
+        Json::Value parent_array(Json::arrayValue);
+        for(unsigned int i=0; i<parents.size(); i++) {
+            Json::Value val(Json::objectValue);
+            jsn::SerializeObject(&parents[i], val);
+            parent_array.append(val);
+        }
+
+        root["parents"] = parent_array;
+    }
 }
 
 void Version::Deserialize(Json::Value& root) {
@@ -14,6 +39,22 @@ void Version::Deserialize(Json::Value& root) {
     type = root.get("type", "").asString();
     published_at = root.get("published_at", "").asString();
     received_at = root.get("received_at", "").asString();
+
+    Json::Value parent_array(Json::arrayValue);
+    parent_array = root["parents"];
+
+    if(parent_array.size()) {
+        Json::ValueIterator itr = parent_array.begin();           
+        for(;itr != parent_array.end(); itr++) {
+            Json::Value val(Json::objectValue);
+            val = *itr;
+
+            Parent p;
+            jsn::DeserializeObject(&p, val);
+            parents.push_back(p);
+        }
+    }
+
 }
 
 void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) {
@@ -37,6 +78,10 @@ void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) 
         hash = val.asString();
         return;
     }
+    if(key == "digest") {
+        digest = val.asString();
+        return;
+    }
     
     std::cout<< "Uknown key : " << key << std::endl;
 }
@@ -45,7 +90,8 @@ void Attachment::Serialize(Json::Value& root) {
     root["content_type"] = content_type;
     root["category"] = category;
     root["name"] = name;
-    root["hash"] = hash;
+    //root["hash"] = hash;
+    root["digest"] = digest;
     //root["size"] = size; no need to send the size, the server calculates this
 }
 
@@ -54,7 +100,8 @@ void Attachment::Deserialize(Json::Value& root) {
     category = root.get("category", "").asString();
     name = root.get("name", "").asString();
     size = root.get("size", 0).asUInt();
-    hash = root.get("hash", "").asString();
+    //hash = root.get("hash", "").asString();
+    digest = root.get("digest", "").asString();
 }
 
 Post::Post() {

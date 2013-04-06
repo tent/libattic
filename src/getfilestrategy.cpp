@@ -30,6 +30,9 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     if(fi) {
         if(fi->deleted())
             return ret::A_FAIL_PULL_DELETED_FILE;
+        // Check for conflict
+        PostTree file_tree;
+        ConstructPostTree(fi, file_tree);
 
         Credentials fileCred;
         status = RetrieveFileCredentials(fi, fileCred);
@@ -219,6 +222,11 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
                     if(post.has_attachment(itr->second.chunk_name())) {
                         Attachment attch = post.get_attachment(itr->second.chunk_name());
                         std::string attachment_path;
+                        utils::FindAndReplace(attachment_url,
+                                              "{digest}",
+                                              attch.digest,
+                                              attachment_path);
+                        /*
                         utils::FindAndReplace(attachment_url, 
                                               "{version}", 
                                               post.version_id(), 
@@ -227,7 +235,7 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
                                               "{name}", 
                                               itr->second.chunk_name(), 
                                               attachment_path);
-
+                                              */
                         std::cout<<" attachment path : " << attachment_path << std::endl;
                         // Request attachment
                         std::string buffer;
@@ -290,8 +298,6 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
         snprintf(szSpeed, 256, "%u", bps);
         event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
     }
-
-    
     return status;                                                                        
 }
 
@@ -368,6 +374,45 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
     }
     else
         status = ret::A_FAIL_INVALID_PTR;
+
+    return status;
+}
+
+int GetFileStrategy::ConstructPostTree(FileInfo* fi, PostTree& tree) { 
+    int status = ret::A_OK;
+    if(fi) {
+        std::cout<<"BUILDING POST TREE " << std::endl;
+        std::string posturl;
+        std::string postid = fi->post_id();
+
+        status = RetrieveAndInsert(postid, tree);
+    }
+    return status;
+}
+
+int GetFileStrategy::RetrieveAndInsert(const std::string& postid, PostTree& tree) {
+    int status = ret::A_OK;
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", postid, posturl);
+
+    Response resp;
+    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+
+    std::cout<<" POST URL : "<< posturl << std::endl;
+    std::cout<<" CODE : " << resp.code << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
+
+    if(resp.code == 200) {
+        FilePost fp;
+        if(jsn::DeserializeObject(&fp, resp.body)) {
+            tree.PushBackPost(&fp);
+            
+
+        }
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }

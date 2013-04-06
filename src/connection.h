@@ -32,6 +32,18 @@ private:
     bool ssl_;
 };
 
+
+// TODO :: finish this for testing
+class AsyncConnection {
+public:
+    AsyncConnection();
+    ~AsyncConnection();
+
+private:
+    boost::asio::ip::tcp::socket socket_;
+    boost::asio::ip::tcp::resolver resolver_;
+};
+
 }//namespace
 #endif
 

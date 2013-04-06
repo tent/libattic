@@ -4,6 +4,7 @@
 
 #include <deque>
 #include "connection.h"
+namespace attic { 
 
 class ConnectionPool {
 public:
@@ -17,5 +18,6 @@ private:
     std::deque<Connection*> pool_;
 };
 
+}//namespace
 #endif
 

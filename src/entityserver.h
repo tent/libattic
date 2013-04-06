@@ -16,7 +16,8 @@ struct ServerUrls : public JsonSerializable {
     std::string posts_feed;
     std::string new_post;
     std::string post;
-    std::string post_attachment;
+    std::string post_attachment; // Depricated
+    std::string attachment; // use this instead
     std::string batch;
     std::string server_info;
 };
@@ -33,6 +34,7 @@ public:
     const std::string& preference() const           { return preference_; }
     const std::string& app_auth_request() const     { return urls_.app_auth_request; }
     const std::string& app_token_request() const    { return urls_.app_token_request; }
+    const std::string& attachment() const           { return urls_.attachment; }
     const std::string& posts_feed() const           { return urls_.posts_feed; }
     const std::string& new_post() const             { return urls_.new_post; }
     const std::string& post() const                 { return urls_.post; }

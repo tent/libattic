@@ -9,6 +9,7 @@ void ServerUrls::Serialize(Json::Value& root) {
     root["new_post"] = new_post;
     root["post"] = post;
     root["post_attachment"] = post_attachment;
+    root["attachment"] = attachment;
     root["batch"] = batch;
     root["server_info"] = server_info;
 }
@@ -20,6 +21,7 @@ void ServerUrls::Deserialize(Json::Value& root) {
     new_post = root.get("new_post", "").asString();
     post = root.get("post", "").asString();
     post_attachment = root.get("post_attachment", "").asString();
+    attachment = root.get("attachment", "").asString();
     batch = root.get("batch", "").asString();
     server_info = root.get("server_info", "").asString();
 }

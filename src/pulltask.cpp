@@ -53,7 +53,7 @@ int PullTask::PullFile(const std::string& filepath) {
 
     std::string post_path = GetPostPath();
     std::string post_attachment;
-    utils::FindAndReplace(TentTask::entity().GetPreferredServer().post_attachment(),
+    utils::FindAndReplace(TentTask::entity().GetPreferredServer().attachment(),
                           "{entity}",
                           TentTask::entity().entity(),
                           post_attachment);

@@ -63,7 +63,7 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
     int status = RegisterAtticApp(g_Entity.c_str(),
                                   name.c_str(), 
                                   "LibAttic Test Suite", 
-                                  "www.tent.is", 
+                                  "http://www.tent.is", 
                                   "", 
                                   g_Entity.c_str(),
                                   "./config");

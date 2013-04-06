@@ -14,11 +14,25 @@
 
 namespace attic {
 
+struct Parent : public JsonSerializable {
+    std::string version; // Post version identifier - required
+    std::string entity; // Entity of parent post - optional
+    std::string original_entity; // original parent post - optional
+    std::string post; // identifier of parent post - optional
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
+
 struct Version : public JsonSerializable {
-    std::string id;
+    std::string id; // Post version identifier
     std::string type;
     std::string published_at;
     std::string received_at;
+
+    typedef std::vector<Parent> ParentList;
+    ParentList parents;
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
@@ -29,7 +43,9 @@ struct Attachment : public JsonSerializable {
     std::string category;  // `json:"category"`
     std::string name;      // `json:"name"`
     std::string hash;      // `json:"hash"`
+    std::string digest;    // `json:"digest"`
     unsigned int size;     // `json:"size"`
+
 
 
     void AssignKeyValue(const std::string &key, const Json::Value &val);
@@ -60,6 +76,7 @@ public:
     const std::string& type() const     { return type_; }
     unsigned int published_at() const   { return published_at_; }
     unsigned int received_at() const    { return received_at_; }
+    Version* version()            { return &version_; }
 
     const std::string& version_id() const { return version_.id; }
 
@@ -71,6 +88,7 @@ public:
     void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
     void PushBackAttachment(Attachment& att) { attachments_[att.name] = att; }
+    void PushBackParent(Parent& p) { version_.parents.push_back(p); }
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
 

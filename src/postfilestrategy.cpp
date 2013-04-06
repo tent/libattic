@@ -195,6 +195,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
     std::cout<< "url : " << url << std::endl;
 
     ChunkPost old_post;
+    Parent parent;
     if(requestType == "PUT") {
         std::cout<<" GETTING OLD POST : " << std::endl;
         Response response;
@@ -204,6 +205,10 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         }
 
         std::cout<<" CODE :" << response.code << std::endl;
+        // extract parents
+
+        parent.version = old_post.version()->id;
+
     }
 
     std::string protocol, host, path;
@@ -333,6 +338,8 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             std::cout<<" CHUNKS? : " << pFi->GetChunkInfoList()->size() << std::endl;
                     // Build Body Form header
             ChunkPost p;
+            if(requestType == "PUT")
+                p.PushBackParent(parent);
             PrepareChunkPost(chunk_list, old_post, pFi, p);
             std::string body; // we send an empty body for now
             jsn::SerializeObject(&p, body);
