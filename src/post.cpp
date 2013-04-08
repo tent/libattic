@@ -4,6 +4,25 @@
 
 namespace attic {
 
+
+void Mention::Serialize(Json::Value& root) {
+    root["entity"] = entity;
+    root["original_entity"] = original_entity;
+    root["post"] = post;
+    root["version"] = version;
+    root["type"] = type;
+    root["public"] = is_public;
+}
+
+void Mention::Deserialize(Json::Value& root) {
+    entity = root.get("entity", "").asString();
+    original_entity = root.get("original_entity", "").asString();
+    post = root.get("post", "").asString();
+    version = root.get("version", "").asString();
+    type = root.get("type", "").asString();
+    is_public = root.get("public", false).asBool();
+}
+
 void Parent::Serialize(Json::Value& root) {
     root["version"] = version;
     root["entity"] = entity;
@@ -131,12 +150,6 @@ void Post::Serialize(Json::Value& root) {
     if(published_at_ > 0)
         root["published_at"] = published_at_;
 
-    if(mentions_.size() > 0) {
-        Json::Value mentions;
-        jsn::SerializeVector(mentions_, mentions);
-        root["mentions"] = mentions;
-    }
-    
     if(licenses_.size() > 0) {
         Json::Value licenses;
         jsn::SerializeVector(licenses_, licenses);
@@ -163,6 +176,17 @@ void Post::Serialize(Json::Value& root) {
         }
 
         root["attachments"] = attachment_arr;
+    }
+
+    if(mentions_.size() > 0) {
+        Json::Value mentions_array(Json::arrayValue);
+        MentionsList::iterator itr = mentions_.begin();
+        for(;itr!= mentions_.end(); itr++) {
+            Json::Value mention(Json::objectValue);
+            jsn::SerializeObject(&(*itr), mention);
+            mentions_array.append(mention);
+        }
+        root["mentions"] = mentions_array;
     }
 
     /*
@@ -198,7 +222,6 @@ void Post::Deserialize(Json::Value& root) {
     received_at_    = atoi(rec.c_str());
 
     jsn::DeserializeObject(&version_, root["version"]);
-    jsn::DeserializeIntoVector(root["mentions"], mentions_);
     jsn::DeserializeIntoVector(root["licenses"], licenses_);
 
     jsn::DeserializeObjectValueIntoMap(root["content"], content_);
@@ -224,6 +247,23 @@ void Post::Deserialize(Json::Value& root) {
                 }
             }
             PushBackAttachment(attch);
+        }
+    }
+
+    Json::Value mentions_array(Json::arrayValue);
+    mentions_array = root["mentions"];
+
+    if(mentions_array.size() > 0) {
+        Json::ValueIterator itr = mentions_array.begin();
+        for(;itr != mentions_array.end(); itr++) {
+            Mention mention;
+            Json::Value mobj;
+            mobj = (*itr);
+
+            if(mobj.isObject()) {
+                jsn::DeserializeObject(&mention, mobj);
+                PushBackMention(mention);
+            }
         }
     }
 

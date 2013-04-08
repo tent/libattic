@@ -14,6 +14,18 @@
 
 namespace attic {
 
+struct Mention : public JsonSerializable {
+    std::string entity;
+    std::string original_entity;
+    std::string post;
+    std::string version;
+    std::string type;
+    bool is_public;
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
 struct Parent : public JsonSerializable {
     std::string version; // Post version identifier - required
     std::string entity; // Entity of parent post - optional
@@ -52,6 +64,7 @@ struct Attachment : public JsonSerializable {
 class Post : public JsonSerializable {
 public:
     typedef std::map<std::string, Attachment> AttachmentMap;
+    typedef std::vector<Mention> MentionsList;
 
     Post();
     ~Post();
@@ -61,7 +74,7 @@ public:
 
     void get_content(const std::string& key, Json::Value& out);
 
-    unsigned int attachments_count()           { return attachments_.size(); }
+    unsigned int attachments_count()            { return attachments_.size(); }
     AttachmentMap* attachments()                { return &attachments_; }
 
     bool has_attachment(const std::string& name);
@@ -84,6 +97,7 @@ public:
     void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
     void PushBackAttachment(Attachment& att) { attachments_[att.name] = att; }
+    void PushBackMention(const Mention& mention) { mentions_.push_back(mention); }
     void PushBackParent(Parent& p) { version_.parents.push_back(p); }
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
@@ -93,10 +107,10 @@ private:
     std::string                         type_;
     unsigned int                        published_at_;
     unsigned int                        received_at_;
-    std::vector<std::string>            mentions_;
     std::vector<std::string>            licenses_;
     ContentMap                          content_;
     AttachmentMap                       attachments_;
+    MentionsList                        mentions_;
     TentApp                             tent_app_;
     std::map<std::string, std::string>  views_;
     Permissions                         permissions_;
