@@ -35,7 +35,7 @@ int ShutdownLibAttic(void (*callback)(int, void*));
 // Master Key
 int EnterPassphrase(const char* szPass);
 int EnterRecoveryKey(const char* szRecovery);
-int RegisterPassphrase(const char* szPass, bool override = false);
+int RegisterPassphrase(const char* szPass);
 int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
 

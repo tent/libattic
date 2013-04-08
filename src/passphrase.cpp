@@ -22,9 +22,10 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
         status = ret::A_FAIL_NEED_ENTER_PASSPHRASE;
         if(override) {
             // Retrieve Attic Post
-            //status = RetrieveCredentialsPost(ap);
+            status = RetrieveCredentialsPost(ap);
             if(status == ret::A_OK) {
-                //reg = true;
+                reg = true;
+                std::cout<<" OVERRIDING ... " << std::endl;
                 // TODO :: when delete is implemented delete the old version
                 //status = DeleteCredentialsPost(ap);
             }
@@ -52,6 +53,9 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
             // Write Out To Post
             PushAtticCredentials(ap);
         }
+        else {
+            std::cout<<" COULD NOT CREATE MASTER KEY " << std::endl;
+        }
     }
 
     return status;
@@ -78,6 +82,8 @@ int Passphrase::EnterPassphrase(const std::string& passphrase,
         //  decrypt master key
         std::string decrypted_masterkey;
         status = DecryptKey(masterkey, phrasekey, salt, decrypted_masterkey);
+        std::cout<<" DK STATUS : " << status << std::endl;
+        std::cout<< " DECRYPTED KEY : " << decrypted_masterkey << std::endl;
         if(status == ret::A_OK) {
             // Everything alright, phrase key is correct
             master_key_out = decrypted_masterkey;
@@ -85,6 +91,9 @@ int Passphrase::EnterPassphrase(const std::string& passphrase,
             std::cout<<" PHRASE KEY : " << phrasekey << std::endl;
             token_out.set_phrase_key(phrasekey);
             token_out.set_salt(salt);
+        }
+        else {
+
         }
     }
 
@@ -103,6 +112,7 @@ int Passphrase::ChangePassphrase(const std::string& old_passphrase,
     if(status == ret::A_OK) {
         //  get master key 
         //  register new passphrase with master key
+        
         status = RegisterPassphrase(new_passphrase, master_key, recoverykey, true);
     }
 
@@ -167,15 +177,24 @@ int Passphrase::DecryptKey(const std::string& key,
                            std::string& key_out) {
     int status = ret::A_OK;
 
+    std::cout<<" input key : " << key << std::endl;
+    std::cout<<" passphrase : " << phrasekey << std::endl;
+    std::cout<<" salt : " << salt << std::endl;
+
     Credentials cred;
     cred.set_key(phrasekey);
     cred.set_iv(salt);
 
     std::string decrypted_key;
     status = crypto::DecryptStringCFB(key, cred, decrypted_key);
+    std::cout<<" DECRYPT STATUS : " << status << std::endl;
+    std::cout<<" DECRYPTED KEY : " << decrypted_key << std::endl;
     if(status == ret::A_OK) {
         if(CheckSentinelBytes(decrypted_key)) {
             key_out = decrypted_key.substr(8);
+        }
+        else {
+            status = ret::A_FAIL_SENTINEL_MISMATCH;
         }
     }
     else {
@@ -202,6 +221,7 @@ int Passphrase::ConstructMasterKey(const std::string& passphrase,
     int status = ret::A_OK;
     PhraseToken pt;
     status = CreatePhraseToken(masterkey, pt);
+
     if(status == ret::A_OK) {
         MasterKey mk;
         status = CreateMasterKey(masterkey, mk);
@@ -258,10 +278,10 @@ void Passphrase::EncryptKeyWithPassphrase(const std::string& key,
     crypto::EncryptStringCFB(key, enc, key_out);
 }
 
-int Passphrase::CreatePhraseToken(const std::string& masterkey, PhraseToken& out) {
+int Passphrase::CreatePhraseToken(const std::string& master_key, PhraseToken& out) {
     int status = ret::A_OK;
 
-    if(masterkey.empty()) 
+    if(master_key.empty()) 
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
 
     if(status == ret::A_OK) {
@@ -275,7 +295,7 @@ int Passphrase::CreatePhraseToken(const std::string& masterkey, PhraseToken& out
 
             // Generate Passphrase Key 
             Credentials cred;
-            crypto::GenerateKeyFromPassphrase(masterkey, salt, cred);
+            crypto::GenerateKeyFromPassphrase(master_key, salt, cred);
             
             // Set the key generated from phrase
             out.set_phrase_key(cred.key());
@@ -307,7 +327,6 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
 
     std::string body;
     AtticPost temp = post; // TODO :: remove this copy once jsn const correctness is fixed
-    jsn::SerializeObject(&temp, body);
 
     std::cout<<" access token : " << access_token_.GetMacKey() << std::endl;
     std::cout<<" post type :" << post.type() << std::endl;
@@ -315,6 +334,7 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
 
     Response response;
     if(post.id().empty()) {
+        jsn::SerializeObject(&temp, body);
         status = netlib::HttpPost(url, 
                                   post.type(),
                                   NULL,
@@ -323,12 +343,16 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
                                   response);
     } 
     else {
-         status = netlib::HttpPut(url, 
-                                  post.type(),
-                                  NULL,
-                                  body,
-                                  &access_token_,
-                                  response);
+        Parent parent;
+        parent.version = temp.version()->id;
+        temp.PushBackParent(parent);
+        jsn::SerializeObject(&temp, body);
+        status = netlib::HttpPut(url, 
+                                 post.type(),
+                                 NULL,
+                                 body,
+                                 &access_token_,
+                                 response);
     }
 
     std::cout<<" code : " << response.code << std::endl;

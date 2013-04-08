@@ -82,7 +82,7 @@ TEST(APP_REGISTRATION, STARTAPPINST) {
     ASSERT_EQ(status, attic::ret::A_OK);
     */
     
-    std::cout<< GetAuthorizationURL() << std::endl;
+    std::cout<< "AUTHORIZATION URL : " << GetAuthorizationURL() << std::endl;
     
 }
 
@@ -132,7 +132,7 @@ TEST(PASSPHRASE, REGISTER)
     if(status == attic::ret::A_OK) {
         RegisterForTemporaryKeyNotify(&TemporaryKeyCb);
         RegisterForRecoveryKeyNotify(&RecoveryKeyCb);
-        status = RegisterPassphrase(g_Passphrase.c_str(), true);
+        status = RegisterPassphrase(g_Passphrase.c_str());
         //ASSERT_EQ(status, attic::ret::A_OK);
 
         std::cout<< " REGISTER STATUS : " << status << std::endl;
@@ -188,10 +188,12 @@ TEST(PASSPHRASE, CHANGE)
 
 
     //status = ChangePassphrase("UldG3H35RSMo1jqx", "password");
-    std::cout<<" Changing password to \"thispass\""<<std::endl;
-    status = ChangePassphrase("password", "thispass");
+    status = ChangePassphrase("thispass", "password");
+    //std::cout<<" Changing password to \"thispass\""<<std::endl;
+    //status = ChangePassphrase("password", "thispass");
     std::cout<<" Change passphrase status : " << status << std::endl;
     ASSERT_EQ(status, attic::ret::A_OK);
+    /*
     status = EnterPassphrase("thispass");
     ASSERT_EQ(status, attic::ret::A_OK);
     std::cout<<" Changing password back " << std::endl;
@@ -199,6 +201,7 @@ TEST(PASSPHRASE, CHANGE)
     ASSERT_EQ(status, attic::ret::A_OK);
     status = EnterPassphrase("password");
     ASSERT_EQ(status, attic::ret::A_OK);
+    */
 
    sleep(10);
 

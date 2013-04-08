@@ -182,6 +182,7 @@ static int DecryptStringCFB(const std::string& cipher,
                                ); // StringSource
     }
     catch (CryptoPP::Exception &e) {
+        std::cout<<" EXCEPTION : " << e.what() << std::endl;
         status = ret::A_FAIL_DECRYPT;
     }                                                            
 

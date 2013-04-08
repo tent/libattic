@@ -243,7 +243,7 @@ int PollFiles(void) {
     return status;
 }
 
-int RegisterPassphrase(const char* szPass, bool override) {
+int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     //int status = IsLibInitialized(false);
     int status = attic::ret::A_OK;
@@ -255,7 +255,7 @@ int RegisterPassphrase(const char* szPass, bool override) {
         std::string master_key;
         g_pClient->credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
         std::string recovery_key;
-        status = ps.RegisterPassphrase(szPass, master_key, recovery_key, override);
+        status = ps.RegisterPassphrase(szPass, master_key, recovery_key, false);
 
         if(status == attic::ret::A_OK) {
             attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
@@ -296,6 +296,7 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
         // Discover Entity, get access token
         attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
 
+        std::cout<<" Changing passphrase " << std::endl;
         std::string recovery_key;
         status = ps.ChangePassphrase(szOld, szNew, recovery_key);
         if(status == attic::ret::A_OK){

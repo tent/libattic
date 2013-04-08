@@ -406,8 +406,6 @@ int GetFileStrategy::RetrieveAndInsert(const std::string& postid, PostTree& tree
         FilePost fp;
         if(jsn::DeserializeObject(&fp, resp.body)) {
             tree.PushBackPost(&fp);
-            
-
         }
     }
     else {
