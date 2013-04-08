@@ -20,7 +20,7 @@ void Parent::Deserialize(Json::Value& root) {
 
 void Version::Serialize(Json::Value& root) {
     root["id"] = id;
-    root["type"] = type;
+//    root["type"] = type;
 
     if(parents.size()) {
         Json::Value parent_array(Json::arrayValue);
@@ -36,7 +36,8 @@ void Version::Serialize(Json::Value& root) {
 
 void Version::Deserialize(Json::Value& root) {
     id = root.get("id", "").asString();
-    type = root.get("type", "").asString();
+    std::cout<<" DESERIALIZE VERSION ID : " << id << std::endl;
+ //   type = root.get("type", "").asString();
     published_at = root.get("published_at", "").asString();
     received_at = root.get("received_at", "").asString();
 
@@ -179,6 +180,11 @@ void Post::Serialize(Json::Value& root) {
     Json::Value permissions(Json::objectValue);
     jsn::SerializeObject(&permissions_, permissions);
     root["permissions"] = permissions;
+
+    Json::Value version(Json::objectValue);
+    jsn::SerializeObject(&version_, version);
+    root["version"] = version;
+
 }
 
 void Post::Deserialize(Json::Value& root) {

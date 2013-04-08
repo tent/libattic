@@ -53,7 +53,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
         std::cout<<" FOLDER POST : " << postid << std::endl;
 
         std::string postBuffer;
-        jsn::SerializeObject(&p, postBuffer);
+
 
         std::cout<<" POST BUFFER : \n" << postBuffer << std::endl;
 
@@ -64,6 +64,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
             posturl = posts_feed_;
             std::cout<< "FOLDER POST URL : " << posturl << std::endl;
             std::cout<< " type : " << p.type() << std::endl;
+            jsn::SerializeObject(&p, postBuffer);
             status = netlib::HttpPost( posturl,
                                        p.type(),
                                        NULL,
@@ -77,13 +78,24 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
             bPost = false;
             utils::FindAndReplace(post_path_, "{post}", postid, posturl);
             std::cout<<"FOLDER PUT URL : " << posturl << std::endl;
-
-            status = netlib::HttpPut(posturl,
-                                     p.type(),
-                                     NULL,
-                                     postBuffer,
-                                     &access_token_,
-                                     response );
+            // Get old version
+            Response resp;
+            netlib::HttpGet(posturl, NULL, &access_token_, resp);
+            if(resp.code == 200) {
+                FolderPost old_post;
+                jsn::DeserializeObject(&old_post, resp.body);
+                Parent parent;
+                parent.version = old_post.version()->id;
+                p.PushBackParent(parent);
+               
+                jsn::SerializeObject(&p, postBuffer);
+                status = netlib::HttpPut(posturl,
+                                         p.type(),
+                                         NULL,
+                                         postBuffer,
+                                         &access_token_,
+                                         response );
+            }
             out = response;
         }
 

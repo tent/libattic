@@ -81,21 +81,39 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         std::cout<< " PUT URL : " << posturl << std::endl;
         
         unsigned int size = utils::CheckFilesize(filepath);
-        FilePost p;
 
-        postutils::InitializeFilePost(fi, p, false);
-        
-        std::string postBuffer;
-        jsn::SerializeObject(&p, postBuffer);
+        Parent parent;
+        FilePost old_post;
+        // Get old version
+        Response resp;
+        netlib::HttpGet(posturl, NULL, &access_token_, resp);
+        if(resp.code == 200) {
+            std::cout<<" GET BODY : " << resp.body << std::endl;
+            jsn::DeserializeObject(&old_post, resp.body);
+            std::cout<<" OLD VERSION : " << old_post.version()->id << std::endl;
+            parent.version = old_post.version()->id;
+            std::cout<<" PARENT VERSION : " << parent.version << std::endl;
 
-        status = netlib::HttpPut(posturl,
-                                 p.type(),
-                                 NULL,
-                                 postBuffer,
-                                 &access_token_,
-                                 response );
+            FilePost p;
+            postutils::InitializeFilePost(fi, p, false);
+            p.PushBackParent(parent);
+            std::string postBuffer;
+            jsn::SerializeObject(&p, postBuffer);
+
+            status = netlib::HttpPut(posturl,
+                                     p.type(),
+                                     NULL,
+                                     postBuffer,
+                                     &access_token_,
+                                     response );
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
    }
 
+std::cout<<" RETURN : " << response.body << std::endl;
     // Handle Response
     if(response.code == 200) {
         FilePost p;

@@ -51,7 +51,7 @@ private:
     std::map<std::string, bool> m_ProcessingQueue; // Files currently being processed
 
     PollDelegate* m_pDelegate;
-    boost::timer::cpu_timer::cpu_timer timer_;
+    boost::timer::cpu_timer timer_;
 
     bool running_;
 };

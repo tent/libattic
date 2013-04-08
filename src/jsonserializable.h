@@ -42,8 +42,7 @@ namespace jsn {
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m);
 
-    static void PrintOutJsonValue(Json::Value* val)
-    {
+    static void PrintOutJsonValue(Json::Value* val) {
         if(val) {
             std::string output;
             Json::StyledWriter writer;
@@ -54,8 +53,7 @@ namespace jsn {
         }
     }
 
-    static bool SerializeObject(JsonSerializable* pObj, std::string& output)
-    {
+    static bool SerializeObject(JsonSerializable* pObj, std::string& output) {
         if(!pObj)
             return false;
 
@@ -69,8 +67,7 @@ namespace jsn {
     }
 
 
-    static bool SerializeObject(JsonSerializable* pObj, Json::Value &val)
-    {
+    static bool SerializeObject(JsonSerializable* pObj, Json::Value &val) {
         if(pObj && val.isObject()) {
             pObj->Serialize(val);
             return true;
@@ -78,8 +75,7 @@ namespace jsn {
         return false;
     }
 
-    static bool SerializeJsonValue(Json::Value& root, std::string& output)
-    {
+    static bool SerializeJsonValue(Json::Value& root, std::string& output) {
         Json::StyledWriter writer;
         output = writer.write(root);
         return true;
@@ -100,8 +96,7 @@ namespace jsn {
         return true;
     }
 
-    static bool DeserializeObject(JsonSerializable* pObj, const std::string& input)
-    {
+    static bool DeserializeObject(JsonSerializable* pObj, const std::string& input) {
         if(input.empty()) {
             std::cout<<" jsonDeserializeObject input empty ... " << std::endl;
             return false;
@@ -121,12 +116,10 @@ namespace jsn {
         }
 
         pObj->Deserialize(root);
-
         return true;
     }
 
-    static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val)
-    {
+    static bool DeserializeObject(JsonSerializable* pObj, Json::Value& val) {
         if(pObj && val.isObject()) {
             pObj->Deserialize(val);
             return true;
@@ -135,8 +128,7 @@ namespace jsn {
         return false;
     }
 
-    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec) 
-    {                                                                                           
+    static void SerializeVectorIntoObjectValue(Json::Value &val, std::vector<std::string> &vec) {
         if(val.isObject()) {
             std::vector<std::string>::iterator itr = vec.begin();                               
             for(; itr != vec.end(); itr++)                                                      
@@ -150,8 +142,7 @@ namespace jsn {
             val.append(*itr);                                                                   
     }                                                                                           
 
-    static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec)
-    {
+    static void DeserializeIntoVector(Json::Value &val, std::vector<std::string> &vec) {
         vec.clear();
         Json::ValueIterator itr = val.begin();
         for(; itr != val.end(); itr++) { 
@@ -160,8 +151,7 @@ namespace jsn {
         }
     }
 
-    static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec)
-    {
+    static void DeserializeObjectValueIntoVector(Json::Value &val, std::vector<std::string> &vec) {
         if(val.isObject()) {
             vec.clear();
             Json::ValueIterator itr = val.begin();

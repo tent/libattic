@@ -13,7 +13,7 @@
 namespace attic { 
 
 struct PostNode {
-    std::string post_url;
+    std::string post_id;
     std::deque<PostNode*> parents;
     std::deque<PostNode*> children;
     unsigned int node_id;

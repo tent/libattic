@@ -18,16 +18,14 @@ struct Parent : public JsonSerializable {
     std::string version; // Post version identifier - required
     std::string entity; // Entity of parent post - optional
     std::string original_entity; // original parent post - optional
-    std::string post; // identifier of parent post - optional
+    std::string post; // identifier of parent post - optional (should not be optional)
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
 };
 
-
 struct Version : public JsonSerializable {
     std::string id; // Post version identifier
-    std::string type;
     std::string published_at;
     std::string received_at;
 
@@ -45,8 +43,6 @@ struct Attachment : public JsonSerializable {
     std::string hash;      // `json:"hash"`
     std::string digest;    // `json:"digest"`
     unsigned int size;     // `json:"size"`
-
-
 
     void AssignKeyValue(const std::string &key, const Json::Value &val);
     void Serialize(Json::Value& root);
