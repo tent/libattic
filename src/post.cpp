@@ -4,7 +4,6 @@
 
 namespace attic {
 
-
 void Mention::Serialize(Json::Value& root) {
     root["entity"] = entity;
     root["original_entity"] = original_entity;
@@ -286,6 +285,11 @@ const Attachment& Post::get_attachment(const std::string& name) {
     return attachments_[name];
 }
 
-
+void Post::MentionPost(const std::string& entity, const std::string& postid) {
+    Mention m;
+    m.entity = entity;
+    m.post = postid;
+    PushBackMention(m);
+}
 
 }//namespace

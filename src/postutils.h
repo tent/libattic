@@ -14,7 +14,7 @@
 
 namespace attic { namespace postutils {
 
-static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic);
+//static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic);
 static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut);
 static int DeserializePostIntoFileInfo(const Post* post, FileInfo& fiOut);
 static int DeserializePostIntoFileInfo(const Post& post, FileInfo& fiOut);
@@ -27,7 +27,7 @@ static void ConstructPostUrl(const std::string& apiroot, std::string& out) { // 
     utils::CheckUrlAndAppendTrailingSlash(out);
     //out += cnst::g_szPostEndpoint;
 }
-
+/*
 static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic) {
     int status = ret::A_OK;
     if(pFi) {
@@ -78,6 +78,7 @@ static int InitializeFilePost(FileInfo* pFi, FilePost& postOut, bool isPublic) {
 
     return status;
 }
+*/
 
 static int DeserializeFilePostIntoFileInfo(const FilePost& post, FileInfo& fiOut) {
     int status = ret::A_OK;

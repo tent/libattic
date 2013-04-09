@@ -50,6 +50,8 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
     // Check for existing post
     std::string posturl;
     std::string postid = fi->post_id();
+    std::string chunk_post_id = fi->chunk_post_id();
+    std::string entity  = GetConfigValue("entity");
 
     std::string relative_path = fi->filepath();
     std::cout<<" INSERTING RELATIVE PATH TO POST : " << relative_path << std::endl;
@@ -61,7 +63,8 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
         std::cout<< " POST URL : " << posturl << std::endl;
         unsigned int size = utils::CheckFilesize(filepath);
         FilePost p;
-        postutils::InitializeFilePost(fi, p, false);
+        p.InitializeFilePost(fi, false);
+        p.MentionPost(entity, chunk_post_id);
         
         std::string postBuffer;
         jsn::SerializeObject(&p, postBuffer);
@@ -93,20 +96,25 @@ int PostFileMetadataStrategy::SendFilePost( FileInfo* fi, const std::string& fil
             std::cout<<" OLD VERSION : " << old_post.version()->id << std::endl;
             parent.version = old_post.version()->id;
             std::cout<<" PARENT VERSION : " << parent.version << std::endl;
+            
+            if(!entity.empty()) {
+                FilePost p;
+                p.MentionPost(entity, chunk_post_id);
+                p.InitializeFilePost(fi, false);
+                p.PushBackParent(parent);
+                std::string postBuffer;
+                jsn::SerializeObject(&p, postBuffer);
 
-            FilePost p;
-            postutils::InitializeFilePost(fi, p, false);
-            p.PushBackParent(parent);
-            std::string postBuffer;
-            jsn::SerializeObject(&p, postBuffer);
-
-            status = netlib::HttpPut(posturl,
-                                     p.type(),
-                                     NULL,
-                                     postBuffer,
-                                     &access_token_,
-                                     response );
-
+                status = netlib::HttpPut(posturl,
+                                         p.type(),
+                                         NULL,
+                                         postBuffer,
+                                         &access_token_,
+                                         response );
+            }
+            else { 
+                std::cout<<" PASSED IN EMPTY ENTITY " << std::endl;
+            }
         }
         else {
             status = ret::A_FAIL_NON_200;

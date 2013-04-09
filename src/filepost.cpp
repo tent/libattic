@@ -16,6 +16,37 @@ FilePost::FilePost(){
 
 FilePost::~FilePost() {}
 
+void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
+    if(fi) {
+        // basic attic post info
+        set_public(is_public);
+        set_relative_path(fi->filepath());
+        set_name(fi->filename());
+        set_file_size(fi->file_size());
+        set_deleted(fi->deleted());
+        // attic post key info
+        set_key_data(fi->encrypted_key());
+        set_iv_data(fi->file_credentials_iv());
+        // set chunk info
+        PushBackChunkPostId(fi->chunk_post_id()); // TODO :: change this to a mention
+        FileInfo::ChunkMap* chunk_list = fi->GetChunkInfoList();
+        if(chunk_list) {
+            std::cout<<" CHUNK LIST SIZE : " << chunk_list->size() << std::endl;
+            FileInfo::ChunkMap::iterator itr = chunk_list->begin();
+
+            std::string identifier;
+            for(;itr != chunk_list->end(); itr++) {
+                identifier.clear();
+                identifier = itr->second.checksum();
+                PushBackChunkIdentifier(identifier);
+            }
+        }
+        else {
+            std::cout<<" INVALID CHUNK LIST : " << std::endl;
+        }
+    }
+}
+
 void FilePost::Serialize(Json::Value& root) {
     Json::Value content(Json::objectValue);
     content["name"] = name_;

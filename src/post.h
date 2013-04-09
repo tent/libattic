@@ -15,7 +15,7 @@
 namespace attic {
 
 struct Mention : public JsonSerializable {
-    std::string entity;
+    std::string entity;     // Required
     std::string original_entity;
     std::string post;
     std::string version;
@@ -99,6 +99,8 @@ public:
     void PushBackAttachment(Attachment& att) { attachments_[att.name] = att; }
     void PushBackMention(const Mention& mention) { mentions_.push_back(mention); }
     void PushBackParent(Parent& p) { version_.parents.push_back(p); }
+
+    void MentionPost(const std::string& entity, const std::string& postid);
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
 

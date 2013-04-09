@@ -150,9 +150,7 @@ int GetFileStrategy::GetChunkPost(FileInfo* fi, Response& responseOut) {
 
     if(fi) {
         // Construct Post URL                                                                        
-
         std::string posturl;
-
         std::string postid = fi->chunk_post_id();
         utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 

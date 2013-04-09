@@ -69,10 +69,13 @@ int PushTask::PushFile(const std::string& filepath) {
 
         std::string post_path = GetPostPath();
         std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+        
+        std::string entity = TentTask::entity().entity();
 
         pushcontext.SetConfigValue("post_path", post_path);
         pushcontext.SetConfigValue("posts_feed", posts_feed);
         pushcontext.SetConfigValue("filepath", filepath);
+        pushcontext.SetConfigValue("entity", entity);
 
         pushcontext.PushBack(&ps);
         pushcontext.PushBack(&pmds);

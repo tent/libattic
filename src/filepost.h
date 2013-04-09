@@ -16,6 +16,8 @@ public:
    FilePost();
     ~FilePost();
 
+    void InitializeFilePost(FileInfo* fi, bool is_public = false);
+
     void Serialize(Json::Value& root);  
     void SerializeChunkPosts(Json::Value& val);
     void SerializeChunkIds(Json::Value& val);
