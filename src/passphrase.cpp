@@ -186,7 +186,8 @@ int Passphrase::DecryptKey(const std::string& key,
     cred.set_iv(salt);
 
     std::string decrypted_key;
-    status = crypto::DecryptStringCFB(key, cred, decrypted_key);
+    //status = crypto::DecryptStringCFB(key, cred, decrypted_key);
+    status = crypto::DecryptStringGCM(key, cred, decrypted_key);
     std::cout<<" DECRYPT STATUS : " << status << std::endl;
     std::cout<<" DECRYPTED KEY : " << decrypted_key << std::endl;
     if(status == ret::A_OK) {
@@ -275,7 +276,9 @@ void Passphrase::EncryptKeyWithPassphrase(const std::string& key,
     enc.set_key(phrasekey);
     enc.set_iv(salt);
     // Encrypt MasterKey with passphrase key
-    crypto::EncryptStringCFB(key, enc, key_out);
+    //crypto::EncryptStringCFB(key, enc, key_out);
+    crypto::EncryptStringGCM(key, enc, key_out);
+
 }
 
 int Passphrase::CreatePhraseToken(const std::string& master_key, PhraseToken& out) {

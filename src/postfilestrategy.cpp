@@ -163,7 +163,9 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
         masterCred.set_iv(fileiv);
 
         std::string decryptedkey;
-        crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
+        //crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
+        crypto::DecryptStringGCM(encryptedkey, masterCred, decryptedkey);
+
         fi->set_file_credentials_key(decryptedkey);
         credOut = fi->file_credentials();
     }
@@ -574,8 +576,8 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 
     std::cout<<" FILE KEY : " << fileKey << std::endl;
     std::cout<< " IV : " << iv << std::endl;
-    crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
-    //crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
+    //crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
+    crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
 
     // Base64 Encode
     std::string finishedChunk;
@@ -632,7 +634,8 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     fCred.set_iv(fileIv);
 
     std::string encryptedKey;
-    crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+    //crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
+    crypto::EncryptStringGCM(fileKey, fCred, encryptedKey);
 
     fi->set_file_credentials_iv(fileIv);
     fi->set_file_credentials_key(fileKey);

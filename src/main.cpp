@@ -255,8 +255,8 @@ TEST(AFILE, PUSH)
 
     ASSERT_EQ(status, attic::ret::A_OK);
 
-    status = EnterPassphrase("password");
-   // status = EnterPassphrase("asdf");
+  //  status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;
@@ -319,7 +319,8 @@ TEST(AFILE, PULL)
     std::cout<<" DOWNLOAD SPEED NOTIFY ... " << std::endl;
     RegisterForDownloadSpeedNotify(&DOWNLOADSPEEDCB);
 
-    status = EnterPassphrase("password");
+    //status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     if(status == attic::ret::A_OK) {
@@ -401,7 +402,7 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 
     ShutdownLibAttic(NULL);
 }
-
+/*
 TEST(INIT, SHUTDOWN)
 {
 
@@ -415,6 +416,7 @@ TEST(INIT, SHUTDOWN)
 
     ShutdownLibAttic(NULL);
 }
+*/
 
 #include "clientutils.h"
 bool g_bDiscover = false;
@@ -469,7 +471,7 @@ TEST(TEST, SYNC)
     if(status == attic::ret::A_OK) {
 
         //EnterPassphrase("password");
-        EnterPassphrase("1234");
+        EnterPassphrase("asdf");
         std::cout<<"syncing..."<<std::endl;
      //   status = SyncFiles(SYNCCB);
         status = PollFiles();

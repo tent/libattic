@@ -127,7 +127,8 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
 
                 // Decrypt File Key
                 std::string filekey;
-                crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+                //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+                crypto::DecryptStringGCM(key, FileKeyCred, filekey);
                 std::cout<<" FILE KEY : " << filekey << std::endl;
 
                 out.set_key(filekey);
@@ -329,11 +330,13 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
         std::cout<<" CIPHER HASH : " << cipherhash << std::endl;
         std::string ci_cipherhash = ci->ciphertext_mac();
         if(ci_cipherhash == cipherhash) {
+            std::cout<<" Ciphertext Hashes match! " << std::endl;
+            std::cout<<" decrypting ... " << std::endl;
             // Decrypt
             std::string decryptedChunk;
-            status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
-            //status = crypto::DecryptStringGCM(base64Chunk, fCred, decryptedChunk);
-
+            //status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
+            status = crypto::DecryptStringGCM(base64Chunk, cred, decryptedChunk);
+            
             if(status == ret::A_OK) {
                 // Decompress
                 std::string decryptedHash;

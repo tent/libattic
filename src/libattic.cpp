@@ -170,8 +170,8 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
     int status = attic::ret::A_OK;
     status = attic::app::RequestUserAuthorizationDetails(szEntityUrl,
-                                                  szCode, 
-                                                  szConfigDirectory);
+                                                         szCode, 
+                                                         szConfigDirectory);
     return status;
 }
 
