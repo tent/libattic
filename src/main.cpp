@@ -468,7 +468,8 @@ TEST(TEST, SYNC)
 
     if(status == attic::ret::A_OK) {
 
-        EnterPassphrase("password");
+        //EnterPassphrase("password");
+        EnterPassphrase("1234");
         std::cout<<"syncing..."<<std::endl;
      //   status = SyncFiles(SYNCCB);
         status = PollFiles();

@@ -254,8 +254,10 @@ int RegisterPassphrase(const char* szPass) {
         // Generate Master Key
         std::string master_key;
         g_pClient->credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
+        std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
+        std::string passphrase(szPass);
         std::string recovery_key;
-        status = ps.RegisterPassphrase(szPass, master_key, recovery_key, false);
+        status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
 
         if(status == attic::ret::A_OK) {
             attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);

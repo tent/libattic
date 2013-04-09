@@ -374,6 +374,7 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     int status = ret::A_OK;
     std::string url = entity_.GetPreferredServer().posts_feed();
 
+    std::cout<<" RETRIEVING CRED POST " << std::endl;
     UrlParams params;
     params.AddValue(std::string("post_types"), std::string(cnst::g_attic_cred_type));
 
