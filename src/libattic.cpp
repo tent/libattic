@@ -264,6 +264,7 @@ int RegisterPassphrase(const char* szPass) {
 
         if(status == attic::ret::A_OK) {
             attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
+            status = EnterPassphrase(szPass);
         }
     }
     return status;
