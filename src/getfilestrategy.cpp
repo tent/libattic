@@ -128,11 +128,17 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 // Decrypt File Key
                 std::string filekey;
                 //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-                crypto::DecryptStringGCM(key, FileKeyCred, filekey);
+                status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
                 std::cout<<" FILE KEY : " << filekey << std::endl;
+                if(status == ret::A_OK) {
+                    out.set_key(filekey);
+                    out.set_iv(iv);
+                }
+                else { 
+                    std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
+                }
 
-                out.set_key(filekey);
-                out.set_iv(iv);
+
             }
         }
         else {
