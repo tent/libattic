@@ -66,6 +66,14 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         if(status == ret::A_OK && resp.code == 200) {
             // On success 
             status = UpdateChunkPostMetadata(fi, resp, fileCredentials);
+            if(status == ret::A_OK) {
+                status = SendFilePost(fi, filepath);
+                if(status != ret::A_OK) {
+                    std::cout<<" FAILED TO SEND POST " << std::endl;
+                }
+            }
+           
+
         }
         else if(resp.code!= 200) {
             log::LogHttpResponse("FORTY333", resp);
@@ -629,6 +637,122 @@ FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
     if(!fi)
         fi = file_manager_->CreateFileInfo();
     return fi;
+}
+
+int PostFileStrategy::SendFilePost( FileInfo* fi, const std::string& filepath) {
+    std::cout<<" send attic post filepath : " << filepath << std::endl;
+    int status = ret::A_OK;
+    std::cout<<" SEND ATTIC POST " << std::endl;
+    // Create Attic Post
+    if(!fi)
+        std::cout<<"invalid file info"<<std::endl;
+
+    // Check for existing post
+    std::string posturl;
+    std::string postid = fi->post_id();
+    std::string chunk_post_id = fi->chunk_post_id();
+    std::string entity  = GetConfigValue("entity");
+
+    std::string relative_path = fi->filepath();
+    std::cout<<" INSERTING RELATIVE PATH TO POST : " << relative_path << std::endl;
+    bool post = true;
+    Response response;
+    if(postid.empty()) {
+        posturl = posts_feed_;
+        // New Post
+        std::cout<< " POST URL : " << posturl << std::endl;
+        unsigned int size = utils::CheckFilesize(filepath);
+        FilePost p;
+        p.InitializeFilePost(fi, false);
+        p.MentionPost(entity, chunk_post_id);
+        
+        std::string postBuffer;
+        jsn::SerializeObject(&p, postBuffer);
+
+        std::cout<<"\n\n Attic Post Buffer : " << postBuffer << std::endl;
+
+        status = netlib::HttpPost(posturl,
+                                  p.type(),
+                                  NULL,
+                                  postBuffer,
+                                  &access_token_,
+                                  response );
+    }
+    else {
+        utils::FindAndReplace(post_path_, "{post}", postid, posturl);
+        post = false;
+        std::cout<< " PUT URL : " << posturl << std::endl;
+        
+        unsigned int size = utils::CheckFilesize(filepath);
+
+        Parent parent;
+        FilePost old_post;
+        // Get old version
+        Response resp;
+        netlib::HttpGet(posturl, NULL, &access_token_, resp);
+        if(resp.code == 200) {
+            std::cout<<" GET BODY : " << resp.body << std::endl;
+            jsn::DeserializeObject(&old_post, resp.body);
+            std::cout<<" OLD VERSION : " << old_post.version()->id << std::endl;
+            parent.version = old_post.version()->id;
+            std::cout<<" PARENT VERSION : " << parent.version << std::endl;
+            
+            if(!entity.empty()) {
+                FilePost p;
+                p.MentionPost(entity, chunk_post_id);
+                p.InitializeFilePost(fi, false);
+                p.PushBackParent(parent);
+                std::string postBuffer;
+                jsn::SerializeObject(&p, postBuffer);
+
+                status = netlib::HttpPut(posturl,
+                                         p.type(),
+                                         NULL,
+                                         postBuffer,
+                                         &access_token_,
+                                         response );
+            }
+            else { 
+                std::cout<<" PASSED IN EMPTY ENTITY " << std::endl;
+            }
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+    }
+
+    // Handle Response
+    if(response.code == 200) {
+        FilePost p;
+        jsn::DeserializeObject(&p, response.body);
+
+        std::string postid = p.id();
+        if(!postid.empty()) {
+            fi->set_post_id(postid); 
+            if(post){
+                std::string fi_filepath = fi->filepath();
+                //fi->SetPostVersion(p.GetVersion()); // TODO update this in the manifest
+
+                file_manager_->SetFilePostId(fi_filepath, postid);
+                //char szVer[256] = {'\0'};
+                //snprintf(szVer, 256, "%d", p.GetVersion());
+                //file_manager_->SetFileVersion(fi_filepath, std::string(szVer));
+                // set post version
+                // Send Folder Post
+                std::cout<<" sending folder post to filepath : " << fi_filepath << std::endl;
+                //SendFolderPost(fi);
+            }
+        }
+        else{
+            std::cout<<" EMPTY POST ID ON RETURN " << std::endl;
+        }
+    }
+    else {
+        log::LogHttpResponse("MOP129409", response);
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
 }
 
 }//namespace

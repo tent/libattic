@@ -58,7 +58,7 @@ int PushTask::PushFile(const std::string& filepath) {
 
     if(fs::CheckFilepathExists(filepath)) {
         PostFileStrategy ps;                // Chunk and upload
-        PostFileMetadataStrategy pmds;      // Update file post
+ //       PostFileMetadataStrategy pmds;      // Update file post
         PostFolderMetadataStrategy pfmds;   // Update folder post
 
         if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
@@ -78,7 +78,7 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("entity", entity);
 
         pushcontext.PushBack(&ps);
-        pushcontext.PushBack(&pmds);
+//        pushcontext.PushBack(&pmds);
         pushcontext.PushBack(&pfmds);
 
         status = pushcontext.ExecuteAll();

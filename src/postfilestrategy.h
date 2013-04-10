@@ -68,6 +68,7 @@ class PostFileStrategy : public HttpStrategyInterface {
                                 const Response& resp, 
                                 const Credentials& file_cred);
 
+    int SendFilePost( FileInfo* fi, const std::string& filepath);
 public:
     PostFileStrategy();
     ~PostFileStrategy();
