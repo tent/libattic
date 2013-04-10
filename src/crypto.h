@@ -206,6 +206,7 @@ static int EncryptStringGCM(const std::string& data,
                               );
     }
     catch (CryptoPP::Exception &e) {
+        std::cout<<" FAILED TO ENCRYPT GCM " << std::endl;
         status = ret::A_FAIL_ENCRYPT;
     }
 
@@ -241,6 +242,7 @@ static int DecryptStringGCM(const std::string& cipher,
 
     }
     catch (CryptoPP::Exception &e) {
+        std::cout<<" DECRYPT STRING GCM : " << e.what() << std::endl;
         //std::cerr << e.what() << "\n";                           
         return ret::A_FAIL_DECRYPT;
     }                                                            

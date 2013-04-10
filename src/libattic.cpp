@@ -254,8 +254,11 @@ int RegisterPassphrase(const char* szPass) {
         // Generate Master Key
         std::string master_key;
         g_pClient->credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
-        std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
+
         std::string passphrase(szPass);
+        std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
         std::string recovery_key;
         status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
 
@@ -269,11 +272,17 @@ int RegisterPassphrase(const char* szPass) {
 int EnterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
+
+
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
         attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
 
+        std::string passphrase(szPass);
+        std::cout<<" PASSED IN : " << szPass << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
         std::string master_key;
         attic::PhraseToken pt;
         status = ps.EnterPassphrase(szPass, pt, master_key);

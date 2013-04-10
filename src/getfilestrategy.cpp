@@ -313,6 +313,7 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
         cred.set_key(filekey);
         cred.set_iv(iv);
 
+        std::cout<< " TRANSFORMING CHUNK " << std::endl;
         std::cout<< " key : " << filekey << std::endl;;
         std::cout<< " IV : " << iv << std::endl;
         std::cout<< " SIZEOF : " << chunkBuffer.size() << std::endl;
@@ -336,7 +337,6 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
             std::string decryptedChunk;
             //status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
             status = crypto::DecryptStringGCM(base64Chunk, cred, decryptedChunk);
-            
             if(status == ret::A_OK) {
                 // Decompress
                 std::string decryptedHash;
