@@ -83,17 +83,18 @@ int Passphrase::EnterPassphrase(const std::string& passphrase,
         std::string decrypted_masterkey;
         status = DecryptKey(masterkey, phrasekey, salt, decrypted_masterkey);
         std::cout<<" DK STATUS : " << status << std::endl;
-        std::cout<< " DECRYPTED KEY : " << decrypted_masterkey << std::endl;
         if(status == ret::A_OK) {
+            // For logging purpses
+            std::string b64_mk;
+            crypto::Base64EncodeString(decrypted_masterkey, b64_mk);
+            std::cout<<" DECRYPTED MASTER KEY : " << b64_mk << std::endl;
             // Everything alright, phrase key is correct
             master_key_out = decrypted_masterkey;
-            std::cout<<" DECRYPTED MASTER KEY : " << master_key_out << std::endl;
-            std::cout<<" PHRASE KEY : " << phrasekey << std::endl;
             token_out.set_phrase_key(phrasekey);
             token_out.set_salt(salt);
         }
         else {
-
+            std::cout<<" FAILED TO DECRYPT MASTER KEY ON ENTER PASSPHRASE " << std::endl;
         }
     }
 

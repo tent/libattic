@@ -427,6 +427,13 @@ static void Base64EncodeString(const std::string& input, std::string& output) {
                             new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
                                                         false) // Insert line breaks false
                           );
+    if(output.find('\0') != std::string::npos) {
+        std::cout<<" FOUND NULL TERMINATOR ! ----------------------------- " << std::endl;
+    }
+    if(output.find('\n') != std::string::npos) {
+        std::cout<<" FOUND NEWLINE WTF--------------------------------------- " << std::endl;
+    }
+
 }
 
 static void Base64DecodeString(const std::string& input, std::string& output) {

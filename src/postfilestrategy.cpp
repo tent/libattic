@@ -42,10 +42,15 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         Credentials fileCredentials;
         status = DetermineChunkPostRequest(fi, fileCredentials, requesttype, posturl, chunkpostid);
        
-        // Check for key
-        if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
-            std::cout<<"FAIL " << std::endl;
-            status = ret::A_FAIL_INVALID_FILE_KEY;
+        if(status == ret::A_OK) {
+            // Check for key
+            if(fileCredentials.KeyEmpty() || fileCredentials.IvEmpty()) {
+                std::cout<<"FAIL FILE CREDENTIALS EMPTY" << std::endl;
+                status = ret::A_FAIL_INVALID_FILE_KEY;
+            }
+        }
+        else { 
+            std::cout<<"INVALID FILE CREDENTIALS " << std::endl;
         }
 
         Response resp;
@@ -88,41 +93,6 @@ int PostFileStrategy::UpdateChunkPostMetadata(FileInfo* fi,
     UpdateFileInfo(file_cred, filepath, chunk_post_id, p.version_id(), fi);
 
     return status;
-
-    if(chunk_post_id.empty())
-        status = ret::A_FAIL_INVALID_POST_ID;
-    else 
-        utils::FindAndReplace(post_path_, "{post}", chunk_post_id, post_url);
-
-    if(status == ret::A_OK) {
-        // update chunk post with chunk info metadata
-        // use non multipart to just update the post body
-        // leaving existing attachment in-tact
-        std::string bodyBuffer;
-        jsn::SerializeObject(&p, bodyBuffer);
-
-        std::cout<<" Updating chunk post metadata : " << post_url << std::endl;
-        Response metaResp;
-        status = netlib::HttpPut(post_url,
-                                 p.type(),
-                                 NULL,
-                                 bodyBuffer,
-                                 &access_token_,
-                                 metaResp);
-
-        std::cout<< " META RESPONSE CODE : " << metaResp.code << std::endl;
-        std::cout<< " META RESPONSE BODY : " << metaResp.body << std::endl;
-
-        if(metaResp.code == 200) {
-            std::string filepath = GetConfigValue("filepath");
-            UpdateFileInfo(file_cred, filepath, chunk_post_id, p.version_id(), fi);
-        }
-        else {
-            log::LogHttpResponse("nam#k923", metaResp);
-            status = ret::A_FAIL_NON_200;
-        }
-    }
-    return status;
 }
 
 int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi, 
@@ -142,6 +112,8 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
         urlOut = posts_feed_;
         // This is a new file
         // Generate Credentials
+
+        std::cout<<" GENTERATING CREDENTIALS " << std::endl;
         crypto::GenerateCredentials(credOut);
     }
     else {
@@ -164,10 +136,14 @@ int PostFileStrategy::DetermineChunkPostRequest(FileInfo* fi,
 
         std::string decryptedkey;
         //crypto::DecryptStringCFB(encryptedkey, masterCred, decryptedkey);
-        crypto::DecryptStringGCM(encryptedkey, masterCred, decryptedkey);
-
-        fi->set_file_credentials_key(decryptedkey);
-        credOut = fi->file_credentials();
+        status = crypto::DecryptStringGCM(encryptedkey, masterCred, decryptedkey);
+        if(status == ret::A_OK) {
+            fi->set_file_credentials_key(decryptedkey);
+            credOut = fi->file_credentials();
+        }
+        else {
+            std::cout<< " INVALID FILEKEY, POSTFILESTRATEGY " << std::endl;
+        }
     }
     return status;
 }
@@ -628,6 +604,9 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     // Encrypt File Key
     std::string fileKey = fileCred.key();
     std::string fileIv = fileCred.iv();
+
+    std::cout<<" Update file info file key : " << fileKey << std::endl;
+    std::cout<<" Update file info file iv : " << fileIv << std::endl;
 
     Credentials fCred;
     fCred.set_key(mk);
