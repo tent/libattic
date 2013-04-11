@@ -298,8 +298,19 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
             out.set_post_id(res.results[5+step]);
             out.set_chunk_post_id(res.results[6+step]);
             out.set_post_version(res.results[7+step]);
-            out.set_encrypted_key(res.results[8+step]);
-            out.set_file_credentials_iv(res.results[9+step]);
+            //out.set_encrypted_key(res.results[8+step]);
+            // File Key (Base64 encoded)
+            std::string b64_key = res.results[8+step];
+            std::string key;
+            crypto::Base64DecodeString(b64_key, key);
+            out.set_encrypted_key(key);
+            // IV (Base64 encoded)
+            //out.set_file_credentials_iv(res.results[9+step]);
+            std::string b64_iv = res.results[9+step];
+            std::string iv;
+            crypto::Base64DecodeString(b64_key, iv);
+            out.set_file_credentials_iv(iv);
+            //
             out.set_deleted(res.results[10+step]);
         }
     }
@@ -349,8 +360,17 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
                 fi.set_post_id(res.results[5+step]);
                 fi.set_chunk_post_id(res.results[6+step]);
                 fi.set_post_version(res.results[7+step]);
-                fi.set_encrypted_key(res.results[8+step]);
-                fi.set_file_credentials_iv(res.results[9+step]);
+                //fi.set_encrypted_key(res.results[8+step]);
+                std::string b64_key = res.results[8+step];
+                std::string key;
+                crypto::Base64DecodeString(b64_key, key);
+                fi.set_encrypted_key(key);
+                //fi.set_file_credentials_iv(res.results[9+step]);
+                std::string b64_iv = res.results[9+step];
+                std::string iv;
+                crypto::Base64DecodeString(b64_iv, iv);
+                fi.set_file_credentials_iv(iv);
+                //
                 fi.set_deleted(res.results[10+step]);
 
                 out.push_back(fi);
@@ -461,13 +481,18 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_blob(stmt, 9, encryptedkey.c_str(), encryptedkey.size(), SQLITE_TRANSIENT);
+            std::string b64_key;
+            crypto::Base64EncodeString(encryptedkey, b64_key);
+            ret = sqlite3_bind_blob(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
+
             if(ret != SQLITE_OK) {
                 printf("key Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
             }
 
-            ret = sqlite3_bind_blob(stmt, 10, iv.c_str(), iv.size(), SQLITE_TRANSIENT);
+            std::string b64_iv;
+            crypto::Base64EncodeString(iv, b64_iv);
+            ret = sqlite3_bind_blob(stmt, 10, b64_iv.c_str(), b64_iv.size(), SQLITE_TRANSIENT);
             if(ret != SQLITE_OK) {
                 printf(" iv Error message: %s\n", sqlite3_errmsg(m_pDb));
                 return false;
