@@ -20,6 +20,7 @@ public:
     ~Connection();
 
     int Initialize(const std::string& url);
+    int Close();
 
     unsigned int Write(boost::asio::streambuf& request);
     void InterpretResponse(Response& out);

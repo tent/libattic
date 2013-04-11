@@ -60,6 +60,17 @@ int Connection::Initialize(const std::string& url) {
     return status;
 }
 
+int Connection::Close() {
+    int status = ret::A_OK;
+    try {
+        socket_->close();
+    }
+    catch(std::exception& e) {
+        std::cout<<" Connection close error " << e.what() << std::endl;
+    }
+
+    return status;
+}
 
 int Connection::InitializeSSLSocket(const std::string& host) {
     using boost::asio::ip::tcp;
