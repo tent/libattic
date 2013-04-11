@@ -334,7 +334,7 @@ TEST(AFILE, PULL)
         ASSERT_EQ(status, attic::ret::A_OK);
     }
 
-       sleep(15);
+    sleep(10);
 
     ShutdownLibAttic(NULL);
 

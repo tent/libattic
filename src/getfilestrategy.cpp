@@ -137,8 +137,6 @@ int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
                 else { 
                     std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
                 }
-
-
             }
         }
         else {
@@ -221,8 +219,10 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
         if (ofs.is_open()) {
             unsigned int count = post.chunk_info_list_size();
             for(unsigned int i=0; i < count; i++) {
+                std::cout<<" FINDING CHUNK # : " << i << std::endl;
                 ChunkPost::ChunkInfoList::iterator itr = post.chunk_info_list()->find(i);
                 if(itr != post.chunk_info_list()->end()) {
+                    std::cout<<" FOUND CHUNK # : " << i << std::endl;
                     // Get attachment
                     if(post.has_attachment(itr->second.chunk_name())) {
                         Attachment attch = post.get_attachment(itr->second.chunk_name());
@@ -255,12 +255,15 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
                             }
                             else {
                                 std::cout<<" FAILED TRANSFORM " << std::endl;
+                                std::cout<<" STATUS : "<< status << std::endl;
+
                                 break;
                             }
                         }
                     }
                 }
                 else {
+                    std::cout<<" DID NOT FIND CHUNK # : " << i << std::endl;
                     std::cout<<" Out of sequence chunk " << std::endl;
                 }
             }

@@ -45,6 +45,7 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
     Folder folder;
     std::cout<<"PARENT RELATIVE : " << parent_relative << std::endl;
     if(file_manager_->GetFolderInfo(parent_relative, folder)) {
+        std::string entity  = GetConfigValue("entity");
         // serialize and send
         FolderPost p(folder);
         std::string posturl;
@@ -52,9 +53,10 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
         folder.GetPostID(postid);
         std::cout<<" FOLDER POST : " << postid << std::endl;
 
+        // Mention file
+        p.MentionPost(entity, fi->post_id());
+
         std::string postBuffer;
-
-
         std::cout<<" POST BUFFER : \n" << postBuffer << std::endl;
 
         Response response;
@@ -71,7 +73,6 @@ int PostFolderMetadataStrategy::SendFolderPost(const FileInfo* fi, Response& out
                                        postBuffer,
                                        &access_token_,
                                        response);
-
             out = response;
         }
         else { // PUT

@@ -24,6 +24,40 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                                CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
     status = InitInstance(pFileManager, pCredentialsManager);
+    // Initialize meta post
+    post_path_ = GetConfigValue("post_path");
+    posts_feed_ = GetConfigValue("posts_feed");
+    std::string filepath = GetConfigValue("filepath");
+
+    if(fs::CheckFilepathExists(filepath)) {
+        FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
+        std::string meta_post_id;
+        status = InitializeFileMetaData(fi, filepath, meta_post_id);
+        if(status == ret::A_OK) {
+            // Retrieve Chunk posts
+
+        }
+    }
+    else {
+        status = ret::A_FAIL_PATH_DOESNT_EXIST;
+    }
+
+    return status;
+}
+// Retrieve (or create) FilePost (metadata)
+//  - if exists, use credentials associated with existing metadata
+//  - else create new credentials and post
+//  - add transit state, in-transit (incomplete), and complete (ready for download)
+// Begin chunking file
+//  - query for chunk posts against file assemble chunk info list
+//  - Create chunk posts in windows of 30 (adjustable)
+//  - upon completion mention file post
+//  - add chunk post order to chunk info post
+/*
+int PostFileStrategy::Execute(FileManager* pFileManager,
+                               CredentialsManager* pCredentialsManager) {
+    int status = ret::A_OK;
+    status = InitInstance(pFileManager, pCredentialsManager);
 
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
@@ -81,7 +115,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     }
     return status;
 }
-
+*/
 int PostFileStrategy::UpdateChunkPostMetadata(FileInfo* fi, 
                                               const Response& resp,
                                               const Credentials& file_cred) {
@@ -322,7 +356,7 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
             // Send body
             std::cout<<" SENDING BODY AFTER CHUNKS " << std::endl; 
             std::cout<<" CHUNKS? : " << pFi->GetChunkInfoList()->size() << std::endl;
-                    // Build Body Form header
+            // Build Body Form header
             ChunkPost p;
             if(requestType == "PUT")
                 p.PushBackParent(parent);
@@ -624,6 +658,12 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     //crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
     crypto::EncryptStringGCM(fileKey, fCred, encryptedKey);
 
+    std::cout<<" Update file ENCRYPTED file key : " << encryptedKey << std::endl;
+    std::string copy_test;
+    copy_test = encryptedKey;
+    std::cout<<" COPY file ENCRYPTED file key : " << copy_test << std::endl;
+    if(encryptedKey == copy_test) { std::cout<<" KEYS ARE THE SAME ! " << std::endl; } else { std::cout<<"KEYS ARE DIFFERENT " << std::endl; }
+
     fi->set_file_credentials_iv(fileIv);
     fi->set_file_credentials_key(fileKey);
     fi->set_encrypted_key(encryptedKey);
@@ -754,5 +794,56 @@ int PostFileStrategy::SendFilePost( FileInfo* fi, const std::string& filepath) {
 
     return status;
 }
+
+int PostFileStrategy::InitializeFileMetaData(FileInfo* fi, 
+                                             const std::string& filepath,
+                                             std::string& post_id_out) {
+    // If file info doesn't have a post, make sure it's created
+    int status = ret::A_OK;
+    // Setup File Meta Data
+    std::string meta_data_post_id = fi->post_id();
+
+    if(meta_data_post_id.empty()) {
+        Credentials file_cred;
+        crypto::GenerateCredentials(file_cred);
+        UpdateFileInfo(file_cred, filepath, "", "", fi);
+
+        std::string posturl = posts_feed_;
+        // New Post
+        std::cout<< " POST URL : " << posturl << std::endl;
+        FilePost p;
+        p.InitializeFilePost(fi, false);
+        std::string post_buffer;
+        jsn::SerializeObject(&p, post_buffer);
+
+        Response response;
+        status = netlib::HttpPost(posturl,
+                                  p.type(),
+                                  NULL,
+                                  post_buffer,
+                                  &access_token_,
+                                  response);
+        if(response.code == 200) {
+            std::cout<<" FILE INITIALIZED : " << response.body << std::endl;
+            Post post;
+            jsn::DeserializeObject(&post, response.body);
+            file_manager_->SetFilePostId(filepath, post.id());
+            
+            FileInfo* ffi = RetrieveFileInfo(filepath);
+            std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+    }
+    return status;
+}
+/*
+int PostFileStrategy::RetrieveChunkPosts(const std::string& file_post_id) {
+
+}
+*/
+
 
 }//namespace
