@@ -23,6 +23,7 @@ const EntityServer Entity::GetPreferredServer() const {
         }
         return (*last_itr);
     }
+
     return srv;
 }
 
@@ -54,12 +55,9 @@ int Entity::LoadFromFile(const std::string& filepath) {
     pBuf[size] = '\0';                                                                            
                                                                                                   
     ifs.read(pBuf, size);                                                                         
-                                                                                                  
-   
     std::string loaded(pBuf);
     
-    if(pBuf)
-    {                                                                                             
+    if(pBuf) {
         delete[] pBuf;                                                                            
         pBuf = 0;                                                                                 
     }                                                                                             

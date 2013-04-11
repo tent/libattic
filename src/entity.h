@@ -40,7 +40,6 @@ public:
     const UrlList& previous_entities() const    { return previous_entities_; }
 
     void set_entity(const std::string& ent) { entity_ = ent; }
-
 private:
     ServerList      server_list_;
     UrlList         previous_entities_;

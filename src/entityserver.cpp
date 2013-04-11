@@ -3,8 +3,8 @@
 namespace attic { 
 
 void ServerUrls::Serialize(Json::Value& root) {
-    root["app_auth_request"] = app_auth_request;
-    root["app_token_request"] = app_token_request;
+    root["oauth_auth"] = oauth_auth;
+    root["oauth_token"] = oauth_token;
     root["posts_feed"] = posts_feed;
     root["new_post"] = new_post;
     root["post"] = post;
@@ -15,8 +15,8 @@ void ServerUrls::Serialize(Json::Value& root) {
 }
 
 void ServerUrls::Deserialize(Json::Value& root) {
-    app_auth_request  = root.get("app_auth_request", "").asString();
-    app_token_request = root.get("app_token_request", "").asString();
+    oauth_auth  = root.get("oauth_auth", "").asString();
+    oauth_token = root.get("oauth_token", "").asString();
     posts_feed = root.get("posts_feed", "").asString();
     new_post = root.get("new_post", "").asString();
     post = root.get("post", "").asString();

@@ -79,7 +79,7 @@ static int RegisterAttic(const std::string& entityurl,
             c_path += cred_path;
             status = RetrieveAppCredentials(c_path, app);
             if(status == ret::A_OK) {
-                std::string app_url = ent.GetPreferredServer().app_auth_request();
+                std::string app_url = ent.GetPreferredServer().oauth_auth();
                 ConstructAppAuthorizationURL(app_url, app, url_out);
                 status = SaveAppToFile(app, configdir);
             }
@@ -179,6 +179,8 @@ int ConstructAppAuthorizationURL(const std::string& path,
                                std::string& urlout) {
     int status = ret::A_OK;
 
+    std::cout<<"ConstructAppAuthorizationURL : " << path << std::endl;
+
     UrlParams val;
     val.AddValue(std::string("client_id"), app.app_id());
     
@@ -271,7 +273,7 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
         rcode.set_code(code);
         rcode.set_token_type(std::string("mac"));
 
-        std::string path = ent.GetPreferredServer().app_token_request();
+        std::string path = ent.GetPreferredServer().oauth_token();
         std::cout<<" TOKEN PATH : " << path << std::endl;
 
         // serialize RedirectCode

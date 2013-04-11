@@ -74,9 +74,9 @@ static int Discover(const std::string& entityurl, const AccessToken* at, Entity&
         Response response;
         netlib::HttpGet(meta_link, NULL, NULL, response);
 
+        std::cout<<" CODE : " << response.code << std::endl;
+        std::cout<<" BODY : " << response.body << std::endl;
         if(response.code == 200) {
-            std::cout<<" CODE : " << response.code << std::endl;
-            std::cout<<" BODY : " << response.body << std::endl;
             EntityPost ep;
             jsn::DeserializeObject(&ep, response.body);
 
@@ -89,6 +89,7 @@ static int Discover(const std::string& entityurl, const AccessToken* at, Entity&
 
         }
         else {
+            std::cout<<" FAIL DISCOVERY NON 200 " << std::endl;
             status = ret::A_FAIL_NON_200;
         }
     }
@@ -103,6 +104,9 @@ static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut)
 
     Response response;
     netlib::HttpHead(entityurl, NULL, NULL, response);
+    std::cout<<" HEAD CODE : " << response.code << std::endl;
+    std::cout<<" HEAD BODY : " << response.body << std::endl;
+    std::cout<<" headers : " << response.header.asString() << std::endl;
 
     if(response.code == 200) {
         std::string link;
@@ -112,6 +116,7 @@ static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut)
         linkOut = metapath;
     }
     else { 
+        std::cout<<" HEAD REQUST FAIL NON 200 " << std::endl;
         status = ret::A_FAIL_NON_200;
     }
 
