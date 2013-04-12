@@ -10,6 +10,7 @@ ChunkInfo::ChunkInfo(const std::string& chunkname, const std::string& checksum) 
     position_ = 0;
     chunk_name_ = chunkname;
     checksum_ = checksum;
+    group_ = -1;
 }
 
 ChunkInfo::~ChunkInfo() {}

@@ -40,6 +40,7 @@
 #include "filequeue.h"
 #include "callbackhandler.h"
 #include "atticclient.h"
+#include "chunkbuffer.h"
 
 // Globals
 std::string g_Entity;

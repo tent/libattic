@@ -34,6 +34,8 @@ static const unsigned int g_unSplitMin = 1 << 21; // ~2 mbs
 static const unsigned int g_unSplitMax = 1 << 23; // ~8 mbs 
 static const unsigned int g_unMaxBuffer = 1 << 26; // ~67 mbs <-- this needs to be at least 2mbs
 
+static const unsigned int g_max_chunk_cluster = 30; // 30 chunks per cluster
+
 // Config values
 static const char* g_szConfigTrashPath = "trash_path";      // filepath to trash or recycling bin
 static const char* g_szConfigUploadLimit = "upload_limit";  // upload limit in mbs

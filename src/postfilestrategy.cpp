@@ -21,13 +21,14 @@ PostFileStrategy::PostFileStrategy() {}
 PostFileStrategy::~PostFileStrategy() {}
 
 int PostFileStrategy::Execute(FileManager* pFileManager,
-                               CredentialsManager* pCredentialsManager) {
+                              CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
     status = InitInstance(pFileManager, pCredentialsManager);
     // Initialize meta post
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
+    std::string entity = GetConfigValue("entity");
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
@@ -35,6 +36,12 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
         if(status == ret::A_OK) {
             // Retrieve Chunk posts
+            ChunkPostList chunk_posts;
+            RetrieveChunkPosts(entity, meta_post_id, chunk_posts);
+            // Extract Chunk info
+            FileInfo::ChunkMap chunk_map;
+            ExtractChunkInfo(chunk_posts, chunk_map);
+            // begin chunking
 
         }
     }
@@ -44,6 +51,94 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
     return status;
 }
+
+int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
+                                         const std::string& post_id,
+                                         ChunkPostList& out) {
+    int status = ret::A_OK;
+    std::string posts_feed = GetConfigValue("posts_feed");
+    UrlParams params;
+    params.AddValue(std::string("mentions"), entity + "+" + post_id);
+    params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
+
+    Response response;
+    netlib::HttpGet(posts_feed,
+                    &params,
+                    &access_token_,
+                    response);
+
+    if(response.code == 200) {
+        Json::Value chunk_post_arr(Json::arrayValue);
+        jsn::DeserializeJson(response.body, chunk_post_arr);
+        Json::ValueIterator itr = chunk_post_arr.begin();
+        for(; itr != chunk_post_arr.end(); itr++) {
+            ChunkPost p;
+            jsn::DeserializeObject(&p, (*itr));
+            // There should never be more than one post in the same group
+            if(out.find(p.group()) == out.end())
+                out[p.group()] = p;
+            else 
+                std::cout<<" DUPLICATE GROUP CHUNL POST, RESOLVE " << std::endl;
+        }
+    }
+    else { 
+        log::LogHttpResponse("FA332JMA3", response);
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+
+void PostFileStrategy::ExtractChunkInfo(ChunkPostList& list,
+                                        FileInfo::ChunkMap& out) {
+    ChunkPostList::iterator itr = list.begin();
+
+    for(;itr != list.end(); itr++) {
+        ChunkPost::ChunkInfoList::iterator cp_itr = itr->second.chunk_info_list()->begin();
+        for(;cp_itr != itr->second.chunk_info_list()->end(); cp_itr++) {
+            ChunkInfo ci = cp_itr->second;
+
+            if(ci.group() == -1) { // debug
+                std::cout<<" CHUNK INFO GROUP NOT SET " << std::endl;
+                ci.set_group(itr->first);
+            }
+
+            out[ci.chunk_name()] = ci;
+        }
+    }
+}
+
+int PostFileStrategy::ChunkFile(const std::string& filepath,
+                                ChunkPostList& chunk_list,
+                                FileInfo::ChunkMap& chunk_map) {
+    int status = ret::A_OK;
+    unsigned int group_count = 0;
+
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+
+    if(ifs.is_open()) {
+        unsigned int total_read = 0;
+        unsigned int chunk_count = 0;
+        while(!ifs.eof()) {
+            if(chunk_count == 0 || chunk_count > 30 ) {
+                // Begin new chunk post
+            }
+            // Actual chunking
+
+            if(chunk_count >= 30) {
+                // End chunk post
+
+                chunk_count = 0;
+                group_count++;
+            }
+        }
+    }
+
+    return status;
+}
+
+
 // Retrieve (or create) FilePost (metadata)
 //  - if exists, use credentials associated with existing metadata
 //  - else create new credentials and post

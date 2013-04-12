@@ -24,6 +24,7 @@ public:
     const std::string& ciphertext_mac() const   { return ciphertext_mac_; }
     const std::string& iv() const               { return iv_; }
 
+    int group() const                           { return group_; }
     unsigned int position() const               { return position_; }
 
     void set_chunk_name(const std::string& name)     { chunk_name_ = name; } 
@@ -32,6 +33,7 @@ public:
     void set_ciphertext_mac(const std::string& mac)  { ciphertext_mac_ = mac; }
     void set_iv(const std::string& iv)               { iv_ = iv; }
     void set_position(const unsigned int position)   { position_ = position; }
+    void set_group(const int g)                      { group_ = g; }
 
     bool HasIv() const { return !iv_.empty(); }
 
@@ -43,6 +45,7 @@ private:
     std::string iv_;                // Iv used to encrypt chunk
 
     unsigned int position_;         // Position in the order of chunks
+    int group_;                     // chunk group designation -1 = unassigned
 };
 
 } // namespace

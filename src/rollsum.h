@@ -3,6 +3,7 @@
 #pragma once
 
 #include <iostream>
+#include <deque>
 #include <string.h>
 #include <stdint.h>
 

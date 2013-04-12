@@ -9,6 +9,7 @@ namespace attic {
 
 ChunkPost::ChunkPost() {
     set_type(cnst::g_attic_chunk_type);
+    group_ = -1;
 }
 
 ChunkPost::~ChunkPost() {}
@@ -41,6 +42,10 @@ void ChunkPost::Serialize(Json::Value& root) {
             chunkval.append(val);
         }
         set_content("chunks", chunkval);
+
+        Json::Value info(Json::objectValue);
+        info["group_number"] = group_;
+        set_content("chunks_info", info);
     }
 
     Post::Serialize(root);
@@ -60,6 +65,10 @@ void ChunkPost::Deserialize(Json::Value& root) {
         jsn::DeserializeObject(&ci, (*itr));
         chunk_info_list_[ci.position()] = ci;
     }
+
+    Json::Value info(Json::objectValue);
+    get_content("chunks_info", info);
+    group_ =  info.get("group_number", -1).asInt();
 }
 
 } //namespace
