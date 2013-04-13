@@ -1080,6 +1080,24 @@ TEST(SOCKET, CONNECTION) {
 
 }
 
+TEST(CHUNKBUFFER, TEST) {
+    attic::ChunkBuffer cb;
+    if(cb.OpenFile("./data/cfs.mp4")) { 
+        std::ofstream ofs;
+        ofs.open("test.mp4", std::ios::out | std::ios::binary);
+
+        std::string chunk;
+        while(cb.ReadChunk(chunk)) {
+            std::cout<<" got a chunk " << std::endl;
+            std::cout<<" chunk size : " << chunk.size() << std::endl;
+            ofs.write(chunk.c_str(), chunk.size());
+            chunk.clear();
+        }
+        ofs.close();
+    }
+
+}
+
 
 int main (int argc, char* argv[]) {
    int status = 0;

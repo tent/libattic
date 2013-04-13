@@ -4,6 +4,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #include "constants.h"
 #include "rollsum.h"
@@ -21,6 +22,8 @@ public:
     bool OpenFile(const std::string& filepath);
     bool ReadChunk(std::string& out);
     bool CloseFile();
+
+    bool BufferEmpty() { if(window_buffer_.size()) return false; return true; }
 
 private:
     RollSum rs_;
