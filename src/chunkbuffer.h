@@ -25,6 +25,9 @@ public:
 
     bool BufferEmpty() { if(window_buffer_.size()) return false; return true; }
 
+    bool EndOfFile();
+
+
 private:
     RollSum rs_;
     std::ifstream ifs_;

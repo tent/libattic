@@ -36,8 +36,9 @@ void ChunkBuffer::ReadToWindow() {
     // Determine how much to read in
     char* data = NULL;
     unsigned int data_size = 0;
-    if(!ifs_.eof()) {
-        if(filesize_ >= max_buffer_read_) {
+    if(total_read_ < filesize_) {
+        if((filesize_ - total_read_) >= max_buffer_read_) {
+            // If the difference is greater than max buffer, read max buffer
             data = new char[max_buffer_read_];
             data_size = max_buffer_read_;
         }
@@ -59,12 +60,10 @@ void ChunkBuffer::ReadToWindow() {
         // clear the window, and append data
         ifs_.read(data, data_size);
         total_read_ += data_size;
+        std::cout<<" Total bytes read : " << total_read_ << std::endl;
+        if(filesize_ < total_read_)
+            std::cout<<" WE READ MORE THAN THE FILESIZE? " << std::endl;
     }
-
-    std::cout<< " data size " << data_size << std::endl;
-    window_buffer_.clear();
-    window_buffer_ += remainder_buffer_;
-    remainder_buffer_.clear();
 
     if(data_size)
         window_buffer_.append(data, data_size);
@@ -77,53 +76,51 @@ void ChunkBuffer::ReadToWindow() {
 
 bool ChunkBuffer::ReadChunk(std::string& out) {
     bool chunked = false;
-    if(window_buffer_.size() <= 0);
-        ReadToWindow();
 
-    int session_read = 0, byte_count = 0, last_split = 0;
     for(unsigned int i=0; i<window_buffer_.size(); i++) {
         // Roll each byte
         char c = window_buffer_[i];
         rs_.Roll(c);
-        byte_count++;
 
-        if(rs_.OnSplit() && (byte_count >= min_split_)) {
-            int diff = i - last_split;
+        if(rs_.OnSplit() && (i >= min_split_)) {
             // Split the window buffer
-            out = window_buffer_.substr(last_split, diff);
-
-            last_split = i;
-            byte_count = 0;
-            session_read += out.size();
+            out = window_buffer_.substr(0, i);
+            window_buffer_.erase(0, i);
             chunked = true;
             break;
         }
 
         // Check for max split, and force
-        if(byte_count >= max_split_) { 
-            int diff = i - last_split;
-            out = window_buffer_.substr(last_split, diff);
-
-            last_split = i;
-            byte_count = 0;
-            session_read += out.size();
+        if(i >= max_split_) { 
+            out = window_buffer_.substr(0, i);
+            window_buffer_.erase(0, i);
             chunked = true;
             break;
         }
     }
 
-    // Set remainder
-    int wdiff = window_buffer_.size() - session_read;
-    if(wdiff) {
-        remainder_buffer_ = window_buffer_.substr(last_split, wdiff);
-        window_buffer_.clear();
-        if(chunked) { 
-            std::cout<<" chunked lets break " << std::endl;
+    if(!chunked) {
+        // Load more into the buffer and try again...
+        if(!EndOfFile()) {
+            ReadToWindow();
+            chunked = ReadChunk(out);
+        }
+        else if(window_buffer_.size()) {
+            std::cout<<" LAST CHUNK " << std::endl;
+            std::cout<<" window buffer size : " << window_buffer_.size() << std::endl;
+            out = window_buffer_;
+            window_buffer_.clear();
+            chunked = true;
         }
     }
-    std::cout<<" total read so far : " << total_read_ << std::endl;
-    std::cout<<" exiting ... " << std::endl;
+
     return chunked;
+}
+
+bool ChunkBuffer::EndOfFile() {
+    if(total_read_ >= filesize_)
+        return true;
+    return false;
 }
 
 } //namespace
