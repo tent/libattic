@@ -23,12 +23,16 @@ public:
 
     unsigned int chunk_info_list_size() { return chunk_info_list_.size(); }
     ChunkInfoList* chunk_info_list() { return &chunk_info_list_; }
+    bool HasChunk(const std::string name);
     int group() { return group_; }
 
     int set_chunk_info_list(FileInfo::ChunkMap& list);
     void set_group(const int g) { group_ = g; }
 private:
-    ChunkInfoList chunk_info_list_;
+    // TODO :: optimization, allocate chunk info on heap, both maps have ptr; test laster for speed and memory
+    //         consumption
+    FileInfo::ChunkMap  chunk_map_;
+    ChunkInfoList chunk_info_list_; // Key by position
     int group_;
 };
 

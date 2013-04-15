@@ -84,6 +84,8 @@ private:
                            ChunkPostList& out);
 
     int ChunkFile(const std::string& filepath,
+                  const Credentials& file_credentials,
+                  const std::string& file_meta_post_id,
                   ChunkPostList& chunk_list,
                   FileInfo::ChunkMap& chunk_map);
 

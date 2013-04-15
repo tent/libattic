@@ -12,6 +12,8 @@
 #include "rollsum.h"
 #include "postutils.h"
 #include "logutils.h"
+#include "chunkbuffer.h"
+#include "chunkrequest.h"
 
 #include "sleep.h"
 
@@ -42,7 +44,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             FileInfo::ChunkMap chunk_map;
             ExtractChunkInfo(chunk_posts, chunk_map);
             // begin chunking
-
+            status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
         }
     }
     else {
@@ -109,29 +111,67 @@ void PostFileStrategy::ExtractChunkInfo(ChunkPostList& list,
 }
 
 int PostFileStrategy::ChunkFile(const std::string& filepath,
+                                const Credentials& file_credentials,
+                                const std::string& file_meta_post_id,
                                 ChunkPostList& chunk_list,
                                 FileInfo::ChunkMap& chunk_map) {
+    // To Chunk a file
+    //  - Chunk and upload sequentially
+    //  - Check if a chunk group(post) exists, if it does update that post, else new post
+   
     int status = ret::A_OK;
-    unsigned int group_count = 0;
 
-    std::ifstream ifs;
-    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
-
-    if(ifs.is_open()) {
+    ChunkBuffer cb;
+    if(cb.OpenFile(filepath)) {
+        std::string file_key = file_credentials.key();
         unsigned int total_read = 0;
         unsigned int chunk_count = 0;
-        while(!ifs.eof()) {
-            if(chunk_count == 0 || chunk_count > 30 ) {
+        unsigned int group_count = 0;
+        std::string chunk;
+        bool new_group = false;
+        ChunkPost* cp = NULL;
+
+        std::string entity = GetConfigValue("entity");
+        ChunkRequest cr(entity, posts_feed_, post_path_, file_meta_post_id, access_token_);
+        while(cb.ReadChunk(chunk)) {
+            // Find Chunk Group
+            if(chunk_count == 0) {
+                cp = new ChunkPost();
                 // Begin new chunk post
+                if(chunk_list.find(group_count) != chunk_list.end()){
+                    Parent parent;
+                    // Chunk Post already exists, copy 
+                    //*cp = (chunk_list.find(group_count));
+
+                }
+                else {
+                    new_group = true;
+                }
             }
-            // Actual chunking
+            // Transform chunk
+            std::string finished_chunk, chunk_name;
+            ChunkInfo ci;
+            TransformChunk(chunk, 
+                           file_key, 
+                           finished_chunk, 
+                           chunk_name, 
+                           ci);
+            chunk_count++;
+
+            if(!new_group) {
+
+            }
 
             if(chunk_count >= 30) {
                 // End chunk post
-
                 chunk_count = 0;
                 group_count++;
+                if(cp) {
+                    delete cp;
+                    cp = NULL;
+                }
             }
+            chunk.clear();
         }
     }
 
@@ -323,7 +363,6 @@ int PostFileStrategy::ProcessFile(const std::string& requestType,
         // extract parents
 
         parent.version = old_post.version()->id;
-
     }
 
     std::string protocol, host, path;

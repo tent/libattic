@@ -19,13 +19,19 @@ ChunkPost::~ChunkPost() {}
 int ChunkPost::set_chunk_info_list(FileInfo::ChunkMap& list) {
     int status = ret::A_OK;
 
+    chunk_map_ = list;
     std::map<std::string, ChunkInfo>::iterator itr = list.begin();
     for(;itr != list.end(); itr++) {
-        // copy
         chunk_info_list_[itr->second.position()] = itr->second;
     }
 
     return status;
+}
+
+bool ChunkPost::HasChunk(const std::string name) { 
+    if(chunk_map_.find(name) != chunk_map_.end())
+        return true;
+    return false;
 }
 
 void ChunkPost::Serialize(Json::Value& root) {
@@ -64,6 +70,7 @@ void ChunkPost::Deserialize(Json::Value& root) {
         ChunkInfo ci;
         jsn::DeserializeObject(&ci, (*itr));
         chunk_info_list_[ci.position()] = ci;
+        chunk_map_[ci.chunk_name()] = ci;
     }
 
     Json::Value info(Json::objectValue);
