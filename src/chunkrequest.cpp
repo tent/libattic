@@ -65,10 +65,13 @@ void ChunkRequest::BeginRequest() {
     socket_->Write(request);
 }
 
-int ChunkRequest::PushBackChunk(const std::string& chunk_name, 
+int ChunkRequest::PushBackChunk(const ChunkInfo& ci,
+                                const std::string& chunk_name, 
                                 const std::string& chunk,
                                 const unsigned int count) { 
     int status = ret::A_OK;
+
+    post_.PushBackChunkInfo(ci, count);
 
     // Check parent if chunk exists
     if(has_parent_ && parent_post_.HasChunk(chunk_name)) {
@@ -99,6 +102,15 @@ int ChunkRequest::PushBackChunk(const std::string& chunk_name,
 
 void ChunkRequest::EndRequest(Response& out) {
     // Send chunk post body
+    if(!entity_.empty() && !meta_post_id_.empty()) {
+        post_.MentionPost(entity_, meta_post_id_);
+    }
+    else {
+        std::cout<<" SOMETHING IS EMPTY " << std::endl;
+        std::cout<<" ENTITY : " << entity_ << std::endl;
+        std::cout<<" META POST ID : " << meta_post_id_ << std::endl;
+    }
+
     std::string body;
     jsn::SerializeObject(&post_, body);
 
@@ -110,6 +122,8 @@ void ChunkRequest::EndRequest(Response& out) {
     // Chunk the Body 
     boost::asio::streambuf chunkedBody;
     std::ostream partbuf(&chunkedBody);
+
+    std::cout<<" END REQUEST BODY : " << body << std::endl;
 
     netlib::ChunkEnd(requestBody, partbuf);
     socket_->Write(chunkedBody);

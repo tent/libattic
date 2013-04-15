@@ -8,6 +8,7 @@
 #include "accesstoken.h"
 #include "connection.h"
 #include "response.h"
+#include "chunkinfo.h"
 
 namespace attic { 
 
@@ -26,7 +27,8 @@ public:
     void set_parent_post(const ChunkPost& cp);
 
     void BeginRequest();
-    int PushBackChunk(const std::string& chunk_name, 
+    int PushBackChunk(const ChunkInfo& ci,
+                      const std::string& chunk_name, 
                       const std::string& chunk,
                       const unsigned int count);
     void EndRequest(Response& out);
