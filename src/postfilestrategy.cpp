@@ -132,21 +132,26 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
         ChunkPost* cp = NULL;
 
         std::string entity = GetConfigValue("entity");
-        ChunkRequest cr(entity, posts_feed_, post_path_, file_meta_post_id, access_token_);
+        ChunkRequest* cr = NULL;
         while(cb.ReadChunk(chunk)) {
             // Find Chunk Group
             if(chunk_count == 0) {
-                cp = new ChunkPost();
+                cr = new ChunkRequest(entity, 
+                                      posts_feed_, 
+                                      post_path_, 
+                                      file_meta_post_id, 
+                                      access_token_, 
+                                      group_count);
                 // Begin new chunk post
                 if(chunk_list.find(group_count) != chunk_list.end()){
-                    Parent parent;
-                    // Chunk Post already exists, copy 
-                    //*cp = (chunk_list.find(group_count));
-
+                    ChunkPost parent = chunk_list.find(group_count)->second;
+                    cr->set_parent_post(parent);
                 }
                 else {
                     new_group = true;
                 }
+
+                cr->BeginRequest();
             }
             // Transform chunk
             std::string finished_chunk, chunk_name;
@@ -156,19 +161,27 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                            finished_chunk, 
                            chunk_name, 
                            ci);
+
+            cr->PushBackChunk(chunk_name, finished_chunk, chunk_count);
+            
             chunk_count++;
-
-            if(!new_group) {
-
-            }
-
             if(chunk_count >= 30) {
                 // End chunk post
                 chunk_count = 0;
                 group_count++;
-                if(cp) {
-                    delete cp;
-                    cp = NULL;
+
+                Response response;
+                cr->EndRequest(response);
+                if(cr) {
+                    delete cr;
+                    cr = NULL;
+                }
+
+                if(response.code != 200) { 
+                    std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
+                    std::cout<<" code : " << response.code << std::endl;
+                    std::cout<<" response : " << response.body << std::endl;
+                    log::LogHttpResponse("KJASDF321", response);
                 }
             }
             chunk.clear();

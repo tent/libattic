@@ -18,7 +18,8 @@ public:
                  const std::string& posts_feed, 
                  const std::string& post_path, 
                  const std::string& meta_post_id,
-                 const AccessToken& at);
+                 const AccessToken& at, 
+                 const unsigned int group_number);
 
     ~ChunkRequest();
 
@@ -47,6 +48,7 @@ private:
     std::string url_;
     std::string entity_;
 
+    unsigned int group_number_;
     bool has_parent_;
 };
 
