@@ -982,10 +982,12 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             file_manager_->SetFilePostId(filepath, post.id());
 
             post_id_out = post.id();
+            fi->set_post_id(post.id());
             
             FileInfo* ffi = RetrieveFileInfo(filepath);
             std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;
 
+            UpdateFileInfo(file_cred, filepath, "", "", fi);
         }
         else {
             status = ret::A_FAIL_NON_200;
