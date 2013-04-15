@@ -6,6 +6,7 @@
 #include "credentials.h"
 #include "chunkpost.h"
 #include "posttree.h"
+#include "filepost.h"
 
 namespace attic { 
 
@@ -32,6 +33,8 @@ class GetFileStrategy : public HttpStrategyInterface {
                        std::string& out);
     int ConstructPostTree(FileInfo* fi, PostTree& tree);
     int RetrieveAndInsert(const std::string& postid, PostTree& tree);
+
+    int RetrieveFilePost(FileInfo* fi, FilePost& out);
 public:
     GetFileStrategy();
     ~GetFileStrategy();

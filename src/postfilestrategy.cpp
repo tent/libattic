@@ -35,6 +35,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
         std::string meta_post_id;
+        std::cout<<" Initializing File Meta Data " << std::endl;
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
         if(status == ret::A_OK) {
             // Retrieve Chunk posts
@@ -45,6 +46,8 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             ExtractChunkInfo(chunk_posts, chunk_map);
             // begin chunking
             status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
+
+            std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
         }
     }
     else {
@@ -162,10 +165,10 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                            chunk_name, 
                            ci);
 
-            cr->PushBackChunk(chunk_name, finished_chunk, chunk_count);
+            cr->PushBackChunk(ci, chunk_name, finished_chunk, chunk_count);
             
             chunk_count++;
-            if(chunk_count >= 30) {
+            if(cb.BufferEmpty() || chunk_count >= 30) {
                 // End chunk post
                 chunk_count = 0;
                 group_count++;
@@ -176,13 +179,15 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                     delete cr;
                     cr = NULL;
                 }
+                std::cout<<" CHUNK ENDING " << std::endl;
+                std::cout<<" code : " << response.code << std::endl;
+                std::cout<<" response : " << response.body << std::endl;
 
                 if(response.code != 200) { 
                     std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
-                    std::cout<<" code : " << response.code << std::endl;
-                    std::cout<<" response : " << response.body << std::endl;
-                    log::LogHttpResponse("KJASDF321", response);
+                                    log::LogHttpResponse("KJASDF321", response);
                 }
+
             }
             chunk.clear();
         }
@@ -975,6 +980,8 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             Post post;
             jsn::DeserializeObject(&post, response.body);
             file_manager_->SetFilePostId(filepath, post.id());
+
+            post_id_out = post.id();
             
             FileInfo* ffi = RetrieveFileInfo(filepath);
             std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;

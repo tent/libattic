@@ -28,6 +28,57 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
     FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
+        if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
+        // Retrieve file metadata
+        // Query for chunkposts mentioning metadata
+        // get file credentials
+        // put file posts in order
+        // pull chunks
+    }
+    else {
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
+    }
+    
+    return status;
+}
+ 
+int GetFileStrategy::RetrieveFilePost(FileInfo* fi, FilePost& out) { 
+    int status = ret::A_OK;
+    std::string posturl;
+    std::string postid = fi->post_id();
+    utils::FindAndReplace(post_path_, "{post}", postid, posturl);
+
+    // Get Metadata post
+    Response resp;
+    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+
+    std::cout<<" POST URL : "<< posturl << std::endl;
+    std::cout<<" CODE : " << resp.code << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
+
+    if(resp.code == 200) {
+        if(!jsn::DeserializeObject(&out, resp.body)) {
+            std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
+        }
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+/*
+int GetFileStrategy::Execute(FileManager* pFileManager,
+                             CredentialsManager* pCredentialsManager) {
+    int status = ret::A_OK;
+    status = InitInstance(pFileManager, pCredentialsManager);
+
+    post_path_ = GetConfigValue("post_path");
+    std::string filepath = GetConfigValue("filepath");
+    std::string post_attachment = GetConfigValue("post_attachment");
+
+    FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
+    if(fi) {
         if(fi->deleted())
             return ret::A_FAIL_PULL_DELETED_FILE;
         // Check for conflict
@@ -92,6 +143,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
    
     return status;
 }
+*/
 
 int GetFileStrategy::RetrieveFileCredentials(FileInfo* fi, Credentials& out) {
     int status = ret::A_OK;

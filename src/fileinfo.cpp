@@ -107,7 +107,6 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
     if(chunks_.size() != 0)
         return false;
 
-
     std::cout<<" RAW DATA : " << data << std::endl;
 
     Json::Value root;
