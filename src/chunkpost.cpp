@@ -28,6 +28,11 @@ int ChunkPost::set_chunk_info_list(FileInfo::ChunkMap& list) {
     return status;
 }
 
+void ChunkPost::PushBackChunkInfo(const ChunkInfo& ci, const unsigned int position) {
+    chunk_info_list_[position] = ci;
+    chunk_map_[ci.chunk_name()] = ci;
+}
+
 bool ChunkPost::HasChunk(const std::string name) { 
     if(chunk_map_.find(name) != chunk_map_.end())
         return true;

@@ -28,6 +28,8 @@ public:
 
     int set_chunk_info_list(FileInfo::ChunkMap& list);
     void set_group(const int g) { group_ = g; }
+
+    void PushBackChunkInfo(const ChunkInfo& ci, const unsigned int position);
 private:
     // TODO :: optimization, allocate chunk info on heap, both maps have ptr; test laster for speed and memory
     //         consumption
