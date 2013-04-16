@@ -2,6 +2,7 @@
 #define TENTTASK_H_
 #pragma once
 
+#include <map>
 #include <string>
 
 #include "task.h"
@@ -25,8 +26,7 @@ public:
              const std::string& configdir,
              TaskDelegate* callbackDelegate = NULL)
              : 
-             Task(type)
-    {
+             Task(type) {
         file_manager_          = fm;
         credentials_manager_   = cm;
         access_token_ = at;
@@ -75,6 +75,17 @@ public:
     void set_working_directory(const std::string& workingdir)    { working_directory_ = workingdir; }
     void set_config_directory(const std::string& configdir)      { config_directory_ = configdir; }
 
+    void SetConfigValue(const std::string& key, const std::string& value) { 
+        config_table_[key] = value; 
+    }
+
+    bool GetConfigValue(const std::string& key, std::string& out) {
+        if(config_table_.find(key) != config_table_.end()) {
+            out = config_table_[key];
+            return true;
+        }
+        return false;
+    }
 protected:
     void Callback(const int code, const std::string& var) {
         if(callback_delegate_)
@@ -89,6 +100,8 @@ protected:
                               post_path);
         return post_path;
     }
+
+
 private:
     AccessToken          access_token_;
     Entity               entity_;
@@ -103,6 +116,7 @@ private:
     CredentialsManager*  credentials_manager_;
 
     TaskDelegate* callback_delegate_;
+    std::map<std::string, std::string> config_table_;
 };
 
 }//namespace
