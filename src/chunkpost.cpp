@@ -1,4 +1,3 @@
-
 #include "chunkpost.h"
 
 #include "constants.h"
@@ -33,14 +32,20 @@ void ChunkPost::PushBackChunkInfo(const ChunkInfo& ci, const unsigned int positi
     chunk_map_[ci.chunk_name()] = ci;
 }
 
-bool ChunkPost::HasChunk(const std::string name) { 
+bool ChunkPost::HasChunk(const std::string& name) { 
     if(chunk_map_.find(name) != chunk_map_.end())
         return true;
     return false;
 }
 
+ChunkInfo* ChunkPost::GetChunk(const std::string& name) {
+    FileInfo::ChunkMap::iterator itr = chunk_map_.find(name);
+    if(itr != chunk_map_.end())
+        return &itr->second;
+    return NULL;
+}
+
 void ChunkPost::Serialize(Json::Value& root) {
-    std::cout<<" Serializing chunk post " << std::endl;
     if(chunk_info_list_.size() > 0) {
         std::vector<std::string> serializedList;
         ChunkInfoList::iterator itr = chunk_info_list_.begin();
@@ -66,7 +71,7 @@ void ChunkPost::Deserialize(Json::Value& root) {
     Post::Deserialize(root);
 
     //std::string cval;
-    Json::Value chunkval;
+    Json::Value chunkval(Json::arrayValue);
     std::vector<std::string> serializedList;
 
     get_content("chunks", chunkval);
@@ -80,7 +85,7 @@ void ChunkPost::Deserialize(Json::Value& root) {
 
     Json::Value info(Json::objectValue);
     get_content("chunks_info", info);
-    group_ =  info.get("group_number", -1).asInt();
+    group_ =  info["group_number"].asInt(); 
 }
 
 } //namespace
