@@ -8,10 +8,8 @@ namespace attic {
 
 class Task;
 
-class ThreadWorker : public MutexClass
-{
-    enum ThreadState
-    {
+class ThreadWorker : public MutexClass {
+    enum ThreadState {
         IDLE = 0,
         RUNNING,
         EXIT,
@@ -21,17 +19,15 @@ class ThreadWorker : public MutexClass
     void PollTask(Task* pTask);
     void SetState(ThreadState t);
 public:
-
     ThreadWorker();
     ~ThreadWorker();
 
     void SetThreadExit();
-    int GetState();
+    int state();
 
     void Run();
 private:
-
-    ThreadState m_State;
+    ThreadState state_;
 };
 
 }//namespace

@@ -2,66 +2,54 @@
 
 namespace attic {
 
-TaskPool::TaskPool() 
-{
-}
+TaskPool::TaskPool() {}
 
-TaskPool::~TaskPool()
-{
-    TaskMap::iterator itr = m_TaskMap.begin();
+TaskPool::~TaskPool() {
+    TaskMap::iterator itr = task_map_.begin();
 
-    for(;itr != m_TaskMap.end(); itr++)
-    {
-        for(;itr->second.size(); )
-        {
-            Task* pTask = itr->second.front();
-            delete pTask;
-            pTask = NULL;
+    for(;itr != task_map_.end(); itr++) {
+        for(;itr->second.size(); ) {
+            Task* task = itr->second.front();
+            delete task;
+            task = NULL;
             itr->second.pop_front();
         }
     }
 }
 
-void TaskPool::PushBack(Task* pTask)
-{
+void TaskPool::PushBack(Task* task) {
     Lock();
-    if(pTask)
-        m_TaskMap[pTask->GetTaskType()].push_back(pTask);
+    if(task)
+        task_map_[task->type()].push_back(task);
     Unlock();
 }
 
-Task* TaskPool::Remove(Task* pTask)
-{
-    if(pTask)
-    {
+Task* TaskPool::Remove(Task* task) {
+    if(task) {
         Lock();
         // Find
-        TaskQueue::iterator itr = FindTask(pTask, pTask->GetTaskType());
-        if(itr != m_TaskMap[pTask->GetTaskType()].end())
-        {
+        TaskQueue::iterator itr = FindTask(task, task->type());
+        if(itr != task_map_[task->type()].end()) {
             // Remove
-            pTask = *itr;                
+            task = *itr;                
             *itr = NULL;
         }
         Unlock();
     }
 
-    return pTask;
+    return task;
 }
 
-TaskPool::TaskQueue::iterator TaskPool::FindTask(Task* pTask, Task::TaskType type)
-{
-    TaskQueue::iterator itr = m_TaskMap[type].begin();
-    if(pTask)
-    {
-        for(;itr != m_TaskMap[type].end(); itr++)
-        {
-            if((*itr) == pTask)
+TaskPool::TaskQueue::iterator TaskPool::FindTask(Task* task, Task::TaskType type) {
+    TaskQueue::iterator itr = task_map_[type].begin();
+    if(task) {
+        for(;itr != task_map_[type].end(); itr++) {
+            if((*itr) == task)
                 break;
         }
     }
     else
-        itr = m_TaskMap[type].end();
+        itr = task_map_[type].end();
 
     return itr;
 }

@@ -14,22 +14,20 @@ class TaskPool : public MutexClass {
     typedef std::deque<Task*> TaskQueue;
     typedef std::map<Task::TaskType, TaskQueue> TaskMap;
 
-    TaskQueue::iterator FindTask(Task* pTask, Task::TaskType type);
+    TaskQueue::iterator FindTask(Task* task, Task::TaskType type);
 
 public:
     TaskPool();
     ~TaskPool();
 
-    void PushBack(Task* pTask);
-    Task* Remove(Task* pTask);
+    void PushBack(Task* task);
+    Task* Remove(Task* task);
         
-    TaskQueue* operator[](const Task::TaskType type)
-    {
-        return &m_TaskMap[type];
+    TaskQueue* operator[](const Task::TaskType type) {
+        return &task_map_[type];
     }
 private:
-
-    TaskMap m_TaskMap;
+    TaskMap task_map_;
 };
 
 }//namespace

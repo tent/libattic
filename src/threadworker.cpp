@@ -8,22 +8,18 @@
 
 namespace attic {
 
-ThreadWorker::ThreadWorker()
-{
-    m_State = ThreadWorker::IDLE;
+ThreadWorker::ThreadWorker() {
+    state_ = ThreadWorker::IDLE;
 }
 
-ThreadWorker::~ThreadWorker()
-{
-}
+ThreadWorker::~ThreadWorker() {}
 
 // Once a thread is set to exist state, it cannot/shouldnot be changed back
-void ThreadWorker::Run()
-{
+void ThreadWorker::Run() {
     std::cout<<" thread worker starting ... " << std::endl;
     Task* pTask = NULL;
-    while(!(GetState() == ThreadWorker::EXIT)) {
-        if(GetState() == ThreadWorker::IDLE) {
+    while(!(state() == ThreadWorker::EXIT)) {
+        if(state() == ThreadWorker::IDLE) {
             // Get a job
             pTask = CentralTaskQueue::GetInstance()->SyncPopFront();
         }
@@ -33,7 +29,7 @@ void ThreadWorker::Run()
             PollTask(pTask);
         }
 
-        if(GetState() == ThreadWorker::FINISHED) {
+        if(state() == ThreadWorker::FINISHED) {
             // Do some finished step, then idle
             SetState(ThreadWorker::IDLE);
         }
@@ -44,7 +40,7 @@ void ThreadWorker::Run()
 }
 
 void ThreadWorker::PollTask(Task* pTask) {
-    switch(pTask->GetTaskState()) {
+    switch(pTask->state()) {
         case Task::IDLE:
             {
                 std::cout<<" starting task " << std::endl;
@@ -85,27 +81,24 @@ void ThreadWorker::PollTask(Task* pTask) {
     };
 }
 
-int ThreadWorker::GetState()
-{
+int ThreadWorker::state() {
     int t;
     Lock();
-    t = m_State;
+    t = state_;
     Unlock();
     return t;
 }
 
-void ThreadWorker::SetState(ThreadState t)
-{
+void ThreadWorker::SetState(ThreadState t) {
     Lock();
-    if(m_State != ThreadWorker::EXIT)
-        m_State = t;
+    if(state_ != ThreadWorker::EXIT)
+        state_ = t;
     Unlock();
 }
 
-void ThreadWorker::SetThreadExit()
-{
+void ThreadWorker::SetThreadExit() {
     Lock();
-    m_State = ThreadWorker::EXIT;
+    state_ = ThreadWorker::EXIT;
     Unlock();
 }
 

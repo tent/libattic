@@ -1,6 +1,6 @@
 #include "taskqueue.h"
 
 namespace attic {
-CentralTaskQueue* CentralTaskQueue::m_pInstance = 0;
+CentralTaskQueue* CentralTaskQueue::instance_ = 0;
 }//namespace
 
