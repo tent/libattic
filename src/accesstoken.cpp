@@ -42,8 +42,7 @@ ret::eCode AccessToken::LoadFromFile(const std::string& filepath) {
     
     std::string loaded(pBuf);
 
-    if(pBuf)
-    {
+    if(pBuf) {
         delete[] pBuf;
         pBuf = 0;
     }
@@ -54,18 +53,28 @@ ret::eCode AccessToken::LoadFromFile(const std::string& filepath) {
     return ret::A_OK;
 }
 
+void AccessToken::Reset() {
+    access_token_.clear();
+    hawk_key_.clear();
+    hawk_algorithm_.clear();
+    token_type_.clear();
+    app_id_.clear();
+}
+
 void AccessToken::Serialize(Json::Value& root) {
-    root["access_token"] = m_AccessToken;
-    root["mac_key"] = m_MacKey;
-    root["mac_algorithm"] = m_MacAlgorithm;
-    root["token_type"] = m_TokenType;
+    root["access_token"] = access_token_;
+    root["hawk_key"] = hawk_key_;
+    root["hawk_algorithm"] = hawk_algorithm_;
+    root["token_type"] = token_type_;
+    root["app_id"] = app_id_;
 }
 
 void AccessToken::Deserialize(Json::Value& root) {
-    m_AccessToken = root.get("access_token", "").asString();
-    m_MacKey = root.get("mac_key", "").asString();
-    m_MacAlgorithm = root.get("mac_algorithm", "").asString();
-    m_TokenType = root.get("token_type", "").asString();
+    access_token_ = root.get("access_token", "").asString();
+    hawk_key_ = root.get("hawk_key", "").asString();
+    hawk_algorithm_ = root.get("hawk_algorithm", "").asString();
+    token_type_ = root.get("token_type", "").asString();
+    app_id_ = root.get("app_id", app_id_).asString();
 }
 
 } // namespace
