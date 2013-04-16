@@ -22,9 +22,9 @@ void TentApp::Serialize(Json::Value& root) {
     root["url"] = app_url_;
     root["icon"] = app_icon_;
 
-    root["mac_algorithm"] = mac_algorithm_;
-    root["mac_key_id"] = mac_key_id_;
-    root["mac_key"] = mac_key_;
+    root["hawk_algorithm"] = hawk_algorithm_;
+    root["hawk_key_id"] = hawk_key_id_;
+    root["hawk_key"] = hawk_key_;
 
     root["redirect_uri"] = redirect_uri_;
     
@@ -48,9 +48,9 @@ void TentApp::Deserialize(Json::Value& root) {
     if(!root["url"].empty()) app_url_ = root.get("url", "").asString(); 
     if(!root["icon"].empty()) app_icon_ = root.get("icon", "").asString(); 
  
-    if(!root["mac_algorithm"].empty()) mac_algorithm_ = root.get("mac_algorithm", "").asString();
-    if(!root["mac_key_id"].empty()) mac_key_id_ = root.get("mac_key_id", "").asString();
-    if(!root["mac_key"].empty()) mac_key_ = root.get("mac_key", "").asString();
+    if(!root["hawk_algorithm"].empty()) hawk_algorithm_ = root.get("hawk_algorithm", "").asString();
+    if(!root["hawk_key_id"].empty()) hawk_key_id_ = root.get("hawk_key_id", "").asString();
+    if(!root["hawk_key"].empty()) hawk_key_ = root.get("hawk_key", "").asString();
 
     if(!root["redirect_uri"].empty()) redirect_uri_ = root.get("redirect_uri", "").asString();
 

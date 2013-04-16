@@ -89,7 +89,7 @@ int Client::LoadAccessToken() {
     if(status == ret::A_OK)
         credentials_manager_.GetAccessTokenCopy(access_token_);
 
-    std::string at = access_token_.GetAccessToken();
+    std::string at = access_token_.access_token();
     std::cout<<" STATUS : " << status << std::endl;
     std::cout<<" ACCESS TOKEN : " << at << std::endl;
     return status;

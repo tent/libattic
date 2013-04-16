@@ -332,7 +332,7 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
     std::string body;
     AtticPost temp = post; // TODO :: remove this copy once jsn const correctness is fixed
 
-    std::cout<<" access token : " << access_token_.GetMacKey() << std::endl;
+    std::cout<<" access token : " << access_token_.hawk_key() << std::endl;
     std::cout<<" post type :" << post.type() << std::endl;
     std::cout<<" credentials url " << url << std::endl;
 

@@ -49,9 +49,9 @@ public:
     const std::string& app_description() const   { return app_description_; }
     const std::string& app_url() const           { return app_url_; }
     const std::string& app_icon() const          { return app_icon_; }
-    const std::string& mac_algorithm() const     { return mac_algorithm_; }
-    const std::string& mac_key_id() const        { return mac_key_id_; }
-    const std::string& mac_key() const           { return mac_key_; }
+    const std::string& hawk_algorithm() const     { return hawk_algorithm_; }
+    const std::string& hawk_key_id() const        { return hawk_key_id_; }
+    const std::string& hawk_key() const           { return hawk_key_; }
     const std::string& redirect_uri() const      { return redirect_uri_; }
     ScopeVec* scopes()                           { return &scopes_; }
     AuthVec* authorizations()                    { return &authorizations_;}
@@ -61,9 +61,9 @@ public:
     void set_app_description(const std::string &description)    { app_description_ = description; }
     void set_app_url(const std::string &url)                    { app_url_ = url; }
     void set_app_icon(const std::string &icon)                  { app_icon_ = icon; }
-    void set_mac_algorithm(const std::string &alg)              { mac_algorithm_ = alg; }
-    void set_mac_key_id(const std::string &id)                  { mac_key_id_ = id; }
-    void set_mac_key(const std::string &key)                    { mac_key_ = key; }
+    void set_hawk_algorithm(const std::string &alg)              { hawk_algorithm_ = alg; }
+    void set_hawk_key_id(const std::string &id)                  { hawk_key_id_ = id; }
+    void set_hawk_key(const std::string &key)                    { hawk_key_ = key; }
     void set_scopes(const std::vector<std::string>& scopes)     { scopes_ = scopes; }
     void set_redirect_uri(const std::string& uri)               { redirect_uri_ = uri; }
     void set_authorizations(const std::vector<std::string>& auth)   { authorizations_ = auth; }
@@ -79,9 +79,9 @@ private:
     std::string app_description_;
     std::string app_url_;
     std::string app_icon_;
-    std::string mac_algorithm_;
-    std::string mac_key_id_;
-    std::string mac_key_;
+    std::string hawk_algorithm_;
+    std::string hawk_key_id_;
+    std::string hawk_key_;
     std::string redirect_uri_;
 };
 

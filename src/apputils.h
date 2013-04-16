@@ -60,7 +60,6 @@ static int RegisterAttic(const std::string& entityurl,
                          const std::string& redirect_uri,
                          const std::string& configdir,
                          std::string& url_out) {
-
     int status = ret::A_OK;
     fs::CreateDirectory(configdir);
 
@@ -85,7 +84,6 @@ static int RegisterAttic(const std::string& entityurl,
             }
         }
     }
-    
     return status;
 }
 
@@ -159,13 +157,13 @@ static int RetrieveAppCredentials(const std::string cred_path, TentApp& app) {
     if(resp.code == 200) {
         AppPost p;
         jsn::DeserializeObject(&p, resp.body);
-        app.set_mac_key_id(p.id());
-        Json::Value mac_key;
-        p.get_content("mac_key", mac_key);
-        app.set_mac_key(mac_key.asString());
-        Json::Value mac_algorithm;
-        p.get_content("mac_algorithm", mac_algorithm);
-        app.set_mac_algorithm(mac_algorithm.asString());
+        app.set_hawk_key_id(p.id());
+        Json::Value hawk_key;
+        p.get_content("hawk_key", hawk_key);
+        app.set_hawk_key(hawk_key.asString());
+        Json::Value hawk_algorithm;
+        p.get_content("hawk_algorithm", hawk_algorithm);
+        app.set_hawk_algorithm(hawk_algorithm.asString());
     }
     else {
         status = ret::A_FAIL_NON_200; 
@@ -252,7 +250,6 @@ static int RegisterApp(const std::string& app_path,
     else {
         status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
     }
-    
 
     return status;
 }
@@ -271,7 +268,7 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
         // Build redirect code
         RedirectCode rcode;
         rcode.set_code(code);
-        rcode.set_token_type(std::string("mac"));
+        rcode.set_token_type(cnst::g_token_type);
 
         std::string path = ent.GetPreferredServer().oauth_token();
         std::cout<<" TOKEN PATH : " << path << std::endl;
@@ -283,13 +280,15 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
 
         std::cout<<" serialized : " << serialized << std::endl;
 
-        AccessToken at;
-        at.m_MacAlgorithm = app.mac_algorithm();
-        at.m_AccessToken = app.mac_key_id();
-        at.m_MacKey = app.mac_key();
+        std::cout<<" setting app id : " << app.app_id() << std::endl;
+        AccessToken auth_at;
+        auth_at.set_hawk_algorithm(app.hawk_algorithm());
+        auth_at.set_access_token(app.hawk_key_id());
+        auth_at.set_hawk_key(app.hawk_key());
+        auth_at.set_app_id(app.app_id());
 
         Response response;
-        netlib::HttpPost(path,"", NULL, serialized, &at, response);
+        netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
 
         std::cout<<" CODE : " << response.code << std::endl;
         std::cout<<" BODY : " << response.body << std::endl;
@@ -298,6 +297,7 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
             AccessToken at;
             status = liba::DeserializeIntoAccessToken(response.body, at);
             if(status == ret::A_OK) {
+                at.set_app_id(app.app_id());
                 status = liba::WriteOutAccessToken(at, configdir);
             }
         }
