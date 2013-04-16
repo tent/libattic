@@ -380,7 +380,10 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
 
     std::cout<<" RETRIEVING CRED POST " << std::endl;
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(cnst::g_attic_cred_type));
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_cred_type));
+    std::string prm;
+    params.SerializeToString(prm);
+    std::cout<<" PARAMS : " << prm << std::endl;
 
     Response response;
     netlib::HttpGet(url,
