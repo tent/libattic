@@ -177,6 +177,7 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
 
 int PushFile(const char* szFilePath) {
+    if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK){
@@ -192,6 +193,7 @@ int PushFile(const char* szFilePath) {
 }
 
 int PullFile(const char* szFilePath) {
+    if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK){
@@ -208,6 +210,7 @@ int PullFile(const char* szFilePath) {
 }
 
 int DeleteFile(const char* szFilePath) {
+    if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) {
@@ -219,8 +222,17 @@ int DeleteFile(const char* szFilePath) {
             attic::log::LogException("TOP1349", e);
         }
     }
-    else {
-        status = attic::ret::A_FAIL_INVALID_FILEPATH;
+    
+    return status;
+}
+
+int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
+    if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+
+    int status = IsLibInitialized();
+    if(status == attic::ret::A_OK) { 
+
     }
 
     return status;
