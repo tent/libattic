@@ -63,9 +63,15 @@ int PullTask::PullFile(const std::string& filepath) {
     HttpStrategyContext pullcontext(GetFileManager(), 
                                     GetCredentialsManager());
 
+
+    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity().entity();
+
     pullcontext.SetConfigValue("post_path",post_path);
+    pullcontext.SetConfigValue("posts_feed", posts_feed);
     pullcontext.SetConfigValue("post_attachment", post_attachment);
     pullcontext.SetConfigValue("filepath", filepath);
+    pullcontext.SetConfigValue("entity", entity);
 
     pullcontext.PushBack(&gfs);
 
