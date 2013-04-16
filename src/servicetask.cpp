@@ -6,10 +6,7 @@ ServiceTask::ServiceTask(FileManager* pFm,
                          CredentialsManager* pCm,
                          const AccessToken& at,
                          const Entity& entity,
-                         const std::string& filepath,
-                         const std::string& tempdir,
-                         const std::string& workingdir,
-                         const std::string& configdir,
+                         const TaskContext& context,
                          TaskDelegate* callbackDelegate) 
                          :
                          TentTask(Task::SERVICE,
@@ -17,10 +14,7 @@ ServiceTask::ServiceTask(FileManager* pFm,
                                   pCm,
                                   at,
                                   entity,
-                                  filepath,
-                                  tempdir,
-                                  workingdir,
-                                  configdir,
+                                  context,
                                   callbackDelegate)
 {
 }

@@ -21,10 +21,7 @@ SyncFileTask::SyncFileTask(FileManager* pFm,
                            CredentialsManager* pCm,
                            const AccessToken& at,
                            const Entity& entity,
-                           const std::string& filepath,
-                           const std::string& tempdir,
-                           const std::string& workingdir,
-                           const std::string& configdir,
+                           const TaskContext& context,
                            TaskDelegate* callbackDelegate)
                            :                                               
                            TentTask( Task::SYNC_FILE_TASK,
@@ -32,14 +29,10 @@ SyncFileTask::SyncFileTask(FileManager* pFm,
                                      pCm,                                  
                                      at,                                   
                                      entity,                               
-                                     filepath,                             
-                                     tempdir,                              
-                                     workingdir,                           
-                                     configdir,                            
-                                     callbackDelegate)                             
-{
+                                     context,
+                                     callbackDelegate) {
     // TODO :: refine constructor params, FOR NOW filepath will need to have the postid
-    m_PostID = filepath;
+    context.get_value("filepath", m_PostID);
 }
 
 SyncFileTask::~SyncFileTask() {}

@@ -20,22 +20,19 @@ public:
              CredentialsManager* cm,
              const AccessToken& at,
              const Entity& entity,
-             const std::string& filepath,
-             const std::string& tempdir, 
-             const std::string& workingdir,
-             const std::string& configdir,
+             const TaskContext& context,
              TaskDelegate* callbackDelegate = NULL)
              : 
-             Task(type) {
+             Task(context, type) {
         file_manager_          = fm;
         credentials_manager_   = cm;
-        access_token_ = at;
+        access_token_          = at;
+        entity_                = entity;
 
-        entity_ = entity;
-        filepath_ = filepath;
-        temp_directory_ = tempdir;
-        working_directory_ = workingdir;
-        config_directory_ = configdir;
+        context.get_value("filepath", filepath_);
+        context.get_value("temp_dir", temp_directory_);
+        context.get_value("working_dir", working_directory_);
+        context.get_value("config_dir", config_directory_);
 
         callback_delegate_ = callbackDelegate;
     }
@@ -89,7 +86,7 @@ public:
 protected:
     void Callback(const int code, const std::string& var) {
         if(callback_delegate_)
-            callback_delegate_->Callback(GetTaskType(), code, GetTaskState(), var);
+            callback_delegate_->Callback(type(), code, state(), var);
     }
 
     std::string GetPostPath() {

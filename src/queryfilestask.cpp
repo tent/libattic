@@ -8,10 +8,12 @@
 namespace attic { 
 
 QueryFilesTask::QueryFilesTask(FileManager* pFm,                       
+                               const TaskContext& context,
                                void (*callback)(int, char**, int, int))
                                :
                                ManifestTask(Task::QUERYMANIFEST,
                                             pFm,
+                                            context,
                                             callback) {
     m_Stride = 0;
 }

@@ -12,6 +12,7 @@ class ScanDirectoryTask : public ManifestTask {
 
 public:
     ScanDirectoryTask(FileManager* fm,
+                      const TaskContext& context,
                       void (*callback)(int, char**, int, int));
 
     ~ScanDirectoryTask();

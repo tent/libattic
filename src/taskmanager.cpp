@@ -16,22 +16,22 @@ TaskManager::TaskManager(FileManager* pFm,
                          const std::string& workingdir,
                          const std::string& configdir)
 {
-    m_pFileManager = pFm;
-    m_pCredentialsManager = pCm;
+    file_manager_ = pFm;
+    credentials_manager_ = pCm;
 
-    m_AccessToken = at;
-    m_Entity = entity;
+    access_token_ = at;
+    entity_ = entity;
 
-    m_TempDir = tempdir;
-    m_WorkingDir = workingdir;
-    m_ConfigDir = configdir;
+    temp_directory_ = tempdir;
+    working_directory_ = workingdir;
+    config_directory_ = configdir;
 }
 
 TaskManager::~TaskManager() {}
 
 int TaskManager::Initialize() {
     int status = ret::A_OK;
-    status = m_TaskFactory.Initialize();
+    status = task_factory_.Initialize();
 
     event::RegisterForEvent(this, event::Event::REQUEST_PULL);
     event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
@@ -44,7 +44,7 @@ int TaskManager::Initialize() {
 
 int TaskManager::Shutdown() {
     int status = ret::A_OK;
-    status = m_TaskFactory.Shutdown();
+    status = task_factory_.Shutdown();
 
     return status;
 }
@@ -101,17 +101,20 @@ int TaskManager::CreateAndSpinOffTask(Task::TaskType tasktype,
                                       TaskDelegate* pDel) {
     int status = ret::A_OK;
 
-    Task* t = m_TaskFactory.GetTentTask( tasktype,
-                                         m_pFileManager,
-                                         m_pCredentialsManager,
-                                         m_AccessToken,
-                                         m_Entity,
-                                         filepath,
-                                         m_TempDir,
-                                         m_WorkingDir,
-                                         m_ConfigDir,
-                                         pDel,
-                                         this);
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+
+    Task* t = task_factory_.GetTentTask(tasktype,
+                                        file_manager_,
+                                        credentials_manager_,
+                                        access_token_,
+                                        entity_,
+                                        tc, 
+                                        pDel,
+                                        this);
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
@@ -136,8 +139,10 @@ int TaskManager::PollFiles(TaskDelegate* pDel) {
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
-    Task* t = m_TaskFactory.GetManifestTask( Task::QUERYMANIFEST,
-                                             m_pFileManager,
+    TaskContext tc;
+    Task* t = task_factory_.GetManifestTask( Task::QUERYMANIFEST,
+                                             file_manager_,
+                                             tc,
                                              callback,
                                              this);
 
@@ -147,8 +152,10 @@ int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
 
 int TaskManager::ScanAtticFolder(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
-    Task* t = m_TaskFactory.GetManifestTask(Task::SCANDIRECTORY,
-                                            m_pFileManager,
+    TaskContext tc;
+    Task* t = task_factory_.GetManifestTask(Task::SCANDIRECTORY,
+                                            file_manager_,
+                                            tc,
                                             callback,
                                             this);
 
@@ -157,7 +164,7 @@ int TaskManager::ScanAtticFolder(void(*callback)(int, char**, int, int)) {
 }
 
 int TaskManager::TaskCount(const Task::TaskType type) {
-    return m_TaskFactory.GetNumberOfActiveTasks(type);
+    return task_factory_.GetNumberOfActiveTasks(type);
 }
 
 }//namespace

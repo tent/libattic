@@ -34,20 +34,18 @@ class TaskFactory : public MutexClass {
 private:
     void TaskFinished(int code, Task* pTask);
 
-    Task* CreateNewTentTask( Task::TaskType type,                  
-                             FileManager* pFm,               
-                             CredentialsManager* pCm,        
-                             const AccessToken& at,          
-                             const Entity& entity,      
-                             const std::string& filepath,    
-                             const std::string& tempdir,     
-                             const std::string& workingdir,  
-                             const std::string& configdir,   
-                             TaskDelegate* callbackDelegate);
+    Task* CreateNewTentTask(Task::TaskType type,                  
+                            FileManager* pFm,               
+                            CredentialsManager* pCm,        
+                            const AccessToken& at,          
+                            const Entity& entity,      
+                            const TaskContext& context,
+                            TaskDelegate* callbackDelegate);
 
-    Task* CreateNewManifestTask( Task::TaskType type,
-                                 FileManager* pFm,
-                                 void (*callback)(int, char**, int, int));
+    Task* CreateNewManifestTask(Task::TaskType type,
+                                FileManager* pFm,
+                                const TaskContext& context,
+                                void (*callback)(int, char**, int, int));
 
     void PushBackTask(Task* t, TaskFactoryDelegate* delegate);
     void LogUnknownTaskType(Task::TaskType type);
@@ -60,22 +58,20 @@ public:
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
-    Task* GetTentTask( Task::TaskType type,                
-                       FileManager* pFm,             
-                       CredentialsManager* pCm,      
-                       const AccessToken& at,        
-                       const Entity& entity,    
-                       const std::string& filepath,  
-                       const std::string& tempdir,   
-                       const std::string& workingdir,
-                       const std::string& configdir, 
-                       TaskDelegate* callbackDelegate,
-                       TaskFactoryDelegate* delegate = NULL);
+    Task* GetTentTask(Task::TaskType type,                
+                      FileManager* pFm,             
+                      CredentialsManager* pCm,      
+                      const AccessToken& at,        
+                      const Entity& entity,    
+                      const TaskContext& context,
+                      TaskDelegate* callbackDelegate,
+                      TaskFactoryDelegate* delegate = NULL);
 
-    Task* GetManifestTask( Task::TaskType type,
-                           FileManager* pFm,
-                           void (*callback)(int, char**, int, int),
-                           TaskFactoryDelegate* delegate = NULL);
+    Task* GetManifestTask(Task::TaskType type,
+                          FileManager* pFm,
+                          const TaskContext& context,
+                          void (*callback)(int, char**, int, int),
+                          TaskFactoryDelegate* delegate = NULL);
 
     int RemoveActiveTask(Task* pTask); // Depricated
 

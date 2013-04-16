@@ -58,17 +58,17 @@ public:
     // Info tasks
     int TaskCount(const Task::TaskType);
 private:
-    TaskFactory             m_TaskFactory; // Local to upload manager
+    TaskFactory             task_factory_; // Local to upload manager
 
-    FileManager*            m_pFileManager;
-    CredentialsManager*     m_pCredentialsManager;
+    FileManager*            file_manager_;
+    CredentialsManager*     credentials_manager_;
 
-    AccessToken             m_AccessToken;
-    Entity                  m_Entity;
+    AccessToken             access_token_;
+    Entity                  entity_;
 
-    std::string             m_TempDir;
-    std::string             m_WorkingDir;
-    std::string             m_ConfigDir;
+    std::string             temp_directory_;
+    std::string             working_directory_;
+    std::string             config_directory_;
 };
 
 }//namespace

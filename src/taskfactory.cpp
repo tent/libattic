@@ -35,8 +35,7 @@ int TaskFactory::Shutdown() // Depricated
     return ret::A_OK;
 }
 
-void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
-{
+void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate) {
     if(t) {
         if(delegate)
             delegate->OnTaskCreate(t);
@@ -53,71 +52,62 @@ void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate)
     }
 }
 
-Task* TaskFactory::GetTentTask( Task::TaskType type,                
-                                FileManager* pFm,             
-                                CredentialsManager* pCm,      
-                                const AccessToken& at,        
-                                const Entity& entity,    
-                                const std::string& filepath,  
-                                const std::string& tempdir,   
-                                const std::string& workingdir,
-                                const std::string& configdir, 
-                                TaskDelegate* callbackDelegate,
-                                TaskFactoryDelegate* delegate)
-
-{
+Task* TaskFactory::GetTentTask(Task::TaskType type,                
+                               FileManager* pFm,             
+                               CredentialsManager* pCm,      
+                               const AccessToken& at,        
+                               const Entity& entity,    
+                               const TaskContext& context,
+                               TaskDelegate* callbackDelegate,
+                               TaskFactoryDelegate* delegate) {
     // Check Inactive Task Pool
     // 
     // Otherwise create a new task
     Task* t = NULL;
-    t = CreateNewTentTask( type,
-                           pFm,       
-                           pCm,
-                           at,
-                           entity,    
-                           filepath,  
-                           tempdir,   
-                           workingdir,
-                           configdir, 
-                           callbackDelegate); 
+    t = CreateNewTentTask(type,
+                          pFm,       
+                          pCm,
+                          at,
+                          entity,    
+                          context,
+                          callbackDelegate); 
 
     PushBackTask(t, delegate);
     return t;
 }
 
 
-Task* TaskFactory::GetManifestTask( Task::TaskType type,
-                                    FileManager* pFm,
-                                    void (*callback)(int, char**, int, int),
-                                    TaskFactoryDelegate* delegate)
-{
+Task* TaskFactory::GetManifestTask(Task::TaskType type,
+                                   FileManager* pFm,
+                                   const TaskContext& context,
+                                   void (*callback)(int, char**, int, int),
+                                   TaskFactoryDelegate* delegate) {
     Task* t = NULL;
 
-    t = CreateNewManifestTask( type,
-                               pFm,
-                               callback);
+    t = CreateNewManifestTask(type,
+                              pFm,
+                              context,
+                              callback);
 
     PushBackTask(t, delegate);
 
     return t;
 }
 
-Task* TaskFactory::CreateNewManifestTask( Task::TaskType type,
-                                          FileManager* pFm,
-                                          void (*callback)(int, char**, int, int))
-{
+Task* TaskFactory::CreateNewManifestTask(Task::TaskType type,
+                                         FileManager* pFm,
+                                         const TaskContext& context,
+                                         void (*callback)(int, char**, int, int)) {
     Task* t = NULL;
     switch(type) {
         case Task::QUERYMANIFEST:
         {
-            t = new QueryFilesTask(pFm,
-                                   callback);
+            t = new QueryFilesTask(pFm, context, callback);
             break;
         }
         case Task::SCANDIRECTORY:
         {
-            t = new ScanDirectoryTask(pFm, callback);
-
+            t = new ScanDirectoryTask(pFm, context, callback);
             break;
         }
         default:
@@ -130,16 +120,13 @@ Task* TaskFactory::CreateNewManifestTask( Task::TaskType type,
     return t;
 }
 
-Task* TaskFactory::CreateNewTentTask( Task::TaskType type,                  
-                                      FileManager* pFm,               
-                                      CredentialsManager* pCm,        
-                                      const AccessToken& at,          
-                                      const Entity& entity,      
-                                      const std::string& filepath,    
-                                      const std::string& tempdir,     
-                                      const std::string& workingdir,  
-                                      const std::string& configdir,   
-                                      TaskDelegate* callbackDelegate)
+Task* TaskFactory::CreateNewTentTask(Task::TaskType type,                  
+                                     FileManager* pFm,               
+                                     CredentialsManager* pCm,        
+                                     const AccessToken& at,          
+                                     const Entity& entity,      
+                                     const TaskContext& context,
+                                     TaskDelegate* callbackDelegate)
 {
 
     Task* t = NULL;
@@ -151,10 +138,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               pCm,                    
                               at,
                               entity,                          
-                              filepath,                        
-                              tempdir,                   
-                              workingdir,                
-                              configdir,                 
+                              context,                 
                               callbackDelegate);                         
             break;
         }
@@ -164,10 +148,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               pCm,          
                               at,
                               entity,                           
-                              filepath,                         
-                              tempdir,                    
-                              workingdir,                 
-                              configdir,                  
+                              context,                  
                               callbackDelegate);         
             break;
         }
@@ -177,10 +158,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                 pCm,          
                                 at,
                                 entity,                                
-                                filepath,                              
-                                tempdir,                         
-                                workingdir,                      
-                                configdir,                       
+                                context,                       
                                 callbackDelegate);             
             break;
         }
@@ -195,10 +173,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                                   pCm,                   
                                   at,                    
                                   entity,                
-                                  filepath,              
-                                  tempdir,               
-                                  workingdir,            
-                                  configdir,             
+                                  context,             
                                   callbackDelegate);
 
             break;
@@ -209,10 +184,7 @@ Task* TaskFactory::CreateNewTentTask( Task::TaskType type,
                               pCm,                   
                               at,                    
                               entity,                
-                              filepath,              
-                              tempdir,               
-                              workingdir,            
-                              configdir,             
+                              context,             
                               callbackDelegate);             
             break;
         }

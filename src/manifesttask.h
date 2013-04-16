@@ -11,9 +11,11 @@ class ManifestTask : public Task {
 public:
     ManifestTask (Task::TaskType type,
                   FileManager* fm,
+                  const TaskContext& context,
                   void (*callback)(int, char**, int, int))
                   :
-                  Task(type) {
+                  Task(context, 
+                       type) {
         file_manager_ = fm;
         callback_ = callback;
     }
