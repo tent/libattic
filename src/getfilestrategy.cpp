@@ -43,6 +43,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 RetrieveChunkPosts(entity, meta_post.id(), cp_list);
                 // put file posts in order
                 // pull chunks
+                status = ConstructFile(cp_list, file_cred, fi);
             }
         }
     }
@@ -85,10 +86,15 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
                                         const std::string& post_id,
                                         ChunkPostList& out) {
     int status = ret::A_OK;
+    std::cout<<" retrieving chunk posts ... " << std::endl;
     std::string posts_feed = GetConfigValue("posts_feed");
     UrlParams params;
     params.AddValue(std::string("mentions"), entity + "+" + post_id);
     params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
+
+    std::string prm;
+    params.SerializeToString(prm);
+    std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
 
     Response response;
     netlib::HttpGet(posts_feed,
@@ -102,15 +108,25 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     if(response.code == 200) {
         Json::Value chunk_post_arr(Json::arrayValue);
         jsn::DeserializeJson(response.body, chunk_post_arr);
+
+        std::cout<<" TOTAL POST COUNT : " << chunk_post_arr.size() << std::endl;
         Json::ValueIterator itr = chunk_post_arr.begin();
         for(; itr != chunk_post_arr.end(); itr++) {
-            ChunkPost p;
-            jsn::DeserializeObject(&p, (*itr));
+            Post gp;
+            jsn::DeserializeObject(&gp, (*itr));
             // There should never be more than one post in the same group
-            if(out.find(p.group()) == out.end())
-                out[p.group()] = p;
-            else 
-                std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
+            if(gp.type() == cnst::g_attic_chunk_type) {
+                ChunkPost p;
+                jsn::DeserializeObject(&p, (*itr));
+                std::cout<<"TYPE : " << p.type() << std::endl;
+                std::cout<<" PUSHING BACK GROUP : " << p.group() << std::endl;
+                if(out.find(p.group()) == out.end()) {
+                    out[p.group()] = p;
+                    std::cout<<" CHUNK INFO LIST SIZE : " << p.chunk_info_list_size() << std::endl;
+                }
+                else 
+                    std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
+            }
         }
     }
     else { 
@@ -171,10 +187,11 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
         for(unsigned int i=0; i < post_count; i++) {
             if(chunk_posts.find(i) != chunk_posts.end()) {
                 ChunkPost cp = chunk_posts.find(i)->second;
-                std::string attachment_url;
-                utils::FindAndReplace(post_attachment, "{post}", cp.id(), attachment_url);
-                std::cout<<" ATTACHMENT URL : " << attachment_url << std::endl;
+  //              std::string attachment_url;
+ //               utils::FindAndReplace(post_attachment, "{post}", cp.id(), attachment_url);
+//                std::cout<<" ATTACHMENT URL : " << attachment_url << std::endl;
                 unsigned int chunk_count = cp.chunk_info_list_size();
+                std::cout<<" CHUNK COUNT : " << chunk_count << std::endl;
                 for(unsigned int j=0; j<chunk_count; j++) {
                     ChunkPost::ChunkInfoList::iterator itr = cp.chunk_info_list()->find(j);
                     if(itr != cp.chunk_info_list()->end()) {
@@ -183,14 +200,17 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
                         if(cp.has_attachment(itr->second.chunk_name())) {
                             Attachment attch = cp.get_attachment(itr->second.chunk_name());
                             std::string attachment_path;
-                            utils::FindAndReplace(attachment_url,
+                            utils::FindAndReplace(post_attachment,
                                                   "{digest}",
                                                   attch.digest,
                                                   attachment_path);
+                            std::cout<<" attachment path : " << attachment_path << std::endl;
                             std::string buffer;
                             status = RetrieveAttachment(attachment_path, buffer);
                             if(status == ret::A_OK) {
-                                ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                                std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
+                                //ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                                ChunkInfo* ci = cp.GetChunk(itr->second.chunk_name());
                                 std::string chunk;
                                 status = TransformChunk(ci, file_cred.key(), buffer, chunk);
                                 if(status == ret::A_OK) {
@@ -214,8 +234,14 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
         ofs.close();
     }
 
+    if(status == ret::A_OK) {
+        std::string path;
+        file_manager_->GetCanonicalFilepath(fi->filepath(), path);
+        fs::MoveFile(temp_path, path);
+    }
 
-    
+    // delete temp file 
+    fs::DeleteFile(temp_path);
 
     return status;
 }
@@ -467,6 +493,7 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
                         std::string buffer;
                         status = RetrieveAttachment(attachment_path, buffer);
                         if(status == ret::A_OK) {
+
                             ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
                             std::string chunk;
                             status = TransformChunk(ci, cred.key(), buffer, chunk);
@@ -499,6 +526,8 @@ int GetFileStrategy::RetrieveAttachments(const std::string& filepath,
 
 int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& outBuffer) {
     int status = ret::A_OK;
+
+    std::cout<<" RETRIEVING ATTACHEMNT : " << url << std::endl;
 
     boost::timer::cpu_timer::cpu_timer t;
     Response response;
@@ -603,8 +632,10 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
             status = ret::A_FAIL_INVALID_CHUNK_HASH;
         }
     }
-    else
+    else { 
+        std::cout<<" INVALID CHUNK INFO PTR " << std::endl; 
         status = ret::A_FAIL_INVALID_PTR;
+    }
 
     return status;
 }
