@@ -217,6 +217,7 @@ void Post::Deserialize(Json::Value& root) {
     std::string pub = root.get("published_at", "").asString();
     published_at_   = atoi(pub.c_str());
     std::string rec = root.get("received_at", "").asString();
+    type_           = root.get("type", "").asString();
 
     received_at_    = atoi(rec.c_str());
 
