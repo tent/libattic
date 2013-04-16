@@ -164,6 +164,7 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                            finished_chunk, 
                            chunk_name, 
                            ci);
+            ci.set_position(chunk_count);
 
             cr->PushBackChunk(ci, chunk_name, finished_chunk, chunk_count);
             
