@@ -137,6 +137,20 @@ int TaskManager::PollFiles(TaskDelegate* pDel) {
     return CreateAndSpinOffTask( Task::POLL, "", pDel);
 }
 
+int TaskManager::RenameFile(const std::string& original_filepath, const std::string& new_filepath) {
+    int status = ret::A_OK;
+    TaskContext tc;
+    tc.set_value("original_filepath", original_filepath);
+    tc.set_value("new_filepath", new_filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    
+    // TODO :: create and spin off task
+
+    return status;
+}
+
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
     TaskContext tc;
