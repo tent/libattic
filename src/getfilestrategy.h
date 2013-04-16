@@ -2,6 +2,8 @@
 #define GETFILESTRATEGY_H_
 #pragma once
 
+#include <map>
+
 #include "httpstrategy.h"
 #include "credentials.h"
 #include "chunkpost.h"
@@ -11,6 +13,8 @@
 namespace attic { 
 
 class GetFileStrategy : public HttpStrategyInterface {
+    typedef std::map<unsigned int, ChunkPost> ChunkPostList; // key, chunk group
+
     int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
     int GetChunkPost(FileInfo* fi, Response& responseOut);
 
@@ -35,6 +39,14 @@ class GetFileStrategy : public HttpStrategyInterface {
     int RetrieveAndInsert(const std::string& postid, PostTree& tree);
 
     int RetrieveFilePost(FileInfo* fi, FilePost& out);
+    int RetrieveChunkPosts(const std::string& entity,
+                           const std::string& post_id,
+                           ChunkPostList& out);
+    int ExtractCredentials(FilePost& in, Credentials& out);
+    int ConstructFile(ChunkPostList& chunk_posts, 
+                      const Credentials& file_cred, 
+                      FileInfo* fi);
+    bool GetTemporaryFilepath(FileInfo* fi, std::string& out);
 public:
     GetFileStrategy();
     ~GetFileStrategy();

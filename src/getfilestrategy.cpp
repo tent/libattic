@@ -25,15 +25,26 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
     std::string post_attachment = GetConfigValue("post_attachment");
+    std::string entity = GetConfigValue("entity");
 
     FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
         if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
         // Retrieve file metadata
-        // Query for chunkposts mentioning metadata
-        // get file credentials
-        // put file posts in order
-        // pull chunks
+        FilePost meta_post;
+        status = RetrieveFilePost(fi, meta_post);
+        if(status == ret::A_OK) {
+            Credentials file_cred;
+            // Get file credentials
+            status = ExtractCredentials(meta_post, file_cred);
+            if(status == ret::A_OK) {
+                // Query for chunkposts mentioning metadata
+                ChunkPostList cp_list;
+                RetrieveChunkPosts(entity, meta_post.id(), cp_list);
+                // put file posts in order
+                // pull chunks
+            }
+        }
     }
     else {
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
@@ -44,8 +55,10 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
  
 int GetFileStrategy::RetrieveFilePost(FileInfo* fi, FilePost& out) { 
     int status = ret::A_OK;
+    std::cout<<" RETRIEVE FILE POST " << std::endl;;
     std::string posturl;
     std::string postid = fi->post_id();
+    std::cout<<" POST ID : " << postid << std::endl;
     utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
     // Get Metadata post
@@ -66,6 +79,162 @@ int GetFileStrategy::RetrieveFilePost(FileInfo* fi, FilePost& out) {
     }
 
     return status;
+}
+
+int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
+                                        const std::string& post_id,
+                                        ChunkPostList& out) {
+    int status = ret::A_OK;
+    std::string posts_feed = GetConfigValue("posts_feed");
+    UrlParams params;
+    params.AddValue(std::string("mentions"), entity + "+" + post_id);
+    params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
+
+    Response response;
+    netlib::HttpGet(posts_feed,
+                    &params,
+                    &access_token_,
+                    response);
+
+    std::cout<<" CODE : " << response.code << std::endl;
+    std::cout<<" BODY : " << response.body << std::endl;
+
+    if(response.code == 200) {
+        Json::Value chunk_post_arr(Json::arrayValue);
+        jsn::DeserializeJson(response.body, chunk_post_arr);
+        Json::ValueIterator itr = chunk_post_arr.begin();
+        for(; itr != chunk_post_arr.end(); itr++) {
+            ChunkPost p;
+            jsn::DeserializeObject(&p, (*itr));
+            // There should never be more than one post in the same group
+            if(out.find(p.group()) == out.end())
+                out[p.group()] = p;
+            else 
+                std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
+        }
+    }
+    else { 
+        log::LogHttpResponse("FA332ASDF3", response);
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+
+int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
+    int status = ret::A_OK;
+    
+    std::string key, iv;
+    key = in.key_data();
+    iv = in.iv_data();
+
+    MasterKey mKey;
+    credentials_manager_->GetMasterKeyCopy(mKey);
+
+    std::string mk;
+    mKey.GetMasterKey(mk);
+    Credentials FileKeyCred;
+    FileKeyCred.set_key(mk);
+    FileKeyCred.set_iv(iv);
+
+    // Decrypt File Key
+    std::string filekey;
+    //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+    status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
+    std::cout<<" FILE KEY : " << filekey << std::endl;
+    if(status == ret::A_OK) {
+        out.set_key(filekey);
+        out.set_iv(iv);
+    }
+    else { 
+        std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
+    }
+
+    return status;
+}
+
+int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts, 
+                                   const Credentials& file_cred, 
+                                   FileInfo* fi) {
+    int status = ret::A_OK;
+    unsigned int post_count = chunk_posts.size();
+    std::cout<<" # CHUNK POSTS : " << post_count << std::endl;
+
+    std::string temp_path;
+    GetTemporaryFilepath(fi, temp_path);
+
+    std::ofstream ofs;
+    ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+    
+    if(ofs.is_open()) {
+        std::string post_attachment = GetConfigValue("post_attachment");
+        for(unsigned int i=0; i < post_count; i++) {
+            if(chunk_posts.find(i) != chunk_posts.end()) {
+                ChunkPost cp = chunk_posts.find(i)->second;
+                std::string attachment_url;
+                utils::FindAndReplace(post_attachment, "{post}", cp.id(), attachment_url);
+                std::cout<<" ATTACHMENT URL : " << attachment_url << std::endl;
+                unsigned int chunk_count = cp.chunk_info_list_size();
+                for(unsigned int j=0; j<chunk_count; j++) {
+                    ChunkPost::ChunkInfoList::iterator itr = cp.chunk_info_list()->find(j);
+                    if(itr != cp.chunk_info_list()->end()) {
+                        std::cout<<" FOUND CHUNK # : " << i << std::endl;
+                        // Get attachment
+                        if(cp.has_attachment(itr->second.chunk_name())) {
+                            Attachment attch = cp.get_attachment(itr->second.chunk_name());
+                            std::string attachment_path;
+                            utils::FindAndReplace(attachment_url,
+                                                  "{digest}",
+                                                  attch.digest,
+                                                  attachment_path);
+                            std::string buffer;
+                            status = RetrieveAttachment(attachment_path, buffer);
+                            if(status == ret::A_OK) {
+                                ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                                std::string chunk;
+                                status = TransformChunk(ci, file_cred.key(), buffer, chunk);
+                                if(status == ret::A_OK) {
+                                    // Append to file 
+                                    ofs.write(chunk.c_str(), chunk.size());
+                                }
+                                else {
+                                    std::cout<<" FAILED TRANSFORM " << std::endl;
+                                    std::cout<<" STATUS : "<< status << std::endl;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                std::cout<<" INVALID CHUNK POST " << std::endl;
+            }
+        }
+        ofs.close();
+    }
+
+
+    
+
+    return status;
+}
+
+bool GetFileStrategy::GetTemporaryFilepath(FileInfo* fi, std::string& out) { 
+    std::string filename = fi->filename();
+
+    std::string temp_path;
+    file_manager_->GetTempDirectory(temp_path);
+    if(fs::CheckFilepathExists(temp_path)) {
+        utils::CheckUrlAndAppendTrailingSlash(temp_path);
+        std::string randstr;
+        utils::GenerateRandomString(randstr, 16);
+        temp_path += filename + "_" + randstr;
+        out = temp_path;
+        return true;
+    }
+        
+    return false;
 }
 /*
 int GetFileStrategy::Execute(FileManager* pFileManager,
