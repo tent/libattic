@@ -71,11 +71,12 @@ static int HttpAsioGetAttachment( const std::string& url,
                                   const AccessToken* at, 
                                   Response& out);
 
-static void BuildAuthHeader( const std::string &url, 
-                             const std::string &requestMethod, 
-                             const std::string &macid, 
-                             const std::string &mackey, 
-                             std::string& out);
+static void BuildAuthHeader(const std::string& url, 
+                            const std::string& requestMethod, 
+                            const std::string& macid, 
+                            const std::string& mackey, 
+                            const std::string& appid,
+                            std::string& out);
 
 static void GenerateNonce(std::string &out);
 
@@ -118,8 +119,7 @@ static void DeChunkString(std::string& in, std::string& out) {
     std::string delim = "\r\n";
     utils::SplitStringSubStr(in, delim, outsplit);
     
-    for(unsigned int i=0; i<outsplit.size(); i+=2)
-    {
+    for(unsigned int i=0; i<outsplit.size(); i+=2) {
         std::string chunksize = outsplit[i];
         int c_size;
         sscanf(chunksize.c_str(), "%x", &c_size);
@@ -143,11 +143,12 @@ static int HttpGet(const std::string& url,
 
     std::string authheader;
     if(at) {
-        netlib::BuildAuthHeader( local_url,
-                                 "GET",
-                                 at->GetAccessToken(),
-                                 at->GetMacKey(),
-                                 authheader);
+        netlib::BuildAuthHeader(local_url,
+                                "GET",
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
+                                authheader);
     }
 
     boost::asio::streambuf request;
@@ -179,8 +180,9 @@ static int HttpGetAttachment (const std::string& url,
     if(at) {
         netlib::BuildAuthHeader( local_url,
                                  "GET",
-                                 at->GetAccessToken(),
-                                 at->GetMacKey(),
+                                 at->access_token(),
+                                 at->hawk_key(),
+                                 at->app_id(),
                                  authheader);
     }
 
@@ -212,8 +214,9 @@ static int HttpHead(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "HEAD",
-                                at->GetAccessToken(),
-                                at->GetMacKey(),
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
                                 authheader);
     }
 
@@ -254,8 +257,9 @@ static int HttpPost(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "POST",
-                                at->GetAccessToken(),
-                                at->GetMacKey(),
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
                                 authheader);
     }
 
@@ -268,6 +272,7 @@ static int HttpPost(const std::string& url,
     request_stream << "Host: " << host << "\r\n";
     request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
     request_stream << "Content-Type: " << cnst::g_content_type_header << ";";
+    
     if(!post_type.empty()) {
         request_stream << " type=\"";
         request_stream << post_type;
@@ -309,8 +314,9 @@ static int HttpPut(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "PUT",
-                                at->GetAccessToken(),
-                                at->GetMacKey(),
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
                                 authheader);
     }
     char len[256] = {'\0'};
@@ -357,8 +363,9 @@ static int HttpDelete(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "DELETE",
-                                at->GetAccessToken(),
-                                at->GetMacKey(),
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
                                 authheader);
     }
 
@@ -568,8 +575,9 @@ static void BuildRequestHeader( const std::string& requestMethod,
     if(pAt) {
         netlib::BuildAuthHeader( url,
                                  requestMethod,
-                                 pAt->GetAccessToken(),
-                                 pAt->GetMacKey(),
+                                 pAt->access_token(),
+                                 pAt->hawk_key(),
+                                 pAt->app_id(),
                                  authheader);
     }
 
@@ -700,17 +708,18 @@ static int ResolveHost(boost::asio::io_service& io_service,
     return status;
 }
 
-static void BuildAuthHeader(const std::string &url, 
-                            const std::string &requestMethod, 
-                            const std::string &macid, 
-                            const std::string &mackey, 
+static void BuildAuthHeader(const std::string& url, 
+                            const std::string& requestMethod, 
+                            const std::string& macid, 
+                            const std::string& mackey, 
+                            const std::string& appid,
                             std::string& out) {
     std::string n;
     GenerateNonce(n);
 
     out.clear();
     
-    out.append("MAC id=\"");
+    out.append("Hawk id=\"");
     out.append(macid.c_str());
     out.append("\", ");
 
@@ -740,6 +749,7 @@ static void BuildAuthHeader(const std::string &url,
     }
 
     std::string requestString;
+    requestString.append("hawk.1.header\n"); // type
     requestString.append(tb); // time 
     requestString.append("\n");
     requestString.append(n); // nonce 
@@ -753,15 +763,23 @@ static void BuildAuthHeader(const std::string &url,
     requestString.append(u.host()); // host
     requestString.append("\n");
     requestString.append(port); // port
+    requestString.append("\n\n\n");
+    requestString.append(appid); // appid
     requestString.append("\n\n");
 
     std::string signedreq;
     SignRequest(requestString, mackey, signedreq);
 
+    std::cout<<" mac key : " << mackey << std::endl;
+
     out.append("mac=\"");
     out.append(signedreq.c_str());
-    out.append("\"");
+    out.append("\", ");
     
+    out.append("app=\"");
+    out.append(appid);
+    out.append("\"");
+
     std::cout << "REQUEST_STRING : " << requestString << std::endl;
     std::cout << "AUTH_HEADER : " << out << std::endl;
 }
