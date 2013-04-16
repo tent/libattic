@@ -15,21 +15,6 @@ namespace attic {
 class GetFileStrategy : public HttpStrategyInterface {
     typedef std::map<unsigned int, ChunkPost> ChunkPostList; // key, chunk group
 
-    int RetrieveFileCredentials(FileInfo* fi, Credentials& out);
-    int GetChunkPost(FileInfo* fi, Response& responseOut);
-
-    int AssembleFile(const std::string& filepath,
-                     const std::string& url,
-                     const Credentials& file_cred,
-                     ChunkPost& post,
-                     FileInfo* fi);
-                     
-    int RetrieveAttachments(const std::string& filepath,
-                            const std::string& attacment_url,
-                            const Credentials& cred,
-                            ChunkPost& post,
-                            FileInfo* fi);
-
     int RetrieveAttachment(const std::string& url, std::string& outBuffer);
     int TransformChunk(const ChunkInfo* ci, 
                        const std::string& filekey,

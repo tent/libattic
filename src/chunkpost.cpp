@@ -38,7 +38,7 @@ bool ChunkPost::HasChunk(const std::string& name) {
     return false;
 }
 
-ChunkInfo* ChunkPost::GetChunk(const std::string& name) {
+ChunkInfo* ChunkPost::GetChunkInfo(const std::string& name) {
     FileInfo::ChunkMap::iterator itr = chunk_map_.find(name);
     if(itr != chunk_map_.end())
         return &itr->second;
