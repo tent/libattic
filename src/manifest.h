@@ -103,12 +103,10 @@ public:
 
     void SetDirectory(std::string &filepath); 
 private:
-    sqlite3*            m_pDb;
-    std::ifstream       m_ifStream;
-    std::ofstream       m_ofStream;
+    sqlite3*            db_;
 
     // Manifest specific data
-    std::string         m_Filepath;     // path to manifest file
+    std::string         filepath_;     // path to manifest file
 };
 
 } //namespace

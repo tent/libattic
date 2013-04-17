@@ -27,6 +27,10 @@ static bool CheckFilepathExists(const std::string& filepath);
 static bool DeleteFile(const std::string& filepath);
 static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out);
 
+static void ExtractSubDirectories(const std::string& root, 
+                                  const std::string& filepath, 
+                                  std::vector<std::string> out);
+
 
 static boost::filesystem::path MakePathRelative( boost::filesystem::path a_From, 
                                                  boost::filesystem::path a_To ) {
@@ -171,6 +175,26 @@ static void ScanDirectory(const std::string& folderpath, std::vector<std::string
         }
     }
 }
+
+static void ExtractSubDirectories(const std::string& root, 
+                                  const std::string& filepath, 
+                                  std::vector<std::string> out) {
+
+    // Assuming these are already canonical paths
+    // Make sure the two paths are actually related
+    if(filepath.find(root) != std::string::npos) {
+        boost::filesystem::path root_path(root);
+        boost::filesystem::path file_path(filepath);
+
+        while(file_path.parent_path() != root_path) {
+            out.push_back(file_path.parent_path().string());
+            file_path = file_path.parent_path();
+        }
+    }
+
+}
+
+
 
 }}//namespace
 #endif

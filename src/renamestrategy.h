@@ -13,7 +13,6 @@ class FileInfo;
 
 class RenameStrategy : public HttpStrategyInterface {
     FileInfo* RetrieveFileInfo(const std::string& filepath);
-
     int RetrieveFilePost(const std::string& post_id, FilePost& fp);
 public:
     RenameStrategy();

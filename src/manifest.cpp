@@ -15,15 +15,15 @@ static const std::string g_foldertable("foldertable");
 static const std::string g_folderentrytable("folderentrytable");
 
 Manifest::Manifest() {
-    m_pDb = NULL;
+    db_ = NULL;
 }
 
 Manifest::~Manifest() {}
 
 void Manifest::SetDirectory(std::string &filepath)  { 
-    m_Filepath = filepath; 
-    utils::CheckUrlAndAppendTrailingSlash(m_Filepath);
-    m_Filepath += "manifest";
+    filepath_ = filepath; 
+    utils::CheckUrlAndAppendTrailingSlash(filepath_);
+    filepath_ += "manifest";
 }
 /*
  * Order to write out (and read in)
@@ -56,16 +56,16 @@ int Manifest::Shutdown() {
 int Manifest::OpenSqliteDb() {
     int status = ret::A_OK;
 
-    int rc = sqlite3_open(m_Filepath.c_str(), &m_pDb);
+    int rc = sqlite3_open(filepath_.c_str(), &db_);
     if(rc) {
         // failed
-        std::cout<< "Can't open database: " << sqlite3_errmsg(m_pDb);
-        std::cout<< " attempted to open : " << m_Filepath << std::endl;
+        std::cout<< "Can't open database: " << sqlite3_errmsg(db_);
+        std::cout<< " attempted to open : " << filepath_ << std::endl;
         status = ret::A_FAIL_TO_LOAD_MANIFEST;
-        m_pDb = NULL;
+        db_ = NULL;
     }
     else {
-        if(!m_pDb) {
+        if(!db_) {
             std::cout << " invlid db instance " << std::endl;
             status = ret::A_FAIL_TO_LOAD_MANIFEST;
         } 
@@ -79,17 +79,17 @@ int Manifest::OpenSqliteDb() {
 
 int Manifest::CloseSqliteDb() {
     std::cout<<" attempting to close db ... " << std::endl;
-    if(m_pDb) {
-        int err = sqlite3_close(m_pDb);
+    if(db_) {
+        int err = sqlite3_close(db_);
         if(err != SQLITE_OK)
             std::cout<<" FAILED TO CLOSE DB " << std::endl;
-        m_pDb = 0;
+        db_ = 0;
     }
     return ret::A_OK;
 }
 
 bool Manifest::CreateTables() {
-    if(!m_pDb)
+    if(!db_)
         return false;
 
     if(!CreateInfoTable()) {
@@ -156,11 +156,11 @@ bool Manifest::CreateFolderEntryTable() {
 }
 
 bool Manifest::PerformQuery(const std::string& query) const {
-    if(!m_pDb || query.empty())
+    if(!db_ || query.empty())
         return false;
 
     char* szError = NULL;
-    int rc = sqlite3_exec( m_pDb, 
+    int rc = sqlite3_exec( db_, 
                            query.c_str(), 
                            NULL, 
                            NULL,
@@ -188,7 +188,7 @@ bool Manifest::PerformQuery(const std::string& query) const {
 //                       );
 //                      void sqlite3_free_table(char **result);
 bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const {
-    if(!m_pDb || select.empty())
+    if(!db_ || select.empty())
         return false;
 
     char *szError = NULL;
@@ -197,7 +197,7 @@ bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const
     //int nCol = 0; 
     char *pzErr = NULL;
 
-    int rc = sqlite3_get_table( m_pDb,
+    int rc = sqlite3_get_table( db_,
                                 select.c_str(),       /* SQL to be evaluated */
                                 &out.results,  /* Results of the query */
                                 &out.nRow,     /* Number of result rows written here */
@@ -390,7 +390,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
               
 bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
-    if(!m_pDb) {
+    if(!db_) {
         std::cout<<"fail db " <<std::endl;
         return false;
     }
@@ -429,55 +429,55 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
-    int ret = sqlite3_prepare_v2(m_pDb, query.c_str(), -1, &stmt, 0);
+    int ret = sqlite3_prepare_v2(db_, query.c_str(), -1, &stmt, 0);
 
     if(ret == SQLITE_OK) {
         if(stmt) {
             ret = sqlite3_bind_text(stmt, 1, filename.c_str(), filename.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("filename Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("filename Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 2, filepath.c_str(), filepath.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("filepath Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("filepath Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_int(stmt, 3, fi.chunk_count());
             if(ret != SQLITE_OK) {
-                printf("chunk count Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("chunk count Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_blob(stmt, 4, chunkdata.c_str(), chunkdata.size(), SQLITE_TRANSIENT);
             if(ret != SQLITE_OK) {
-                printf("chunkdata Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("chunkdata Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_int(stmt, 5, fi.file_size());
             if(ret != SQLITE_OK) {
-                printf("filesize Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("filesize Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 6, metapostid.c_str(), metapostid.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("metapostid Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("metapostid Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 7, chunkpostid.c_str(), chunkpostid.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("chunkpostid Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("chunkpostid Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_text(stmt, 8, fi.post_version().c_str(), fi.post_version().size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("version Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("version Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
@@ -486,7 +486,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             ret = sqlite3_bind_blob(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
 
             if(ret != SQLITE_OK) {
-                printf("key Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("key Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
@@ -494,39 +494,39 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             crypto::Base64EncodeString(iv, b64_iv);
             ret = sqlite3_bind_blob(stmt, 10, b64_iv.c_str(), b64_iv.size(), SQLITE_TRANSIENT);
             if(ret != SQLITE_OK) {
-                printf(" iv Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf(" iv Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_bind_int(stmt, 11, fi.deleted());
             if(ret != SQLITE_OK) {
-                printf(" deleted Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf(" deleted Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_step(stmt);
             if(ret != SQLITE_DONE) {
                 std::cout<<" return : " << ret << std::endl;
-                printf("step Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("step Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
             ret = sqlite3_finalize(stmt);
             if(ret != SQLITE_OK) {
-                printf("finalize Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("finalize Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
         }
         else {
             std::cout<< "Invalid statement" << std::endl;
-            printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+            printf("Error message: %s\n", sqlite3_errmsg(db_));
             return false;
         }
 
     }
     else {
         std::cout<< "failed to prepare statement " << std::endl;
-        printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+        printf("Error message: %s\n", sqlite3_errmsg(db_));
         return false;
     }
 
@@ -712,48 +712,48 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string
 
         // Prepare statement
         sqlite3_stmt* stmt = NULL;
-        int ret = sqlite3_prepare_v2(m_pDb, exc.c_str(), -1, &stmt, 0);
+        int ret = sqlite3_prepare_v2(db_, exc.c_str(), -1, &stmt, 0);
         if(ret == SQLITE_OK) {
             if(stmt) {
                 ret = sqlite3_bind_text(stmt, 1, folderpath.c_str(), folderpath.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_bind_text(stmt, 2, folderid.c_str(), folderid.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_bind_text(stmt, 3, folderpostid.c_str(), folderpostid.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_step(stmt);
                 if(ret != SQLITE_DONE) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_finalize(stmt);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
             }
             else {
                 std::cout<< "Invalid statement" << std::endl;
-                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
         }
         else {
             std::cout<< "failed to prepare statement " << std::endl;
-            printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+            printf("Error message: %s\n", sqlite3_errmsg(db_));
             return false;
         }
         return true;
@@ -779,54 +779,54 @@ bool Manifest::InsertFolderEnrty( const std::string& folderid,
 
         // Prepare statement
         sqlite3_stmt* stmt = NULL;
-        int ret = sqlite3_prepare_v2(m_pDb, exc.c_str(), -1, &stmt, 0);
+        int ret = sqlite3_prepare_v2(db_, exc.c_str(), -1, &stmt, 0);
         if(ret == SQLITE_OK) {
             if(stmt) {
                 ret = sqlite3_bind_text(stmt, 1, folderid.c_str(), folderid.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_bind_text(stmt, 2, metapostid.c_str(), metapostid.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_bind_text(stmt, 3, type.c_str(), type.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_bind_text(stmt, 4, filepath.c_str(), filepath.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_step(stmt);
                 if(ret != SQLITE_DONE) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
                 ret = sqlite3_finalize(stmt);
                 if(ret != SQLITE_OK) {
-                    printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
             }
             else {
                 std::cout<< "Invalid statement" << std::endl;
-                printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+                printf("Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
         }
         else {
             std::cout<< "failed to prepare statement " << std::endl;
-            printf("Error message: %s\n", sqlite3_errmsg(m_pDb));
+            printf("Error message: %s\n", sqlite3_errmsg(db_));
             return false;
         }
         return true;

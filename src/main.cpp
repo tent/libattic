@@ -753,6 +753,20 @@ TEST(FILESYSTEM, GETCANONICALPATH)
     attic::fs::GetCanonicalPath(path, absolute);
 }
 
+TEST(FILESYSTEM, SUBDIRECTORIES)
+{
+    std::string root("data");
+    std::string test("data/test/folder/this/is/mine/what.pdf");
+
+    std::vector<std::string> list;
+    attic::utils::ExtractSubPaths(root, test, list);
+
+    std::vector<std::string>::iterator itr = list.begin();
+    for(;itr!=list.end(); itr++) {
+        std::cout<< *itr << std::endl;
+    }
+}
+
 TEST(AUTHCODE, GENERATE)
 {
     std::string authcode;

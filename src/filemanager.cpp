@@ -326,8 +326,12 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     std::cout<<" canonical : " << canonical << std::endl;
 
     if(canonical.find(working_directory_) != std::string::npos) {
-        std::string relative;
-        fs::MakePathRelative(working_directory_, canonical, relative);
+        std::string relative, working;
+        Lock();
+        working = working_directory_;
+        Unlock();
+        
+        fs::MakePathRelative(working, canonical, relative);
         out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
         retval = true;
     }

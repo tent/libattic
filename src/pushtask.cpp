@@ -9,6 +9,7 @@
 #include "postfilestrategy.h"
 #include "postfilemetadatastrategy.h"
 #include "postfoldermetadatastrategy.h"
+#include "postfolderstrategy.h"
 
 namespace attic {
 
@@ -55,6 +56,7 @@ int PushTask::PushFile(const std::string& filepath) {
  //       PostFileMetadataStrategy pmds;      // Update file post
         PostFolderMetadataStrategy pfmds;   // Update folder post
 
+        PostFolderStrategy pfs;
         if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
         if(!GetCredentialsManager()) std::cout<<" Invalid Cred Manager " << std::endl;
 
@@ -71,12 +73,12 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("filepath", filepath);
         pushcontext.SetConfigValue("entity", entity);
 
-        pushcontext.PushBack(&ps);
-//        pushcontext.PushBack(&pmds);
-        pushcontext.PushBack(&pfmds);
+        // TODO :: check the folder post(s) first
+        // push back post folder strategy
+        pushcontext.PushBack(&pfs);
+        //pushcontext.PushBack(&ps);
 
         status = pushcontext.ExecuteAll();
-        
     }
     else {
         status = ret::A_FAIL_OPEN_FILE;
