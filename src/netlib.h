@@ -59,11 +59,12 @@ static int HttpPost( const std::string& url,
                      const AccessToken* at, 
                      Response& out);
 
-static int HttpPut( const std::string& url, 
-                    const UrlParams* pParams,
-                    const std::string& requestbody,
-                    const AccessToken* at, 
-                    Response& out);
+static int HttpPut(const std::string& url, 
+                   const std::string& post_type,
+                   const UrlParams* pParams,
+                   const std::string& requestbody,
+                   const AccessToken* at, 
+                   Response& out);
 
 
 static int HttpAsioGetAttachment( const std::string& url, 
