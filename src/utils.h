@@ -139,18 +139,17 @@ static void SeedRand() {
 }
 
 static void ExtractFileName(const std::string& filepath, std::string& out) {
-    unsigned int size = filepath.size();                     
-    if(size) {                                                          
+    unsigned int size = filepath.size();
+    if(size) {
         // Check if passed a directory                         
-        if(filepath[size-1] == '/')                          
-            return;                                       
-
-        std::vector<std::string> split;                          
-        utils::SplitString(filepath, '/', split);              
-        if(split.size()) {
-            out = split[split.size()-1];                          
-        }                                                      
-     }                                                          
+        if(filepath[size-1] != '/') {
+            std::vector<std::string> split;
+            utils::SplitString(filepath, '/', split);
+            if(split.size()) {
+                out = split[split.size()-1];
+            }
+        }
+     }
 }
 
 static bool CheckAndRemoveRelativePath(const std::string &filepath, std::string &out) {
