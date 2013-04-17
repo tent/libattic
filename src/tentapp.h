@@ -49,9 +49,9 @@ public:
     const std::string& app_description() const   { return app_description_; }
     const std::string& app_url() const           { return app_url_; }
     const std::string& app_icon() const          { return app_icon_; }
-    const std::string& hawk_algorithm() const     { return hawk_algorithm_; }
-    const std::string& hawk_key_id() const        { return hawk_key_id_; }
-    const std::string& hawk_key() const           { return hawk_key_; }
+    const std::string& hawk_algorithm() const    { return hawk_algorithm_; }
+    const std::string& hawk_key_id() const       { return hawk_key_id_; }
+    const std::string& hawk_key() const          { return hawk_key_; }
     const std::string& redirect_uri() const      { return redirect_uri_; }
     ScopeVec* scopes()                           { return &scopes_; }
     AuthVec* authorizations()                    { return &authorizations_;}

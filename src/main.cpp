@@ -474,13 +474,13 @@ TEST(TEST, SYNC)
         status = PollFiles();
         std::cout<<"done calling ... " << std::endl;
     }
-
-       sleep(10);
+    sleep(10);
 
     ShutdownLibAttic(NULL);
 }
 
 bool g_bRename = false;
+std::string old_file, new_file;
 TEST(TEST, RENAME) {
     if(g_Entity.empty()) return;
     if(!g_bRename) return;
@@ -490,10 +490,14 @@ TEST(TEST, RENAME) {
     SetConfigValue("temp_dir", "./data/temp");
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
+    ASSERT_EQ(status, attic::ret::A_OK);
 
     if(status == attic::ret::A_OK) {
-
+        EnterPassphrase("asdf");
+        status = RenameFile(old_file.c_str(), new_file.c_str());
+        ASSERT_EQ(status, attic::ret::A_OK);
     }
+    sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -1116,7 +1120,7 @@ int main (int argc, char* argv[]) {
    int status = 0;
 
     if(argc > 1) {
-        int optcount = 14;
+        int optcount = 15;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -1125,6 +1129,7 @@ int main (int argc, char* argv[]) {
             "CHANGEPASS",
             "PULL",
             "PUSH",
+            "RENAME",
             "DELETE",
             "SYNC",
             "QUERYMANIFEST",
@@ -1143,6 +1148,7 @@ int main (int argc, char* argv[]) {
             CHANGEPASS,
             PULL,
             PUSH,
+            RENAME,
             DELETE,
             SYNC,
             QUERYMANIFEST,
@@ -1247,6 +1253,19 @@ int main (int argc, char* argv[]) {
                         }
                         else {
                             std::cout<<" Invalid params, ./attic PUSH <filename> (file is relative to data dir) " << std::endl;
+                        }
+                        break;
+                    }
+                    case RENAME:
+                    {
+                        std::cout<<" RENAAAAAAAME " << std::endl;
+                        if(argc > 4) {
+                            g_bRename = true;
+                            old_file = argv[2];
+                            new_file = argv[3];
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic RENAME <old_filename> <new_filename> " << std::endl;
                         }
                         break;
                     }
