@@ -233,7 +233,6 @@ TEST(PASSPHRASE, RECOVER)
 
 bool g_bPush = false;
 std::string g_File;
-
 static void UPLOADSPEEDCB(int a, int b, const char* c) {
     if(c) {
         std::cout<<" SPEED : " << c << "b/s" << std::endl;
@@ -292,7 +291,6 @@ TEST(AFILE, PUSH)
 }
 
 bool g_bPull = false;
-
 static void DOWNLOADSPEEDCB(int a, int b, const char* c) {
     std::cout<<" DOWNLOADSPEEDCB HIT " << std::endl;
     if(c) {
@@ -342,7 +340,6 @@ TEST(AFILE, PULL)
 }
 
 bool g_bDelete = false;
-
 TEST(AFILE, DELETE) 
 {
     if(g_Entity.empty()) return;
@@ -457,7 +454,6 @@ TEST(DISCOVERY, OUTWARD_DISCOVERY)
 }
 
 bool g_bSync = false;
-
 TEST(TEST, SYNC)
 {
     if(g_Entity.empty()) return;
@@ -484,8 +480,25 @@ TEST(TEST, SYNC)
     ShutdownLibAttic(NULL);
 }
 
-// Non command driven tests //
+bool g_bRename = false;
+TEST(TEST, RENAME) {
+    if(g_Entity.empty()) return;
+    if(!g_bRename) return;
 
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
+
+    if(status == attic::ret::A_OK) {
+
+    }
+
+    ShutdownLibAttic(NULL);
+}
+
+// Non command driven tests //
 TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
 {
     std::string test("This is a test string, of some sort of data, it's pretty great");
