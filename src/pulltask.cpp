@@ -71,7 +71,6 @@ int PullTask::PullFile(const std::string& filepath) {
 
     status = pullcontext.ExecuteAll();
 
- 
     return status; 
 }
 

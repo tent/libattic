@@ -28,6 +28,7 @@ public:
         SYNC_FILE_TASK,
         ENCRYPT,
         DECRYPT,
+        RENAME,
         // ManifestTask
         QUERYMANIFEST,
         SCANDIRECTORY,

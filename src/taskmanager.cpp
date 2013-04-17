@@ -14,8 +14,7 @@ TaskManager::TaskManager(FileManager* pFm,
                          const Entity& entity,
                          const std::string& tempdir, 
                          const std::string& workingdir,
-                         const std::string& configdir)
-{
+                         const std::string& configdir) {
     file_manager_ = pFm;
     credentials_manager_ = pCm;
 
@@ -90,23 +89,12 @@ void TaskManager::OnTaskInsert(Task* t) {
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
 }
 
-int TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
-    return CreateAndSpinOffTask( Task::SYNC_FILE_TASK,
-                                 postid,
-                                 pDel);
-}
+
 
 int TaskManager::CreateAndSpinOffTask(Task::TaskType tasktype, 
-                                      const std::string& filepath, 
+                                      const TaskContext& tc, 
                                       TaskDelegate* pDel) {
     int status = ret::A_OK;
-
-    TaskContext tc;
-    tc.set_value("filepath", filepath);
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-
     Task* t = task_factory_.GetTentTask(tasktype,
                                         file_manager_,
                                         credentials_manager_,
@@ -122,33 +110,57 @@ int TaskManager::CreateAndSpinOffTask(Task::TaskType tasktype,
 }
 
 int TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
-    return CreateAndSpinOffTask( Task::PUSH, filepath, pDel);
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask(Task::PUSH, tc, pDel);
 }
 
 int TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
-    return CreateAndSpinOffTask( Task::PULL, filepath, pDel);
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask(Task::PULL, tc, pDel);
+}
+
+int TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
+    TaskContext tc;
+    tc.set_value("postid", postid);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask( Task::SYNC_FILE_TASK, tc, pDel);
 }
 
 int TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
-    return CreateAndSpinOffTask( Task::DELETE, filepath, pDel);
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask(Task::DELETE, tc, pDel);
 }
 
 int TaskManager::PollFiles(TaskDelegate* pDel) {
-    return CreateAndSpinOffTask( Task::POLL, "", pDel);
+    TaskContext tc;
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask(Task::POLL, tc, pDel);
 }
 
 int TaskManager::RenameFile(const std::string& original_filepath, const std::string& new_filepath) {
-    int status = ret::A_OK;
     TaskContext tc;
     tc.set_value("original_filepath", original_filepath);
     tc.set_value("new_filepath", new_filepath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    
-    // TODO :: create and spin off task
-
-    return status;
+    return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
 }
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {

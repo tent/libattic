@@ -229,10 +229,15 @@ int DeleteFile(const char* szFilePath) {
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-
     int status = IsLibInitialized();
-    if(status == attic::ret::A_OK) { 
 
+    if(status == attic::ret::A_OK) { 
+        try { 
+            status = g_pTaskManager->RenameFile(szOldFilepath, szNewFilepath);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("ASDKJ23423*", e);
+        }
     }
 
     return status;

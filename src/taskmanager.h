@@ -47,11 +47,9 @@ public:
     int DeleteFile(const std::string& filepath, TaskDelegate* pDel);
     int RenameFile(const std::string& original_filepath, const std::string& new_filepath);
 
-    int CreateAndSpinOffTask( Task::TaskType tasktype, 
-                              const std::string& filepath, 
-                              TaskDelegate* pDel);
-
-
+    int CreateAndSpinOffTask(Task::TaskType tasktype, 
+                             const TaskContext& tc, 
+                             TaskDelegate* pDel);
     // Utility Tasks
     int QueryManifest(void(*callback)(int, char**, int, int));
     int ScanAtticFolder(void(*callback)(int, char**, int, int) = NULL);
