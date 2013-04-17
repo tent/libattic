@@ -586,8 +586,7 @@ bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::string &id)
-{
+bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::string &id) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_infotable.c_str();
@@ -599,8 +598,35 @@ bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::str
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid)
-{
+bool Manifest::UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_infotable.c_str();
+    exc += " SET filepath=\"";
+    exc += new_filepath.c_str();
+    exc += "\" WHERE filepath=\"";
+    exc += old_filepath.c_str();
+    exc += "\";";
+
+    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
+    return PerformQuery(exc);
+}
+
+bool Manifest::UpdateFilename(const std::string& filepath, const std::string& new_filename) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_infotable.c_str();
+    exc += " SET filename=\"";
+    exc += new_filename.c_str();
+    exc += "\" WHERE filepath=\"";
+    exc += filepath.c_str();
+    exc += "\";";
+
+    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
+    return PerformQuery(exc);
+}
+
+bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
@@ -611,6 +637,8 @@ bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::stri
     exc += "\";";
     return PerformQuery(exc);
 }
+
+
 
 
 

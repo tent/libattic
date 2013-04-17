@@ -68,6 +68,8 @@ public:
     bool UpdateFileChunkPostID(const std::string &filename, const std::string &id);
     bool UpdateFileVersion(const std::string& filepath, const std::string& version);
     bool UpdateFileDeleted(const std::string& filepath, const int val);
+    bool UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath);
+    bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
 
     bool QueryForFile(const std::string &filename, FileInfo& out);
     int QueryAllFiles(std::vector<FileInfo>& out);
