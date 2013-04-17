@@ -248,6 +248,33 @@ static void FindAndReplace(const std::string& in,
     }
 }
 
+static void ExtractSubPaths(const std::string& root, 
+                            const std::string& filepath,
+                            std::vector<std::string> out) {
+    if(filepath.find(root) != std::string::npos) {
+        unsigned int filepath_size = filepath.size();
+        if(filepath_size) {
+            std::string filename;
+            ExtractFileName(filepath, filename);
+            // erase filename
+            std::string local_filepath = filepath;
+            size_t fn_pos = filepath.find(filename);
+            local_filepath.erase(fn_pos-1, filename.size()+1);
+
+            size_t pos = std::string::npos;
+            while(local_filepath != root) {
+                std::cout<<local_filepath << std::endl;
+                out.push_back(local_filepath);
+                pos = local_filepath.rfind("/");
+                if(pos != std::string::npos) {
+                    std::string end = local_filepath.substr(pos);
+                    local_filepath.erase(pos, end.size());
+                }
+            }
+        }
+    }
+}
+
 }}//namespace
 #endif
 
