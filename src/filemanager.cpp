@@ -19,29 +19,45 @@ int FileManager::Initialize(const std::string &manifestDirectory,
                             const std::string &workingDirectory,
                             const std::string& tempDirectory) {
     // Set manifest path
-    m_ManifestDirectory = manifestDirectory;
-    m_Manifest.SetDirectory(m_ManifestDirectory);
+    manifest_directory_ = manifestDirectory;
+    manifest_.SetDirectory(manifest_directory_);
 
     // Set working directory
-    m_WorkingDirectory = workingDirectory;
-    m_TempDirectory = tempDirectory;
+    working_directory_ = workingDirectory;
+    temp_directory_ = tempDirectory;
 
-    return m_Manifest.Initialize();
+    return manifest_.Initialize();
 }
 
 int FileManager::Shutdown() {
-    return m_Manifest.Shutdown();
+    return manifest_.Shutdown();
 }
 
 int FileManager::RemoveFile(const std::string &filepath) {
     int status = ret::A_OK;
 
     Lock();
-    if(!m_Manifest.RemoveFileInfo(filepath))
+    if(!manifest_.RemoveFileInfo(filepath))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     Unlock();
 
     return status;
+}
+
+void FileManager::GetRelativePath(const std::string& filepath, std::string& relative_out) {
+    if(IsPathRelative(filepath)) {
+        std::cout<<" Filepath : " << filepath << " ALREADY RELATIVE " << std::endl;
+        relative_out = filepath;
+        return;
+    }
+
+    std::string canonical, relative;
+    if(!filepath.empty()) {
+        fs::GetCanonicalPath(filepath, canonical);
+        fs::MakePathRelative(working_directory_, canonical, relative);
+    }
+    relative_out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
+    std::cout<<" RELATIVE PATH : " << relative_out << std::endl;
 }
 
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
@@ -55,14 +71,14 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
         // set canonical
         std::cout<<" PATH IS RELATIVE " << std::endl;
         int pos = filepath.find(cnst::g_szWorkingPlaceHolder);
-        canonical = m_WorkingDirectory + filepath.substr((pos+strlen(cnst::g_szWorkingPlaceHolder)));
-        std::cout<<" working : " << m_WorkingDirectory << std::endl;
+        canonical = working_directory_ + filepath.substr((pos+strlen(cnst::g_szWorkingPlaceHolder)));
+        std::cout<<" working : " << working_directory_ << std::endl;
         std::cout<<" CANONICAL IS : " << canonical << std::endl;
         relative = filepath;
     }
     else {
         fs::GetCanonicalPath(filepath, canonical);
-        fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        fs::MakePathRelative(working_directory_, canonical, relative);
         // TODO :: fix for windows
         relative = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
 
@@ -97,27 +113,27 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     pFi->set_filepath(relative);
     Lock();
     // Insert into infotable
-    m_Manifest.InsertFileInfo(*pFi);
+    manifest_.InsertFileInfo(*pFi);
     Unlock();
 
     // Folder operations
     Lock();
-    if(!m_Manifest.IsFolderInManifest(parent)){
+    if(!manifest_.IsFolderInManifest(parent)){
         // Create folder entry
-        m_Manifest.InsertFolderInfo(parent, "");
+        manifest_.InsertFolderInfo(parent, "");
     }
     Unlock();
 
     // File operations
     Lock();
     std::string folderid;
-    if(!m_Manifest.GetFolderID(parent, folderid)) {
+    if(!manifest_.GetFolderID(parent, folderid)) {
         std::cout<<" failed to find folder post " << std::endl;
     }
 
     std::string postid = pFi->post_id();
-    if(!m_Manifest.IsFolderEntryInManifest(relative)) {
-       m_Manifest.InsertFolderEnrty(folderid,   
+    if(!manifest_.IsFolderEntryInManifest(relative)) {
+       manifest_.InsertFolderEnrty(folderid,   
                                     postid, 
                                     cnst::g_szFileType,       
                                     relative);  
@@ -126,10 +142,48 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 }
  
 
+int FileManager::RenameFile(const std::string& old_filepath, const std::string& new_filename) {
+    int status = ret::A_OK;
+    FileInfo* fi = GetFileInfo(old_filepath);
+    if(fi) {
+        std::string relative_filepath;
+        GetRelativePath(old_filepath, relative_filepath);
+        std::string old_filename;
+        utils::ExtractFileName(old_filepath, old_filename);
+
+        std::string new_filepath;
+        utils::FindAndReplace(relative_filepath, 
+                              (std::string("/") + old_filename), 
+                              (std::string("/") + new_filename), 
+                              new_filepath);
+
+        std::cout<<" RENAMING : " << relative_filepath << std::endl;
+        std::cout<<" NEW PATH : " << new_filepath << std::endl;
+        Lock();
+        bool s = manifest_.UpdateFilepath(relative_filepath, new_filepath);
+        if(s)
+           s = manifest_.UpdateFilename(new_filepath, new_filename);
+        Unlock();
+        if(s) {
+
+
+        }
+        else {
+            std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;
+            status = ret::A_FAIL_TO_QUERY_MANIFEST;
+        }
+    }
+    else {
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+    }
+
+    return status;
+}
+
 void FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
     if(IsPathRelative(filepath)) {
         Lock();
-        m_Manifest.UpdateFileVersion(filepath, version);
+        manifest_.UpdateFileVersion(filepath, version);
         Unlock();
     }
 }
@@ -137,7 +191,7 @@ void FileManager::SetFileVersion(const std::string& filepath, const std::string&
 void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
     if(IsPathRelative(filepath)) {
         Lock();
-        m_Manifest.UpdateFileDeleted(filepath, del);
+        manifest_.UpdateFileDeleted(filepath, del);
         Unlock();
     }
 }
@@ -146,12 +200,12 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
 {
     if(IsPathRelative(filepath)) {
         Lock();
-        m_Manifest.UpdateFilePostID(filepath, postid);
+        manifest_.UpdateFilePostID(filepath, postid);
         Unlock();
 
         Lock();
-        if(m_Manifest.IsFolderEntryInManifest(filepath))
-            m_Manifest.SetFolderEntryMetapostID(filepath, postid);
+        if(manifest_.IsFolderEntryInManifest(filepath))
+            manifest_.SetFolderEntryMetapostID(filepath, postid);
         else 
             std::cout<< "Could not find folder entry in MANIFEST " << std::endl;
         Unlock();
@@ -172,8 +226,8 @@ void FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
     std::cout<<" SETTING FOLDER POST ID : " << parent_relative << std::endl;
 
     Lock();
-    if(m_Manifest.IsFolderInManifest(parent_relative))
-        m_Manifest.UpdateFolderPostID(parent_relative, postid);
+    if(manifest_.IsFolderInManifest(parent_relative))
+        manifest_.UpdateFolderPostID(parent_relative, postid);
     else
         std::cout<<" COULD NOT FIND FOLDER IN MANIFEST " << std::endl;
     Unlock();
@@ -182,12 +236,12 @@ void FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
 
 void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid)
 {
-    m_Manifest.UpdateFileChunkPostID(filepath, postid);
+    manifest_.UpdateFileChunkPostID(filepath, postid);
 }
 
 FileInfo* FileManager::CreateFileInfo() {
     Lock();
-    FileInfo* pFi = m_FileInfoFactory.CreateFileInfoObject();
+    FileInfo* pFi = file_info_factory_.CreateFileInfoObject();
     Unlock();
 
     return pFi;
@@ -200,7 +254,7 @@ void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
     if(IsPathRelative(relativepath)) {
         int pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
         if(pos != std::string::npos) {
-            out = m_WorkingDirectory + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
+            out = working_directory_ + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
             std::cout<<" OUT : " << out << std::endl;
         }
         else {
@@ -225,7 +279,7 @@ bool FileManager::DoesFileExist(const std::string& filepath)
     bool stat = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        stat = m_Manifest.IsFileInManifest(filepath);
+        stat = manifest_.IsFileInManifest(filepath);
         Unlock();
     }
     else {
@@ -239,9 +293,9 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
 {
     bool retval = false;
 
-    if(filepath.find(m_WorkingDirectory) != std::string::npos) {
+    if(filepath.find(working_directory_) != std::string::npos) {
         std::string relative;
-        fs::MakePathRelative(m_WorkingDirectory, filepath, relative);
+        fs::MakePathRelative(working_directory_, filepath, relative);
         out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
         retval = true;
         return retval;
@@ -250,7 +304,7 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     std::cout<<" attempting to get a relative path " << std::endl;
     std::cout<<" for : " << filepath << std::endl;
     std::string rel;
-    fs::MakePathRelative(m_WorkingDirectory, filepath, rel);
+    fs::MakePathRelative(working_directory_, filepath, rel);
     std::cout<<" rel : " << rel << std::endl;
     std::string canonical;
     int pos = 0;
@@ -271,9 +325,9 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     }
     std::cout<<" canonical : " << canonical << std::endl;
 
-    if(canonical.find(m_WorkingDirectory) != std::string::npos) {
+    if(canonical.find(working_directory_) != std::string::npos) {
         std::string relative;
-        fs::MakePathRelative(m_WorkingDirectory, canonical, relative);
+        fs::MakePathRelative(working_directory_, canonical, relative);
         out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
         retval = true;
     }
@@ -297,8 +351,8 @@ FileInfo* FileManager::GetFileInfo(const std::string &filepath)
     // Attempt to get relative path
     if(IsPathRelative(relative)) {
         Lock();
-        pFi = m_FileInfoFactory.CreateFileInfoObject();
-        m_Manifest.QueryForFile(relative, *pFi);
+        pFi = file_info_factory_.CreateFileInfoObject();
+        manifest_.QueryForFile(relative, *pFi);
         Unlock();
 
         if(pFi) {
@@ -327,15 +381,15 @@ bool FileManager::GetFolderInfo(const std::string& folderpath, Folder& folder)
 
     bool bRet = false;
     Lock();
-    if(m_Manifest.IsFolderInManifest(parent_relative)) {
+    if(manifest_.IsFolderInManifest(parent_relative)) {
         std::string folderpostid, folder_id; 
-        m_Manifest.GetFolderPostID(parent_relative, folderpostid);
-        m_Manifest.GetFolderID(parent_relative, folder_id);
+        manifest_.GetFolderPostID(parent_relative, folderpostid);
+        manifest_.GetFolderID(parent_relative, folder_id);
         folder.SetPostID(folderpostid);
         folder.SetPath(parent_relative);
         // Retreive Entries
         std::vector<FolderEntry> entries;
-        m_Manifest.GetFolderEntries(folder_id, entries);
+        manifest_.GetFolderEntries(folder_id, entries);
 
         std::cout<<" NUMBER OF ENTRIES : " << entries.size() << std::endl;
         for(unsigned int i=0; i<entries.size(); i++)
@@ -351,7 +405,7 @@ bool FileManager::GetFolderInfo(const std::string& folderpath, Folder& folder)
 int FileManager::GetAllFileInfo(std::vector<FileInfo>& out)
 {
     Lock();
-    int status = m_Manifest.QueryAllFiles(out);
+    int status = manifest_.QueryAllFiles(out);
     Unlock();
     return status;
 }
