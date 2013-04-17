@@ -2,11 +2,13 @@
 #define RENAMETASK_H_
 #pragma once
 
+#include <string>
 #include "tenttask.h"
 
 namespace attic { 
 
 class RenameTask : public TentTask {
+    int RenameFile(const std::string& old_filepath, const std::string& new_filepath);
 public:
     RenameTask(FileManager* pFm, 
                CredentialsManager* pCm,
