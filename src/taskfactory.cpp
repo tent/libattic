@@ -8,6 +8,7 @@
 #include "queryfilestask.h"
 #include "polltask.h"
 #include "syncfiletask.h"
+#include "renametask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -150,6 +151,16 @@ Task* TaskFactory::CreateNewTentTask(Task::TaskType type,
                               entity,                           
                               context,                  
                               callbackDelegate);         
+            break;
+        }
+        case Task::RENAME:
+        {
+            t = new RenameTask(pFm,
+                               pCm,
+                               at,
+                               entity,
+                               context,
+                               callbackDelegate);
             break;
         }
         case Task::DELETE:
