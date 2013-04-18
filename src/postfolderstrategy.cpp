@@ -28,7 +28,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
         Folder folder;
         if(!file_manager_->GetFolderEntry(*itr, folder)) {
             // Create 
-            file_manager_->CreateFolderEntry(*itr, folder);
+            file_manager_->CreateFolderEntry(*itr, "");
         }
 
         if(folder.folder_post_id().empty()) {
@@ -84,6 +84,7 @@ void PostFolderStrategy::ExtractDirectories(const std::string& filepath,
     std::cout<<" filepath : "<< filepath << std::endl;
     std::cout<<" canonical : " << canonical << std::endl;
     
+    directories.push_back(working_dir);
     utils::ExtractSubPaths(working_dir, canonical, directories);
 }
 

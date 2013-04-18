@@ -249,6 +249,7 @@ bool Manifest::IsFolderInManifest(const std::string &folderpath) {
     return false;
 }
 
+
 bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
     std::string exc;
     exc += "SELECT * FROM ";
@@ -546,8 +547,7 @@ bool Manifest::RemoveFileInfo(const std::string &filepath)
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string& version)
-{
+bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string& version) {
     std::string exc;
     exc += "UPDATE \"";
     exc += g_infotable;
@@ -559,8 +559,8 @@ bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string&
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val)
-{
+
+bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val) {
     char szDel[256] = {'\0'};
     snprintf(szDel, 256, "%d", val);
 
@@ -628,7 +628,7 @@ bool Manifest::UpdateFilename(const std::string& filepath, const std::string& ne
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid) {
+bool Manifest::UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
@@ -640,12 +640,7 @@ bool Manifest::UpdateFolderPostID(const std::string& folderpath, const std::stri
     return PerformQuery(exc);
 }
 
-
-
-
-
-bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out)
-{
+bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out) {
     std::string query;
     query += "SELECT folderpostid FROM ";
     query += g_foldertable;

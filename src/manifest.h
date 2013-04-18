@@ -80,8 +80,8 @@ public:
     bool IsFolderInManifest(const std::string& folderpath);
     bool IsFolderInManifestWithID(const std::string& folderid);
     bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
+    bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
 
-    bool UpdateFolderPostID(const std::string& folderpath, const std::string& folderpostid);
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
 

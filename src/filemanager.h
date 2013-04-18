@@ -51,7 +51,8 @@ public:
     FileInfo* GetFileInfo(const std::string &filepath);
 
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
-    bool CreateFolderEntry(const std::string& folderpath, Folder& folder);
+    bool CreateFolderEntry(const std::string& folderpath, 
+                           const std::string& folder_post_id);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
 
     void SetManifestDirectory(const std::string &filepath)      { manifest_directory_ = filepath; }
