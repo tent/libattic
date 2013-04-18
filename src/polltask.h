@@ -6,25 +6,32 @@
 #include <string>
 #include <deque>
 
+#include <boost/timer/timer.hpp>
+
 #include "tenttask.h"
-#include "folder.h"
+#include "folderpost.h"
+#include "filepost.h"
 #include "taskdelegate.h"
 #include "event.h"
-#include <boost/timer/timer.hpp>
+
 namespace attic { 
 
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
-    int RetrieveFolderPosts(std::deque<Folder>& folders);
     int SyncFolderPosts();
-    int SyncFolder(Folder& folder);
+    int SyncFolder(FolderPost& folder_post);
+
     int GetFolderPostCount();
+    int GetFilePostCount(const std::string& folder_post_id);
 
     void PushBackFile(const std::string& filepath);
     void RemoveFile(const std::string& filepath);
     bool IsFileInQueue(const std::string& filepath);
 
+
+    int RetrieveFolderPosts(std::deque<FolderPost>& posts);
+    int RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>& posts);
 public:
     void PollTaskCB(int a, std::string& b);
 
@@ -45,9 +52,9 @@ public:
     void RunTask();
 
 private:
-    std::map<std::string, bool> m_ProcessingQueue; // Files currently being processed
+    std::map<std::string, bool> processing_queue_; // Files currently being processed
 
-    PollDelegate* m_pDelegate;
+    PollDelegate* delegate_;
     boost::timer::cpu_timer timer_;
 
     bool running_;

@@ -37,14 +37,14 @@ PollTask::PollTask( FileManager* pFm,
                              entity,                               
                              context,
                              callbackDelegate) {
-    m_pDelegate = new PollDelegate(this);
+    delegate_ = new PollDelegate(this);
     running_ = true;
 }
 
 PollTask::~PollTask() {
-    if(m_pDelegate) {
-        delete m_pDelegate;
-        m_pDelegate = NULL;
+    if(delegate_) {
+        delete delegate_;
+        delegate_ = NULL;
     }
 }
 
@@ -81,19 +81,17 @@ void PollTask::OnEventRaised(const event::Event& event){
 void PollTask::PollTaskCB(int a, std::string& b) {
     //std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
     std::string returnpost = b;
-    if(m_ProcessingQueue.find(returnpost) != m_ProcessingQueue.end()) {
+    if(processing_queue_.find(returnpost) != processing_queue_.end()) {
         // remove it from the map
-        m_ProcessingQueue.erase(returnpost);
+        processing_queue_.erase(returnpost);
     }
     else {
         std::cout<<" POSTID NOT FOUND IN QUEUE ?!?!? " << b << std::endl;
     }
 }
 
-// TODO:: after v0.1 abstract this to sync strategy
 void PollTask::RunTask() {
     int status = ret::A_OK;
-
     // Spin off consumer task for checking each file meta post for newer versions
     if(polltask::g_pCurrentPollTask == this) {
         if(!timer_.is_stopped()) {
@@ -101,7 +99,6 @@ void PollTask::RunTask() {
             boost::timer::nanosecond_type const elapsed(time.system + time.user);
             total_elapsed += elapsed;
         }
-
         //std::cout<<" total elapsed : " << total_elapsed << "limit " << limit << std::endl;
         if(total_elapsed > limit) {
             std::cout<<" ********************************************************" << std::endl;
@@ -110,7 +107,7 @@ void PollTask::RunTask() {
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
-//                status = SyncFolderPosts();
+                status = SyncFolderPosts();
                 if(status != ret::A_OK)
                     std::cout<<" POLLING ERR : " << status << std::endl;
             }
@@ -128,15 +125,12 @@ void PollTask::RunTask() {
     //sleep::sleep_seconds(2);
 }
 
-
-/*
 int PollTask::SyncFolderPosts() {
     int status = ret::A_OK;
-
-    std::deque<Folder> folders;
+    std::deque<FolderPost> folders;
     status = RetrieveFolderPosts(folders);
     if(status == ret::A_OK) {
-        std::deque<Folder>::iterator itr = folders.begin();
+        std::deque<FolderPost>::iterator itr = folders.begin();
         for(;itr != folders.end(); itr++) {
             status = SyncFolder(*itr);
             if(status != ret::A_OK) {
@@ -145,55 +139,97 @@ int PollTask::SyncFolderPosts() {
             }
         }
     }
-
     return status;
 }
-*/
 
-/*
-int PollTask::SyncFolder(Folder& folder) {
-    // Make sure the folder exists in the manifest
-    //
-    // loop through the entries make sure they exist, if there is a newer version
-    // spin off a pull command
-    //std::cout<<" Syncing ... folder ... " << std::endl;
-
+int PollTask::SyncFolder(FolderPost& folder_post) {
     int status = ret::A_OK;
-    Folder::EntryList* pList = folder.GetEntryList();
-
-    if(pList) { 
-        //std::cout<<" ENTRY SIZE : " << pList->size() << std::endl;
-        Folder::EntryList::iterator itr = pList->begin();
-        for(;itr != pList->end(); itr++) {
-            std::string postid;
-            itr->second.GetPostID(postid);
-            //std::cout<<" FOLDER ENTRY POST ID : " << postid << std::endl;
-            if(!postid.empty()) { 
-                // Check if currently in the sync queue
-                if(m_ProcessingQueue.find(postid) == m_ProcessingQueue.end()) {
-                    // TODO :: check if file exists locally, 
-
-                    //         check if file is marked as deleted
-                    //          - if it exists and is marked move to trash
-                    m_ProcessingQueue[postid] = true;
-                    // TODO :: create TaskDelegate to pass here !
-                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, postid, m_pDelegate);
+    std::deque<FilePost> file_posts;
+    status = RetrieveFilePosts(folder_post.id(), file_posts);
+    if(status == ret::A_OK) {
+        std::deque<FilePost>::iterator itr = file_posts.begin();
+        for(;itr != file_posts.end(); itr++) {
+            if(!(*itr).deleted()) {
+                if(processing_queue_.find((*itr).id()) == processing_queue_.end()) {
+                    processing_queue_[(*itr).id()] = true;
+                    std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
+                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                                      (*itr).id(),
+                                      delegate_);
                 }
-                // If it is in the queue ignore, do not reaise an event
             }
         }
     }
-    else {
-        std::cout<<" invalid entry list " << std::endl;
-    }
-
     return status;
 }
 
-int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
+int PollTask::RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>& posts) {
     int status = ret::A_OK;
+    int postcount = GetFilePostCount(post_id);
+    if(postcount > 0) {
+        Entity entity = TentTask::entity();
+        std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+        AccessToken at = access_token();
+        int cap = 200;
+        std::string lastid;
+        for(int i=0; i < postcount; i+=cap) {
+            int diff = postcount - i;
+            int request_count = 0;
+            if(diff > cap)
+                request_count = cap;
+            else
+                request_count = diff;
+
+            char countBuff[256] = {"\0"};
+            snprintf(countBuff, 256, "%d", request_count);
+
+            UrlParams params;                                                                  
+            params.AddValue(std::string("mentions"), entity.entity() + "+" + post_id);
+            params.AddValue(std::string("types"), std::string(cnst::g_attic_file_type));  
+            params.AddValue(std::string("limit"), std::string(countBuff));                         
+            if(!lastid.empty())
+                params.AddValue(std::string("last_id"), lastid);
+
+            Response resp;
+            netlib::HttpGet(posts_feed,
+                            &params,
+                            &at,
+                            resp);
+
+            std::cout<< "LINK HEADER : " << resp.header["Link"] << std::endl;
+            std::cout<<" response code : " << resp.code << std::endl;
+            std::cout<<" response body : " << resp.body << std::endl;
+
+            if(resp.code == 200) { 
+                Json::Value root;
+                Json::Reader reader;
+                reader.parse(resp.body, root);
+                //jsn::PrintOutJsonValue(&root);
+
+                Json::ValueIterator itr = root.begin();
+                for(; itr != root.end(); itr++) {
+                    FilePost fp;
+                    if(jsn::DeserializeObject(&fp, *itr))
+                        posts.push_back(fp);
+                }
+                lastid = posts[posts.size()-1].id();
+            }
+            else {
+                log::LogHttpResponse("AMM23812", resp);
+                status = ret::A_FAIL_NON_200;
+                break;
+            }
+        }
+    }
+    return status;
+}
+
+int PollTask::RetrieveFolderPosts(std::deque<FolderPost>& posts) {
+    int status = ret::A_OK;
+    std::cout<<" RETRIEVING FOLDER POSTS " << std::endl;
     int postcount = GetFolderPostCount();
     if(postcount > 0) {
+        std::cout<<" FOLDER POST COUNT : " << postcount << std::endl;
         Entity entity = TentTask::entity();
         std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
 
@@ -212,7 +248,7 @@ int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
             snprintf(countBuff, 256, "%d", request_count);
 
             UrlParams params;                                                                  
-            params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));  
+            params.AddValue(std::string("types"), std::string(cnst::g_attic_folder_type));  
             params.AddValue(std::string("limit"), std::string(countBuff));                         
             if(!lastid.empty())
                 params.AddValue(std::string("last_id"), lastid);
@@ -233,13 +269,14 @@ int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
                 reader.parse(resp.body, root);
                 //jsn::PrintOutJsonValue(&root);
 
+                std::cout<<" iterating " << std::endl;
                 Json::ValueIterator itr = root.begin();
                 for(; itr != root.end(); itr++) {
                     FolderPost fp;
-                    jsn::DeserializeObject(&fp, *itr);
-                    Folder folder = fp.folder();
-                    folders.push_back(folder);
+                    if(jsn::DeserializeObject(&fp, *itr))
+                        posts.push_back(fp);
                 }
+                lastid = posts[posts.size()-1].id();
             }
             else {
                 log::LogHttpResponse("AMM23812", resp);
@@ -250,13 +287,41 @@ int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
     }
     return status;
 }
-*/
+
+int PollTask::GetFilePostCount(const std::string& folder_post_id) {
+    Entity entity = TentTask::entity();
+    std::string url = entity.GetPreferredServer().posts_feed();
+
+    UrlParams params;
+    params.AddValue(std::string("mentions"), entity.entity() + "+" + folder_post_id);
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_file_type));
+
+    Response response;                                                                            
+    AccessToken at = access_token();                                                           
+    netlib::HttpHead(url,
+                    &params,
+                    &at,
+                    response);
+
+    //std::cout<<" code : " << response.code << std::endl;
+    //std::cout<<" header : " << response.header.asString() << std::endl;
+    //std::cout<<" body : " << response.body << std::endl;
+
+    int count = -1;                                                                               
+    if(response.code == 200) {
+        if(response.header.HasValue("Count"))
+            count = atoi(response.header["Count"].c_str());
+    }
+
+    return count;
+}
+
 int PollTask::GetFolderPostCount() {
     std::string url = entity().GetPreferredServer().posts_feed();
     //std::cout<<" URL : " << url << std::endl;
 
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(cnst::g_attic_folder_type));             
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_folder_type));             
 
     Response response;                                                                            
     AccessToken at = access_token();                                                           
@@ -279,15 +344,15 @@ int PollTask::GetFolderPostCount() {
 }
 
 void PollTask::PushBackFile(const std::string& filepath) {
-    m_ProcessingQueue[filepath] = true;
+    processing_queue_[filepath] = true;
 }
 
 void PollTask::RemoveFile(const std::string& filepath) {
-    m_ProcessingQueue.erase(filepath);
+    processing_queue_.erase(filepath);
 }
 
 bool PollTask::IsFileInQueue(const std::string& filepath) {
-    if(m_ProcessingQueue.find(filepath)!= m_ProcessingQueue.end())
+    if(processing_queue_.find(filepath)!= processing_queue_.end())
         return true;
     return false;
 }
