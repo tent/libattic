@@ -415,8 +415,9 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
 int Passphrase::GetCredentialsPostCount() {
     std::string url = entity_.GetPreferredServer().posts_feed();
 
+    std::cout<<" GET CREDENTIALS POST COUNT " << std::endl;
     UrlParams params;
-    params.AddValue(std::string("post_types"), std::string(cnst::g_attic_cred_type));
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_cred_type));
 
     Response response;
     netlib::HttpHead(url,
