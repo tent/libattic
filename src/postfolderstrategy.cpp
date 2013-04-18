@@ -74,9 +74,7 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder) {
 
 void PostFolderStrategy::ExtractDirectories(const std::string& filepath, 
                                             std::vector<std::string>& directories) {
-    std::string working_dir;
-    file_manager_->GetWorkingDirectory(working_dir);
-
+    std::string working_dir = file_manager_->working_directory();
     std::string canonical;
     fs::GetCanonicalPath(filepath, canonical);
 

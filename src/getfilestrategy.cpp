@@ -246,8 +246,7 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
 bool GetFileStrategy::GetTemporaryFilepath(FileInfo* fi, std::string& out) { 
     std::string filename = fi->filename();
 
-    std::string temp_path;
-    file_manager_->GetTempDirectory(temp_path);
+    std::string temp_path = file_manager_->temp_directory();
     if(fs::CheckFilepathExists(temp_path)) {
         utils::CheckUrlAndAppendTrailingSlash(temp_path);
         std::string randstr;

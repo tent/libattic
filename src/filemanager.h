@@ -11,6 +11,7 @@
 #include "fileinfofactory.h"
 #include "errorcodes.h"
 #include "folder.h"
+#include "filequeue.h"
 
 namespace attic { 
 
@@ -44,26 +45,35 @@ public:
     void GetCanonicalFilepath(const std::string& relativepath, std::string& out);
 
     bool DoesFileExist(const std::string& filepath);
-    void GetManifestDirectory(std::string &out) const   { out = manifest_directory_; }
-    void GetWorkingDirectory(std::string &out) const    { out = working_directory_; }
-    void GetTempDirectory(std::string &out) const       { out = temp_directory_; }
     int GetAllFileInfo(std::vector<FileInfo>& out);
     FileInfo* GetFileInfo(const std::string &filepath);
-
-    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
-    bool CreateFolderEntry(const std::string& folderpath, 
-                           const std::string& folder_post_id);
-    bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
-
-    void SetManifestDirectory(const std::string &filepath)      { manifest_directory_ = filepath; }
-    void SetWorkingDirectory(const std::string &workingDir)     { working_directory_ = workingDir; }
-    void SetTempDirectory(const std::string &tempDir)           { temp_directory_ = tempDir; }
 
     void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFileDeleted(const std::string& filepath, const bool del = true);
     void SetFilePostId(const std::string &filepath, const std::string& postid);
     void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
+
+    // Folder
+    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
+    bool CreateFolderEntry(const std::string& folderpath, 
+                           const std::string& folder_post_id);
+    bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
+
+    // File Queue
+    bool LockFile(const std::string& filepath);
+    bool UnlockFile(const std::string& filepath);
+    bool IsFileLocked(const std::string& filepath);
+
+    // Accessor / Mutator
+    const std::string& manifest_directory() const   { return manifest_directory_; }
+    const std::string& working_directory() const    { return working_directory_; }
+    const std::string& temp_directory() const       { return temp_directory_; }
+
+    void set_manifest_directory(const std::string &filepath)      { manifest_directory_ = filepath; }
+    void set_working_directory(const std::string &workingDir)     { working_directory_ = workingDir; }
+    void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
 private:
+    CentralFileQueue    file_queue_;
     FileInfoFactory     file_info_factory_;
     Manifest            manifest_;
 
