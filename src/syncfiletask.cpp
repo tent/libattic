@@ -32,7 +32,7 @@ SyncFileTask::SyncFileTask(FileManager* pFm,
                                      context,
                                      callbackDelegate) {
     // TODO :: refine constructor params, FOR NOW filepath will need to have the postid
-    context.get_value("filepath", m_PostID);
+    context.get_value("postid", post_id_);
 }
 
 SyncFileTask::~SyncFileTask() {}
@@ -58,7 +58,7 @@ void SyncFileTask::RunTask() {
     }
 
     //std::cout<<" ...sync file task finished ... " << std::endl;
-    Callback(status, m_PostID);
+    Callback(status, post_id_);
     SetFinishedState();
 }
 
@@ -66,9 +66,9 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     int status = ret::A_OK;
 
     std::string url;
-    utils::FindAndReplace(GetPostPath(), "{post}", m_PostID, url);
-
-    //std::cout<<" SYNC META DATA URL : " << url << std::endl;
+    utils::FindAndReplace(GetPostPath(), "{post}", post_id_, url);
+    std::cout<<" post id : " << post_id_ << std::endl;
+    std::cout<<" SYNC META DATA URL : " << url << std::endl;
 
     Response response;
     AccessToken at = access_token();
@@ -109,6 +109,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
                 bPull = false;
             //TODO VO3
             // compare versions
+            // compare file hashes
             // check if file exists, locally
             else if( !fs::CheckFilepathExists(canonical_path))
                 bPull= true;
@@ -143,74 +144,13 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
 int SyncFileTask::RaisePullRequest(const FilePost& p, FileInfo& fi) {
     int status = ret::A_OK;
 
-    // retreive chunk info
-    status = RetrieveChunkInfo(p, fi);
-    if(status == ret::A_OK) {
-        std::string filepath = p.relative_path();
-        // insert to file manager
-        FileManager* fm = GetFileManager();
-        fm->InsertToManifest(&fi);
-        // pull request
+    std::string filepath = p.relative_path();
+    if(!filepath.empty()) { 
         event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
-        m_ProcessingQueue[filepath] = true;
+        processing_queue_[filepath] = true;
     }
     else {
-        std::cout<<" FAILED TO RETRIEVE CHUNK INFO " << std::endl;
-    }
-
-    return status;
-}
-
-int SyncFileTask::RetrieveChunkInfo(const FilePost& post, FileInfo& fi) {
-    int status = ret::A_OK;
-
-    Entity entity = TentTask::entity();
-    AccessToken at = access_token();                                                
-         
-    // Get Chunk info
-    std::vector<std::string> chunkPosts;
-    chunkPosts = post.GetChunkPosts();
-
-    if(chunkPosts.size()) {
-        std::vector<std::string>::iterator itr = chunkPosts.begin();
-        std::string postid;
-        for(;itr != chunkPosts.end(); itr++) {
-            fi.set_chunk_post_id(*itr);
-            postid.clear();
-            postid = *itr;
-            std::string url;
-            utils::FindAndReplace(GetPostPath(), "{post}", postid, url);
-
-            Response response;
-            netlib::HttpGet(url, 
-                            NULL,
-                            &at,
-                            response); 
-
-            //std::cout<< " CODE : " << response.code << std::endl;
-            //std::cout<< " RESP : " << response.body << std::endl;
-
-            if(response.code == 200) {
-                ChunkPost cp;
-                jsn::DeserializeObject(&cp, response.body);
-
-                if(cp.chunk_info_list_size()) {
-                    ChunkPost::ChunkInfoList* ciList = cp.chunk_info_list();
-                    ChunkPost::ChunkInfoList::iterator itr = ciList->begin();
-
-                    for(;itr != ciList->end(); itr++) {
-                        fi.PushChunkBack(itr->second);
-                    }
-                }
-            }
-            else {
-                status = ret::A_FAIL_NON_200;
-                log::LogHttpResponse("MNB889RFA", response);
-            }
-        }
-    }
-    else {
-        status = ret::A_FAIL_EMPTY_CHUNK_POST;
+        status = ret::A_FAIL_INVALID_FILEPATH;
     }
 
     return status;

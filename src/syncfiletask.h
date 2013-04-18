@@ -14,13 +14,9 @@ namespace attic {
 class TaskDelegate;
 class SyncFileTask : public TentTask {
     int SyncMetaData(FilePost& out);
-    /*
-    int AssessFileInfo(const FileInfo& local_fi, const FileInfo& meta_fi);
-    int Pull(const AtticPost& p, const FileInfo& meta_fi);
-    */
+    
     int ProcessFileInfo(const FilePost& p);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
-    int RetrieveChunkInfo(const FilePost& post, FileInfo& fi);
 public:
     SyncFileTask(FileManager* pFm,
                  CredentialsManager* pCm,
@@ -40,8 +36,8 @@ public:
     void Cb(int a, void* b);
 
 private:
-    std::map<std::string, bool> m_ProcessingQueue;
-    std::string m_PostID;
+    std::map<std::string, bool> processing_queue_;
+    std::string post_id_;
 };
 
 }//namespace
