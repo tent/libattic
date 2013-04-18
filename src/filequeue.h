@@ -76,15 +76,8 @@ public:
         return retval;
     }
 
-    static CentralFileQueue* GetInstance() {
-        if(!instance_)
-            instance_ = new CentralFileQueue();
-        return instance_;
-    }
-
 private:
     FileQueue file_queue_;
-    static CentralFileQueue* instance_;
 };
 
 }//namespace

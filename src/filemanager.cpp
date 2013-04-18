@@ -444,4 +444,17 @@ int FileManager::GetAllFileInfo(std::vector<FileInfo>& out) {
     return status;
 }
 
+bool FileManager::LockFile(const std::string& filepath) {
+    return file_queue_.LockFile(filepath);
+}
+
+bool FileManager::UnlockFile(const std::string& filepath) {
+    return file_queue_.UnlockFile(filepath);
+}
+
+bool FileManager::IsFileLocked(const std::string& filepath) {
+    return file_queue_.IsFileLocked(filepath);
+}
+
+
 }//namespace
