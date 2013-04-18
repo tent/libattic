@@ -16,43 +16,44 @@ public:
     ~FileQueue() {}
 
     virtual bool LockFile(const std::string& filepath) {
-        if(!m_FileQueue[filepath]) {
-            m_FileQueue[filepath] = true;
+        if(!file_queue_[filepath]) {
+            file_queue_[filepath] = true;
             return true;
         }
         return false;
     }
 
     virtual bool UnlockFile(const std::string& filepath) {
-        if(m_FileQueue[filepath]) {
-            m_FileQueue[filepath] = false;
+        if(file_queue_[filepath]) {
+            file_queue_[filepath] = false;
             return true;
         }
         return false;
     }
     
     bool IsFileLocked(const std::string& filepath) {
-        if(m_FileQueue.find(filepath) != m_FileQueue.end())
-            return m_FileQueue[filepath];
+        if(file_queue_.find(filepath) != file_queue_.end())
+            return file_queue_[filepath];
         return false;
     }
 
 private:
     // filepath, locked
-    std::map<std::string, bool> m_FileQueue;
+    std::map<std::string, bool> file_queue_;
 };
 
 class CentralFileQueue : public MutexClass {
-    CentralFileQueue() {}
+
     CentralFileQueue(const CentralFileQueue& rhs) {}
     CentralFileQueue operator=(const CentralFileQueue& rhs) { return *this; }
 public:
+    CentralFileQueue() {}
     ~CentralFileQueue() {}
 
     bool LockFile(const std::string& filepath) {
         bool retval = false;
         Lock();
-        retval = m_FileQueue.LockFile(filepath);
+        retval = file_queue_.LockFile(filepath);
         event::RaiseEvent(event::Event::FILE_LOCK, filepath, NULL);
         Unlock();
         return retval;
@@ -61,7 +62,7 @@ public:
     bool UnlockFile(const std::string& filepath) {
         bool retval = false;
         Lock();
-        retval = m_FileQueue.UnlockFile(filepath);
+        retval = file_queue_.UnlockFile(filepath);
         event::RaiseEvent(event::Event::FILE_UNLOCK, filepath, NULL);
         Unlock();
         return retval;
@@ -70,20 +71,20 @@ public:
     bool IsFileLocked(const std::string& filepath) {
         bool retval = false;
         Lock();
-        retval = m_FileQueue.IsFileLocked(filepath);
+        retval = file_queue_.IsFileLocked(filepath);
         Unlock();
         return retval;
     }
 
     static CentralFileQueue* GetInstance() {
-        if(!m_pInstance)
-            m_pInstance = new CentralFileQueue();
-        return m_pInstance;
+        if(!instance_)
+            instance_ = new CentralFileQueue();
+        return instance_;
     }
 
 private:
-    FileQueue m_FileQueue;
-    static CentralFileQueue* m_pInstance;
+    FileQueue file_queue_;
+    static CentralFileQueue* instance_;
 };
 
 }//namespace
