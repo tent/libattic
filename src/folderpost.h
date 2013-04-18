@@ -2,9 +2,10 @@
 #define FOLDERPOST_H_
 #pragma once
 
+#include <string>
 #include <vector>
-#include "post.h"
 #include "folder.h"
+#include "post.h"
 
 namespace attic { 
 

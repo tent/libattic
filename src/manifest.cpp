@@ -111,6 +111,8 @@ bool Manifest::CreateTables() {
     return true;
 }
 
+// TODO :: Perhaps add folderid for queries, can remove folder entry table if we do this
+//
 bool Manifest::CreateInfoTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
@@ -127,7 +129,7 @@ bool Manifest::CreateInfoTable() {
 //  * folder path - RELATIVE path to the folder, if the relative path is empty use <working> 
 //    to denote that its whatever Attic folder was set by the app
 //  * folderid - random id generate upon creation, folderid is used for various index operations in
-//    the folder entry table.
+//    the folder entry table. We use a folder id to allow the folder to be renamed and its "contents" to remain the same. Without having to update each file individually
 //  * folderpostid - id of the attic-folder post containing the metadata
 bool Manifest::CreateFolderTable() {
     std::string exc;
@@ -694,8 +696,7 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out)
     return true;
 }
 
-bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid)
-{
+bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid) {
     if(!IsFolderInManifest(folderpath)) {
         std::string folderid;
         crypto::GenerateRandomString(folderid);
@@ -838,8 +839,7 @@ bool Manifest::InsertFolderEnrty( const std::string& folderid,
     return false;
 }
 
-bool Manifest::IsFolderEntryInManifest(const std::string& filepath)
-{
+bool Manifest::IsFolderEntryInManifest(const std::string& filepath) {
     std::string exc;
     exc += "SELECT * FROM ";
     exc += g_folderentrytable;
@@ -855,8 +855,7 @@ bool Manifest::IsFolderEntryInManifest(const std::string& filepath)
     return false;
 }
 
-bool Manifest::SetFolderEntryMetapostID(const std::string& filepath, const std::string& metapostid)
-{
+bool Manifest::SetFolderEntryMetapostID(const std::string& filepath, const std::string& metapostid) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_folderentrytable;
@@ -868,8 +867,7 @@ bool Manifest::SetFolderEntryMetapostID(const std::string& filepath, const std::
     return PerformQuery(exc);
 }
 
-bool Manifest::GetFolderEntryMetapostID(const std::string& filepath, std::string& out)
-{
+bool Manifest::GetFolderEntryMetapostID(const std::string& filepath, std::string& out) {
     std::string query;
     query += "SELECT metapostid FROM ";
     query += g_folderentrytable;
@@ -892,50 +890,6 @@ bool Manifest::GetFolderEntryMetapostID(const std::string& filepath, std::string
     if(!step)
         return false;
     return true;
-
-}
-
-    //exc += " (folderid TEXT, metapostid TEXT, type TEXT, filepath TEXT,";
-bool Manifest::GetFolderEntries(const std::string& folderid, std::vector<FolderEntry>& out)
-{
-    std::string query;
-    query += "SELECT * FROM ";
-    query += g_folderentrytable;
-    query += " WHERE folderid=\"";
-    query += folderid;
-    query += "\";";
-
-    SelectResult res;
-    if(!PerformSelect(query, res))
-        return false;
-
-    //std::cout<<" query start " << std::endl;
-    int step = 0;
-    for(int i=0; i<res.nRow+1; i++) {
-        step = i*res.nCol;
-        
-        for(int j=0; j<res.nCol; j++)
-            std::cout << " Results : " << res.results[j+step] << std::endl;
-
-        if(step > 0) {
-            FolderEntry fe;
-            // ignore folder id
-            fe.SetPostID(res.results[1+step]);
-            fe.SetType(res.results[2+step]);
-            fe.SetPath(res.results[3+step]);
-
-            out.push_back(fe);
-        }
-    }
-
-    //std::cout<<" query done " << std::endl;
-    sqlite3_free_table(res.results);
-
-    if(!step)
-        return false;
-
-    return true;
-
 
 }
 

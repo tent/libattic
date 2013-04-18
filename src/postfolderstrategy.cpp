@@ -3,6 +3,9 @@
 #include "filemanager.h"
 #include "credentialsmanager.h"
 #include "filesystem.h"
+#include "folder.h"
+#include "folderpost.h"
+#include "netlib.h"
 
 namespace attic { 
 
@@ -16,16 +19,54 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     std::string entity = GetConfigValue("entity");
 
     std::cout<<" POST FOLDER STRATEGY " << std::endl;
-
     // Extract all parent directories up to the working directory
     std::vector<std::string> dirs;
     ExtractDirectories(filepath, dirs);
 
     std::vector<std::string>::iterator itr = dirs.begin();
     for(;itr != dirs.end(); itr++) {
-        // Check if there is a folder entry for each
-        //      if yes, do nothing
-        //      else, create one
+        Folder folder;
+        if(!file_manager_->GetFolderEntry(*itr, folder)) {
+            // Create 
+            file_manager_->CreateFolderEntry(*itr, folder);
+        }
+
+        if(folder.folder_post_id().empty()) {
+            // Create Folder Post
+            status = CreateFolderPost(folder);
+            if(status == ret::A_OK) {
+                // Update folder post id;
+                file_manager_->SetFolderPostId(*itr, folder.folder_post_id());
+            }
+        }
+    }
+
+    return status;
+}
+
+int PostFolderStrategy::CreateFolderPost(Folder& folder) {
+    int status = ret::A_OK;
+
+    // Create folderpost
+    FolderPost fp(folder);
+    std::string body;
+    jsn::SerializeObject(&fp, body);
+    // on success update post id in folder object
+    Response response;
+    netlib::HttpPost(posts_feed_,
+                     fp.type(),
+                     NULL,
+                     body,
+                     &access_token_,
+                     response);
+
+    if(response.code == 200) {
+        FolderPost back;
+        jsn::DeserializeObject(&back, response.body);
+        folder.set_folder_post_id(back.id());
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
     }
 
     return status;

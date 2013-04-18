@@ -33,8 +33,7 @@ public:
     int nCol;
 };
 
-class Manifest
-{
+class Manifest {
     // TODO :: abstract table specific methods
     // SQLite specific ///////////////////////////////////
     int OpenSqliteDb();
@@ -98,8 +97,6 @@ public:
 
     bool SetFolderEntryMetapostID(const std::string& filepath, const std::string& metapostid);
     bool GetFolderEntryMetapostID(const std::string& filepath, std::string& out);
-
-    bool GetFolderEntries(const std::string& folderid, std::vector<FolderEntry>& out);
 
     void SetDirectory(std::string &filepath); 
 private:

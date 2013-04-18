@@ -32,7 +32,6 @@ public:
     int Initialize(const std::string& manifestDirectory, 
                    const std::string& workingDirectory,
                    const std::string& tempDirectory);
-
     int Shutdown();
 
     void InsertToManifest (FileInfo* pFi);
@@ -50,18 +49,19 @@ public:
     void GetTempDirectory(std::string &out) const       { out = temp_directory_; }
     int GetAllFileInfo(std::vector<FileInfo>& out);
     FileInfo* GetFileInfo(const std::string &filepath);
-    bool GetFolderInfo(const std::string& folderpath, Folder& folder);
 
+    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
+    bool CreateFolderEntry(const std::string& folderpath, Folder& folder);
+    bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
 
     void SetManifestDirectory(const std::string &filepath)      { manifest_directory_ = filepath; }
     void SetWorkingDirectory(const std::string &workingDir)     { working_directory_ = workingDir; }
     void SetTempDirectory(const std::string &tempDir)           { temp_directory_ = tempDir; }
+
     void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFileDeleted(const std::string& filepath, const bool del = true);
     void SetFilePostId(const std::string &filepath, const std::string& postid);
     void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
-    void SetFolderPostId(const std::string& folderpath, const std::string& postid);
-
 private:
     FileInfoFactory     file_info_factory_;
     Manifest            manifest_;

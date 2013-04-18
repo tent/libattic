@@ -18,18 +18,22 @@ FolderPost::~FolderPost() {}
 
 void FolderPost::Serialize(Json::Value& root) {
     Json::Value folder(Json::objectValue);
-    jsn::SerializeObject(&folder_, folder);
-
-    set_content("children", folder);
+    folder["folderpath"] = folder_.folderpath();
+    folder["manifest_id"] = folder_.manifest_id();
+    folder["folder_post_id"] = folder_.folder_post_id();
+    set_content("folder", folder);
 
     Post::Serialize(root);
 }
 
 void FolderPost::Deserialize(Json::Value& root) {
     Post::Deserialize(root);
-    Json::Value folder;
-    get_content("children", folder);
-    jsn::DeserializeObject(&folder_, folder);
+
+    Json::Value folder(Json::objectValue);
+    get_content("folder", folder);
+    folder_.set_folderpath(folder.get("folderpath", "").asString());
+    folder_.set_manifest_id(folder.get("manifest_id", "").asString());
+    folder_.set_folder_post_id(folder.get("folder_post_id", "").asString());
 }
 
 }//namespace

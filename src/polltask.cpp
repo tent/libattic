@@ -110,7 +110,7 @@ void PollTask::RunTask() {
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
-                status = SyncFolderPosts();
+//                status = SyncFolderPosts();
                 if(status != ret::A_OK)
                     std::cout<<" POLLING ERR : " << status << std::endl;
             }
@@ -129,6 +129,7 @@ void PollTask::RunTask() {
 }
 
 
+/*
 int PollTask::SyncFolderPosts() {
     int status = ret::A_OK;
 
@@ -147,13 +148,16 @@ int PollTask::SyncFolderPosts() {
 
     return status;
 }
+*/
 
+/*
 int PollTask::SyncFolder(Folder& folder) {
     // Make sure the folder exists in the manifest
     //
     // loop through the entries make sure they exist, if there is a newer version
     // spin off a pull command
     //std::cout<<" Syncing ... folder ... " << std::endl;
+
     int status = ret::A_OK;
     Folder::EntryList* pList = folder.GetEntryList();
 
@@ -246,6 +250,7 @@ int PollTask::RetrieveFolderPosts(std::deque<Folder>& folders) {
     }
     return status;
 }
+*/
 int PollTask::GetFolderPostCount() {
     std::string url = entity().GetPreferredServer().posts_feed();
     //std::cout<<" URL : " << url << std::endl;

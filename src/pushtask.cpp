@@ -7,8 +7,6 @@
 #include "taskdelegate.h"
 
 #include "postfilestrategy.h"
-#include "postfilemetadatastrategy.h"
-#include "postfoldermetadatastrategy.h"
 #include "postfolderstrategy.h"
 
 namespace attic {
@@ -52,13 +50,11 @@ int PushTask::PushFile(const std::string& filepath) {
     int status = ret::A_OK;
 
     if(fs::CheckFilepathExists(filepath)) {
-        PostFileStrategy ps;                // Chunk and upload
- //       PostFileMetadataStrategy pmds;      // Update file post
-        PostFolderMetadataStrategy pfmds;   // Update folder post
-
-        PostFolderStrategy pfs;
         if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
         if(!GetCredentialsManager()) std::cout<<" Invalid Cred Manager " << std::endl;
+
+        PostFolderStrategy pfs;             // Check (and create) if directory posts exist
+        PostFileStrategy ps;                // Chunk and upload
 
         HttpStrategyContext pushcontext(GetFileManager(), 
                                         GetCredentialsManager());
@@ -76,7 +72,7 @@ int PushTask::PushFile(const std::string& filepath) {
         // TODO :: check the folder post(s) first
         // push back post folder strategy
         pushcontext.PushBack(&pfs);
-        //pushcontext.PushBack(&ps);
+        //pushcontext.PushBack(&ps); 
 
         status = pushcontext.ExecuteAll();
     }

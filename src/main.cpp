@@ -851,30 +851,6 @@ TEST(CHUNKINFO, SERIALIZATION)
     ASSERT_EQ(output, output2);
 }
 
-TEST(FOLDER, SERIALIZATION)
-{
-    attic::Folder folder;
-    attic::FolderEntry one("dasf", "file", "adsfae");
-    attic::FolderEntry two("einen", "file", "914891284192jfkjadkfe");
-    folder.PushBackEntry(one);
-    folder.PushBackEntry(two);
-
-    std::string output;
-    attic::jsn::SerializeObject(&folder, output);
-
-    attic::Folder other;
-    attic::jsn::DeserializeObject(&other, output);
-
-    std::string output2;
-    attic::jsn::SerializeObject(&other, output2);
-
-    ASSERT_EQ(output, output2);
-
-    attic::FolderEntry three("fdasfsad", "1111", "2222222");
-    folder.PushBackEntry(three);
-    std::string tt; 
-    attic::jsn::SerializeObject(&folder, tt);
-}
 /*
 TEST(PARAMS, ENCODE) 
 {

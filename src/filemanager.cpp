@@ -215,24 +215,7 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
     }
 }
 
-void FileManager::SetFolderPostId(const std::string& folderpath, const std::string& postid)
-{
-    std::string parent_relative = folderpath;
 
-    if(parent_relative.empty())
-        parent_relative = cnst::g_szWorkingPlaceHolder;
-
-    std::cout<<" FOLDER PATH : " << folderpath << std::endl;
-    std::cout<<" SETTING FOLDER POST ID : " << parent_relative << std::endl;
-
-    Lock();
-    if(manifest_.IsFolderInManifest(parent_relative))
-        manifest_.UpdateFolderPostID(parent_relative, postid);
-    else
-        std::cout<<" COULD NOT FIND FOLDER IN MANIFEST " << std::endl;
-    Unlock();
- 
-}
 
 void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid)
 {
@@ -375,39 +358,68 @@ FileInfo* FileManager::GetFileInfo(const std::string &filepath)
     return pFi;
 }
 
-bool FileManager::GetFolderInfo(const std::string& folderpath, Folder& folder)
-{
-    std::cout<<" GET FOLDER INFO : " << folderpath << std::endl;
+bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
+    // Check if folder exists
+    //  - if it does, fill out class
+    //  - else return false
+    
+    std::string relative;
+    if(!IsPathRelative(folderpath)) {
+        // Make Relative
+        GetRelativePath(folderpath, relative);
+    }
+    else {
+        relative = folderpath;
+    }
+
+    if(relative.empty())
+        relative = cnst::g_szWorkingPlaceHolder;
+
+    bool ret = false;
+    Lock();
+    if(manifest_.IsFolderInManifest(relative)) {
+        std::string folderpostid, folder_id; 
+        manifest_.GetFolderPostID(parent_relative, folderpostid);
+        manifest_.GetFolderID(parent_relative, folder_id);
+        folder.set_folder_post_id(folderpostid);
+        folder.set_manifest_id(folder_id);
+        folder.set_filepath(relative);
+        ret = true;
+    }
+    Unlock();
+
+    return ret;
+}
+
+bool FileManager::CreateFolderEntry(const std::string& folderpath, Folder& folder) {
+    // Create Folder Entry
+    // Generate unique folder id
+
+    return false;
+}
+
+bool FileManager::SetFolderPostId(const std::string& folderpath, const std::string& post_id) {
+    /* OLD
     std::string parent_relative = folderpath;
 
     if(parent_relative.empty())
         parent_relative = cnst::g_szWorkingPlaceHolder;
 
-    bool bRet = false;
+    std::cout<<" FOLDER PATH : " << folderpath << std::endl;
+    std::cout<<" SETTING FOLDER POST ID : " << parent_relative << std::endl;
+
     Lock();
-    if(manifest_.IsFolderInManifest(parent_relative)) {
-        std::string folderpostid, folder_id; 
-        manifest_.GetFolderPostID(parent_relative, folderpostid);
-        manifest_.GetFolderID(parent_relative, folder_id);
-        folder.SetPostID(folderpostid);
-        folder.SetPath(parent_relative);
-        // Retreive Entries
-        std::vector<FolderEntry> entries;
-        manifest_.GetFolderEntries(folder_id, entries);
-
-        std::cout<<" NUMBER OF ENTRIES : " << entries.size() << std::endl;
-        for(unsigned int i=0; i<entries.size(); i++)
-            folder.PushBackEntry(entries[i]);
-        
-        bRet = true;
-    }
+    if(manifest_.IsFolderInManifest(parent_relative))
+        manifest_.UpdateFolderPostID(parent_relative, postid);
+    else
+        std::cout<<" COULD NOT FIND FOLDER IN MANIFEST " << std::endl;
     Unlock();
-
-    return bRet;
+    */
+ 
+    return false;
 }
 
-int FileManager::GetAllFileInfo(std::vector<FileInfo>& out)
-{
+int FileManager::GetAllFileInfo(std::vector<FileInfo>& out) {
     Lock();
     int status = manifest_.QueryAllFiles(out);
     Unlock();
