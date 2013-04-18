@@ -125,9 +125,13 @@ Each post should be capped at 100 chunks.
 
 `https://cupcake.io/types/post/attic-folder/v0.1.0`
 
+_depricated_
 This post has one field, `children`, which is an object. The keys are the names
 of the children (files and folders) of the folder. The values are an object with
 two fields:
+
+Folder posts no longer contain information about what's in them, they conatain their
+relative directory path and act as an anchor for file posts to mention. 
 
 `id`: The post id of the object.
 `type: Either `file` or `folder`.
