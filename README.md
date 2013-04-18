@@ -134,10 +134,13 @@ Folder posts no longer contain information about what's in them, they conatain t
 relative directory path and act as an anchor for file posts to mention. 
 
 `id`: The post id of the object.
+
+_depricated_
 `type: Either `file` or `folder`.
 
-#### Profile section
+#### Profile section 
 
+_depricated_
 `https://cupcake.io/types/profile/attic/v0.1.0`
 
 - `master_key`: The base64 encoded encrypted *master key* used by the entity.
