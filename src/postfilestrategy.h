@@ -49,6 +49,8 @@ private:
 
     void ExtractChunkInfo(ChunkPostList& list,
                           FileInfo::ChunkMap& out);
+
+    bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
 public:
     PostFileStrategy();
     ~PostFileStrategy();

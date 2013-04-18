@@ -72,7 +72,7 @@ int PushTask::PushFile(const std::string& filepath) {
         // TODO :: check the folder post(s) first
         // push back post folder strategy
         pushcontext.PushBack(&pfs);
-        //pushcontext.PushBack(&ps); 
+        pushcontext.PushBack(&ps); 
 
         status = pushcontext.ExecuteAll();
     }

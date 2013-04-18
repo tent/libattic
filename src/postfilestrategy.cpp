@@ -326,44 +326,71 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
     std::string meta_data_post_id = fi->post_id();
 
     if(meta_data_post_id.empty()) {
-        Credentials file_cred;
-        crypto::GenerateCredentials(file_cred);
-        UpdateFileInfo(file_cred, filepath, "", "", fi);
+        // Get Folder post id
+        std::string folder_post_id;
+        if(RetrieveFolderPostId(filepath, folder_post_id)) {
+            std::string entity = GetConfigValue("entity");
 
-        std::string posturl = posts_feed_;
-        // New Post
-        std::cout<< " POST URL : " << posturl << std::endl;
-        FilePost p;
-        p.InitializeFilePost(fi, false);
-        std::string post_buffer;
-        jsn::SerializeObject(&p, post_buffer);
-
-        Response response;
-        status = netlib::HttpPost(posturl,
-                                  p.type(),
-                                  NULL,
-                                  post_buffer,
-                                  &access_token_,
-                                  response);
-        if(response.code == 200) {
-            std::cout<<" FILE INITIALIZED : " << response.body << std::endl;
-            Post post;
-            jsn::DeserializeObject(&post, response.body);
-            file_manager_->SetFilePostId(filepath, post.id());
-
-            post_id_out = post.id();
-            fi->set_post_id(post.id());
-            
-            FileInfo* ffi = RetrieveFileInfo(filepath);
-            std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;
-
+            Credentials file_cred;
+            crypto::GenerateCredentials(file_cred);
             UpdateFileInfo(file_cred, filepath, "", "", fi);
+
+            std::string posturl = posts_feed_;
+            // New Post
+            std::cout<< " POST URL : " << posturl << std::endl;
+            FilePost p;
+            p.InitializeFilePost(fi, false);
+            p.MentionPost(entity, folder_post_id);
+            std::string post_buffer;
+            jsn::SerializeObject(&p, post_buffer);
+
+            Response response;
+            status = netlib::HttpPost(posturl,
+                                      p.type(),
+                                      NULL,
+                                      post_buffer,
+                                      &access_token_,
+                                      response);
+            if(response.code == 200) {
+                std::cout<<" FILE INITIALIZED : " << response.body << std::endl;
+                Post post;
+                jsn::DeserializeObject(&post, response.body);
+                file_manager_->SetFilePostId(filepath, post.id());
+
+                post_id_out = post.id();
+                fi->set_post_id(post.id());
+                
+                FileInfo* ffi = RetrieveFileInfo(filepath);
+                std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;
+
+                UpdateFileInfo(file_cred, filepath, "", "", fi);
+            }
+            else {
+                status = ret::A_FAIL_NON_200;
+            }
         }
         else {
-            status = ret::A_FAIL_NON_200;
+            status = ret::A_FAIL_INVALID_FOLDER_POST;
         }
     }
     return status;
+}
+
+bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
+    std::cout<<" retrieving folder post id " << std::endl;
+    std::cout<<" filepath : " << filepath << std::endl;
+    // Get Parent folder
+    std::string folderpath;
+    fs::GetParentPath(filepath, folderpath);
+
+    bool ret = false;
+    Folder folder;
+    if(file_manager_->GetFolderEntry(folderpath, folder)) {
+        id_out = folder.folder_post_id();
+        ret = true;
+    }
+    std::cout<<" folder post id : " << id_out << std::endl;
+    return ret;
 }
 
 }//namespace
