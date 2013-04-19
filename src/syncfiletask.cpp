@@ -64,12 +64,8 @@ void SyncFileTask::RunTask() {
 
 int SyncFileTask::SyncMetaData(FilePost& out) {
     int status = ret::A_OK;
-
     std::string url;
     utils::FindAndReplace(GetPostPath(), "{post}", post_id_, url);
-    std::cout<<" post id : " << post_id_ << std::endl;
-    std::cout<<" SYNC META DATA URL : " << url << std::endl;
-
     Response response;
     AccessToken at = access_token();
     netlib::HttpGet( url,
@@ -87,7 +83,7 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
 
 int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     int status = ret::A_OK;
-    FileManager* fm = GetFileManager();
+    FileManager* fm = file_manager();
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
 
@@ -129,7 +125,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
             ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
             if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
                 // Move to trash;
-                fs::MoveFile(canonical_path, trash_path);
+                fs::MoveFileToFolder(canonical_path, trash_path);
             }
             else {
                 std::string msg = "Invalid trash_path";
