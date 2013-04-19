@@ -74,9 +74,14 @@ static int RegisterAttic(const std::string& entityurl,
         status = SendAppRegRequest(path, app, cred_path);
         if(status == ret::A_OK) {
             std::string c_path = entityurl; 
-            utils::CheckUrlAndRemoveTrailingSlash(c_path);
-            c_path += cred_path;
-            status = RetrieveAppCredentials(c_path, app);
+            utils::CheckUrlAndAppendTrailingSlash(c_path);
+            if(cred_path[0] == '/') 
+                cred_path.erase(0, 1);
+            if(c_path.find("http://") != std::string::npos) {
+                // TODO :: this
+            }
+            //c_path += cred_path;
+            status = RetrieveAppCredentials(cred_path, app);
             if(status == ret::A_OK) {
                 std::string app_url = ent.GetPreferredServer().oauth_auth();
                 ConstructAppAuthorizationURL(app_url, app, url_out);
