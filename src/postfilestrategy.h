@@ -51,6 +51,8 @@ private:
                           FileInfo::ChunkMap& out);
 
     bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
+
+    int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
 public:
     PostFileStrategy();
     ~PostFileStrategy();

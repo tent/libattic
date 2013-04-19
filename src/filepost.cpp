@@ -11,7 +11,8 @@ namespace attic {
 
 FilePost::FilePost(){
     set_type(cnst::g_attic_file_type);
-    deleted_ = 0;
+    deleted_ = false;
+    in_transit_ = false;
 }
 
 FilePost::~FilePost() {}
@@ -51,10 +52,8 @@ void FilePost::Serialize(Json::Value& root) {
     Json::Value content(Json::objectValue);
     content["name"] = name_;
     content["path"] = relative_path_;
-
-    char del[256] = {'\0'};
-    snprintf(del, 256, "%d", deleted_);
-    content["deleted"] = del;
+    content["deleted"] = deleted_;
+    content["in_transit"] = in_transit_;
     
     Json::Value chunkposts;//(Json::objectValue);
     SerializeChunkPosts(chunkposts);
@@ -95,8 +94,8 @@ void FilePost::Deserialize(Json::Value& root) {
 
     name_           = content.get("name", "").asString();
     relative_path_  = content.get("path", "").asString();
-    std::string del = content.get("deleted", "").asString();
-    deleted_ = atoi(del.c_str());
+    deleted_        = content.get("deleted", false).asBool();
+    in_transit_     = content.get("in_transit", false).asBool();
 
     std::string size = content.get("size", "").asString();
     file_size_ = atoi(size.c_str());

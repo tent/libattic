@@ -50,13 +50,13 @@ public:
     const std::string& encrypted_key() const        { return encrypted_key_; }
     const std::string& post_version() const         { return post_version_; }
 
-    int deleted() const                             { return deleted_; }
+    bool deleted() const                            { return deleted_; }
     unsigned int chunk_count() const                { return chunk_count_; }
     unsigned int file_size() const                  { return file_size_; }
 
     void set_filename(const std::string &filename)          { filename_ = filename; }
     void set_filepath(const std::string &filepath)          { filepath_ = filepath; }
-    void set_chunks(const ChunkMap& chunk_map)             { chunks_ = chunk_map; }
+    void set_chunks(const ChunkMap& chunk_map)              { chunks_ = chunk_map; }
     void set_chunk_count(const std::string& count)          { chunk_count_ = atoi(count.c_str()); }
     void set_chunk_count(const unsigned int unChunkCount)   { chunk_count_ = unChunkCount; }
     void set_file_size(const std::string& file)             { file_size_ = atoi(file.c_str()); }
@@ -71,7 +71,7 @@ public:
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
     void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 
     void set_deleted(const std::string& deleted)            { deleted_ = atoi(deleted.c_str()); }
-    void set_deleted(const int deleted)                     { deleted_ = deleted; }
+    void set_deleted(const bool deleted)                     { deleted_ = deleted; }
 private:    
     ChunkMap        chunks_;
     Credentials     file_credentials_; // File Specific credentials 
@@ -92,7 +92,7 @@ private:
     std::string     post_version_; // Version of the post the file is attached to
     unsigned int    chunk_count_; // depricated
     unsigned int    file_size_;   // Filesize, not compressed
-    int    deleted_; // Is the file deleted? // soft delete
+    bool            deleted_; // Is the file deleted? // soft delete
 };
 
 }//namespace

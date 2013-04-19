@@ -48,6 +48,11 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
 
             std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
+
+            if(status == ret::A_OK) { 
+                // Update meta data transit state
+                status = UpdateFilePostTransitState(meta_post_id, false);
+            }
         }
     }
     else {
@@ -123,7 +128,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
     //  - Check if a chunk group(post) exists, if it does update that post, else new post
    
     int status = ret::A_OK;
-
     ChunkBuffer cb;
     if(cb.OpenFile(filepath)) {
         std::string file_key = file_credentials.key();
@@ -337,10 +341,10 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
 
             std::string posturl = posts_feed_;
             // New Post
-            std::cout<< " POST URL : " << posturl << std::endl;
             FilePost p;
             p.InitializeFilePost(fi, false);
             p.MentionPost(entity, folder_post_id);
+            p.set_in_transit(true);
             std::string post_buffer;
             jsn::SerializeObject(&p, post_buffer);
 
@@ -373,6 +377,56 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             status = ret::A_FAIL_INVALID_FOLDER_POST;
         }
     }
+    else {
+        status = UpdateFilePostTransitState(meta_data_post_id, true);
+    }
+
+    return status;
+}
+
+int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, bool in_transit) {
+    int status = ret::A_OK;
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    FilePost p;
+    // Get Existing post
+    Response get_resp;
+    netlib::HttpGet(posturl,
+                    NULL,
+                    &access_token_,
+                    get_resp);
+    if(get_resp.code == 200) {
+        jsn::DeserializeObject(&p, get_resp.body);
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
+    }
+
+    if(status == ret::A_OK) {
+        Parent parent;
+        parent.version = p.version()->id;
+        // Set its transit state
+        p.set_in_transit(in_transit);
+        p.PushBackParent(parent);
+        // Put
+        std::string put_buffer;
+        jsn::SerializeObject(&p, put_buffer);
+
+        Response put_resp;
+        status = netlib::HttpPut(posturl,
+                                 p.type(),
+                                 NULL,
+                                 put_buffer,
+                                 &access_token_,
+                                 put_resp);
+        if(put_resp.code == 200) {
+            std::cout<<" success : " << put_resp.body << std::endl;
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+    }
+
     return status;
 }
 

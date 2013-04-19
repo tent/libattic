@@ -25,7 +25,7 @@ int SoftDeleteStrategy::Execute(FileManager* pFileManager,
 void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
     int status = ret::A_OK;
     std::string filepath = fi->filepath();
-    fi->set_deleted(1);
+    fi->set_deleted(true);
     file_manager_->SetFileDeleted(filepath, true);
 }
 
