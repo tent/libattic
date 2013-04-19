@@ -31,15 +31,30 @@ PullTask::PullTask(FileManager* pFm,
 
 PullTask::~PullTask() {}
 
+void PullTask::OnPaused() { 
+    std::cout<<" PULL TASK IS PAUSED " << std::endl;
+    if(!file_manager()->IsFileLocked(filepath())){
+        SetRunningState();
+    }
+}
+
 void PullTask::RunTask() {
     std::string filepath = TentTask::filepath();
 
-    event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
-    int status = PullFile(filepath);
-    event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
+    if(file_manager()->IsFileLocked(filepath))
+        SetPausedState();
+    else {
+        std::cout<<" RUNNING PULL TASK " << std::endl;
+        file_manager()->LockFile(filepath);
+        event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
+        int status = PullFile(filepath);
+        event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
+        file_manager()->UnlockFile(filepath);
 
-    Callback(status, filepath);
-    SetFinishedState();
+        std::cout<<" PULL TASK FINISHED : " << status << std::endl;
+        Callback(status, filepath);
+        SetFinishedState();
+    }
 }
 
 int PullTask::PullFile(const std::string& filepath) {
@@ -54,9 +69,8 @@ int PullTask::PullFile(const std::string& filepath) {
     Response resp;
 
     GetFileStrategy gfs;
-    HttpStrategyContext pullcontext(GetFileManager(), 
-                                    GetCredentialsManager());
-
+    HttpStrategyContext pullcontext(file_manager(), 
+                                    credentials_manager());
 
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
     std::string entity = TentTask::entity().entity();

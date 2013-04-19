@@ -30,38 +30,43 @@ PushTask::PushTask(FileManager* pFm,
 
 PushTask::~PushTask() {}
 
+void PushTask::OnPaused() { 
+    if(!file_manager()->IsFileLocked(filepath())){
+        SetRunningState();
+    }
+}
+
 void PushTask::RunTask() {
     // Run the task
     std::string filepath = TentTask::filepath();
 
-    event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
-    int status = PushFile(filepath);
-    event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+    if(file_manager()->IsFileLocked(filepath))
+        SetPausedState();
+    else {
+        file_manager()->LockFile(filepath);
+        event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
+        int status = PushFile(filepath);
+        event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+        file_manager()->UnlockFile(filepath);
     
-    // Callback
-    Callback(status, filepath);
-    SetFinishedState();
+        // Callback
+        Callback(status, filepath);
+        SetFinishedState();
+    }
 }
 
 // Note* path should not be relative, let the filemanager take care of
 // all the canonical to relative path conversions
 int PushTask::PushFile(const std::string& filepath) {
-
     int status = ret::A_OK;
-
     if(fs::CheckFilepathExists(filepath)) {
-        if(!GetFileManager()) std::cout<<" Invalid File Manager " << std::endl;
-        if(!GetCredentialsManager()) std::cout<<" Invalid Cred Manager " << std::endl;
+        if(!file_manager()) std::cout<<" Invalid File Manager " << std::endl;
+        if(!credentials_manager()) std::cout<<" Invalid Cred Manager " << std::endl;
 
-        PostFolderStrategy pfs;             // Check (and create) if directory posts exist
-        PostFileStrategy ps;                // Chunk and upload
-
-        HttpStrategyContext pushcontext(GetFileManager(), 
-                                        GetCredentialsManager());
+        HttpStrategyContext pushcontext(file_manager(), credentials_manager());
 
         std::string post_path = GetPostPath();
         std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-        
         std::string entity = TentTask::entity().entity();
 
         pushcontext.SetConfigValue("post_path", post_path);
@@ -69,7 +74,8 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("filepath", filepath);
         pushcontext.SetConfigValue("entity", entity);
 
-        // TODO :: check the folder post(s) first
+        PostFolderStrategy pfs;             // Check (and create) if directory posts exist
+        PostFileStrategy ps;                // Chunk and upload
         // push back post folder strategy
         pushcontext.PushBack(&pfs);
         pushcontext.PushBack(&ps); 
