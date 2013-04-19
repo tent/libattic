@@ -173,7 +173,6 @@ void Post::Serialize(Json::Value& root) {
             itr->second.Serialize(attachment);
             attachment_arr.append(attachment);
         }
-
         root["attachments"] = attachment_arr;
     }
 
@@ -266,6 +265,8 @@ void Post::Deserialize(Json::Value& root) {
             }
         }
     }
+
+    std::cout<<" Mentions count : " << mentions_.size() << std::endl;
 
 
     if(!root["app"].isNull()) {

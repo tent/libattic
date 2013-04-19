@@ -314,7 +314,8 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
             crypto::Base64DecodeString(b64_key, iv);
             out.set_file_credentials_iv(iv);
             //
-            out.set_deleted(res.results[10+step]);
+            std::cout<<" GET DELETED : " << res.results[10+step] << std::endl;
+            out.set_deleted(atoi(res.results[10+step]));
         }
     }
 

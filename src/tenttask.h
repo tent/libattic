@@ -59,11 +59,11 @@ public:
     const std::string& wokring_directory()  const { return working_directory_; }
     const std::string& config_directory()   const { return config_directory_; }
 
-    FileManager*        GetFileManager()        { return file_manager_; } 
-    CredentialsManager* GetCredentialsManager() { return credentials_manager_; } 
+    FileManager*        file_manager()        { return file_manager_; } 
+    CredentialsManager* credentials_manager() { return credentials_manager_; } 
 
     void set_file_manager(FileManager* fm)                  { file_manager_ = fm; }
-    void credentials_manager(CredentialsManager* cm)     { credentials_manager_ = cm; }
+    void set_credentials_manager(CredentialsManager* cm)     { credentials_manager_ = cm; }
 
     void set_access_token(const AccessToken& at)                 { access_token_ = at; }
     void set_entity(const Entity& entity)                        { entity_ = entity; }

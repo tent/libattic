@@ -50,7 +50,7 @@ void RenameTask::RunTask() {
 int RenameTask::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
     int status = ret::A_OK;
 
-    HttpStrategyContext rename_context(GetFileManager(), GetCredentialsManager());
+    HttpStrategyContext rename_context(file_manager(), credentials_manager());
     std::string post_path = GetPostPath();
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
     std::string entity = TentTask::entity().entity();

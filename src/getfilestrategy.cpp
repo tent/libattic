@@ -29,6 +29,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
     FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
     if(fi) {
+        std::cout<<" FILE : " << filepath << " DELETED : " << fi->deleted() << std::endl;
         if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
         // Retrieve file metadata
         FilePost meta_post;

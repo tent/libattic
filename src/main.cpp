@@ -348,25 +348,27 @@ TEST(AFILE, DELETE)
     SetConfigValue("working_dir", "./data");
     SetConfigValue("config_dir", "./config");
     SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("trash_path", "./data/temp"); // test trash dir
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
     ASSERT_EQ(status, attic::ret::A_OK);
 
-    status = EnterPassphrase("password");
+    status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     if(status == attic::ret::A_OK) {
         std::string rel("./data");
         std::string filepath;
         attic::fs::GetCanonicalPath(rel, filepath);
-        filepath += "/oglisv.pdf";
+        //filepath += "/oglisv.pdf";
+        filepath += "/" + g_File;
 
         status = DeleteFile(filepath.c_str());
         ASSERT_EQ(status, attic::ret::A_OK);
     }
 
-       sleep(10);
+   sleep(10);
 
     ShutdownLibAttic(NULL);
 }
@@ -462,6 +464,11 @@ TEST(TEST, SYNC)
     SetConfigValue("working_dir", "./data");
     SetConfigValue("config_dir", "./config");
     SetConfigValue("temp_dir", "./data/temp");
+
+    std::string rel = "./data/trash";
+    std::string trash;
+    attic::fs::GetCanonicalPath(rel, trash);
+    SetConfigValue("trash_path", trash.c_str()); // test trash dir
     SetConfigValue("entity_url", g_Entity.c_str());
     int status = InitLibAttic();
 
@@ -1261,7 +1268,13 @@ int main (int argc, char* argv[]) {
                     }
                     case DELETE:
                     {
-                        g_bDelete = true;
+                        if(argc > 3) {
+                            g_bDelete = true;
+                            g_File = argv[2];
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic DELETE <filename> " << std::endl;
+                        }
                         break;
                     }
                     case SYNC:

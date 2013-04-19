@@ -11,7 +11,6 @@
 #include "filesystem.h"
 
 #include "softdeletestrategy.h"
-#include "postfilemetadatastrategy.h"
 
 namespace attic { 
 
@@ -40,18 +39,18 @@ void DeleteTask::RunTask() {
 
     std::string filepath = TentTask::filepath();
     std::string post_path = TentTask::GetPostPath(); 
+    std::string entity = TentTask::entity().entity();
 
     SoftDeleteStrategy sds;
-    PostFileMetadataStrategy pmds;
 
-    HttpStrategyContext softdeletectx(GetFileManager(), 
-                                      GetCredentialsManager());
+    HttpStrategyContext softdeletectx(file_manager(), 
+                                      credentials_manager());
 
     softdeletectx.SetConfigValue("post_path", post_path);
     softdeletectx.SetConfigValue("filepath", filepath);
+    softdeletectx.SetConfigValue("entity", entity);
 
     softdeletectx.PushBack(&sds);
-    softdeletectx.PushBack(&pmds);
 
     status = softdeletectx.ExecuteAll();
     

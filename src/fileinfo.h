@@ -70,8 +70,9 @@ public:
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
     void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 
-    void set_deleted(const std::string& deleted)            { deleted_ = atoi(deleted.c_str()); }
-    void set_deleted(const bool deleted)                     { deleted_ = deleted; }
+    //void set_deleted(const std::string& deleted)            { deleted_ = atoi(deleted.c_str()); }
+    void set_deleted(const bool deleted)                    { deleted_ = deleted; }
+
 private:    
     ChunkMap        chunks_;
     Credentials     file_credentials_; // File Specific credentials 

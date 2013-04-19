@@ -143,29 +143,35 @@ int PollTask::SyncFolderPosts() {
 }
 
 int PollTask::SyncFolder(FolderPost& folder_post) {
+    std::cout<<" SYNCING FOLDER " << std::endl;
     int status = ret::A_OK;
     std::deque<FilePost> file_posts;
     status = RetrieveFilePosts(folder_post.id(), file_posts);
     if(status == ret::A_OK) {
         std::deque<FilePost>::iterator itr = file_posts.begin();
         for(;itr != file_posts.end(); itr++) {
-            if(!(*itr).deleted()) {
-                if(processing_queue_.find((*itr).id()) == processing_queue_.end()) {
-                    processing_queue_[(*itr).id()] = true;
-                    std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
-                    event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
-                                      (*itr).id(),
-                                      delegate_);
-                }
+            if(processing_queue_.find((*itr).id()) == processing_queue_.end()) {
+                processing_queue_[(*itr).id()] = true;
+                std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
+                event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                                  (*itr).id(),
+                                  delegate_);
             }
         }
+    }
+    else {
+        std::cout<<" RETRIEVE FILE POSTS STATUS : " << status << std::endl;
+
     }
     return status;
 }
 
 int PollTask::RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>& posts) {
     int status = ret::A_OK;
+    std::cout<<" RETRIEVE FILE POSTS " << std::endl;
     int postcount = GetFilePostCount(post_id);
+    std::cout<<" FILE POST COUNT : " << postcount << std::endl;
+    std::cout<<" POST ID : " << post_id << std::endl;
     if(postcount > 0) {
         Entity entity = TentTask::entity();
         std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
