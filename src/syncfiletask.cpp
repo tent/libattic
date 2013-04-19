@@ -91,7 +91,7 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
 
-    if(!p.deleted()) {
+    if(!p.deleted() && !p.in_transit()) {
         FileInfo fi;
         postutils::DeserializeFilePostIntoFileInfo(p, fi);
         // Check if file is in manifest
