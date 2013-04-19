@@ -139,6 +139,31 @@ static bool CheckFilepathExists(const std::string& filepath) {
     return false;
 }
 
+static void MoveFileToFolder(const std::string& filepath, const std::string& folderpath) {
+    std::string filename;
+    size_t pos = filepath.rfind("/");
+    if(pos != std::string::npos) {
+        filename = filepath.substr(pos);
+
+        std::string new_path = folderpath;
+        if(new_path[new_path.size()-1] != '/')
+            new_path.append("/");
+        new_path.append(filename);
+
+        boost::filesystem::path from(filepath);
+        boost::filesystem::path to(new_path);
+        for(int i=0; boost::filesystem::exists(to)!=false; i++) {
+            std::string suf = "(";
+            char buf[256] = {'\0'};
+            snprintf(buf, 256, "%d", i);
+            suf += buf; 
+            suf += ")";
+            to += suf;
+        }
+        boost::filesystem::rename(from, to);
+    }
+}
+
 static void MoveFile(const std::string& originalpath, const std::string& newpath) {
     boost::filesystem::path from_fp(originalpath);
     CreateDirectoryTree(newpath);
