@@ -5,6 +5,7 @@
 
 #include "task.h"
 #include "taskqueue.h"
+#include "sleep.h"
 
 namespace attic {
 
@@ -53,12 +54,14 @@ void ThreadWorker::PollTask(Task* pTask) {
             {
                 //std::cout<<" running task " << std::endl;
                 pTask->RunTask();
+                sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::PAUSED:
             {
                 std::cout<< " task paused " << std::endl;
                 pTask->OnPaused();
+                sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::FINISHED:
