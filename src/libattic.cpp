@@ -243,6 +243,15 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     return status;
 }
 
+
+int RenameFolder(const char* szFolderpath) {
+    if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    int status = IsLibInitialized();
+
+
+    return status;
+}
+
 int PollFiles(void) {
     int status = IsLibInitialized();
 

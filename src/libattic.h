@@ -62,6 +62,7 @@ int PushFile(const char* szFilePath);
 int PullFile(const char* szFilePath);
 int DeleteFile(const char* szFilePath);
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath);
+int RenameFolder(const char* szFolderpath);
 int PollFiles(void);
 
 int Pause(void);
