@@ -34,24 +34,33 @@ void RenameTask::RunTask() {
     int status = ret::A_OK;
 
     std::cout<<" Rename task run ... " << std::endl;
-    std::string old_file, new_file, folderpath;
-    context_.get_value("folderpath", folderpath);
-    if(folderpath.empty()) {
+    std::string filetype;
+    context_.get_value("file_type", filetype);
+    std::string file;
+    if(filetype == "file") {
+        std::string old_file, new_file;
         context_.get_value("original_filepath", old_file);
         context_.get_value("new_filepath", new_file);
         event::RaiseEvent(event::Event::PUSH, event::Event::START, old_file, NULL);
-        status = RenameFile(old_file, new_file);
+        status = RenameFile(filetype, old_file, new_file);
         event::RaiseEvent(event::Event::PUSH, event::Event::DONE, old_file, NULL);
+        file = new_file;
     }
-    else {
-        status = RenameFolder(folderpath);
+    else if(filetype == "folder") {
+        std::string old_folder, new_folder;
+        context_.get_value("original_folderpath", old_folder);
+        context_.get_value("new_folderpath", new_folder);
+        status = RenameFolder(filetype, old_folder, new_folder);
+        file = new_folder;
     }
 
-    Callback(status, new_file);
+    Callback(status, file);
     SetFinishedState();
 }
 
-int RenameTask::RenameFolder(const std::string& folderpath) {
+int RenameTask::RenameFolder(const std::string& file_type,
+                             const std::string& old_folderpath, 
+                             const std::string& new_folderpath) {
     int status = ret::A_OK;
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
@@ -59,7 +68,9 @@ int RenameTask::RenameFolder(const std::string& folderpath) {
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
     std::string entity = TentTask::entity().entity();
 
-    rename_context.SetConfigValue("folderpath", folderpath);
+    rename_context.SetConfigValue("file_type", file_type);
+    rename_context.SetConfigValue("original_folderpath", old_folderpath);
+    rename_context.SetConfigValue("new_folderpath", new_folderpath);
     rename_context.SetConfigValue("post_path", post_path);
     rename_context.SetConfigValue("posts_feed", posts_feed);
     rename_context.SetConfigValue("entity", entity);
@@ -72,7 +83,9 @@ int RenameTask::RenameFolder(const std::string& folderpath) {
     return status;
 }
 
-int RenameTask::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
+int RenameTask::RenameFile(const std::string& file_type, 
+                           const std::string& old_filepath, 
+                           const std::string& new_filepath) {
     int status = ret::A_OK;
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
@@ -80,6 +93,7 @@ int RenameTask::RenameFile(const std::string& old_filepath, const std::string& n
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
     std::string entity = TentTask::entity().entity();
 
+    rename_context.SetConfigValue("file_type", file_type);
     rename_context.SetConfigValue("post_path", post_path);
     rename_context.SetConfigValue("posts_feed", posts_feed);
     rename_context.SetConfigValue("entity", entity);

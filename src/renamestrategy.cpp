@@ -20,6 +20,18 @@ int RenameStrategy::Execute(FileManager* pFileManager,
     // Initialize meta post
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
+    std::string filetype = GetConfigValue("file_type");
+    if(filetype == "file") {
+        status = RenameFile();
+    }
+    else if(filetype == "folder") {
+        status = RenameFolder();
+    }
+    return status;
+}
+
+int RenameStrategy::RenameFile() {
+    int status = ret::A_OK;
     std::string old_filepath = GetConfigValue("original_filepath");
     std::string new_filepath = GetConfigValue("new_filepath");
     std::string entity = GetConfigValue("entity");
@@ -47,45 +59,73 @@ int RenameStrategy::Execute(FileManager* pFileManager,
         
         // Update meta post
         std::string meta_post_id = fi->post_id();
-        FilePost fp;
-        status = RetrieveFilePost(meta_post_id, fp);
-        if(status == ret::A_OK) {
-            fp.set_relative_path(relative);
-            std::cout<<" FILENAME : " << new_filename << std::endl;
-            fp.set_name(new_filename);
-
-            Parent parent;
-            parent.version = fp.version()->id;
-            fp.PushBackParent(parent);
-            
-            std::string body;
-            jsn::SerializeObject(&fp, body);
-
-            std::string posturl;
-            utils::FindAndReplace(post_path_, "{post}", meta_post_id, posturl);
-            std::cout<<" POST URL : " << posturl << std::endl;
-            Response resp;
-            netlib::HttpPut(posturl,
-                            fp.type(),
-                            NULL,
-                            body,
-                            &access_token_,
-                            resp);
-
-            if(resp.code == 200) {
-
-            }
-            else {
-                status = ret::A_FAIL_NON_200;
-            }
-            std::cout<<" code : " << resp.code << std::endl;
-            std::cout<<" body : " << resp.body << std::endl;
-        }
+        status = UpdateFileMetaPost(meta_post_id,
+                                    new_filepath,
+                                    relative);
+        
     }
     else {
         status = ret::A_FAIL_INVALID_FILE_INFO;
     }
+    return status;
+}
 
+int RenameStrategy::RenameFolder() {
+    int status = ret::A_OK;
+    std::string old_folderpath = GetConfigValue("original_folderpath"); 
+    std::string new_folderpath = GetConfigValue("new_folderpath");
+    std::string entity = GetConfigValue("entity");
+
+    return status;
+}
+
+int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id,
+                                         const std::string& foldername,
+                                         const std::string& relative_path) {
+    int status = ret::A_OK;
+
+
+    return status;
+}
+
+int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, 
+                                       const std::string& filename,
+                                       const std::string& relative_path) {
+    int status = ret::A_OK;
+    FilePost fp;
+    status = RetrieveFilePost(post_id, fp);
+    if(status == ret::A_OK) {
+        fp.set_relative_path(relative_path);
+        std::cout<<" FILENAME : " << filename << std::endl;
+        fp.set_name(filename);
+
+        Parent parent;
+        parent.version = fp.version()->id;
+        fp.PushBackParent(parent);
+        
+        std::string body;
+        jsn::SerializeObject(&fp, body);
+
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+        std::cout<<" POST URL : " << posturl << std::endl;
+        Response resp;
+        netlib::HttpPut(posturl,
+                        fp.type(),
+                        NULL,
+                        body,
+                        &access_token_,
+                        resp);
+
+        if(resp.code == 200) {
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+        std::cout<<" code : " << resp.code << std::endl;
+        std::cout<<" body : " << resp.body << std::endl;
+    }
     return status;
 }
 
