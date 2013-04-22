@@ -405,11 +405,22 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
 }
 
 bool FileManager::UpdateFolderEntry(Folder& folder) {
+    std::cout<<" FOLDER PATH : " << folder.folderpath() << std::endl;
+    std::cout<<" FOLDER ID : " << folder.manifest_id() << std::endl;
 
     bool ret = false;
     Lock();
-    ret = manifest_.UpdateFolderPath(folder.folderpath(), folder.manifest_id());
+    ret = manifest_.UpdateFolderPath(folder.manifest_id(), folder.folderpath() );
     Unlock();
+    return ret;
+}
+
+bool FileManager::UpdateFolderContents(Folder& folder) {
+    bool ret = false;
+    Lock();
+    ret = manifest_.UpdateAllFileInfoForFolder(folder.manifest_id());
+    Unlock();
+
     return ret;
 }
 

@@ -61,6 +61,7 @@ public:
                            const std::string& folder_post_id);
     bool UpdateFolderEntry(Folder& folder);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
+    bool UpdateFolderContents(Folder& folder);
 
     // File Queue
     bool LockFile(const std::string& filepath);
