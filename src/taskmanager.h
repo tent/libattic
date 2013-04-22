@@ -46,7 +46,7 @@ public:
     int SyncFile(const std::string& postid, TaskDelegate* pDel);
     int DeleteFile(const std::string& filepath, TaskDelegate* pDel);
     int RenameFile(const std::string& original_filepath, const std::string& new_filepath);
-    int RenameFolder(const std::string& folderpath);
+    int RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
 
     int CreateAndSpinOffTask(Task::TaskType tasktype, 
                              const TaskContext& tc, 

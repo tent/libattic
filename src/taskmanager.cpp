@@ -155,6 +155,7 @@ int TaskManager::PollFiles(TaskDelegate* pDel) {
 
 int TaskManager::RenameFile(const std::string& original_filepath, const std::string& new_filepath) {
     TaskContext tc;
+    tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
     tc.set_value("new_filepath", new_filepath);
     tc.set_value("temp_dir", temp_directory_);
@@ -163,9 +164,11 @@ int TaskManager::RenameFile(const std::string& original_filepath, const std::str
     return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
 }
 
-int TaskManager::RenameFolder(const std::string& folderpath) {
+int TaskManager::RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath) {
     TaskContext tc;
-    tc.set_value("folderpath", folderpath);
+    tc.set_value("file_type", "folder");
+    tc.set_value("original_folderpath", original_folderpath);
+    tc.set_value("new_folderpath", new_folderpath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
