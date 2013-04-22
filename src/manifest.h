@@ -91,17 +91,6 @@ public:
 
     bool UpdateFileInfoForFolder(const std::string& folderid);
 
-    // Folder Entry
-    bool IsFolderEntryInManifest(const std::string& filepath);
-    bool InsertFolderEnrty(const std::string& folderid, 
-                           const std::string& metapostid, 
-                           const std::string& type,
-                           const std::string& filepath);
-
-
-    bool SetFolderEntryMetapostID(const std::string& filepath, const std::string& metapostid);
-    bool GetFolderEntryMetapostID(const std::string& filepath, std::string& out);
-
     void SetDirectory(std::string &filepath); 
 private:
     sqlite3*            db_;
