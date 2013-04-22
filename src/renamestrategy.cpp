@@ -22,9 +22,11 @@ int RenameStrategy::Execute(FileManager* pFileManager,
     posts_feed_ = GetConfigValue("posts_feed");
     std::string filetype = GetConfigValue("file_type");
     if(filetype == "file") {
+        std::cout<<" RENAME FILE " << std::endl;
         status = RenameFile();
     }
     else if(filetype == "folder") {
+        std::cout<<" RENAME FOLDER  " << std::endl;
         status = RenameFolder();
     }
     return status;
@@ -73,17 +75,30 @@ int RenameStrategy::RenameFile() {
 int RenameStrategy::RenameFolder() {
     int status = ret::A_OK;
     std::string old_folderpath = GetConfigValue("original_folderpath"); 
-    std::string new_folderpath = GetConfigValue("new_folderpath");
+    std::string new_foldername = GetConfigValue("new_foldername");
     std::string entity = GetConfigValue("entity");
 
-    std::string folder_post_id;
+    std::cout<<" Original folderpath : " << old_folderpath << std::endl;
+    std::string parent;
+    fs::GetParentPath(old_folderpath, parent);
+    std::string relative;
+    file_manager_->GetRelativePath(parent, relative);
+    utils::CheckUrlAndAppendTrailingSlash(relative);
+    std::string folder_path = relative + new_foldername;
+
+    // Get parent, append new name
+    std::cout<<" new folderpath : " << folder_path << std::endl;
+
     Folder folder;
     if(file_manager_->GetFolderEntry(old_folderpath, folder)) {
-        status = UpdateFolderMetaPost(folder_post_id, 
-                                      new_folderpath, 
-                                      folder);
+        status = UpdateFolderMetaPost(folder_path, folder);
         if(status == ret::A_OK){
-            if(!file_manager_->UpdateFolderEntry(folder)) {
+            if(file_manager_->UpdateFolderEntry(folder)) {
+                // Update folder contents
+                file_manager_->UpdateFolderContents(folder);
+            }
+            else { 
+                std::cout<<" FAILED TO UPDATE FOLDER ENTRY : " << std::endl;
                 status = ret::A_FAIL_UPDATE_MANIFEST;
             }
         }
@@ -95,6 +110,8 @@ int RenameStrategy::RenameFolder() {
 int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& fp) {
     int status = ret::A_OK;
 
+    std::cout<<" RETRIEVE FOLDER POST " << std::endl;
+
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
     std::cout<<" POST URL : " << posturl << std::endl;
@@ -104,6 +121,8 @@ int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& f
                     NULL,
                     &access_token_,
                     response);
+    std::cout<<" CODE : " << response.code << std::endl;
+    std::cout<<" BODY : " << response.body << std::endl;
     if(response.code == 200) {
         jsn::DeserializeObject(&fp, response.body);
     }
@@ -114,15 +133,41 @@ int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& f
     return status;
 }
 
-int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id,
-                                         const std::string& folderpath, 
-                                         Folder& folder) { 
+int RenameStrategy::UpdateFolderMetaPost(const std::string& folderpath, Folder& folder) { 
     int status = ret::A_OK;
     FolderPost fp;
     status = RetrieveFolderPost(folder.folder_post_id(), fp);
     if(status == ret::A_OK) {
+        std::cout<<" SETTING FOLDERPATH : " << folderpath << std::endl;
         folder.set_folderpath(folderpath);
         fp.set_folder(folder);
+
+        Parent parent;
+        parent.version = fp.version()->id;
+        fp.PushBackParent(parent);
+        
+        std::string body;
+        jsn::SerializeObject(&fp, body);
+
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", folder.folder_post_id(), posturl);
+        std::cout<<" POST URL : " << posturl << std::endl;
+        Response resp;
+        netlib::HttpPut(posturl,
+                        fp.type(),
+                        NULL,
+                        body,
+                        &access_token_,
+                        resp);
+
+        if(resp.code == 200) {
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+        }
+        std::cout<<" code : " << resp.code << std::endl;
+        std::cout<<" body : " << resp.body << std::endl;
     }
 
     return status;
