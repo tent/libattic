@@ -49,6 +49,7 @@ public:
     const std::string& file_credentials_iv() const  { return file_credentials_.iv(); }
     const std::string& encrypted_key() const        { return encrypted_key_; }
     const std::string& post_version() const         { return post_version_; }
+    const std::string& folder_manifest_id() const   { return folder_manifest_id_; }
 
     bool deleted() const                            { return deleted_; }
     unsigned int chunk_count() const                { return chunk_count_; }
@@ -70,6 +71,7 @@ public:
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
     void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 
+    void set_folder_manifest_id(const std::string& id)      { folder_manifest_id_ = id; }
     //void set_deleted(const std::string& deleted)            { deleted_ = atoi(deleted.c_str()); }
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
@@ -79,6 +81,8 @@ private:
                                        // Key is used to encrypt chunks, an iv is specific to chunk
                                        // Iv is used to encrypt this key
     std::string     encrypted_key_;
+
+    std::string     folder_manifest_id_; // folderid in the manifest
 
     std::string     filename_;   // File within directory
     std::string     filepath_;   // Directory
