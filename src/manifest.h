@@ -82,6 +82,9 @@ public:
     bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
 
+    bool UpdateFolderPath(const std::string& folderid, const std::string& folderpath);
+
+
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
 

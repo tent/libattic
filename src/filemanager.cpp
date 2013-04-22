@@ -391,6 +391,15 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     return ret;
 }
 
+
+bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
+    Folder folder;
+    bool ret = GetFolderEntry(folderpath, folder);
+    id_out = folder.folder_post_id();
+
+    return ret;
+}
+
 bool FileManager::CreateFolderEntry(const std::string& folderpath, 
                                     const std::string& folder_post_id) {
     // Create Folder Entry
@@ -410,6 +419,15 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     ret = manifest_.InsertFolderInfo(relative, folder_post_id);
     Unlock();
 
+    return ret;
+}
+
+bool FileManager::UpdateFolderEntry(Folder& folder) {
+
+    bool ret = false;
+    Lock();
+    ret = manifest_.UpdateFolderPath(folder.folderpath(), folder.manifest_id());
+    Unlock();
     return ret;
 }
 

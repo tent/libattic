@@ -55,8 +55,10 @@ public:
 
     // Folder
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
+    bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
     bool CreateFolderEntry(const std::string& folderpath, 
                            const std::string& folder_post_id);
+    bool UpdateFolderEntry(Folder& folder);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
 
     // File Queue
