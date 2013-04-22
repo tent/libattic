@@ -123,24 +123,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
         manifest_.InsertFolderInfo(parent, "");
     }
     Unlock();
-
-    // File operations
-    Lock();
-    std::string folderid;
-    if(!manifest_.GetFolderID(parent, folderid)) {
-        std::cout<<" failed to find folder post " << std::endl;
-    }
-
-    std::string postid = pFi->post_id();
-    if(!manifest_.IsFolderEntryInManifest(relative)) {
-       manifest_.InsertFolderEnrty(folderid,   
-                                    postid, 
-                                    cnst::g_szFileType,       
-                                    relative);  
-    }
-    Unlock();
 }
- 
 
 int FileManager::RenameFile(const std::string& old_filepath, const std::string& new_filename) {
     int status = ret::A_OK;
@@ -196,18 +179,10 @@ void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
     }
 }
 
-void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid)
-{
+void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
     if(IsPathRelative(filepath)) {
         Lock();
         manifest_.UpdateFilePostID(filepath, postid);
-        Unlock();
-
-        Lock();
-        if(manifest_.IsFolderEntryInManifest(filepath))
-            manifest_.SetFolderEntryMetapostID(filepath, postid);
-        else 
-            std::cout<< "Could not find folder entry in MANIFEST " << std::endl;
         Unlock();
     }
     else {
@@ -215,11 +190,10 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
     }
 }
 
-
-
-void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid)
-{
+void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid) {
+    Lock();
     manifest_.UpdateFileChunkPostID(filepath, postid);
+    Unlock();
 }
 
 FileInfo* FileManager::CreateFileInfo() {
@@ -391,7 +365,6 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     return ret;
 }
 
-
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
@@ -399,6 +372,15 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
 
     return ret;
 }
+
+bool FileManager::GetFolderManifestId(const std::string& folderpath, std::string& id_out) {
+    Folder folder;
+    bool ret = GetFolderEntry(folderpath, folder);
+    id_out = folder.manifest_id();
+
+    return ret;
+}
+
 
 bool FileManager::CreateFolderEntry(const std::string& folderpath, 
                                     const std::string& folder_post_id) {
