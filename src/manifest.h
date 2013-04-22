@@ -87,8 +87,9 @@ public:
 
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
-
     bool RemoveFolderData(const std::string& folderpath);
+
+    bool UpdateFileInfoForFolder(const std::string& folderid);
 
     // Folder Entry
     bool IsFolderEntryInManifest(const std::string& filepath);

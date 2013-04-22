@@ -25,23 +25,6 @@ void Manifest::SetDirectory(std::string &filepath)  {
     utils::CheckUrlAndAppendTrailingSlash(filepath_);
     filepath_ += "manifest";
 }
-/*
- * Order to write out (and read in)
- * Manifest Header
- * - number of entries (unsigned long) 
- *
- * Entry
- * - Filename (str)
- * - Filepath (str)
- * - ChunkCount (unsigned int)
- * - ChunkData (str)
- * - FileSize (unsigned int)
- * - MetaPostID (str)
- * - ChunkPostID (str)
- * - PostVersion (unsigned int)
- * - Encrypted Key (blob) // Encrytped
- * - Iv (blob) // not encrypted
- */
 
 int Manifest::Initialize() {
     return OpenSqliteDb();
@@ -120,7 +103,7 @@ bool Manifest::CreateInfoTable() {
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
-    exc += " deleted INT, PRIMARY KEY(filepath ASC));";
+    exc += " deleted INT, folder_manifest_id TEXT, PRIMARY KEY(filepath ASC, folder_manifest_id ASC));";
 
     return PerformQuery(exc);
 }
@@ -316,6 +299,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
             //
             std::cout<<" GET DELETED : " << res.results[10+step] << std::endl;
             out.set_deleted(atoi(res.results[10+step]));
+            out.set_folder_manifest_id(res.results[11+step]);
         }
     }
 
@@ -325,6 +309,11 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
         return false;
 
     return true;
+}
+
+bool Manifest::UpdateFileInfoForFolder(const std::string& folderid) { 
+
+    return false;
 }
 
 int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
@@ -405,6 +394,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string chunkpostid = fi.chunk_post_id();
     std::string encryptedkey = fi.encrypted_key();
     std::string iv = fi.file_credentials_iv();
+    std::string folder_manifest_id = fi.folder_manifest_id();
     
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
@@ -427,8 +417,8 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " chunkpostid, postversion, encryptedkey, iv, deleted)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?);";
+    query += " chunkpostid, postversion, encryptedkey, iv, deleted, folder_manifest_id)";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
 
 
     // Prepare statement
@@ -507,6 +497,8 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 printf(" deleted Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
+            
+            ret = sqlite3_bind_text(stmt, 12, folder_manifest_id.c_str(), folder_manifest_id.size(), SQLITE_STATIC);
 
             ret = sqlite3_step(stmt);
             if(ret != SQLITE_DONE) {
