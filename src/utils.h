@@ -250,7 +250,7 @@ static void FindAndReplace(const std::string& in,
 
 static void ExtractSubPaths(const std::string& root, 
                             const std::string& filepath,
-                            std::vector<std::string> out) {
+                            std::vector<std::string>& out) {
     if(filepath.find(root) != std::string::npos) {
         unsigned int filepath_size = filepath.size();
         if(filepath_size) {
@@ -263,7 +263,7 @@ static void ExtractSubPaths(const std::string& root,
 
             size_t pos = std::string::npos;
             while(local_filepath != root) {
-                std::cout<<local_filepath << std::endl;
+                std::cout<< "LOCAL FILEPATH : " << local_filepath << std::endl;
                 out.push_back(local_filepath);
                 pos = local_filepath.rfind("/");
                 if(pos != std::string::npos) {

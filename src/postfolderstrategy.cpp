@@ -27,6 +27,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     for(;itr != dirs.end(); itr++) {
         Folder folder;
         if(!file_manager_->GetFolderEntry(*itr, folder)) {
+            std::cout<<" creating folder entry for : " << *itr << std::endl;
             // Create 
             file_manager_->CreateFolderEntry(*itr, "");
         }
@@ -74,6 +75,7 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder) {
 
 void PostFolderStrategy::ExtractDirectories(const std::string& filepath, 
                                             std::vector<std::string>& directories) {
+    std::cout<<" EXTRACTING DIRECTORIES " << std::endl;
     std::string working_dir = file_manager_->working_directory();
     std::string canonical;
     fs::GetCanonicalPath(filepath, canonical);
@@ -84,6 +86,8 @@ void PostFolderStrategy::ExtractDirectories(const std::string& filepath,
     
     directories.push_back(working_dir);
     utils::ExtractSubPaths(working_dir, canonical, directories);
+    std::cout<<" DIRS EXTRACTED : " << directories.size() << std::endl;
+    std::cout<<" dir : " << directories[0] << std::endl;
 }
 
 }//namespace
