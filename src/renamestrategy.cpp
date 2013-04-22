@@ -76,14 +76,54 @@ int RenameStrategy::RenameFolder() {
     std::string new_folderpath = GetConfigValue("new_folderpath");
     std::string entity = GetConfigValue("entity");
 
+    std::string folder_post_id;
+    Folder folder;
+    if(file_manager_->GetFolderEntry(old_folderpath, folder)) {
+        status = UpdateFolderMetaPost(folder_post_id, 
+                                      new_folderpath, 
+                                      folder);
+        if(status == ret::A_OK){
+            if(!file_manager_->UpdateFolderEntry(folder)) {
+                status = ret::A_FAIL_UPDATE_MANIFEST;
+            }
+        }
+    }
+
+    return status;
+}
+
+int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& fp) {
+    int status = ret::A_OK;
+
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    std::cout<<" POST URL : " << posturl << std::endl;
+
+    Response response;
+    netlib::HttpGet(posturl,
+                    NULL,
+                    &access_token_,
+                    response);
+    if(response.code == 200) {
+        jsn::DeserializeObject(&fp, response.body);
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
+    }
+
     return status;
 }
 
 int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id,
-                                         const std::string& foldername,
-                                         const std::string& relative_path) {
+                                         const std::string& folderpath, 
+                                         Folder& folder) { 
     int status = ret::A_OK;
-
+    FolderPost fp;
+    status = RetrieveFolderPost(folder.folder_post_id(), fp);
+    if(status == ret::A_OK) {
+        folder.set_folderpath(folderpath);
+        fp.set_folder(folder);
+    }
 
     return status;
 }

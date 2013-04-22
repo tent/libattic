@@ -5,6 +5,7 @@
 #include <string>
 #include "httpstrategy.h"
 #include "filepost.h"
+#include "folderpost.h"
 
 namespace attic { 
 
@@ -15,14 +16,15 @@ class RenameStrategy : public HttpStrategyInterface {
     int RenameFile();
     int RenameFolder();
     FileInfo* RetrieveFileInfo(const std::string& filepath);
+    int RetrieveFolderPost(const std::string& post_id, FolderPost& fp);
     int RetrieveFilePost(const std::string& post_id, FilePost& fp);
     int UpdateFileMetaPost(const std::string& post_id, 
                            const std::string& filename,
                            const std::string& relative_path);
 
     int UpdateFolderMetaPost(const std::string& post_id,
-                             const std::string& foldername,
-                             const std::string& relative_path);
+                             const std::string& folderpath,
+                             Folder& folder);
 public:
     RenameStrategy();
     ~RenameStrategy();
