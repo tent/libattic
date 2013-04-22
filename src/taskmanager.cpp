@@ -163,6 +163,15 @@ int TaskManager::RenameFile(const std::string& original_filepath, const std::str
     return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
 }
 
+int TaskManager::RenameFolder(const std::string& folderpath) {
+    TaskContext tc;
+    tc.set_value("folderpath", folderpath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
+}
+
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
     TaskContext tc;
