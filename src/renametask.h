@@ -13,7 +13,7 @@ class RenameTask : public TentTask {
                    const std::string& new_filepath);
     int RenameFolder(const std::string& file_type,
                      const std::string& old_folderpath, 
-                     const std::string& new_folderpath);
+                     const std::string& new_foldername);
 public:
     RenameTask(FileManager* pFm, 
                CredentialsManager* pCm,
