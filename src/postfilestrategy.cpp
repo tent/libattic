@@ -316,8 +316,16 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
 
 FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
     FileInfo* fi = file_manager_->GetFileInfo(filepath);
-    if(!fi)
+    if(!fi) { 
         fi = file_manager_->CreateFileInfo();
+        // Get folder id
+        std::string folderpath;
+        if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
+            std::string folderid;
+            file_manager_->GetFolderManifestId(folderpath, folderid);
+            fi->set_folder_manifest_id(folderid);
+        }
+    }
     return fi;
 }
 
