@@ -508,6 +508,28 @@ TEST(TEST, RENAME) {
 
     ShutdownLibAttic(NULL);
 }
+bool g_bRenameFolder = false;
+std::string old_folder, new_folder;
+TEST(TEST, FOLDER) { 
+    if(g_Entity.empty()) return;
+    if(!g_bRenameFolder) return;
+
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", g_Entity.c_str());
+    int status = InitLibAttic();
+    ASSERT_EQ(status, attic::ret::A_OK);
+
+    if(status == attic::ret::A_OK) {
+        EnterPassphrase("asdf");
+        status = RenameFolder(old_folder.c_str(), new_folder.c_str());
+        ASSERT_EQ(status, attic::ret::A_OK);
+    }
+    sleep(10);
+
+    ShutdownLibAttic(NULL);
+}
 
 // Non command driven tests //
 TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
@@ -1117,7 +1139,7 @@ int main (int argc, char* argv[]) {
    int status = 0;
 
     if(argc > 1) {
-        int optcount = 15;
+        int optcount = 16;
         char* options[] = {
             "REGISTERAPP",
             "REQUESTAUTHCODE",
@@ -1127,6 +1149,7 @@ int main (int argc, char* argv[]) {
             "PULL",
             "PUSH",
             "RENAME",
+            "RENAMEFOLDER",
             "DELETE",
             "SYNC",
             "QUERYMANIFEST",
@@ -1146,6 +1169,7 @@ int main (int argc, char* argv[]) {
             PULL,
             PUSH,
             RENAME,
+            RENAMEFOLDER,
             DELETE,
             SYNC,
             QUERYMANIFEST,
@@ -1264,6 +1288,19 @@ int main (int argc, char* argv[]) {
                         else {
                             std::cout<<" Invalid params, ./attic RENAME <old_filename> <new_filename> " << std::endl;
                         }
+                        break;
+                    }
+                    case RENAMEFOLDER:
+                    {
+                        if(argc > 4) {
+                            g_bRenameFolder = true;
+                            old_folder = argv[2];
+                            new_folder = argv[3];
+                        }
+                        else {
+                            std::cout<<" Invalid params, ./attic RENAMEFOLDER <old_folder> <new_folder> " << std::endl;
+                        }
+
                         break;
                     }
                     case DELETE:
