@@ -145,8 +145,8 @@ bool Manifest::PerformQuery(const std::string& query) const {
 //                       sqlite3 *db,          /* An open database */
 //                       const char *zSql,     /* SQL to be evaluated */
 //                       char ***pazResult,    /* Results of the query */
-//                       int *pnRow,           /* Number of result rows written here */
-//                       int *pnColumn,        /* Number of result columns written here */
+//                       int *prow_,           /* Number of result rows written here */
+//                       int *pcol_umn,        /* Number of result columns written here */
 //                       char **pzErrmsg       /* Error msg written here */
 //                       );
 //                      void sqlite3_free_table(char **result);
@@ -156,15 +156,15 @@ bool Manifest::PerformSelect(const std::string& select, SelectResult &out) const
 
     char *szError = NULL;
     //char **results;
-    //int nRow = 0;
-    //int nCol = 0; 
+    //int row_ = 0;
+    //int col_ = 0; 
     char *pzErr = NULL;
 
     int rc = sqlite3_get_table( db_,
                                 select.c_str(),       /* SQL to be evaluated */
-                                &out.results,  /* Results of the query */
-                                &out.nRow,     /* Number of result rows written here */
-                                &out.nCol,     /* Number of result columns written here */
+                                &out.results_,  /* Results of the query */
+                                &out.row_,     /* Number of result rows written here */
+                                &out.col_,     /* Number of result columns written here */
                                 &pzErr         /* Error msg written here */
                                );
 
@@ -187,7 +187,7 @@ bool Manifest::IsFileInManifest(const std::string &filepath) {
 
     SelectResult res;
     if(PerformSelect(pexc.c_str() ,res)) {
-        if(res.nRow)
+        if(res.row_)
             return true;
     }
 
@@ -204,7 +204,7 @@ bool Manifest::IsFolderInManifest(const std::string &folderpath) {
         
     SelectResult res;
     if(PerformSelect(exc.c_str() ,res)) {
-        if(res.nRow)
+        if(res.row_)
             return true;
     }
     return false;
@@ -221,7 +221,7 @@ bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
         
     SelectResult res;
     if(PerformSelect(exc.c_str() ,res)) {
-        if(res.nRow)
+        if(res.row_)
             return true;
     }
 
@@ -242,56 +242,49 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
         return false;
 
     int step = 0;
-    for(int i=0; i<res.nRow+1; i++) {
-        step = i*res.nCol;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
         //std::cout<< " step : " << step << std::endl;
 
         /*
-        for(int j=0; j<res.nCol; j++)
+        for(int j=0; j<res.col_; j++)
         {
-            std::cout << " Results : " << res.results[j+step] << std::endl;
+            std::cout << " Results : " << res.results_[j+step] << std::endl;
         }
         */
 
         if(step > 0) {
-            out.set_filename(res.results[0+step]);
-            out.set_filepath(res.results[1+step]);
-            out.set_chunk_count(res.results[2+step]);
-            out.LoadSerializedChunkData(res.results[3+step]);
-            out.set_file_size(res.results[4+step]);
-            out.set_post_id(res.results[5+step]);
-            out.set_chunk_post_id(res.results[6+step]);
-            out.set_post_version(res.results[7+step]);
-            //out.set_encrypted_key(res.results[8+step]);
+            out.set_filename(res.results_[0+step]);
+            out.set_filepath(res.results_[1+step]);
+            out.set_chunk_count(res.results_[2+step]);
+            out.LoadSerializedChunkData(res.results_[3+step]);
+            out.set_file_size(res.results_[4+step]);
+            out.set_post_id(res.results_[5+step]);
+            out.set_chunk_post_id(res.results_[6+step]);
+            out.set_post_version(res.results_[7+step]);
+            //out.set_encrypted_key(res.results_[8+step]);
             // File Key (Base64 encoded)
-            std::string b64_key = res.results[8+step];
+            std::string b64_key = res.results_[8+step];
             std::string key;
             crypto::Base64DecodeString(b64_key, key);
             out.set_encrypted_key(key);
             // IV (Base64 encoded)
-            //out.set_file_credentials_iv(res.results[9+step]);
-            std::string b64_iv = res.results[9+step];
+            //out.set_file_credentials_iv(res.results_[9+step]);
+            std::string b64_iv = res.results_[9+step];
             std::string iv;
             crypto::Base64DecodeString(b64_key, iv);
             out.set_file_credentials_iv(iv);
             //
-            std::cout<<" GET DELETED : " << res.results[10+step] << std::endl;
-            out.set_deleted(atoi(res.results[10+step]));
-            out.set_folder_manifest_id(res.results[11+step]);
+            std::cout<<" GET DELETED : " << res.results_[10+step] << std::endl;
+            out.set_deleted(atoi(res.results_[10+step]));
+            out.set_folder_manifest_id(res.results_[11+step]);
         }
     }
-
-    sqlite3_free_table(res.results);
 
     if(!step)
         return false;
 
     return true;
-}
-
-bool Manifest::UpdateFileInfoForFolder(const std::string& folderid) { 
-
-    return false;
 }
 
 int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
@@ -307,54 +300,59 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
     if(PerformSelect(pexc.c_str(), res)) {
 
         /*
-        std::cout << " Row count : " << res.nRow << std::endl;
-        std::cout << " Col count : " << res.nCol << std::endl;
+        std::cout << " Row count : " << res.row_ << std::endl;
+        std::cout << " Col count : " << res.col_ << std::endl;
         */
 
         int step = 0;
-        for(int i=0; i<res.nRow+1; i++) {
-            step = i*res.nCol;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
             /*
-            for(int j=0; j<res.nCol; j++)
+            for(int j=0; j<res.col_; j++)
             {
-                std::cout << " Results : " << res.results[j+step] << std::endl;
+                std::cout << " Results : " << res.results_[j+step] << std::endl;
             }
             */
 
             if(step > 0) {
                 FileInfo fi;
-                fi.set_filename(res.results[0+step]);
-                fi.set_filepath(res.results[1+step]);
-                fi.set_chunk_count(res.results[2+step]);
-                fi.LoadSerializedChunkData(res.results[3+step]);
-                fi.set_file_size(res.results[4+step]);
-                fi.set_post_id(res.results[5+step]);
-                fi.set_chunk_post_id(res.results[6+step]);
-                fi.set_post_version(res.results[7+step]);
-                //fi.set_encrypted_key(res.results[8+step]);
-                std::string b64_key = res.results[8+step];
-                std::string key;
-                crypto::Base64DecodeString(b64_key, key);
-                fi.set_encrypted_key(key);
-                //fi.set_file_credentials_iv(res.results[9+step]);
-                std::string b64_iv = res.results[9+step];
-                std::string iv;
-                crypto::Base64DecodeString(b64_iv, iv);
-                fi.set_file_credentials_iv(iv);
-                //
-                fi.set_deleted(res.results[10+step]);
-
+                ExtractFileInfoResults(res, step, fi);
                 out.push_back(fi);
             }
         }
-
-        sqlite3_free_table(res.results);
     }
     else {
         status = ret::A_FAIL_TO_QUERY_MANIFEST;
     }
 
     return status;
+}
+
+void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out) {
+    out.set_filename(res.results_[0+step]);
+    out.set_filepath(res.results_[1+step]);
+    out.set_chunk_count(res.results_[2+step]);
+    out.LoadSerializedChunkData(res.results_[3+step]);
+    out.set_file_size(res.results_[4+step]);
+    out.set_post_id(res.results_[5+step]);
+    out.set_chunk_post_id(res.results_[6+step]);
+    out.set_post_version(res.results_[7+step]);
+    //out.set_encrypted_key(res.results_[8+step]);
+    // File Key (Base64 encoded)
+    std::string b64_key = res.results_[8+step];
+    std::string key;
+    crypto::Base64DecodeString(b64_key, key);
+    out.set_encrypted_key(key);
+    // IV (Base64 encoded)
+    //out.set_file_credentials_iv(res.results_[9+step]);
+    std::string b64_iv = res.results_[9+step];
+    std::string iv;
+    crypto::Base64DecodeString(b64_key, iv);
+    out.set_file_credentials_iv(iv);
+    //
+    std::cout<<" GET DELETED : " << res.results_[10+step] << std::endl;
+    out.set_deleted(atoi(res.results_[10+step]));
+    out.set_folder_manifest_id(res.results_[11+step]);
 }
 
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
@@ -507,8 +505,36 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     return true;
 }
 
-bool Manifest::RemoveFileInfo(const std::string &filepath)
-{
+bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) { 
+    std::string query;
+    query += "SELECT * FROM \"";
+    query += g_infotable;
+    query += "\" WHERE folder_manifest_id=\"";
+    query += folderid;
+    query += "\";";
+
+    SelectResult res;
+    if(PerformSelect(query.c_str(), res)) {
+        int step = 0;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
+            if(step > 0) {
+                FileInfo fi;
+                ExtractFileInfoResults(res, step, fi);
+                // Update path
+                std::string folderid = fi.folder_manifest_id();
+                std::string path;
+                GetFolderPath(folderid, path);
+                // Update filepath
+                utils::CheckUrlAndAppendTrailingSlash(path);
+                path += fi.filename();
+                UpdateFilepath(fi.filepath(), path);
+            }
+        }
+    }
+}
+
+bool Manifest::RemoveFileInfo(const std::string &filepath) {
     std::string exc;
     exc += "DELETE FROM \"";
     exc += g_infotable;
@@ -529,7 +555,6 @@ bool Manifest::UpdateFileVersion(const std::string& filepath, const std::string&
     exc +="\";";
     return PerformQuery(exc);
 }
-
 
 bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val) {
     char szDel[256] = {'\0'};
@@ -620,6 +645,8 @@ bool Manifest::UpdateFolderPath(const std::string& folderid, const std::string& 
     exc += "\" WHERE folderid=\"";
     exc += folderid;
     exc += "\";";
+
+    std::cout<<" UPDATING FOLDER PATH : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -636,20 +663,42 @@ bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out) 
         return false;
 
     int step = 0;
-    for(int i=0; i<res.nRow+1; i++) {
-        step = i*res.nCol;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
         if(step > 0)
-            out = res.results[0+step];
+            out = res.results_[0+step];
     }
 
-    sqlite3_free_table(res.results);
     if(!step)
         return false;
     return true;
 }
 
-bool Manifest::GetFolderID(const std::string& folderpath, std::string& out)
-{
+bool Manifest::GetFolderPath(const std::string& folder_manifest_id, std::string& path_out) {
+    std::string query;
+    query += "SELECT folderpath FROM ";
+    query += g_foldertable;
+    query += " WHERE folderid=\"";
+    query += folder_manifest_id;
+    query+= "\"";
+
+    SelectResult res;
+    if(!PerformSelect(query.c_str(), res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0)
+            path_out = res.results_[0+step];
+    }
+
+    if(!step)
+        return false;
+    return true;
+}
+
+bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
     std::string query;
     query += "SELECT folderid FROM ";
     query += g_foldertable;
@@ -662,13 +711,15 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out)
         return false;
 
     int step = 0;
-    for(int i=0; i<res.nRow+1; i++) {
-        step = i*res.nCol;
-        if(step > 0)
-            out = res.results[0+step];
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) { 
+            out = res.results_[0+step];
+            std::cout<< " OOOOOOUT : " << out << std::endl;
+        }
+
     }
 
-    sqlite3_free_table(res.results);
     if(!step)
         return false;
     return true;

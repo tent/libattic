@@ -21,16 +21,24 @@
 namespace attic { 
 
 class SelectResult { 
+    friend class Manifest;
 public:
-    SelectResult() 
-    {
-        nRow = 0;
-        nCol = 0;
+    SelectResult() {
+        row_ = 0;
+        col_ = 0;
+    }
+    ~SelectResult() {
+        sqlite3_free_table(results_);
     }
 
-    char** results;
-    int nRow;
-    int nCol;
+    std::string operator[](const unsigned int n) { return results_[n]; }
+
+    int row() const { return row_; }
+    int col() const { return col_; }
+private:
+    char** results_;
+    int row_;
+    int col_;
 };
 
 class Manifest {
@@ -49,6 +57,8 @@ class Manifest {
 
     // InfoTable
     void CheckIfTableExists(const std::string &tableName);
+
+    void ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out);
 
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
@@ -81,15 +91,14 @@ public:
     bool IsFolderInManifestWithID(const std::string& folderid);
     bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
-
     bool UpdateFolderPath(const std::string& folderid, const std::string& folderpath);
 
-
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
+    bool GetFolderPath(const std::string& folder_manifest_id, std::string& path_out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
     bool RemoveFolderData(const std::string& folderpath);
 
-    bool UpdateFileInfoForFolder(const std::string& folderid);
+    bool UpdateAllFileInfoForFolder(const std::string& folderid);
 
     void SetDirectory(std::string &filepath); 
 private:
