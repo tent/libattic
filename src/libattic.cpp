@@ -243,14 +243,14 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     return status;
 }
 
-int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath) {
+int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
     if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(!szNewFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szNewFoldername) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) { 
         try { 
-            status = g_pTaskManager->RenameFolder(szOldFolderpath, szNewFolderpath);
+            status = g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
         }
         catch(std::exception& e) {
             attic::log::LogException("BBKJ23423*", e);
