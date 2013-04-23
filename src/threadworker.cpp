@@ -18,61 +18,76 @@ ThreadWorker::~ThreadWorker() {}
 // Once a thread is set to exist state, it cannot/shouldnot be changed back
 void ThreadWorker::Run() {
     std::cout<<" thread worker starting ... " << std::endl;
-    Task* pTask = NULL;
+    Task* task = NULL;
     while(!(state() == ThreadWorker::EXIT)) {
         if(state() == ThreadWorker::IDLE) {
             // Get a job
-            pTask = CentralTaskQueue::GetInstance()->SyncPopFront();
+            task = CentralTaskQueue::GetInstance()->SyncPopFront();
         }
 
-        if(pTask)  {
-            SetState(ThreadWorker::RUNNING);
-            PollTask(pTask);
+        if(task)  {
+            if(state() != ThreadWorker::SHUTDOWN)
+                SetState(ThreadWorker::RUNNING);
+            else 
+                task->SetFinishedState();
+            PollTask(&task);
         }
 
         if(state() == ThreadWorker::FINISHED) {
+            std::cout<<" THREAD WORKER FINISHED " << std::endl;
             // Do some finished step, then idle
             SetState(ThreadWorker::IDLE);
+        }
+
+        if(state() == ThreadWorker::SHUTDOWN) {
+            std::cout<<" THREAD EXIT " << std::endl;
+            SetThreadExit();
+            if(task) {
+                std::cout<<" TASK STILL EXISTS?!?!?!?! " << std::endl;
+                delete task;
+                task = NULL;
+            }
         }
 
         boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     }
     std::cout<<" thread  worker ending ... " << std::endl;
+    
 }
 
-void ThreadWorker::PollTask(Task* pTask) {
-    switch(pTask->state()) {
+void ThreadWorker::PollTask(Task** task) {
+    switch((*task)->state()) {
         case Task::IDLE:
             {
                 std::cout<<" starting task " << std::endl;
                 // Start the task
-                pTask->OnStart();
-                pTask->SetRunningState();
+                (*task)->OnStart();
+                (*task)->SetRunningState();
                 break;
             }
         case Task::RUNNING:
             {
                 //std::cout<<" running task " << std::endl;
-                pTask->RunTask();
+                (*task)->RunTask();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::PAUSED:
             {
                 std::cout<< " task paused " << std::endl;
-                pTask->OnPaused();
+                (*task)->OnPaused();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::FINISHED:
             {
                 std::cout<< " task finished " << std::endl;
-                pTask->OnFinished();
+                (*task)->OnFinished();
                 // cleanup task
-                if(pTask)
-                    delete pTask;
-                pTask = NULL;
-
+                if((*task)) { 
+                    delete (*task);
+                    (*task) = NULL;
+                }
                 SetState(ThreadWorker::FINISHED);
                 break;
             }
@@ -102,6 +117,12 @@ void ThreadWorker::SetState(ThreadState t) {
 void ThreadWorker::SetThreadExit() {
     Lock();
     state_ = ThreadWorker::EXIT;
+    Unlock();
+}
+
+void ThreadWorker::SetThreadShutdown() {
+    Lock();
+    state_ = ThreadWorker::SHUTDOWN;
     Unlock();
 }
 

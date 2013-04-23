@@ -9,6 +9,7 @@
 #include "polltask.h"
 #include "syncfiletask.h"
 #include "renametask.h"
+#include "servicetask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -127,8 +128,7 @@ Task* TaskFactory::CreateNewTentTask(Task::TaskType type,
                                      const AccessToken& at,          
                                      const Entity& entity,      
                                      const TaskContext& context,
-                                     TaskDelegate* callbackDelegate)
-{
+                                     TaskDelegate* callbackDelegate) {
 
     Task* t = NULL;
     switch(type)
@@ -199,6 +199,15 @@ Task* TaskFactory::CreateNewTentTask(Task::TaskType type,
                               callbackDelegate);             
             break;
         }
+        case Task::SERVICE:
+        {
+            t = new ServiceTask(pFm, 
+                                pCm,                
+                                at,                 
+                                entity,             
+                                context,            
+                                callbackDelegate);
+        }
         default:
         {
             std::cout<<" CREATING UNKNOWN TASK " << std::endl;
@@ -210,16 +219,14 @@ Task* TaskFactory::CreateNewTentTask(Task::TaskType type,
     return t;
 }
 
-void TaskFactory::LogUnknownTaskType(Task::TaskType type)
-{
+void TaskFactory::LogUnknownTaskType(Task::TaskType type) {
     char buf[256] = {'\0'};
     sprintf(buf, "%d", type);
     std::string a = "Unknown task type : ";
     a.append(buf);
 }
 
-int TaskFactory::RemoveActiveTask(Task* pTask) // Depricated
-{
+int TaskFactory::RemoveActiveTask(Task* pTask){ // Depricated
     int status = ret::A_OK;
     // Remove from active list
 
@@ -227,8 +234,7 @@ int TaskFactory::RemoveActiveTask(Task* pTask) // Depricated
     return status;
 }
 
-void TaskFactory::TaskFinished(int code, Task* pTask)
-{
+void TaskFactory::TaskFinished(int code, Task* pTask) {
     if(code == ret::A_OK && pTask) {
         // Reset task and return it into the active pool
     }
@@ -241,8 +247,7 @@ void TaskFactory::TaskFinished(int code, Task* pTask)
     }
 }
 
-int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type) // Depricated
-{
+int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type){ // Depricated
     int taskcount = -1;
 
     /*

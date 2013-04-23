@@ -13,16 +13,18 @@ class ThreadWorker : public MutexClass {
         IDLE = 0,
         RUNNING,
         EXIT,
-        FINISHED
+        FINISHED,
+        SHUTDOWN,
     };
 
-    void PollTask(Task* pTask);
+    void PollTask(Task** pTask);
     void SetState(ThreadState t);
 public:
     ThreadWorker();
     ~ThreadWorker();
 
     void SetThreadExit();
+    void SetThreadShutdown();
     int state();
 
     void Run();

@@ -9,9 +9,7 @@ namespace attic {
 class Task;
 class ThreadPool;
 
-class TaskArbiter : public MutexClass
-{
-
+class TaskArbiter : public MutexClass{
     TaskArbiter();
     TaskArbiter(const TaskArbiter& rhs) {}
     TaskArbiter operator=(const TaskArbiter& rhs) { return *this; }
@@ -26,9 +24,9 @@ public:
     int SpinOffTask(Task* pTask); // Spin off detached thread
 
 private:
-    static bool            m_bInitialized;
-    static TaskArbiter*    m_pInstance;
-    ThreadPool*            m_pPool;
+    static bool            initialized_;
+    static TaskArbiter*    instance_;
+    ThreadPool*            pool_;
 };
 
 }//namespace

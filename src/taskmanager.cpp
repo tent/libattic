@@ -30,13 +30,17 @@ TaskManager::~TaskManager() {}
 
 int TaskManager::Initialize() {
     int status = ret::A_OK;
-    status = task_factory_.Initialize();
-
-    event::RegisterForEvent(this, event::Event::REQUEST_PULL);
-    event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
-    event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
-    event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
-    //event::RegisterForEvent(this, event::Event::POLL);
+    status = StartUpServiceThread();
+    if(status == ret::A_OK) {
+        status = task_factory_.Initialize();
+        if(status == ret::A_OK) {
+            event::RegisterForEvent(this, event::Event::REQUEST_PULL);
+            event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
+            event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
+            event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
+            //event::RegisterForEvent(this, event::Event::POLL);
+        }
+    }
 
     return status;
 }
@@ -173,6 +177,11 @@ int TaskManager::RenameFolder(const std::string& original_folderpath, const std:
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
+}
+
+int TaskManager::StartUpServiceThread() {
+    TaskContext tc;
+    return CreateAndSpinOffTask(Task::SERVICE, tc, NULL);
 }
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {

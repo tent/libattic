@@ -7,30 +7,27 @@
 
 namespace attic { 
 
-TaskArbiter* TaskArbiter::m_pInstance = 0;
-bool TaskArbiter::m_bInitialized = false;
+TaskArbiter* TaskArbiter::instance_ = 0;
+bool TaskArbiter::initialized_ = false;
 
-TaskArbiter::TaskArbiter()
-{
-    m_pPool = new ThreadPool();
+TaskArbiter::TaskArbiter() {
+    pool_ = new ThreadPool();
 }
 
-TaskArbiter::~TaskArbiter()
-{
-    if(m_pPool) {
-        delete m_pPool;
-        m_pPool = NULL;
+TaskArbiter::~TaskArbiter() {
+    if(pool_) {
+        delete pool_;
+        pool_ = NULL;
     }
 }
 
-int TaskArbiter::Initialize(unsigned int poolSize)
-{
+int TaskArbiter::Initialize(unsigned int poolSize) {
     int status = ret::A_OK;
     Lock();
-    if(m_pPool)  {
-        m_pPool->Initialize();
-        m_pPool->ExtendPool(poolSize);
-        m_bInitialized = true;
+    if(pool_) {
+        pool_->Initialize();
+        pool_->ExtendPool(poolSize);
+        initialized_ = true;
     }
     else {
         status = ret::A_FAIL_INVALID_PTR;
@@ -39,39 +36,36 @@ int TaskArbiter::Initialize(unsigned int poolSize)
     return status; 
 }
 
-int TaskArbiter::Shutdown()
-{
+int TaskArbiter::Shutdown() {
     int status = ret::A_OK;
 
     Lock();
-    if(m_pPool)
-        status = m_pPool->Shutdown();
+    if(pool_)
+        status = pool_->Shutdown();
     Unlock();
 
-    if(m_pInstance) {
-        delete m_pInstance;
-        m_pInstance = NULL;
+    if(instance_) {
+        delete instance_;
+        instance_ = NULL;
     }
 
     CentralTaskQueue::GetInstance()->Shutdown();
     return status;
 }
 
-TaskArbiter* TaskArbiter::GetInstance()
-{
-    if(!m_pInstance)
-        m_pInstance = new TaskArbiter();
-    return m_pInstance;
+TaskArbiter* TaskArbiter::GetInstance() {
+    if(!instance_)
+        instance_ = new TaskArbiter();
+    return instance_;
 }
 
 // Spin off detached thread, (not explicitly detached,
 // but treated as such, in all actuallity on most platforms
 // its probably joinable)
-int TaskArbiter::SpinOffTask(Task* pTask)
-{
+int TaskArbiter::SpinOffTask(Task* pTask) {
     int status = ret::A_OK;
 
-    if(m_bInitialized) { 
+    if(initialized_) { 
         CentralTaskQueue::GetInstance()->SyncPushBack(pTask);
     }
     else

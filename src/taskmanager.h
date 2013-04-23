@@ -18,6 +18,7 @@ class CredentialsManager;
 class TaskDelegate;
 
 class TaskManager : public TaskFactoryDelegate, public event::EventListener {
+    int StartUpServiceThread();
 public:
     TaskManager(FileManager* pFm, 
                 CredentialsManager* pCm,

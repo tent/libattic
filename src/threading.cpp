@@ -31,7 +31,8 @@ int ThreadPool::Initialize() {
 int ThreadPool::Shutdown() {
     std::cout<<" shutting down pool " << std::endl;
     for(unsigned int i=0; i<m_Workers.size(); i++) {
-        m_Workers[i]->SetThreadExit();
+        //m_Workers[i]->SetThreadExit();
+        m_Workers[i]->SetThreadShutdown();
     }
 
     std::cout<<" joining threads ... " << std::endl;

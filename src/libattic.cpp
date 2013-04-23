@@ -83,7 +83,7 @@ int InitLibAttic(unsigned int threadCount) {
     g_pClient->LoadPhraseToken();
 
     if(status == attic::ret::A_OK)  {
-        attic::event::EventSystem::GetInstance()->Initialize();
+        //attic::event::EventSystem::GetInstance()->Initialize();
         // Essential
         status = attic::liba::InitializeTaskArbiter(threadCount);
         // Try to load a master key if we have one
@@ -120,7 +120,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     // Shutdown threading first, ALWAYS
     status = attic::liba::ShutdownTaskArbiter();
     status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
-    attic::event::ShutdownEventSystem();
+    //attic::event::ShutdownEventSystem();
     g_pTaskManager = NULL;
 
     if(g_pClient) {

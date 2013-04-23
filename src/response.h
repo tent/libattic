@@ -10,6 +10,10 @@ namespace attic {
 
 class Response {
 public:
+    Response() {
+        code = 0;
+    }
+
     std::string CodeAsString() {
         char buf[256]={'\0'};                
         snprintf(buf ,256 ,"%d", code);             
@@ -27,7 +31,7 @@ public:
         header.ParseString(in);
     }
 
-    int code =0;                             
+    int code;
     std::string body;                        
     HttpHeader header;  // Response Header
 };                                           
