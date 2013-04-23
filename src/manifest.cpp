@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include <vector>
 
 #include "utils.h"
 #include "crypto.h"
