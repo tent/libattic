@@ -27,8 +27,7 @@ public:
     RenameStrategy();
     ~RenameStrategy();
 
-    int Execute(FileManager* pFileManager,
-                CredentialsManager* pCredentialsManager);
+    int Execute(FileManager* pFileManager, CredentialsManager* pCredentialsManager);
 };
 
 } //namespace

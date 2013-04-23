@@ -10,7 +10,7 @@ namespace attic {
 class RenameTask : public TentTask {
     int RenameFile(const std::string& file_type,
                    const std::string& old_filepath, 
-                   const std::string& new_filepath);
+                   const std::string& new_filename);
     int RenameFolder(const std::string& file_type,
                      const std::string& old_folderpath, 
                      const std::string& new_foldername);

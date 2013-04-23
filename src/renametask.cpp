@@ -38,13 +38,13 @@ void RenameTask::RunTask() {
     context_.get_value("file_type", filetype);
     std::string file;
     if(filetype == "file") {
-        std::string old_file, new_file;
+        std::string old_file, new_filename;
         context_.get_value("original_filepath", old_file);
-        context_.get_value("new_filepath", new_file);
+        context_.get_value("new_filename", new_filename);
         event::RaiseEvent(event::Event::PUSH, event::Event::START, old_file, NULL);
-        status = RenameFile(filetype, old_file, new_file);
+        status = RenameFile(filetype, old_file, new_filename);
         event::RaiseEvent(event::Event::PUSH, event::Event::DONE, old_file, NULL);
-        file = new_file;
+        file = new_filename;
     }
     else if(filetype == "folder") {
         std::string old_folder, new_folder_name;
@@ -85,7 +85,7 @@ int RenameTask::RenameFolder(const std::string& file_type,
 
 int RenameTask::RenameFile(const std::string& file_type, 
                            const std::string& old_filepath, 
-                           const std::string& new_filepath) {
+                           const std::string& new_filename) {
     int status = ret::A_OK;
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
@@ -98,7 +98,7 @@ int RenameTask::RenameFile(const std::string& file_type,
     rename_context.SetConfigValue("posts_feed", posts_feed);
     rename_context.SetConfigValue("entity", entity);
     rename_context.SetConfigValue("original_filepath", old_filepath);
-    rename_context.SetConfigValue("new_filepath", new_filepath);
+    rename_context.SetConfigValue("new_filename", new_filename);
 
     RenameStrategy rs;
     rename_context.PushBack(&rs);

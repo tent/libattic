@@ -35,23 +35,19 @@ int RenameStrategy::Execute(FileManager* pFileManager,
 int RenameStrategy::RenameFile() {
     int status = ret::A_OK;
     std::string old_filepath = GetConfigValue("original_filepath");
-    std::string new_filepath = GetConfigValue("new_filepath");
+    std::string new_filename = GetConfigValue("new_filename");
     std::string entity = GetConfigValue("entity");
 
     FileInfo* fi = RetrieveFileInfo(old_filepath);
     if(fi) {
         // Update File Info
-        //
-        std::string new_filename;
-        utils::ExtractFileName(new_filepath, new_filename);
         std::cout<< " new filename : " << new_filename << std::endl;
 
         status = file_manager_->RenameFile(old_filepath, new_filename);
         std::cout<<" RENAME LOCAL CACHE FILE STATUS : " << status << std::endl;
         std::string relative;
-        std::cout<<" NEW FILEPATH : " << new_filepath << std::endl;
         std::string parent_dir;
-        fs::GetParentPath(new_filepath, parent_dir);
+        fs::GetParentPath(old_filepath, parent_dir);
         std::cout<<" Parent dir : " << parent_dir << std::endl;
         std::cout<<" filename : " << new_filename << std::endl;
 
