@@ -1,7 +1,6 @@
 #include "filemanager.h"
 
 #include <string>
-#include <vector>
 #include <iostream>
 
 #include "filesystem.h"
@@ -224,15 +223,13 @@ void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
 
 }
 
-bool FileManager::IsPathRelative(const std::string& filepath)
-{
+bool FileManager::IsPathRelative(const std::string& filepath) {
     if(filepath.find(cnst::g_szWorkingPlaceHolder) != std::string::npos)
         return true;
     return false;
 }
 
-bool FileManager::DoesFileExist(const std::string& filepath)
-{
+bool FileManager::DoesFileExist(const std::string& filepath) {
     bool stat = false;
     if(IsPathRelative(filepath)) {
         Lock();
@@ -246,8 +243,7 @@ bool FileManager::DoesFileExist(const std::string& filepath)
     return stat;
 }
 
-bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::string& out)
-{
+bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::string& out) {
     bool retval = false;
 
     if(filepath.find(working_directory_) != std::string::npos) {
@@ -448,9 +444,16 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
     return ret;
 }
 
-int FileManager::GetAllFileInfo(std::vector<FileInfo>& out) {
+int FileManager::GetAllFileInfo(std::deque<FileInfo>& out) {
     Lock();
     int status = manifest_.QueryAllFiles(out);
+    Unlock();
+    return status;
+}
+
+int FileManager::GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out) {
+    Lock();
+    int status = manifest_.QueryAllFilesForFolder(folderid, out);
     Unlock();
     return status;
 }

@@ -62,7 +62,7 @@ int RenameStrategy::RenameFile() {
         // Update meta post
         std::string meta_post_id = fi->post_id();
         status = UpdateFileMetaPost(meta_post_id,
-                                    new_filepath,
+                                    new_filename,
                                     relative);
         
     }
@@ -96,6 +96,20 @@ int RenameStrategy::RenameFolder() {
             if(file_manager_->UpdateFolderEntry(folder)) {
                 // Update folder contents
                 file_manager_->UpdateFolderContents(folder);
+                // Retrieve Contents file info, and update
+                std::deque<FileInfo> fi_list;
+                file_manager_->GetAllFileInfoForFolder(folder.manifest_id(), fi_list);
+
+                std::cout<<" NUMBER OF FILES IN FOLDER : " << fi_list.size() << std::endl;
+
+                // Update meta post
+                std::deque<FileInfo>::iterator itr = fi_list.begin();
+                for(;itr != fi_list.end(); itr++) {
+                    status = UpdateFileMetaPost((*itr).post_id(),
+                                                (*itr).filename(),
+                                                (*itr).filepath());
+                }
+
             }
             else { 
                 std::cout<<" FAILED TO UPDATE FOLDER ENTRY : " << std::endl;

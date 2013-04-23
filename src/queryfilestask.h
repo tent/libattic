@@ -2,13 +2,14 @@
 #define QUERYFILESTASK_H_
 #pragma once
 
+#include <deque>
 #include "manifesttask.h"
 #include "fileinfo.h"
 
 namespace attic { 
 
 class QueryFilesTask : public ManifestTask {
-    int CreateCStringListsAndCallBack(std::vector<FileInfo>& vec);
+    int CreateCStringListsAndCallBack(std::deque<FileInfo>& vec);
 public:
     QueryFilesTask(FileManager* pFm,
                    const TaskContext& context,

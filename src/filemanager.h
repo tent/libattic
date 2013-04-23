@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <string>
+#include <deque>
 
 #include "mutexclass.h"
 #include "manifest.h"
@@ -45,7 +46,9 @@ public:
     void GetCanonicalFilepath(const std::string& relativepath, std::string& out);
 
     bool DoesFileExist(const std::string& filepath);
-    int GetAllFileInfo(std::vector<FileInfo>& out);
+    int GetAllFileInfo(std::deque<FileInfo>& out);
+    int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
+
     FileInfo* GetFileInfo(const std::string &filepath);
 
     void SetFileVersion(const std::string& filepath, const std::string& version);

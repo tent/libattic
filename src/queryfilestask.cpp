@@ -1,6 +1,6 @@
 #include "queryfilestask.h"
 
-#include <vector>
+
 #include <string>
 
 #include "errorcodes.h"
@@ -21,14 +21,14 @@ QueryFilesTask::QueryFilesTask(FileManager* pFm,
 QueryFilesTask::~QueryFilesTask() {}
 
 void QueryFilesTask::RunTask() {
-    std::vector<FileInfo> vec;                          
+    std::deque<FileInfo> vec;                          
     file_manager()->GetAllFileInfo(vec); // blocking
     CreateCStringListsAndCallBack(vec);
 
     SetFinishedState();
 }
 
-int QueryFilesTask::CreateCStringListsAndCallBack(std::vector<FileInfo>& vec) {
+int QueryFilesTask::CreateCStringListsAndCallBack(std::deque<FileInfo>& vec) {
     int status = ret::A_OK;
 
     unsigned int size = vec.size();
