@@ -1,5 +1,8 @@
 #include "servicetask.h"
 
+#include <iostream>
+#include "sleep.h"
+
 namespace attic { 
 
 ServiceTask::ServiceTask(FileManager* pFm,
@@ -21,13 +24,23 @@ ServiceTask::ServiceTask(FileManager* pFm,
  
 ServiceTask::~ServiceTask() {}
 
+
 void ServiceTask::OnStart() {
+    std::cout<<" SERVICE TASK ON START " << std::endl;
+    event::EventSystem::GetInstance()->Initialize();
 
 }
 
 void ServiceTask::OnPaused() {}
-void ServiceTask::OnFinished() {}
+void ServiceTask::OnFinished() {
+    std::cout<<" SERVICE TASK ON FINISHED " << std::endl;
+    event::EventSystem::GetInstance()->Shutdown();
+}
 
-void ServiceTask::RunTask() {}
+void ServiceTask::RunTask() {
+    std::cout<<" RUNNING SERVICE TASK " << std::endl;
+    event::EventSystem::GetInstance()->ProcessEvents();
+
+}
 
 } //namespace
