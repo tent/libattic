@@ -10,7 +10,7 @@
 #pragma once
 
 #include <fstream>
-#include <vector>
+#include <deque>
 #include <string>
 #include <map>
 #include <sqlite3.h>
@@ -62,6 +62,7 @@ class Manifest {
 
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
+    typedef std::deque<FileInfo> FileInfoList;
 
     Manifest();
     ~Manifest();
@@ -81,7 +82,8 @@ public:
     bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
 
     bool QueryForFile(const std::string &filename, FileInfo& out);
-    int QueryAllFiles(std::vector<FileInfo>& out);
+    int QueryAllFiles(FileInfoList& out);
+    int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
 
     bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filename);

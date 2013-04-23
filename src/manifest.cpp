@@ -287,7 +287,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
     return true;
 }
 
-int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
+int Manifest::QueryAllFiles(FileInfoList& out) {
     int status = ret::A_OK;
 
     std::string pexc;
@@ -296,9 +296,7 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
     pexc += ";";
 
     SelectResult res;
-    
     if(PerformSelect(pexc.c_str(), res)) {
-
         /*
         std::cout << " Row count : " << res.row_ << std::endl;
         std::cout << " Col count : " << res.col_ << std::endl;
@@ -314,6 +312,33 @@ int Manifest::QueryAllFiles(std::vector<FileInfo>& out) {
             }
             */
 
+            if(step > 0) {
+                FileInfo fi;
+                ExtractFileInfoResults(res, step, fi);
+                out.push_back(fi);
+            }
+        }
+    }
+    else {
+        status = ret::A_FAIL_TO_QUERY_MANIFEST;
+    }
+
+    return status;
+}
+
+int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out) {
+    int status = ret::A_OK;
+    std::string query;
+    query += "SELECT * FROM ";
+    query += g_infotable;
+    query += " WHERE folder_manifest_id=\"";
+    query += folderid;
+    query += "\";";
+    SelectResult res;
+    if(PerformSelect(query.c_str(), res)) {
+        int step = 0;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
             if(step > 0) {
                 FileInfo fi;
                 ExtractFileInfoResults(res, step, fi);
