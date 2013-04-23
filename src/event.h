@@ -106,10 +106,9 @@ static void RaiseEvent(const Event& event) {
     EventSystem::GetInstance()->RaiseEvent(event);
 }
 
-static void RaiseEvent( const Event::EventType type, 
-                        const std::string& value, 
-                        TaskDelegate* delegate)
-{
+static void RaiseEvent(const Event::EventType type, 
+                       const std::string& value, 
+                       TaskDelegate* delegate) {
     Event event;
     event.type = type;
     event.value = value;
@@ -117,11 +116,10 @@ static void RaiseEvent( const Event::EventType type,
     RaiseEvent(event);
 }
 
-static void RaiseEvent( const Event::EventType type,
-                        const Event::EventStatus status,
-                        const std::string& value,
-                        TaskDelegate* delegate)
-{
+static void RaiseEvent(const Event::EventType type,
+                       const Event::EventStatus status,
+                       const std::string& value,
+                       TaskDelegate* delegate) {
     Event event;
     event.type = type;
     event.status = status;
