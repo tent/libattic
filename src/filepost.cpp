@@ -45,6 +45,14 @@ void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
         else {
             std::cout<<" INVALID CHUNK LIST : " << std::endl;
         }
+
+        FileInfo::AliasMap* alias_list = fi->GetAliasMap();
+        if(alias_list) {
+            FileInfo::AliasMap::iterator itr = alias_list->begin();
+            for(; itr != alias_list->end(); itr++) {
+                past_aliases_.push_back(itr->first);
+            }
+        }
     }
 }
 
@@ -62,6 +70,10 @@ void FilePost::Serialize(Json::Value& root) {
     Json::Value chunkids;
     SerializeChunkIds(chunkids);
     content["chunk_ids"] = chunkids;
+
+    Json::Value aliases;
+    SerializePastAliases(aliases);
+    content["past_aliases"] = aliases;
 
     std::string key_data;
     crypto::Base64EncodeString(key_data_, key_data);
@@ -86,6 +98,10 @@ void FilePost::SerializeChunkIds(Json::Value& val) {
     jsn::SerializeVector(chunk_ids_, val);
 }
 
+void FilePost::SerializePastAliases(Json::Value& val) {
+    jsn::SerializeVector(past_aliases_, val);
+}
+
 void FilePost::Deserialize(Json::Value& root) {
     Post::Deserialize(root);
 
@@ -102,6 +118,7 @@ void FilePost::Deserialize(Json::Value& root) {
 
     DeserializeChunkPosts(content["chunk_posts"]);
     DeserializeChunkIds(content["chunk_ids"]);
+    DeserializePastAliases(content["past_aliases"]);
 
     std::string key_data = content["kdata"].asString();
     std::string iv_data = content["vdata"].asString();
@@ -116,6 +133,10 @@ void FilePost::DeserializeChunkPosts(Json::Value& val) {
 
 void FilePost::DeserializeChunkIds(Json::Value& val) {
     jsn::DeserializeIntoVector(val, chunk_ids_);
+}
+
+void FilePost::DeserializePastAliases(Json::Value& val) {
+    jsn::DeserializeIntoVector(val, past_aliases_);
 }
 
 } //namespace

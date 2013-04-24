@@ -21,15 +21,19 @@ public:
     void Serialize(Json::Value& root);  
     void SerializeChunkPosts(Json::Value& val);
     void SerializeChunkIds(Json::Value& val);
+    void SerializePastAliases(Json::Value& val);
 
     void Deserialize(Json::Value& root);
     void DeserializeChunkPosts(Json::Value& val);
     void DeserializeChunkIds(Json::Value& val);
+    void DeserializePastAliases(Json::Value& val);
 
     void PushBackChunkPostId(const std::string& postId) { chunk_posts_.push_back(postId); }
     void PushBackChunkIdentifier(const std::string& id) { chunk_ids_.push_back(id); }
+    void PushBackAlias(const std::string& alias)        { past_aliases_.push_back(alias); }
 
     std::vector<std::string> GetChunkPosts() const { return chunk_posts_; }
+    std::vector<std::string> GetPastAliases() const { return past_aliases_; }
 
     const std::string& name() const          { return name_; }
     const std::string& relative_path() const { return relative_path_; }
@@ -51,6 +55,7 @@ public:
 private:
     std::vector<std::string> chunk_posts_;
     std::vector<std::string> chunk_ids_;
+    std::vector<std::string> past_aliases_;
 
     // Attic specific post                       
     std::string name_;                  // Name of file
@@ -58,7 +63,6 @@ private:
     std::string key_data_;
     std::string iv_data_;
     std::string checksum_;
-
 
     unsigned int file_size_;
     bool in_transit_;

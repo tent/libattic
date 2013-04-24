@@ -15,6 +15,7 @@ class FileInfo {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
     typedef std::map<std::string, ChunkInfo> ChunkMap;
+    typedef std::map<std::string, bool> AliasMap;
 
     FileInfo( const std::string& filename,
               const std::string& filepath,
@@ -27,14 +28,19 @@ public:
     bool InitializeFile(const std::string &filepath); // Init a file
 
     int PushChunkBack(ChunkInfo& chunk);
+    void PushBackAlias(const std::string& alias);
+    bool HasAlias(const std::string& alias);
     ChunkInfo* GetChunkInfo(const std::string& chunkname);
     ChunkMap* GetChunkInfoList() { return &chunks_; }
+    AliasMap* GetAliasMap() { return &past_aliases_; }
 
     bool DoesChunkExist(const std::string& chunk_name);
 
+    void GetSerializedAliasData(std::string& out) const;
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
     bool LoadSerializedChunkPost(const std::string& data);
+    bool LoadSerializedAliasData(const std::string& data);
     bool HasEncryptedKey();
     bool IsValid() { return !filename_.empty(); }
     
@@ -76,6 +82,7 @@ public:
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
 private:    
+    AliasMap        past_aliases_;
     ChunkMap        chunks_;
     Credentials     file_credentials_; // File Specific credentials 
                                        // Key is used to encrypt chunks, an iv is specific to chunk
