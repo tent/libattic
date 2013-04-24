@@ -126,6 +126,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 
 int FileManager::RenameFile(const std::string& old_filepath, const std::string& new_filename) {
     int status = ret::A_OK;
+    std::cout<<" OLD FILEPATH : " << old_filepath << std::endl;
     FileInfo* fi = GetFileInfo(old_filepath);
     if(fi) {
         std::string relative_filepath;
@@ -295,8 +296,7 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     return retval;
 } 
 
-FileInfo* FileManager::GetFileInfo(const std::string &filepath)
-{
+FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     FileInfo* pFi = NULL;
     std::string relative;
     if(!IsPathRelative(filepath)) {

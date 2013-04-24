@@ -41,25 +41,28 @@ int RenameStrategy::RenameFile() {
     FileInfo* fi = RetrieveFileInfo(old_filepath);
     if(fi) {
         // Update File Info
+        std::cout<< " original filepath : " << old_filepath << std::endl;
         std::cout<< " new filename : " << new_filename << std::endl;
 
         status = file_manager_->RenameFile(old_filepath, new_filename);
         std::cout<<" RENAME LOCAL CACHE FILE STATUS : " << status << std::endl;
-        std::string relative;
-        std::string parent_dir;
-        fs::GetParentPath(old_filepath, parent_dir);
-        std::cout<<" Parent dir : " << parent_dir << std::endl;
-        std::cout<<" filename : " << new_filename << std::endl;
+        if(status == ret::A_OK) {
+            std::string relative;
+            std::string parent_dir;
+            fs::GetParentPath(old_filepath, parent_dir);
+            std::cout<<" Parent dir : " << parent_dir << std::endl;
+            std::cout<<" filename : " << new_filename << std::endl;
 
-        file_manager_->GetRelativePath(parent_dir, relative);
-        relative +=  new_filename;
-        std::cout<<" GET RELATIVE : " << relative << std::endl;
-        
-        // Update meta post
-        std::string meta_post_id = fi->post_id();
-        status = UpdateFileMetaPost(meta_post_id,
-                                    new_filename,
-                                    relative);
+            file_manager_->GetRelativePath(parent_dir, relative);
+            relative +=  new_filename;
+            std::cout<<" GET RELATIVE : " << relative << std::endl;
+            
+            // Update meta post
+            std::string meta_post_id = fi->post_id();
+            status = UpdateFileMetaPost(meta_post_id,
+                                        new_filename,
+                                        relative);
+        }
         
     }
     else {

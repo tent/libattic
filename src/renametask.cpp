@@ -93,6 +93,8 @@ int RenameTask::RenameFile(const std::string& file_type,
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
     std::string entity = TentTask::entity().entity();
 
+    std::cout<<" filepath : " << old_filepath << std::endl;
+
     rename_context.SetConfigValue("file_type", file_type);
     rename_context.SetConfigValue("post_path", post_path);
     rename_context.SetConfigValue("posts_feed", posts_feed);
