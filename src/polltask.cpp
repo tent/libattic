@@ -21,7 +21,7 @@ namespace polltask {
 }
 
 static long total_elapsed = 0;
-static boost::timer::nanosecond_type const limit(3 * 1000000000LL); // 3 seconds in nanoseconds
+static boost::timer::nanosecond_type const limit(1 * 1000000000LL); // 1 seconds in nanoseconds
 
 PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,

@@ -46,10 +46,11 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             ExtractChunkInfo(chunk_posts, chunk_map);
             // begin chunking
             status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
-
             std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
 
             if(status == ret::A_OK) { 
+                // Update file info
+                file_manager_->SetFileChunks(fi->filepath(), chunk_map);
                 // Update meta data transit state
                 status = UpdateFilePostTransitState(meta_post_id, false);
             }
@@ -169,6 +170,7 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                            chunk_name, 
                            ci);
             ci.set_position(chunk_count);
+            chunk_map[ci.chunk_name()] = ci;
 
             cr->PushBackChunk(ci, chunk_name, finished_chunk, chunk_count);
             
@@ -190,7 +192,7 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
 
                 if(response.code != 200) { 
                     std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
-                                    log::LogHttpResponse("KJASDF321", response);
+                    log::LogHttpResponse("KJASDF321", response);
                 }
 
             }
@@ -311,6 +313,7 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     fi->set_encrypted_key(encryptedKey);
 
     // Insert file info to manifest
+    std::cout<<" INSERTING TO MANIFEST " << std::endl;
     file_manager_->InsertToManifest(fi);
 }
 

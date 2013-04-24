@@ -146,6 +146,8 @@ int FileManager::RenameFile(const std::string& old_filepath, const std::string& 
         std::string alias_data;
         fi->GetSerializedAliasData(alias_data);
 
+        std::cout<<" SERIALIZED ALIAS DATA : " << alias_data << std::endl;
+
         Lock();
         bool s = manifest_.UpdateFilepath(relative_filepath, new_filepath);
         if(s) s = manifest_.UpdateFilename(new_filepath, new_filename);

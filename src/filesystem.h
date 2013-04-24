@@ -219,6 +219,12 @@ static void ExtractSubDirectories(const std::string& root,
 
 }
 
+static void RenamePath(const std::string& original_path, const std::string& new_path) {
+    boost::filesystem::path original(original_path), newpath(new_path);
+    boost::filesystem::rename(original, newpath);
+
+}
+
 
 
 }}//namespace

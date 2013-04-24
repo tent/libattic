@@ -256,7 +256,7 @@ TEST(AFILE, PUSH)
     ASSERT_EQ(status, attic::ret::A_OK);
 
   //  status = EnterPassphrase("password");
-    status = EnterPassphrase("1234");
+    status = EnterPassphrase("asdf");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;
@@ -475,7 +475,7 @@ TEST(TEST, SYNC)
     if(status == attic::ret::A_OK) {
 
         //EnterPassphrase("password");
-        EnterPassphrase("1234");
+        EnterPassphrase("asdf");
         std::cout<<"syncing..."<<std::endl;
      //   status = SyncFiles(SYNCCB);
         status = PollFiles();
@@ -501,7 +501,10 @@ TEST(TEST, RENAME) {
 
     if(status == attic::ret::A_OK) {
         EnterPassphrase("asdf");
-        status = RenameFile(old_file.c_str(), new_file.c_str());
+
+        std::string temp_old;
+        attic::fs::GetCanonicalPath(old_file, temp_old);
+        status = RenameFile(temp_old.c_str(), new_file.c_str());
         ASSERT_EQ(status, attic::ret::A_OK);
     }
     sleep(10);
