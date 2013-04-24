@@ -13,8 +13,22 @@ namespace attic {
 class TaskQueue : public MutexClass {
 public:                                                                            
     TaskQueue(){task_queue_.clear();}
+    ~TaskQueue(){}
 
-    ~TaskQueue(){}                                                                 
+    void ClearTaskQueue() { 
+        Lock();
+        if(task_queue_.size()) {
+            for(unsigned int i=0; i<task_queue_.size(); i++) {
+                Task* p = task_queue_[i];
+                task_queue_[i] = NULL;
+                if(p) {
+                    delete p;
+                    p = NULL;
+                }
+            }
+        }
+        Unlock();
+    }
 
     void SyncPushBack(Task* pTask) { 
         if(!pTask) {
@@ -62,6 +76,7 @@ public:
 
     void Shutdown() {
         if(instance_) {
+            instance_->ClearTaskQueue();
             delete instance_;
             instance_ = NULL;
         }
