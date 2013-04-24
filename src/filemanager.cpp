@@ -142,16 +142,16 @@ int FileManager::RenameFile(const std::string& old_filepath, const std::string& 
 
         std::cout<<" RENAMING : " << relative_filepath << std::endl;
         std::cout<<" NEW PATH : " << new_filepath << std::endl;
+        fi->PushBackAlias(old_filepath);
+        std::string alias_data;
+        fi->GetSerializedAliasData(alias_data);
+
         Lock();
         bool s = manifest_.UpdateFilepath(relative_filepath, new_filepath);
-        if(s)
-           s = manifest_.UpdateFilename(new_filepath, new_filename);
+        if(s) s = manifest_.UpdateFilename(new_filepath, new_filename);
+        if(s) s = manifest_.UpdatePastAlias(new_filepath, alias_data);
         Unlock();
-        if(s) {
-
-
-        }
-        else {
+        if(!s) {
             std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;
             status = ret::A_FAIL_TO_QUERY_MANIFEST;
         }
@@ -194,6 +194,17 @@ void FileManager::SetFileChunkPostId(const std::string &filepath, const std::str
     Lock();
     manifest_.UpdateFileChunkPostID(filepath, postid);
     Unlock();
+}
+
+void FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
+    FileInfo* fi = GetFileInfo(filepath);
+    if(fi) {
+        fi->set_chunks(map);
+        InsertToManifest(fi);
+    }
+    else {
+        std::cout<<" INVALID FILEINFO OBJECT " << std::endl;
+    }
 }
 
 FileInfo* FileManager::CreateFileInfo() {

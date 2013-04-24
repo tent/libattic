@@ -53,8 +53,9 @@ public:
 
     void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFileDeleted(const std::string& filepath, const bool del = true);
-    void SetFilePostId(const std::string &filepath, const std::string& postid);
-    void SetFileChunkPostId(const std::string &filepath, const std::string& postid);
+    void SetFilePostId(const std::string& filepath, const std::string& postid);
+    void SetFileChunkPostId(const std::string& filepath, const std::string& postid);
+    void SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
 
     // Folder
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
