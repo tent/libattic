@@ -132,6 +132,7 @@ static int SendAppRegRequest(const std::string& app_path,
                                   NULL,
                                   response);
 
+        std::cout<<" HEADERS : " << response.header.asString() << std::endl;
         std::cout<<" CODE : " << response.code << std::endl;
         std::cout<<" BODY : " << response.body << std::endl;
         if(response.code == 200) {

@@ -8,6 +8,7 @@
 #include "fileinfo.h"
 #include "filesystem.h"
 #include "credentialsmanager.h"
+#include "connectionhandler.h"
 
 #include "rollsum.h"
 #include "postutils.h"
@@ -72,10 +73,12 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
     params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
 
     Response response;
-    netlib::HttpGet(posts_feed,
-                    &params,
-                    &access_token_,
-                    response);
+
+    ConnectionHandler ch;
+    ch.HttpGet(posts_feed,
+               &params,
+               &access_token_,
+               response);
 
     if(response.code == 200) {
         Json::Value chunk_post_arr(Json::arrayValue);
@@ -357,7 +360,8 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             jsn::SerializeObject(&p, post_buffer);
 
             Response response;
-            status = netlib::HttpPost(posturl,
+            ConnectionHandler ch;
+            status = ch.HttpPost(posturl,
                                       p.type(),
                                       NULL,
                                       post_buffer,
@@ -394,21 +398,29 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
 
 int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, bool in_transit) {
     int status = ret::A_OK;
+    std::cout<<" UPDATE TRANSIT STATE " << std::endl;
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    std::cout<<" PUST URL : " << posturl << std::endl;
     FilePost p;
     // Get Existing post
     Response get_resp;
-    netlib::HttpGet(posturl,
-                    NULL,
-                    &access_token_,
-                    get_resp);
+    ConnectionHandler ch;
+    ch.HttpGet(posturl,
+               NULL,
+               &access_token_,
+               get_resp);
+
+    std::cout<<" CODE : " << get_resp.code << std::endl;
+    std::cout<<" BODY : " << get_resp.body << std::endl;
     if(get_resp.code == 200) {
         jsn::DeserializeObject(&p, get_resp.body);
     }
     else {
         status = ret::A_FAIL_NON_200;
     }
+
+    std::cout<<" GOT EXISTING POST : " << status << std::endl;
 
     if(status == ret::A_OK) {
         Parent parent;
@@ -421,7 +433,8 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         jsn::SerializeObject(&p, put_buffer);
 
         Response put_resp;
-        status = netlib::HttpPut(posturl,
+        ConnectionHandler ch;
+        status = ch.HttpPut(posturl,
                                  p.type(),
                                  NULL,
                                  put_buffer,
@@ -433,6 +446,10 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         else {
             status = ret::A_FAIL_NON_200;
         }
+
+        std::cout<<" PUT UPDATED POST " << std::endl;
+        std::cout<<" CODE : " << put_resp.code << std::endl;
+        std::cout<<" BODY : " << put_resp.body << std::endl;
     }
 
     return status;

@@ -136,6 +136,7 @@ static int HttpGet(const std::string& url,
                    const AccessToken* at, 
                    Response& out) {
     int status = ret::A_OK;
+
     std::string local_url = url;
     if(pParams) EncodeAndAppendUrlParams(pParams, local_url);
 

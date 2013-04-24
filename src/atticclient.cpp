@@ -12,8 +12,7 @@ namespace attic {
 Client::Client(const std::string& workingdir, 
                const std::string& configdir, 
                const std::string& tempdir, 
-               const std::string& entityurl) 
-{
+               const std::string& entityurl) {
     working_directory_ = workingdir;
     config_directory_ = configdir;
     temp_directory_ = tempdir;
@@ -29,6 +28,8 @@ int Client::Initialize() {
     std::cout << " file manager init status : " << status << std::endl;
     if(!status)
         status = InitializeCredentialsManager();
+    if(!status)
+        conh_.SetEntityUrlOnManager(entity_url_);
     return status;
 }
 

@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "crypto.h"
 #include "logutils.h"
+#include "connectionhandler.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -386,10 +387,18 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     std::cout<<" PARAMS : " << prm << std::endl;
 
     Response response;
+    ConnectionHandler ch;
+    ch.HttpGet(url,
+               &params,
+               &access_token_,
+               response);
+
+    /*
     netlib::HttpGet(url,
                    &params,
                    &access_token_,
                    response);
+                   */
 
     std::cout<<" code : " << response.code << std::endl;
     std::cout<<" header : " << response.header.asString() << std::endl;

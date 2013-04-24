@@ -2,11 +2,13 @@
 #define CONNECTIONPOOL_H_
 #pragma once
 
+#include <string>
 #include <deque>
 #include "connection.h"
 namespace attic { 
 
 class ConnectionPool {
+    typedef std::deque<Connection*> ConnectionQueue;
 public:
     ConnectionPool();
     ~ConnectionPool();
@@ -14,8 +16,13 @@ public:
     void PushBack(Connection* con);
     Connection* PopFront();
 
+    void ExtendPool(boost::asio::io_service* io_service, 
+                    const std::string& host, 
+                    const int stride = 3);
+
+    bool empty() { return pool_.empty(); }
 private:
-    std::deque<Connection*> pool_;
+    ConnectionQueue pool_;
 };
 
 }//namespace

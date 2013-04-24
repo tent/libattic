@@ -14,22 +14,30 @@
 namespace attic {
 
 class ConnectionManager {
-public:
-    ConnectionManager() {}
-    ~ConnectionManager() {}
+    friend class ConnectionHandler;
+    ConnectionManager();
+    ConnectionManager(const ConnectionManager& rhs) {}
+    ConnectionManager operator=(const ConnectionManager& rhs) { return *this; }
 
-    int Initialize(const std::string& host_url);
-    int Shutdown();
-
+    static ConnectionManager* GetInstance();
     Connection* RequestConnection();
     void ReclaimConnection(Connection* socket);
+    int Shutdown();
+    void Release();
+public:
+    ~ConnectionManager();
+    int Initialize(const std::string& host_url);
 
 private:
     std::string             host_url_;
     boost::asio::io_service io_service_;
 
-    ConnectionPool          open_pool_;
+    ConnectionPool          pool_;
     MutexClass              pool_mtx_;
+
+    static ConnectionManager* instance_;
+    static int ref_;
+    bool initialized_;
 };
 
 }//namespace

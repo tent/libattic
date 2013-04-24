@@ -9,6 +9,7 @@
 #include "entity.h"
 #include "accesstoken.h"
 #include "phrasetoken.h"
+#include "connectionhandler.h"
 
 namespace attic { 
 
@@ -72,6 +73,8 @@ private:
     Entity              entity_;
     AccessToken         access_token_;
     PhraseToken         phrase_token_;
+
+    ConnectionHandler   conh_;
 
     std::string working_directory_;
     std::string config_directory_;

@@ -11,6 +11,7 @@
 #include "postutils.h"
 #include "event.h"
 #include "logutils.h"
+#include "connectionhandler.h"
 
 namespace attic { 
 

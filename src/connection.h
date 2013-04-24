@@ -15,6 +15,7 @@ namespace attic {
 class Connection {
     int InitializeSSLSocket(const std::string& host);
     void SSLLoadCerts();
+
 public:
     Connection(boost::asio::io_service* io_service);
     ~Connection();
@@ -22,11 +23,14 @@ public:
     int Initialize(const std::string& url);
     int Close();
 
+    bool TestConnection();
+
     unsigned int Write(boost::asio::streambuf& request);
     void InterpretResponse(Response& out);
 
 private:
-    boost::asio::io_service* io_service_;
+    //boost::asio::io_service* io_service_;
+    boost::asio::io_service io_service_;
     boost::asio::ip::tcp::socket* socket_;
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>* ssl_socket_;
     boost::asio::ssl::context* ctx_;

@@ -33,7 +33,6 @@ void EventSystem::ProcessEvents() {
 
     m_queueMtx.Lock();
     unsigned int count = m_EventQueue.size();
-    std::cout<< " Processing EVENTS : " << count << " #" << std::endl;
     m_queueMtx.Unlock();
 
     std::deque<Event> tempQueue;
@@ -44,7 +43,6 @@ void EventSystem::ProcessEvents() {
         for(unsigned int b = 0; b<stride; b++) {
             if(m_EventQueue.size()) {
                 tempQueue.push_back(m_EventQueue.front());
-                std::cout<<" TEMP QUEUE SIZE : " << tempQueue.size() << std::endl;
                 m_EventQueue.pop_front();
             }
             else {
@@ -64,7 +62,6 @@ void EventSystem::ProcessEvents() {
 }
 
 void EventSystem::Notify(const Event& event) {
-    std::cout<<" NOTIFYING " << std::endl;
     // Notify listeners
     m_listenMtx.Lock();
     if(m_ListenerMap[event.type].size()) {

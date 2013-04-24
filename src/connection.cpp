@@ -6,7 +6,7 @@
 namespace attic { 
 
 Connection::Connection(boost::asio::io_service* io_service) {
-    io_service_ = io_service;
+    //io_service_ = io_service;
     socket_ = NULL;
     ssl_socket_ = NULL;
     ctx_ = NULL;
@@ -29,29 +29,27 @@ Connection::~Connection() {
         ctx_ = NULL;
     }
 
-    io_service_ = NULL;
+    //io_service_ = NULL;
     ssl_ = false;
 }
 
 int Connection::Initialize(const std::string& url) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
-    if(io_service_) {
-        socket_ = new tcp::socket(*io_service_);
+    socket_ = new tcp::socket(io_service_);
 
-        std::string protocol, host, path;
-        netlib::ExtractHostAndPath(url, protocol, host, path);
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(url, protocol, host, path);
 
-        if(protocol == "https")
-            ssl_ = true;
+    if(protocol == "https")
+        ssl_ = true;
 
-        status = netlib::ResolveHost(*io_service_, *socket_, host, ssl_);
+    status = netlib::ResolveHost(io_service_, *socket_, host, ssl_);
 
-        if(ssl_)
-            status = InitializeSSLSocket(host);
-        if(status == ret::A_OK) {
+    if(ssl_)
+        status = InitializeSSLSocket(host);
+    if(status == ret::A_OK) {
 
-        }
     }
     else {
         status = ret::A_FAIL_INVALID_IOSERVICE;
@@ -77,7 +75,7 @@ int Connection::InitializeSSLSocket(const std::string& host) {
     int status = ret::A_OK;
 
     boost::system::error_code error = boost::asio::error::host_not_found; 
-    ctx_ = new boost::asio::ssl::context(*io_service_,
+    ctx_ = new boost::asio::ssl::context(io_service_,
                                          boost::asio::ssl::context::sslv23_client);
 
     // Load Cert
@@ -118,6 +116,70 @@ void Connection::InterpretResponse(Response& out) {
         netlib::InterpretResponse(socket_, out);
 }
 
+bool Connection::TestConnection() {
+    std::cout<<" TESTING CONNECTION " << std::endl;
+    boost::system::error_code error;
+    boost::asio::streambuf buf;
+
+    /*
+    boost::asio::streambuf req;
+    std::ostream req_stream(&req);
+    req_stream << "1\r\n\r\n";
+    */
+
+    unsigned int bytes_written = 0;
+    try {
+        if(!ssl_) {
+     //       bytes_written = boost::asio::write(*socket_, req, error);
+            //std::cout<<" BYTES WRITTEN : " << bytes_written << std::endl;
+            //
+            struct timeval timeout;      
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 1000; 
+            if (setsockopt (socket_->native_handle(),
+                            SOL_SOCKET, 
+                            SO_SNDTIMEO, 
+                            (char *)&timeout, sizeof(timeout)) < 0)
+                std::cout << "setsockopt failed\n";
+            else {
+                std::cout<<" setsockopt win " << std::endl;
+            }
+            fd_set readfds;
+            int socket_fd = socket_->native_handle();
+            FD_ZERO(&readfds);
+            FD_SET(socket_->native_handle(), &readfds);
+            int sel = select(socket_->native_handle(), &readfds, NULL, NULL, &timeout);
+            if(sel < 0 ) 
+                std::cout<<" SELECT FAIL " << std::endl;
+            std::cout<<"SELECT : " <<  sel << std::endl;
+
+            if(FD_ISSET(socket_->native_handle(), &readfds)) {
+                std::cout<<" READ SOMETHING ... " << std::endl;
+            }
+            else {
+                std::cout<<" TIMED OUT " << std::endl;
+            }
+            char szbuf[256] = {'\0'};
+            int result = recv(socket_fd, szbuf, 256, 0);
+            std::cout<<" RECV RESULT : " << result << std::endl;
+
+            //boost::asio::read(*socket_, buf, boost::asio::transfer_at_least(1), error);
+        }
+        else {
+            //bytes_written = boost::asio::write(*socket_, req, error);
+            //std::cout<<" BYTES WRITTEN : " << bytes_written << std::endl;
+            boost::asio::read(*ssl_socket_, buf, boost::asio::transfer_at_least(1), error);
+
+        }
+    }
+    catch(std::exception& e) {
+        std::cout<<" Test Connection exception : " << e.what() << std::endl;
+        return false;
+    }
+
+
+    return true;
+}
 
 void Connection::SSLLoadCerts() { // Move to connection pool, load once give to all connections
     std::cout<<" LOADING CERTS " << std::endl;

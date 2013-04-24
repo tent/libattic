@@ -43,7 +43,6 @@ static std::string g_AuthorizationURL;// move to client
 static bool g_bEnteredPassphrase = false;
 static bool g_bLibInitialized = false;
 
-int LoadMasterKey(); // call with a valid phrase token
 int IsLibInitialized(bool checkPassphrase = true);
 
 static attic::Client* g_pClient = NULL;
@@ -83,15 +82,8 @@ int InitLibAttic(unsigned int threadCount) {
     g_pClient->LoadPhraseToken();
 
     if(status == attic::ret::A_OK)  {
-        //attic::event::EventSystem::GetInstance()->Initialize();
         // Essential
         status = attic::liba::InitializeTaskArbiter(threadCount);
-        // Try to load a master key if we have one
-        if(LoadMasterKey() == attic::ret::A_OK) {  // don't set it equal to status, because if this fails
-                                            // it's really not that important, we can have the user
-                                            // go ahead and enter it.
-        }
-
         status = attic::liba::InitializeTaskManager(&g_pTaskManager,
                                              g_pClient->file_manager(),
                                              g_pClient->credentials_manager(),
@@ -478,28 +470,6 @@ int PhraseStatus() {
 
     if(!g_bEnteredPassphrase)
         status = attic::ret::A_FAIL_NEED_ENTER_PASSPHRASE;
-
-    return status;
-}
-
-int LoadMasterKey() { // Depricated
-
-    std::cout<<" LoadMasterKey in libattic.cpp is depricated, implement functionality in client"<<std::endl;
-    int status = attic::ret::A_OK;
-    /*
-    // Check for valid phrase token
-    PhraseToken pt = g_pClient->phrase_token();
-    if(pt.IsPhraseKeyEmpty()) {
-        // "Enter Password"
-        g_bEnteredPassphrase = false;
-        status = attic::ret::A_FAIL_NEED_ENTER_PASSPHRASE;
-    }
-    else {
-        std::string phraseKey = pt.phrase_key();
-        std::string salt = pt.salt();
-        status = DecryptMasterKey(phraseKey, salt);
-    }   
-    */
 
     return status;
 }
