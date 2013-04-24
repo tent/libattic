@@ -107,10 +107,12 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
             // compare versions
             // compare file hashes
             // check if file exists, locally
-            else if( !fs::CheckFilepathExists(canonical_path))
+            else if(!fs::CheckFilepathExists(canonical_path))
                 bPull= true;
         }
         else {
+            // Insert into manifest
+            fm->InsertToManifest(&fi);
             // Doesn't exist in the manifest
             bPull = true;
         }

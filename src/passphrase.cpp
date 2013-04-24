@@ -437,6 +437,8 @@ int Passphrase::GetCredentialsPostCount() {
     else {
         log::LogHttpResponse("41935", response);
     }
+
+    std::cout<<" CREDENTIALS POST COUNT : " << count << std::endl;
     return count;
 }
 

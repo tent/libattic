@@ -256,7 +256,7 @@ TEST(AFILE, PUSH)
     ASSERT_EQ(status, attic::ret::A_OK);
 
   //  status = EnterPassphrase("password");
-    status = EnterPassphrase("asdf");
+    status = EnterPassphrase("1234");
     ASSERT_EQ(status, attic::ret::A_OK);
 
     std::cout<<" register for upload speend notify " << std::endl;
@@ -475,7 +475,7 @@ TEST(TEST, SYNC)
     if(status == attic::ret::A_OK) {
 
         //EnterPassphrase("password");
-        EnterPassphrase("asdf");
+        EnterPassphrase("1234");
         std::cout<<"syncing..."<<std::endl;
      //   status = SyncFiles(SYNCCB);
         status = PollFiles();

@@ -27,29 +27,35 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::string post_attachment = GetConfigValue("post_attachment");
     std::string entity = GetConfigValue("entity");
 
-    FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
-    if(fi) {
-        std::cout<<" FILE : " << filepath << " DELETED : " << fi->deleted() << std::endl;
-        if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
-        // Retrieve file metadata
-        FilePost meta_post;
-        status = RetrieveFilePost(fi, meta_post);
-        if(status == ret::A_OK) {
-            Credentials file_cred;
-            // Get file credentials
-            status = ExtractCredentials(meta_post, file_cred);
+    if(!filepath.empty()) { 
+        FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
+        if(fi) {
+            std::cout<<" FILE : " << filepath << " DELETED : " << fi->deleted() << std::endl;
+            if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
+            // Retrieve file metadata
+            FilePost meta_post;
+            status = RetrieveFilePost(fi, meta_post);
             if(status == ret::A_OK) {
-                // Query for chunkposts mentioning metadata
-                ChunkPostList cp_list;
-                RetrieveChunkPosts(entity, meta_post.id(), cp_list);
-                // put file posts in order
-                // pull chunks
-                status = ConstructFile(cp_list, file_cred, fi);
+                Credentials file_cred;
+                // Get file credentials
+                status = ExtractCredentials(meta_post, file_cred);
+                if(status == ret::A_OK) {
+                    // Query for chunkposts mentioning metadata
+                    ChunkPostList cp_list;
+                    RetrieveChunkPosts(entity, meta_post.id(), cp_list);
+                    // put file posts in order
+                    // pull chunks
+                    status = ConstructFile(cp_list, file_cred, fi);
+                }
             }
+        }
+        else {
+            status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
         }
     }
     else {
-        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;                                                 
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+        std::cout<<" FILEPATH EMPTY : " << filepath << std::endl;
     }
     
     return status;
