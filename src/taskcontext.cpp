@@ -2,7 +2,10 @@
 
 namespace attic { 
 
-TaskContext::TaskContext() {}
+TaskContext::TaskContext() {
+    delegate_ = NULL;
+}
+
 TaskContext::~TaskContext() {}
 
 void TaskContext::set_value(const std::string& key, const std::string& value) {
