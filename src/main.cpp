@@ -407,16 +407,18 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 TEST(INIT, SHUTDOWN)
 {
 
-    SetConfigValue("working_dir", "./data");
-    SetConfigValue("config_dir", "./config");
-    SetConfigValue("temp_dir", "./data/temp");
-    SetConfigValue("entity_url", g_Entity.c_str());
-    int status = InitLibAttic();
+    for(int i=0; i < 100; i++) {
+        SetConfigValue("working_dir", "./data");
+        SetConfigValue("config_dir", "./config");
+        SetConfigValue("temp_dir", "./data/temp");
+        SetConfigValue("entity_url", g_Entity.c_str());
+        int status = InitLibAttic();
 
-    ASSERT_EQ(status, attic::ret::A_OK);
-    sleep(1);
+        ASSERT_EQ(status, attic::ret::A_OK);
+        sleep(1);
 
-    ShutdownLibAttic(NULL);
+        ShutdownLibAttic(NULL);
+    }
 }
 */
 

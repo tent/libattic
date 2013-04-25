@@ -49,9 +49,19 @@ void ThreadWorker::Run() {
             }
         }
 
+        //std::cout<<" ping state : " << state() << std::endl;
+
         boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
     }
     std::cout<<" thread  worker ending ... " << std::endl;
+    if(state() == ThreadWorker::EXIT) {
+        if(task) { 
+            task->OnFinished();
+            delete task;
+            task = NULL;
+        }
+
+    }
     
 }
 

@@ -380,7 +380,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
                 jsn::DeserializeObject(&post, response.body);
                 file_manager_->SetFilePostId(filepath, post.id());
 
-                post_id_out = post.id();
+                meta_data_post_id = post.id();
                 fi->set_post_id(post.id());
                 
                 FileInfo* ffi = RetrieveFileInfo(filepath);
@@ -396,10 +396,12 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             status = ret::A_FAIL_INVALID_FOLDER_POST;
         }
     }
-    else {
+
+    if(status == ret::A_OK) {
         status = UpdateFilePostTransitState(meta_data_post_id, true);
-        post_id_out = meta_data_post_id;
     }
+
+    post_id_out = meta_data_post_id;
 
     return status;
 }
@@ -436,6 +438,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         // Set its transit state
         p.set_in_transit(in_transit);
         p.PushBackParent(parent);
+        p.set_deleted(false);
         // Put
         std::string put_buffer;
         jsn::SerializeObject(&p, put_buffer);

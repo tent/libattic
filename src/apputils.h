@@ -67,7 +67,6 @@ static int RegisterAttic(const std::string& entityurl,
     status = client::Discover(entityurl, NULL, ent);
     if(status == ret::A_OK) {
         TentApp app;
-        std::cout<<" URL : " << std::endl;
         InitAppInstance(name, description, url, icon, redirect_uri, app);
         std::string path = ent.GetPreferredServer().new_post();
         std::string cred_path;

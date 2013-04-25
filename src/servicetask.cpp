@@ -35,6 +35,7 @@ void ServiceTask::OnStart() {
 
 void ServiceTask::OnPaused() {}
 void ServiceTask::OnFinished() {
+    std::cout<<" SERVICE TASK FINISHED ... " << std::endl;
     event::EventSystem::GetInstance()->Shutdown();
     if(task_dispatch_) {
         delete task_dispatch_;

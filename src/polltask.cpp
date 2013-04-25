@@ -49,6 +49,7 @@ PollTask::~PollTask() {
 }
 
 void PollTask::OnStart(){
+    std::cout<<" POLL TASK STARTING " << std::endl;
     if(!polltask::g_pCurrentPollTask) {
         polltask::g_pCurrentPollTask = this;
     }
@@ -61,6 +62,7 @@ void PollTask::OnStart(){
 void PollTask::OnPaused() {}
 
 void PollTask::OnFinished() {
+    std::cout<<" POLL TASK FINISHING " << std::endl;
     event::UnregisterFromEvent(this, event::Event::PAUSE);
     event::UnregisterFromEvent(this, event::Event::RESUME);
     timer_.stop();
