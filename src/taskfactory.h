@@ -34,7 +34,7 @@ class TaskFactory : public MutexClass {
 private:
     void TaskFinished(int code, Task* pTask);
 
-    Task* CreateNewTentTask(Task::TaskType type,                  
+    Task* CreateNewTentTask(int type,
                             FileManager* pFm,               
                             CredentialsManager* pCm,        
                             const AccessToken& at,          
@@ -58,7 +58,7 @@ public:
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
-    Task* GetTentTask(Task::TaskType type,                
+    Task* GetTentTask(int type,
                       FileManager* pFm,             
                       CredentialsManager* pCm,      
                       const AccessToken& at,        

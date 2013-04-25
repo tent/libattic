@@ -54,7 +54,7 @@ void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate) {
     }
 }
 
-Task* TaskFactory::GetTentTask(Task::TaskType type,                
+Task* TaskFactory::GetTentTask(int type,
                                FileManager* pFm,             
                                CredentialsManager* pCm,      
                                const AccessToken& at,        
@@ -122,7 +122,7 @@ Task* TaskFactory::CreateNewManifestTask(Task::TaskType type,
     return t;
 }
 
-Task* TaskFactory::CreateNewTentTask(Task::TaskType type,                  
+Task* TaskFactory::CreateNewTentTask(int type,                  
                                      FileManager* pFm,               
                                      CredentialsManager* pCm,        
                                      const AccessToken& at,          
@@ -199,19 +199,9 @@ Task* TaskFactory::CreateNewTentTask(Task::TaskType type,
                               callbackDelegate);             
             break;
         }
-        case Task::SERVICE:
-        {
-            t = new ServiceTask(pFm, 
-                                pCm,                
-                                at,                 
-                                entity,             
-                                context,            
-                                callbackDelegate);
-        }
         default:
         {
             std::cout<<" CREATING UNKNOWN TASK " << std::endl;
-            LogUnknownTaskType(type);
         }
     }
 
