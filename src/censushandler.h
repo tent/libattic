@@ -10,7 +10,7 @@
 
 namespace attic { 
 
-class CensusHandler : public EventListener {
+class CensusHandler : public event::EventListener {
     bool GetCensusPost(CensusPost& out);
     int GetCensusPostCount();
     int RetrieveCensusPost(CensusPost& out);
@@ -23,7 +23,7 @@ public:
 
     bool CensusInquiry();
 
-    void OnEventRaised(const Event& event);
+    void OnEventRaised(const event::Event& event);
 private:
     AccessToken access_token_;
     std::string posts_feed_;

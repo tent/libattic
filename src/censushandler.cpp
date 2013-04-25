@@ -12,7 +12,7 @@ CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& a
 
 CensusHandler::~CensusHandler() {}
 
-void CensusHandler::CensusInquiry()  {
+bool CensusHandler::CensusInquiry()  {
     // Retrieve Census post ( there should only be one, delete otherwise)
     CensusPost p;
     if(GetCensusPost(p)) {
@@ -119,7 +119,7 @@ int CensusHandler::GetCensusPostCount() {
     return count;
 }
 
-void CensusHandler::OnEventRaised(const Event& event) {
+void CensusHandler::OnEventRaised(const event::Event& event) {
 
 }
 
