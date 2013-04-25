@@ -38,7 +38,8 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         std::string meta_post_id;
         std::cout<<" Initializing File Meta Data " << std::endl;
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
-        if(status == ret::A_OK) {
+        std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
+        if(status == ret::A_OK && !meta_post_id.empty()) {
             // Retrieve Chunk posts
             ChunkPostList chunk_posts;
             RetrieveChunkPosts(entity, meta_post_id, chunk_posts);
@@ -55,6 +56,9 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                 // Update meta data transit state
                 status = UpdateFilePostTransitState(meta_post_id, false);
             }
+        }
+        else if(status == ret::A_OK && meta_post_id.empty()) {
+            std::cout<<" META POST ID EMPTY " << std::endl;
         }
     }
     else {
@@ -394,6 +398,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
     }
     else {
         status = UpdateFilePostTransitState(meta_data_post_id, true);
+        post_id_out = meta_data_post_id;
     }
 
     return status;
@@ -404,7 +409,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     std::cout<<" UPDATE TRANSIT STATE " << std::endl;
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    std::cout<<" PUST URL : " << posturl << std::endl;
+    std::cout<<" POST URL : " << posturl << std::endl;
     FilePost p;
     // Get Existing post
     Response get_resp;
