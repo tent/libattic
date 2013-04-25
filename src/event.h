@@ -23,6 +23,7 @@ struct Event {
         PUSH = 0,
         PULL,
         DELETE,
+        RENAME,
         REQUEST_PUSH,
         REQUEST_PULL,
         REQUEST_DELETE,

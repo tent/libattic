@@ -10,6 +10,12 @@ CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& a
     access_token_ = at;
 }
 
+void CensusHandler::Initialize() {
+    event::RegisterForEvent(this, event::Event::PUSH);
+    event::RegisterForEvent(this, event::Event::DELETE);
+    event::RegisterForEvent(this, event::Event::RENAME);
+}
+
 CensusHandler::~CensusHandler() {}
 
 bool CensusHandler::CensusInquiry()  {
@@ -26,8 +32,35 @@ bool CensusHandler::CensusInquiry()  {
     return false;
 }
 
-void CensusHandler::PushVersionBump() {
+int CensusHandler::PushVersionBump() {
+    int status = ret::A_OK;
+    CensusPost p;
+    if(GetCensusPost(p)) {
+        std::string posturl, post_id;
+        post_id = p.id();
+        if(!post_id.empty()) {
+            utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
+            Parent parent;
+            parent.version = p.version()->id;
+            p.PushBackParent(parent);
+
+            std::string post_buffer;
+            jsn::SerializeObject(&p, post_buffer);
+            
+            Response resp;
+            status = netlib::HttpPost(posturl,
+                                      p.type(),
+                                      NULL,
+                                      post_buffer,
+                                      &access_token_,
+                                      resp);
+            if(resp.code == 200) {
+
+            }
+        }
+    }
+    return status;
 }
 
 bool CensusHandler::GetCensusPost(CensusPost& out) {
@@ -120,7 +153,8 @@ int CensusHandler::GetCensusPostCount() {
 }
 
 void CensusHandler::OnEventRaised(const event::Event& event) {
-
+    // Event raised, don't really care what, bump the version
+    PushVersionBump();
 }
 
 } //namespace
