@@ -30,7 +30,6 @@ TaskManager::~TaskManager() {}
 
 int TaskManager::Initialize() {
     int status = ret::A_OK;
-    status = StartUpServiceThread();
     if(status == ret::A_OK) {
         status = task_factory_.Initialize();
         if(status == ret::A_OK) {
@@ -93,71 +92,57 @@ void TaskManager::OnTaskInsert(Task* t) {
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
 }
 
-
-
-int TaskManager::CreateAndSpinOffTask(Task::TaskType tasktype, 
-                                      const TaskContext& tc, 
-                                      TaskDelegate* pDel) {
-    int status = ret::A_OK;
-    Task* t = task_factory_.GetTentTask(tasktype,
-                                        file_manager_,
-                                        credentials_manager_,
-                                        access_token_,
-                                        entity_,
-                                        tc, 
-                                        pDel,
-                                        this);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-    return status;
-
-}
-
-int TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
+void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::PUSH, tc, pDel);
+    tc.set_type(Task::PUSH);
+    PushContextBack(tc);
 }
 
-int TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
+void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::PULL, tc, pDel);
+    tc.set_type(Task::PULL);
+    PushContextBack(tc);
 }
 
-int TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
+void TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
     TaskContext tc;
     tc.set_value("postid", postid);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask( Task::SYNC_FILE_TASK, tc, pDel);
+    tc.set_type(Task::SYNC);
+    PushContextBack(tc);
 }
 
-int TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
+void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::DELETE, tc, pDel);
+    tc.set_type(Task::DELETE);
+    PushContextBack(tc);
 }
 
-int TaskManager::PollFiles(TaskDelegate* pDel) {
+void TaskManager::PollFiles(TaskDelegate* pDel) { // This will need to be a direct call
     TaskContext tc;
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::POLL, tc, pDel);
+    tc.set_type(Task::POLL);
+    PushContextBack(tc);
 }
 
-int TaskManager::RenameFile(const std::string& original_filepath, const std::string& new_filename) {
+void TaskManager::RenameFile(const std::string& original_filepath, 
+                             const std::string& new_filename) {
     TaskContext tc;
     tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
@@ -165,10 +150,12 @@ int TaskManager::RenameFile(const std::string& original_filepath, const std::str
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
+    tc.set_type(Task::RENAME);
+    PushContextBack(tc);
 }
 
-int TaskManager::RenameFolder(const std::string& original_folderpath, const std::string& new_foldername) {
+void TaskManager::RenameFolder(const std::string& original_folderpath, 
+                               const std::string& new_foldername) {
     TaskContext tc;
     tc.set_value("file_type", "folder");
     tc.set_value("original_folderpath", original_folderpath);
@@ -176,12 +163,21 @@ int TaskManager::RenameFolder(const std::string& original_folderpath, const std:
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    return CreateAndSpinOffTask(Task::RENAME, tc, NULL);
+    tc.set_type(Task::RENAME);
+    PushContextBack(tc);
 }
 
-int TaskManager::StartUpServiceThread() {
-    TaskContext tc;
-    return CreateAndSpinOffTask(Task::SERVICE, tc, NULL);
+void TaskManager::PushContextBack(TaskContext& tc) {
+    cxt_mtx.Lock();
+    context_queue_.push_back(tc);
+    cxt_mtx.Unlock();
+}
+
+void TaskManager::RetrieveContextQueue(TaskContext::ContextQueue& out) {
+    cxt_mtx.Lock();
+    out = context_queue_;
+    context_queue_.clear();
+    cxt_mtx.Unlock();
 }
 
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
@@ -192,6 +188,7 @@ int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
                                              tc,
                                              callback,
                                              this);
+
 
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
