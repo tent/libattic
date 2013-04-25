@@ -6,6 +6,7 @@
 #include "taskfactory.h"
 #include "taskarbiter.h"
 #include "filemanager.h"
+#include "taskqueue.h"
 
 
 namespace attic { 
@@ -46,10 +47,16 @@ void TaskDispatch::Process(TaskManager* tm) {
 }
 
 void TaskDispatch::Dispatch() {
-    std::cout<<" DISPATCHING " << std::endl;
-    TaskContext::ContextQueue::iterator itr = dispatch_queue_.begin();
-    for(;itr != dispatch_queue_.end(); itr++) {
-        CreateAndSpinOffTask(*itr);
+    unsigned int task_count = CentralTaskQueue::GetInstance()->TaskCount();
+    if(task_count < 20) {
+        unsigned int t =0;
+        TaskContext::ContextQueue::iterator itr = dispatch_queue_.begin();
+        for(;itr != dispatch_queue_.end(); itr++) {
+            CreateAndSpinOffTask(*itr);
+            t++;
+            if((t+task_count) > 50)
+                break;
+        }
     }
 }
 

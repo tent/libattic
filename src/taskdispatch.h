@@ -33,7 +33,6 @@ public:
     void Dispatch();
     
     void set_dispatch_queue(const TaskContext::ContextQueue& q) { dispatch_queue_ = q; } 
-
 private:
     TaskContext::ContextQueue dispatch_queue_;
     TaskContext::ContextQueue hold_queue_;

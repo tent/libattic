@@ -21,7 +21,6 @@ ServiceTask::~ServiceTask() {}
 void ServiceTask::OnStart() {
     event::EventSystem::GetInstance()->Initialize();
     if(task_manager_) {
-        std::cout<<" CREATING TASK DISPATCH " << std::endl;
         task_dispatch_ = new TaskDispatch(task_manager_->file_manager(),
                                           task_manager_->credentials_manager(),
                                           task_manager_->access_token(),
@@ -44,14 +43,12 @@ void ServiceTask::OnFinished() {
 }
 
 void ServiceTask::RunTask() {
-    std::cout<<" RUNNING SERVICE TASK " << std::endl;
     event::EventSystem::GetInstance()->ProcessEvents();
 
     if(task_dispatch_) {
         task_dispatch_->Process(task_manager_);
         task_dispatch_->Dispatch();
     }
-
 }
 
 } //namespace

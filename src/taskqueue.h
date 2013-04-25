@@ -45,7 +45,7 @@ public:
         Unlock();
     }
 
-    Task* SyncPopFront() {                                                                              
+    Task* SyncPopFront() {
         Task* pTask = NULL;                                                        
         
         Lock();
@@ -58,9 +58,16 @@ public:
             
         }                                                                          
         Unlock();
-
         return pTask;                                                              
     }                                                                              
+
+    unsigned int TaskCount() { 
+        unsigned int count = 0;
+        Lock();
+        count = task_queue_.size();
+        Unlock();
+        return count;
+    }
 
 private:                                                                           
     std::deque<Task*> task_queue_;                                                 
