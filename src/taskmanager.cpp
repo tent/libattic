@@ -118,7 +118,7 @@ void TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::SYNC);
+    tc.set_type(Task::SYNC_FILE_TASK);
     PushContextBack(tc);
 }
 
