@@ -126,6 +126,7 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 
 int FileManager::RenameFile(const std::string& old_filepath, const std::string& new_filename) {
     int status = ret::A_OK;
+    std::cout<<" OLD FILEPATH : " << old_filepath << std::endl;
     FileInfo* fi = GetFileInfo(old_filepath);
     if(fi) {
         std::string relative_filepath;
@@ -141,16 +142,18 @@ int FileManager::RenameFile(const std::string& old_filepath, const std::string& 
 
         std::cout<<" RENAMING : " << relative_filepath << std::endl;
         std::cout<<" NEW PATH : " << new_filepath << std::endl;
+        fi->PushBackAlias(old_filepath);
+        std::string alias_data;
+        fi->GetSerializedAliasData(alias_data);
+
+        std::cout<<" SERIALIZED ALIAS DATA : " << alias_data << std::endl;
+
         Lock();
         bool s = manifest_.UpdateFilepath(relative_filepath, new_filepath);
-        if(s)
-           s = manifest_.UpdateFilename(new_filepath, new_filename);
+        if(s) s = manifest_.UpdateFilename(new_filepath, new_filename);
+        if(s) s = manifest_.UpdatePastAlias(new_filepath, alias_data);
         Unlock();
-        if(s) {
-
-
-        }
-        else {
+        if(!s) {
             std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;
             status = ret::A_FAIL_TO_QUERY_MANIFEST;
         }
@@ -193,6 +196,17 @@ void FileManager::SetFileChunkPostId(const std::string &filepath, const std::str
     Lock();
     manifest_.UpdateFileChunkPostID(filepath, postid);
     Unlock();
+}
+
+void FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
+    FileInfo* fi = GetFileInfo(filepath);
+    if(fi) {
+        fi->set_chunks(map);
+        InsertToManifest(fi);
+    }
+    else {
+        std::cout<<" INVALID FILEINFO OBJECT " << std::endl;
+    }
 }
 
 FileInfo* FileManager::CreateFileInfo() {
@@ -295,8 +309,7 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     return retval;
 } 
 
-FileInfo* FileManager::GetFileInfo(const std::string &filepath)
-{
+FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     FileInfo* pFi = NULL;
     std::string relative;
     if(!IsPathRelative(filepath)) {

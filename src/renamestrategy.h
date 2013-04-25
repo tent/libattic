@@ -19,8 +19,8 @@ class RenameStrategy : public HttpStrategyInterface {
     int RetrieveFolderPost(const std::string& post_id, FolderPost& fp);
     int RetrieveFilePost(const std::string& post_id, FilePost& fp);
     int UpdateFileMetaPost(const std::string& post_id, 
-                           const std::string& filename,
-                           const std::string& relative_path);
+                           const std::string& new_filename,
+                           const std::string& new_relative_path);
 
     int UpdateFolderMetaPost(const std::string& folderpath, Folder& folder);
 public:

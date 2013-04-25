@@ -501,7 +501,10 @@ TEST(TEST, RENAME) {
 
     if(status == attic::ret::A_OK) {
         EnterPassphrase("asdf");
-        status = RenameFile(old_file.c_str(), new_file.c_str());
+
+        std::string temp_old;
+        attic::fs::GetCanonicalPath(old_file, temp_old);
+        status = RenameFile(temp_old.c_str(), new_file.c_str());
         ASSERT_EQ(status, attic::ret::A_OK);
     }
     sleep(10);

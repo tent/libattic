@@ -59,7 +59,7 @@ class Manifest {
     void CheckIfTableExists(const std::string &tableName);
 
     void ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out);
-
+    bool PushBackAlias(const std::string& filepath, const std::string& alias);
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
     typedef std::deque<FileInfo> FileInfoList;
@@ -80,8 +80,10 @@ public:
     bool UpdateFileDeleted(const std::string& filepath, const int val);
     bool UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath);
     bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
+    bool UpdatePastAlias(const std::string& filepath, const std::string& alias_data);
 
-    bool QueryForFile(const std::string &filename, FileInfo& out);
+
+    bool QueryForFile(const std::string &filepath, FileInfo& out);
     int QueryAllFiles(FileInfoList& out);
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
 

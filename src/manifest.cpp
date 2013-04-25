@@ -96,7 +96,8 @@ bool Manifest::CreateInfoTable() {
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
-    exc += " deleted INT, folder_manifest_id TEXT, PRIMARY KEY(filepath ASC, folder_manifest_id ASC));";
+    exc += " deleted INT, folder_manifest_id TEXT, alias_data TEXT,";
+    exc += " PRIMARY KEY(filepath ASC, folder_manifest_id ASC));";
 
     return PerformQuery(exc);
 }
@@ -253,30 +254,7 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
         */
 
         if(step > 0) {
-            out.set_filename(res.results_[0+step]);
-            out.set_filepath(res.results_[1+step]);
-            out.set_chunk_count(res.results_[2+step]);
-            out.LoadSerializedChunkData(res.results_[3+step]);
-            out.set_file_size(res.results_[4+step]);
-            out.set_post_id(res.results_[5+step]);
-            out.set_chunk_post_id(res.results_[6+step]);
-            out.set_post_version(res.results_[7+step]);
-            //out.set_encrypted_key(res.results_[8+step]);
-            // File Key (Base64 encoded)
-            std::string b64_key = res.results_[8+step];
-            std::string key;
-            crypto::Base64DecodeString(b64_key, key);
-            out.set_encrypted_key(key);
-            // IV (Base64 encoded)
-            //out.set_file_credentials_iv(res.results_[9+step]);
-            std::string b64_iv = res.results_[9+step];
-            std::string iv;
-            crypto::Base64DecodeString(b64_key, iv);
-            out.set_file_credentials_iv(iv);
-            //
-            std::cout<<" GET DELETED : " << res.results_[10+step] << std::endl;
-            out.set_deleted(atoi(res.results_[10+step]));
-            out.set_folder_manifest_id(res.results_[11+step]);
+            ExtractFileInfoResults(res, step, out);
         }
     }
 
@@ -373,10 +351,12 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     std::string iv;
     crypto::Base64DecodeString(b64_key, iv);
     out.set_file_credentials_iv(iv);
-    //
-    std::cout<<" GET DELETED : " << res.results_[10+step] << std::endl;
     out.set_deleted(atoi(res.results_[10+step]));
     out.set_folder_manifest_id(res.results_[11+step]);
+    std::string b64_alias = res.results_[12+step];
+    std::string alias_data;
+    crypto::Base64DecodeString(b64_alias, alias_data);
+    out.LoadSerializedAliasData(alias_data);
 }
 
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
@@ -399,6 +379,13 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
 
+
+    std::string alias_data;
+    fi.GetSerializedAliasData(alias_data);
+
+    std::string alias_encoded;
+    crypto::Base64EncodeString(alias_data, alias_encoded);
+
     /*
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
@@ -417,8 +404,8 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " chunkpostid, postversion, encryptedkey, iv, deleted, folder_manifest_id)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+    query += " chunkpostid, postversion, encryptedkey, iv, deleted, folder_manifest_id, alias_data)";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
 
     // Prepare statement
@@ -499,6 +486,16 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             }
             
             ret = sqlite3_bind_text(stmt, 12, folder_manifest_id.c_str(), folder_manifest_id.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK) {
+                printf("version Error message: %s\n", sqlite3_errmsg(db_));
+                return false;
+            }
+
+            ret = sqlite3_bind_text(stmt, 13, alias_encoded.c_str(), alias_encoded.size(), SQLITE_STATIC);
+            if(ret != SQLITE_OK) {
+                printf("version Error message: %s\n", sqlite3_errmsg(db_));
+                return false;
+            }
 
             ret = sqlite3_step(stmt);
             if(ret != SQLITE_DONE) {
@@ -530,6 +527,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
 }
 
 bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) { 
+    bool ret = false;
     std::string query;
     query += "SELECT * FROM \"";
     query += g_infotable;
@@ -538,7 +536,8 @@ bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) {
     query += "\";";
 
     SelectResult res;
-    if(PerformSelect(query.c_str(), res)) {
+    ret = PerformSelect(query.c_str(), res);
+    if(ret) {
         int step = 0;
         for(int i=0; i<res.row_+1; i++) {
             step = i*res.col_;
@@ -549,13 +548,33 @@ bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) {
                 std::string folderid = fi.folder_manifest_id();
                 std::string path;
                 GetFolderPath(folderid, path);
+                // Update alias
+                std::string old_path = fi.filepath();
                 // Update filepath
                 utils::CheckUrlAndAppendTrailingSlash(path);
                 path += fi.filename();
-                UpdateFilepath(fi.filepath(), path);
+                ret = UpdateFilepath(fi.filepath(), path);
+                if(ret) {
+                    // PushBackAlias
+                    ret = PushBackAlias(path, old_path);
+                }
             }
         }
     }
+
+    return ret;
+}
+
+bool Manifest::PushBackAlias(const std::string& filepath, const std::string& alias) {
+    bool ret = false;
+    FileInfo fi;
+    ret = QueryForFile(filepath, fi);
+    if(ret) {
+        fi.PushBackAlias(alias);
+        ret = InsertFileInfo(fi);
+    }
+
+    return ret;
 }
 
 bool Manifest::RemoveFileInfo(const std::string &filepath) {
@@ -595,8 +614,7 @@ bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val) {
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &id)
-{
+bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &id) {
     std::string exc;
     exc += "UPDATE \"";
     exc += g_infotable;
@@ -611,11 +629,11 @@ bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &
 bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::string &id) {
     std::string exc;
     exc += "UPDATE ";
-    exc += g_infotable.c_str();
+    exc += g_infotable;
     exc += " SET chunkpostid=\"";
-    exc += id.c_str();
+    exc += id;
     exc += "\" WHERE filepath=\"";
-    exc += filepath.c_str();
+    exc += filepath;
     exc += "\";";
     return PerformQuery(exc);
 }
@@ -623,11 +641,11 @@ bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::str
 bool Manifest::UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath) {
     std::string exc;
     exc += "UPDATE ";
-    exc += g_infotable.c_str();
+    exc += g_infotable;
     exc += " SET filepath=\"";
-    exc += new_filepath.c_str();
+    exc += new_filepath;
     exc += "\" WHERE filepath=\"";
-    exc += old_filepath.c_str();
+    exc += old_filepath;
     exc += "\";";
 
     std::cout<<" PERFORMING QUERY : " << exc << std::endl;
@@ -637,11 +655,27 @@ bool Manifest::UpdateFilepath(const std::string& old_filepath, const std::string
 bool Manifest::UpdateFilename(const std::string& filepath, const std::string& new_filename) {
     std::string exc;
     exc += "UPDATE ";
-    exc += g_infotable.c_str();
+    exc += g_infotable;
     exc += " SET filename=\"";
-    exc += new_filename.c_str();
+    exc += new_filename;
     exc += "\" WHERE filepath=\"";
-    exc += filepath.c_str();
+    exc += filepath;
+    exc += "\";";
+
+    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
+    return PerformQuery(exc);
+}
+
+bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& alias_data) {
+    std::string encoded;
+    crypto::Base64EncodeString(alias_data, encoded);
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_infotable;
+    exc += " SET alias_data=\"";
+    exc += encoded;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
     exc += "\";";
 
     std::cout<<" PERFORMING QUERY : " << exc << std::endl;

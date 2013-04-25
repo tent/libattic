@@ -14,7 +14,7 @@ endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
     message(STATUS "Bulding Attic Test Binary")
-    set(CMAKE_CXX_FLAGS "-w -g3 -ggdb -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "-g3 -ggdb -Wall -Wextra")
 endif(ATTIC_BINARY)
 
 # Build dependencies
