@@ -75,8 +75,8 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
 
     Response response;
 
-    ConnectionHandler ch;
-    ch.HttpGet(posts_feed,
+//    ConnectionHandler ch;
+    netlib::HttpGet(posts_feed,
                &params,
                &access_token_,
                response);
@@ -363,8 +363,8 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             jsn::SerializeObject(&p, post_buffer);
 
             Response response;
-            ConnectionHandler ch;
-            status = ch.HttpPost(posturl,
+            //ConnectionHandler ch;
+            status = netlib::HttpPost(posturl,
                                       p.type(),
                                       NULL,
                                       post_buffer,
@@ -408,8 +408,8 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     FilePost p;
     // Get Existing post
     Response get_resp;
-    ConnectionHandler ch;
-    ch.HttpGet(posturl,
+    //ConnectionHandler ch;
+    netlib::HttpGet(posturl,
                NULL,
                &access_token_,
                get_resp);
@@ -436,8 +436,8 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         jsn::SerializeObject(&p, put_buffer);
 
         Response put_resp;
-        ConnectionHandler ch;
-        status = ch.HttpPut(posturl,
+        //ConnectionHandler ch;
+        status = netlib::HttpPut(posturl,
                                  p.type(),
                                  NULL,
                                  put_buffer,

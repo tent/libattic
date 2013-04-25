@@ -387,8 +387,8 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     std::cout<<" PARAMS : " << prm << std::endl;
 
     Response response;
-    ConnectionHandler ch;
-    ch.HttpGet(url,
+    //ConnectionHandler ch;
+    netlib::HttpGet(url,
                &params,
                &access_token_,
                response);

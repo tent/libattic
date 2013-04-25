@@ -74,7 +74,7 @@ private:
     AccessToken         access_token_;
     PhraseToken         phrase_token_;
 
-    ConnectionHandler   conh_;
+    //ConnectionHandler   conh_;
 
     std::string working_directory_;
     std::string config_directory_;

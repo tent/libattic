@@ -402,6 +402,7 @@ TEST(MANIFEST, QUERY_ALL_FILES)
 
     ShutdownLibAttic(NULL);
 }
+
 /*
 TEST(INIT, SHUTDOWN)
 {
@@ -413,10 +414,12 @@ TEST(INIT, SHUTDOWN)
     int status = InitLibAttic();
 
     ASSERT_EQ(status, attic::ret::A_OK);
+    sleep(1);
 
     ShutdownLibAttic(NULL);
 }
 */
+
 
 #include "clientutils.h"
 bool g_bDiscover = false;
@@ -1134,6 +1137,25 @@ TEST(CHUNKBUFFER, TEST) {
         }
         ofs.close();
     }
+}
+
+#include "taskcontext.h"
+
+TEST(SIZE, TEST) {
+    std::cout<<" SIZE TESTS " << std::endl;
+    attic::TaskContext tc;                                       
+    tc.set_value("file_type", "file");                    
+    tc.set_value("original_filepath", std::string("this is a test")); 
+    tc.set_value("new_filename", std::string("jkasdfjksjadf"));           
+    tc.set_value("temp_dir", std::string("jkasdfjksjadf"));            
+    tc.set_value("working_dir", std::string("jkasdfjksjadf"));      
+    tc.set_value("config_dir", std::string("jkasdfjksjadf"));        
+    
+    std::cout<<" SIZEOF : " << sizeof(tc) << std::endl;
+    std::string test;
+    test += "kksdajfkajsdlfjasjdkjflkasjdkfjkasjdfjaksjdfkjaskdjfsadfs"; 
+    std::cout<< " SIZEOF : std::string : " << test.size() << std::endl;
+
 
 }
 
