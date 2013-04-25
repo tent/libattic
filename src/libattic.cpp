@@ -31,7 +31,9 @@
 
 #include "logutils.h"
 #include "filesystem.h"
+#include "servicemanager.h"
 
+static attic::ServiceManager       g_service_manager;
 static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
 //static TaskArbiter g_Arb;
@@ -83,16 +85,20 @@ int InitLibAttic(unsigned int threadCount) {
 
     if(status == attic::ret::A_OK)  {
         // Essential
-        status = attic::liba::InitializeTaskArbiter(threadCount);
+        status = attic::liba::InitializeTaskArbiter(threadCount + 1);
         status = attic::liba::InitializeTaskManager(&g_pTaskManager,
-                                             g_pClient->file_manager(),
-                                             g_pClient->credentials_manager(),
-                                             g_pClient->access_token(),
-                                             g_pClient->entity(),
-                                             g_pClient->temp_directory(),
-                                             g_pClient->working_directory(),
-                                             g_pClient->config_directory());
+                                                     g_pClient->file_manager(),
+                                                     g_pClient->credentials_manager(),
+                                                     g_pClient->access_token(),
+                                                     g_pClient->entity(),
+                                                     g_pClient->temp_directory(),
+                                                     g_pClient->working_directory(),
+                                                     g_pClient->config_directory());
 
+        // Configure the service manager before initializing
+        g_service_manager.set_task_manager(g_pTaskManager);
+        g_service_manager.Initialize();
+        
         g_CallbackHandler.Initialize();
     }
     else {
@@ -114,7 +120,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
     //attic::event::ShutdownEventSystem();
     g_pTaskManager = NULL;
-
+    g_service_manager.Shutdown();
     if(g_pClient) {
         std::cout<<" shutting down client ... " << std::endl;
         g_pClient->Shutdown();
@@ -123,6 +129,8 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
         delete g_pClient;
         g_pClient = NULL;
     }
+
+    attic::ConfigManager::GetInstance()->Shutdown();
 
     std::cout<<" calling back .. " << std::endl;
     if(callback)
@@ -225,7 +233,7 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilename) {
 
     if(status == attic::ret::A_OK) { 
         try { 
-            status = g_pTaskManager->RenameFile(szOldFilepath, szNewFilename);
+            g_pTaskManager->RenameFile(szOldFilepath, szNewFilename);
         }
         catch(std::exception& e) {
             attic::log::LogException("ASDKJ23423*", e);
@@ -242,7 +250,7 @@ int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
 
     if(status == attic::ret::A_OK) { 
         try { 
-            status = g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
+            g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
         }
         catch(std::exception& e) {
             attic::log::LogException("BBKJ23423*", e);
@@ -258,7 +266,7 @@ int PollFiles(void) {
     if(status == attic::ret::A_OK) {
         try { 
             if(status == attic::ret::A_OK)
-                status = g_pTaskManager->PollFiles(NULL);
+                g_pTaskManager->PollFiles(NULL);
         }
         catch(std::exception& e) {
             std::cout<<" caught : " << e.what() << std::endl;
@@ -489,7 +497,7 @@ int GetFileList(void(*callback)(int, char**, int, int)) {
         status = IsLibInitialized();
 
         if(status == attic::ret::A_OK)
-            status = g_pTaskManager->QueryManifest(callback);
+            g_pTaskManager->QueryManifest(callback);
     }
 
     return status;
@@ -559,13 +567,13 @@ int Pause(void) {
 int Resume(void) {
     int status = attic::ret::A_OK;
     attic::event::RaiseEvent(attic::event::Event::RESUME, "", NULL);
-    status = g_pTaskManager->ScanAtticFolder(NULL);
+    g_pTaskManager->ScanAtticFolder(NULL);
     return status;
 }
 
 int ScanAtticFolder() { 
     int status = attic::ret::A_OK;
-    status = g_pTaskManager->ScanAtticFolder(NULL);
+    g_pTaskManager->ScanAtticFolder(NULL);
     return status;
 }
 

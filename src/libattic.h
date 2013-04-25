@@ -28,7 +28,7 @@ int RequestUserAuthorizationDetails( const char* szEntityUrl,
 
 
 // Api begin
-int InitLibAttic(unsigned int threadCount = 5);
+int InitLibAttic(unsigned int threadCount = 10);
 
 int ShutdownLibAttic(void (*callback)(int, void*));
 
