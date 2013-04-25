@@ -2,21 +2,18 @@
 #define SERVICETASK_H_
 #pragma once
 
-#include "tenttask.h"
+#include "task.h"
+#include "taskdispatch.h"
 
 namespace attic { 
 // This task encapsulates general purpose systems that need dt updating
 // Event system
 // - Time sensative delete queues etc (future)
 //
-class ServiceTask : public TentTask {
+class TaskManager;
+class ServiceTask : public Task {
 public:
-    ServiceTask(FileManager* pFm,
-             CredentialsManager* pCm,
-             const AccessToken& at,
-             const Entity& entity,
-             const TaskContext& context,
-             TaskDelegate* callbackDelegate);
+    ServiceTask(TaskManager* tm, const TaskContext& context);
  
     ~ServiceTask();
 
@@ -25,6 +22,9 @@ public:
     virtual void OnFinished();
 
     void RunTask();
+private:
+    TaskManager* task_manager_;
+    TaskDispatch* task_dispatch_;
 };
 
 }//namespace
