@@ -33,6 +33,8 @@ RenameTask::~RenameTask() {}
 void RenameTask::RunTask() {
     int status = ret::A_OK;
 
+
+
     std::cout<<" Rename task run ... " << std::endl;
     std::string filetype;
     context_.get_value("file_type", filetype);
@@ -41,16 +43,22 @@ void RenameTask::RunTask() {
         std::string old_file, new_filename;
         context_.get_value("original_filepath", old_file);
         context_.get_value("new_filename", new_filename);
-        event::RaiseEvent(event::Event::PUSH, event::Event::START, old_file, NULL);
+
+        event::RaiseEvent(event::Event::RENAME, event::Event::START, old_file, NULL);
         status = RenameFile(filetype, old_file, new_filename);
-        event::RaiseEvent(event::Event::PUSH, event::Event::DONE, old_file, NULL);
+        event::RaiseEvent(event::Event::RENAME, event::Event::DONE, old_file, NULL);
+
         file = new_filename;
     }
     else if(filetype == "folder") {
         std::string old_folder, new_folder_name;
         context_.get_value("original_folderpath", old_folder);
         context_.get_value("new_foldername", new_folder_name);
+
+        event::RaiseEvent(event::Event::RENAME, event::Event::START, old_folder, NULL);
         status = RenameFolder(filetype, old_folder, new_folder_name);
+        event::RaiseEvent(event::Event::RENAME, event::Event::DONE, old_folder, NULL);
+
         file = new_folder_name;
     }
 
