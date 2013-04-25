@@ -157,15 +157,13 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
     std::vector<std::string>::iterator itr = chunkList.begin();
 
     for(;itr != chunkList.end(); itr++) {
-        ChunkInfo* ci = new ChunkInfo();
-        jsn::DeserializeObject(ci, *itr);
+        ChunkInfo ci = ChunkInfo();
+        jsn::DeserializeObject(&ci, *itr);
 
-        std::string name = ci->chunk_name();
+        std::string name = ci.chunk_name();
         if(chunks_.find(name) == chunks_.end()) {
-            chunks_[name] = *ci;
+            chunks_[name] = ci;
         }
-
-        delete ci;
     }
 
     return true;

@@ -50,11 +50,11 @@ struct Version : public JsonSerializable {
 
 struct Attachment : public JsonSerializable {
     std::string content_type;      // `json:"content_type"`
-    std::string category;  // `json:"category"`
-    std::string name;      // `json:"name"`
-    std::string hash;      // `json:"hash"`
-    std::string digest;    // `json:"digest"`
-    unsigned int size;     // `json:"size"`
+    std::string category;          // `json:"category"`
+    std::string name;              // `json:"name"`
+    std::string hash;              // `json:"hash"`
+    std::string digest;            // `json:"digest"`
+    unsigned int size;             // `json:"size"`
 
     void AssignKeyValue(const std::string &key, const Json::Value &val);
     void Serialize(Json::Value& root);

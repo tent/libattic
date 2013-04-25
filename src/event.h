@@ -22,6 +22,7 @@ struct Event {
     enum EventType {
         PUSH = 0,
         PULL,
+        DELETE,
         REQUEST_PUSH,
         REQUEST_PULL,
         REQUEST_DELETE,

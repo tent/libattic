@@ -37,9 +37,12 @@ void DeleteTask::RunTask() {
     // Run the task
     int status = ret::A_OK;
 
+
     std::string filepath = TentTask::filepath();
     std::string post_path = TentTask::GetPostPath(); 
     std::string entity = TentTask::entity().entity();
+
+    event::RaiseEvent(event::Event::DELETE, event::Event::START, filepath, NULL);
 
     SoftDeleteStrategy sds;
 
@@ -54,6 +57,7 @@ void DeleteTask::RunTask() {
 
     status = softdeletectx.ExecuteAll();
     
+    event::RaiseEvent(event::Event::DELETE, event::Event::DONE, filepath, NULL);
     // Callback
     Callback(status, "");
     SetFinishedState();
