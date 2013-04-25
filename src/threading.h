@@ -13,8 +13,7 @@ namespace attic {
 class ThreadWorker;
 class TaskQueue;
 
-class ThreadPool                                                                                 
-{                                                                                                
+class ThreadPool{
 public:                                                                                          
     ThreadPool();
     ~ThreadPool();
@@ -24,7 +23,6 @@ public:
 
     int ExtendPool(unsigned int stride);                                                        
     int AbridgePool(unsigned int stride);                                                       
-
 private:                                                                                         
     std::vector<boost::thread*> m_Threads;
     std::vector<ThreadWorker*> m_Workers;
