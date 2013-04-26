@@ -56,6 +56,10 @@ void PollTask::OnStart(){
 
     event::RegisterForEvent(this, event::Event::PAUSE);
     event::RegisterForEvent(this, event::Event::RESUME);
+    Entity entity = TentTask::entity();
+    census_handler_.Initialize(entity.GetPreferredServer().posts_feed(),
+                               entity.GetPreferredServer().post(),
+                               access_token());
     timer_.start();
 }
 
@@ -109,9 +113,12 @@ void PollTask::RunTask() {
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
-                status = SyncFolderPosts();
-                if(status != ret::A_OK)
-                    std::cout<<" POLLING ERR : " << status << std::endl;
+                if(census_handler_.Inquiry()) {
+                    status = SyncFiles();
+                    //status = SyncFolderPosts();
+                    if(status != ret::A_OK)
+                        std::cout<<" POLLING ERR : " << status << std::endl;
+                }
             }
             timer_.start();
         }
@@ -148,7 +155,7 @@ int PollTask::SyncFolder(FolderPost& folder_post) {
     std::cout<<" SYNCING FOLDER " << std::endl;
     int status = ret::A_OK;
     std::deque<FilePost> file_posts;
-    status = RetrieveFilePosts(folder_post.id(), file_posts);
+    status = RetrieveFilePostsThatMentionFolder(folder_post.id(), file_posts);
     if(status == ret::A_OK) {
         std::deque<FilePost>::iterator itr = file_posts.begin();
         for(;itr != file_posts.end(); itr++) {
@@ -168,7 +175,8 @@ int PollTask::SyncFolder(FolderPost& folder_post) {
     return status;
 }
 
-int PollTask::RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>& posts) {
+int PollTask::RetrieveFilePostsThatMentionFolder(const std::string& post_id, 
+                                                 std::deque<FilePost>& posts) {
     int status = ret::A_OK;
     std::cout<<" RETRIEVE FILE POSTS " << std::endl;
     int postcount = GetFilePostCount(post_id);
@@ -230,6 +238,71 @@ int PollTask::RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>
         }
     }
     return status;
+}
+
+int PollTask::SyncFiles() {
+    int status = ret::A_OK;
+
+    std::deque<FilePost> posts;
+    std::string last_id;
+    while(RetrieveFilePosts(posts, last_id)) {
+        std::cout<<" LAST ID : " << std::endl;
+        // Process Posts
+        std::deque<FilePost>::iterator itr = posts.begin();
+        for(;itr != posts.end(); itr++) {
+            event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                              (*itr).id(),
+                              delegate_);
+        }
+        posts.clear();
+    }
+
+    return status;
+}
+
+bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_id) {
+    Entity entity = TentTask::entity();
+    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+
+    AccessToken at = access_token();
+
+    char count_buf[256] = {'\0'};
+    snprintf(count_buf, 256, "%d", 200);
+
+    UrlParams params;                                                                  
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_file_type));  
+    params.AddValue(std::string("limit"), std::string(count_buf));
+    if(!last_id.empty())
+        params.AddValue(std::string("last_id"), last_id);
+
+    Response resp;
+    netlib::HttpGet(posts_feed,
+                    &params,
+                    &at,
+                    resp);
+
+    if(resp.code == 200) { 
+        Json::Value root;
+        Json::Reader reader;
+        reader.parse(resp.body, root);
+        //jsn::PrintOutJsonValue(&root);
+
+        std::cout<<" iterating " << std::endl;
+        Json::ValueIterator itr = root.begin();
+        for(; itr != root.end(); itr++) {
+            FilePost fp;
+            if(jsn::DeserializeObject(&fp, *itr))
+                posts.push_back(fp);
+        }
+        std::string id;
+        id = posts[posts.size()-1].id();
+        if(id != last_id) {
+            last_id = id;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int PollTask::RetrieveFolderPosts(std::deque<FolderPost>& posts) {

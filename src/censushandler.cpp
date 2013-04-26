@@ -5,20 +5,21 @@
 
 namespace attic { 
 
-CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& at) {
-    posts_feed_ = posts_feed;
-    access_token_ = at;
-}
+CensusHandler::CensusHandler() {}
+CensusHandler::~CensusHandler() {}
 
-void CensusHandler::Initialize() {
+void CensusHandler::Initialize(const std::string& posts_feed, 
+                               const std::string& post_path,
+                               const AccessToken& at) {
+    posts_feed_ = posts_feed;
+    post_path_ = post_path;
+    access_token_ = at;
     event::RegisterForEvent(this, event::Event::PUSH);
     event::RegisterForEvent(this, event::Event::DELETE);
     event::RegisterForEvent(this, event::Event::RENAME);
 }
 
-CensusHandler::~CensusHandler() {}
-
-bool CensusHandler::CensusInquiry()  {
+bool CensusHandler::Inquiry()  {
     // Retrieve Census post ( there should only be one, delete otherwise)
     CensusPost p;
     if(GetCensusPost(p)) {
@@ -153,6 +154,7 @@ int CensusHandler::GetCensusPostCount() {
 }
 
 void CensusHandler::OnEventRaised(const event::Event& event) {
+    std::cout<<" BUMPING VERSION " << std::endl;
     // Event raised, don't really care what, bump the version
     PushVersionBump();
 }

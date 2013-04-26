@@ -18,11 +18,13 @@ class CensusHandler : public event::EventListener {
 
     int PushVersionBump();
 public:
-    CensusHandler(const std::string& posts_feed, const AccessToken& at);
+    CensusHandler();
     ~CensusHandler();
 
-    void Initialize();
-    bool CensusInquiry();
+    void Initialize(const std::string& posts_feed, 
+                    const std::string& post_path,
+                    const AccessToken& at);
+    bool Inquiry();
 
     void OnEventRaised(const event::Event& event);
 private:

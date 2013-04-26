@@ -13,6 +13,7 @@
 #include "filepost.h"
 #include "taskdelegate.h"
 #include "event.h"
+#include "censushandler.h"
 
 namespace attic { 
 
@@ -30,8 +31,10 @@ class PollTask : public TentTask, public event::EventListener {
     bool IsFileInQueue(const std::string& filepath);
 
 
+    int SyncFiles();
+    bool RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_id);
     int RetrieveFolderPosts(std::deque<FolderPost>& posts);
-    int RetrieveFilePosts(const std::string& post_id, std::deque<FilePost>& posts);
+    int RetrieveFilePostsThatMentionFolder(const std::string& post_id, std::deque<FilePost>& posts);
 public:
     void PollTaskCB(int a, std::string& b);
 
@@ -58,6 +61,8 @@ private:
     boost::timer::cpu_timer timer_;
 
     bool running_;
+
+    CensusHandler census_handler_;
 };
 
 class PollDelegate : public TaskDelegate {
@@ -70,8 +75,7 @@ public:
     virtual void Callback(const int type,
                           const int code,
                           const int state,
-                          const std::string& var) const
-    {
+                          const std::string& var) const {
         if(m_pTask) {
             std::string retval = var;
             m_pTask->PollTaskCB(code, retval);
