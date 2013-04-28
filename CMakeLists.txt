@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 
-option (ATTIC_STATIC_LIB "Build Attic Static lib" OFF)
-option (ATTIC_BINARY "Build Attic Binary test executable" ON)
+option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
+option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
