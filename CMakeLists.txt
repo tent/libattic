@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 
-option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
-option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
+option (ATTIC_STATIC_LIB "Build Attic Static lib" OFF)
+option (ATTIC_BINARY "Build Attic Binary test executable" ON)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
@@ -53,6 +53,8 @@ endif(ATTIC_BINARY)
 if(ATTIC_STATIC_LIB)
     file(MAKE_DIRECTORY lib)
     set(LIBRARY_OUTPUT_PATH lib)
+    file(MAKE_DIRECTORY include)
+    file(COPY src/libattic.h DESTINATION include)
 endif(ATTIC_STATIC_LIB)
 
 
@@ -149,6 +151,8 @@ if(ATTIC_BINARY)
                           boost_timer
                           boost_chrono
                           pthread
+                          crypto
+                          dl
                           ssl
                           rt
                           gtest) #pulls gtest from google subdirectory
