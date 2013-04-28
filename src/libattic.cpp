@@ -15,7 +15,6 @@
 
 #include "constants.h"
 #include "credentials.h"
-#include "profile.h"
 
 #include "libatticutils.h"
 
