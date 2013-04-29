@@ -3,6 +3,7 @@
 #include "crypto.h"
 #include "logutils.h"
 #include "connectionhandler.h"
+#include "pagepost.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -28,7 +29,7 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
                 reg = true;
                 std::cout<<" OVERRIDING ... " << std::endl;
                 // TODO :: when delete is implemented delete the old version
-                //status = DeleteCredentialsPost(ap);
+                status = DeleteCredentialsPost(ap);
             }
         }
     }
@@ -37,6 +38,9 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
     }
 
     if(reg) {
+        std::cout<<" PREV STATUS : " << status << std::endl;
+        std::cout<<" Constructing master key .... " << std::endl;
+        std::cout<<" passed in passphrase : " << passphrase << std::endl;
         std::string encrypted_masterkey, salt;
         status = ConstructMasterKey(passphrase, masterkey, encrypted_masterkey, salt);
         if(status == ret::A_OK) {
@@ -407,8 +411,10 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     if(response.code == 200) {
         // There should be only one, either way, take the top most in the array
         //  - later do this to sort by newest
+        PagePost p;
+        jsn::DeserializeObject(&p , response.body);
         Json::Value arr(Json::arrayValue);
-        jsn::DeserializeJson(response.body, arr);
+        jsn::DeserializeJson(p.data(), arr);
         Json::ValueIterator itr = arr.begin();
         if(itr!= arr.end())
             jsn::DeserializeObject(&out, *itr);
