@@ -15,6 +15,7 @@
 #include "logutils.h"
 #include "chunkbuffer.h"
 #include "chunkrequest.h"
+#include "pagepost.h"
 
 #include "sleep.h"
 
@@ -35,30 +36,39 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
-        std::string meta_post_id;
-        std::cout<<" Initializing File Meta Data " << std::endl;
-        status = InitializeFileMetaData(fi, filepath, meta_post_id);
-        std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
-        if(status == ret::A_OK && !meta_post_id.empty()) {
-            // Retrieve Chunk posts
-            ChunkPostList chunk_posts;
-            RetrieveChunkPosts(entity, meta_post_id, chunk_posts);
-            // Extract Chunk info
-            FileInfo::ChunkMap chunk_map;
-            ExtractChunkInfo(chunk_posts, chunk_map);
-            // begin chunking
-            status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
-            std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
+        // Verify key credentials
+        if(!fi->file_credentials().key_empty()) {
+            std::string meta_post_id;
+            std::cout<<" Initializing File Meta Data " << std::endl;
+            status = InitializeFileMetaData(fi, filepath, meta_post_id);
+            std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
+            if(status == ret::A_OK && !meta_post_id.empty()) {
+                // Retrieve Chunk posts
+                ChunkPostList chunk_posts;
+                RetrieveChunkPosts(entity, meta_post_id, chunk_posts);
+                // Extract Chunk info
+                FileInfo::ChunkMap chunk_map;
+                ExtractChunkInfo(chunk_posts, chunk_map);
+                // begin chunking
+                status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
+                std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
 
-            if(status == ret::A_OK) { 
-                // Update file info
-                file_manager_->SetFileChunks(fi->filepath(), chunk_map);
-                // Update meta data transit state
-                status = UpdateFilePostTransitState(meta_post_id, false);
+                if(status == ret::A_OK) { 
+                    // Update file info
+                    file_manager_->SetFileChunks(fi->filepath(), chunk_map);
+                    // Update meta data transit state
+                    status = UpdateFilePostTransitState(meta_post_id, false);
+                }
+            }
+            else if(status == ret::A_OK && meta_post_id.empty()) {
+                std::cout<<" META POST ID EMPTY " << std::endl;
             }
         }
-        else if(status == ret::A_OK && meta_post_id.empty()) {
-            std::cout<<" META POST ID EMPTY " << std::endl;
+        else {
+            std::string error = "Invalid file key during post file ";
+            log::LogString("KJASDmmm++234", error);
+            status = ret::A_FAIL_INVALID_FILE_KEY;
+
         }
     }
     else {
@@ -86,8 +96,12 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
                response);
 
     if(response.code == 200) {
+        PagePost pp;
+        jsn::DeserializeObject(&pp, response.body);
+
+        std::cout<< "RETRIEVE DATA PP DATA : " << pp.data() << std::endl;
         Json::Value chunk_post_arr(Json::arrayValue);
-        jsn::DeserializeJson(response.body, chunk_post_arr);
+        jsn::DeserializeJson(pp.data(), chunk_post_arr);
         Json::ValueIterator itr = chunk_post_arr.begin();
         for(; itr != chunk_post_arr.end(); itr++) {
             ChunkPost p;
