@@ -94,7 +94,7 @@ bool Manifest::CreateInfoTable() {
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_infotable;
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
-    exc += " chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT,";
+    exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, folder_manifest_id TEXT, alias_data TEXT,";
     exc += " PRIMARY KEY(filepath ASC, folder_manifest_id ASC));";
@@ -337,7 +337,12 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     out.LoadSerializedChunkData(res.results_[3+step]);
     out.set_file_size(res.results_[4+step]);
     out.set_post_id(res.results_[5+step]);
-    out.set_chunk_post_id(res.results_[6+step]);
+    std::string b64_cred_data = res.results_[6+step];
+    std::string cred_data;
+    crypto::Base64DecodeString(b64_cred_data, cred_data);
+    Credentials cred;
+    jsn::DeserializeObject(&cred, cred_data);
+    out.set_file_credentials(cred);
     out.set_post_version(res.results_[7+step]);
     //out.set_encrypted_key(res.results_[8+step]);
     // File Key (Base64 encoded)
@@ -359,7 +364,7 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     out.LoadSerializedAliasData(alias_data);
 }
 
-//"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, chunkpostid TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
+//"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
 bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
@@ -371,7 +376,9 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string filename = fi.filename();
     std::string filepath = fi.filepath();
     std::string metapostid = fi.post_id();
-    std::string chunkpostid = fi.chunk_post_id();
+
+    std::string cred_data = fi.file_credentials().asString();
+
     std::string encryptedkey = fi.encrypted_key();
     std::string iv = fi.file_credentials_iv();
     std::string folder_manifest_id = fi.folder_manifest_id();
@@ -386,18 +393,19 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string alias_encoded;
     crypto::Base64EncodeString(alias_data, alias_encoded);
 
-    /*
+
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
-    std::cout<< " count : " << fi.GetChunkCount() << std::endl;
-    std::cout<< " filesize : " << fi.GetFileSize() << std::endl;
+    std::cout<< " count : " << fi.chunk_count() << std::endl;
+    std::cout<< " filesize : " << fi.file_size() << std::endl;
     std::cout<< " meta id : " << metapostid << std::endl;
-    std::cout<< " chunk id : " << chunkpostid << std::endl;
-    std::cout<< " version : " << fi.GetPostVersion() << std::endl;
+    std::cout<< " chunk id : " << cred_data << std::endl;
+    std::cout<< " version : " << fi.post_version() << std::endl;
     std::cout<< " chunkdata : " << chunkdata << std::endl;
     std::cout<< " encrypted key : " << encryptedkey << std::endl;
     std::cout<< " iv : " << iv << std::endl;
-    std::cout<< " deleted : " << fi.GetDeleted() << std::endl;
+    std::cout<< " deleted : " << fi.deleted() << std::endl;
+    /*
     */
 
     std::string query;
@@ -450,7 +458,9 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
 
-            ret = sqlite3_bind_text(stmt, 7, chunkpostid.c_str(), chunkpostid.size(), SQLITE_STATIC);
+            std::string b64_cred_data;
+            crypto::Base64EncodeString(cred_data, b64_cred_data);
+            ret = sqlite3_bind_text(stmt, 7, b64_cred_data.c_str(), b64_cred_data.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("chunkpostid Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
@@ -465,6 +475,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             std::string b64_key;
             crypto::Base64EncodeString(encryptedkey, b64_key);
             ret = sqlite3_bind_blob(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
+            std::cout<<" BASE 64 KEY ENCRYPTED : " << b64_key << std::endl;
 
             if(ret != SQLITE_OK) {
                 printf("key Error message: %s\n", sqlite3_errmsg(db_));
