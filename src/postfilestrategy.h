@@ -12,6 +12,7 @@
 #include "connection.h"
 #include "chunkpost.h"
 #include "fileinfo.h"
+#include "filepost.h"
 
 namespace attic {
 
@@ -53,6 +54,7 @@ private:
     bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
 
     int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
+    int ExtractCredentials(FilePost& in, Credentials& out);
 public:
     PostFileStrategy();
     ~PostFileStrategy();

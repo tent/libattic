@@ -39,7 +39,6 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         std::string meta_post_id;
         std::cout<<" Initializing File Meta Data " << std::endl;
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
-
         // Verify key credentials
         if(!fi->file_credentials().key_empty()) {
             std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
@@ -411,6 +410,26 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             status = ret::A_FAIL_INVALID_FOLDER_POST;
         }
     }
+    else {
+        // Get existing file post, and extract credentials
+        // make sure this has file credentials, if not pull from post
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", meta_data_post_id, posturl);
+
+        Response resp;
+        netlib::HttpGet(posturl, NULL, &access_token_, resp);
+
+        if(resp.code == 200) {
+            FilePost fp;
+            jsn::DeserializeObject(&fp, resp.body);
+            Credentials cred;
+            ExtractCredentials(fp, cred);
+            fi->set_file_credentials(cred);
+        }
+        else {
+            log::LogHttpResponse("MASDK@#8", resp);
+        }
+    }
 
     if(status == ret::A_OK) {
         status = UpdateFilePostTransitState(meta_data_post_id, true);
@@ -496,6 +515,38 @@ bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
     }
     std::cout<<" folder post id : " << id_out << std::endl;
     return ret;
+}
+
+int PostFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
+    int status = ret::A_OK;
+    
+    std::string key, iv;
+    key = in.key_data();
+    iv = in.iv_data();
+
+    MasterKey mKey;
+    credentials_manager_->GetMasterKeyCopy(mKey);
+
+    std::string mk;
+    mKey.GetMasterKey(mk);
+    Credentials FileKeyCred;
+    FileKeyCred.set_key(mk);
+    FileKeyCred.set_iv(iv);
+
+    // Decrypt File Key
+    std::string filekey;
+    //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+    status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
+    std::cout<<" FILE KEY : " << filekey << std::endl;
+    if(status == ret::A_OK) {
+        out.set_key(filekey);
+        out.set_iv(iv);
+    }
+    else { 
+        std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
+    }
+
+    return status;
 }
 
 }//namespace
