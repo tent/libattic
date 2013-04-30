@@ -2,6 +2,7 @@
 
 #include <deque>
 #include "netlib.h"
+#include "pagepost.h"
 
 namespace attic { 
 
@@ -88,13 +89,14 @@ int CensusHandler::RetrieveCensusPost(CensusPost& out) {
                              resp);
 
     if(resp.code == 200) {
-        Json::Value root;
-        Json::Reader reader;
-        reader.parse(resp.body, root);
-
+        PagePost pp;
+        jsn::DeserializeObject(&pp, resp.body);
+        Json::Value arr(Json::arrayValue);
+        jsn::DeserializeJsonValue(arr, pp.data());
+        
         std::deque<CensusPost> posts;
-        Json::ValueIterator itr = root.begin();
-        for(; itr != root.end(); itr++) {
+        Json::ValueIterator itr = arr.begin();
+        for(; itr != arr.end(); itr++) {
             CensusPost cp;
             if(jsn::DeserializeObject(&cp, *itr))
                     posts.push_back(cp);
