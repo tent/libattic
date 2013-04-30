@@ -417,8 +417,7 @@ static void EncodeAndAppendUrlParams(const UrlParams* pParams, std::string& url)
 static void ExtractHostAndPath( const std::string& url, 
                                 std::string& protocol,
                                 std::string& host, 
-                                std::string& path)
-{
+                                std::string& path) {
     std::string uri = url;
     int left = 0;
     left = uri.find("http");
@@ -441,8 +440,10 @@ static void ExtractHostAndPath( const std::string& url,
     right = uri.find("/", left);
 
     int diff = right - left;
-    host = uri.substr(left, diff);
-    path = uri.substr(right);
+    if(!(diff < 0)) {
+        host = uri.substr(left, diff);
+        path = uri.substr(right);
+    }
 }
 
 static void InterpretResponse(tcp::socket* socket, Response& resp) {

@@ -62,6 +62,11 @@ int InitLibAttic(unsigned int threadCount) {
     attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigTempDir, tempdir);
     attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigEntityURL, entityurl);
 
+    std::cout<<" working dir : " << workingdir << std::endl;
+    std::cout<<" config dir : " << configdir << std::endl;
+    std::cout<<" temp dir : " << tempdir << std::endl;
+    std::cout<<" entityurl : " << entityurl << std::endl;
+
     std::string t;
     std::cout<<" creating new client ... " << std::endl;
     if(!workingdir.empty())
