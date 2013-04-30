@@ -93,13 +93,13 @@ int Credentials::set_iv(const byte* pIv, const unsigned int length) {
     return status;
 }
 
-bool Credentials::KeyEmpty() {
+bool Credentials::byte_key_empty() {
     if(strlen(reinterpret_cast<const char*>(byte_key_)))
         return false;
     return true;
 }
 
-bool Credentials::IvEmpty() {
+bool Credentials::byte_iv_empty() {
     if(strlen(reinterpret_cast<const char*>(byte_iv_)))
         return false;
     return true;

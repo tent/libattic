@@ -35,8 +35,11 @@ public:
     int set_iv(const std::string& iv); 
     int set_iv(const byte* pIv, const unsigned int length);
 
-    bool KeyEmpty();
-    bool IvEmpty();
+    bool byte_key_empty();
+    bool byte_iv_empty();
+
+    bool key_empty() const { return key_.empty(); }
+    bool iv_empty() const { return iv_.empty(); } 
 
 private:
     std::string key_;
