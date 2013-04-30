@@ -31,6 +31,13 @@ void Credentials::GetSerializedCredentials(std::string& out) {
     jsn::SerializeObject(this, out);
 }
 
+std::string Credentials::asString() const {
+    Credentials obj = *this;
+    std::string out;
+    jsn::SerializeObject(&obj, out);
+    return out;
+}
+
 int Credentials::set_key(const std::string& key) { 
     int status = ret::A_OK;
 

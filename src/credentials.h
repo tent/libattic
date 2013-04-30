@@ -20,6 +20,8 @@ public:
 
     void GetSerializedCredentials(std::string& out);
 
+    std::string asString() const;
+
     size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
     size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
 
