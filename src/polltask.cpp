@@ -266,8 +266,6 @@ int PollTask::SyncFiles() {
         std::cout<< "NEXT : " << pp.pages().next() << std::endl;
         std::cout<< "EMPTY? " << pp.pages().next().empty() << std::endl;
         if(pp.pages().next().empty()) { 
-
-
             break;
         }
     }
