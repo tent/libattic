@@ -69,6 +69,7 @@ void PollTask::OnFinished() {
     std::cout<<" POLL TASK FINISHING " << std::endl;
     event::UnregisterFromEvent(this, event::Event::PAUSE);
     event::UnregisterFromEvent(this, event::Event::RESUME);
+    census_handler_.Shutdown();
     timer_.stop();
 }
 

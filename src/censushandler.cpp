@@ -20,6 +20,12 @@ void CensusHandler::Initialize(const std::string& posts_feed,
     event::RegisterForEvent(this, event::Event::RENAME);
 }
 
+void CensusHandler::Shutdown() {
+    event::UnregisterFromEvent(this, event::Event::PUSH);
+    event::UnregisterFromEvent(this, event::Event::DELETE);
+    event::UnregisterFromEvent(this, event::Event::RENAME);
+}
+
 bool CensusHandler::Inquiry()  {
     // Retrieve Census post ( there should only be one, delete otherwise)
     CensusPost p;

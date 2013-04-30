@@ -22,7 +22,6 @@ void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallba
 
 void CallbackHandler::OnEventRaised(const event::Event& event) {
     std::cout<<" Notifying : " << event.type << std::endl;
-
     Notify(event);
 }
 

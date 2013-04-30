@@ -16,6 +16,7 @@
 #include "chunkbuffer.h"
 #include "chunkrequest.h"
 #include "pagepost.h"
+#include "censushandler.h"
 
 #include "sleep.h"
 
@@ -68,11 +69,26 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             std::string error = "Invalid file key during post file ";
             log::LogString("KJASDmmm++234", error);
             status = ret::A_FAIL_INVALID_FILE_KEY;
-
         }
     }
     else {
         status = ret::A_FAIL_PATH_DOESNT_EXIST;
+    }
+
+    if(status == ret::A_OK) {
+        std::cout<<" BUMPING CENSUS VERSION START " << std::endl;
+        // bump census version
+        //
+        CensusHandler ch;
+        ch.Initialize(posts_feed_, post_path_, access_token_);
+        status = ch.PushVersionBump();
+        if(status != ret::A_OK) {
+            std::string error = "Failed to bump census version";
+            log::LogString("MKA!o3214", error);
+        }
+        ch.Shutdown();
+
+        std::cout<<" BUMPING CENSUS VERSION END " << std::endl;
     }
 
     return status;
