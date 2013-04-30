@@ -114,6 +114,7 @@ void PollTask::RunTask() {
             timer_.stop();
             if(running_) {
                 if(census_handler_.Inquiry()) {
+                    std::cout<<" Syncing files ... " << std::endl;
                     status = SyncFiles();
                     //status = SyncFolderPosts();
                     if(status != ret::A_OK)
@@ -244,23 +245,38 @@ int PollTask::SyncFiles() {
     int status = ret::A_OK;
 
     std::deque<FilePost> posts;
-    std::string last_id;
-    while(RetrieveFilePosts(posts, last_id)) {
+    PagePost pp;
+    while(RetrieveFilePosts(posts, pp)) {
+        std::cout<< "PAGES : \n" << pp.pages().asString() << std::endl;
+        sleep::sleep_seconds(1);
         std::cout<<" LAST ID : " << std::endl;
+
         // Process Posts
         std::deque<FilePost>::iterator itr = posts.begin();
         for(;itr != posts.end(); itr++) {
-            event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
-                              (*itr).id(),
-                              delegate_);
+            if(processing_queue_.find((*itr).id()) == processing_queue_.end()) {
+                processing_queue_[(*itr).id()] = true;
+                std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
+                event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                                  (*itr).id(),
+                                  delegate_);
+            }
         }
         posts.clear();
+        std::cout<< "NEXT : " << pp.pages().next() << std::endl;
+        std::cout<< "EMPTY? " << pp.pages().next().empty() << std::endl;
+        if(pp.pages().next().empty()) { 
+
+
+            break;
+        }
     }
 
     return status;
 }
 
-bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_id) {
+bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, PagePost& out) {
+    std::cout<< " retrieving file posts " << std::endl;
     Entity entity = TentTask::entity();
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
 
@@ -268,6 +284,10 @@ bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_
 
     char count_buf[256] = {'\0'};
     snprintf(count_buf, 256, "%d", 200);
+
+    std::string last_id = out.pages().next();
+
+    std::cout<<" NEXT ID : " << last_id << std::endl;
 
     UrlParams params;                                                                  
     params.AddValue(std::string("types"), std::string(cnst::g_attic_file_type));  
@@ -282,24 +302,23 @@ bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_
                     resp);
 
     if(resp.code == 200) { 
-        Json::Value root;
-        Json::Reader reader;
-        reader.parse(resp.body, root);
-        //jsn::PrintOutJsonValue(&root);
+        jsn::DeserializeObject(&out, resp.body);
+
+        Json::Value arr(Json::arrayValue);
+        jsn::DeserializeJson(out.data(), arr);
 
         std::cout<<" iterating " << std::endl;
-        Json::ValueIterator itr = root.begin();
-        for(; itr != root.end(); itr++) {
+        std::cout<<" data : " << out.data() << std::endl;
+        Json::ValueIterator itr = arr.begin();
+        for(; itr != arr.end(); itr++) {
             FilePost fp;
             if(jsn::DeserializeObject(&fp, *itr))
                 posts.push_back(fp);
         }
-        std::string id;
-        id = posts[posts.size()-1].id();
-        if(id != last_id) {
-            last_id = id;
-            return true;
-        }
+        return true;
+    }
+    else {
+        log::LogHttpResponse("A0214812", resp);
     }
 
     return false;

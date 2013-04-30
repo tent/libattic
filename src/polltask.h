@@ -14,6 +14,7 @@
 #include "taskdelegate.h"
 #include "event.h"
 #include "censushandler.h"
+#include "pagepost.h"
 
 namespace attic { 
 
@@ -32,7 +33,7 @@ class PollTask : public TentTask, public event::EventListener {
 
 
     int SyncFiles();
-    bool RetrieveFilePosts(std::deque<FilePost>& posts, std::string& last_id);
+    bool RetrieveFilePosts(std::deque<FilePost>& posts, PagePost& out);
     int RetrieveFolderPosts(std::deque<FolderPost>& posts);
     int RetrieveFilePostsThatMentionFolder(const std::string& post_id, std::deque<FilePost>& posts);
 public:
