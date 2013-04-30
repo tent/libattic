@@ -19,6 +19,7 @@ public:
     const std::string& prev() const { return prev_; }
     const std::string& next() const { return next_; }
     const std::string& last() const { return last_; }
+    std::string asString() const;
 private:
     std::string first_;
     std::string prev_;

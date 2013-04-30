@@ -10,6 +10,15 @@ void Pages::Serialize(Json::Value& root) {
     root["last"] = last_;
 }
 
+std::string Pages::asString() const {
+    std::string out;
+    out += "first : " + first_ + "\n";
+    out += "prev : " + prev_ + "\n";
+    out += "next : " + next_ + "\n";
+    out += "last : " + last_ + "\n";
+    return out;
+}
+
 void Pages::Deserialize(Json::Value& root) {
     first_ = root.get("first", "").asString();
     prev_ = root.get("prev", "").asString();
