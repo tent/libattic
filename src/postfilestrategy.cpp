@@ -36,11 +36,12 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
+        std::string meta_post_id;
+        std::cout<<" Initializing File Meta Data " << std::endl;
+        status = InitializeFileMetaData(fi, filepath, meta_post_id);
+
         // Verify key credentials
         if(!fi->file_credentials().key_empty()) {
-            std::string meta_post_id;
-            std::cout<<" Initializing File Meta Data " << std::endl;
-            status = InitializeFileMetaData(fi, filepath, meta_post_id);
             std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
             if(status == ret::A_OK && !meta_post_id.empty()) {
                 // Retrieve Chunk posts
