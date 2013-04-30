@@ -12,6 +12,7 @@
 #include "event.h"
 #include "logutils.h"
 #include "connectionhandler.h"
+#include "pagepost.h"
 
 namespace attic { 
 
@@ -114,8 +115,10 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     std::cout<<" BODY : " << response.body << std::endl;
 
     if(response.code == 200) {
+        PagePost pp;
+        jsn::DeserializeObject(&pp, response.body);
         Json::Value chunk_post_arr(Json::arrayValue);
-        jsn::DeserializeJson(response.body, chunk_post_arr);
+        jsn::DeserializeJson(pp.data(), chunk_post_arr);
 
         std::cout<<" TOTAL POST COUNT : " << chunk_post_arr.size() << std::endl;
         Json::ValueIterator itr = chunk_post_arr.begin();
