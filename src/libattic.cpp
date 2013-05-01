@@ -333,7 +333,6 @@ int EnterPassphrase(const char* szPass) {
             g_bEnteredPassphrase = true;
         }
     }
-
     return status;
 }
 
@@ -585,5 +584,16 @@ void SetConfigValue(const char* szKey, const char* szValue) {
     std::string key(szKey);
     std::string value(szValue);
     attic::ConfigManager::GetInstance()->SetValue(key, value);
+}
+
+int HasCredentialsPost() {
+    int status = IsLibInitialized();
+    if(status == attic::ret::A_OK) {
+        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        bool retval = ps.HasCredentialsPost();
+        if(!retval)
+            status = attic::ret::A_FAIL;
+    }
+    return status;
 }
 

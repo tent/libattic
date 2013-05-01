@@ -484,5 +484,11 @@ int Passphrase::DeleteCredentialsPost(AtticPost& post) {
     return status;
 }
 
+bool Passphrase::HasCredentialsPost() {
+    if(GetCredentialsPostCount() > 0) 
+        return true;
+    return false;
+}
+
 
 }} //namespace

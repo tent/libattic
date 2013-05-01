@@ -85,6 +85,8 @@ public:
                                const std::string& answer_one,
                                const std::string& answer_two,
                                const std::string& answer_three);
+
+    bool HasCredentialsPost();
 private:
     AccessToken access_token_;
     Entity entity_;
