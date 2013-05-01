@@ -107,9 +107,6 @@ int InitLibAttic(unsigned int threadCount) {
         
         g_CallbackHandler.Initialize();
     }
-    else {
-        status = attic::ret::A_FAIL_LOAD_APP_DATA;
-    }
 
     if(status == attic::ret::A_OK) { 
         g_bLibInitialized = true;

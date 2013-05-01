@@ -34,8 +34,9 @@ int Client::Initialize() {
         status = LoadAccessToken();
     if(!status)
         status = LoadEntity();
+    // Optional
     if(!status)
-        status = LoadPhraseToken();
+        LoadPhraseToken();
     
     return status;
 }
@@ -108,8 +109,10 @@ int Client::LoadPhraseToken() {
 
     std::string path;
     ConstructPhraseTokenFilepath(path);
+    std::cout<<" phrase token path : " << path << std::endl;
 
     status = phrase_token_.LoadFromFile(path);
+    /*
     if(status != ret::A_OK) {
         // Assume no file
         // Extract info from entity
@@ -119,6 +122,7 @@ int Client::LoadPhraseToken() {
         }
 
     }
+    */
 
     return status;
 }
@@ -134,13 +138,14 @@ int Client::ExtractPhraseToken(PhraseToken& out) {
    // TODO :: this with app post 
 
     //return status;
-    return -1;
+    return 0;
 }
 
 int Client::LoadAppFromFile() { 
     int status = ret::A_OK;
     std::string savepath;
     ConstructAppPath(savepath);
+    std::cout<<" save path : " << savepath << std::endl;
     status = tent_app_.LoadFromFile(savepath);
 
     return status;
@@ -148,8 +153,6 @@ int Client::LoadAppFromFile() {
 
 int Client::LoadEntity(bool override) {
     int status = ret::A_OK;
-
-
     std::string entpath;
     ConstructEntityFilepath(entpath);
     
