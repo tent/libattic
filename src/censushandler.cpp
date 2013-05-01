@@ -31,8 +31,6 @@ bool CensusHandler::Inquiry()  {
     // Retrieve Census post ( there should only be one, delete otherwise)
     CensusPost p;
     if(GetCensusPost(p)) {
-        std::cout<<" last known version : " << last_known_version_ << std::endl;
-        std::cout<<" new version : " << p.version()->id << std::endl;
         // compare last known version(s) 
         if(last_known_version_ != p.version()->id) { 
             // if there is a difference, check all files and bump version
@@ -51,9 +49,6 @@ int CensusHandler::PushVersionBump() {
         post_id = p.id();
         if(!post_id.empty()) {
             utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-
-            std::cout<<" BUMP URL : " << posturl<<std::endl;
-
             Parent parent;
             parent.version = p.version()->id;
             p.PushBackParent(parent);
@@ -82,7 +77,6 @@ int CensusHandler::PushVersionBump() {
 
 bool CensusHandler::GetCensusPost(CensusPost& out) {
     int post_count = GetCensusPostCount();
-    std::cout<<" CENSUS POST COUNT : " << post_count << std::endl;
     if(post_count == 0)
         CreateCensusPost(out);
     else if(post_count > 0)
@@ -105,7 +99,6 @@ int CensusHandler::RetrieveCensusPost(CensusPost& out) {
                              resp);
 
     if(resp.code == 200) {
-        std::cout<<" RETREVIAL BODY : " << resp.body << std::endl;
         PagePost pp;
         jsn::DeserializeObject(&pp, resp.body);
         Json::Value arr(Json::arrayValue);
@@ -173,7 +166,6 @@ int CensusHandler::GetCensusPostCount() {
 }
 
 void CensusHandler::OnEventRaised(const event::Event& event) {
-    std::cout<<" BUMPING VERSION " << std::endl;
     // Event raised, don't really care what, bump the version
     PushVersionBump();
 }
