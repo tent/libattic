@@ -398,7 +398,7 @@ static int HttpRequest(const std::string& url,
         sock.InterpretResponse(out);
     }
     catch (std::exception& e) {
-        log::LogException(e);
+        log::LogException("NETAD01", e);
     }
 
     return status;
