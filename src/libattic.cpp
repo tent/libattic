@@ -81,11 +81,13 @@ int InitLibAttic(unsigned int threadCount) {
                            tempdir,
                            entityurl);
                           
-    g_pClient->Initialize();
+    status = g_pClient->Initialize();
+    /*
     g_pClient->LoadAppFromFile();
     g_pClient->LoadAccessToken();
     g_pClient->LoadEntity();
     g_pClient->LoadPhraseToken();
+    */
 
     if(status == attic::ret::A_OK)  {
         // Essential
@@ -283,8 +285,7 @@ int PollFiles(void) {
 
 int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
-    //int status = IsLibInitialized(false);
-    int status = attic::ret::A_OK;
+    int status = IsLibInitialized(false);
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
@@ -311,7 +312,6 @@ int RegisterPassphrase(const char* szPass) {
 int EnterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-
 
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
