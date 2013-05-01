@@ -29,6 +29,8 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::string post_attachment = GetConfigValue("post_attachment");
     std::string entity = GetConfigValue("entity");
 
+    if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
+
     if(!filepath.empty()) { 
         FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
         if(fi) {
@@ -155,6 +157,12 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     return status;
 }
 
+void GetFileStrategy::GetMasterKey(std::string& out) {
+    MasterKey mKey;
+    credentials_manager_->GetMasterKeyCopy(mKey);
+    mKey.GetMasterKey(out);
+}
+
 int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     int status = ret::A_OK;
     
@@ -162,11 +170,8 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     key = in.key_data();
     iv = in.iv_data();
 
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-
     std::string mk;
-    mKey.GetMasterKey(mk);
+    GetMasterKey(mk);
     std::cout << "MASTER KEY : " << mk << std::endl;
     Credentials FileKeyCred;
     FileKeyCred.set_key(mk);
@@ -430,6 +435,17 @@ int GetFileStrategy::RetrieveAndInsert(const std::string& postid, PostTree& tree
     }
 
     return status;
+}
+
+bool GetFileStrategy::ValidMasterKey() {
+    std::string mk;
+    GetMasterKey(mk);
+    if(mk.empty()) {
+        std::string error = "Invalid master key, it is empty!";
+        log::LogString("MASDP2823", error);
+        return false;
+    }
+    return true;
 }
 
 }//namespace

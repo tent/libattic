@@ -58,6 +58,7 @@ private:
 
     void GetMasterKey(std::string& out);
 
+    bool ValidMasterKey();
 public:
     PostFileStrategy();
     ~PostFileStrategy();

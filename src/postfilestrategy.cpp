@@ -36,13 +36,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     std::string entity = GetConfigValue("entity");
 
     // Check Master Key before doing anything else
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("MASTER90i8", error);
-        return ret::A_FAIL_INVALID_MASTERKEY;
-    }
+    if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
@@ -575,6 +569,17 @@ int PostFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     }
 
     return status;
+}
+
+bool PostFileStrategy::ValidMasterKey() {
+    std::string mk;
+    GetMasterKey(mk);
+    if(mk.empty()) {
+        std::string error = "Invalid master key, it is empty!";
+        log::LogString("MASDF1000", error);
+        return false;
+    }
+    return true;
 }
 
 }//namespace

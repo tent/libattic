@@ -2,6 +2,7 @@
 #define GETFILESTRATEGY_H_
 #pragma once
 
+#include <string>
 #include <map>
 
 #include "httpstrategy.h"
@@ -32,6 +33,8 @@ class GetFileStrategy : public HttpStrategyInterface {
                       const Credentials& file_cred, 
                       FileInfo* fi);
     bool GetTemporaryFilepath(FileInfo* fi, std::string& out);
+    void GetMasterKey(std::string& out);
+    bool ValidMasterKey();
 public:
     GetFileStrategy();
     ~GetFileStrategy();
