@@ -33,6 +33,7 @@ using boost::asio::ip::tcp;
 #include "event.h"
 #include "connection.h"
 #include "constants.h"
+#include "logutils.h"
 
 
 namespace attic { namespace netlib {
@@ -305,7 +306,6 @@ static int HttpPut(const std::string& url,
                    Response& out) {
     int status = ret::A_OK;
 
-    std::cout<<" type : " << post_type << std::endl;
     std::string local_url = url;
     if(pParams) EncodeAndAppendUrlParams(pParams, local_url);
 
@@ -398,7 +398,7 @@ static int HttpRequest(const std::string& url,
         sock.InterpretResponse(out);
     }
     catch (std::exception& e) {
-        std::cout << "Exception: " << e.what() << "\n";
+        log::LogException(e);
     }
 
     return status;
@@ -624,13 +624,10 @@ static void BuildAttachmentForm(const std::string& name,
                                 unsigned int attachmentnumber,
                                 std::ostream& bodystream) {
 
-    std::cout<<" ATTACHMENT NAME : " << name << std::endl;
-    std::cout<<" BODY SIZE : " << body.size() << std::endl;
     char szSize[256] = {'\0'};
     snprintf(szSize, 256, "%lu", body.size());
     char szAttachmentCount[256] = {'\0'};
     snprintf(szAttachmentCount, 256, "%d", attachmentnumber);
-    std::cout<<" attachment count : " << szAttachmentCount << std::endl;
 
     bodystream << "\r\n--" << boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
@@ -666,7 +663,6 @@ static int ResolveHost(boost::asio::io_service& io_service,
                        const bool ssl) {
     int status = ret::A_OK;
 
-    std::cout<<" host " << host << std::endl;
     std::string resolve_host = host;
     // Extract port (if one exists)
     std::string port;
@@ -688,9 +684,6 @@ static int ResolveHost(boost::asio::io_service& io_service,
     if(port.empty())
         port = protocol;
     
-    std::cout<<" PROT : " << protocol << std::endl;
-    std::cout<<" HOST : " << resolve_host << std::endl;
-    std::cout<<" PORT : " << port << std::endl;
 
     tcp::resolver::query query(resolve_host, port);
     //tcp::resolver::query query(host, protocol, boost::asio::ip::resolver_query_base::numeric_service);
@@ -744,7 +737,6 @@ static void BuildAuthHeader(const std::string& url,
     if(u.HasPort())
         port = u.port();
     else {
-        std::cout<<" scheme : " << u.scheme() << std::endl;
         if(u.scheme() == std::string("https"))
             port.append("443");
         else
@@ -773,8 +765,6 @@ static void BuildAuthHeader(const std::string& url,
     std::string signedreq;
     SignRequest(requestString, mackey, signedreq);
 
-    std::cout<<" mac key : " << mackey << std::endl;
-
     out.append("mac=\"");
     out.append(signedreq.c_str());
     out.append("\", ");
@@ -782,9 +772,6 @@ static void BuildAuthHeader(const std::string& url,
     out.append("app=\"");
     out.append(appid);
     out.append("\"");
-
-    std::cout << "REQUEST_STRING : " << requestString << std::endl;
-    std::cout << "AUTH_HEADER : " << out << std::endl;
 }
 
 static void GenerateNonce(std::string &out)
