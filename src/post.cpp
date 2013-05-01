@@ -54,7 +54,6 @@ void Version::Serialize(Json::Value& root) {
 
 void Version::Deserialize(Json::Value& root) {
     id = root.get("id", "").asString();
-    std::cout<<" DESERIALIZE VERSION ID : " << id << std::endl;
  //   type = root.get("type", "").asString();
     published_at = root.get("published_at", "").asString();
     received_at = root.get("received_at", "").asString();
@@ -101,8 +100,6 @@ void Attachment::AssignKeyValue(const std::string &key, const Json::Value &val) 
         digest = val.asString();
         return;
     }
-    
-    std::cout<< "Uknown key : " << key << std::endl;
 }
 
 void Attachment::Serialize(Json::Value& root) {
@@ -164,7 +161,6 @@ void Post::Serialize(Json::Value& root) {
         root["content"] = content;
     }
 
-    std::cout<<" ATTACHMENT SERIALIZE SIZE : " << attachments_.size() << std::endl;
     if(attachments_.size() > 0) {
         Json::Value attachment_arr(Json::arrayValue);
         AttachmentMap::iterator itr = attachments_.begin();
@@ -265,9 +261,6 @@ void Post::Deserialize(Json::Value& root) {
             }
         }
     }
-
-    std::cout<<" Mentions count : " << mentions_.size() << std::endl;
-
 
     if(!root["app"].isNull()) {
         tent_app_.Deserialize(root["app"]);
