@@ -42,12 +42,19 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 // Get file credentials
                 status = ExtractCredentials(meta_post, file_cred);
                 if(status == ret::A_OK) {
-                    // Query for chunkposts mentioning metadata
-                    ChunkPostList cp_list;
-                    RetrieveChunkPosts(entity, meta_post.id(), cp_list);
-                    // put file posts in order
-                    // pull chunks
-                    status = ConstructFile(cp_list, file_cred, fi);
+                    if(!file_cred.key_empty()) {
+                        // Query for chunkposts mentioning metadata
+                        ChunkPostList cp_list;
+                        RetrieveChunkPosts(entity, meta_post.id(), cp_list);
+                        // put file posts in order
+                        // pull chunks
+                        status = ConstructFile(cp_list, file_cred, fi);
+                    }
+                    else {
+                        std::string error = "Invalid file key on get file";
+                        log::LogString("MAOP8091", error);
+                        status = ret::A_FAIL_INVALID_FILE_KEY;
+                    }
                 }
             }
         }
@@ -160,6 +167,7 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
     std::string mk;
     mKey.GetMasterKey(mk);
+    std::cout << "MASTER KEY : " << mk << std::endl;
     Credentials FileKeyCred;
     FileKeyCred.set_key(mk);
     FileKeyCred.set_iv(iv);
@@ -168,6 +176,7 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     std::string filekey;
     //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
     status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
+    std::cout<<" ORIGINAL KEY : " << key << std::endl;
     std::cout<<" FILE KEY : " << filekey << std::endl;
     if(status == ret::A_OK) {
         out.set_key(filekey);

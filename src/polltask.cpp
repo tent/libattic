@@ -86,7 +86,7 @@ void PollTask::OnEventRaised(const event::Event& event){
     };
 }
 void PollTask::PollTaskCB(int a, std::string& b) {
-    //std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
+    std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
     std::string returnpost = b;
     if(processing_queue_.find(returnpost) != processing_queue_.end()) {
         // remove it from the map
@@ -114,6 +114,7 @@ void PollTask::RunTask() {
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
+                std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
                 if(census_handler_.Inquiry()) {
                     std::cout<<" Syncing files ... " << std::endl;
                     status = SyncFiles();
