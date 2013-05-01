@@ -70,7 +70,6 @@ int CensusHandler::PushVersionBump() {
                                      resp);
             if(resp.code == 200) {
                 //std::cout<<" PUSH RESP : " << std::endl;
-                //std::cout<<resp.body<<std::endl;
             }
             else {
                 log::LogHttpResponse("CEN3801", resp);
