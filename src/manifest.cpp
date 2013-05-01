@@ -412,7 +412,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " chunkpostid, postversion, encryptedkey, iv, deleted, folder_manifest_id, alias_data)";
+    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_manifest_id, alias_data)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
 
@@ -462,7 +462,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             crypto::Base64EncodeString(cred_data, b64_cred_data);
             ret = sqlite3_bind_text(stmt, 7, b64_cred_data.c_str(), b64_cred_data.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
-                printf("chunkpostid Error message: %s\n", sqlite3_errmsg(db_));
+                printf("credential_data Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
 
@@ -634,18 +634,6 @@ bool Manifest::UpdateFilePostID(const std::string& filepath, const std::string &
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc +="\";";
-    return PerformQuery(exc);
-}
-
-bool Manifest::UpdateFileChunkPostID(const std::string &filepath, const std::string &id) {
-    std::string exc;
-    exc += "UPDATE ";
-    exc += g_infotable;
-    exc += " SET chunkpostid=\"";
-    exc += id;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc += "\";";
     return PerformQuery(exc);
 }
 
