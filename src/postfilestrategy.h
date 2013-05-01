@@ -55,6 +55,9 @@ private:
 
     int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
     int ExtractCredentials(FilePost& in, Credentials& out);
+
+    void GetMasterKey(std::string& out);
+
 public:
     PostFileStrategy();
     ~PostFileStrategy();

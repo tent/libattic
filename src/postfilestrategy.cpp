@@ -35,6 +35,15 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
+    // Check Master Key before doing anything else
+    std::string mk;
+    GetMasterKey(mk);
+    if(mk.empty()) {
+        std::string error = "Invalid master key, it is empty!";
+        log::LogString("MASTER90i8", error);
+        return ret::A_FAIL_INVALID_MASTERKEY;
+    }
+
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
         std::string meta_post_id;
@@ -299,6 +308,12 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     return status;
 }
 
+void PostFileStrategy::GetMasterKey(std::string& out) {
+    MasterKey mKey;
+    credentials_manager_->GetMasterKeyCopy(mKey);
+    mKey.GetMasterKey(out);
+}
+
 void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred, 
                                       const std::string& filepath, 
                                       const std::string& chunkpostid,
@@ -309,11 +324,8 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     unsigned int filesize = utils::CheckFilesize(filepath);
 
     // Encrypt File Key
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-
     std::string mk;
-    mKey.GetMasterKey(mk);
+    GetMasterKey(mk);
 
     fi->set_post_version(post_version);
 
