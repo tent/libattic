@@ -99,6 +99,7 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::PUSH);
+    tc.set_delegate(pDel);
     PushContextBack(tc);
 }
 
@@ -109,6 +110,7 @@ void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) 
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::PULL);
+    tc.set_delegate(pDel);
     PushContextBack(tc);
 }
 
@@ -119,6 +121,7 @@ void TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::SYNC_FILE_TASK);
+    tc.set_delegate(pDel);
     PushContextBack(tc);
 }
 
@@ -129,6 +132,7 @@ void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::DELETE);
+    tc.set_delegate(pDel);
     PushContextBack(tc);
 }
 
@@ -138,6 +142,7 @@ void TaskManager::PollFiles(TaskDelegate* pDel) { // This will need to be a dire
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::POLL);
+    tc.set_delegate(pDel);
     PushContextBack(tc);
 }
 
