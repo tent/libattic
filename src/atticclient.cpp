@@ -28,10 +28,15 @@ int Client::Initialize() {
     std::cout << " file manager init status : " << status << std::endl;
     if(!status)
         status = InitializeCredentialsManager();
-    /*
     if(!status)
-        conh_.SetEntityUrlOnManager(entity_url_);
-        */
+        status = LoadAppFromFile();
+    if(!status)
+        status = LoadAccessToken();
+    if(!status)
+        status = LoadEntity();
+    if(!status)
+        status = LoadPhraseToken();
+    
     return status;
 }
 
