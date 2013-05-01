@@ -192,12 +192,6 @@ void FileManager::SetFilePostId(const std::string &filepath, const std::string& 
     }
 }
 
-void FileManager::SetFileChunkPostId(const std::string &filepath, const std::string& postid) {
-    Lock();
-    manifest_.UpdateFileChunkPostID(filepath, postid);
-    Unlock();
-}
-
 void FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
     FileInfo* fi = GetFileInfo(filepath);
     if(fi) {
