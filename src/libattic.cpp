@@ -106,6 +106,7 @@ int InitLibAttic(unsigned int threadCount) {
         g_service_manager.Initialize();
         
         g_CallbackHandler.Initialize();
+        attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
     }
 
     if(status == attic::ret::A_OK) { 
