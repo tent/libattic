@@ -4,8 +4,8 @@
 #include <boost/thread/thread.hpp>
 
 #include "task.h"
-#include "taskqueue.h"
 #include "sleep.h"
+#include "taskarbiter.h"
 
 namespace attic {
 
@@ -22,7 +22,8 @@ void ThreadWorker::Run() {
     while(!(state() == ThreadWorker::EXIT)) {
         if(state() == ThreadWorker::IDLE) {
             // Get a job
-            task = CentralTaskQueue::GetInstance()->SyncPopFront();
+            task = TaskArbiter::GetInstance()->SyncPopFront();
+            if(!task) { sleep::sleep_seconds(1); }
         }
 
         if(task)  {
@@ -48,11 +49,9 @@ void ThreadWorker::Run() {
                 task = NULL;
             }
         }
-
-        //std::cout<<" ping state : " << state() << std::endl;
-
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        sleep::sleep_milliseconds(100);
     }
+
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
         if(task) { 
@@ -60,7 +59,6 @@ void ThreadWorker::Run() {
             delete task;
             task = NULL;
         }
-
     }
     
 }
