@@ -84,8 +84,10 @@ public:
     }
 protected:
     void Callback(const int code, const std::string& var) {
-        if(callback_delegate_)
+        if(callback_delegate_) { 
+            std::cout<< "calling back : " << var << " code " << code << std::endl;
             callback_delegate_->Callback(type(), code, state(), var);
+        }
     }
 
     std::string GetPostPath() {
