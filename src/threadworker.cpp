@@ -45,7 +45,8 @@ void ThreadWorker::Run() {
             SetThreadExit();
             if(task) {
                 std::cout<<" TASK STILL EXISTS?!?!?!?! " << std::endl;
-                delete task;
+                task->OnFinished();
+                TaskArbiter::GetInstance()->ReclaimTask(task);
                 task = NULL;
             }
         }
@@ -56,7 +57,7 @@ void ThreadWorker::Run() {
     if(state() == ThreadWorker::EXIT) {
         if(task) { 
             task->OnFinished();
-            delete task;
+            TaskArbiter::GetInstance()->ReclaimTask(task);
             task = NULL;
         }
     }
@@ -91,11 +92,9 @@ void ThreadWorker::PollTask(Task** task) {
             {
                 std::cout<< " task finished " << std::endl;
                 (*task)->OnFinished();
+                TaskArbiter::GetInstance()->ReclaimTask(*task);
+                (*task) = NULL;
                 // cleanup task
-                if((*task)) { 
-                    delete (*task);
-                    (*task) = NULL;
-                }
                 SetState(ThreadWorker::FINISHED);
                 break;
             }
