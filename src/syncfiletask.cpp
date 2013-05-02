@@ -21,16 +21,14 @@ SyncFileTask::SyncFileTask(FileManager* pFm,
                            CredentialsManager* pCm,
                            const AccessToken& at,
                            const Entity& entity,
-                           const TaskContext& context,
-                           TaskDelegate* callbackDelegate)
+                           const TaskContext& context)
                            :                                               
                            TentTask( Task::SYNC_FILE_TASK,
                                      pFm,                                  
                                      pCm,                                  
                                      at,                                   
                                      entity,                               
-                                     context,
-                                     callbackDelegate) {
+                                     context) {
     // TODO :: refine constructor params, FOR NOW filepath will need to have the postid
     context.get_value("postid", post_id_);
 }

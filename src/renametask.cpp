@@ -15,16 +15,14 @@ RenameTask::RenameTask(FileManager* pFm,
                        CredentialsManager* pCm,
                        const AccessToken& at,
                        const Entity& entity,
-                       const TaskContext& context,
-                       TaskDelegate* callbackDelegate) 
+                       const TaskContext& context)
                        :
                        TentTask(Task::RENAME,
                                 pFm,
                                 pCm,
                                 at,
                                 entity,
-                                context,
-                                callbackDelegate)
+                                context)
 {
 }
 

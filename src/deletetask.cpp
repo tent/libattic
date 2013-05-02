@@ -18,16 +18,14 @@ DeleteTask::DeleteTask(FileManager* pFm,
                        CredentialsManager* pCm,
                        const AccessToken& at,
                        const Entity& entity,
-                       const TaskContext& context,
-                       TaskDelegate* callbackDelegate)
+                       const TaskContext& context)
                        :
                        TentTask(Task::DELETE,
                                 pFm,
                                 pCm,
                                 at,
                                 entity,
-                                context,
-                                callbackDelegate)
+                                context)
 {
 }
 
@@ -36,7 +34,6 @@ DeleteTask::~DeleteTask(){}
 void DeleteTask::RunTask() {
     // Run the task
     int status = ret::A_OK;
-
 
     std::string filepath = TentTask::filepath();
     std::string post_path = TentTask::GetPostPath(); 

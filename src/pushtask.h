@@ -20,8 +20,7 @@ public:
              CredentialsManager* pCm,
              const AccessToken& at,
              const Entity& entity,
-             const TaskContext& context,
-             TaskDelegate* callbackDelegate);
+             const TaskContext& context);
 
     ~PushTask();
 

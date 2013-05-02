@@ -15,16 +15,14 @@ PushTask::PushTask(FileManager* pFm,
                    CredentialsManager* pCm,
                    const AccessToken& at,
                    const Entity& entity,
-                   const TaskContext& context,
-                   TaskDelegate* callbackDelegate)
+                   const TaskContext& context)
                    :
-                   TentTask (Task::PUSH,
-                             pFm,
-                             pCm,
-                             at,
-                             entity,
-                             context,
-                             callbackDelegate)
+                   TentTask(Task::PUSH,
+                            pFm,
+                            pCm,
+                            at,
+                            entity,
+                            context)
 {
 }
 

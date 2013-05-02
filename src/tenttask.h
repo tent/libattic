@@ -20,8 +20,7 @@ public:
              CredentialsManager* cm,
              const AccessToken& at,
              const Entity& entity,
-             const TaskContext& context,
-             TaskDelegate* callbackDelegate = NULL)
+             const TaskContext& context)
              : 
              Task(context, type) {
         file_manager_          = fm;
@@ -34,7 +33,7 @@ public:
         context.get_value("working_dir", working_directory_);
         context.get_value("config_dir", config_directory_);
 
-        callback_delegate_ = callbackDelegate;
+        callback_delegate_ = context.delegate();
     }
 
     virtual void SetFinishedState() {
