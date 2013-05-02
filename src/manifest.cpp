@@ -31,7 +31,6 @@ int Manifest::Initialize() {
 
 int Manifest::Shutdown() { 
     int status = CloseSqliteDb();
-    std::cout<<" CloseDB status : " << status << std::endl;
     return status;
 }
 
@@ -244,15 +243,6 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
     int step = 0;
     for(int i=0; i<res.row_+1; i++) {
         step = i*res.col_;
-        //std::cout<< " step : " << step << std::endl;
-
-        /*
-        for(int j=0; j<res.col_; j++)
-        {
-            std::cout << " Results : " << res.results_[j+step] << std::endl;
-        }
-        */
-
         if(step > 0) {
             ExtractFileInfoResults(res, step, out);
         }
@@ -274,21 +264,9 @@ int Manifest::QueryAllFiles(FileInfoList& out) {
 
     SelectResult res;
     if(PerformSelect(pexc.c_str(), res)) {
-        /*
-        std::cout << " Row count : " << res.row_ << std::endl;
-        std::cout << " Col count : " << res.col_ << std::endl;
-        */
-
         int step = 0;
         for(int i=0; i<res.row_+1; i++) {
             step = i*res.col_;
-            /*
-            for(int j=0; j<res.col_; j++)
-            {
-                std::cout << " Results : " << res.results_[j+step] << std::endl;
-            }
-            */
-
             if(step > 0) {
                 FileInfo fi;
                 ExtractFileInfoResults(res, step, fi);
@@ -367,7 +345,6 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
 bool Manifest::InsertFileInfo(const FileInfo& fi) {
-    std::cout<<" INSERTING INTO INFO TABLE ! ------------------------------------ " << std::endl;
     if(!db_) {
         std::cout<<"fail db " <<std::endl;
         return false;
@@ -393,7 +370,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string alias_encoded;
     crypto::Base64EncodeString(alias_data, alias_encoded);
 
-
+/*
     std::cout<< " name : " << filename << std::endl;
     std::cout<< " path : " << filepath << std::endl;
     std::cout<< " count : " << fi.chunk_count() << std::endl;
@@ -405,7 +382,6 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::cout<< " encrypted key : " << encryptedkey << std::endl;
     std::cout<< " iv : " << iv << std::endl;
     std::cout<< " deleted : " << fi.deleted() << std::endl;
-    /*
     */
 
     std::string query;
@@ -475,7 +451,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             std::string b64_key;
             crypto::Base64EncodeString(encryptedkey, b64_key);
             ret = sqlite3_bind_blob(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
-            std::cout<<" BASE 64 KEY ENCRYPTED : " << b64_key << std::endl;
+            //std::cout<<" BASE 64 KEY ENCRYPTED : " << b64_key << std::endl;
 
             if(ret != SQLITE_OK) {
                 printf("key Error message: %s\n", sqlite3_errmsg(db_));
@@ -510,7 +486,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
 
             ret = sqlite3_step(stmt);
             if(ret != SQLITE_DONE) {
-                std::cout<<" return : " << ret << std::endl;
+                //std::cout<<" return : " << ret << std::endl;
                 printf("step Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
             }
@@ -647,7 +623,6 @@ bool Manifest::UpdateFilepath(const std::string& old_filepath, const std::string
     exc += old_filepath;
     exc += "\";";
 
-    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -661,7 +636,6 @@ bool Manifest::UpdateFilename(const std::string& filepath, const std::string& ne
     exc += filepath;
     exc += "\";";
 
-    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -677,7 +651,6 @@ bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& a
     exc += filepath;
     exc += "\";";
 
-    std::cout<<" PERFORMING QUERY : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -703,7 +676,6 @@ bool Manifest::UpdateFolderPath(const std::string& folderid, const std::string& 
     exc += folderid;
     exc += "\";";
 
-    std::cout<<" UPDATING FOLDER PATH : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -772,7 +744,6 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
         step = i*res.col_;
         if(step > 0) { 
             out = res.results_[0+step];
-            std::cout<< " OOOOOOUT : " << out << std::endl;
         }
 
     }
