@@ -1,5 +1,4 @@
 cmake_minimum_required (VERSION 2.8)
-project(libattic)
 
 option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
 option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
@@ -8,8 +7,9 @@ option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
 set (CMAKE_CXX_COMPILER clang++)
 set (CMAKE_C_COMPILER clang)
 
+project(libattic)
 if(ATTIC_STATIC_LIB)
-    message(STATUS "Bulding Attic Static library")
+    #message(STATUS "Bulding Attic Static library")
     set(CMAKE_CXX_FLAGS "-w")
 endif(ATTIC_STATIC_LIB)
 
@@ -20,8 +20,6 @@ endif(ATTIC_BINARY)
 
 # Build dependencies
 # Build gtest libs
-
-
 add_subdirectory("vendor/jsoncpp")
 add_subdirectory("vendor/cryptopp")
 
@@ -102,7 +100,6 @@ ExternalProject_Add(boost
 ExternalProject_Get_Property(boost INSTALL_DIR)
 set(BOOST_DIR ${INSTALL_DIR})
 include_directories(${BOOST_DIR}/include)
-
 
 add_library(boost_thread STATIC IMPORTED)
 set_property(TARGET boost_thread PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_thread.a)
