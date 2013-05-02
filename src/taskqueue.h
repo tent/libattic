@@ -10,94 +10,44 @@
 
 namespace attic {
 
-class TaskQueue : public MutexClass {
-public:                                                                            
-    TaskQueue(){task_queue_.clear();}
-    ~TaskQueue(){}
+class QueueStats {
+public:
+    QueueStats();
+    ~QueueStats();
 
-    void ClearTaskQueue() { 
-        Lock();
-        if(task_queue_.size()) {
-            for(unsigned int i=0; i<task_queue_.size(); i++) {
-                Task* p = task_queue_[i];
-                task_queue_[i] = NULL;
-                if(p) {
-                    delete p;
-                    p = NULL;
-                }
-            }
-        }
-        Unlock();
-    }
+    void PrintStats();
 
-    void SyncPushBack(Task* pTask) { 
-        if(!pTask) {
-            std::cout<<" INVALID TASK PASSED " << std::endl;
-            return;
-        }
+    unsigned int total_tasks();
+    unsigned int active_tasks();
+    unsigned int reclaimed_tasks();
 
-        Lock();
-        if(pTask) {
-             std::cout<< "^^^\t pushing back task ... of type : "<< pTask->type() << std::endl;
-             task_queue_.push_back(pTask);
-             std::cout<<" queue size : " << task_queue_.size() << std::endl;
-        }
-        Unlock();
-    }
-
-    Task* SyncPopFront() {
-        Task* pTask = NULL;                                                        
-        
-        Lock();
-        if(task_queue_.size() > 0) {
-            std::cout<<" Popping off task ... "<< task_queue_.size() << std::endl;
-            pTask = task_queue_.front();                                           
-            task_queue_[0] = NULL;
-            task_queue_.pop_front();
-            std::cout<<" size now : " << task_queue_.size() << std::endl;            
-            
-        }                                                                          
-        Unlock();
-        return pTask;                                                              
-    }                                                                              
-
-    unsigned int TaskCount() { 
-        unsigned int count = 0;
-        Lock();
-        count = task_queue_.size();
-        Unlock();
-        return count;
-    }
-
-private:                                                                           
-    std::deque<Task*> task_queue_;                                                 
+    void increment_total_tasks();
+    void increment_active_tasks();
+    void decrement_active_tasks();
+    void increment_reclaimed_tasks();
+private:
+    MutexClass t_mtx_, a_mtx_, r_mtx_;
+    unsigned int total_tasks_;
+    unsigned int active_tasks_;
+    unsigned int reclaimed_tasks_;
 };
 
+class TaskQueue : public MutexClass {
+public:                                                                            
+    TaskQueue();
+    ~TaskQueue();
 
-class CentralTaskQueue : public TaskQueue {
-    CentralTaskQueue() {}
-    CentralTaskQueue(const CentralTaskQueue& rhs){}
-    CentralTaskQueue operator=(const CentralTaskQueue& rhs){ return *this;}
-public:
-    ~CentralTaskQueue(){}
+    void ClearTaskQueue();
+    void SyncPushBack(Task* pTask);
 
-    void Shutdown() {
-        if(instance_) {
-            instance_->ClearTaskQueue();
-            delete instance_;
-            instance_ = NULL;
-        }
-    }
+    Task* SyncPopFront();
+    void ReclaimTask(Task* task);
 
-    static CentralTaskQueue* GetInstance() {
-        if(!instance_)
-            instance_ = new CentralTaskQueue();
-        return instance_;
-    }
-
-
-private:
-    static CentralTaskQueue* instance_;
+    void PrintStats();
+    unsigned int ActiveTaskCount();
+private:                                                                           
+    std::deque<Task*> task_queue_;                                                 
+    QueueStats queue_stats_;
 };
 
 }//namespace
