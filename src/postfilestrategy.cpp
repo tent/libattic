@@ -284,6 +284,10 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 
     std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
 
+    std::string ver_256;
+    GenerateSha256(encryptedChunk, ver_256);
+    verification_map_[ver_256] = true;
+
     // Fill Out Chunk info object
     out.set_chunk_name(chunkName);
     out.set_plaintext_mac(plaintextHash);

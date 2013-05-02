@@ -56,9 +56,13 @@ void ThreadWorker::Run() {
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
         if(task) { 
+            delete task;
+            task = NULL;
+            /*
             task->OnFinished();
             TaskArbiter::GetInstance()->ReclaimTask(task);
             task = NULL;
+            */
         }
     }
     

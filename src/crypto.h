@@ -44,6 +44,7 @@ static unsigned int                    g_Stride = 400000;    // Size of stride u
 static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
 static void GenerateIv(std::string& out);
+static void GenerateSha256Hash(const std::string& source, std::string& hash_out);
 static bool GenerateHash( const std::string& source, std::string& hash_out);
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
 static void GenerateRandomString(std::string& out, const unsigned int size);
@@ -110,6 +111,19 @@ static void GenerateIv(std::string& out) {
     memset(iv, 0, CryptoPP::AES::BLOCKSIZE);
     g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE); 
     out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
+}
+
+static void GenerateSha256Hash(const std::string& source, std::string& hash_out) {
+    CryptoPP::SHA256 hash;
+    CryptoPP::StringSource src(source.c_str(), 
+                               true,
+                               new CryptoPP::HashFilter( hash,
+                                   new CryptoPP::Base64Encoder (
+                                       new CryptoPP::StringSink(hash_out),
+                                       false
+                                       )
+                                   )
+                              );
 }
 
 static bool GenerateHash(const std::string& source, std::string& hash_out) {

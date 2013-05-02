@@ -60,11 +60,14 @@ private:
 
     bool ValidMasterKey();
 public:
+    std::map<std::string, bool> verification_map_;
     PostFileStrategy();
     ~PostFileStrategy();
 
     int Execute(FileManager* pFileManager,
                 CredentialsManager* pCredentialsManager);
+
+
 };
 
 }//namespace

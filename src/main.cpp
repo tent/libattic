@@ -403,7 +403,6 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     ShutdownLibAttic(NULL);
 }
 
-/*
 TEST(INIT, SHUTDOWN)
 {
 
@@ -413,15 +412,14 @@ TEST(INIT, SHUTDOWN)
         SetConfigValue("temp_dir", "./data/temp");
         SetConfigValue("entity_url", g_Entity.c_str());
         int status = InitLibAttic();
+        std::cout<<" STATUS : " << status << std::endl;
 
         ASSERT_EQ(status, attic::ret::A_OK);
-        sleep(1);
+        sleep(10);
 
         ShutdownLibAttic(NULL);
     }
 }
-*/
-
 
 #include "clientutils.h"
 bool g_bDiscover = false;
@@ -590,13 +588,13 @@ TEST(CREDENTIALS, ISEMPTY)
 {
     attic::Credentials cred;
 
-    ASSERT_EQ(cred.KeyEmpty(), true);
-    ASSERT_EQ(cred.IvEmpty(), true);
+    ASSERT_EQ(cred.key_empty(), true);
+    ASSERT_EQ(cred.iv_empty(), true);
 
     cred = attic::crypto::GenerateCredentials();
 
-    ASSERT_EQ(cred.KeyEmpty(), false);
-    ASSERT_EQ(cred.IvEmpty(), false);
+    ASSERT_EQ(cred.key_empty(), false);
+    ASSERT_EQ(cred.iv_empty(), false);
 }
 
 TEST(CRYPTO, SIZES)
