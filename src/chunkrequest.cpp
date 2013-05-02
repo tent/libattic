@@ -46,11 +46,7 @@ void ChunkRequest::BeginRequest() {
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url_, protocol, host, path);
-    std::cout<<" Begining Chunk Request " << std::endl;
-    std::cout<<" protocol : " << protocol << std::endl;
-    std::cout<<" host : " << host << std::endl;
-    std::cout<<" path : " << path << std::endl;
-     
+    
     socket_ = new Connection(&io_service_);
     socket_->Initialize(url_);
 
@@ -75,7 +71,6 @@ int ChunkRequest::PushBackChunk(const ChunkInfo& ci,
 
     // Check parent if chunk exists
     if(has_parent_ && parent_post_.HasChunk(chunk_name)) {
-        std::cout<<" Parent already has chunk " << std::endl;
         // copy over attachment
         if(parent_post_.has_attachment(chunk_name)) {
             Attachment attachment = parent_post_.get_attachment(chunk_name);
@@ -123,12 +118,9 @@ void ChunkRequest::EndRequest(Response& out) {
     boost::asio::streambuf chunkedBody;
     std::ostream partbuf(&chunkedBody);
 
-    std::cout<<" END REQUEST BODY : " << body << std::endl;
-
     netlib::ChunkEnd(requestBody, partbuf);
     socket_->Write(chunkedBody);
 
-    std::cout<<" interpreting response " << std::endl;
     socket_->InterpretResponse(out);
 
     if(socket_) {
