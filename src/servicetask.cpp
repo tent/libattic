@@ -19,6 +19,7 @@ ServiceTask::~ServiceTask() {}
 
 
 void ServiceTask::OnStart() {
+    std::cout<<" SERVICE TASK STARTED " << std::endl;
     event::EventSystem::GetInstance()->Initialize();
     if(task_manager_) {
         task_dispatch_ = new TaskDispatch(task_manager_->file_manager(),

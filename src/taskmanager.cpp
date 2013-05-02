@@ -176,12 +176,12 @@ void TaskManager::PushContextBack(TaskContext& tc) {
 
 void TaskManager::RetrieveContextQueue(TaskContext::ContextQueue& out) {
     cxt_mtx.Lock();
-    std::cout<<" context queue size (before) : " << context_queue_.size() << std::endl;
-    std::cout<<" outgoing queue size (before) : " << out.size() << std::endl;
+//    std::cout<<" context queue size (before) : " << context_queue_.size() << std::endl;
+    //std::cout<<" outgoing queue size (before) : " << out.size() << std::endl;
     out = context_queue_;
     context_queue_.clear();
-    std::cout<<" context queue size (after) : " << context_queue_.size() << std::endl;
-    std::cout<<" outgoing queue size (after) : " << out.size() << std::endl;
+    //std::cout<<" context queue size (after) : " << context_queue_.size() << std::endl;
+    //std::cout<<" outgoing queue size (after) : " << out.size() << std::endl;
     cxt_mtx.Unlock();
 }
 
