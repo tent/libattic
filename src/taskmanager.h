@@ -18,7 +18,7 @@ class FileManager;
 class CredentialsManager;
 class TaskDelegate;
 
-class TaskManager : public TaskFactoryDelegate, public event::EventListener {
+class TaskManager : public event::EventListener {
 public:
     TaskManager(FileManager* pFm, 
                 CredentialsManager* pCm,
@@ -41,6 +41,7 @@ public:
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
+    Task* GetTentTask(const TaskContext& tc);
     // Sync Tasks
     void UploadFile(const std::string& filepath, TaskDelegate* pDel);
     void DownloadFile(const std::string& filepath, TaskDelegate* pDel);

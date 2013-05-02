@@ -31,14 +31,11 @@ TaskManager::~TaskManager() {}
 int TaskManager::Initialize() {
     int status = ret::A_OK;
     if(status == ret::A_OK) {
-        status = task_factory_.Initialize();
-        if(status == ret::A_OK) {
-            event::RegisterForEvent(this, event::Event::REQUEST_PULL);
-            event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
-            event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
-            event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
-            //event::RegisterForEvent(this, event::Event::POLL);
-        }
+        event::RegisterForEvent(this, event::Event::REQUEST_PULL);
+        event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
+        event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
+        event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
+        //event::RegisterForEvent(this, event::Event::POLL);
     }
 
     return status;
@@ -46,7 +43,6 @@ int TaskManager::Initialize() {
 
 int TaskManager::Shutdown() {
     int status = ret::A_OK;
-    status = task_factory_.Shutdown();
 
     return status;
 }
@@ -180,21 +176,24 @@ void TaskManager::PushContextBack(TaskContext& tc) {
 
 void TaskManager::RetrieveContextQueue(TaskContext::ContextQueue& out) {
     cxt_mtx.Lock();
+    std::cout<<" context queue size (before) : " << context_queue_.size() << std::endl;
+    std::cout<<" outgoing queue size (before) : " << out.size() << std::endl;
     out = context_queue_;
     context_queue_.clear();
+    std::cout<<" context queue size (after) : " << context_queue_.size() << std::endl;
+    std::cout<<" outgoing queue size (after) : " << out.size() << std::endl;
     cxt_mtx.Unlock();
 }
 
+// TODO :: don't directly spin off tasks, or create seperate thread pool for system type 
+//         tasks like this or one off threads
 int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
     int status = ret::A_OK;
     TaskContext tc;
-    Task* t = task_factory_.GetManifestTask( Task::QUERYMANIFEST,
-                                             file_manager_,
-                                             tc,
-                                             callback,
-                                             this);
-
-
+    Task* t = task_factory_.GetManifestTask(Task::QUERYMANIFEST,
+                                            file_manager_,
+                                            tc,
+                                            callback);
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
 }
@@ -205,15 +204,20 @@ int TaskManager::ScanAtticFolder(void(*callback)(int, char**, int, int)) {
     Task* t = task_factory_.GetManifestTask(Task::SCANDIRECTORY,
                                             file_manager_,
                                             tc,
-                                            callback,
-                                            this);
-
+                                            callback);
     status = TaskArbiter::GetInstance()->SpinOffTask(t);
     return status;
 }
 
-int TaskManager::TaskCount(const Task::TaskType type) {
-    return task_factory_.GetNumberOfActiveTasks(type);
+Task* TaskManager::GetTentTask(const TaskContext& tc) {
+    Task* t = task_factory_.GetTentTask(tc.type(),            
+                                        file_manager_,        
+                                        credentials_manager_, 
+                                        access_token_,        
+                                        entity_,              
+                                        tc);
+    return t;
 }
+
 
 }//namespace
