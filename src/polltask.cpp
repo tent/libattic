@@ -27,16 +27,14 @@ PollTask::PollTask( FileManager* pFm,
                     CredentialsManager* pCm,
                     const AccessToken& at,
                     const Entity& entity,
-                    const TaskContext& context,
-                    TaskDelegate* callbackDelegate)
+                    const TaskContext& context)
                     :                                               
                     TentTask(Task::POLL,
                              pFm,
                              pCm,
                              at,
                              entity,                               
-                             context,
-                             callbackDelegate) {
+                             context) {
     delegate_ = new PollDelegate(this);
     running_ = true;
 }
