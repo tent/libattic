@@ -36,42 +36,53 @@ TaskDispatch::~TaskDispatch() {
 void TaskDispatch::Initialize() {}
 void TaskDispatch::Shutdown() {}
 
-
 void TaskDispatch::Process(TaskManager* tm) {
+    // Grab all the current contexts
     if(tm) {
         tm->RetrieveContextQueue(hold_queue_);
     }
-    // Copy n, number to process queue, then process that
-    dispatch_queue_ = hold_queue_; // TODO :: actually mitigate this properly, this is for testing
-    hold_queue_.clear();
+    // Distribute contexts
+    if(hold_queue_.size() > 0) {
+        std::cout<<" dispatch hold queue size : " << hold_queue_.size() << std::endl;
+
+        TaskContext::ContextQueue::iterator itr = hold_queue_.begin();
+        for(;itr != hold_queue_.end(); itr++) {
+            std::cout<<" copying context " << std::endl;
+            task_map_[(*itr).type()].push_back(*itr);
+        }
+        hold_queue_.clear();
+    }
 }
 
 void TaskDispatch::Dispatch() {
-    unsigned int task_count = CentralTaskQueue::GetInstance()->TaskCount();
-    if(task_count < 20) {
+    unsigned int task_count = TaskArbiter::GetInstance()->ActiveTaskCount();
+    if(task_count < 5) { // TODO :: testing, up this limit
         unsigned int t =0;
-        TaskContext::ContextQueue::iterator itr = dispatch_queue_.begin();
-        for(;itr != dispatch_queue_.end(); itr++) {
-            CreateAndSpinOffTask(*itr);
+        TaskMap::iterator itr = task_map_.begin();
+        for(;itr != task_map_.end(); itr++) {
+            std::deque<TaskContext>::iterator d_itr = task_map_[itr->first].begin();
+            for(; d_itr != task_map_[itr->first].end(); d_itr++) {
+                CreateAndSpinOffTask(*d_itr);
+            }
+            //task_map_.erase(itr);
+
+            /*
             t++;
-            if((t+task_count) > 50)
+            if((t+task_count) > 0) // TODO :: for testing purposes, up this limit somewhere
                 break;
+                */
         }
+        task_map_.clear();
+    }
+    else {
+        std::cout<<" Dispatch , task count : " << task_count << std::endl;
+        std::cout<<" dispatch queue count : " <<task_map_.size() << std::endl;
     }
 }
 
 int TaskDispatch::CreateAndSpinOffTask(const TaskContext& tc) {
-    int status = ret::A_OK;
-    Task* t = task_factory_.GetTentTask(tc.type(),
-                                        file_manager_,
-                                        credentials_manager_,
-                                        access_token_,
-                                        entity_,
-                                        tc, 
-                                        tc.delegate(),
-                                        NULL);
-
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
+    std::cout<<" creating and spinning of task, type : " << tc.type() << std::endl;
+    int status = TaskArbiter::GetInstance()->CreateAndSpinOffTask(tc);
     return status;
 }
 

@@ -2,13 +2,14 @@
 #define TASKDISPATCH_H_
 #pragma once
 
+#include <map>
+#include <deque>
 #include <string>
 #include "task.h"
 #include "tenttask.h"
 #include "taskcontext.h"
 #include "taskmanager.h"
 #include "filemanager.h"
-#include "taskfactory.h"
 #include "credentialsmanager.h"
 
 namespace attic { 
@@ -16,6 +17,8 @@ namespace attic {
 class TaskDispatch {
     int CreateAndSpinOffTask(const TaskContext& tc);
 public:
+    typedef std::map<int, std::deque<TaskContext> > TaskMap;
+
     TaskDispatch(FileManager* fm,
                  CredentialsManager* cm,
                  const AccessToken& at,
@@ -32,13 +35,11 @@ public:
     void Process(TaskManager* tm);
     void Dispatch();
     
-    void set_dispatch_queue(const TaskContext::ContextQueue& q) { dispatch_queue_ = q; } 
 private:
-    TaskContext::ContextQueue dispatch_queue_;
+    TaskMap task_map_;
     TaskContext::ContextQueue hold_queue_;
 
     // General settings for dispatch
-    TaskFactory             task_factory_;
     FileManager*            file_manager_;
     CredentialsManager*     credentials_manager_;
 
