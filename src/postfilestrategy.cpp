@@ -35,13 +35,13 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
+    std::cout<<" starting upload : " << filepath << std::endl;
     // Check Master Key before doing anything else
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
         std::string meta_post_id;
-        std::cout<<" Initializing File Meta Data " << std::endl;
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
         // Verify key credentials
         if(!fi->file_credentials().key_empty()) {
@@ -66,6 +66,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             }
             else if(status == ret::A_OK && meta_post_id.empty()) {
                 std::cout<<" META POST ID EMPTY " << std::endl;
+                status = ret::A_FAIL_INVALID_POST_ID;
             }
         }
         else {
@@ -79,9 +80,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     }
 
     if(status == ret::A_OK) {
-        std::cout<<" BUMPING CENSUS VERSION START " << std::endl;
         // bump census version
-        //
         CensusHandler ch;
         ch.Initialize(posts_feed_, post_path_, access_token_);
         status = ch.PushVersionBump();
@@ -90,10 +89,9 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             log::LogString("MKA!o3214", error);
         }
         ch.Shutdown();
-
-        std::cout<<" BUMPING CENSUS VERSION END " << std::endl;
     }
 
+    std::cout<<" finishing upload : " << filepath <<" status : " << status << std::endl;
     return status;
 }
 
@@ -118,7 +116,6 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
         PagePost pp;
         jsn::DeserializeObject(&pp, response.body);
 
-        std::cout<< "RETRIEVE DATA PP DATA : " << pp.data() << std::endl;
         Json::Value chunk_post_arr(Json::arrayValue);
         jsn::DeserializeJson(pp.data(), chunk_post_arr);
         Json::ValueIterator itr = chunk_post_arr.begin();
@@ -226,10 +223,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                     delete cr;
                     cr = NULL;
                 }
-                std::cout<<" CHUNK ENDING " << std::endl;
-                std::cout<<" code : " << response.code << std::endl;
-                std::cout<<" response : " << response.body << std::endl;
-
                 if(response.code != 200) { 
                     std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
                     log::LogHttpResponse("KJASDF321", response);
@@ -356,7 +349,6 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     fi->set_encrypted_key(encryptedKey);
 
     // Insert file info to manifest
-    std::cout<<" INSERTING TO MANIFEST " << std::endl;
     file_manager_->InsertToManifest(fi);
 }
 
@@ -411,7 +403,6 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
                                       &access_token_,
                                       response);
             if(response.code == 200) {
-                std::cout<<" FILE INITIALIZED : " << response.body << std::endl;
                 Post post;
                 jsn::DeserializeObject(&post, response.body);
                 file_manager_->SetFilePostId(filepath, post.id());
@@ -464,10 +455,8 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
 
 int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, bool in_transit) {
     int status = ret::A_OK;
-    std::cout<<" UPDATE TRANSIT STATE " << std::endl;
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    std::cout<<" POST URL : " << posturl << std::endl;
     FilePost p;
     // Get Existing post
     Response get_resp;
@@ -477,16 +466,12 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
                &access_token_,
                get_resp);
 
-    std::cout<<" CODE : " << get_resp.code << std::endl;
-    std::cout<<" BODY : " << get_resp.body << std::endl;
     if(get_resp.code == 200) {
         jsn::DeserializeObject(&p, get_resp.body);
     }
     else {
         status = ret::A_FAIL_NON_200;
     }
-
-    std::cout<<" GOT EXISTING POST : " << status << std::endl;
 
     if(status == ret::A_OK) {
         Parent parent;
@@ -508,23 +493,16 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
                                  &access_token_,
                                  put_resp);
         if(put_resp.code == 200) {
-            std::cout<<" success : " << put_resp.body << std::endl;
         }
         else {
             status = ret::A_FAIL_NON_200;
         }
-
-        std::cout<<" PUT UPDATED POST " << std::endl;
-        std::cout<<" CODE : " << put_resp.code << std::endl;
-        std::cout<<" BODY : " << put_resp.body << std::endl;
     }
 
     return status;
 }
 
 bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
-    std::cout<<" retrieving folder post id " << std::endl;
-    std::cout<<" filepath : " << filepath << std::endl;
     // Get Parent folder
     std::string folderpath;
     fs::GetParentPath(filepath, folderpath);
@@ -535,7 +513,6 @@ bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
         id_out = folder.folder_post_id();
         ret = true;
     }
-    std::cout<<" folder post id : " << id_out << std::endl;
     return ret;
 }
 
