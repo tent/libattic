@@ -3,6 +3,8 @@
 #pragma once
 
 #include "mutexclass.h"
+#include "taskqueue.h"
+#include "taskmanager.h"
 
 namespace attic { 
 
@@ -21,14 +23,24 @@ public:
 
     static TaskArbiter* GetInstance();
 
-    int SpinOffTask(Task* pTask); // Spin off detached thread
+    Task* SyncPopFront();
+    void ReclaimTask(Task* task);
+    void SyncPushBack(Task* pTask);
+    unsigned int ActiveTaskCount();
 
+    int CreateAndSpinOffTask(const TaskContext& tc);
+    int SpinOffTask(Task* pTask);
+
+    TaskManager* task_manager() { return task_manager_; }
+    void set_task_manager(TaskManager* task_manager) { task_manager_ = task_manager; }
 private:
     static bool            initialized_;
     static TaskArbiter*    instance_;
     ThreadPool*            pool_;
+    TaskQueue              task_queue_;
+    TaskManager*           task_manager_;
 };
 
-}//namespace
+} //namespace
 #endif
 

@@ -12,6 +12,7 @@ bool TaskArbiter::initialized_ = false;
 
 TaskArbiter::TaskArbiter() {
     pool_ = new ThreadPool();
+    task_manager_ = NULL;
 }
 
 TaskArbiter::~TaskArbiter() {
@@ -49,7 +50,7 @@ int TaskArbiter::Shutdown() {
         instance_ = NULL;
     }
 
-    CentralTaskQueue::GetInstance()->Shutdown();
+    task_queue_.ClearTaskQueue();
     return status;
 }
 
@@ -59,18 +60,41 @@ TaskArbiter* TaskArbiter::GetInstance() {
     return instance_;
 }
 
+int TaskArbiter::CreateAndSpinOffTask(const TaskContext& tc) {
+    int status = ret::A_OK; 
+    Task* t = task_manager_->GetTentTask(tc);
+    status = SpinOffTask(t);
+    return status;
+}       
+
+
 // Spin off detached thread, (not explicitly detached,
 // but treated as such, in all actuallity on most platforms
 // its probably joinable)
 int TaskArbiter::SpinOffTask(Task* pTask) {
     int status = ret::A_OK;
-
-    if(initialized_) { 
-        CentralTaskQueue::GetInstance()->SyncPushBack(pTask);
-    }
+    if(initialized_)
+        task_queue_.SyncPushBack(pTask);
     else
         status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
     return status;
 }
 
+void TaskArbiter::SyncPushBack(Task* task) {
+    task_queue_.SyncPushBack(task);
+}
+
+Task* TaskArbiter::SyncPopFront() {
+    return task_queue_.SyncPopFront();
+}
+
+void TaskArbiter::ReclaimTask(Task* task) {
+    task_queue_.ReclaimTask(task);
+}
+
+unsigned int TaskArbiter::ActiveTaskCount() {
+    return task_queue_.ActiveTaskCount();
+}
+
 }//namespace
+
