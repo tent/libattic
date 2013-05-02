@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
+project(libattic)
 
 option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
 option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
@@ -20,7 +21,7 @@ endif(ATTIC_BINARY)
 # Build dependencies
 # Build gtest libs
 
-project(libattic)
+
 add_subdirectory("vendor/jsoncpp")
 add_subdirectory("vendor/cryptopp")
 
