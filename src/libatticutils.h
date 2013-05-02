@@ -64,38 +64,9 @@ namespace attic { namespace liba {
         return status;
     }
 
-    int InitializeTaskFactory( TaskFactory** pTf) {
-        int status = ret::A_OK;
-        if(!(*pTf))
-        {
-            (*pTf) = new TaskFactory();
-            status = (*pTf)->Initialize();
-        }
-        else
-            status = ret::A_FAIL_ATTEMPT_TO_REINIT;
-
-        return status;
-    }
-
     int ShutdownTaskArbiter() {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
-
-        return status;
-    }
-
-    int ShutdownTaskFactory( TaskFactory* pTf ) {
-        int status = ret::A_OK;
-        // Blind shutdown
-        if(pTf)
-        {
-            pTf->Shutdown();
-            delete pTf;
-            pTf = NULL;
-        }
-        else
-            status = ret::A_FAIL_INVALID_PTR;
-
 
         return status;
     }
