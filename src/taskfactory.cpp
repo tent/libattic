@@ -1,4 +1,3 @@
-
 #include "taskfactory.h"
 
 #include "tenttask.h"
@@ -16,65 +15,27 @@
 #include "taskarbiter.h"
 #include "tentapp.h"
 #include "scandirectorytask.h"
+#include "logutils.h"
 
 namespace attic { 
 
 TaskFactory::TaskFactory() {}
 TaskFactory::~TaskFactory() {}
 
-int TaskFactory::Initialize() // Depricated
-{
-    std::cout<<" Initializing task factory " << std::endl;
-
-
-    return ret::A_OK;
-}
-
-int TaskFactory::Shutdown() // Depricated
-{
-    std::cout<<" Shutting down task factory " << std::endl;
-
-    return ret::A_OK;
-}
-
-void TaskFactory::PushBackTask(Task* t, TaskFactoryDelegate* delegate) {
-    if(t) {
-        if(delegate)
-            delegate->OnTaskCreate(t);
-
-        // TODO :: this is probably unecessary, let the owner delete task
-        /*
-        Lock();
-        m_ActiveTaskPool.PushBack(t);
-        Unlock();
-        */
-
-        if(delegate)
-            delegate->OnTaskInsert(t);
-    }
-}
-
 Task* TaskFactory::GetTentTask(int type,
                                FileManager* pFm,             
                                CredentialsManager* pCm,      
                                const AccessToken& at,        
                                const Entity& entity,    
-                               const TaskContext& context,
-                               TaskDelegate* callbackDelegate,
-                               TaskFactoryDelegate* delegate) {
-    // Check Inactive Task Pool
-    // 
-    // Otherwise create a new task
+                               const TaskContext& context) {
     Task* t = NULL;
     t = CreateNewTentTask(type,
                           pFm,       
                           pCm,
                           at,
                           entity,    
-                          context,
-                          callbackDelegate); 
+                          context);
 
-    PushBackTask(t, delegate);
     return t;
 }
 
@@ -82,17 +43,12 @@ Task* TaskFactory::GetTentTask(int type,
 Task* TaskFactory::GetManifestTask(Task::TaskType type,
                                    FileManager* pFm,
                                    const TaskContext& context,
-                                   void (*callback)(int, char**, int, int),
-                                   TaskFactoryDelegate* delegate) {
+                                   void (*callback)(int, char**, int, int)) {
     Task* t = NULL;
-
     t = CreateNewManifestTask(type,
                               pFm,
                               context,
                               callback);
-
-    PushBackTask(t, delegate);
-
     return t;
 }
 
@@ -127,30 +83,27 @@ Task* TaskFactory::CreateNewTentTask(int type,
                                      CredentialsManager* pCm,        
                                      const AccessToken& at,          
                                      const Entity& entity,      
-                                     const TaskContext& context,
-                                     TaskDelegate* callbackDelegate) {
+                                     const TaskContext& context) {
 
     Task* t = NULL;
     switch(type)
     {
         case Task::PUSH:
         {
-            t = new PushTask( pFm,
-                              pCm,                    
-                              at,
-                              entity,                          
-                              context,                 
-                              callbackDelegate);                         
+            t = new PushTask(pFm,
+                             pCm,                    
+                             at,
+                             entity,                          
+                             context);
             break;
         }
         case Task::PULL:
         {
-            t = new PullTask( pFm,                     
-                              pCm,          
-                              at,
-                              entity,                           
-                              context,                  
-                              callbackDelegate);         
+            t = new PullTask(pFm,                     
+                             pCm,          
+                             at,
+                             entity,                           
+                             context);
             break;
         }
         case Task::RENAME:
@@ -159,18 +112,16 @@ Task* TaskFactory::CreateNewTentTask(int type,
                                pCm,
                                at,
                                entity,
-                               context,
-                               callbackDelegate);
+                               context);
             break;
         }
         case Task::DELETE:
         {
-            t = new DeleteTask( pFm,                          
-                                pCm,          
-                                at,
-                                entity,                                
-                                context,                       
-                                callbackDelegate);             
+            t = new DeleteTask(pFm,                          
+                               pCm,          
+                               at,
+                               entity,                                
+                               context);
             break;
         }
         case Task::SYNC:
@@ -180,23 +131,21 @@ Task* TaskFactory::CreateNewTentTask(int type,
         }
         case Task::SYNC_FILE_TASK:
         {
-            t = new SyncFileTask( pFm,                   
-                                  pCm,                   
-                                  at,                    
-                                  entity,                
-                                  context,             
-                                  callbackDelegate);
+            t = new SyncFileTask(pFm,
+                                 pCm,
+                                 at,
+                                 entity,
+                                 context);
 
             break;
         }
         case Task::POLL:
         {
-            t = new PollTask( pFm,                   
-                              pCm,                   
-                              at,                    
-                              entity,                
-                              context,             
-                              callbackDelegate);             
+            t = new PollTask(pFm,                   
+                             pCm,                   
+                             at,                    
+                             entity,                
+                             context);
             break;
         }
         default:
@@ -214,39 +163,7 @@ void TaskFactory::LogUnknownTaskType(Task::TaskType type) {
     sprintf(buf, "%d", type);
     std::string a = "Unknown task type : ";
     a.append(buf);
-}
-
-int TaskFactory::RemoveActiveTask(Task* pTask){ // Depricated
-    int status = ret::A_OK;
-    // Remove from active list
-
-
-    return status;
-}
-
-void TaskFactory::TaskFinished(int code, Task* pTask) {
-    if(code == ret::A_OK && pTask) {
-        // Reset task and return it into the active pool
-    }
-    else {
-        // Log error
-        if(pTask) {
-            delete pTask;
-            pTask = NULL;
-        }
-    }
-}
-
-int TaskFactory::GetNumberOfActiveTasks(const Task::TaskType type){ // Depricated
-    int taskcount = -1;
-
-    /*
-    m_ActiveTaskPool.Lock();
-    taskcount = m_ActiveTaskPool[type]->size();
-    m_ActiveTaskPool.Unlock();
-    */
-
-    return taskcount;
+    log::LogString("KJASD123", a);
 }
 
 }//namespace

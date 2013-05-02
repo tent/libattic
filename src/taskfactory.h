@@ -13,12 +13,8 @@
 
 namespace attic { 
 
-class TentApp;
 class FileManager;
-class ConnectionManager;
 class CredentialsManager;
-class Credentials;
-class TaskArbiter;
 class TaskDelegate;
 
 class TaskFactoryDelegate {
@@ -39,22 +35,17 @@ private:
                             CredentialsManager* pCm,        
                             const AccessToken& at,          
                             const Entity& entity,      
-                            const TaskContext& context,
-                            TaskDelegate* callbackDelegate);
+                            const TaskContext& context);
 
     Task* CreateNewManifestTask(Task::TaskType type,
                                 FileManager* pFm,
                                 const TaskContext& context,
                                 void (*callback)(int, char**, int, int));
 
-    void PushBackTask(Task* t, TaskFactoryDelegate* delegate);
     void LogUnknownTaskType(Task::TaskType type);
 public:                                                                 
     TaskFactory();                                                      
     ~TaskFactory();                                                     
-
-    int Initialize(); // Depricated
-    int Shutdown(); // Depricated
 
     // Synchronous versions of methods take care of locking themselves,
     // this method locks and unlocks before completing, making it blocking.
@@ -63,23 +54,13 @@ public:
                       CredentialsManager* pCm,      
                       const AccessToken& at,        
                       const Entity& entity,    
-                      const TaskContext& context,
-                      TaskDelegate* callbackDelegate,
-                      TaskFactoryDelegate* delegate = NULL);
+                      const TaskContext& context);
 
     Task* GetManifestTask(Task::TaskType type,
                           FileManager* pFm,
                           const TaskContext& context,
-                          void (*callback)(int, char**, int, int),
-                          TaskFactoryDelegate* delegate = NULL);
-
-    int RemoveActiveTask(Task* pTask); // Depricated
-
-    // Information methods
-    int GetNumberOfActiveTasks(const Task::TaskType type); // Depricated
+                          void (*callback)(int, char**, int, int));
 private:
-    TaskPool    m_ActiveTaskPool;
-    TaskPool    m_InactiveTaskPool;
 };                                                                      
 
 }//namespace
