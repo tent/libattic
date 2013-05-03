@@ -223,11 +223,14 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                     delete cr;
                     cr = NULL;
                 }
-                if(response.code != 200) { 
+                if(response.code == 200) { 
+                    std::cout<<" Chunk response : " << response.body << std::endl;
+                    
+                }
+                else {
                     std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
                     log::LogHttpResponse("KJASDF321", response);
                 }
-
             }
             chunk.clear();
         }
@@ -285,7 +288,7 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
 
     std::string ver_256;
-    GenerateSha256(encryptedChunk, ver_256);
+    crypto::GenerateSha256Hash(encryptedChunk, ver_256);
     verification_map_[ver_256] = true;
 
     // Fill Out Chunk info object
