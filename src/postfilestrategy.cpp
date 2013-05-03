@@ -110,7 +110,7 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
 
     Response response;
 
-//    ConnectionHandler ch;
+    //ConnectionHandler ch;
     netlib::HttpGet(posts_feed,
                &params,
                &access_token_,
@@ -228,6 +228,7 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 }
                 if(response.code == 200) { 
                     // Verifiy chunks made it to the server
+                    std::cout<<" cr response : " << response.body << std::endl;
                     ChunkPost cp;
                     jsn::DeserializeObject(&cp, response.body);
                     if(!VerifyChunks(cp, filepath)) {
@@ -248,14 +249,18 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
 }
 
 bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) {
+    std::cout<<" verification map size : " << verification_map_.size() << std::endl;
     Post::AttachmentMap::iterator itr_cp = cp.attachments()->begin();
     for(;itr_cp != cp.attachments()->end(); itr_cp++) {
         std::cout<< itr_cp->second.digest << std::endl;
         std::string decoded;
         if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
             std::string error = "Failed to validate attachment integrity.\n";
-            error += "\t filepath : ";
-            error += filepath + "\n";
+            error += "\t filepath : " + filepath + "\n";
+            error += "\t attachment name : " + itr_cp->second.name + "\n";
+            char buf[256] = {'\0'};
+            snprintf(buf, 256, "%u", itr_cp->second.size);
+            error += "\t size : " + std::string(buf) + "\n";
             log::LogString("MAS021n124", error);
             return false;
         }
@@ -278,7 +283,6 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
     // Calculate plaintext hash
     std::string plaintextHash;
     crypto::GenerateHash(chunk, plaintextHash);
-
     std::cout<<" PLAINTEXT : " << plaintextHash << std::endl;
 
     // create chunk name (hex encoded plaintext hash)
@@ -468,6 +472,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
         utils::FindAndReplace(post_path_, "{post}", meta_data_post_id, posturl);
 
         Response resp;
+        //ConnectionHandler ch;
         netlib::HttpGet(posturl, NULL, &access_token_, resp);
 
         if(resp.code == 200) {
@@ -498,7 +503,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     FilePost p;
     // Get Existing post
     Response get_resp;
-    //ConnectionHandler ch;
+    ConnectionHandler ch;
     netlib::HttpGet(posturl,
                NULL,
                &access_token_,
