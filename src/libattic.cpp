@@ -107,6 +107,7 @@ int InitLibAttic(unsigned int threadCount) {
         
         g_CallbackHandler.Initialize();
         attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
+        //status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
     }
 
     if(status == attic::ret::A_OK) { 
@@ -135,6 +136,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     }
 
     attic::ConfigManager::GetInstance()->Shutdown();
+    //status = attic::ConnectionManager::GetInstance()->Shutdown();
 
     std::cout<<" calling back .. " << std::endl;
     if(callback)

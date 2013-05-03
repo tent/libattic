@@ -56,7 +56,8 @@ int ConnectionHandler::HttpPost(const std::string& url,
     request_stream << "Content-Length: " << len << "\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
-    request_stream << "Connection: close\r\n\r\n";
+    request_stream <<"\r\n";
+    //request_stream << "Connection: close\r\n\r\n";
     request_stream << requestbody;
 
     /*
@@ -110,7 +111,8 @@ int ConnectionHandler::HttpPut(const std::string& url,
     request_stream << "Content-Length : " << len << "\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
-    request_stream << "Connection: close\r\n\r\n";
+    request_stream <<"\r\n";
+    //request_stream << "Connection: close\r\n\r\n";
     request_stream << requestbody;
 /*
     std::ostringstream ss;
@@ -151,7 +153,8 @@ int ConnectionHandler::HttpGet(const std::string& url,
     request_stream << "Content-Type: " << cnst::g_content_type_header << "\r\n";
     if(!authheader.empty())
         request_stream << "Authorization: " << authheader <<"\r\n";
-    request_stream << "Connection: close\r\n\r\n";
+    request_stream <<"\r\n";
+    //request_stream << "Connection: close\r\n\r\n";
 
     status = HttpRequest(local_url, request, out);
     return status;
@@ -164,10 +167,9 @@ int ConnectionHandler::HttpRequest(const std::string& url,
     using namespace boost::asio::ssl;
     try {
         boost::asio::io_service io_service; 
-
         //Connection sock(&io_service);
         //sock.Initialize(url);
-        Connection* sock = manager_instance_->RequestConnection();
+        Connection* sock = manager_instance_->RequestConnection(url);
         if(sock) {
             sock->Write(request);
             sock->InterpretResponse(out);

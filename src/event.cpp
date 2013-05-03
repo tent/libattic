@@ -30,35 +30,35 @@ void EventSystem::Shutdown() {
 }
 
 void EventSystem::ProcessEvents() {
-
     m_queueMtx.Lock();
     unsigned int count = m_EventQueue.size();
     m_queueMtx.Unlock();
 
-    std::deque<Event> tempQueue;
-    unsigned int stride = 5;
-    for(unsigned int i=0; i<count; i+=stride){
-        // Copy some events
-        m_queueMtx.Lock();
-        for(unsigned int b = 0; b<stride; b++) {
-            if(m_EventQueue.size()) {
-                tempQueue.push_back(m_EventQueue.front());
-                m_EventQueue.pop_front();
+    if(count) {
+        std::cout<<" PROCESSING " << count << " EVENTS " << std::endl;
+        std::deque<Event> tempQueue;
+        unsigned int stride = 100;
+        for(unsigned int i=0; i<count; i+=stride){
+            // Copy some events
+            m_queueMtx.Lock();
+
+            unsigned int b = 0;
+            EventQueue::iterator e_itr = m_EventQueue.begin();
+            for(;e_itr != m_EventQueue.end(); e_itr++) {
+                tempQueue.push_back(*e_itr);
+                b++;
+                if(b>=stride) break;
             }
-            else {
-                break;
-            }
+            m_EventQueue.erase(m_EventQueue.begin(), m_EventQueue.begin()+b);
+            m_queueMtx.Unlock();
+
+            //Process Temp events
+            std::deque<Event>::iterator itr = tempQueue.begin();
+            for(;itr!= tempQueue.end(); itr++)
+                Notify(*itr);
+            tempQueue.clear();
         }
-        m_queueMtx.Unlock();
-
-        //Process Temp events
-        std::deque<Event>::iterator itr = tempQueue.begin();
-        for(;itr!= tempQueue.end(); itr++)
-            Notify(*itr);
-        tempQueue.clear();
-        
     }
-
 }
 
 void EventSystem::Notify(const Event& event) {

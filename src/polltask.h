@@ -21,10 +21,10 @@ namespace attic {
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
-    int SyncFolderPosts();
-    int SyncFolder(FolderPost& folder_post);
+//    int SyncFolderPosts();
+//    int SyncFolder(FolderPost& folder_post);
 
-    int GetFolderPostCount();
+//    int GetFolderPostCount();
     int GetFilePostCount(const std::string& folder_post_id);
 
     void PushBackFile(const std::string& filepath);
@@ -34,8 +34,8 @@ class PollTask : public TentTask, public event::EventListener {
 
     int SyncFiles();
     bool RetrieveFilePosts(std::deque<FilePost>& posts, PagePost& out);
-    int RetrieveFolderPosts(std::deque<FolderPost>& posts);
-    int RetrieveFilePostsThatMentionFolder(const std::string& post_id, std::deque<FilePost>& posts);
+ //   int RetrieveFolderPosts(std::deque<FolderPost>& posts);
+  //  int RetrieveFilePostsThatMentionFolder(const std::string& post_id, std::deque<FilePost>& posts);
 public:
     void PollTaskCB(int a, std::string& b);
 

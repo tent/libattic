@@ -135,6 +135,7 @@ void PollTask::RunTask() {
     //sleep::sleep_seconds(2);
 }
 
+/*
 int PollTask::SyncFolderPosts() {
     int status = ret::A_OK;
     std::deque<FolderPost> folders;
@@ -151,7 +152,9 @@ int PollTask::SyncFolderPosts() {
     }
     return status;
 }
+*/
 
+/*
 int PollTask::SyncFolder(FolderPost& folder_post) {
     std::cout<<" SYNCING FOLDER " << std::endl;
     int status = ret::A_OK;
@@ -240,6 +243,7 @@ int PollTask::RetrieveFilePostsThatMentionFolder(const std::string& post_id,
     }
     return status;
 }
+*/
 
 int PollTask::SyncFiles() {
     int status = ret::A_OK;
@@ -321,7 +325,7 @@ bool PollTask::RetrieveFilePosts(std::deque<FilePost>& posts, PagePost& out) {
 
     return false;
 }
-
+/*
 int PollTask::RetrieveFolderPosts(std::deque<FolderPost>& posts) {
     int status = ret::A_OK;
     std::cout<<" RETRIEVING FOLDER POSTS " << std::endl;
@@ -385,6 +389,7 @@ int PollTask::RetrieveFolderPosts(std::deque<FolderPost>& posts) {
     }
     return status;
 }
+*/
 
 int PollTask::GetFilePostCount(const std::string& folder_post_id) {
     Entity entity = TentTask::entity();
@@ -414,6 +419,7 @@ int PollTask::GetFilePostCount(const std::string& folder_post_id) {
     return count;
 }
 
+/*
 int PollTask::GetFolderPostCount() {
     std::string url = entity().GetPreferredServer().posts_feed();
     //std::cout<<" URL : " << url << std::endl;
@@ -440,6 +446,7 @@ int PollTask::GetFolderPostCount() {
 
     return count;
 }
+*/
 
 void PollTask::PushBackFile(const std::string& filepath) {
     processing_queue_[filepath] = true;

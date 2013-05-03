@@ -19,14 +19,17 @@ class ConnectionManager {
     ConnectionManager(const ConnectionManager& rhs) {}
     ConnectionManager operator=(const ConnectionManager& rhs) { return *this; }
 
-    static ConnectionManager* GetInstance();
-    Connection* RequestConnection();
+
+    Connection* RequestConnection(const std::string& url);
     void ReclaimConnection(Connection* socket);
-    int Shutdown();
+
     void Release();
 public:
     ~ConnectionManager();
+
+    static ConnectionManager* GetInstance();
     int Initialize(const std::string& host_url);
+    int Shutdown();
 
 private:
     std::string             host_url_;

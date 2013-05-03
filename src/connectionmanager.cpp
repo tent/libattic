@@ -1,6 +1,7 @@
 #include "connectionmanager.h"
 
 #include "errorcodes.h"
+#include "netlib.h"
 
 namespace attic { 
 
@@ -27,7 +28,7 @@ int ConnectionManager::Shutdown() {
 void ConnectionManager::Release() { 
     ref_--;
     if(ref_ <= 0) { 
-        Shutdown();
+        //Shutdown();
     }
 }
 
@@ -40,23 +41,30 @@ ConnectionManager* ConnectionManager::GetInstance() {
 
 int ConnectionManager::Initialize(const std::string& host_url) {
     int status = ret::A_OK;
-
-    // Start up io service
-    boost::system::error_code ec;
-    try {
-        io_service_.run(ec);
+    if(!host_url.empty()) {
+        // Start up io service
+        boost::system::error_code ec;
+        try {
+            io_service_.run(ec);
+        }
+        catch(std::exception& e) {
+            std::cout<<" Failed to init connection manager " << e.what() << std::endl;
+            status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
+        }
+        if(status = ret::A_OK) {
+            // save host
+            host_url_ = host_url;
+            initialized_ = true;
+        }
     }
-    catch(std::exception& e) {
-        std::cout<<" Failed to init connection manager " << e.what() << std::endl;
+    else {
+        status = ret::A_FAIL_EMPTY_STRING;
     }
 
-    // save host
-    host_url_ = host_url;
-    initialized_ = true;
     return status;
 }
 
-Connection* ConnectionManager::RequestConnection() {
+Connection* ConnectionManager::RequestConnection(const std::string& url) {
     Connection* con = NULL;
     pool_mtx_.Lock();
     if(initialized_) {
@@ -82,7 +90,7 @@ Connection* ConnectionManager::RequestConnection() {
         }
     }
     else {
-        std::cout<<" CONNECTION MANAGER NOT INITIALIZED " << std::endl;
+        std::cout<<" CONNECTION MANAGER NOT INITIALIZED ..." << std::endl;
     }
     pool_mtx_.Unlock();
     std::cout<<" returning con " << std::endl;
