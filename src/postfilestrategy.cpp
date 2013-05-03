@@ -63,6 +63,10 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                     // Update meta data transit state
                     status = UpdateFilePostTransitState(meta_post_id, false);
                 }
+                else {
+                    // TODO :: Undo the file to the last good version, or delete if no last good version
+
+                }
             }
             else if(status == ret::A_OK && meta_post_id.empty()) {
                 std::cout<<" META POST ID EMPTY " << std::endl;
@@ -164,7 +168,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
     // To Chunk a file
     //  - Chunk and upload sequentially
     //  - Check if a chunk group(post) exists, if it does update that post, else new post
-   
     int status = ret::A_OK;
     ChunkBuffer cb;
     if(cb.OpenFile(filepath)) {
@@ -224,8 +227,13 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                     cr = NULL;
                 }
                 if(response.code == 200) { 
-                    std::cout<<" Chunk response : " << response.body << std::endl;
-                    
+                    // Verifiy chunks made it to the server
+                    ChunkPost cp;
+                    jsn::DeserializeObject(&cp, response.body);
+                    if(!VerifyChunks(cp, filepath)) {
+                        status = ret::A_FAIL_ATTACHMENT_VERIFICATION;
+                        break;
+                    }
                 }
                 else {
                     std::cout<<" CHUNK POST FAILED AT GROUP : " << group_count << std::endl;
@@ -237,6 +245,25 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
     }
 
     return status;
+}
+
+bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) {
+    Post::AttachmentMap::iterator itr_cp = cp.attachments()->begin();
+    for(;itr_cp != cp.attachments()->end(); itr_cp++) {
+        std::cout<< itr_cp->second.digest << std::endl;
+        std::string decoded;
+        if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
+            std::string error = "Failed to validate attachment integrity.\n";
+            error += "\t filepath : ";
+            error += filepath + "\n";
+            log::LogString("MAS021n124", error);
+            return false;
+        }
+        else {
+            std::cout<<" ATTACHMENT DIGEST FOUND " << std::endl;
+        }
+    }
+    return true;
 }
 
 int PostFileStrategy::TransformChunk(const std::string& chunk, 
@@ -284,12 +311,16 @@ int PostFileStrategy::TransformChunk(const std::string& chunk,
 
     std::string ciphertextHash;
     crypto::GenerateHash(encryptedChunk, ciphertextHash);
-
     std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
 
-    std::string ver_256;
-    crypto::GenerateSha256Hash(encryptedChunk, ver_256);
-    verification_map_[ver_256] = true;
+    // Verification Hash, has of base64 encoded chunk, used to verify each chunk is 
+    // successfully uplaoded
+    std::string ver;
+    crypto::GenerateHexEncodedHmac(finalizedOut, ver);
+    std::cout<<" VERIFICATION PRE : " << ver << std::endl;
+    ver = ver.substr(0, 64);
+    std::cout<<" VERIFICATION HASH : " << ver << std::endl;
+    verification_map_[ver] = true;
 
     // Fill Out Chunk info object
     out.set_chunk_name(chunkName);

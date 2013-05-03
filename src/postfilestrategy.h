@@ -59,6 +59,8 @@ private:
     void GetMasterKey(std::string& out);
 
     bool ValidMasterKey();
+
+    bool VerifyChunks(ChunkPost& cp, const std::string& filepath);
 public:
     std::map<std::string, bool> verification_map_;
     PostFileStrategy();

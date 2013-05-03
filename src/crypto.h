@@ -46,6 +46,7 @@ static void GenerateCredentials(Credentials& cred);
 static void GenerateIv(std::string& out);
 static void GenerateSha256Hash(const std::string& source, std::string& hash_out);
 static bool GenerateHash( const std::string& source, std::string& hash_out);
+static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out);
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
 static void GenerateRandomString(std::string& out, const unsigned int size);
 
@@ -141,6 +142,20 @@ static bool GenerateHash(const std::string& source, std::string& hash_out) {
     return true;
 }
 
+static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out) {
+    CryptoPP::SHA512 hash;
+    CryptoPP::StringSource src(source, 
+                               true,
+                               new CryptoPP::HashFilter( hash,
+                                   new CryptoPP::HexEncoder(
+                                       new CryptoPP::StringSink(hash_out),
+                                       false
+                                       )
+                                   )
+                              );
+    return true;
+
+}
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out) {
     CryptoPP::SHA512 hash;
     CryptoPP::FileSource src(filepath.c_str(),
@@ -434,6 +449,24 @@ static int VerifyHMACForString( const std::string& input,
     return status;
 }
 
+
+static void HexEncodeString(const std::string& input, std::string& output) {
+    CryptoPP::StringSource(input,
+                           true,
+                           new CryptoPP::HexEncoder(
+                             new CryptoPP::StringSink(output)
+                           ) // HexEncoder
+                          ); // StringSource
+}
+
+static void HexDecodeString(const std::string& input, std::string& output) {
+    CryptoPP::StringSource(input,
+                           true,
+                           new CryptoPP::HexDecoder(
+                               new CryptoPP::StringSink(output)
+                           ) // HexDecoder
+                          ); // StringSource
+}
 
 static void Base64EncodeString(const std::string& input, std::string& output) {
     CryptoPP::StringSource( input, 
