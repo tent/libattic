@@ -3,37 +3,28 @@
 #pragma once
 
 #include <string>
+#include <deque>
+
 
 #include "accesstoken.h"
-#include "censuspost.h"
+#include "filepost.h"
 #include "event.h"
 
 namespace attic { 
 
-class CensusHandler : public event::EventListener {
-    bool GetCensusPost(CensusPost& out);
-    int GetCensusPostCount();
-    int RetrieveCensusPost(CensusPost& out);
-    int CreateCensusPost(CensusPost& out);
-
-
+class CensusHandler {
+    int QueryTimeline(std::deque<FilePost>& out);
 public:
-    CensusHandler();
+    CensusHandler(const std::string& posts_feed, const AccessToken& at);
     ~CensusHandler();
 
-    void Initialize(const std::string& posts_feed, 
-                    const std::string& post_path,
-                    const AccessToken& at);
-    void Shutdown();
-    bool Inquiry();
+    bool Inquiry(std::deque<FilePost>& out);
 
-    int PushVersionBump();
-    void OnEventRaised(const event::Event& event);
 private:
     AccessToken access_token_;
     std::string posts_feed_;
-    std::string post_path_;
-    std::string last_known_version_;
+
+    std::string since_time_;
 };
 
 } //namespace

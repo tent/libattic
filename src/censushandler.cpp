@@ -7,167 +7,75 @@
 
 namespace attic { 
 
-CensusHandler::CensusHandler() {}
+CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& at) {
+    posts_feed_ = posts_feed;
+    access_token_ = at;
+    since_time_ = "0";
+}
+
 CensusHandler::~CensusHandler() {}
 
-void CensusHandler::Initialize(const std::string& posts_feed, 
-                               const std::string& post_path,
-                               const AccessToken& at) {
-    posts_feed_ = posts_feed;
-    post_path_ = post_path;
-    access_token_ = at;
-    event::RegisterForEvent(this, event::Event::PUSH);
-    event::RegisterForEvent(this, event::Event::DELETE);
-    event::RegisterForEvent(this, event::Event::RENAME);
-}
-
-void CensusHandler::Shutdown() {
-    event::UnregisterFromEvent(this, event::Event::PUSH);
-    event::UnregisterFromEvent(this, event::Event::DELETE);
-    event::UnregisterFromEvent(this, event::Event::RENAME);
-}
-
-bool CensusHandler::Inquiry()  {
-    // Retrieve Census post ( there should only be one, delete otherwise)
-    CensusPost p;
-    if(GetCensusPost(p)) {
-        // compare last known version(s) 
-        if(last_known_version_ != p.version()->id) { 
-            // if there is a difference, check all files and bump version
-            last_known_version_ = p.version()->id;
-            return true;
-         }
-    }
+bool CensusHandler::Inquiry(std::deque<FilePost>& out)  {
+    QueryTimeline(out);
+    if(out.size())
+        return true;
     return false;
 }
 
-int CensusHandler::PushVersionBump() {
+int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
     int status = ret::A_OK;
-    CensusPost p;
-    if(GetCensusPost(p)) {
-        std::string posturl, post_id;
-        post_id = p.id();
-        if(!post_id.empty()) {
-            utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-            Parent parent;
-            parent.version = p.version()->id;
-            p.PushBackParent(parent);
 
-            std::string post_buffer;
-            jsn::SerializeObject(&p, post_buffer);
-            
-            Response resp;
-            status = netlib::HttpPut(posturl,
-                                     p.type(),
-                                     NULL,
-                                     post_buffer,
-                                     &access_token_,
-                                     resp);
-            if(resp.code == 200) {
+    std::cout<<" file list size incoming : " << out.size() << std::endl;
+    std::string next_param;
+    for(;;) {
+        UrlParams params;
+        if(next_param.empty()) {
+            std::cout<<" since time in param : " << since_time_ << std::endl;
+            params.AddValue("types", cnst::g_attic_file_type);
+            params.AddValue("since_time", since_time_);
+            params.AddValue("sort_by", "version.received_at");
+        }
+        else {
+            params.DeserializeEncodedString(next_param);
+            // deserialize next params into UrlParams
+        }
+        std::cout<< "params : " << params.asString() << std::endl;
+        Response resp;
+        netlib::HttpGet(posts_feed_,
+                        &params,
+                        &access_token_,
+                        resp);
+        if(resp.code == 200) {
+            std::cout<< "query timeline result : " << resp.body << std::endl;
+            PagePost pp;
+            jsn::DeserializeObject(&pp, resp.body);
+            Json::Value arr(Json::arrayValue);
+            jsn::DeserializeJsonValue(arr, pp.data());
+
+            Json::ValueIterator itr = arr.begin();
+            for(; itr != arr.end(); itr++) {
+                FilePost fp;
+                if(jsn::DeserializeObject(&fp, *itr))
+                    out.push_back(fp);
             }
-            else {
-                log::LogHttpResponse("CEN3801", resp);
-                status = ret::A_FAIL_NON_200;
+
+            next_param = pp.pages().next();
+            if(next_param.empty()) {
+                since_time_ = out.front().version()->received_at; // newest one
+                std::cout<<" setting since time : " << since_time_ <<std::endl;
+                break;
             }
         }
-    }
-    return status;
-}
-
-bool CensusHandler::GetCensusPost(CensusPost& out) {
-    int post_count = GetCensusPostCount();
-    if(post_count == 0)
-        CreateCensusPost(out);
-    else if(post_count > 0)
-        RetrieveCensusPost(out);
-    else 
-        return false;
-    return true;
-}
-
-int CensusHandler::RetrieveCensusPost(CensusPost& out) {
-    int status = ret::A_OK;
-
-    UrlParams params;                                                                  
-    params.AddValue("types", std::string(cnst::g_attic_census_type));
-
-    Response resp;
-    status = netlib::HttpGet(posts_feed_,
-                             &params,
-                             &access_token_,
-                             resp);
-
-    if(resp.code == 200) {
-        PagePost pp;
-        jsn::DeserializeObject(&pp, resp.body);
-        Json::Value arr(Json::arrayValue);
-        jsn::DeserializeJsonValue(arr, pp.data());
-        
-        std::deque<CensusPost> posts;
-        Json::ValueIterator itr = arr.begin();
-        for(; itr != arr.end(); itr++) {
-            CensusPost cp;
-            if(jsn::DeserializeObject(&cp, *itr))
-                    posts.push_back(cp);
-        }
-
-        if(posts.size() > 0) {
-            // grab the first one (if there are many)
-            out = posts[0];
-            // delete the rest (if there are many
+        else {
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("MAP12410a#", resp);
+            break;
         }
     }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
 
     return status;
 }
 
-int CensusHandler::CreateCensusPost(CensusPost& out) {
-    int status = ret::A_OK;
-
-    std::string post_buffer;
-    jsn::SerializeObject(&out, post_buffer);
-
-    Response resp;
-    status = netlib::HttpPost(posts_feed_,
-                              out.type(),
-                              NULL,
-                              post_buffer,
-                              &access_token_,
-                              resp);
-
-    if(resp.code == 200) {
-        jsn::DeserializeObject(&out, resp.body);
-    }
-
-    return status;
-}
-
-int CensusHandler::GetCensusPostCount() {
-    UrlParams params;                                                                  
-    params.AddValue("types", std::string(cnst::g_attic_census_type));
-
-    Response resp;
-    netlib::HttpHead(posts_feed_,
-                     &params,
-                     &access_token_,
-                     resp);
-
-    int count = -1;
-    if(resp.code == 200) {
-        if(resp.header.HasValue("Count"))
-            count = atoi(resp.header["Count"].c_str());
-    }
- 
-    return count;
-}
-
-void CensusHandler::OnEventRaised(const event::Event& event) {
-    // Event raised, don't really care what, bump the version
-    PushVersionBump();
-}
 
 } //namespace
 
