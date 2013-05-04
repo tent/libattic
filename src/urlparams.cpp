@@ -6,16 +6,22 @@ namespace attic {
 
 void UrlParams::AddValue(const std::string& key, const std::string &value) {
     // Note* adding multiple values to the same key pill push back the value
-    m_Values[key].push_back(value);
+    values_[key].push_back(value);
 }
 
 std::vector<std::string> UrlParams::GetValue(const std::string& key) {
     UrlParam value;
-    UrlParamMap::iterator itr = m_Values.find(key);
-    if(itr != m_Values.end()) {
+    UrlParamMap::iterator itr = values_.find(key);
+    if(itr != values_.end()) {
         value = itr->second;
     }
     return value;
+}
+
+std::string UrlParams::asString() {
+    std::string out;
+    SerializeToString(out);
+    return out;
 }
 
 void UrlParams::SerializeToString(std::string &out) const {
@@ -23,10 +29,10 @@ void UrlParams::SerializeToString(std::string &out) const {
     // appendable to a url
     out.append("?");
 
-    UrlParamMap::const_iterator itr = m_Values.begin();
+    UrlParamMap::const_iterator itr = values_.begin();
 
-    for(;itr != m_Values.end(); itr++) {
-        if(itr != m_Values.begin()) {
+    for(;itr != values_.end(); itr++) {
+        if(itr != values_.begin()) {
             out.append("&");
         }
 
@@ -46,10 +52,10 @@ void UrlParams::SerializeToString(std::string &out) const {
 void UrlParams::SerializeAndEncodeToString(std::string &out) const {
     out.append("?");
 
-    UrlParamMap::const_iterator itr = m_Values.begin();
+    UrlParamMap::const_iterator itr = values_.begin();
 
-    for(;itr != m_Values.end(); itr++) {
-        if(itr != m_Values.begin()) {
+    for(;itr != values_.end(); itr++) {
+        if(itr != values_.begin()) {
             out.append("&");
         }
 
@@ -66,6 +72,29 @@ void UrlParams::SerializeAndEncodeToString(std::string &out) const {
             
             if(*valItr != itr->second.back())
                 out.append(",");
+        }
+    }
+}
+
+void UrlParams::DeserializeEncodedString(const std::string& in) {
+    values_.clear();
+    std::string decoded;
+    decoded = netlib::UriDecode(in);
+    std::string local = decoded;
+    if(local.size()) {
+        if(local[0] == '?') {
+            local.erase(0,1);
+        }
+        utils::split s;
+        utils::SplitString(local, '&', s);
+        utils::split::iterator itr = s.begin();
+        for(; itr != s.end(); itr++) {
+            size_t pos = itr->find("=");
+            if(pos != std::string::npos) {
+                std::string key = (*itr).substr(0, pos);
+                std::string value = (*itr).substr(pos+1);
+                AddValue(key, value);
+            }
         }
     }
 }

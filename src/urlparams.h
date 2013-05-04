@@ -17,10 +17,12 @@ public:
     void AddValue(const std::string& key, const std::string &value);
     UrlParam GetValue(const std::string& key);
 
-    void SerializeToString(std::string &out) const;
-    void SerializeAndEncodeToString(std::string &out) const;
+    std::string asString();
+    void SerializeToString(std::string& out) const;
+    void SerializeAndEncodeToString(std::string& out) const;
+    void DeserializeEncodedString(const std::string& in);
 private:
-    UrlParamMap m_Values;
+    UrlParamMap values_;
 };
 
 }//namespace
