@@ -30,18 +30,20 @@ int ThreadPool::Initialize() {
 
 int ThreadPool::Shutdown() {
     std::cout<<" shutting down pool " << std::endl;
-    for(unsigned int i=0; i<m_Workers.size(); i++) {
-        m_Workers[i]->SetThreadExit();
-        //m_Workers[i]->SetThreadShutdown();
+    for(unsigned int i=0; i<workers_.size(); i++) {
+        workers_[i]->SetThreadExit();
+        //workers_[i]->SetThreadShutdown();
     }
 
     std::cout<<" joining threads ... " << std::endl;
-    for(unsigned int i=0; i<m_Threads.size(); i++) {
+    for(unsigned int i=0; i<threads_.size(); i++) {
         try {
             std::cout<<" joining : " << i << std::endl;
-            std::cout<<" joinable : " << m_Threads[i]->joinable() << std::endl;
-            if(m_Threads[i]->joinable()) {
-                m_Threads[i]->join();
+            std::cout<<" joinable : " << threads_[i]->joinable() << std::endl;
+            if(threads_[i]->joinable()) {
+                threads_[i]->join();
+                delete threads_[i];
+                threads_[i] = NULL;
             }
         }
         catch(boost::system::system_error& ti) {
@@ -49,7 +51,7 @@ int ThreadPool::Shutdown() {
         }
     }
 
-    std::cout<<" done " << std::endl;
+    std::cout<<" done shutting down pool " << std::endl;
     return ret::A_OK;
 }
 
@@ -59,10 +61,10 @@ int ThreadPool::ExtendPool(unsigned int stride) {
 
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker();
-        m_Workers.push_back(pWorker);
+        workers_.push_back(pWorker);
 
         boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
-        m_Threads.push_back(pt);
+        threads_.push_back(pt);
 
         // decide whether or not to keep as a detached thread
 //        std::cout<<"detaching thread ... " << std::endl;
@@ -82,7 +84,7 @@ int ThreadPool::AbridgePool(unsigned int stride) {
         while(m_ThreadData[i]->State.TryLock()) { sleep(0); }
         m_ThreadData[i]->State.SetStateExit();
         m_ThreadData[i]->State.Unlock();
-        m_ThreadCount--;
+        thread_count_--;
     }
     */
 
