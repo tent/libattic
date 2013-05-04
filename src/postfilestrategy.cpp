@@ -17,6 +17,7 @@
 #include "chunkrequest.h"
 #include "pagepost.h"
 #include "censushandler.h"
+#include "chunktransform.h"
 
 #include "sleep.h"
 
@@ -81,18 +82,6 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     }
     else {
         status = ret::A_FAIL_PATH_DOESNT_EXIST;
-    }
-
-    if(status == ret::A_OK) {
-        // bump census version
-        CensusHandler ch;
-        ch.Initialize(posts_feed_, post_path_, access_token_);
-        status = ch.PushVersionBump();
-        if(status != ret::A_OK) {
-            std::string error = "Failed to bump census version";
-            log::LogString("MKA!o3214", error);
-        }
-        ch.Shutdown();
     }
 
     std::cout<<" finishing upload : " << filepath <<" status : " << status << std::endl;
@@ -202,17 +191,24 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 cr->BeginRequest();
             }
             // Transform chunk
-            std::string finished_chunk, chunk_name;
             ChunkInfo ci;
+            ChunkTransform ct(chunk, file_key);
+            ct.Transform();
+            ci.set_chunk_name(ct.name());
+            ci.set_plaintext_mac(ct.plaintext_hash());
+            ci.set_ciphertext_mac(ct.ciphertext_hash());
+            ci.set_iv(ct.chunk_iv());
+            verification_map_[ct.verification_hash()] = true;
+            /*
             TransformChunk(chunk, 
                            file_key, 
                            finished_chunk, 
                            chunk_name, 
                            ci);
+                           */
             ci.set_position(chunk_count);
             chunk_map[ci.chunk_name()] = ci;
-
-            cr->PushBackChunk(ci, chunk_name, finished_chunk, chunk_count);
+            cr->PushBackChunk(ci, ci.chunk_name(), ct.finalized_data(), chunk_count);
             
             chunk_count++;
             if(cb.BufferEmpty() || chunk_count >= 30) {
@@ -424,7 +420,8 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             std::string entity = GetConfigValue("entity");
 
             Credentials file_cred;
-            crypto::GenerateCredentials(file_cred);
+            while(file_cred.key_empty())
+                crypto::GenerateCredentials(file_cred);
             UpdateFileInfo(file_cred, filepath, "", "", fi);
 
             std::string posturl = posts_feed_;
