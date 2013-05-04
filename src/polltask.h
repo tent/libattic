@@ -21,21 +21,11 @@ namespace attic {
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
-//    int SyncFolderPosts();
-//    int SyncFolder(FolderPost& folder_post);
-
-//    int GetFolderPostCount();
-    int GetFilePostCount(const std::string& folder_post_id);
-
     void PushBackFile(const std::string& filepath);
     void RemoveFile(const std::string& filepath);
     bool IsFileInQueue(const std::string& filepath);
 
-
-    int SyncFiles();
-    bool RetrieveFilePosts(std::deque<FilePost>& posts, PagePost& out);
- //   int RetrieveFolderPosts(std::deque<FolderPost>& posts);
-  //  int RetrieveFilePostsThatMentionFolder(const std::string& post_id, std::deque<FilePost>& posts);
+    int SyncFiles(std::deque<FilePost>& file_list);
 public:
     void PollTaskCB(int a, std::string& b);
 
@@ -56,13 +46,11 @@ public:
 
 private:
     std::map<std::string, bool> processing_queue_; // Files currently being processed
-
     PollDelegate* delegate_;
     boost::timer::cpu_timer timer_;
 
     bool running_;
-
-    CensusHandler census_handler_;
+    CensusHandler* census_handler_;
 };
 
 class PollDelegate : public TaskDelegate {
