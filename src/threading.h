@@ -24,10 +24,10 @@ public:
     int ExtendPool(unsigned int stride);                                                        
     int AbridgePool(unsigned int stride);                                                       
 private:                                                                                         
-    std::vector<boost::thread*> m_Threads;
-    std::vector<ThreadWorker*> m_Workers;
+    std::vector<boost::thread*> threads_;
+    std::vector<ThreadWorker*> workers_;
 
-    unsigned int m_ThreadCount;                                                                  
+    unsigned int thread_count_;                                                                  
 };                                                                                               
 
 

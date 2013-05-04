@@ -4,10 +4,14 @@
 
 namespace attic {
 TaskQueue::TaskQueue() {}
-TaskQueue::~TaskQueue(){}
+TaskQueue::~TaskQueue(){
+    std::cout<< " task queue destructor " << std::endl;
+}
 
 void TaskQueue::ClearTaskQueue() { 
+    std::cout<<" before lock " << std::endl;
     Lock();
+    std::cout<<" after lock " << std::endl;
     if(task_queue_.size()) {
         for(unsigned int i=0; i<task_queue_.size(); i++) {
             Task* p = task_queue_[i];

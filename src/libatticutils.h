@@ -67,7 +67,6 @@ namespace attic { namespace liba {
     int ShutdownTaskArbiter() {
         int status = ret::A_OK;
         status = TaskArbiter::GetInstance()->Shutdown();
-
         return status;
     }
 

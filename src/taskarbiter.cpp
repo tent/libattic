@@ -40,17 +40,24 @@ int TaskArbiter::Initialize(unsigned int poolSize) {
 int TaskArbiter::Shutdown() {
     int status = ret::A_OK;
 
+    std::cout<<" 1 " << std::endl;
     Lock();
     if(pool_)
         status = pool_->Shutdown();
     Unlock();
 
+    task_queue_.ClearTaskQueue();
+    std::cout<<" 1 " << std::endl;
+    // DO THIS LAST ... if you have any mutex derived member varibales it will delete them...
+    // and may cause DEADLOCK ...DUH
     if(instance_) {
         delete instance_;
         instance_ = NULL;
     }
 
-    task_queue_.ClearTaskQueue();
+    std::cout<<" 1 " << std::endl;
+
+    std::cout<<" 1 " << std::endl;
     return status;
 }
 

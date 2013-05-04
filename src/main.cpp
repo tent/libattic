@@ -403,6 +403,7 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     ShutdownLibAttic(NULL);
 }
 
+/*
 TEST(INIT, SHUTDOWN)
 {
 
@@ -420,7 +421,7 @@ TEST(INIT, SHUTDOWN)
         ShutdownLibAttic(NULL);
     }
 }
-
+*/
 #include "clientutils.h"
 bool g_bDiscover = false;
 TEST(DISCOVERY, OUTWARD_DISCOVERY)
@@ -915,6 +916,13 @@ TEST(PARAMS, ENCODE)
     std::cout<<" RANDOM STRING : " << random << std::endl;
 }
 */
+
+TEST(PARAMS, DECODE) {
+    std::string encoded = "?before_post=http%3A%2F%2Fbb216a47d970.alpha.attic.is+A3QNgRslTgFL7izr76eXiQ&limit=2&since_time=0";
+    attic::UrlParams params;
+    params.DeserializeEncodedString(encoded);
+
+}
 
 
 bool g_bRollsum = false;

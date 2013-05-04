@@ -121,7 +121,9 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     int status = attic::ret::A_OK;
 
     // Shutdown threading first, ALWAYS
+    std::cout<<" shutting down task arbiter " << std::endl;
     status = attic::liba::ShutdownTaskArbiter();
+    std::cout<<" shutting down task manager " << std::endl;
     status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
     //attic::event::ShutdownEventSystem();
     g_pTaskManager = NULL;
@@ -135,6 +137,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
         g_pClient = NULL;
     }
 
+    std::cout<<" shutting down config manager " << std::endl;
     attic::ConfigManager::GetInstance()->Shutdown();
     //status = attic::ConnectionManager::GetInstance()->Shutdown();
 

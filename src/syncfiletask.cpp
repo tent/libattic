@@ -40,6 +40,7 @@ void SyncFileTask::OnFinished() {}
 
 void SyncFileTask::RunTask() {
     int status = ret::A_OK;
+    std::cout<<" Syncing post id : " << post_id_ << std::endl;
     // Retrieve metadata
     FilePost p;
     status = SyncMetaData(p);
@@ -85,39 +86,45 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
 
-    if(!p.deleted() && !p.in_transit()) {
-        FileInfo fi;
-        postutils::DeserializeFilePostIntoFileInfo(p, fi);
-        // Check if file is in manifest
-        //int version = p.GetVersion();
+    if(!p.deleted()) { 
+        if(!p.in_transit()) {
+            FileInfo fi;
+            postutils::DeserializeFilePostIntoFileInfo(p, fi);
+            // Check if file is in manifest
+            //int version = p.GetVersion();
 
-        // Get Local file info
-        FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
+            // Get Local file info
+            FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
 
-        bool bPull = false;
-        if(pLocal_fi) {
-            std::string canonical_path;
-            fm->GetCanonicalFilepath(filepath, canonical_path);
+            bool bPull = false;
+            if(pLocal_fi) {
+                std::string canonical_path;
+                fm->GetCanonicalFilepath(filepath, canonical_path);
 
-            // Check if any aliases exist, and fix
-            CheckForAliases(p, filepath);
-            
-            // check if file exists, locally
-            if(pLocal_fi->deleted())
-                bPull = false;
-            else if(!fs::CheckFilepathExists(canonical_path))
-                bPull= true;
+                // Check if any aliases exist, and fix
+                CheckForAliases(p, filepath);
+                
+                // check if file exists, locally
+                if(pLocal_fi->deleted())
+                    bPull = false;
+                else if(!fs::CheckFilepathExists(canonical_path))
+                    bPull= true;
+            }
+            else {
+                std::cout<<" NOT IN MANIFEST PULL " << std::endl;
+                // Insert into manifest
+                fm->InsertToManifest(&fi);
+                // Doesn't exist in the manifest
+                bPull = true;
+            }
+            if(bPull) RaisePullRequest(p, fi);
         }
         else {
-            std::cout<<" NOT IN MANIFEST PULL " << std::endl;
-            // Insert into manifest
-            fm->InsertToManifest(&fi);
-            // Doesn't exist in the manifest
-            bPull = true;
+            std::cout<<" file in transit " << std::endl;
         }
-        if(bPull) RaisePullRequest(p, fi);
     }
     else {
+        std::cout<<" file marked for deletion " << std::endl;
         std::string canonical_path;
         fm->GetCanonicalFilepath(filepath, canonical_path);
         if(fs::CheckFilepathExists(canonical_path)){
