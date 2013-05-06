@@ -31,8 +31,6 @@ RenameTask::~RenameTask() {}
 void RenameTask::RunTask() {
     int status = ret::A_OK;
 
-
-
     std::cout<<" Rename task run ... " << std::endl;
     std::string filetype;
     context_.get_value("file_type", filetype);

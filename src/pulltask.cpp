@@ -38,21 +38,23 @@ void PullTask::OnPaused() {
 
 void PullTask::RunTask() {
     std::string filepath = TentTask::filepath();
-
-    if(file_manager()->IsFileLocked(filepath))
-        SetPausedState();
-    else {
-        std::cout<<" RUNNING PULL TASK " << std::endl;
+    int status = ret::A_OK;
+    if(!file_manager()->IsFileLocked(filepath)) {
         file_manager()->LockFile(filepath);
         event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
-        int status = PullFile(filepath);
+        status = PullFile(filepath);
         event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
         file_manager()->UnlockFile(filepath);
-
-        std::cout<<" PULL TASK FINISHED : " << status << std::endl;
-        Callback(status, filepath);
-        SetFinishedState();
     }
+    else {
+        std::string error = " File is locked by other task, finishing task\n";
+        error += " file : " + filepath + "\n";
+        log::LogString("1#819kmapAm", error);
+        status = ret::A_FAIL_FILE_IN_USE;
+    }
+
+    Callback(status, filepath);
+    SetFinishedState();
 }
 
 int PullTask::PullFile(const std::string& filepath) {

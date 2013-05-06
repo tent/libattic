@@ -37,20 +37,23 @@ void PushTask::OnPaused() {
 void PushTask::RunTask() {
     // Run the task
     std::string filepath = TentTask::filepath();
-
-    if(file_manager()->IsFileLocked(filepath))
-        SetPausedState();
-    else {
+    int status = ret::A_OK;
+    if(!file_manager()->IsFileLocked(filepath)) {
         file_manager()->LockFile(filepath);
         event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
-        int status = PushFile(filepath);
+        status = PushFile(filepath);
         event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
         file_manager()->UnlockFile(filepath);
-    
-        // Callback
-        Callback(status, filepath);
-        SetFinishedState();
     }
+    else {
+        std::string error = " File is locked by other task, finishing task\n";
+        error += " file : " + filepath + "\n";
+        log::LogString("333MA!941", error);
+        status = ret::A_FAIL_FILE_IN_USE;
+    }
+
+    Callback(status, filepath);
+    SetFinishedState();
 }
 
 // Note* path should not be relative, let the filemanager take care of

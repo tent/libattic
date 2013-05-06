@@ -919,11 +919,23 @@ TEST(PARAMS, ENCODE)
 
 TEST(PARAMS, DECODE) {
     std::string encoded = "?before_post=http%3A%2F%2Fbb216a47d970.alpha.attic.is+A3QNgRslTgFL7izr76eXiQ&limit=2&since_time=0";
+    std::cout << " encoded :" << encoded << std::endl;
     attic::UrlParams params;
     params.DeserializeEncodedString(encoded);
+    std::cout<<" decoded : " << params.asString() << std::endl;
+    std::string encode_two;
+    params.SerializeAndEncodeToString(encode_two);
+    std::cout<<" encoded again : " << encode_two << std::endl;
+
+
+    attic::UrlParams params_two;
+    params_two.AddValue("something", "id.something.text + blah=20");
+    std::cout<< " test encode : " << params_two.asString() << std::endl;
+    std::string test_encode;
+    params_two.SerializeAndEncodeToString(test_encode);
+    std::cout<< " test encoded : " << test_encode << std::endl;
 
 }
-
 
 bool g_bRollsum = false;
 std::string g_filepath;
