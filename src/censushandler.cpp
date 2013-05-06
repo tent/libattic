@@ -32,7 +32,8 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
         if(next_param.empty()) {
             std::cout<<" since time in param : " << since_time_ << std::endl;
             params.AddValue("types", cnst::g_attic_file_type);
-            params.AddValue("since_time", since_time_);
+            params.AddValue("since", since_time_);
+            params.AddValue("limit", "200");
             params.AddValue("sort_by", "version.received_at");
         }
         else {
@@ -50,22 +51,44 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
             std::cout<< "query timeline result : " << resp.body << std::endl;
             PagePost pp;
             jsn::DeserializeObject(&pp, resp.body);
+            std::cout<<" deserialized " << std::endl;
             Json::Value arr(Json::arrayValue);
             jsn::DeserializeJsonValue(arr, pp.data());
+            std::cout<<" deserialized " << std::endl;
 
+            std::cout<<" ARR SIZE : " << arr.size() << std::endl;
             Json::ValueIterator itr = arr.begin();
             for(; itr != arr.end(); itr++) {
                 FilePost fp;
                 if(jsn::DeserializeObject(&fp, *itr))
                     out.push_back(fp);
             }
-
-            next_param = pp.pages().next();
-            if(next_param.empty()) {
-                since_time_ = out.front().version()->received_at; // newest one
-                std::cout<<" setting since time : " << since_time_ <<std::endl;
-                break;
+            
+            if(arr.size()) {
+                try {
+                    if(pp.pages().next().empty()) {
+                        since_time_ = out.front().version()->received_at; // newest one
+                        std::cout<<" setting since time : " << since_time_ <<std::endl;
+                        break;
+                    }
+                    else {
+                        std::cout<<" NEXT PARAM  : " << pp.pages().next() << std::endl;
+                        std::cout<<" size : " << pp.pages().next().size() << std::endl;
+                        std::cout<<" assigning ... " << std::endl;
+                        next_param.clear();
+                        next_param = pp.pages().next();
+                        since_time_ = out.front().version()->received_at; // update since time
+                        std::cout<<" setting since time : " << since_time_ <<std::endl;
+                    }
+                }
+                catch(std::exception& e) {
+                    log::LogException("mak3412", e);
+                    break;
+                }
             }
+            else 
+                break;
+            std::cout<<" looping ... " << std::endl;
         }
         else {
             status = ret::A_FAIL_NON_200;
