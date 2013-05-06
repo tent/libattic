@@ -141,7 +141,6 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
     Json::Reader reader;
 
     if(!reader.parse(data, root)) {
-        std::cout<<" FAILED TO PARSE " << std::endl;
         return false;
     }
 

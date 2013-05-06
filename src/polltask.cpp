@@ -141,7 +141,6 @@ void PollTask::RunTask() {
 
 int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
     int status = ret::A_OK;
-
     // Process Posts
     std::deque<FilePost>::iterator itr = file_list.begin();
     for(;itr != file_list.end(); itr++) {

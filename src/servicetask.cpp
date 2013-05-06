@@ -46,7 +46,6 @@ void ServiceTask::OnFinished() {
 
 void ServiceTask::RunTask() {
     event::EventSystem::GetInstance()->ProcessEvents();
-
     if(task_dispatch_) {
         task_dispatch_->Process(task_manager_);
         task_dispatch_->Dispatch();
