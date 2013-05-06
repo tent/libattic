@@ -8,6 +8,12 @@
 
 namespace attic {
 
+static unsigned int upload_count = 0;
+static unsigned int download_count = 0;
+static unsigned int poll_count = 0;
+static unsigned int syncfile_count = 0;
+static unsigned int delete_count = 0;
+
 TaskManager::TaskManager(FileManager* pFm, 
                          CredentialsManager* pCm,
                          const AccessToken& at,
@@ -43,6 +49,13 @@ int TaskManager::Initialize() {
 
 int TaskManager::Shutdown() {
     int status = ret::A_OK;
+
+    std::cout<< "TaskManager Stats : " << std::endl;
+    std::cout<< "\t upload count : " << upload_count << std::endl;
+    std::cout<< "\t download count : " << download_count << std::endl;
+    std::cout<< "\t poll count : " << poll_count << std::endl;
+    std::cout<< "\t sync file count : " << syncfile_count << std::endl;
+    std::cout<< "\t delete count : " << delete_count << std::endl;
 
     return status;
 }
@@ -97,6 +110,7 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
     tc.set_type(Task::PUSH);
     tc.set_delegate(pDel);
     PushContextBack(tc);
+    upload_count++;
 }
 
 void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) {
@@ -108,6 +122,7 @@ void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* pDel) 
     tc.set_type(Task::PULL);
     tc.set_delegate(pDel);
     PushContextBack(tc);
+    download_count++;
 }
 
 void TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
@@ -119,6 +134,7 @@ void TaskManager::SyncFile(const std::string& postid, TaskDelegate* pDel) {
     tc.set_type(Task::SYNC_FILE_TASK);
     tc.set_delegate(pDel);
     PushContextBack(tc);
+    syncfile_count++;
 }
 
 void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
@@ -130,6 +146,7 @@ void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* pDel) {
     tc.set_type(Task::DELETE);
     tc.set_delegate(pDel);
     PushContextBack(tc);
+    delete_count++;
 }
 
 void TaskManager::PollFiles(TaskDelegate* pDel) { // This will need to be a direct call
@@ -140,6 +157,7 @@ void TaskManager::PollFiles(TaskDelegate* pDel) { // This will need to be a dire
     tc.set_type(Task::POLL);
     tc.set_delegate(pDel);
     PushContextBack(tc);
+    poll_count++;
 }
 
 void TaskManager::RenameFile(const std::string& original_filepath, 
