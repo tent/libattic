@@ -904,8 +904,16 @@ static std::string UriDecode(const std::string & sSrc) {
     // but are not followed by two hexadecimal characters (0-9, A-F) are reserved
     // for future extension"
 
-    const unsigned char * pSrc = (const unsigned char *)sSrc.c_str();
-    const int SRC_LEN = sSrc.length();
+    std::string local = sSrc;
+
+    size_t pos = local.find('+');
+    while(pos != std::string::npos) {
+        local.replace(pos, 1, " ");
+        pos = local.find('+');
+    }
+
+    const unsigned char * pSrc = (const unsigned char *)local.c_str();
+    const int SRC_LEN = local.length();
     const unsigned char * const SRC_END = pSrc + SRC_LEN;
     const unsigned char * const SRC_LAST_DEC = SRC_END - 2;   // last decodable '%' 
 

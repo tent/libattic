@@ -36,6 +36,7 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
             params.AddValue("sort_by", "version.received_at");
         }
         else {
+            std::cout<<" NEXT PARAM : " << next_param << std::endl;
             params.DeserializeEncodedString(next_param);
             // deserialize next params into UrlParams
         }
