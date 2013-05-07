@@ -80,7 +80,7 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     return status;
 }
 
-int SyncFileTask::ProcessFileInfo(const FilePost& p) {
+int SyncFileTask::ProcessFileInfo(FilePost& p) {
     int status = ret::A_OK;
     FileManager* fm = file_manager();
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
@@ -105,10 +105,15 @@ int SyncFileTask::ProcessFileInfo(const FilePost& p) {
                 CheckForAliases(p, filepath);
                 
                 // check if file exists, locally
-                if(pLocal_fi->deleted())
+                if(pLocal_fi->deleted()) {
                     bPull = false;
-                else if(!fs::CheckFilepathExists(canonical_path))
-                    bPull= true;
+                }
+                else if(!fs::CheckFilepathExists(canonical_path)) {
+                    bPull = true;
+                }
+
+                if(pLocal_fi->post_version() != p.version()->id)
+                    bPull = true;
             }
             else {
                 std::cout<<" NOT IN MANIFEST PULL " << std::endl;
@@ -161,7 +166,6 @@ void SyncFileTask::CheckForAliases(const FilePost& p, const std::string& filepat
             std::cout<<" OLD PATH EXISTS! RENAME IT! " << std::endl;
             std::string new_filepath;
             fm->GetCanonicalFilepath(filepath, new_filepath);
-
             try {
                 std::cout<<" canonical : " << canonical << std::endl;
                 std::cout<<" new filepath : " << new_filepath << std::endl;

@@ -15,7 +15,7 @@ class TaskDelegate;
 class SyncFileTask : public TentTask {
     int SyncMetaData(FilePost& out);
     
-    int ProcessFileInfo(const FilePost& p);
+    int ProcessFileInfo(FilePost& p);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
     void CheckForAliases(const FilePost& p, const std::string& filepath);
 public:
