@@ -23,6 +23,7 @@ public:
 
     bool HasChunk(const std::string& name);
     ChunkInfo* GetChunkInfo(const std::string& name);
+    bool GetChunkInfo(const std::string& name, ChunkInfo& out);
     void PushBackChunkInfo(const ChunkInfo& ci, const unsigned int position);
 
     unsigned int chunk_info_list_size() { return chunk_info_list_.size(); }

@@ -16,11 +16,12 @@ ChunkInfo::ChunkInfo(const std::string& chunkname, const std::string& checksum) 
 ChunkInfo::~ChunkInfo() {}
 
 void ChunkInfo::Serialize(Json::Value& root) {
-    std::string chunkname, plaintextmac, ciphertextmac, iv, position;
+    std::string chunkname, plaintextmac, ciphertextmac, iv, position, verificationhash;
     crypto::Base64EncodeString(chunk_name_, chunkname);
     crypto::Base64EncodeString(plaintext_mac_, plaintextmac);
     crypto::Base64EncodeString(ciphertext_mac_, ciphertextmac);
     crypto::Base64EncodeString(iv_, iv);
+    crypto::Base64EncodeString(verification_hash_, verificationhash);
     char pos[256] = {'\0'};
     snprintf(pos, 256, "%u", position_);
     crypto::Base64EncodeString(std::string(pos), position);
@@ -33,6 +34,7 @@ void ChunkInfo::Serialize(Json::Value& root) {
     root["ciphertext_mac"] = ciphertextmac; 
     root["iv"] = iv;
     root["position"] = position;
+    root["verification_hash"] = verificationhash;
 }
 
 void ChunkInfo::Deserialize(Json::Value& root) {
@@ -41,6 +43,7 @@ void ChunkInfo::Deserialize(Json::Value& root) {
     std::string ciphertextmac = root.get("ciphertext_mac", "").asString();
     std::string iv = root.get("iv", "").asString();
     std::string position = root.get("position", "").asString();
+    std::string verificationhash = root.get("verification_hash", "").asString();
 
     crypto::Base64DecodeString(chunkname, chunk_name_);
     crypto::Base64DecodeString(plaintextmac, plaintext_mac_);
@@ -49,6 +52,7 @@ void ChunkInfo::Deserialize(Json::Value& root) {
     std::string decodepos;
     crypto::Base64DecodeString(position, decodepos);
     position_ = atoi(decodepos.c_str());
+    crypto::Base64DecodeString(verificationhash, verification_hash_);
 }
 
 } //namespace

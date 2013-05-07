@@ -45,6 +45,17 @@ ChunkInfo* ChunkPost::GetChunkInfo(const std::string& name) {
     return NULL;
 }
 
+bool ChunkPost::GetChunkInfo(const std::string& name, ChunkInfo& out) {
+    if(HasChunk(name)) {
+        FileInfo::ChunkMap::iterator itr = chunk_map_.find(name);
+        if(itr != chunk_map_.end()) {
+            out =itr->second;
+            return true;
+        }
+    }
+    return false;
+}
+
 void ChunkPost::Serialize(Json::Value& root) {
     if(chunk_info_list_.size() > 0) {
         std::vector<std::string> serializedList;
