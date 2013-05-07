@@ -34,7 +34,6 @@
 #include "servicemanager.h"
 
 
-static std::deque<std::string> error_stack;
 static attic::ServiceManager       g_service_manager;
 static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
@@ -53,7 +52,6 @@ static attic::Client* g_pClient = NULL;
 
 //////// API start
 int InitLibAttic(unsigned int threadCount) {
-
     int status = attic::ret::A_OK;
     // Init sequence ORDER MATTERS
     attic::utils::SeedRand();
@@ -83,14 +81,7 @@ int InitLibAttic(unsigned int threadCount) {
                            configdir,
                            tempdir,
                            entityurl);
-                          
     status = g_pClient->Initialize();
-    /*
-    g_pClient->LoadAppFromFile();
-    g_pClient->LoadAccessToken();
-    g_pClient->LoadEntity();
-    g_pClient->LoadPhraseToken();
-    */
 
     if(status == attic::ret::A_OK)  {
         // Essential
@@ -108,7 +99,6 @@ int InitLibAttic(unsigned int threadCount) {
         g_service_manager.set_task_manager(g_pTaskManager);
         g_service_manager.Initialize();
         
-        g_CallbackHandler.Initialize();
         attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
         //status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
     }
@@ -179,15 +169,16 @@ const char* GetAuthorizationURL() {
 int RequestUserAuthorizationDetails(const char* szEntityUrl,
                                     const char* szCode, 
                                     const char* szConfigDirectory) {
-
     int status = attic::ret::A_OK;
-    std::string error;
+    if(!szEntityUrl) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szCode) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szConfigDirectory) return attic::ret::A_FAIL_INVALID_CSTR;
+
     status = attic::app::RequestUserAuthorizationDetails(szEntityUrl,
                                                          szCode, 
-                                                         szConfigDirectory,
-                                                         error);
-    if(!error.empty())
-        error_stack.push_back(error);
+                                                         szConfigDirectory);
+    attic::event::EventSystem::instance()->ProcessEvents();
+
     return status;
 }
 
@@ -605,14 +596,5 @@ int HasCredentialsPost() {
             status = attic::ret::A_FAIL;
     }
     return status;
-}
-
-const char* CheckForError() {
-    if(error_stack.size()) {
-        std::string err = error_stack.front();
-        error_stack.pop_front();
-        return err.c_str();
-    }
-    return NULL;
 }
 
