@@ -100,8 +100,10 @@ int InitLibAttic(unsigned int threadCount) {
         g_service_manager.Initialize();
         
         attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
-        //status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
     }
+
+    status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
+    std::cout<<" Connection manager initialization status : " << status << std::endl;
 
     if(status == attic::ret::A_OK) { 
         g_bLibInitialized = true;
@@ -132,7 +134,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
 
     std::cout<<" shutting down config manager " << std::endl;
     attic::ConfigManager::GetInstance()->Shutdown();
-    //status = attic::ConnectionManager::GetInstance()->Shutdown();
+    status = attic::ConnectionManager::GetInstance()->Shutdown();
 
     std::cout<<" calling back .. " << std::endl;
     if(callback)
@@ -181,7 +183,15 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
     return status;
 }
+int Discover(const char* szEntityurl) {
+    int status = attic::ret::A_OK;
+    if(!szEntityurl) return attic::ret::A_FAIL_INVALID_CSTR;
 
+    attic::Entity ent;
+    status = attic::client::Discover(szEntityurl, NULL, ent);
+
+    return status;
+}
 
 int PushFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
@@ -283,6 +293,8 @@ int PollFiles(void) {
 
     return status;
 }
+
+
 
 int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;

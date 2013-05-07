@@ -1,7 +1,6 @@
 #include "servicetask.h"
 
 #include <iostream>
-
 #include "sleep.h"
 #include "taskmanager.h"
 

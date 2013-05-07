@@ -22,7 +22,7 @@ int RegisterAtticApp(const char* szEntityurl,
                      const char* szConfigDir);
 const char* GetAuthorizationURL();
 
-int RequestUserAuthorizationDetails( const char* szEntityUrl, 
+int RequestUserAuthorizationDetails(const char* szEntityUrl, 
                                      const char* szCode,
                                      const char* szConfigDirectory); // Config Directory
 
@@ -69,6 +69,8 @@ int PollFiles(void);
 
 int Pause(void);
 int Resume(void);
+
+int Discover(const char* szEntityurl);
 
 const char** GetQuestionList();
 
