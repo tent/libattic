@@ -262,8 +262,7 @@ static int RegisterApp(const std::string& app_path,
 
 int RequestUserAuthorizationDetails(const std::string& entityurl,
                                     const std::string& code,
-                                    const std::string& configdir,
-                                    std::string& error_out) {
+                                    const std::string& configdir) {
     int status = ret::A_OK;
 
     Entity ent;
@@ -313,15 +312,11 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
                 error << "Attempted path : " << path << std::endl;
                 error << "Code : " << response.code << std::endl;
                 error << "Body : " << response.body << std::endl;
-                std::string error_out = error.str();
-                log::LogString("NC4218_4RQ", error_out);
-
+                std::string err = error.str();
+                log::LogString("NC4218_4RQ", err);
                 status = ret::A_FAIL_NON_200;
             }
         }
-    }
-    else {
-        error_out = "Non 200 ON DISCOVERY : " + entityurl + "\n";
     }
     return status;
 }

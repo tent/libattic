@@ -20,7 +20,7 @@ ServiceTask::~ServiceTask() {}
 
 void ServiceTask::OnStart() {
     std::cout<<" SERVICE TASK STARTED " << std::endl;
-    event::EventSystem::GetInstance()->Initialize();
+    event::EventSystem::instance()->Initialize();
     if(task_manager_) {
         task_dispatch_ = new TaskDispatch(task_manager_->file_manager(),
                                           task_manager_->credentials_manager(),
@@ -37,7 +37,7 @@ void ServiceTask::OnStart() {
 void ServiceTask::OnPaused() {}
 void ServiceTask::OnFinished() {
     std::cout<<" SERVICE TASK FINISHED ... " << std::endl;
-    event::EventSystem::GetInstance()->Shutdown();
+    event::EventSystem::instance()->Shutdown();
     if(task_dispatch_) {
         delete task_dispatch_;
         task_dispatch_ = NULL;
@@ -45,7 +45,7 @@ void ServiceTask::OnFinished() {
 }
 
 void ServiceTask::RunTask() {
-    event::EventSystem::GetInstance()->ProcessEvents();
+    event::EventSystem::instance()->ProcessEvents();
     if(task_dispatch_) {
         task_dispatch_->Process(task_manager_);
         task_dispatch_->Dispatch();
