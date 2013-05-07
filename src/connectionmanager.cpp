@@ -6,18 +6,17 @@
 namespace attic { 
 
 ConnectionManager* ConnectionManager::instance_ = NULL;
+bool ConnectionManager::initialized_ = false;
 int ConnectionManager::ref_ = 0;
 
-ConnectionManager::ConnectionManager() {
-    ref_ = 0;
-    initialized_ = false;
-}
+ConnectionManager::ConnectionManager() {}
 
 ConnectionManager::~ConnectionManager() {
     std::cout<<" CONNECTION MANAGER DESTRUCTOR " << std::endl;
 }
 
 int ConnectionManager::Shutdown() {
+    std::cout<<" Connection Manager Shutting Down " << std::endl;
     int status = ret::A_OK;
     if(instance_){
         delete instance_;
@@ -41,6 +40,7 @@ ConnectionManager* ConnectionManager::GetInstance() {
 
 int ConnectionManager::Initialize(const std::string& host_url) {
     int status = ret::A_OK;
+    std::cout<< "attempting to init " << host_url << std::endl;
     if(!host_url.empty()) {
         // Start up io service
         boost::system::error_code ec;
@@ -51,10 +51,12 @@ int ConnectionManager::Initialize(const std::string& host_url) {
             std::cout<<" Failed to init connection manager " << e.what() << std::endl;
             status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
         }
+
         if(status = ret::A_OK) {
             // save host
             host_url_ = host_url;
             initialized_ = true;
+            std::cout<<" Connection manager initialized ... " << std::endl;
         }
     }
     else {

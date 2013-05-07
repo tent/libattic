@@ -19,7 +19,6 @@ class ConnectionManager {
     ConnectionManager(const ConnectionManager& rhs) {}
     ConnectionManager operator=(const ConnectionManager& rhs) { return *this; }
 
-
     Connection* RequestConnection(const std::string& url);
     void ReclaimConnection(Connection* socket);
 
@@ -40,7 +39,7 @@ private:
 
     static ConnectionManager* instance_;
     static int ref_;
-    bool initialized_;
+    static bool initialized_;
 };
 
 }//namespace

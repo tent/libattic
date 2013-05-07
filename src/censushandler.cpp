@@ -5,6 +5,8 @@
 #include "pagepost.h"
 #include "logutils.h"
 
+#include "connectionhandler.h"
+
 namespace attic { 
 
 CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& at) {
@@ -43,6 +45,7 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
         }
         std::cout<< "params : " << params.asString() << std::endl;
         Response resp;
+        //ConnectionHandler ch;
         netlib::HttpGet(posts_feed_,
                         &params,
                         &access_token_,
