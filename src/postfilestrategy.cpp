@@ -63,6 +63,12 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                     file_manager_->SetFileChunks(fi->filepath(), chunk_map);
                     // Update meta data transit state
                     status = UpdateFilePostTransitState(meta_post_id, false);
+
+                    // Last thing that should happen
+                    if(!UpdateFilePostVersion(fi, meta_post_id)){
+                        std::string error = " Failed to update file post version";
+                        log::LogString("MASDF@12934", error);
+                    }
                 }
                 else {
                     // TODO :: Undo the file to the last good version, or delete if no last good version
@@ -527,6 +533,27 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     }
 
     return status;
+}
+
+bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::string& meta_post_id) {
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", meta_post_id, posturl);
+
+    // Get Existing post
+    Response get_resp;
+    ConnectionHandler ch;
+    netlib::HttpGet(posturl,
+               NULL,
+               &access_token_,
+               get_resp);
+
+    if(get_resp.code == 200) {
+        FilePost p;
+        jsn::DeserializeObject(&p, get_resp.body);
+        file_manager_->SetFileVersion(fi->filepath(), p.version()->id);
+        return true;
+    }
+    return false;
 }
 
 bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {

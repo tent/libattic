@@ -61,6 +61,8 @@ private:
     bool ValidMasterKey();
 
     bool VerifyChunks(ChunkPost& cp, const std::string& filepath);
+
+    bool UpdateFilePostVersion(const FileInfo* fi, const std::string& meta_post_id);
 public:
     std::map<std::string, bool> verification_map_;
     PostFileStrategy();
