@@ -16,8 +16,6 @@ public:
     CallbackHandler();
     ~CallbackHandler();
 
-    void Initialize();
-
     void RegisterCallback(event::Event::EventType type, EventCallback cb);
     void OnEventRaised(const event::Event& event);
 
