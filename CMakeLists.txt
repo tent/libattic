@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 
 option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
 option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
+option (DEBUG "Debug Build" OFF)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
@@ -9,13 +10,22 @@ set (CMAKE_C_COMPILER clang)
 
 project(libattic)
 if(ATTIC_STATIC_LIB)
-    #message(STATUS "Bulding Attic Static library")
-    set(CMAKE_CXX_FLAGS "-w")
+    message(STATUS "Bulding Attic Static library")
+    if(DEBUG)
+        set(CMAKE_CXX_FLAGS "-w -g3 -ggdb ")
+    else(DEBUG)
+        set(CMAKE_CXX_FLAGS "-w")
+    endif(DEBUG)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
     message(STATUS "Bulding Attic Test Binary")
-    set(CMAKE_CXX_FLAGS "-g3 -ggdb -Wall -Wextra")
+    if(DEBUG)
+        #set(CMAKE_C_FLAGS "-fPIC")
+        set(CMAKE_CXX_FLAGS "-g3 -ggdb -Wall -Wextra")# -fsanitize=memory")
+    else(DEBUG)
+        set(CMAKE_CXX_FLAGS "-w")
+    endif(DEBUG)
 endif(ATTIC_BINARY)
 
 # Build dependencies
