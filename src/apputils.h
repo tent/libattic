@@ -320,6 +320,9 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
             }
         }
     }
+    else {
+        error_out = "Non 200 ON DISCOVERY : " + entityurl + "\n";
+    }
     return status;
 }
 static int LoadAppFromFile(TentApp& app, const std::string& configdir) {
