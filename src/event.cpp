@@ -2,37 +2,37 @@
 
 namespace attic { namespace event {
 
-EventSystem* EventSystem::m_pInstance = 0;
+EventSystem* EventSystem::instance_ = 0;
 
-EventSystem* EventSystem::GetInstance() {
-    if(!m_pInstance)
-        m_pInstance = new EventSystem();
-    return m_pInstance;
+EventSystem* EventSystem::instance() {
+    if(!instance_)
+        instance_ = new EventSystem();
+    return instance_;
 }
 
 void EventSystem::Shutdown() {
-    m_listenMtx.Lock();
-    ListenerMap::iterator itr = m_ListenerMap.begin();
-    for(;itr != m_ListenerMap.end(); itr++) {
+    listen_mtx_.Lock();
+    ListenerMap::iterator itr = listener_map_.begin();
+    for(;itr != listener_map_.end(); itr++) {
         itr->second.clear();
     }
-    m_ListenerMap.clear();
-    m_listenMtx.Unlock();
-    m_queueMtx.Lock();
-    m_EventQueue.clear();
-    m_queueMtx.Unlock();
+    listener_map_.clear();
+    listen_mtx_.Unlock();
+    queue_mtx_.Lock();
+    event_queue_.clear();
+    queue_mtx_.Unlock();
 
-    if(m_pInstance) {
-        delete m_pInstance;
-        m_pInstance = NULL;
+    if(instance_) {
+        delete instance_;
+        instance_ = NULL;
     }
 
 }
 
 void EventSystem::ProcessEvents() {
-    m_queueMtx.Lock();
-    unsigned int count = m_EventQueue.size();
-    m_queueMtx.Unlock();
+    queue_mtx_.Lock();
+    unsigned int count = event_queue_.size();
+    queue_mtx_.Unlock();
 
     if(count) {
         std::cout<<" PROCESSING " << count << " EVENTS " << std::endl;
@@ -40,17 +40,17 @@ void EventSystem::ProcessEvents() {
         unsigned int stride = 100;
         for(unsigned int i=0; i<count; i+=stride){
             // Copy some events
-            m_queueMtx.Lock();
+            queue_mtx_.Lock();
 
             unsigned int b = 0;
-            EventQueue::iterator e_itr = m_EventQueue.begin();
-            for(;e_itr != m_EventQueue.end(); e_itr++) {
+            EventQueue::iterator e_itr = event_queue_.begin();
+            for(;e_itr != event_queue_.end(); e_itr++) {
                 tempQueue.push_back(*e_itr);
                 b++;
                 if(b>=stride) break;
             }
-            m_EventQueue.erase(m_EventQueue.begin(), m_EventQueue.begin()+b);
-            m_queueMtx.Unlock();
+            event_queue_.erase(event_queue_.begin(), event_queue_.begin()+b);
+            queue_mtx_.Unlock();
 
             //Process Temp events
             std::deque<Event>::iterator itr = tempQueue.begin();
@@ -63,43 +63,43 @@ void EventSystem::ProcessEvents() {
 
 void EventSystem::Notify(const Event& event) {
     // Notify listeners
-    m_listenMtx.Lock();
-    if(m_ListenerMap[event.type].size()) {
-        Listeners::iterator itr = m_ListenerMap[event.type].begin();
-        for(;itr != m_ListenerMap[event.type].end(); itr++) {
+    listen_mtx_.Lock();
+    if(listener_map_[event.type].size()) {
+        Listeners::iterator itr = listener_map_[event.type].begin();
+        for(;itr != listener_map_[event.type].end(); itr++) {
             if(*itr)
                 (*itr)->OnEventRaised(event);
         }
     }
-    m_listenMtx.Unlock();
+    listen_mtx_.Unlock();
 
 }
 
 void EventSystem::RaiseEvent(const Event& event) {
     // Pushback
-    m_queueMtx.Lock();
-    m_EventQueue.push_back(event);
-    m_queueMtx.Unlock();
+    queue_mtx_.Lock();
+    event_queue_.push_back(event);
+    queue_mtx_.Unlock();
 
     //Notify(event);
 }
 
 void EventSystem::RegisterForEvent(EventListener* pListener, Event::EventType type) {
-    m_listenMtx.Lock();
-    m_ListenerMap[type].push_back(pListener);
-    m_listenMtx.Unlock();
+    listen_mtx_.Lock();
+    listener_map_[type].push_back(pListener);
+    listen_mtx_.Unlock();
 }
 
 void EventSystem::UnregisterFromEvent(const EventListener* pListener, Event::EventType type) {
-    m_listenMtx.Lock();
-    Listeners::iterator itr = m_ListenerMap[type].begin();
-    for(;itr != m_ListenerMap[type].end(); itr++) {
+    listen_mtx_.Lock();
+    Listeners::iterator itr = listener_map_[type].begin();
+    for(;itr != listener_map_[type].end(); itr++) {
         if(pListener == *itr) {
-            m_ListenerMap[type].erase(itr);
+            listener_map_[type].erase(itr);
             break;
         }
     }
-    m_listenMtx.Unlock();
+    listen_mtx_.Unlock();
 }
 
 }} //namespace

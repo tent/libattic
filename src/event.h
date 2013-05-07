@@ -64,7 +64,7 @@ class EventSystem {
 public:
     ~EventSystem() {}
 
-    static EventSystem* GetInstance();
+    static EventSystem* instance();
 
     void Initialize() {}
     void Shutdown();
@@ -81,31 +81,31 @@ private:
     typedef std::vector<EventListener*> Listeners;
     typedef std::map<Event::EventType, Listeners> ListenerMap;
 
-    MutexClass m_listenMtx;
-    ListenerMap m_ListenerMap;
+    MutexClass listen_mtx_;
+    ListenerMap listener_map_;
 
-    MutexClass m_queueMtx;
-    EventQueue m_EventQueue;
+    MutexClass queue_mtx_;
+    EventQueue event_queue_;
 
-    static EventSystem* m_pInstance;
+    static EventSystem* instance_;
 };
 
 
 static void RegisterForEvent(EventListener* pListener, Event::EventType type) {
     if(pListener) {
-        EventSystem::GetInstance()->RegisterForEvent(pListener, type);  
+        EventSystem::instance()->RegisterForEvent(pListener, type);  
     }
 }
 
 static void UnregisterFromEvent(EventListener* pListener, Event::EventType type) {
     if(pListener) {
-        EventSystem::GetInstance()->UnregisterFromEvent(pListener, type);  
+        EventSystem::instance()->UnregisterFromEvent(pListener, type);  
     }
 
 }
 
 static void RaiseEvent(const Event& event) {
-    EventSystem::GetInstance()->RaiseEvent(event);
+    EventSystem::instance()->RaiseEvent(event);
 }
 
 static void RaiseEvent(const Event::EventType type, 
@@ -132,7 +132,7 @@ static void RaiseEvent(const Event::EventType type,
 
 
 static void ShutdownEventSystem() {
-    EventSystem::GetInstance()->Shutdown();
+    EventSystem::instance()->Shutdown();
 }
 
 }}//namesapce
