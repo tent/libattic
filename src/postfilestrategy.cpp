@@ -193,22 +193,9 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
             // Transform chunk
             ChunkInfo ci;
             ChunkTransform ct(chunk, file_key);
-            ct.Transform();
-            ci.set_chunk_name(ct.name());
-            ci.set_plaintext_mac(ct.plaintext_hash());
-            ci.set_ciphertext_mac(ct.ciphertext_hash());
-            ci.set_iv(ct.chunk_iv());
-            verification_map_[ct.verification_hash()] = true;
-            /*
-            TransformChunk(chunk, 
-                           file_key, 
-                           finished_chunk, 
-                           chunk_name, 
-                           ci);
-                           */
-            ci.set_position(chunk_count);
+            cr->ProcessTransform(ct, chunk_count, ci);
+            verification_map_[ci.verification_hash()] = true;
             chunk_map[ci.chunk_name()] = ci;
-            cr->PushBackChunk(ci, ci.chunk_name(), ct.finalized_data(), chunk_count);
             
             chunk_count++;
             if(cb.BufferEmpty() || chunk_count >= 30) {

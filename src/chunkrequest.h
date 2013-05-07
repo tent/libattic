@@ -9,11 +9,15 @@
 #include "connection.h"
 #include "response.h"
 #include "chunkinfo.h"
+#include "chunktransform.h"
 
 namespace attic { 
 
 class ChunkRequest {
     int WriteToSocket(boost::asio::streambuf& buffer);
+    int PushBackChunk(const ChunkInfo& ci,
+                      const std::string& chunk,
+                      const unsigned int position);
 public:
     ChunkRequest(const std::string& entity,
                  const std::string& posts_feed, 
@@ -27,11 +31,14 @@ public:
     void set_parent_post(const ChunkPost& cp);
 
     void BeginRequest();
-    int PushBackChunk(const ChunkInfo& ci,
-                      const std::string& chunk_name, 
-                      const std::string& chunk,
-                      const unsigned int count);
+    
+    int ProcessTransform(ChunkTransform& ct, 
+                         const unsigned int position, 
+                         ChunkInfo& out);
     void EndRequest(Response& out);
+
+    bool HasAttachment(const std::string& chunk_name);
+
 private:
     // TODO :: abstract this away, get a socket from connection manager somehow,
     //         pass in a socket from the contructor, or something, use this for now.

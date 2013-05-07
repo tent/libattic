@@ -27,7 +27,12 @@ ChunkRequest::ChunkRequest(const std::string& entity,
     post_.set_group(group_number);
 }
 
-ChunkRequest::~ChunkRequest() {}
+ChunkRequest::~ChunkRequest() {
+    if(socket_) {
+        delete socket_;
+        socket_ = NULL;
+    }
+}
 
 void ChunkRequest::set_parent_post(const ChunkPost& cp) { 
     parent_post_ = cp; 
@@ -61,36 +66,59 @@ void ChunkRequest::BeginRequest() {
     socket_->Write(request);
 }
 
-int ChunkRequest::PushBackChunk(const ChunkInfo& ci,
-                                const std::string& chunk_name, 
-                                const std::string& chunk,
-                                const unsigned int count) { 
-    int status = ret::A_OK;
 
-    post_.PushBackChunkInfo(ci, count);
-
-    // Check parent if chunk exists
+bool ChunkRequest::HasAttachment(const std::string& chunk_name) {
     if(has_parent_ && parent_post_.HasChunk(chunk_name)) {
-        // copy over attachment
-        if(parent_post_.has_attachment(chunk_name)) {
-            Attachment attachment = parent_post_.get_attachment(chunk_name);
-            post_.PushBackAttachment(attachment);
-        }
-        else { 
-            std::cout<<" PARENT POST DOESN'T HAVE ATTACHMENT?!?!? " << std::endl;
-        }
+        if(parent_post_.has_attachment(chunk_name))
+            return true;
+    }
+    return false;
+}
+
+int ChunkRequest::ProcessTransform(ChunkTransform& ct, 
+                                   const unsigned int position,
+                                   ChunkInfo& out) {
+    int status = ret::A_OK;
+    if(HasAttachment(ct.name())) {
+        // Copy over attachment
+        Attachment attachment = parent_post_.get_attachment(ct.name());
+        post_.PushBackAttachment(attachment);
+
+        if(!parent_post_.GetChunkInfo(ct.name(), out))
+            std::cout<<" FAILED TO GET CHUNK INFO????" << std::endl;
+        // Update position
+        out.set_position(position);
     }
     else {
-        // Build Attachment and write to socket
-        boost::asio::streambuf attachment;
-        std::ostream attachmentstream(&attachment);
-        netlib::BuildAttachmentForm(chunk_name, chunk, boundary_, count, attachmentstream);
-
-        boost::asio::streambuf part;
-        std::ostream chunkpartbuf(&part);
-        netlib::ChunkPart(attachment, chunkpartbuf);
-        status = WriteToSocket(part);
+        // Transform chunk
+        ct.Transform();
+        out.set_chunk_name(ct.name());
+        out.set_plaintext_mac(ct.plaintext_hash());
+        out.set_ciphertext_mac(ct.ciphertext_hash());
+        out.set_iv(ct.chunk_iv());
+        out.set_verification_hash(ct.verification_hash());
+        out.set_position(position);
+        status = PushBackChunk(out, ct.finalized_data(), position);
     }
+    post_.PushBackChunkInfo(out, position);
+
+    return status;
+}
+
+int ChunkRequest::PushBackChunk(const ChunkInfo& ci,
+                                const std::string& chunk,
+                                const unsigned int position) { 
+    int status = ret::A_OK;
+
+    // Build Attachment and write to socket
+    boost::asio::streambuf attachment;
+    std::ostream attachmentstream(&attachment);
+    netlib::BuildAttachmentForm(ci.chunk_name(), chunk, boundary_, position, attachmentstream);
+
+    boost::asio::streambuf part;
+    std::ostream chunkpartbuf(&part);
+    netlib::ChunkPart(attachment, chunkpartbuf);
+    status = WriteToSocket(part);
 
     return status;
 }
