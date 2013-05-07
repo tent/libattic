@@ -38,6 +38,9 @@ int Connection::Initialize(const std::string& url) {
     int status = ret::A_OK;
     socket_ = new tcp::socket(io_service_);
 
+    if(!SetTimeout())
+        std::cout<<" failed to set timeout " << std::endl;
+
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);
 
@@ -73,9 +76,6 @@ int Connection::Close() {
 int Connection::InitializeSSLSocket(const std::string& host) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
-
-    if(!SetTimeout())
-        std::cout<<" failed to set timeout " << std::endl;
 
     boost::system::error_code error = boost::asio::error::host_not_found; 
     ctx_ = new boost::asio::ssl::context(io_service_,
