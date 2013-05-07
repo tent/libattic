@@ -16,6 +16,8 @@ class Connection {
     int InitializeSSLSocket(const std::string& host);
     void SSLLoadCerts();
 
+    bool SetTimeout();
+
 public:
     Connection(boost::asio::io_service* io_service);
     ~Connection();

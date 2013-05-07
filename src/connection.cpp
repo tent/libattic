@@ -74,6 +74,9 @@ int Connection::InitializeSSLSocket(const std::string& host) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
 
+    if(!SetTimeout())
+        std::cout<<" failed to set timeout " << std::endl;
+
     boost::system::error_code error = boost::asio::error::host_not_found; 
     ctx_ = new boost::asio::ssl::context(io_service_,
                                          boost::asio::ssl::context::sslv23_client);
@@ -116,6 +119,20 @@ void Connection::InterpretResponse(Response& out) {
         netlib::InterpretResponse(socket_, out);
 }
 
+bool Connection::SetTimeout() {
+    struct timeval timeout;      
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 1000; 
+    if (setsockopt (socket_->native_handle(),
+                    SOL_SOCKET, 
+                    SO_SNDTIMEO, 
+                    (char *)&timeout, sizeof(timeout)) < 0) {
+        std::cout << "setsockopt failed\n";
+        return false;
+    }
+    return true;
+}
+
 bool Connection::TestConnection() {
     std::cout<<" TESTING CONNECTION " << std::endl;
     boost::system::error_code error;
@@ -132,7 +149,8 @@ bool Connection::TestConnection() {
         if(!ssl_) {
      //       bytes_written = boost::asio::write(*socket_, req, error);
             //std::cout<<" BYTES WRITTEN : " << bytes_written << std::endl;
-            //
+           
+            /*
             struct timeval timeout;      
             timeout.tv_sec = 0;
             timeout.tv_usec = 1000; 
@@ -144,6 +162,7 @@ bool Connection::TestConnection() {
             else {
                 std::cout<<" setsockopt win " << std::endl;
             }
+
             fd_set readfds;
             int socket_fd = socket_->native_handle();
             FD_ZERO(&readfds);
@@ -164,6 +183,8 @@ bool Connection::TestConnection() {
             std::cout<<" RECV RESULT : " << result << std::endl;
 
             //boost::asio::read(*socket_, buf, boost::asio::transfer_at_least(1), error);
+            //
+            */
         }
         else {
             //bytes_written = boost::asio::write(*socket_, req, error);
