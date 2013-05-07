@@ -262,59 +262,62 @@ static int RegisterApp(const std::string& app_path,
 
 int RequestUserAuthorizationDetails(const std::string& entityurl,
                                     const std::string& code,
-                                    const std::string& configdir) {
+                                    const std::string& configdir,
+                                    std::string& error_out) {
     int status = ret::A_OK;
 
     Entity ent;
     status = client::Discover(entityurl, NULL, ent);
     if(status == ret::A_OK) {
         TentApp app;
-        LoadAppFromFile(app, configdir);
+        status = LoadAppFromFile(app, configdir);
+        if(status == ret::A_OK) {
+            // Build redirect code
+            RedirectCode rcode;
+            rcode.set_code(code);
+            rcode.set_token_type(cnst::g_token_type);
 
-        // Build redirect code
-        RedirectCode rcode;
-        rcode.set_code(code);
-        rcode.set_token_type(cnst::g_token_type);
+            std::string path = ent.GetPreferredServer().oauth_token();
+            std::cout<<" TOKEN PATH : " << path << std::endl;
 
-        std::string path = ent.GetPreferredServer().oauth_token();
-        std::cout<<" TOKEN PATH : " << path << std::endl;
+            // serialize RedirectCode
+            std::string serialized;
+            if(!jsn::SerializeObject(&rcode, serialized))
+                return ret::A_FAIL_TO_SERIALIZE_OBJECT;
 
-        // serialize RedirectCode
-        std::string serialized;
-        if(!jsn::SerializeObject(&rcode, serialized))
-            return ret::A_FAIL_TO_SERIALIZE_OBJECT;
+            std::cout<<" serialized : " << serialized << std::endl;
+            std::cout<<" setting app id : " << app.app_id() << std::endl;
+            AccessToken auth_at;
+            auth_at.set_hawk_algorithm(app.hawk_algorithm());
+            auth_at.set_access_token(app.hawk_key_id());
+            auth_at.set_hawk_key(app.hawk_key());
+            auth_at.set_app_id(app.app_id());
 
-        std::cout<<" serialized : " << serialized << std::endl;
+            Response response;
+            netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
 
-        std::cout<<" setting app id : " << app.app_id() << std::endl;
-        AccessToken auth_at;
-        auth_at.set_hawk_algorithm(app.hawk_algorithm());
-        auth_at.set_access_token(app.hawk_key_id());
-        auth_at.set_hawk_key(app.hawk_key());
-        auth_at.set_app_id(app.app_id());
+            std::cout<<" CODE : " << response.code << std::endl;
+            std::cout<<" BODY : " << response.body << std::endl;
 
-        Response response;
-        netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
-
-        std::cout<<" CODE : " << response.code << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-
-        if(response.code == 200) {
-            AccessToken at;
-            status = liba::DeserializeIntoAccessToken(response.body, at);
-            if(status == ret::A_OK) {
-                at.set_app_id(app.app_id());
-                status = liba::WriteOutAccessToken(at, configdir);
+            if(response.code == 200) {
+                AccessToken at;
+                status = liba::DeserializeIntoAccessToken(response.body, at);
+                if(status == ret::A_OK) {
+                    at.set_app_id(app.app_id());
+                    status = liba::WriteOutAccessToken(at, configdir);
+                }
             }
-        }
-        else {
-            std::ostringstream error;
-            error << "NC4218_4RQ Non 200 repsonse" << std::endl;
-            error << "Code : " << response.code << std::endl;
-            error << "Body : " << response.body << std::endl;
-            event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+            else {
+                std::ostringstream error;
+                error << "Non 200 repsonse" << std::endl;
+                error << "Attempted path : " << path << std::endl;
+                error << "Code : " << response.code << std::endl;
+                error << "Body : " << response.body << std::endl;
+                std::string error_out = error.str();
+                log::LogString("NC4218_4RQ", error_out);
 
-            status = ret::A_FAIL_NON_200;
+                status = ret::A_FAIL_NON_200;
+            }
         }
     }
     return status;

@@ -403,25 +403,26 @@ TEST(MANIFEST, QUERY_ALL_FILES)
     ShutdownLibAttic(NULL);
 }
 
-/*
 TEST(INIT, SHUTDOWN)
 {
 
-    for(int i=0; i < 100; i++) {
-        SetConfigValue("working_dir", "./data");
-        SetConfigValue("config_dir", "./config");
-        SetConfigValue("temp_dir", "./data/temp");
-        SetConfigValue("entity_url", g_Entity.c_str());
-        int status = InitLibAttic();
-        std::cout<<" STATUS : " << status << std::endl;
+    SetConfigValue("working_dir", "./data");
+    SetConfigValue("config_dir", "./config");
+    SetConfigValue("temp_dir", "./data/temp");
+    SetConfigValue("entity_url", "http://localhost:8080");
+    int status = InitLibAttic();
+    std::cout<<" STATUS : " << status << std::endl;
 
-        ASSERT_EQ(status, attic::ret::A_OK);
-        sleep(10);
-
-        ShutdownLibAttic(NULL);
+    if(!EnterPassphrase("asdf")) {
+        std::cout<<" polling files ... " << std::endl;
+        PollFiles();
     }
+
+    ASSERT_EQ(status, attic::ret::A_OK);
+    sleep(10);
+
+    ShutdownLibAttic(NULL);
 }
-*/
 #include "clientutils.h"
 bool g_bDiscover = false;
 TEST(DISCOVERY, OUTWARD_DISCOVERY)
@@ -764,11 +765,21 @@ TEST(REINTERPREST, CAST)
 
     memcpy( bkey, 
             reinterpret_cast<const unsigned char*>(key.c_str()), 
+            key.size());
+
+    memcpy( bkey1, 
+            reinterpret_cast<const unsigned char*>(key.c_str()), 
+            key.size());
+
+    /*
+    memcpy( bkey, 
+            reinterpret_cast<const unsigned char*>(key.c_str()), 
             CryptoPP::AES::MAX_KEYLENGTH);
 
     memcpy( bkey1, 
             reinterpret_cast<const unsigned char*>(key.c_str()), 
             CryptoPP::AES::MAX_KEYLENGTH);
+            */
 
     int res =  strcmp( reinterpret_cast<const char*>(bkey), 
                        reinterpret_cast<const char*>(bkey1));

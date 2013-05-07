@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <deque>
 
 #include "utils.h"
 #include "errorcodes.h"
@@ -32,6 +33,8 @@
 #include "filesystem.h"
 #include "servicemanager.h"
 
+
+static std::deque<std::string> error_stack;
 static attic::ServiceManager       g_service_manager;
 static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
@@ -178,9 +181,13 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
                                     const char* szConfigDirectory) {
 
     int status = attic::ret::A_OK;
+    std::string error;
     status = attic::app::RequestUserAuthorizationDetails(szEntityUrl,
                                                          szCode, 
-                                                         szConfigDirectory);
+                                                         szConfigDirectory,
+                                                         error);
+    if(!error.empty())
+        error_stack.push_back(error);
     return status;
 }
 
@@ -598,5 +605,14 @@ int HasCredentialsPost() {
             status = attic::ret::A_FAIL;
     }
     return status;
+}
+
+const char* CheckForError() {
+    if(error_stack.size()) {
+        std::string err = error_stack.front();
+        error_stack.pop_front();
+        return err.c_str();
+    }
+    return NULL;
 }
 
