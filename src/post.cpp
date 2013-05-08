@@ -37,14 +37,14 @@ void Parent::Deserialize(Json::Value& root) {
 }
 
 void Version::Serialize(Json::Value& root) {
-    root["id"] = id;
+    root["id"] = id_;
 //    root["type"] = type;
 
-    if(parents.size()) {
+    if(parents_.size()) {
         Json::Value parent_array(Json::arrayValue);
-        for(unsigned int i=0; i<parents.size(); i++) {
+        for(unsigned int i=0; i<parents_.size(); i++) {
             Json::Value val(Json::objectValue);
-            jsn::SerializeObject(&parents[i], val);
+            jsn::SerializeObject(&parents_[i], val);
             parent_array.append(val);
         }
 
@@ -53,10 +53,10 @@ void Version::Serialize(Json::Value& root) {
 }
 
 void Version::Deserialize(Json::Value& root) {
-    id = root.get("id", "").asString();
+    id_ = root.get("id", "").asString();
  //   type = root.get("type", "").asString();
-    published_at = root.get("published_at", "").asString();
-    received_at = root.get("received_at", "").asString();
+    published_at_ = root.get("published_at", "").asString();
+    received_at_ = root.get("received_at", "").asString();
 
     Json::Value parent_array(Json::arrayValue);
     parent_array = root["parents"];
@@ -69,7 +69,7 @@ void Version::Deserialize(Json::Value& root) {
 
             Parent p;
             jsn::DeserializeObject(&p, val);
-            parents.push_back(p);
+            parents_.push_back(p);
         }
     }
 

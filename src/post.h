@@ -36,16 +36,27 @@ struct Parent : public JsonSerializable {
     void Deserialize(Json::Value& root);
 };
 
-struct Version : public JsonSerializable {
-    std::string id; // Post version identifier
-    std::string published_at;
-    std::string received_at;
+class Version : public JsonSerializable {
+public:
+    const std::string& id() const           { return id_; }
+    const std::string& published_at() const { return published_at_; }
+    const std::string& received_at() const  { return received_at_; } 
 
-    typedef std::vector<Parent> ParentList;
-    ParentList parents;
+    void set_id(const std::string& id)              { id_ = id; }
+    void set_published_at(const std::string& at)    { published_at_ = at; }
+    void set_received_at(const std::string& at)     { received_at_ = at; }
+
+    void PushBackParent(Parent& p) { parents_.push_back(p); }
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
+private:
+    typedef std::vector<Parent> ParentList;
+    ParentList parents_;
+
+    std::string id_; // Post version identifier
+    std::string published_at_;
+    std::string received_at_;
 };
 
 struct Attachment : public JsonSerializable {
@@ -87,7 +98,7 @@ public:
     unsigned int received_at() const    { return received_at_; }
     Version* version()            { return &version_; }
 
-    const std::string& version_id() const { return version_.id; }
+    const std::string& version_id() const { return version_.id(); }
 
     void set_id(const std::string &id)              { id_ = id; }
     void set_entity(const std::string &entity)      { entity_ = entity; }
@@ -99,7 +110,7 @@ public:
     void PushBackAttachment(Attachment& att) { attachments_[att.name] = att; }
     void PushBackMention(const Mention& mention) { mentions_.push_back(mention); }
 
-    void PushBackParent(Parent& p) { version_.parents.push_back(p); }
+    void PushBackParent(Parent& p) { version_.PushBackParent(p); }
 
     void MentionPost(const std::string& entity, const std::string& postid);
 private:
