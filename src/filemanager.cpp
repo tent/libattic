@@ -124,7 +124,9 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     Unlock();
 }
 
-int FileManager::RenameFile(const std::string& old_filepath, const std::string& new_filename) {
+int FileManager::RenameFile(const std::string& old_filepath, 
+                            const std::string& new_filename,
+                            std::string& new_filepath) {
     int status = ret::A_OK;
     std::cout<<" OLD FILEPATH : " << old_filepath << std::endl;
     FileInfo* fi = GetFileInfo(old_filepath);
@@ -133,8 +135,6 @@ int FileManager::RenameFile(const std::string& old_filepath, const std::string& 
         GetRelativePath(old_filepath, relative_filepath);
         std::string old_filename;
         utils::ExtractFileName(old_filepath, old_filename);
-
-        std::string new_filepath;
         utils::FindAndReplace(relative_filepath, 
                               (std::string("/") + old_filename), 
                               (std::string("/") + new_filename), 
@@ -161,7 +161,6 @@ int FileManager::RenameFile(const std::string& old_filepath, const std::string& 
     else {
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     }
-
     return status;
 }
 

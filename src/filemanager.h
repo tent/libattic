@@ -40,7 +40,9 @@ public:
     int RemoveFile(const std::string &filepath);
     void GetRelativePath(const std::string& filepath, std::string& relative_out);
 
-    int RenameFile(const std::string& old_filepath, const std::string& new_filename);
+    int RenameFile(const std::string& old_filepath, 
+                   const std::string& new_filename,
+                   std::string& new_filepath);
 
     FileInfo* CreateFileInfo();
     void GetCanonicalFilepath(const std::string& relativepath, std::string& out);
