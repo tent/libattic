@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include "filepost.h"
 
 namespace attic {
     
@@ -13,11 +14,16 @@ class RenameHandler {
 public:
     RenameHandler(FileManager* fi);
     ~RenameHandler();
+    
+    int RenameFileLocalCache(const std::string& old_filepath,
+                             const std::string& new_name,
+                             std::string& new_filepath);
 
-    bool RenameFileLocalCache(const std::string& old_filepath, const std::string& new_name);
-    bool RenameFileLocalCache(const std::vector<std::string>& alias_list, 
-                              const std::string& new_filepath, 
-                              const std::string& file_post_id);
+    void UpdateFileMetaPost(FilePost& fp, 
+                            const FileInfo& fi, 
+                            FilePost& out);
+   
+    bool CheckForRename(FilePost& fp);
 private:
     FileManager* file_manager_;
 };
