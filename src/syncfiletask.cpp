@@ -14,6 +14,7 @@
 #include "taskdelegate.h"
 #include "logutils.h"
 #include "configmanager.h"
+#include "renamehandler.h"
 
 namespace attic { 
 
@@ -90,41 +91,43 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
 
     if(!p.deleted()) { 
         if(!p.in_transit()) {
-            FileInfo fi;
-            postutils::DeserializeFilePostIntoFileInfo(p, fi);
-            // Check if file is in manifest
-            //int version = p.GetVersion();
+            // Check if any aliases exist, and fix
+            RenameHandler rh(file_manager());
+            if(!rh.CheckForRename(p)) {
+                FileInfo fi;
+                postutils::DeserializeFilePostIntoFileInfo(p, fi);
+                // Check if file is in manifest
+                //int version = p.GetVersion();
 
-            // Get Local file info
-            FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
+                // Get Local file info
+                FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
 
-            bool bPull = false;
-            if(pLocal_fi) {
-                std::string canonical_path;
-                fm->GetCanonicalFilepath(filepath, canonical_path);
+                bool bPull = false;
+                if(pLocal_fi) {
+                    std::string canonical_path;
+                    fm->GetCanonicalFilepath(filepath, canonical_path);
+                    // CheckForAliases(p, filepath);
+                    
+                    // check if file exists, locally
+                    if(pLocal_fi->deleted()) {
+                        bPull = false;
+                    }
+                    else if(!fs::CheckFilepathExists(canonical_path)) {
+                        bPull = true;
+                    }
 
-                // Check if any aliases exist, and fix
-                CheckForAliases(p, filepath);
-                
-                // check if file exists, locally
-                if(pLocal_fi->deleted()) {
-                    bPull = false;
+                    if(pLocal_fi->post_version() != p.version()->id())
+                        bPull = true;
                 }
-                else if(!fs::CheckFilepathExists(canonical_path)) {
+                else {
+                    std::cout<<" NOT IN MANIFEST PULL " << std::endl;
+                    // Insert into manifest
+                    fm->InsertToManifest(&fi);
+                    // Doesn't exist in the manifest
                     bPull = true;
                 }
-
-                if(pLocal_fi->post_version() != p.version()->id)
-                    bPull = true;
+                if(bPull) RaisePullRequest(p, fi);
             }
-            else {
-                std::cout<<" NOT IN MANIFEST PULL " << std::endl;
-                // Insert into manifest
-                fm->InsertToManifest(&fi);
-                // Doesn't exist in the manifest
-                bPull = true;
-            }
-            if(bPull) RaisePullRequest(p, fi);
         }
         else {
             std::cout<<" file in transit " << std::endl;
