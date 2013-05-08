@@ -85,7 +85,7 @@ int SoftDeleteStrategy::PostFilePost(const std::string& post_id, FilePost& fp) {
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
         Parent parent;
-        parent.version = fp.version()->id;
+        parent.version = fp.version()->id();
         fp.PushBackParent(parent);
 
         std::string body;

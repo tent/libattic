@@ -48,7 +48,8 @@ int RenameStrategy::RenameFile() {
 
         std::cout<<" OLD RELATIVE : " << old_relative_filepath << std::endl;
 
-        status = file_manager_->RenameFile(old_relative_filepath, new_filename);
+        std::string new_filepath;
+        status = file_manager_->RenameFile(old_relative_filepath, new_filename, new_filepath);
         std::cout<<" RENAME LOCAL CACHE FILE STATUS : " << status << std::endl;
         if(status == ret::A_OK) {
             std::string relative;
@@ -165,7 +166,7 @@ int RenameStrategy::UpdateFolderMetaPost(const std::string& folderpath, Folder& 
         fp.set_folder(folder);
 
         Parent parent;
-        parent.version = fp.version()->id;
+        parent.version = fp.version()->id();
         fp.PushBackParent(parent);
         
         std::string body;
@@ -208,7 +209,7 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id,
         fp.set_name(new_filename);
 
         Parent parent;
-        parent.version = fp.version()->id;
+        parent.version = fp.version()->id();
         fp.PushBackParent(parent);
         
         std::string body;

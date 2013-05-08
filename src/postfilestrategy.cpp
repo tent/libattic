@@ -508,7 +508,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
 
     if(status == ret::A_OK) {
         Parent parent;
-        parent.version = p.version()->id;
+        parent.version = p.version()->id();
         // Set its transit state
         p.set_in_transit(in_transit);
         p.PushBackParent(parent);
@@ -550,7 +550,7 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     if(get_resp.code == 200) {
         FilePost p;
         jsn::DeserializeObject(&p, get_resp.body);
-        file_manager_->SetFileVersion(fi->filepath(), p.version()->id);
+        file_manager_->SetFileVersion(fi->filepath(), p.version()->id());
         return true;
     }
     return false;

@@ -70,7 +70,7 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
             if(arr.size()) {
                 try {
                     if(pp.pages().next().empty()) {
-                        since_time_ = out.front().version()->received_at; // newest one
+                        since_time_ = out.front().version()->received_at(); // newest one
                         std::cout<<" setting since time : " << since_time_ <<std::endl;
                         break;
                     }
@@ -80,7 +80,7 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
                         std::cout<<" assigning ... " << std::endl;
                         next_param.clear();
                         next_param = pp.pages().next();
-                        since_time_ = out.front().version()->received_at; // update since time
+                        since_time_ = out.front().version()->received_at(); // update since time
                         std::cout<<" setting since time : " << since_time_ <<std::endl;
                     }
                 }
