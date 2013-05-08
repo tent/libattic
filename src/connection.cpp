@@ -123,12 +123,14 @@ bool Connection::SetTimeout() {
     struct timeval timeout;      
     timeout.tv_sec = 0;
     timeout.tv_usec = 1000; 
-    if (setsockopt (socket_->native_handle(),
-                    SOL_SOCKET, 
-                    SO_SNDTIMEO, 
-                    (char *)&timeout, sizeof(timeout)) < 0) {
-        std::cout << "setsockopt failed\n";
-        return false;
+    if(socket_) {
+        if (setsockopt (socket_->native_handle(),
+                        SOL_SOCKET, 
+                        SO_SNDTIMEO, 
+                        (char *)&timeout, sizeof(timeout)) < 0) {
+            std::cout << "setsockopt failed\n";
+            return false;
+        }
     }
     return true;
 }

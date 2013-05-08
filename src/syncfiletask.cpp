@@ -72,10 +72,12 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
                      &at,
                      response); 
 
-    if(response.code == 200) 
+    if(response.code == 200) {
         jsn::DeserializeObject(&out, response.body);
-    else
+    }
+    else {
         status = ret::A_FAIL_NON_200;
+    }
 
     return status;
 }
@@ -155,6 +157,7 @@ void SyncFileTask::CheckForAliases(const FilePost& p, const std::string& filepat
     std::cout<<" FILEEEEEEE PATH : " << filepath << std::endl;
     FileManager* fm = file_manager();
     std::vector<std::string> aliases = p.GetPastAliases();
+    std::cout<<" Alias count : " << aliases.size() << std::endl;
 
     std::vector<std::string>::iterator itr = aliases.begin();
     for(;itr != aliases.end(); itr++) {
