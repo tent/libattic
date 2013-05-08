@@ -303,6 +303,19 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     return retval;
 } 
 
+FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
+    FileInfo* fi = NULL;
+
+    if(!post_id.empty()) {
+        Lock();
+        fi = file_info_factory_.CreateFileInfoObject();
+        manifest_.QueryForFileByPostId(post_id, *fi);
+        Unlock();
+    }
+
+    return fi;
+}
+
 FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     FileInfo* pFi = NULL;
     std::string relative;

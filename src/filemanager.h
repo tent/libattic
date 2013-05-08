@@ -50,6 +50,7 @@ public:
     int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
 
     FileInfo* GetFileInfo(const std::string &filepath);
+    FileInfo* GetFileInfoByPostId(const std::string& post_id);
 
     void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFileDeleted(const std::string& filepath, const bool del = true);

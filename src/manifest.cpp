@@ -96,7 +96,7 @@ bool Manifest::CreateInfoTable() {
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, folder_manifest_id TEXT, alias_data TEXT,";
-    exc += " PRIMARY KEY(filepath ASC, folder_manifest_id ASC));";
+    exc += " PRIMARY KEY(filepath ASC, folder_manifest_id ASC, metapostid ASC));";
 
     return PerformQuery(exc);
 }
@@ -250,7 +250,31 @@ bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
 
     if(!step)
         return false;
+    return true;
+}
 
+bool Manifest::QueryForFileByPostId(const std::string& post_id, FileInfo& out) {
+    std::string exc;
+    exc += "SELECT * FROM ";
+    exc += g_infotable;
+    exc += " WHERE metapostid=\"";
+    exc += post_id;
+    exc += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(exc.c_str(), res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) {
+            ExtractFileInfoResults(res, step, out);
+        }
+    }
+
+    if(!step)
+        return false;
     return true;
 }
 

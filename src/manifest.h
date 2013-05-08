@@ -83,6 +83,7 @@ public:
 
 
     bool QueryForFile(const std::string &filepath, FileInfo& out);
+    bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
     int QueryAllFiles(FileInfoList& out);
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
 
