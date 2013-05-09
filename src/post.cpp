@@ -287,4 +287,13 @@ void Post::MentionPost(const std::string& entity, const std::string& postid) {
     PushBackMention(m);
 }
 
+void Post::set_fragment(const std::string& fragment) {
+    type_ = base_type_ + fragment;
+}
+
+void Post::clear_fragment() {
+    type_ = base_type_;
+}
+
 }//namespace
+

@@ -103,7 +103,7 @@ public:
     void set_id(const std::string &id)              { id_ = id; }
     void set_entity(const std::string &entity)      { entity_ = entity; }
     void set_published_at(unsigned int uUnixTime)   { published_at_ = uUnixTime; }
-    void set_type(const std::string &type)          { type_ = type; }
+    void set_type(const std::string &type)          { type_ = type + "#";  base_type_ = type + "#"; }
     void set_content(const std::string &type, Json::Value &val) { content_[type] = val; }
     void set_public(const bool pub)                 { permissions_.SetIsPublic(pub); }
 
@@ -113,12 +113,16 @@ public:
     void PushBackParent(Parent& p) { version_.PushBackParent(p); }
 
     void MentionPost(const std::string& entity, const std::string& postid);
+
+    void set_fragment(const std::string& fragment);
+    void clear_fragment();
 private:
     typedef std::map<std::string, Json::Value> ContentMap;
 
     std::string                         id_;
     std::string                         entity_;
-    std::string                         type_;
+    std::string                         base_type_; // base type of post
+    std::string                         type_; // type (may be fragmented)
     unsigned int                        published_at_;
     unsigned int                        received_at_;
     std::vector<std::string>            licenses_;
