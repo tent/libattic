@@ -95,6 +95,7 @@ void TaskPool::ReclaimTask(Task* task) {
         delete task;
         task = NULL;
         reclaimed_task_count_++;
+        active_task_count_--;
     }
 }
 

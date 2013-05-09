@@ -15,7 +15,6 @@ class TaskPool : public MutexClass {
     typedef std::map<Task::TaskType, TaskQueue> TaskMap;
 
     TaskQueue::iterator FindTask(Task* task, Task::TaskType type);
-
 public:
     TaskPool();
     ~TaskPool();
