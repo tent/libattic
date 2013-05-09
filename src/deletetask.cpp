@@ -37,6 +37,7 @@ void DeleteTask::RunTask() {
     std::string filepath = TentTask::filepath();
     std::string post_path = TentTask::GetPostPath(); 
     std::string entity = TentTask::entity().entity();
+    std::cout<<" RUNNING DELETE TASK " << std::endl;
 
     if(!file_manager()->IsFileLocked(filepath)) {
         file_manager()->LockFile(filepath);
@@ -59,6 +60,8 @@ void DeleteTask::RunTask() {
         log::LogString("39919ANN941", error);
         status = ret::A_FAIL_FILE_IN_USE;
     }
+
+    std::cout<<" DELETE TASK CALLING BACK STATUS : " << status << std::endl;
     // Callback
     Callback(status, "");
     SetFinishedState();
