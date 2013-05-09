@@ -43,6 +43,9 @@ public:
     int RenameFile(const std::string& old_filepath, 
                    const std::string& new_filename,
                    std::string& new_filepath);
+    int RenameFolder(const std::string& old_folderpath,
+                     const std::string& new_foldername,
+                     std::string& new_folderpath);
 
     FileInfo* CreateFileInfo();
     void GetCanonicalFilepath(const std::string& relativepath, std::string& out);

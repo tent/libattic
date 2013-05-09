@@ -124,6 +124,45 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     Unlock();
 }
 
+int FileManager::RenameFolder(const std::string& old_folderpath,
+                              const std::string& new_foldername,
+                              std::string& new_folderpath) {
+    int status = ret::A_OK;
+
+    Folder folder;
+    if(GetFolderEntry(old_folderpath, folder)){
+        std::string relative_folderpath;
+        GetRelativePath(old_folderpath, relative_folderpath);
+        std::string old_foldername;
+        utils::ExtractFileName(old_folderpath, old_foldername);
+        utils::FindAndReplace(relative_folderpath, 
+                              (std::string("/") + old_foldername), 
+                              (std::string("/") + new_foldername), 
+                              new_folderpath);
+
+        std::cout<<" OLD PATH : " << relative_folderpath << std::endl;
+        std::cout<<" NEW PATH : " << new_folderpath << std::endl;
+        if(!new_folderpath.empty()) {
+            //Update folder path
+            Lock();
+            manifest_.UpdateFolderPath(folder.manifest_id(), new_folderpath);
+            Unlock();
+            //Update folder contents
+            Lock();
+            bool ret = manifest_.UpdateAllFileInfoForFolder(folder.manifest_id());
+            Unlock();
+        }
+        else {
+            status = ret::A_FAIL_INVALID_FOLDERPATH;
+        }
+    }
+    else {
+        status = ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+    }
+
+    return status;
+}
+
 int FileManager::RenameFile(const std::string& old_filepath, 
                             const std::string& new_filename,
                             std::string& new_filepath) {
