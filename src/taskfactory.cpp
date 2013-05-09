@@ -124,11 +124,6 @@ Task* TaskFactory::CreateNewTentTask(int type,
                                context);
             break;
         }
-        case Task::SYNC:
-        {
-            std::cout<<" called to create sync task ...why?" << std::endl;
-            break;
-        }
         case Task::SYNC_FILE_TASK:
         {
             t = new SyncFileTask(pFm,

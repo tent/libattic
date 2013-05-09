@@ -23,12 +23,8 @@ public:
         PUSH,
         PULL,
         RENAME,
-        PULLALL,
         DELETE,                                                         
-        SYNC,
         SYNC_FILE_TASK,
-        ENCRYPT,
-        DECRYPT,
         // ManifestTask
         QUERYMANIFEST,
         SCANDIRECTORY,
