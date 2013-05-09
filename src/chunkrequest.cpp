@@ -190,11 +190,8 @@ int ChunkRequest::WriteToSocket(boost::asio::streambuf& buffer) {
             status = ret::A_FAIL_SOCKET_WRITE;
         }
     }
-
     return status;
 }
-
-
 
 } // namespace
 

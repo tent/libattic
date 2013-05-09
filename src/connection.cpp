@@ -38,8 +38,10 @@ int Connection::Initialize(const std::string& url) {
     int status = ret::A_OK;
     socket_ = new tcp::socket(io_service_);
 
+    /*
     if(!SetTimeout())
         std::cout<<" failed to set timeout " << std::endl;
+        */
 
     std::string protocol, host, path;
     netlib::ExtractHostAndPath(url, protocol, host, path);
