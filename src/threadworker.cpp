@@ -3,14 +3,15 @@
 #include <iostream>
 #include <boost/thread/thread.hpp>
 
-#include "task.h"
+
 #include "sleep.h"
 #include "taskarbiter.h"
 
 namespace attic {
 
-ThreadWorker::ThreadWorker() {
+ThreadWorker::ThreadWorker(bool strict) {
     state_ = ThreadWorker::IDLE;
+    strict_ = strict;
 }
 
 ThreadWorker::~ThreadWorker() {}
@@ -22,7 +23,7 @@ void ThreadWorker::Run() {
     while(!(state() == ThreadWorker::EXIT)) {
         if(state() == ThreadWorker::IDLE) {
             // Get a job
-            task = TaskArbiter::GetInstance()->SyncPopFront();
+            task = RetrieveTask();
             if(!task) { sleep::sleep_seconds(1); }
         }
 
@@ -134,5 +135,48 @@ void ThreadWorker::SetThreadShutdown() {
     state_ = ThreadWorker::SHUTDOWN;
     Unlock();
 }
+
+void ThreadWorker::SetTaskPreference(Task::TaskType type, bool active) {
+    task_preference_[type] = active;
+}
+
+Task* ThreadWorker::RetrieveTask() {
+    Task* t = NULL;
+    // Retrieve task based on preference first, then just any old task
+    PreferenceMap::iterator itr = task_preference_.begin();
+    for(;itr!= task_preference_.end(); itr++) {
+        if(itr->second)
+            t = TaskArbiter::GetInstance()->RequestTask(itr->first);
+    }
+
+    if(!t && !strict_)
+        t = TaskArbiter::GetInstance()->RequestTask();
+    return t;
+}
+
+ThreadWorkerFactory::ThreadWorkerFactory() {
+    push_pull.first = 0;
+    push_pull.second = true; // strict 
+    pull_push.first = 0;
+    pull_push.second = true; // strict
+    poll.first = 0;
+    poll.second = true; // strict
+    rename_delete.first = 0;
+    rename_delete.second = false; // not strict
+    sync.first = 0;
+    sync.second = false; // not strict
+    generic.first = 0;
+    generic.second = false; // not strict
+
+    thread_count_ = 0;
+}
+
+ThreadWorkerFactory::~ThreadWorkerFactory() {}
+
+ThreadWorker* ThreadWorkerFactory::GetThreadWorker() {
+
+}
+
+
 
 }//namespace
