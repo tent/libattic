@@ -17,14 +17,14 @@ CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& a
 
 CensusHandler::~CensusHandler() {}
 
-bool CensusHandler::Inquiry(std::deque<FilePost>& out)  {
-    QueryTimeline(out);
+bool CensusHandler::Inquiry(const std::string& fragment, std::deque<FilePost>& out)  {
+    QueryTimeline(fragment, out);
     if(out.size())
         return true;
     return false;
 }
 
-int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
+int CensusHandler::QueryTimeline(const std::string& fragment, std::deque<FilePost>& out) {
     int status = ret::A_OK;
 
     std::cout<<" file list size incoming : " << out.size() << std::endl;
@@ -33,7 +33,7 @@ int CensusHandler::QueryTimeline(std::deque<FilePost>& out) {
         UrlParams params;
         if(next_param.empty()) {
             std::cout<<" since time in param : " << since_time_ << std::endl;
-            params.AddValue("types", cnst::g_attic_file_type);
+            params.AddValue("types", std::string(cnst::g_attic_file_type) + "#" + fragment);
             params.AddValue("since", since_time_);
             params.AddValue("limit", "200");
             params.AddValue("sort_by", "version.received_at");

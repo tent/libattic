@@ -13,12 +13,12 @@
 namespace attic { 
 
 class CensusHandler {
-    int QueryTimeline(std::deque<FilePost>& out);
+    int QueryTimeline(const std::string& fragment, std::deque<FilePost>& out);
 public:
     CensusHandler(const std::string& posts_feed, const AccessToken& at);
     ~CensusHandler();
 
-    bool Inquiry(std::deque<FilePost>& out);
+    bool Inquiry(const std::string& fragment, std::deque<FilePost>& out);
 
 private:
     AccessToken access_token_;
