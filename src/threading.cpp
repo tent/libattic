@@ -59,18 +59,63 @@ int ThreadPool::ExtendPool(unsigned int stride) {
     std::cout<<" extending thread pool " << std::endl;
     int status = ret::A_OK;
 
+    // Service worker
+    ThreadWorker* servicew = new ThreadWorker(true); // Strict
+    servicew->SetTaskPreference(Task::SERVICE);
+    workers_.push_back(servicew);
+    boost::thread* service_thread = new boost::thread(NewThreadFunc, servicew);
+    threads_.push_back(service_thread);
+
+
+    // Poll worker
+    ThreadWorker* pollw = new ThreadWorker(true); // Strict
+    pollw->SetTaskPreference(Task::POLL);
+    pollw->SetTaskPreference(Task::SERVICE, false);
+    workers_.push_back(pollw);
+    boost::thread* poll_thread = new boost::thread(NewThreadFunc, pollw);
+    threads_.push_back(poll_thread);
+
+    // Rename delete
+    ThreadWorker* rdw = new ThreadWorker();
+    rdw->SetTaskPreference(Task::RENAME);
+    rdw->SetTaskPreference(Task::DELETE);
+    rdw->SetTaskPreference(Task::POLL, false);
+    rdw->SetTaskPreference(Task::SERVICE, false);
+    workers_.push_back(rdw);
+    boost::thread* rdw_thread = new boost::thread(NewThreadFunc, rdw);
+    threads_.push_back(rdw_thread);
+
+    ThreadWorker* second_rdw = new ThreadWorker();
+    second_rdw->SetTaskPreference(Task::RENAME);
+    second_rdw->SetTaskPreference(Task::DELETE);
+    second_rdw->SetTaskPreference(Task::POLL, false);
+    second_rdw->SetTaskPreference(Task::SERVICE, false);
+    workers_.push_back(second_rdw);
+    boost::thread* second_thread = new boost::thread(NewThreadFunc, second_rdw);
+    threads_.push_back(second_thread);
+
+    // Generic workers
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker();
+        pWorker->SetTaskPreference(Task::POLL, false);
+        pWorker->SetTaskPreference(Task::SERVICE, false);
         workers_.push_back(pWorker);
 
         boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
         threads_.push_back(pt);
-
-        // decide whether or not to keep as a detached thread
-//        std::cout<<"detaching thread ... " << std::endl;
-//        pt->detach();
-
+        if(workers_.size() >= stride)
+            break;
     }
+
+    /*
+    for(unsigned int i=0; i < stride; i++){
+        boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
+        threads_.push_back(pt);
+        // decide whether or not to keep as a detached thread
+        // std::cout<<"detaching thread ... " << std::endl;
+        // pt->detach();
+    }
+    */
 
     return status;
 }
