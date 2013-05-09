@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "netlib.h"
 #include "jsonserializable.h"
+#include "renamehandler.h"
 
 namespace attic {
 
@@ -37,6 +38,10 @@ int RenameStrategy::RenameFile() {
     std::string old_filepath = GetConfigValue("original_filepath");
     std::string new_filename = GetConfigValue("new_filename");
     std::string entity = GetConfigValue("entity");
+
+    RenameHandler rh(file_manager_);
+    std::string new_filepath;
+    status = rh.RenameFileLocalCache(old_filepath, new_filename, new_filepath);
 
     FileInfo* fi = RetrieveFileInfo(old_filepath);
     if(fi) {
