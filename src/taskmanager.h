@@ -48,8 +48,8 @@ public:
     void PollFiles(TaskDelegate* pDel);
     void SyncFile(const std::string& postid, TaskDelegate* pDel);
     void DeleteFile(const std::string& filepath, TaskDelegate* pDel);
-    void RenameFile(const std::string& original_filepath, const std::string& new_filename);
-    void RenameFolder(const std::string& original_folderpath, const std::string& new_foldername);
+    void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
+    void RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
 
     // Utility Tasks
     int QueryManifest(void(*callback)(int, char**, int, int));

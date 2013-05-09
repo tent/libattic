@@ -104,7 +104,6 @@ int RenameStrategy::RenameFolder() {
                                                 (*itr).filename(),
                                                 (*itr).filepath());
                 }
-
             }
             else { 
                 std::cout<<" FAILED TO UPDATE FOLDER ENTRY : " << std::endl;

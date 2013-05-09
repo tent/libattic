@@ -161,11 +161,11 @@ void TaskManager::PollFiles(TaskDelegate* pDel) { // This will need to be a dire
 }
 
 void TaskManager::RenameFile(const std::string& original_filepath, 
-                             const std::string& new_filename) {
+                             const std::string& new_filepath) {
     TaskContext tc;
     tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
-    tc.set_value("new_filename", new_filename);
+    tc.set_value("new_filepath", new_filepath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
@@ -174,11 +174,11 @@ void TaskManager::RenameFile(const std::string& original_filepath,
 }
 
 void TaskManager::RenameFolder(const std::string& original_folderpath, 
-                               const std::string& new_foldername) {
+                               const std::string& new_folderpath) {
     TaskContext tc;
     tc.set_value("file_type", "folder");
     tc.set_value("original_folderpath", original_folderpath);
-    tc.set_value("new_foldername", new_foldername);
+    tc.set_value("new_folderpath", new_folderpath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);
