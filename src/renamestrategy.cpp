@@ -42,42 +42,23 @@ int RenameStrategy::RenameFile() {
     RenameHandler rh(file_manager_);
     std::string new_filepath;
     status = rh.RenameFileLocalCache(old_filepath, new_filename, new_filepath);
-
-    FileInfo* fi = RetrieveFileInfo(old_filepath);
-    if(fi) {
-        // Update File Info
-        std::cout<< " original filepath : " << old_filepath << std::endl;
-        std::cout<< " new filename : " << new_filename << std::endl;
-        std::string old_relative_filepath;
-        file_manager_->GetRelativePath(old_filepath, old_relative_filepath);
-
-        std::cout<<" OLD RELATIVE : " << old_relative_filepath << std::endl;
-
-        std::string new_filepath;
-        status = file_manager_->RenameFile(old_relative_filepath, new_filename, new_filepath);
-        std::cout<<" RENAME LOCAL CACHE FILE STATUS : " << status << std::endl;
-        if(status == ret::A_OK) {
-            std::string relative;
-            std::string parent_dir;
-            fs::GetParentPath(old_filepath, parent_dir);
-            std::cout<<" Parent dir : " << parent_dir << std::endl;
-            std::cout<<" filename : " << new_filename << std::endl;
-
-            file_manager_->GetRelativePath(parent_dir, relative);
-            relative +=  new_filename;
-            std::cout<<" GET RELATIVE : " << relative << std::endl;
-            
-            // Update meta post
-            std::string meta_post_id = fi->post_id();
-            status = UpdateFileMetaPost(meta_post_id,
-                                        new_filename,
-                                        relative);
+    if(status == ret::A_OK) {
+        FileInfo* fi = RetrieveFileInfo(new_filepath);
+        if(fi) {
+            FilePost p;
+            status = RetrieveFilePost(fi->post_id(), p);
+            if(status == ret::A_OK) {
+                FilePost new_p;
+                rh.UpdateFileMetaPost(p, *fi, new_p);
+                status = UpdateFileMetaPost(fi->post_id(), new_p);
+            }
         }
-        
+        else {
+            std::cout<<" COULD NOT FIND FILE FOR PATH : " << new_filepath << std::endl;
+            status = ret::A_FAIL_INVALID_FILE_INFO;
+        }
     }
-    else {
-        status = ret::A_FAIL_INVALID_FILE_INFO;
-    }
+
     return status;
 }
 
@@ -197,6 +178,35 @@ int RenameStrategy::UpdateFolderMetaPost(const std::string& folderpath, Folder& 
         std::cout<<" code : " << resp.code << std::endl;
         std::cout<<" body : " << resp.body << std::endl;
     }
+
+    return status;
+}
+
+int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePost& fp) {
+    int status = ret::A_OK;
+    std::string body;
+    FilePost p = fp;
+    jsn::SerializeObject(&p, body);
+
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    std::cout<<" POST URL : " << posturl << std::endl;
+    Response resp;
+    netlib::HttpPut(posturl,
+                    fp.type(),
+                    NULL,
+                    body,
+                    &access_token_,
+                    resp);
+
+    if(resp.code == 200) {
+
+    }
+    else {
+        status = ret::A_FAIL_NON_200;
+    }
+    std::cout<<" code : " << resp.code << std::endl;
+    std::cout<<" body : " << resp.body << std::endl;
 
     return status;
 }
