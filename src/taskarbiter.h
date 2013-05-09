@@ -23,9 +23,10 @@ public:
 
     static TaskArbiter* GetInstance();
 
-    Task* SyncPopFront();
+    Task* RequestTask();
+    Task* RequestTask(Task::TaskType type);
     void ReclaimTask(Task* task);
-    void SyncPushBack(Task* pTask);
+    void PushBackTask(Task* pTask);
     unsigned int ActiveTaskCount();
 
     int CreateAndSpinOffTask(const TaskContext& tc);
@@ -36,9 +37,10 @@ public:
 private:
     static bool            initialized_;
     static TaskArbiter*    instance_;
-    ThreadPool*            pool_;
-    TaskQueue              task_queue_;
     TaskManager*           task_manager_;
+
+    ThreadPool*            thread_pool_;
+    TaskPool               task_pool_;
 };
 
 } //namespace

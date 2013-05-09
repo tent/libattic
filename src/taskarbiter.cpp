@@ -11,23 +11,23 @@ TaskArbiter* TaskArbiter::instance_ = 0;
 bool TaskArbiter::initialized_ = false;
 
 TaskArbiter::TaskArbiter() {
-    pool_ = new ThreadPool();
+    thread_pool_ = new ThreadPool();
     task_manager_ = NULL;
 }
 
 TaskArbiter::~TaskArbiter() {
-    if(pool_) {
-        delete pool_;
-        pool_ = NULL;
+    if(thread_pool_) {
+        delete thread_pool_;
+        thread_pool_ = NULL;
     }
 }
 
 int TaskArbiter::Initialize(unsigned int poolSize) {
     int status = ret::A_OK;
     Lock();
-    if(pool_) {
-        pool_->Initialize();
-        pool_->ExtendPool(poolSize);
+    if(thread_pool_) {
+        thread_pool_->Initialize();
+        thread_pool_->ExtendPool(poolSize);
         initialized_ = true;
     }
     else {
@@ -42,11 +42,11 @@ int TaskArbiter::Shutdown() {
 
     std::cout<<" 1 " << std::endl;
     Lock();
-    if(pool_)
-        status = pool_->Shutdown();
+    if(thread_pool_)
+        status = thread_pool_->Shutdown();
     Unlock();
 
-    task_queue_.ClearTaskQueue();
+    task_pool_.ClearPool();
     std::cout<<" 1 " << std::endl;
     // DO THIS LAST ... if you have any mutex derived member varibales it will delete them...
     // and may cause DEADLOCK ...DUH
@@ -81,26 +81,30 @@ int TaskArbiter::CreateAndSpinOffTask(const TaskContext& tc) {
 int TaskArbiter::SpinOffTask(Task* pTask) {
     int status = ret::A_OK;
     if(initialized_)
-        task_queue_.SyncPushBack(pTask);
+        task_pool_.PushBack(pTask);
     else
         status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
     return status;
 }
 
-void TaskArbiter::SyncPushBack(Task* task) {
-    task_queue_.SyncPushBack(task);
+void TaskArbiter::PushBackTask(Task* task) {
+    task_pool_.PushBack(task);
 }
 
-Task* TaskArbiter::SyncPopFront() {
-    return task_queue_.SyncPopFront();
+Task* TaskArbiter::RequestTask() {
+    return task_pool_.RequestNextAvailableTask();
+}
+
+Task* TaskArbiter::RequestTask(Task::TaskType type) {
+    return task_pool_.RequestTask(type);
 }
 
 void TaskArbiter::ReclaimTask(Task* task) {
-    task_queue_.ReclaimTask(task);
+    task_pool_.ReclaimTask(task);
 }
 
 unsigned int TaskArbiter::ActiveTaskCount() {
-    return task_queue_.ActiveTaskCount();
+    return task_pool_.ActiveTaskCount();
 }
 
 }//namespace
