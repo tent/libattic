@@ -21,8 +21,8 @@ public:
     SoftDeleteStrategy() {}
     ~SoftDeleteStrategy() {}
 
-    int Execute(FileManager* pFileManager,
-                CredentialsManager* pCredentialsManager);
+    int Execute(FileManager* file_manager,
+                CredentialsManager* credentials_manager_);
 };
 
 }//namespace

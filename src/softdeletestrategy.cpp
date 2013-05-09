@@ -5,16 +5,18 @@
 
 namespace attic { 
 
-int SoftDeleteStrategy::Execute(FileManager* pFileManager,
-                                CredentialsManager* pCredentialsManager){
+int SoftDeleteStrategy::Execute(FileManager* file_manager,
+                                CredentialsManager* credentials_manager_){
     int status = ret::A_OK;
-    status = InitInstance(pFileManager, pCredentialsManager);
+    status = InitInstance(file_manager, credentials_manager_);
+    std::cout<<" del " << std::endl;
 
     post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
 
     FileInfo* fi = RetrieveFileInfo(filepath);
     if(fi) { 
+    std::cout<<" del " << std::endl;
         MarkFileDeleted(fi);
         status = UpdateFilePost(fi);
     }
@@ -44,7 +46,7 @@ int SoftDeleteStrategy::UpdateFilePost(FileInfo* fi) {
     FilePost fp;
     status = RetrieveFilePost(postid, fp);
     if(status == ret::A_OK) {
-        fp.set_deleted(true);
+        fp.set_fragment(cnst::g_deleted_fragment);
         status = PostFilePost(postid, fp);
     }
 
@@ -59,6 +61,7 @@ int SoftDeleteStrategy::RetrieveFilePost(const std::string& post_id, FilePost& o
 
         std::cout<<" POST URL : " << posturl << std::endl;
 
+
         Response resp;
         netlib::HttpGet(posturl,
                         NULL,
@@ -70,6 +73,7 @@ int SoftDeleteStrategy::RetrieveFilePost(const std::string& post_id, FilePost& o
         }
         else{
             status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("175kjas", resp);
         }
     }
     else { 
@@ -83,6 +87,8 @@ int SoftDeleteStrategy::PostFilePost(const std::string& post_id, FilePost& fp) {
     if(!post_id.empty()) {
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+        std::cout<<" post url : " << posturl << std::endl;
+        std::cout<<" post type : " << fp.type() << std::endl;
 
         Parent parent;
         parent.version = fp.version()->id();
@@ -103,6 +109,7 @@ int SoftDeleteStrategy::PostFilePost(const std::string& post_id, FilePost& fp) {
         }
         else {
             status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("192151mm", resp);
         }
     }
     else { 
