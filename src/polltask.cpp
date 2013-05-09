@@ -10,6 +10,9 @@
 #include "sleep.h"
 #include "logutils.h"
 
+#include "filesystem.h"
+#include "configmanager.h"
+
 namespace attic {
 
 namespace polltask {
@@ -117,12 +120,19 @@ void PollTask::RunTask() {
             if(running_) {
                 std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
                 std::deque<FilePost> file_list;
-                if(census_handler_->Inquiry(file_list)) {
+                if(census_handler_->Inquiry("", file_list)) { // Query all
                     std::cout<<" Syncing files ... " << std::endl;
                     status = SyncFiles(file_list);
-                    //status = SyncFolderPosts();
                     if(status != ret::A_OK)
                         std::cout<<" POLLING ERR : " << status << std::endl;
+                }
+
+                std::deque<FilePost> deleted_list;
+                if(census_handler_->Inquiry(cnst::g_deleted_fragment, file_list)) { // Query all
+                    std::cout<<" Checking for deleted files ... " << std::endl;
+                    std::deque<FilePost>::iterator itr = deleted_list.begin();
+                    for(;itr!=deleted_list.end(); itr++)
+                        std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
                 }
             }
             timer_.start();
@@ -168,6 +178,46 @@ bool PollTask::IsFileInQueue(const std::string& filepath) {
         return true;
     return false;
 }
+
+void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will move to its own job
+    std::string canonical_path;
+    file_manager()->GetCanonicalFilepath(fp.relative_path(), canonical_path);
+    if(fs::CheckFilepathExists(canonical_path)){
+        // Move to trash
+        std::string trash_path;
+        ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
+        if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
+            // Move to trash;
+            fs::MoveFileToFolder(canonical_path, trash_path);
+        }
+        else {
+            std::string msg = "Invalid trash_path";
+            log::LogString("MOA1349", msg);
+        }
+    }
+}
+
+// Could be alot, spin off on worker
+/*
+void DeleteFiles() {
+std::cout<<" file marked for deletion " << std::endl;
+        std::string canonical_path;
+        fm->GetCanonicalFilepath(filepath, canonical_path);
+        if(fs::CheckFilepathExists(canonical_path)){
+            // Move to trash
+            std::string trash_path;
+            ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
+            if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
+                // Move to trash;
+                fs::MoveFileToFolder(canonical_path, trash_path);
+            }
+            else {
+                std::string msg = "Invalid trash_path";
+                log::LogString("MOA1349", msg);
+            }
+        }
+}
+*/
 
 
 }//namespace
