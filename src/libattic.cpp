@@ -243,14 +243,14 @@ int DeleteFile(const char* szFilePath) {
     return status;
 }
 
-int RenameFile(const char* szOldFilepath, const char* szNewFilename) {
+int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(!szNewFilename) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) { 
         try { 
-            g_pTaskManager->RenameFile(szOldFilepath, szNewFilename);
+            g_pTaskManager->RenameFile(szOldFilepath, szNewFilepath);
         }
         catch(std::exception& e) {
             attic::log::LogException("ASDKJ23423*", e);
@@ -387,9 +387,9 @@ int EnterRecoveryKey(const char* szRecovery) {
 
 const char** GetQuestionList() {
     static const char* t[]={
-                            {"What is your spirit animal?"}, 
-                            {"What is your favorite color?"},
-                            {"What is your color?"}
+                            {"one"}, 
+                            {"two"},
+                            {"three"}
                            };
     return t;
 }
