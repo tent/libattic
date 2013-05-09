@@ -11,8 +11,6 @@ namespace attic {
 
 FilePost::FilePost(){
     set_type(cnst::g_attic_file_type);
-    deleted_ = false;
-    in_transit_ = false;
 }
 
 FilePost::~FilePost() {}
@@ -24,7 +22,6 @@ void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
         set_relative_path(fi->filepath());
         set_name(fi->filename());
         set_file_size(fi->file_size());
-        set_deleted(fi->deleted());
         // attic post key info
         set_key_data(fi->encrypted_key());
         set_iv_data(fi->file_credentials_iv());
@@ -60,8 +57,6 @@ void FilePost::Serialize(Json::Value& root) {
     Json::Value content(Json::objectValue);
     content["name"] = name_;
     content["path"] = relative_path_;
-    content["deleted"] = deleted_;
-    content["in_transit"] = in_transit_;
     
     Json::Value chunkposts;//(Json::objectValue);
     SerializeChunkPosts(chunkposts);
@@ -111,8 +106,6 @@ void FilePost::Deserialize(Json::Value& root) {
 
     name_           = content.get("name", "").asString();
     relative_path_  = content.get("path", "").asString();
-    deleted_        = content.get("deleted", false).asBool();
-    in_transit_     = content.get("in_transit", false).asBool();
 
     std::string size = content.get("size", "").asString();
     file_size_ = atoi(size.c_str());
@@ -142,8 +135,6 @@ void FilePost::DeserializePastAliases(Json::Value& val) {
     std::cout<<" ALIAS COUNT : " << past_aliases_.size() << std::endl;
     for(int i=0; i<past_aliases_.size();i++)
         std::cout<<past_aliases_[i]<<std::endl;
-
-
 }
 
 } //namespace

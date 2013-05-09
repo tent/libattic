@@ -41,8 +41,6 @@ public:
     const std::string& iv_data() const       { return iv_data_; }
     const std::string& checksum() const      { return checksum_; }
     unsigned int file_size() const           { return file_size_; }
-    bool deleted() const                     { return deleted_; }
-    bool in_transit() const                  { return in_transit_; }
 
     void set_name(const std::string& name)          { name_ = name; }
     void set_relative_path(const std::string& path) { relative_path_ = path; }
@@ -50,8 +48,6 @@ public:
     void set_iv_data(const std::string& iv)         { iv_data_ = iv; }
     void set_checksum(const std::string& checksum)  { checksum_ = checksum; }
     void set_file_size(unsigned int size)           { file_size_ = size; }
-    void set_deleted(bool del)                      { deleted_ = del; }
-    void set_in_transit(bool transit)               { in_transit_ = transit; }
 private:
     std::vector<std::string> chunk_posts_;
     std::vector<std::string> chunk_ids_;
@@ -65,8 +61,6 @@ private:
     std::string checksum_;
 
     unsigned int file_size_;
-    bool in_transit_;
-    bool deleted_;
 };
 
 }//namespace
