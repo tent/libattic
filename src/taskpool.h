@@ -20,13 +20,25 @@ public:
     TaskPool();
     ~TaskPool();
 
+    void ClearPool();
+
     void PushBack(Task* task);
     Task* Remove(Task* task);
+
+    bool HasTaskOfType(const Task::TaskType type);
+    Task* RequestTask(const Task::TaskType type);
+    Task* RequestNextAvailableTask();
+    void ReclaimTask(Task* task);
+
+    unsigned int ActiveTaskCount();
         
     TaskQueue* operator[](const Task::TaskType type) {
         return &task_map_[type];
     }
 private:
+    unsigned int total_task_count_;
+    unsigned int active_task_count_;
+    unsigned int reclaimed_task_count_;
     TaskMap task_map_;
 };
 
