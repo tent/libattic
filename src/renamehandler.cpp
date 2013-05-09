@@ -43,6 +43,14 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
     out.PushBackParent(parent);
 }
 
+int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
+                                          const std::string& new_foldername,
+                                          std::string& new_folderpath) {
+    int status = ret::A_OK;
+    status = file_manager_->RenameFolder(old_folderpath, new_foldername, new_folderpath);
+    return status;
+}
+
 bool RenameHandler::CheckForRename(FilePost& fp) {
     std::cout<<" CHECKING FOR RENAME " << std::endl;
     FileInfo* fi = file_manager_->GetFileInfoByPostId(fp.id());

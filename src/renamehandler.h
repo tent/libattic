@@ -22,6 +22,10 @@ public:
     void UpdateFileMetaPost(FilePost& fp, 
                             const FileInfo& fi, 
                             FilePost& out);
+
+    int RenameFolderLocalCache(const std::string& old_folderpath,
+                               const std::string& new_foldername,
+                               std::string& new_folderpath);
    
     bool CheckForRename(FilePost& fp);
 private:
