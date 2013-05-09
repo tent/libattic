@@ -17,7 +17,6 @@ class SyncFileTask : public TentTask {
     
     int ProcessFileInfo(FilePost& p);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
-    void CheckForAliases(const FilePost& p, const std::string& filepath);
 public:
     SyncFileTask(FileManager* pFm,
                  CredentialsManager* pCm,

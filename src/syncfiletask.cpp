@@ -89,99 +89,42 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
 
-    if(!p.deleted()) { 
-        if(!p.in_transit()) {
-            // Check if any aliases exist, and fix
-            RenameHandler rh(file_manager());
-            if(!rh.CheckForRename(p)) {
-                FileInfo fi;
-                postutils::DeserializeFilePostIntoFileInfo(p, fi);
-                // Check if file is in manifest
-                //int version = p.GetVersion();
+    // Check if any aliases exist, and fix
+    RenameHandler rh(file_manager());
+    if(!rh.CheckForRename(p)) {
+        FileInfo fi;
+        postutils::DeserializeFilePostIntoFileInfo(p, fi);
+        // Check if file is in manifest
+        //int version = p.GetVersion();
 
-                // Get Local file info
-                FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
+        // Get Local file info
+        FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
 
-                bool bPull = false;
-                if(pLocal_fi) {
-                    std::string canonical_path;
-                    fm->GetCanonicalFilepath(filepath, canonical_path);
-                    // CheckForAliases(p, filepath);
-                    
-                    // check if file exists, locally
-                    if(pLocal_fi->deleted()) {
-                        bPull = false;
-                    }
-                    else if(!fs::CheckFilepathExists(canonical_path)) {
-                        bPull = true;
-                    }
-
-                    if(pLocal_fi->post_version() != p.version()->id())
-                        bPull = true;
-                }
-                else {
-                    std::cout<<" NOT IN MANIFEST PULL " << std::endl;
-                    // Insert into manifest
-                    fm->InsertToManifest(&fi);
-                    // Doesn't exist in the manifest
-                    bPull = true;
-                }
-                if(bPull) RaisePullRequest(p, fi);
+        bool bPull = false;
+        if(pLocal_fi) {
+            std::string canonical_path;
+            fm->GetCanonicalFilepath(filepath, canonical_path);
+            // check if file exists, locally
+            if(pLocal_fi->deleted()) {
+                bPull = false;
             }
+            else if(!fs::CheckFilepathExists(canonical_path)) {
+                bPull = true;
+            }
+
+            if(pLocal_fi->post_version() != p.version()->id())
+                bPull = true;
         }
         else {
-            std::cout<<" file in transit " << std::endl;
+            std::cout<<" NOT IN MANIFEST PULL " << std::endl;
+            // Insert into manifest
+            fm->InsertToManifest(&fi);
+            // Doesn't exist in the manifest
+            bPull = true;
         }
+        if(bPull) RaisePullRequest(p, fi);
     }
-    else {
-        std::cout<<" file marked for deletion " << std::endl;
-        std::string canonical_path;
-        fm->GetCanonicalFilepath(filepath, canonical_path);
-        if(fs::CheckFilepathExists(canonical_path)){
-            // Move to trash
-            std::string trash_path;
-            ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
-            if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
-                // Move to trash;
-                fs::MoveFileToFolder(canonical_path, trash_path);
-            }
-            else {
-                std::string msg = "Invalid trash_path";
-                log::LogString("MOA1349", msg);
-            }
-        }
-    }
-
     return status;
-}
-
-void SyncFileTask::CheckForAliases(const FilePost& p, const std::string& filepath) {
-    std::cout<<" CHECK FOR ALIASES " << std::endl;
-    std::cout<<" FILEEEEEEE PATH : " << filepath << std::endl;
-    FileManager* fm = file_manager();
-    std::vector<std::string> aliases = p.GetPastAliases();
-    std::cout<<" Alias count : " << aliases.size() << std::endl;
-
-    std::vector<std::string>::iterator itr = aliases.begin();
-    for(;itr != aliases.end(); itr++) {
-        std::string canonical;
-        std::cout<<" PURE ALIAS : " << (*itr) << std::endl;
-        fm->GetCanonicalFilepath((*itr), canonical);
-        std::cout<<" CHECKING ALIAS : " << canonical << std::endl;
-        if(fs::CheckFilepathExists(canonical)) {
-            std::cout<<" OLD PATH EXISTS! RENAME IT! " << std::endl;
-            std::string new_filepath;
-            fm->GetCanonicalFilepath(filepath, new_filepath);
-            try {
-                std::cout<<" canonical : " << canonical << std::endl;
-                std::cout<<" new filepath : " << new_filepath << std::endl;
-                fs::RenamePath(canonical, new_filepath);
-            }
-            catch (std::exception& e) {
-                std::cout<<" RENAME EXCEPTION : " << e.what() << std::endl;
-            }
-        }
-    }
 }
 
 int SyncFileTask::RaisePullRequest(const FilePost& p, FileInfo& fi) {
