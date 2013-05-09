@@ -422,7 +422,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             FilePost p;
             p.InitializeFilePost(fi, false);
             p.MentionPost(entity, folder_post_id);
-            p.set_in_transit(true);
+            p.set_fragment(cnst::g_transit_fragment);
             std::string post_buffer;
             jsn::SerializeObject(&p, post_buffer);
 
@@ -449,6 +449,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
             }
             else {
                 status = ret::A_FAIL_NON_200;
+                log::LogHttpResponse("_---_---901", response);
             }
         }
         else {
@@ -504,15 +505,15 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     }
     else {
         status = ret::A_FAIL_NON_200;
+        log::LogHttpResponse("nmasd981", get_resp);
     }
 
     if(status == ret::A_OK) {
         Parent parent;
         parent.version = p.version()->id();
         // Set its transit state
-        p.set_in_transit(in_transit);
+        p.clear_fragment();
         p.PushBackParent(parent);
-        p.set_deleted(false);
         // Put
         std::string put_buffer;
         jsn::SerializeObject(&p, put_buffer);
@@ -529,6 +530,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         }
         else {
             status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("PO1090MASDF", put_resp);
         }
     }
 
