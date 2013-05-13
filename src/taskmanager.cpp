@@ -36,6 +36,9 @@ TaskManager::~TaskManager() {}
 
 int TaskManager::Initialize() {
     int status = ret::A_OK;
+
+    task_factory_.Initialize(file_manager_, credentials_manager_, access_token_, entity_);
+    
     if(status == ret::A_OK) {
         event::RegisterForEvent(this, event::Event::REQUEST_PULL);
         event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
@@ -186,6 +189,15 @@ void TaskManager::RenameFolder(const std::string& original_folderpath,
     PushContextBack(tc);
 }
 
+TaskContext TaskManager::CreateServiceContext(void) {
+    TaskContext tc;
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::SERVICE);
+    return tc;
+}
+
 void TaskManager::PushContextBack(TaskContext& tc) {
     cxt_mtx.Lock();
     context_queue_.push_back(tc);
@@ -202,40 +214,5 @@ void TaskManager::RetrieveContextQueue(TaskContext::ContextQueue& out) {
     //std::cout<<" outgoing queue size (after) : " << out.size() << std::endl;
     cxt_mtx.Unlock();
 }
-
-// TODO :: don't directly spin off tasks, or create seperate thread pool for system type 
-//         tasks like this or one off threads
-int TaskManager::QueryManifest(void(*callback)(int, char**, int, int)) {
-    int status = ret::A_OK;
-    TaskContext tc;
-    Task* t = task_factory_.GetManifestTask(Task::QUERYMANIFEST,
-                                            file_manager_,
-                                            tc,
-                                            callback);
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-    return status;
-}
-
-int TaskManager::ScanAtticFolder(void(*callback)(int, char**, int, int)) {
-    int status = ret::A_OK;
-    TaskContext tc;
-    Task* t = task_factory_.GetManifestTask(Task::SCANDIRECTORY,
-                                            file_manager_,
-                                            tc,
-                                            callback);
-    status = TaskArbiter::GetInstance()->SpinOffTask(t);
-    return status;
-}
-
-Task* TaskManager::GetTentTask(const TaskContext& tc) {
-    Task* t = task_factory_.GetTentTask(tc.type(),            
-                                        file_manager_,        
-                                        credentials_manager_, 
-                                        access_token_,        
-                                        entity_,              
-                                        tc);
-    return t;
-}
-
 
 }//namespace

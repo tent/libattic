@@ -41,7 +41,6 @@ public:
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
-    Task* GetTentTask(const TaskContext& tc);
     // Sync Tasks
     void UploadFile(const std::string& filepath, TaskDelegate* pDel);
     void DownloadFile(const std::string& filepath, TaskDelegate* pDel);
@@ -50,10 +49,6 @@ public:
     void DeleteFile(const std::string& filepath, TaskDelegate* pDel);
     void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
     void RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
-
-    // Utility Tasks
-    int QueryManifest(void(*callback)(int, char**, int, int));
-    int ScanAtticFolder(void(*callback)(int, char**, int, int) = NULL);
 
     // Info tasks
     int TaskCount(const Task::TaskType);
@@ -68,6 +63,8 @@ public:
     const std::string temp_directory() const { return temp_directory_; }
     const std::string working_directory() const { return working_directory_; }
     const std::string config_directory() const { return config_directory_; }
+
+    TaskContext CreateServiceContext(void);
 private:
     TaskFactory             task_factory_; // Local to upload manager
 
