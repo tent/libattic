@@ -105,6 +105,7 @@ void TaskManager::OnTaskInsert(Task* t) {
 }
 
 void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
+    std::cout<<" UPLOADING FILE " << std::endl;
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
