@@ -5,6 +5,7 @@
 #include "mutexclass.h"
 #include "taskqueue.h"
 #include "taskmanager.h"
+#include "taskcontext.h"
 
 namespace attic { 
 
@@ -23,14 +24,14 @@ public:
 
     static TaskArbiter* GetInstance();
 
-    Task* RequestTask();
-    Task* RequestTask(Task::TaskType type);
-    void ReclaimTask(Task* task);
-    void PushBackTask(Task* pTask);
+    void PushBackTask(const TaskContext& tc);
+    bool RequestTaskContext(TaskContext& out);
+    bool RequestTaskContext(Task::TaskType type, TaskContext& out);
+
     unsigned int ActiveTaskCount();
 
-    int CreateAndSpinOffTask(const TaskContext& tc);
-    int SpinOffTask(Task* pTask);
+//    int CreateAndSpinOffTask(const TaskContext& tc);
+//    int SpinOffTask(Task* pTask);
 
     TaskManager* task_manager() { return task_manager_; }
     void set_task_manager(TaskManager* task_manager) { task_manager_ = task_manager; }
@@ -39,7 +40,6 @@ private:
     static TaskArbiter*    instance_;
     TaskManager*           task_manager_;
 
-    ThreadPool*            thread_pool_;
     TaskPool               task_pool_;
 };
 

@@ -11,40 +11,19 @@ TaskArbiter* TaskArbiter::instance_ = 0;
 bool TaskArbiter::initialized_ = false;
 
 TaskArbiter::TaskArbiter() {
-    thread_pool_ = new ThreadPool();
-    task_manager_ = NULL;
+    //task_manager_ = NULL;
 }
 
-TaskArbiter::~TaskArbiter() {
-    if(thread_pool_) {
-        delete thread_pool_;
-        thread_pool_ = NULL;
-    }
-}
+TaskArbiter::~TaskArbiter() {}
 
 int TaskArbiter::Initialize(unsigned int poolSize) {
     int status = ret::A_OK;
-    Lock();
-    if(thread_pool_) {
-        thread_pool_->Initialize();
-        thread_pool_->ExtendPool(poolSize);
-        initialized_ = true;
-    }
-    else {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
-    Unlock();
+    initialized_ = true;
     return status; 
 }
 
 int TaskArbiter::Shutdown() {
     int status = ret::A_OK;
-
-    std::cout<<" 1 " << std::endl;
-    Lock();
-    if(thread_pool_)
-        status = thread_pool_->Shutdown();
-    Unlock();
 
     task_pool_.ClearPool();
     std::cout<<" 1 " << std::endl;
@@ -54,10 +33,6 @@ int TaskArbiter::Shutdown() {
         delete instance_;
         instance_ = NULL;
     }
-
-    std::cout<<" 1 " << std::endl;
-
-    std::cout<<" 1 " << std::endl;
     return status;
 }
 
@@ -67,6 +42,7 @@ TaskArbiter* TaskArbiter::GetInstance() {
     return instance_;
 }
 
+/*
 int TaskArbiter::CreateAndSpinOffTask(const TaskContext& tc) {
     int status = ret::A_OK; 
     Task* t = task_manager_->GetTentTask(tc);
@@ -86,21 +62,18 @@ int TaskArbiter::SpinOffTask(Task* pTask) {
         status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
     return status;
 }
+*/
 
-void TaskArbiter::PushBackTask(Task* task) {
-    task_pool_.PushBack(task);
+void TaskArbiter::PushBackTask(const TaskContext& tc) {
+    task_pool_.PushBack(tc);
 }
 
-Task* TaskArbiter::RequestTask() {
-    return task_pool_.RequestNextAvailableTask();
+bool TaskArbiter::RequestTaskContext(TaskContext& out) {
+    return task_pool_.RequestNextAvailableTaskContext(out);
 }
 
-Task* TaskArbiter::RequestTask(Task::TaskType type) {
-    return task_pool_.RequestTask(type);
-}
-
-void TaskArbiter::ReclaimTask(Task* task) {
-    task_pool_.ReclaimTask(task);
+bool TaskArbiter::RequestTaskContext(Task::TaskType type, TaskContext& out) {
+    return task_pool_.RequestTaskContext(type, out);
 }
 
 unsigned int TaskArbiter::ActiveTaskCount() {
