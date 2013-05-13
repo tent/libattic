@@ -135,7 +135,8 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
             Post gp;
             jsn::DeserializeObject(&gp, (*itr));
             // There should never be more than one post in the same group
-            if(gp.type() == cnst::g_attic_chunk_type) {
+            std::cout<<" CHUNK POST TYPE : " << gp.type() << std::endl;
+            if(gp.type().find(cnst::g_attic_chunk_type) != std::string::npos) {
                 ChunkPost p;
                 jsn::DeserializeObject(&p, (*itr));
                 std::cout<<"TYPE : " << p.type() << std::endl;
@@ -201,69 +202,68 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
     unsigned int post_count = chunk_posts.size();
     std::cout<<" # CHUNK POSTS : " << post_count << std::endl;
 
-    std::string temp_path;
-    GetTemporaryFilepath(fi, temp_path);
+    if(post_count > 0) {
+        std::string temp_path;
+        GetTemporaryFilepath(fi, temp_path);
 
-    std::ofstream ofs;
-    ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-    
-    if(ofs.is_open()) {
-        std::string post_attachment = GetConfigValue("post_attachment");
-        for(unsigned int i=0; i < post_count; i++) {
-            if(chunk_posts.find(i) != chunk_posts.end()) {
-                ChunkPost cp = chunk_posts.find(i)->second;
-                unsigned int chunk_count = cp.chunk_info_list_size();
-                std::cout<<" CHUNK COUNT : " << chunk_count << std::endl;
-                for(unsigned int j=0; j<chunk_count; j++) {
-                    ChunkPost::ChunkInfoList::iterator itr = cp.chunk_info_list()->find(j);
-                    if(itr != cp.chunk_info_list()->end()) {
-                        std::cout<<" FOUND CHUNK # : " << i << std::endl;
-                        // Get attachment
-                        if(cp.has_attachment(itr->second.chunk_name())) {
-                            Attachment attch = cp.get_attachment(itr->second.chunk_name());
-                            std::string attachment_path;
-                            utils::FindAndReplace(post_attachment,
-                                                  "{digest}",
-                                                  attch.digest,
-                                                  attachment_path);
-                            std::cout<<" attachment path : " << attachment_path << std::endl;
-                            std::string buffer;
-                            status = RetrieveAttachment(attachment_path, buffer);
-                            if(status == ret::A_OK) {
-                                std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
-                                //ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
-                                ChunkInfo* ci = cp.GetChunkInfo(itr->second.chunk_name());
-                                std::string chunk;
-                                status = TransformChunk(ci, file_cred.key(), buffer, chunk);
+        std::ofstream ofs;
+        ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+        if(ofs.is_open()) {
+            std::string post_attachment = GetConfigValue("post_attachment");
+            for(unsigned int i=0; i < post_count; i++) {
+                if(chunk_posts.find(i) != chunk_posts.end()) {
+                    ChunkPost cp = chunk_posts.find(i)->second;
+                    unsigned int chunk_count = cp.chunk_info_list_size();
+                    std::cout<<" CHUNK COUNT : " << chunk_count << std::endl;
+                    for(unsigned int j=0; j<chunk_count; j++) {
+                        ChunkPost::ChunkInfoList::iterator itr = cp.chunk_info_list()->find(j);
+                        if(itr != cp.chunk_info_list()->end()) {
+                            std::cout<<" FOUND CHUNK # : " << i << std::endl;
+                            // Get attachment
+                            if(cp.has_attachment(itr->second.chunk_name())) {
+                                Attachment attch = cp.get_attachment(itr->second.chunk_name());
+                                std::string attachment_path;
+                                utils::FindAndReplace(post_attachment,
+                                                      "{digest}",
+                                                      attch.digest,
+                                                      attachment_path);
+                                std::cout<<" attachment path : " << attachment_path << std::endl;
+                                std::string buffer;
+                                status = RetrieveAttachment(attachment_path, buffer);
                                 if(status == ret::A_OK) {
-                                    // Append to file 
-                                    ofs.write(chunk.c_str(), chunk.size());
-                                }
-                                else {
-                                    std::cout<<" FAILED TRANSFORM " << std::endl;
-                                    std::cout<<" STATUS : "<< status << std::endl;
-                                    break;
+                                    std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
+                                    //ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                                    ChunkInfo* ci = cp.GetChunkInfo(itr->second.chunk_name());
+                                    std::string chunk;
+                                    status = TransformChunk(ci, file_cred.key(), buffer, chunk);
+                                    if(status == ret::A_OK) {
+                                        // Append to file 
+                                        ofs.write(chunk.c_str(), chunk.size());
+                                    }
+                                    else {
+                                        std::cout<<" FAILED TRANSFORM " << std::endl;
+                                        std::cout<<" STATUS : "<< status << std::endl;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                else {
+                    std::cout<<" INVALID CHUNK POST " << std::endl;
+                }
             }
-            else {
-                std::cout<<" INVALID CHUNK POST " << std::endl;
-            }
+            ofs.close();
         }
-        ofs.close();
+        if(status == ret::A_OK) {
+            std::string path;
+            file_manager_->GetCanonicalFilepath(fi->filepath(), path);
+            fs::MoveFile(temp_path, path);
+        }
+        // delete temp file 
+        fs::DeleteFile(temp_path);
     }
-
-    if(status == ret::A_OK) {
-        std::string path;
-        file_manager_->GetCanonicalFilepath(fi->filepath(), path);
-        fs::MoveFile(temp_path, path);
-    }
-
-    // delete temp file 
-    fs::DeleteFile(temp_path);
 
     return status;
 }
