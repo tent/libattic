@@ -42,28 +42,6 @@ TaskArbiter* TaskArbiter::GetInstance() {
     return instance_;
 }
 
-/*
-int TaskArbiter::CreateAndSpinOffTask(const TaskContext& tc) {
-    int status = ret::A_OK; 
-    Task* t = task_manager_->GetTentTask(tc);
-    status = SpinOffTask(t);
-    return status;
-}       
-
-
-// Spin off detached thread, (not explicitly detached,
-// but treated as such, in all actuallity on most platforms
-// its probably joinable)
-int TaskArbiter::SpinOffTask(Task* pTask) {
-    int status = ret::A_OK;
-    if(initialized_)
-        task_pool_.PushBack(pTask);
-    else
-        status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
-    return status;
-}
-*/
-
 void TaskArbiter::PushBackTask(const TaskContext& tc) {
     task_pool_.PushBack(tc);
 }

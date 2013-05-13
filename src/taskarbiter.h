@@ -30,9 +30,6 @@ public:
 
     unsigned int ActiveTaskCount();
 
-//    int CreateAndSpinOffTask(const TaskContext& tc);
-//    int SpinOffTask(Task* pTask);
-
     TaskManager* task_manager() { return task_manager_; }
     void set_task_manager(TaskManager* task_manager) { task_manager_ = task_manager; }
 private:
