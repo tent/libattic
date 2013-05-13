@@ -36,6 +36,7 @@ TaskDispatch::~TaskDispatch() {
 void TaskDispatch::Initialize() {}
 void TaskDispatch::Shutdown() {}
 
+/*
 void TaskDispatch::Process(TaskManager* tm) {
     // Grab all the current contexts
     if(tm) {
@@ -66,12 +67,7 @@ void TaskDispatch::Dispatch() {
             }
             //task_map_.erase(itr);
 
-            /*
-            t++;
-            if((t+task_count) > 0) // TODO :: for testing purposes, up this limit somewhere
-                break;
-                */
-        }
+       }
         task_map_.clear();
     }
     else {
@@ -80,11 +76,13 @@ void TaskDispatch::Dispatch() {
     }
 }
 
+
 int TaskDispatch::CreateAndSpinOffTask(const TaskContext& tc) {
     std::cout<<" creating and spinning of task, type : " << tc.type() << std::endl;
     int status = TaskArbiter::GetInstance()->CreateAndSpinOffTask(tc);
     return status;
 }
+*/
 
 } //namespace
 

@@ -15,7 +15,7 @@
 namespace attic { 
 
 class TaskDispatch {
-    int CreateAndSpinOffTask(const TaskContext& tc);
+//    int CreateAndSpinOffTask(const TaskContext& tc);
 public:
     typedef std::map<int, std::deque<TaskContext> > TaskMap;
 
@@ -32,8 +32,8 @@ public:
     void Initialize();
     void Shutdown();
 
-    void Process(TaskManager* tm);
-    void Dispatch();
+//    void Process(TaskManager* tm);
+//    void Dispatch();
     
 private:
     TaskMap task_map_;
