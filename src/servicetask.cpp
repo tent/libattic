@@ -3,6 +3,7 @@
 #include <iostream>
 #include "sleep.h"
 #include "taskmanager.h"
+#include "taskarbiter.h"
 
 namespace attic { 
 
@@ -32,10 +33,14 @@ void ServiceTask::OnPaused() {}
 void ServiceTask::OnFinished() {
     std::cout<<" SERVICE TASK FINISHED ... " << std::endl;
     event::EventSystem::instance()->Shutdown();
+
+
+
 }
 
 void ServiceTask::RunTask() {
     event::EventSystem::instance()->ProcessEvents();
+    TaskArbiter::GetInstance()->RetrieveTasks();
 }
 
 } //namespace
