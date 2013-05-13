@@ -2,7 +2,7 @@
 #define SERVICETASK_H_
 #pragma once
 
-#include "task.h"
+#include "tenttask.h"
 #include "taskdispatch.h"
 
 namespace attic { 
@@ -11,9 +11,13 @@ namespace attic {
 // - Time sensative delete queues etc (future)
 //
 class TaskManager;
-class ServiceTask : public Task {
+class ServiceTask : public TentTask {
 public:
-    ServiceTask(TaskManager* tm, const TaskContext& context);
+    ServiceTask(FileManager* pFm, 
+                CredentialsManager* pCm,
+                const AccessToken& at,
+                const Entity& entity,
+                const TaskContext& context);
  
     ~ServiceTask();
 
@@ -23,8 +27,7 @@ public:
 
     void RunTask();
 private:
-    TaskManager* task_manager_;
-    TaskDispatch* task_dispatch_;
+    //TaskDispatch* task_dispatch_;
 };
 
 }//namespace
