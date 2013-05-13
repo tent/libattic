@@ -9,8 +9,8 @@
 
 namespace attic { 
 
-ServiceManager::ServiceManager() {
-    task_manager_ = NULL;
+ServiceManager::ServiceManager(TaskManager* tm) {
+    task_manager_ = tm;
 }
 
 ServiceManager::~ServiceManager() {
@@ -31,11 +31,10 @@ int ServiceManager::Shutdown() {
 int ServiceManager::StartupServiceThread() {
     int status = ret::A_OK;
     std::cout<<" STARTING UP SERVICE THREAD " << std::endl;
-    TaskContext tc;
     // Create a Service Task
-    Task* task = new ServiceTask(task_manager_, tc);
-    // Spin it off, Arbiter takes ownership of task, don't worry about delete
-    status = TaskArbiter::GetInstance()->SpinOffTask(task);
+    TaskContext tc = task_manager_->CreateServiceContext();
+
+    TaskArbiter::GetInstance()->PushBackTask(tc);
 
     return status;
 }
