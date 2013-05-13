@@ -16,7 +16,7 @@ TaskArbiter::TaskArbiter() {
 
 TaskArbiter::~TaskArbiter() {}
 
-int TaskArbiter::Initialize(unsigned int poolSize) {
+int TaskArbiter::Initialize() {
     int status = ret::A_OK;
     initialized_ = true;
     return status; 
@@ -26,7 +26,6 @@ int TaskArbiter::Shutdown() {
     int status = ret::A_OK;
 
     task_pool_.ClearPool();
-    std::cout<<" 1 " << std::endl;
     // DO THIS LAST ... if you have any mutex derived member varibales it will delete them...
     // and may cause DEADLOCK ...DUH
     if(instance_) {
@@ -56,6 +55,17 @@ bool TaskArbiter::RequestTaskContext(Task::TaskType type, TaskContext& out) {
 
 unsigned int TaskArbiter::ActiveTaskCount() {
     return task_pool_.ActiveTaskCount();
+}
+
+void TaskArbiter::RetrieveTasks() {
+    if(task_manager_) {
+        TaskContext::ContextQueue cq;
+        task_manager_->RetrieveContextQueue(cq);
+        TaskContext::ContextQueue::iterator itr = cq.begin();
+        for(;itr!=cq.end();itr++) {
+            task_pool_.PushBack(*itr);
+        }
+    }
 }
 
 }//namespace

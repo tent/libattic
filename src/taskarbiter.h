@@ -19,7 +19,7 @@ class TaskArbiter : public MutexClass{
 public:
     ~TaskArbiter();
 
-    int Initialize(unsigned int poolSize);
+    int Initialize();
     int Shutdown();
 
     static TaskArbiter* GetInstance();
@@ -29,6 +29,8 @@ public:
     bool RequestTaskContext(Task::TaskType type, TaskContext& out);
 
     unsigned int ActiveTaskCount();
+
+    void RetrieveTasks();
 
     TaskManager* task_manager() { return task_manager_; }
     void set_task_manager(TaskManager* task_manager) { task_manager_ = task_manager; }
