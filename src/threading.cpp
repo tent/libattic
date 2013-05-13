@@ -55,36 +55,97 @@ int ThreadPool::Shutdown() {
     return ret::A_OK;
 }
 
-int ThreadPool::ExtendPool(unsigned int stride) {
+void ThreadPool::SpinOffWorker(ThreadWorker* worker) {
+    if(worker) {
+        workers_.push_back(worker);
+        boost::thread* thread = new boost::thread(NewThreadFunc, worker);
+        threads_.push_back(thread);
+    }
+}
+
+
+ThreadManager::ThreadManager(){}
+ThreadManager::~ThreadManager() {}
+
+int ThreadManager::Initialize(FileManager* fm,
+                              CredentialsManager* cm,
+                              const AccessToken& at,
+                              const Entity ent,
+                              unsigned int poolSize) {
+    int status = ret::A_OK;
+    pool_mtx_.Lock();
+    if(thread_pool_) {
+        thread_pool_->Initialize();
+        ExtendPool(poolSize);
+    }
+    else {
+        status = ret::A_FAIL_INVALID_PTR;
+    }
+    pool_mtx_.Unlock();
+
+    if(status = ret::A_OK) {
+        if(fm) 
+            file_manager_ = fm;
+        else
+            status = ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
+        if(cm)
+            credentials_manager_ = cm;
+        else
+            status = ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
+        access_token_ = at;
+        entity_ = ent;
+    }
+    return status; 
+}
+
+int ThreadManager::Shutdown() {
+    int status = ret::A_OK;
+    pool_mtx_.Lock();
+    if(thread_pool_)
+        status = thread_pool_->Shutdown();
+    pool_mtx_.Unlock();
+
+    file_manager_ = NULL;
+    credentials_manager_ = NULL;
+    return status;
+}
+
+int ThreadManager::ExtendPool(unsigned int stride) {
     std::cout<<" extending thread pool " << std::endl;
     int status = ret::A_OK;
 
     // Service worker
-    ThreadWorker* servicew = new ThreadWorker(true); // Strict
+    ThreadWorker* servicew = new ThreadWorker(file_manager_, 
+                                              credentials_manager_, 
+                                              access_token_, 
+                                              entity_,
+                                              true); // Strict
     servicew->SetTaskPreference(Task::SERVICE);
-    workers_.push_back(servicew);
-    boost::thread* service_thread = new boost::thread(NewThreadFunc, servicew);
-    threads_.push_back(service_thread);
+    thread_pool_->SpinOffWorker(servicew);
 
 
     // Poll worker
-    ThreadWorker* pollw = new ThreadWorker(true); // Strict
+    ThreadWorker* pollw = new ThreadWorker(file_manager_, 
+                                           credentials_manager_, 
+                                           access_token_, 
+                                           entity_,
+                                           true); // Strict
     pollw->SetTaskPreference(Task::POLL);
     pollw->SetTaskPreference(Task::SERVICE, false);
-    workers_.push_back(pollw);
-    boost::thread* poll_thread = new boost::thread(NewThreadFunc, pollw);
-    threads_.push_back(poll_thread);
-
-    // Rename delete
-    ThreadWorker* rdw = new ThreadWorker();
+    thread_pool_->SpinOffWorker(pollw);
+        // Rename delete
+    ThreadWorker* rdw = new ThreadWorker(file_manager_, 
+                                         credentials_manager_, 
+                                         access_token_, 
+                                         entity_, 
+                                         true); // Strict
     rdw->SetTaskPreference(Task::RENAME);
     rdw->SetTaskPreference(Task::DELETE);
     rdw->SetTaskPreference(Task::POLL, false);
     rdw->SetTaskPreference(Task::SERVICE, false);
-    workers_.push_back(rdw);
-    boost::thread* rdw_thread = new boost::thread(NewThreadFunc, rdw);
-    threads_.push_back(rdw_thread);
+    thread_pool_->SpinOffWorker(rdw);
 
+    /*
     ThreadWorker* second_rdw = new ThreadWorker();
     second_rdw->SetTaskPreference(Task::RENAME);
     second_rdw->SetTaskPreference(Task::DELETE);
@@ -93,17 +154,18 @@ int ThreadPool::ExtendPool(unsigned int stride) {
     workers_.push_back(second_rdw);
     boost::thread* second_thread = new boost::thread(NewThreadFunc, second_rdw);
     threads_.push_back(second_thread);
+    */
 
-    // Generic workers
+    // Generic (Push/Pull) workers
     for(unsigned int i=0; i < stride; i++){
-        ThreadWorker* pWorker = new ThreadWorker();
+        ThreadWorker* pWorker = new ThreadWorker(file_manager_, credentials_manager_, access_token_, entity_);
         pWorker->SetTaskPreference(Task::POLL, false);
         pWorker->SetTaskPreference(Task::SERVICE, false);
-        workers_.push_back(pWorker);
+        pWorker->SetTaskPreference(Task::RENAME, false);
+        pWorker->SetTaskPreference(Task::DELETE, false);
 
-        boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
-        threads_.push_back(pt);
-        if(workers_.size() >= stride)
+        thread_pool_->SpinOffWorker(pWorker);
+        if(thread_pool_->WorkerCount() >= stride)
             break;
     }
 
@@ -120,20 +182,5 @@ int ThreadPool::ExtendPool(unsigned int stride) {
     return status;
 }
 
-int ThreadPool::AbridgePool(unsigned int stride) {
-    int status = ret::A_OK;
-    std::cout<<" not implemented " <<std::endl;
-    /*
-    for(unsigned int i=0; i < stride; i++)
-    {
-        while(m_ThreadData[i]->State.TryLock()) { sleep(0); }
-        m_ThreadData[i]->State.SetStateExit();
-        m_ThreadData[i]->State.Unlock();
-        thread_count_--;
-    }
-    */
-
-    return status;
-}
 
 }//namespace
