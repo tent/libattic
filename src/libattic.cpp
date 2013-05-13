@@ -32,11 +32,15 @@
 #include "logutils.h"
 #include "filesystem.h"
 #include "servicemanager.h"
+#include "threading.h"
 
 
-static attic::ServiceManager       g_service_manager;
-static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
+
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
+
+static attic::ServiceManager*      g_service_manager = NULL;
+static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
+static attic::ThreadManager*       g_thread_manager = NULL;
 //static TaskArbiter g_Arb;
 
 // var
@@ -96,10 +100,22 @@ int InitLibAttic(unsigned int threadCount) {
                                                      g_pClient->config_directory());
 
         // Configure the service manager before initializing
-        g_service_manager.set_task_manager(g_pTaskManager);
-        g_service_manager.Initialize();
+        g_service_manager = new attic::ServiceManager(g_pTaskManager);
+        g_service_manager->Initialize();
         
         attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
+
+        g_thread_manager = new attic::ThreadManager();
+        status = g_thread_manager->Initialize(g_pClient->file_manager(),
+                                              g_pClient->credentials_manager(),
+                                              g_pClient->access_token(),
+                                              g_pClient->entity(), 
+                                              threadCount + 1);
+        if(status != attic::ret::A_OK) {
+            g_thread_manager->Shutdown();
+            delete g_thread_manager;
+            g_thread_manager = NULL;
+        }
     }
 
     status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
@@ -116,13 +132,24 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     int status = attic::ret::A_OK;
 
     // Shutdown threading first, ALWAYS
+    if(g_thread_manager) {
+        g_thread_manager->Shutdown();
+        delete g_thread_manager;
+        g_thread_manager = NULL;
+    }
+     
     std::cout<<" shutting down task arbiter " << std::endl;
     status = attic::liba::ShutdownTaskArbiter();
     std::cout<<" shutting down task manager " << std::endl;
     status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
     //attic::event::ShutdownEventSystem();
     g_pTaskManager = NULL;
-    g_service_manager.Shutdown();
+    if(g_service_manager) {
+        g_service_manager->Shutdown();
+        delete g_service_manager;
+        g_service_manager = NULL;
+    }
+
     if(g_pClient) {
         std::cout<<" shutting down client ... " << std::endl;
         g_pClient->Shutdown();
@@ -512,8 +539,9 @@ int GetFileList(void(*callback)(int, char**, int, int)) {
     if(status == attic::ret::A_OK) {
         status = IsLibInitialized();
 
-        if(status == attic::ret::A_OK)
-            g_pTaskManager->QueryManifest(callback);
+        // TODO :: reimplement this
+        //if(status == attic::ret::A_OK)
+            //g_pTaskManager->QueryManifest(callback);
     }
 
     return status;
@@ -583,13 +611,15 @@ int Pause(void) {
 int Resume(void) {
     int status = attic::ret::A_OK;
     attic::event::RaiseEvent(attic::event::Event::RESUME, "", NULL);
-    g_pTaskManager->ScanAtticFolder(NULL);
+    // TODO :: re-implement this
+    //g_pTaskManager->ScanAtticFolder(NULL);
     return status;
 }
 
 int ScanAtticFolder() { 
     int status = attic::ret::A_OK;
-    g_pTaskManager->ScanAtticFolder(NULL);
+    // TODO :: re-implement
+    //g_pTaskManager->ScanAtticFolder(NULL); k
     return status;
 }
 
