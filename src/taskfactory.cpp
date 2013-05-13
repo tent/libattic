@@ -145,9 +145,19 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                              context);
             break;
         }
+        case Task::SERVICE:
+        {
+            t = new ServiceTask(file_manager_,
+                                credentials_manager_,
+                                access_token_,
+                                entity_,
+                                context);
+            break;
+        }
         default:
         {
             std::cout<<" CREATING UNKNOWN TASK " << std::endl;
+            std::cout<< " TASK TYPE : " << context.type() << std::endl;
         }
     }
 
