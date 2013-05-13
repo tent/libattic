@@ -34,8 +34,6 @@
 #include "servicemanager.h"
 #include "threading.h"
 
-
-
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
 
 static attic::ServiceManager*      g_service_manager = NULL;
@@ -82,14 +80,13 @@ int InitLibAttic(unsigned int threadCount) {
         attic::fs::CreateDirectory(tempdir);
     
     g_pClient = new attic::Client(workingdir,
-                           configdir,
-                           tempdir,
-                           entityurl);
+                                  configdir,
+                                  tempdir,
+                                  entityurl);
     status = g_pClient->Initialize();
 
     if(status == attic::ret::A_OK)  {
         // Essential
-        status = attic::liba::InitializeTaskArbiter(threadCount + 1);
         status = attic::liba::InitializeTaskManager(&g_pTaskManager,
                                                      g_pClient->file_manager(),
                                                      g_pClient->credentials_manager(),
@@ -103,15 +100,17 @@ int InitLibAttic(unsigned int threadCount) {
         g_service_manager = new attic::ServiceManager(g_pTaskManager);
         g_service_manager->Initialize();
         
+        attic::TaskArbiter::GetInstance()->Initialize();
         attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
 
-        g_thread_manager = new attic::ThreadManager();
-        status = g_thread_manager->Initialize(g_pClient->file_manager(),
-                                              g_pClient->credentials_manager(),
-                                              g_pClient->access_token(),
-                                              g_pClient->entity(), 
-                                              threadCount + 1);
+        g_thread_manager = new attic::ThreadManager(g_pClient->file_manager(),
+                                                    g_pClient->credentials_manager(),
+                                                    g_pClient->access_token(),
+                                                    g_pClient->entity());
+
+        status = g_thread_manager->Initialize(threadCount + 1);
         if(status != attic::ret::A_OK) {
+            std::cout<<" FAILED TO START THREAD MANAGER " << std::endl;
             g_thread_manager->Shutdown();
             delete g_thread_manager;
             g_thread_manager = NULL;
@@ -139,7 +138,7 @@ int ShutdownLibAttic(void (*callback)(int, void*)) {
     }
      
     std::cout<<" shutting down task arbiter " << std::endl;
-    status = attic::liba::ShutdownTaskArbiter();
+    status = attic::TaskArbiter::GetInstance()->Shutdown();
     std::cout<<" shutting down task manager " << std::endl;
     status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
     //attic::event::ShutdownEventSystem();
