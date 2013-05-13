@@ -3,14 +3,12 @@
 #pragma once
 
 #include "tenttask.h"
-#include "taskdispatch.h"
 
 namespace attic { 
 // This task encapsulates general purpose systems that need dt updating
 // Event system
 // - Time sensative delete queues etc (future)
 //
-class TaskManager;
 class ServiceTask : public TentTask {
 public:
     ServiceTask(FileManager* pFm, 
@@ -27,7 +25,6 @@ public:
 
     void RunTask();
 private:
-    //TaskDispatch* task_dispatch_;
 };
 
 }//namespace
