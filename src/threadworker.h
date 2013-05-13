@@ -6,6 +6,10 @@
 #include <utility>
 #include "mutexclass.h"
 #include "task.h"
+#include "filemanager.h"
+#include "credentialsmanager.h"
+#include "accesstoken.h"
+#include "entity.h"
 
 namespace attic {
 
@@ -23,7 +27,12 @@ class ThreadWorker : public MutexClass {
 
     Task* RetrieveTask();
 public:
-    ThreadWorker(bool strict = false);
+    ThreadWorker(FileManager* fm,
+                 CredentialsManager* cm,
+                 const AccessToken& at,
+                 const Entity ent,
+                 bool strict = false);
+
     ~ThreadWorker();
     void SetTaskPreference(Task::TaskType type, bool active = true);
 
@@ -33,31 +42,18 @@ public:
 
     void Run();
 private:
+    TaskFactory task_factory_;
     typedef std::map<Task::TaskType, bool> PreferenceMap;
     PreferenceMap task_preference_;
     ThreadState state_;
     bool strict_; // If the worker is strict, it will only take its prefered tasks
                   // otherwise it will check its preference first, before just taking
                   // anything it can get
-};
 
-
-// TODO :: tweak this later to churn out the correct ratio of workers
-class ThreadWorkerFactory {
-public:
-    ThreadWorkerFactory();
-    ~ThreadWorkerFactory();
-    ThreadWorker* GetThreadWorker();
-    void set_thread_count(unsigned int count) { thread_count_ = count; }
-private:
-    unsigned int thread_count_;
-    typedef std::pair<unsigned int, bool> WorkerType;
-    WorkerType push_pull;
-    WorkerType pull_push;
-    WorkerType poll;
-    WorkerType rename_delete;
-    WorkerType sync;
-    WorkerType generic;
+    FileManager*            file_manager_;
+    CredentialsManager*     credentials_manager_;
+    AccessToken             access_token_;
+    Entity                  entity_;
 };
 
 }//namespace

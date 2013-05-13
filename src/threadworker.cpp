@@ -8,10 +8,20 @@
 #include "taskarbiter.h"
 
 namespace attic {
-
-ThreadWorker::ThreadWorker(bool strict) {
+ThreadWorker::ThreadWorker(FileManager* fm,
+                           CredentialsManager* cm,
+                           const AccessToken& at,
+                           const Entity ent,
+                           bool strict) {
     state_ = ThreadWorker::IDLE;
     strict_ = strict;
+
+    file_manager_ = fm;
+    credentials_manager_ = cm;
+    access_token_ = at;
+    entity_ = ent;
+
+    task_factory_.Initialize(file_manager_, credentials_manager_, access_token_, entity_);
 }
 
 ThreadWorker::~ThreadWorker() {}
@@ -47,7 +57,7 @@ void ThreadWorker::Run() {
             if(task) {
                 std::cout<<" TASK STILL EXISTS?!?!?!?! " << std::endl;
                 task->OnFinished();
-                TaskArbiter::GetInstance()->ReclaimTask(task);
+                task_factory_.ReclaimTask(task);
                 task = NULL;
             }
         }
@@ -60,7 +70,7 @@ void ThreadWorker::Run() {
 //            delete task;
  //           task = NULL;
             task->OnFinished();
-            TaskArbiter::GetInstance()->ReclaimTask(task);
+            task_factory_.ReclaimTask(task);
             task = NULL;
         }
     }
@@ -95,7 +105,7 @@ void ThreadWorker::PollTask(Task** task) {
             {
                 std::cout<< " task finished " << std::endl;
                 (*task)->OnFinished();
-                TaskArbiter::GetInstance()->ReclaimTask(*task);
+                task_factory_.ReclaimTask(*task);
                 (*task) = NULL;
                 // cleanup task
                 SetState(ThreadWorker::FINISHED);
@@ -141,40 +151,23 @@ void ThreadWorker::SetTaskPreference(Task::TaskType type, bool active) {
 }
 
 Task* ThreadWorker::RetrieveTask() {
-    Task* t = NULL;
+    bool success = false;
+    TaskContext tc;
     // Retrieve task based on preference first, then just any old task
     PreferenceMap::iterator itr = task_preference_.begin();
     for(;itr!= task_preference_.end(); itr++) {
         if(itr->second)
-            t = TaskArbiter::GetInstance()->RequestTask(itr->first);
+            success = TaskArbiter::GetInstance()->RequestTaskContext(itr->first, tc);
     }
 
-    if(!t && !strict_)
-        t = TaskArbiter::GetInstance()->RequestTask();
+    if(!success && !strict_)
+        success = TaskArbiter::GetInstance()->RequestTaskContext(tc);
+
+    Task* t = NULL;
+    if(success)
+        t = task_factory_.GetTentTask(tc);
+
     return t;
-}
-
-ThreadWorkerFactory::ThreadWorkerFactory() {
-    push_pull.first = 0;
-    push_pull.second = true; // strict 
-    pull_push.first = 0;
-    pull_push.second = true; // strict
-    poll.first = 0;
-    poll.second = true; // strict
-    rename_delete.first = 0;
-    rename_delete.second = false; // not strict
-    sync.first = 0;
-    sync.second = false; // not strict
-    generic.first = 0;
-    generic.second = false; // not strict
-
-    thread_count_ = 0;
-}
-
-ThreadWorkerFactory::~ThreadWorkerFactory() {}
-
-ThreadWorker* ThreadWorkerFactory::GetThreadWorker() {
-
 }
 
 
