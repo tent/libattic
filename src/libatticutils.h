@@ -58,18 +58,6 @@ namespace attic { namespace liba {
         return status;
     }
 
-    int InitializeTaskArbiter(const unsigned int threadCount) {
-        int status = ret::A_OK;
-        status = TaskArbiter::GetInstance()->Initialize(threadCount);
-        return status;
-    }
-
-    int ShutdownTaskArbiter() {
-        int status = ret::A_OK;
-        status = TaskArbiter::GetInstance()->Shutdown();
-        return status;
-    }
-
     int ShutdownCredentialsManager(CredentialsManager** pCm) {
         int status = ret::A_OK;
         if((*pCm))
