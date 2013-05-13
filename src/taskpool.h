@@ -5,40 +5,36 @@
 #include <deque>
 #include <map>
 
-#include "mutexclass.h"
 #include "task.h"
+#include "mutexclass.h"
+#include "taskcontext.h"
 
 namespace attic {
 
 class TaskPool : public MutexClass {
-    typedef std::deque<Task*> TaskQueue;
-    typedef std::map<Task::TaskType, TaskQueue> TaskMap;
-
-    TaskQueue::iterator FindTask(Task* task, Task::TaskType type);
+    typedef std::map<int, TaskContext::ContextQueue> ContextMap;
 public:
     TaskPool();
     ~TaskPool();
 
     void ClearPool();
 
-    void PushBack(Task* task);
-    Task* Remove(Task* task);
+    void PushBack(const TaskContext& tc);
 
-    bool HasTaskOfType(const Task::TaskType type);
-    Task* RequestTask(const Task::TaskType type);
-    Task* RequestNextAvailableTask();
-    void ReclaimTask(Task* task);
+    bool HasTaskContextOfType(const Task::TaskType type);
+    bool RequestTaskContext(const Task::TaskType type, TaskContext& out);
+    bool RequestNextAvailableTaskContext(TaskContext& out);
 
     unsigned int ActiveTaskCount();
         
-    TaskQueue* operator[](const Task::TaskType type) {
-        return &task_map_[type];
+    TaskContext::ContextQueue* operator[](const Task::TaskType type) {
+        return &context_map_[type];
     }
 private:
     unsigned int total_task_count_;
     unsigned int active_task_count_;
     unsigned int reclaimed_task_count_;
-    TaskMap task_map_;
+    ContextMap context_map_;
 };
 
 }//namespace
