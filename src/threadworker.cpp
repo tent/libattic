@@ -11,7 +11,7 @@ namespace attic {
 ThreadWorker::ThreadWorker(FileManager* fm,
                            CredentialsManager* cm,
                            const AccessToken& at,
-                           const Entity ent,
+                           const Entity& ent,
                            bool strict) {
     state_ = ThreadWorker::IDLE;
     strict_ = strict;

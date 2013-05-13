@@ -30,7 +30,7 @@ public:
     ThreadWorker(FileManager* fm,
                  CredentialsManager* cm,
                  const AccessToken& at,
-                 const Entity ent,
+                 const Entity& ent,
                  bool strict = false);
 
     ~ThreadWorker();

@@ -37,17 +37,13 @@ private:
 class ThreadManager {
     int ExtendPool(unsigned int stride);                                                        
 public:
-    ThreadManager();
+    ThreadManager(FileManager* fm,
+                  CredentialsManager* cm,
+                  const AccessToken& at,
+                  const Entity& ent);
     ~ThreadManager();
 
-    int Initialize(FileManager* fm,
-                   CredentialsManager* cm,
-                   const AccessToken& at,
-                   const Entity ent,
-                   unsigned int poolSize);
-
-
-
+    int Initialize(unsigned int pool_size);
     int Shutdown();
 
 private:
