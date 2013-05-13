@@ -19,23 +19,28 @@
 
 namespace attic { 
 
-TaskFactory::TaskFactory() {}
+TaskFactory::TaskFactory() {
+    file_manager_ = NULL;
+    credentials_manager_ = NULL;
+}
+
 TaskFactory::~TaskFactory() {}
 
-Task* TaskFactory::GetTentTask(int type,
-                               FileManager* pFm,             
-                               CredentialsManager* pCm,      
-                               const AccessToken& at,        
-                               const Entity& entity,    
-                               const TaskContext& context) {
-    Task* t = NULL;
-    t = CreateNewTentTask(type,
-                          pFm,       
-                          pCm,
-                          at,
-                          entity,    
-                          context);
+void TaskFactory::Initialize(FileManager* fm,             
+                             CredentialsManager* cm,      
+                             const AccessToken& at,        
+                             const Entity& ent) {
+    file_manager_ = fm;
+    credentials_manager_ = cm;
+    access_token_ = at;
+    entity_ = ent;
+}
 
+void TaskFactory::Shutdown() {}
+
+Task* TaskFactory::GetTentTask(const TaskContext& context) {
+    Task* t = NULL;
+    t = CreateNewTentTask(context);
     return t;
 }
 
@@ -45,32 +50,35 @@ Task* TaskFactory::GetManifestTask(Task::TaskType type,
                                    const TaskContext& context,
                                    void (*callback)(int, char**, int, int)) {
     Task* t = NULL;
-    t = CreateNewManifestTask(type,
-                              pFm,
-                              context,
+    t = CreateNewManifestTask(context,
                               callback);
     return t;
 }
 
-Task* TaskFactory::CreateNewManifestTask(Task::TaskType type,
-                                         FileManager* pFm,
-                                         const TaskContext& context,
+void TaskFactory::ReclaimTask(Task* task) {
+    if(task) {
+        delete task;
+        task = NULL;
+    }
+}
+
+Task* TaskFactory::CreateNewManifestTask(const TaskContext& context,
                                          void (*callback)(int, char**, int, int)) {
     Task* t = NULL;
-    switch(type) {
+    switch(context.type()) {
         case Task::QUERYMANIFEST:
         {
-            t = new QueryFilesTask(pFm, context, callback);
+            t = new QueryFilesTask(file_manager_, context, callback);
             break;
         }
         case Task::SCANDIRECTORY:
         {
-            t = new ScanDirectoryTask(pFm, context, callback);
+            t = new ScanDirectoryTask(file_manager_, context, callback);
             break;
         }
         default:
         {
-            LogUnknownTaskType(type);
+            LogUnknownTaskType(context.type());
             break;
         }
     }
@@ -78,68 +86,62 @@ Task* TaskFactory::CreateNewManifestTask(Task::TaskType type,
     return t;
 }
 
-Task* TaskFactory::CreateNewTentTask(int type,                  
-                                     FileManager* pFm,               
-                                     CredentialsManager* pCm,        
-                                     const AccessToken& at,          
-                                     const Entity& entity,      
-                                     const TaskContext& context) {
-
+Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
     Task* t = NULL;
-    switch(type)
+    switch(context.type())
     {
         case Task::PUSH:
         {
-            t = new PushTask(pFm,
-                             pCm,                    
-                             at,
-                             entity,                          
+            t = new PushTask(file_manager_,
+                             credentials_manager_,                    
+                             access_token_,
+                             entity_,                          
                              context);
             break;
         }
         case Task::PULL:
         {
-            t = new PullTask(pFm,                     
-                             pCm,          
-                             at,
-                             entity,                           
+            t = new PullTask(file_manager_,
+                             credentials_manager_,
+                             access_token_,
+                             entity_,
                              context);
             break;
         }
         case Task::RENAME:
         {
-            t = new RenameTask(pFm,
-                               pCm,
-                               at,
-                               entity,
+            t = new RenameTask(file_manager_,
+                               credentials_manager_,
+                               access_token_,
+                               entity_,
                                context);
             break;
         }
         case Task::DELETE:
         {
-            t = new DeleteTask(pFm,                          
-                               pCm,          
-                               at,
-                               entity,                                
+            t = new DeleteTask(file_manager_,
+                               credentials_manager_,
+                               access_token_,
+                               entity_,
                                context);
             break;
         }
         case Task::SYNC_FILE_TASK:
         {
-            t = new SyncFileTask(pFm,
-                                 pCm,
-                                 at,
-                                 entity,
+            t = new SyncFileTask(file_manager_,
+                                 credentials_manager_,
+                                 access_token_,
+                                 entity_,
                                  context);
 
             break;
         }
         case Task::POLL:
         {
-            t = new PollTask(pFm,                   
-                             pCm,                   
-                             at,                    
-                             entity,                
+            t = new PollTask(file_manager_,
+                             credentials_manager_,
+                             access_token_,
+                             entity_,
                              context);
             break;
         }
@@ -153,7 +155,7 @@ Task* TaskFactory::CreateNewTentTask(int type,
     return t;
 }
 
-void TaskFactory::LogUnknownTaskType(Task::TaskType type) {
+void TaskFactory::LogUnknownTaskType(int type) {
     char buf[256] = {'\0'};
     sprintf(buf, "%d", type);
     std::string a = "Unknown task type : ";
