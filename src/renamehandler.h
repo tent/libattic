@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "filepost.h"
+#include "folderpost.h"
 
 namespace attic {
     
@@ -22,10 +23,15 @@ public:
                             const FileInfo& fi, 
                             FilePost& out);
 
+    void UpdateFolderMetaPost(FolderPost& fp,
+                              const Folder& folder,
+                              FolderPost& out);
+
     int RenameFolderLocalCache(const std::string& old_folderpath,
                                const std::string& new_folderpath);
    
     bool CheckForRename(FilePost& fp);
+    bool CheckForRename(FolderPost& fp);
 private:
     FileManager* file_manager_;
 };

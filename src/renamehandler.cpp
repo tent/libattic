@@ -44,6 +44,31 @@ int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
     return status;
 }
 
+void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
+                                         const Folder& folder,
+                                         FolderPost& out) {
+    out = fp;
+    out.PushBackAlias(fp.folder().folderpath());
+    out.set_folder(folder);
+
+    Parent parent;
+    parent.version = fp.version()->id();
+    out.PushBackParent(parent);
+}
+
+bool RenameHandler::CheckForRename(FolderPost& fp) {
+    std::cout<<" Checking for folder RENAME " << std::endl;
+    Folder folder;
+    if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
+        if(folder.folderpath() != fp.folder().folderpath()) {
+
+        }
+
+    }
+
+    return false;
+}
+
 bool RenameHandler::CheckForRename(FilePost& fp) {
     std::cout<<" CHECKING FOR RENAME " << std::endl;
     FileInfo* fi = file_manager_->GetFileInfoByPostId(fp.id());
