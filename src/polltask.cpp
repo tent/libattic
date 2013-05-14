@@ -128,11 +128,14 @@ void PollTask::RunTask() {
                 }
 
                 std::deque<FilePost> deleted_list;
-                if(census_handler_->Inquiry(cnst::g_deleted_fragment, file_list)) { // Query all
+                if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) { // Query all
                     std::cout<<" Checking for deleted files ... " << std::endl;
+                    std::cout<<" deleted files ... : " << deleted_list.size();
                     std::deque<FilePost>::iterator itr = deleted_list.begin();
-                    for(;itr!=deleted_list.end(); itr++)
+                    for(;itr!=deleted_list.end(); itr++) {
                         std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
+                        DeleteLocalFile(*itr);
+                    }
                 }
             }
             timer_.start();
