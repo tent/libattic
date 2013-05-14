@@ -125,27 +125,32 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
 }
 
 int FileManager::RenameFolder(const std::string& old_folderpath,
-                              const std::string& new_foldername,
-                              std::string& new_folderpath) {
+                              const std::string& new_folderpath) {
     int status = ret::A_OK;
 
-    Folder folder;
-    if(GetFolderEntry(old_folderpath, folder)){
-        std::string relative_folderpath;
-        GetRelativePath(old_folderpath, relative_folderpath);
-        std::string old_foldername;
-        utils::ExtractFileName(old_folderpath, old_foldername);
-        utils::FindAndReplace(relative_folderpath, 
-                              (std::string("/") + old_foldername), 
-                              (std::string("/") + new_foldername), 
-                              new_folderpath);
+    std::cout<<" OLD FOLDERPATH : " << old_folderpath << std::endl;
+    std::cout<<" NEW FOLDERPATH : " << new_folderpath << std::endl;
 
-        std::cout<<" OLD PATH : " << relative_folderpath << std::endl;
-        std::cout<<" NEW PATH : " << new_folderpath << std::endl;
-        if(!new_folderpath.empty()) {
+    std::string alias_old, alias_new;
+    if(!IsPathRelative(old_folderpath))
+        GetAliasedFilepath(old_folderpath, alias_old);
+    else
+        alias_old = old_folderpath;
+
+    if(!IsPathRelative(new_folderpath))
+        GetAliasedFilepath(new_folderpath, alias_new);
+    else
+        alias_new = new_folderpath;
+
+    std::cout<<" ALIAS OLD : " << alias_old << std::endl;
+    std::cout<<" ALIAS NEW : " << alias_new << std::endl;
+
+    Folder folder;
+    if(GetFolderEntry(alias_old, folder)){
+        if(!alias_new.empty()) {
             //Update folder path
             Lock();
-            manifest_.UpdateFolderPath(folder.manifest_id(), new_folderpath);
+            manifest_.UpdateFolderPath(folder.manifest_id(), alias_new);
             Unlock();
             //Update folder contents
             Lock();
@@ -163,34 +168,41 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
     return status;
 }
 
+// Takes in two absolute (canonical) filepaths, and swaps them
 int FileManager::RenameFile(const std::string& old_filepath, 
-                            const std::string& new_filename,
-                            std::string& new_filepath) {
+                            const std::string& new_filepath) {
     int status = ret::A_OK;
     std::cout<<" OLD FILEPATH : " << old_filepath << std::endl;
-    FileInfo* fi = GetFileInfo(old_filepath);
-    if(fi) {
-        std::string relative_filepath;
-        GetRelativePath(old_filepath, relative_filepath);
-        std::string old_filename;
-        utils::ExtractFileName(old_filepath, old_filename);
-        utils::FindAndReplace(relative_filepath, 
-                              (std::string("/") + old_filename), 
-                              (std::string("/") + new_filename), 
-                              new_filepath);
+    std::cout<<" NEW FILEPATH : " << new_filepath << std::endl;
 
-        std::cout<<" RENAMING : " << relative_filepath << std::endl;
-        std::cout<<" NEW PATH : " << new_filepath << std::endl;
-        fi->PushBackAlias(old_filepath);
+    std::string alias_old, alias_new;
+    if(!IsPathRelative(old_filepath))
+        GetAliasedFilepath(old_filepath, alias_old);
+    else
+        alias_old = old_filepath;
+
+    if(!IsPathRelative(new_filepath))
+        GetAliasedFilepath(new_filepath, alias_new);
+    else
+        alias_new = new_filepath;
+
+    std::cout<<" ALIAS OLD : " << alias_old << std::endl;
+    std::cout<<" ALIAS NEW : " << alias_new << std::endl;
+
+    FileInfo* fi = GetFileInfo(alias_old);
+    if(fi && !alias_new.empty()) {
+        fi->PushBackAlias(alias_old);
         std::string alias_data;
         fi->GetSerializedAliasData(alias_data);
 
+        std::string filename;
+        utils::ExtractFileName(alias_new, filename);
         std::cout<<" SERIALIZED ALIAS DATA : " << alias_data << std::endl;
 
         Lock();
-        bool s = manifest_.UpdateFilepath(relative_filepath, new_filepath);
-        if(s) s = manifest_.UpdateFilename(new_filepath, new_filename);
-        if(s) s = manifest_.UpdatePastAlias(new_filepath, alias_data);
+        bool s = manifest_.UpdateFilepath(alias_old, alias_new);
+        if(s) s = manifest_.UpdateFilename(alias_new, filename);
+        if(s) s = manifest_.UpdatePastAlias(alias_new, alias_data);
         Unlock();
         if(!s) {
             std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;
@@ -249,15 +261,30 @@ FileInfo* FileManager::CreateFileInfo() {
     return pFi;
 }
 
-void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
-    std::string relative, canonical;
+bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& out) {
+    size_t pos = filepath.find(working_directory_);
+    if(pos != std::string::npos) {
+        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + filepath.substr(pos+working_directory_.size());
+        pos = out.find("//");
+        if(pos != std::string::npos) {
+            out.erase(pos, 1);
+        }
+    }
+    return false;
+}
 
+bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
+    std::string relative, canonical;
     std::cout<<" RELATIVE IN : " << relativepath << std::endl;
     if(IsPathRelative(relativepath)) {
-        int pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
+        size_t pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
         if(pos != std::string::npos) {
             out = working_directory_ + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
+
+            
+
             std::cout<<" OUT : " << out << std::endl;
+            return true;
         }
         else {
             std::cout << " MALFORMED RELATIVE PATH " << relativepath << std::endl;
@@ -267,6 +294,7 @@ void FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
         std::cout<< " PATH NOT RELATIVE " << std::endl;
     }
 
+    return false;
 }
 
 bool FileManager::IsPathRelative(const std::string& filepath) {
@@ -340,6 +368,9 @@ bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::str
     std::cout<< " RELATIVE OUT : " << out << std::endl;
     return retval;
 } 
+
+
+
 
 FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
     FileInfo* fi = NULL;

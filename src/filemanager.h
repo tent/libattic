@@ -27,6 +27,7 @@ class FileManager : public MutexClass {
     bool IsPathRelative(const std::string& filepath);
 
     bool AttemptToGetRelativePath(const std::string& filepath, std::string& out);
+
 public:
     FileManager();
     ~FileManager();
@@ -41,14 +42,13 @@ public:
     void GetRelativePath(const std::string& filepath, std::string& relative_out);
 
     int RenameFile(const std::string& old_filepath, 
-                   const std::string& new_filename,
-                   std::string& new_filepath);
+                   const std::string& new_filepath);
     int RenameFolder(const std::string& old_folderpath,
-                     const std::string& new_foldername,
-                     std::string& new_folderpath);
+                     const std::string& new_folderpath);
 
     FileInfo* CreateFileInfo();
-    void GetCanonicalFilepath(const std::string& relativepath, std::string& out);
+    bool GetCanonicalFilepath(const std::string& relativepath, std::string& out);
+    bool GetAliasedFilepath(const std::string& filepath, std::string& out);
 
     bool DoesFileExist(const std::string& filepath);
     int GetAllFileInfo(std::deque<FileInfo>& out);

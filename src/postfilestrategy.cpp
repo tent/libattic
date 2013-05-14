@@ -518,6 +518,8 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         std::string put_buffer;
         jsn::SerializeObject(&p, put_buffer);
 
+        std::cout << " UPDATE FILE POST TYPE : " << p.type() << std::endl;
+
         Response put_resp;
         //ConnectionHandler ch;
         status = netlib::HttpPut(posturl,
@@ -526,6 +528,9 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
                                  put_buffer,
                                  &access_token_,
                                  put_resp);
+
+        std::cout<< " code " << put_resp.code << std::endl;
+        std::cout<< " body " << put_resp.body << std::endl;
         if(put_resp.code == 200) {
         }
         else {

@@ -36,12 +36,11 @@ int RenameStrategy::Execute(FileManager* pFileManager,
 int RenameStrategy::RenameFile() {
     int status = ret::A_OK;
     std::string old_filepath = GetConfigValue("original_filepath");
-    std::string new_filename = GetConfigValue("new_filename");
+    std::string new_filepath = GetConfigValue("new_filepath");
     std::string entity = GetConfigValue("entity");
 
     RenameHandler rh(file_manager_);
-    std::string new_filepath;
-    status = rh.RenameFileLocalCache(old_filepath, new_filename, new_filepath);
+    status = rh.RenameFileLocalCache(old_filepath, new_filepath);
     if(status == ret::A_OK) {
         FileInfo* fi = RetrieveFileInfo(new_filepath);
         if(fi) {
@@ -65,7 +64,7 @@ int RenameStrategy::RenameFile() {
 int RenameStrategy::RenameFolder() {
     int status = ret::A_OK;
     std::string old_folderpath = GetConfigValue("original_folderpath"); 
-    std::string new_foldername = GetConfigValue("new_foldername");
+    std::string new_folderpath = GetConfigValue("new_folderpath");
     std::string entity = GetConfigValue("entity");
 
     std::cout<<" Original folderpath : " << old_folderpath << std::endl;
@@ -79,7 +78,7 @@ int RenameStrategy::RenameFolder() {
     std::string relative;
     file_manager_->GetRelativePath(parent, relative);
     utils::CheckUrlAndAppendTrailingSlash(relative);
-    std::string folder_path = relative + new_foldername;
+    std::string folder_path = relative + new_folderpath;
 
     // Get parent, append new name
     std::cout<<" new folderpath : " << folder_path << std::endl;
@@ -211,16 +210,16 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePos
 }
 
 int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, 
-                                       const std::string& new_filename,
+                                       const std::string& new_filepath,
                                        const std::string& new_relative_path) {
     int status = ret::A_OK;
     FilePost fp;
     status = RetrieveFilePost(post_id, fp);
     if(status == ret::A_OK) {
-        std::cout<<" FILENAME : " << new_filename << std::endl;
+        std::cout<<" FILENAME : " << new_filepath << std::endl;
         fp.PushBackAlias(fp.relative_path()); // Push back old path
         fp.set_relative_path(new_relative_path);
-        fp.set_name(new_filename);
+        fp.set_name(new_filepath);
 
         Parent parent;
         parent.version = fp.version()->id();

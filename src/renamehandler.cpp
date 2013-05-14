@@ -17,16 +17,10 @@ RenameHandler::~RenameHandler() {
 }
 
 int RenameHandler::RenameFileLocalCache(const std::string& old_filepath, 
-                                        const std::string& new_name,
-                                        std::string& new_filepath) {
+                                        const std::string& new_filepath) {
     int status = ret::A_OK;
-    FileInfo* fi = file_manager_->GetFileInfo(old_filepath);
-    if(fi) {
-        status = file_manager_->RenameFile(fi->filepath(), 
-                                           new_name, 
-                                           new_filepath);
-        std::cout<<" out filepath : " << new_filepath << std::endl;
-    }
+    status = file_manager_->RenameFile(old_filepath,
+                                       new_filepath);
     return status;
 }
 
@@ -44,10 +38,9 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
 }
 
 int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
-                                          const std::string& new_foldername,
-                                          std::string& new_folderpath) {
+                                          const std::string& new_folderpath) {
     int status = ret::A_OK;
-    status = file_manager_->RenameFolder(old_folderpath, new_foldername, new_folderpath);
+    status = file_manager_->RenameFolder(old_folderpath, new_folderpath);
     return status;
 }
 
@@ -60,8 +53,11 @@ bool RenameHandler::CheckForRename(FilePost& fp) {
             std::cout<< " FILEPATHS DIFFER, RENAME " << std::endl;
             // Update Local cache
             std::string old_filepath = fi->filepath();
-            std::string new_filepath;
-            int status = RenameFileLocalCache(fi->filepath(), fp.name(), new_filepath);
+            std::string new_filepath = fp.relative_path();
+
+            std::cout << "local filepath : " << fi->filepath() << std::endl;
+            std::cout << "post filepath : " << fp.relative_path() << std::endl;
+            int status = RenameFileLocalCache(old_filepath, new_filepath);
             std::cout<<" new filepath : " << new_filepath << std::endl;
             if(status == ret::A_OK) {
                 // Rename physical file
