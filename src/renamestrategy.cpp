@@ -67,47 +67,28 @@ int RenameStrategy::RenameFolder() {
     std::string new_folderpath = GetConfigValue("new_folderpath");
     std::string entity = GetConfigValue("entity");
 
-    std::cout<<" Original folderpath : " << old_folderpath << std::endl;
+    std::cout<<" original folderpath : " << old_folderpath << std::endl;
+    std::cout<<" new folderpath : " << new_folderpath << std::endl;
 
-    std::string old_relative;
-    file_manager_->GetRelativePath(old_folderpath, old_relative);
-    utils::CheckUrlAndAppendTrailingSlash(old_relative);
-
-    std::string parent;
-    fs::GetParentPath(old_folderpath, parent);
-    std::string relative;
-    file_manager_->GetRelativePath(parent, relative);
-    utils::CheckUrlAndAppendTrailingSlash(relative);
-    std::string folder_path = relative + new_folderpath;
-
-    // Get parent, append new name
-    std::cout<<" new folderpath : " << folder_path << std::endl;
-
-    Folder folder;
-    if(file_manager_->GetFolderEntry(old_folderpath, folder)) {
-        status = UpdateFolderMetaPost(folder_path, folder);
-        if(status == ret::A_OK){
-            if(file_manager_->UpdateFolderEntry(folder)) {
-                // Update folder contents
-                file_manager_->UpdateFolderContents(folder);
-                // Retrieve Contents file info, and update
-                std::deque<FileInfo> fi_list;
-                file_manager_->GetAllFileInfoForFolder(folder.manifest_id(), fi_list);
-
-                std::cout<<" NUMBER OF FILES IN FOLDER : " << fi_list.size() << std::endl;
-
-                // Update meta post
-                std::deque<FileInfo>::iterator itr = fi_list.begin();
-                for(;itr != fi_list.end(); itr++) {
-                    status = UpdateFileMetaPost((*itr).post_id(),
-                                                (*itr).filename(),
-                                                (*itr).filepath());
-                }
+    RenameHandler rh(file_manager_);
+    status = rh.RenameFolderLocalCache(old_folderpath, new_folderpath);
+    if(status == ret::A_OK) {
+        Folder folder;
+        if(RetrieveFolder(new_folderpath, folder)) {
+            FolderPost fp;
+            // Retrieve Folder Post
+            status = RetrieveFolderPost(folder.folder_post_id(), fp);
+            if(status == ret::A_OK) {
+                // Update it
+                FolderPost new_fp;
+                rh.UpdateFolderMetaPost(fp, folder, new_fp);
+                status = UpdateFolderMetaPost(new_fp.id(), new_fp);
             }
-            else { 
-                std::cout<<" FAILED TO UPDATE FOLDER ENTRY : " << std::endl;
-                status = ret::A_FAIL_UPDATE_MANIFEST;
-            }
+
+        }
+        else { 
+            std::cout<<" COULD NOT FILD FOLDERPATH : " << new_folderpath << std::endl;
+            status = ret::A_FAIL_INVALID_FOLDERPATH;
         }
     }
 
@@ -140,43 +121,13 @@ int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& f
     return status;
 }
 
-int RenameStrategy::UpdateFolderMetaPost(const std::string& folderpath, Folder& folder) { 
+int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id, const FolderPost& fp) {
     int status = ret::A_OK;
-    FolderPost fp;
-    status = RetrieveFolderPost(folder.folder_post_id(), fp);
-    if(status == ret::A_OK) {
-        std::cout<<" SETTING FOLDERPATH : " << folderpath << std::endl;
-        folder.set_folderpath(folderpath);
-        fp.set_folder(folder);
+    std::string body;
+    FolderPost p = fp;
+    jsn::SerializeObject(&p, body);
 
-        Parent parent;
-        parent.version = fp.version()->id();
-        fp.PushBackParent(parent);
-        
-        std::string body;
-        jsn::SerializeObject(&fp, body);
-
-        std::string posturl;
-        utils::FindAndReplace(post_path_, "{post}", folder.folder_post_id(), posturl);
-        std::cout<<" POST URL : " << posturl << std::endl;
-        Response resp;
-        netlib::HttpPut(posturl,
-                        fp.type(),
-                        NULL,
-                        body,
-                        &access_token_,
-                        resp);
-
-        if(resp.code == 200) {
-
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
-        }
-        std::cout<<" code : " << resp.code << std::endl;
-        std::cout<<" body : " << resp.body << std::endl;
-    }
-
+    status = UpdatePost(post_id, fp.type(), body);
     return status;
 }
 
@@ -186,12 +137,21 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePos
     FilePost p = fp;
     jsn::SerializeObject(&p, body);
 
+    status = UpdatePost(post_id, fp.type(), body);
+    return status;
+}
+
+int RenameStrategy::UpdatePost(const std::string& post_id, 
+                               const std::string& post_type, 
+                               const std::string& body) {
+    int status = ret::A_OK;
+
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
     std::cout<<" POST URL : " << posturl << std::endl;
     Response resp;
     netlib::HttpPut(posturl,
-                    fp.type(),
+                    post_type,
                     NULL,
                     body,
                     &access_token_,
@@ -206,48 +166,6 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePos
     std::cout<<" code : " << resp.code << std::endl;
     std::cout<<" body : " << resp.body << std::endl;
 
-    return status;
-}
-
-int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, 
-                                       const std::string& new_filepath,
-                                       const std::string& new_relative_path) {
-    int status = ret::A_OK;
-    FilePost fp;
-    status = RetrieveFilePost(post_id, fp);
-    if(status == ret::A_OK) {
-        std::cout<<" FILENAME : " << new_filepath << std::endl;
-        fp.PushBackAlias(fp.relative_path()); // Push back old path
-        fp.set_relative_path(new_relative_path);
-        fp.set_name(new_filepath);
-
-        Parent parent;
-        parent.version = fp.version()->id();
-        fp.PushBackParent(parent);
-        
-        std::string body;
-        jsn::SerializeObject(&fp, body);
-
-        std::string posturl;
-        utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-        std::cout<<" POST URL : " << posturl << std::endl;
-        Response resp;
-        netlib::HttpPut(posturl,
-                        fp.type(),
-                        NULL,
-                        body,
-                        &access_token_,
-                        resp);
-
-        if(resp.code == 200) {
-
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
-        }
-        std::cout<<" code : " << resp.code << std::endl;
-        std::cout<<" body : " << resp.body << std::endl;
-    }
     return status;
 }
 
@@ -277,6 +195,10 @@ FileInfo* RenameStrategy::RetrieveFileInfo(const std::string& filepath) {
     if(!fi)
         fi = file_manager_->CreateFileInfo();
     return fi;
+}
+
+bool RenameStrategy::RetrieveFolder(const std::string& folderpath, Folder& out) {
+    return file_manager_->GetFolderEntry(folderpath, out);
 }
 
 
