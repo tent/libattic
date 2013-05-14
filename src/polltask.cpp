@@ -119,24 +119,11 @@ void PollTask::RunTask() {
             timer_.stop();
             if(running_) {
                 std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
-                std::deque<FilePost> file_list;
-                if(census_handler_->Inquiry("", file_list)) { // Query all
-                    std::cout<<" Syncing files ... " << std::endl;
-                    status = SyncFiles(file_list);
-                    if(status != ret::A_OK)
-                        std::cout<<" POLLING ERR : " << status << std::endl;
-                }
-
-                std::deque<FilePost> deleted_list;
-                if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) { // Query all
-                    std::cout<<" Checking for deleted files ... " << std::endl;
-                    std::cout<<" deleted files ... : " << deleted_list.size();
-                    std::deque<FilePost>::iterator itr = deleted_list.begin();
-                    for(;itr!=deleted_list.end(); itr++) {
-                        std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
-                        DeleteLocalFile(*itr);
-                    }
-                }
+                // Check all file posts
+                PollFilePosts();
+                // check deleted file posts
+                PollDeletedFilePosts();
+                
             }
             timer_.start();
         }
@@ -150,6 +137,40 @@ void PollTask::RunTask() {
 
     sleep::sleep_milliseconds(100);
     //sleep::sleep_seconds(2);
+}
+
+void PollTask::PollFilePosts() {
+    std::deque<FilePost> file_list;
+    if(census_handler_->Inquiry("", file_list)) {
+        std::cout<<" Syncing files ... " << std::endl;
+        int status = SyncFiles(file_list);
+        if(status != ret::A_OK)
+            std::cout<<" POLLING ERR : " << status << std::endl;
+    }
+}
+
+void PollTask::PollDeletedFilePosts() {
+    std::deque<FilePost> deleted_list;
+    if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) {
+        std::cout<<" Checking for deleted files ... " << std::endl;
+        std::cout<<" deleted files ... : " << deleted_list.size();
+        std::deque<FilePost>::iterator itr = deleted_list.begin();
+        for(;itr!=deleted_list.end(); itr++) {
+            std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
+            DeleteLocalFile(*itr);
+        }
+    }
+}
+
+void PollTask::PollFolderPosts() {
+    std::deque<FolderPost> folder_list;
+    if(census_handler_->Inquiry("", folder_list)){
+        std::deque<FolderPost>::iterator itr = folder_list.begin();
+        for(;itr != folder_list.end(); itr++) {
+            std::cout<<" folder ... " << (*itr).folder().folderpath() << std::endl;
+
+        }
+    }
 }
 
 int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
