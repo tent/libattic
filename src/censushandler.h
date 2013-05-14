@@ -6,20 +6,32 @@
 #include <deque>
 #include <map>
 
-
 #include "accesstoken.h"
+#include "pagepost.h"
 #include "filepost.h"
+#include "folderpost.h"
 #include "event.h"
 
 namespace attic { 
 
 class CensusHandler {
-    int QueryTimeline(const std::string& fragment, std::deque<FilePost>& out);
+    int QueryTimeline(const std::string& post_type,
+                      const std::string& fragment, 
+                      std::deque<PagePost>& out);
+   
+    void DeserializePages(const std::deque<PagePost>& pages, 
+                          std::deque<FilePost>& out);
+    void DeserializePages(const std::deque<PagePost>& pages, 
+                          std::deque<FolderPost>& out);
 public:
     CensusHandler(const std::string& posts_feed, const AccessToken& at);
     ~CensusHandler();
 
-    bool Inquiry(const std::string& fragment, std::deque<FilePost>& out);
+    bool Inquiry(const std::string& fragment, 
+                 std::deque<FilePost>& out);
+
+    bool Inquiry(const std::string& fragment,
+                 std::deque<FolderPost>& out);
 
 private:
     // fragment map keeps track of the the since time for each query type
