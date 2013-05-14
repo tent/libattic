@@ -417,6 +417,17 @@ FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     return pFi;
 }
 
+
+bool FileManager::GetFolderEntryByPostId(const std::string& post_id, Folder& folder) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        Lock();
+        ret = manifest_.QueryForFolderByPostId(post_id, folder);
+        Unlock();
+    }
+    return ret;
+}
+
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
     // Check if folder exists
     //  - if it does, fill out class
@@ -434,17 +445,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
 
-    bool ret = false;
     Lock();
-    if(manifest_.IsFolderInManifest(relative)) {
-        std::string folderpostid, folder_id; 
-        manifest_.GetFolderPostID(relative, folderpostid);
-        manifest_.GetFolderID(relative, folder_id);
-        folder.set_folder_post_id(folderpostid);
-        folder.set_manifest_id(folder_id);
-        folder.set_folderpath(relative);
-        ret = true;
-    }
+    bool ret = manifest_.QueryForFolder(relative, folder);
     Unlock();
 
     return ret;

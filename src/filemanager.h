@@ -64,6 +64,9 @@ public:
 
     // Folder
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
+    bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
+
+
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
     bool GetFolderManifestId(const std::string& folderpath, std::string& id_out);
     bool CreateFolderEntry(const std::string& folderpath, 
