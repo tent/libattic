@@ -107,7 +107,7 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     std::cout<<" retrieving chunk posts ... " << std::endl;
     std::string posts_feed = GetConfigValue("posts_feed");
     UrlParams params;
-    params.AddValue(std::string("mentions"), entity + "+" + post_id);
+    params.AddValue(std::string("mentions"), entity + " " + post_id);
     params.AddValue(std::string("types"), std::string(cnst::g_attic_chunk_type));
 
     std::string prm;
