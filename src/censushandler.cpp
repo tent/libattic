@@ -12,7 +12,6 @@ namespace attic {
 CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& at) {
     posts_feed_ = posts_feed;
     access_token_ = at;
-    since_time_ = "0";
 }
 
 CensusHandler::~CensusHandler() {}
@@ -27,14 +26,17 @@ bool CensusHandler::Inquiry(const std::string& fragment, std::deque<FilePost>& o
 int CensusHandler::QueryTimeline(const std::string& fragment, std::deque<FilePost>& out) {
     int status = ret::A_OK;
 
+    if(fragment_map_.find(fragment) == fragment_map_.end())
+        fragment_map_[fragment] = "0"; 
+
     std::cout<<" file list size incoming : " << out.size() << std::endl;
     std::string next_param;
     for(;;) {
         UrlParams params;
         if(next_param.empty()) {
-            std::cout<<" since time in param : " << since_time_ << std::endl;
+            std::cout<<" since time in param : " << fragment_map_[fragment] << std::endl;
             params.AddValue("types", std::string(cnst::g_attic_file_type) + "#" + fragment);
-            params.AddValue("since", since_time_);
+            params.AddValue("since", fragment_map_[fragment]);
             params.AddValue("limit", "200");
             params.AddValue("sort_by", "version.received_at");
         }
@@ -65,13 +67,15 @@ int CensusHandler::QueryTimeline(const std::string& fragment, std::deque<FilePos
                 FilePost fp;
                 if(jsn::DeserializeObject(&fp, *itr))
                     out.push_back(fp);
+                else 
+                    std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
             }
             
             if(arr.size()) {
                 try {
                     if(pp.pages().next().empty()) {
-                        since_time_ = out.front().version()->received_at(); // newest one
-                        std::cout<<" setting since time : " << since_time_ <<std::endl;
+                        fragment_map_[fragment] = out.front().version()->received_at(); // newest one
+                        std::cout<<" setting since time : " << fragment_map_[fragment] <<std::endl;
                         break;
                     }
                     else {
@@ -80,8 +84,8 @@ int CensusHandler::QueryTimeline(const std::string& fragment, std::deque<FilePos
                         std::cout<<" assigning ... " << std::endl;
                         next_param.clear();
                         next_param = pp.pages().next();
-                        since_time_ = out.front().version()->received_at(); // update since time
-                        std::cout<<" setting since time : " << since_time_ <<std::endl;
+                        fragment_map_[fragment] = out.front().version()->received_at(); // update since time
+                        std::cout<<" setting since time : " << fragment_map_[fragment] <<std::endl;
                     }
                 }
                 catch(std::exception& e) {
