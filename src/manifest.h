@@ -60,6 +60,8 @@ class Manifest {
 
     void ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out);
     bool PushBackAlias(const std::string& filepath, const std::string& alias);
+
+    void ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out);
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
     typedef std::deque<FileInfo> FileInfoList;
@@ -91,6 +93,9 @@ public:
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
+    bool QueryForFolder(const std::string& folderpath, Folder& out);
+    bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
+
     bool IsFolderInManifest(const std::string& folderpath);
     bool IsFolderInManifestWithID(const std::string& folderid);
     bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);

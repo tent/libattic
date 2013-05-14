@@ -112,7 +112,7 @@ bool Manifest::CreateFolderTable() {
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_foldertable;
     exc += " (folderpath TEXT, folderid TEXT, folderpostid TEXT,";
-    exc += " PRIMARY KEY(folderpath ASC, folderid ASC));";
+    exc += " PRIMARY KEY(folderpath ASC, folderid ASC, folderpostid ASC));";
 
     return PerformQuery(exc);
 }
@@ -226,6 +226,8 @@ bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
 
     return false;
 }
+
+
 
 bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
     char pexc[1024];
@@ -366,6 +368,61 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     out.LoadSerializedAliasData(alias_data);
 }
 
+bool Manifest::QueryForFolder(const std::string& folderpath, Folder& out) {
+    std::string exc;
+    exc += "SELECT * FROM ";
+    exc += g_foldertable;
+    exc += " WHERE folderpath=\"";
+    exc += folderpath;
+    exc += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(exc, res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) {
+            ExtractFolderInfoResults(res, step, out);
+        }
+    }
+
+    if(!step)
+        return false;
+    return true;
+}
+
+bool Manifest::QueryForFolderByPostId(const std::string& post_id, Folder& out) {
+    std::string exc;
+    exc += "SELECT * FROM ";
+    exc += g_foldertable;
+    exc += " WHERE folderpostid=\"";
+    exc += post_id;
+    exc += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(exc, res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) {
+            ExtractFolderInfoResults(res, step, out);
+        }
+    }
+
+    if(!step)
+        return false;
+    return true;
+}
+
+void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out) {
+    out.set_folderpath(res.results_[0+step]);
+    out.set_manifest_id(res.results_[1+step]);
+    out.set_folder_post_id(res.results_[2+step]);
+}
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
 bool Manifest::InsertFileInfo(const FileInfo& fi) {
