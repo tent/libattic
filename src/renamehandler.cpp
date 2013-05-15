@@ -59,13 +59,31 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
 bool RenameHandler::CheckForRename(FolderPost& fp) {
     std::cout<<" Checking for folder RENAME " << std::endl;
     Folder folder;
+    std::cout<<" checking for folder with id : " << fp.id() << std::endl;
     if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
         if(folder.folderpath() != fp.folder().folderpath()) {
+            // Update local cache
+            std::string old_folderpath = folder.folderpath();
+            std::string new_folderpath = fp.folder().folderpath();
 
+            int status = RenameFolderLocalCache(old_folderpath, new_folderpath);
+            if(status = ret::A_OK) {
+                // Rename physical file
+                std::string canonical_old, canonical_new;
+                file_manager_->GetCanonicalFilepath(old_folderpath, canonical_old);
+                file_manager_->GetCanonicalFilepath(new_folderpath, canonical_new);
+                std::cout<<" OLD : " << canonical_old << std::endl;
+                std::cout<<" NEW : " << canonical_new << std::endl;
+                if(!canonical_new.empty()) {
+                    if(fs::CheckFilepathExists(canonical_old)) {
+                        std::cout<<" RENAMING FOLDER " << std::endl;
+                        fs::RenamePath(canonical_old, canonical_new);
+                        return true;
+                    }
+                }
+            }
         }
-
     }
-
     return false;
 }
 
