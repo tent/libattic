@@ -8,6 +8,7 @@
 #include "chunkinfo.h"
 #include "folder.h"
 #include "constants.h"
+#include "logutils.h"
 
 namespace attic {
 
@@ -436,7 +437,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     std::string relative;
     if(!IsPathRelative(folderpath)) {
         // Make Relative
-        GetRelativePath(folderpath, relative);
+        //GetRelativePath(folderpath, relative);
+        GetAliasedFilepath(folderpath, relative);
     }
     else {
         relative = folderpath;
@@ -444,6 +446,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
 
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
+
+    std::cout<<" Searching for folder entry : " << relative << std::endl;
 
     Lock();
     bool ret = manifest_.QueryForFolder(relative, folder);
@@ -491,16 +495,46 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     return ret;
 }
 
-bool FileManager::UpdateFolderEntry(Folder& folder) {
-    std::cout<<" FOLDER PATH : " << folder.folderpath() << std::endl;
-    std::cout<<" FOLDER ID : " << folder.manifest_id() << std::endl;
+bool FileManager::UpdateFolderEntry(FolderPost& fp) {
+    std::cout<<" FOLDER PATH : " << fp.folder().folderpath() << std::endl;
+    std::cout<<" FOLDER POST ID : " << fp.id() << std::endl;
 
     bool ret = false;
     Lock();
-    ret = manifest_.UpdateFolderPath(folder.manifest_id(), folder.folderpath() );
+    if(manifest_.IsFolderInManifest(fp.folder().folderpath())) {
+        std::string id;
+        manifest_.GetFolderPostID(fp.folder().folderpath(), id);
+        if(id.empty()) {
+            // update id
+            ret = manifest_.UpdateFolderPostId(fp.folder().folderpath(), fp.id());
+        }
+        else if(id != fp.id()) {
+            // throw error
+            std::string error = " LOCAL CACHE FOLDER POST ID MISMATCH \n";
+            error += "\tpost id : ";
+            error += fp.id();
+            error += "\n";
+            error += "\t conficted id : ";
+            error += id;
+            error += "\n";
+            error += "folderpath : ";
+            error += fp.folder().folderpath();
+            log::LogString("MASDlf", error);
+        }
+        else {
+            // Already ok
+            ret = true;
+        }
+    }
+    else {
+        // create entry
+        ret = CreateFolderEntry(fp.folder().folderpath(), fp.id());
+    }
     Unlock();
     return ret;
 }
+
+
 
 bool FileManager::UpdateFolderContents(Folder& folder) {
     bool ret = false;
