@@ -25,6 +25,8 @@ class GetFileStrategy : public HttpStrategyInterface {
     int RetrieveAndInsert(const std::string& postid, PostTree& tree);
 
     int RetrieveFilePost(FileInfo* fi, FilePost& out);
+
+
     int RetrieveChunkPosts(const std::string& entity,
                            const std::string& post_id,
                            ChunkPostList& out);
@@ -35,6 +37,10 @@ class GetFileStrategy : public HttpStrategyInterface {
     bool GetTemporaryFilepath(FileInfo* fi, std::string& out);
     void GetMasterKey(std::string& out);
     bool ValidMasterKey();
+
+    void ValidateFolderEntries(FilePost& fp);
+    void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);
+    bool RetrieveFolderPost(const std::string& post_id, FolderPost& out);
 public:
     GetFileStrategy();
     ~GetFileStrategy();

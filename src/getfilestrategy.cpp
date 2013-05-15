@@ -51,6 +51,10 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         // put file posts in order
                         // pull chunks
                         status = ConstructFile(cp_list, file_cred, fi);
+                        if(status == ret::A_OK) {
+                            // Retrieve associated folder entries and create local cache entries for them
+
+                        }
                     }
                     else {
                         std::string error = "Invalid file key on get file";
@@ -446,6 +450,52 @@ bool GetFileStrategy::ValidMasterKey() {
         return false;
     }
     return true;
+}
+
+void GetFileStrategy::ValidateFolderEntries(FilePost& fp) {
+    std::deque<FolderPost> folder_list;
+    RetrieveFolderPosts(fp, folder_list);
+    if(folder_list.size()) {
+        // Validate folder entries exist
+        std::deque<FolderPost>::iterator itr = folder_list.begin();
+        for(;itr!= folder_list.end(); itr++)
+            file_manager_->UpdateFolderEntry((*itr));
+    }
+}
+
+void GetFileStrategy::RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out) {
+    Post::MentionsList::iterator itr = fp.mentions()->begin();
+    for(;itr!=fp.mentions()->end(); itr++) {
+        FolderPost fp;
+        if(RetrieveFolderPost((*itr).post, fp))
+            out.push_back(fp);
+    }
+}
+
+bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& out) {
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+
+    Response resp;
+    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+
+    std::cout<<" POST URL : "<< posturl << std::endl;
+    std::cout<<" CODE : " << resp.code << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
+
+    if(resp.code == 200) {
+        FolderPost fp;
+        if(!jsn::DeserializeObject(&fp, resp.body)) {
+            if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) {
+                return true;
+            }
+        }
+    }
+    else {
+        log::LogHttpResponse("MASDKF111", resp);
+    }
+
+    return false;
 }
 
 }//namespace
