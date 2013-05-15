@@ -87,7 +87,7 @@ int RenameStrategy::RenameFolder() {
 
         }
         else { 
-            std::cout<<" COULD NOT FILD FOLDERPATH : " << new_folderpath << std::endl;
+            std::cout<<" COULD NOT FIND FOLDERPATH : " << new_folderpath << std::endl;
             status = ret::A_FAIL_INVALID_FOLDERPATH;
         }
     }
