@@ -53,6 +53,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         status = ConstructFile(cp_list, file_cred, fi);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache entries for them
+                            ValidateFolderEntries(meta_post);
 
                         }
                     }
@@ -453,13 +454,17 @@ bool GetFileStrategy::ValidMasterKey() {
 }
 
 void GetFileStrategy::ValidateFolderEntries(FilePost& fp) {
+    std::cout<<" Validating folder entires ... " << std::endl;
     std::deque<FolderPost> folder_list;
     RetrieveFolderPosts(fp, folder_list);
+    std::cout<< " retrieved " << folder_list.size() << " folder posts " << std::endl;
     if(folder_list.size()) {
         // Validate folder entries exist
         std::deque<FolderPost>::iterator itr = folder_list.begin();
-        for(;itr!= folder_list.end(); itr++)
+        for(;itr!= folder_list.end(); itr++) { 
+            std::cout<<" updating folder entries " << std::endl;
             file_manager_->UpdateFolderEntry((*itr));
+        }
     }
 }
 
