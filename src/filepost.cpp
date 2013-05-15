@@ -130,9 +130,7 @@ void FilePost::DeserializeChunkIds(Json::Value& val) {
 }
 
 void FilePost::DeserializePastAliases(Json::Value& val) {
-    std::cout<< " deserializing past aliases ... " << std::endl;
     jsn::DeserializeIntoVector(val, past_aliases_);
-    std::cout<<" ALIAS COUNT : " << past_aliases_.size() << std::endl;
     for(int i=0; i<past_aliases_.size();i++)
         std::cout<<past_aliases_[i]<<std::endl;
 }
