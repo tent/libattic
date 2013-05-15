@@ -202,7 +202,6 @@ void Post::Serialize(Json::Value& root) {
     Json::Value version(Json::objectValue);
     jsn::SerializeObject(&version_, version);
     root["version"] = version;
-
 }
 
 void Post::Deserialize(Json::Value& root) {
@@ -213,6 +212,8 @@ void Post::Deserialize(Json::Value& root) {
     published_at_   = atoi(pub.c_str());
     std::string rec = root.get("received_at", "").asString();
     type_           = root.get("type", "").asString();
+    if(type_.find("#") != std::string::npos)
+        base_type_ = type_.substr(0, type_.find("#")+1);
 
     received_at_    = atoi(rec.c_str());
 

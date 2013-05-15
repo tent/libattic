@@ -87,6 +87,7 @@ public:
 
     unsigned int attachments_count()            { return attachments_.size(); }
     AttachmentMap* attachments()                { return &attachments_; }
+    MentionsList* mentions()                    { return &mentions_; }
 
     bool has_attachment(const std::string& name);
     const Attachment& get_attachment(const std::string& name);
