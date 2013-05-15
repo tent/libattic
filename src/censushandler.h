@@ -18,6 +18,11 @@ class CensusHandler {
     int QueryTimeline(const std::string& post_type,
                       const std::string& fragment, 
                       std::deque<PagePost>& out);
+
+    void SetReceivedAt(const std::string& post_type,
+                       const std::string& fragment, 
+                       const std::string& time);
+
    
     void DeserializePages(const std::deque<PagePost>& pages, 
                           std::deque<FilePost>& out);

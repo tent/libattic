@@ -21,6 +21,11 @@ bool CensusHandler::Inquiry(const std::string& fragment,
     int status = QueryTimeline(cnst::g_attic_file_type, fragment, page_list);
     if(page_list.size() && status == ret::A_OK) {
         DeserializePages(page_list, out);
+        if(out.size()) {
+            SetReceivedAt(cnst::g_attic_file_type, 
+                          fragment, 
+                          out.front().version()->received_at());
+        }
         return true;
     }
     return false;
@@ -33,9 +38,22 @@ bool CensusHandler::Inquiry(const std::string& fragment,
     int status = QueryTimeline(cnst::g_attic_folder_type, fragment, page_list);
     if(page_list.size() && status == ret::A_OK) {
         DeserializePages(page_list, out);
+        if(out.size()) {
+            SetReceivedAt(cnst::g_attic_folder_type, 
+                          fragment, 
+                          out.front().version()->received_at());
+        }
         return true;
     }
     return false;
+}
+
+void CensusHandler::SetReceivedAt(const std::string& post_type,
+                                  const std::string& fragment, 
+                                  const std::string& time) {
+    std::string pt = post_type + "#" + fragment;
+    fragment_map_[pt] = time; 
+    std::cout<<" setting time for : " << pt << " time : " << time << std::endl;
 }
 
 int CensusHandler::QueryTimeline(const std::string& post_type, 
@@ -43,17 +61,19 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                                  std::deque<PagePost>& out) {
     int status = ret::A_OK;
 
-    if(fragment_map_.find(fragment) == fragment_map_.end())
-        fragment_map_[fragment] = "0"; 
+    std::string pt = post_type + "#" + fragment;
+
+    if(fragment_map_.find(pt) == fragment_map_.end())
+        fragment_map_[pt] = "0"; 
 
     std::cout<<" file list size incoming : " << out.size() << std::endl;
     std::string next_param;
     for(;;) {
         UrlParams params;
         if(next_param.empty()) {
-            std::cout<<" since time in param : " << fragment_map_[fragment] << std::endl;
-            params.AddValue("types", post_type + "#" + fragment);
-            params.AddValue("since", fragment_map_[fragment]);
+            std::cout<<" since time in param : " << fragment_map_[pt] << std::endl;
+            params.AddValue("types", pt);
+            params.AddValue("since", fragment_map_[pt]);
             params.AddValue("limit", "200");
             params.AddValue("sort_by", "version.received_at");
         }
@@ -77,8 +97,6 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
 
             try {
                 if(pp.pages().next().empty()) {
-                    fragment_map_[fragment] = out.front().version()->received_at(); // newest one
-                    std::cout<<" setting since time : " << fragment_map_[fragment] <<std::endl;
                     break;
                 }
                 else {
@@ -87,8 +105,6 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                     std::cout<<" assigning ... " << std::endl;
                     next_param.clear();
                     next_param = pp.pages().next();
-                    fragment_map_[fragment] = out.front().version()->received_at(); // update since time
-                    std::cout<<" setting since time : " << fragment_map_[fragment] <<std::endl;
                 }
             }
             catch(std::exception& e) {
@@ -128,7 +144,22 @@ void CensusHandler::DeserializePages(const std::deque<PagePost>& pages,
 
 void CensusHandler::DeserializePages(const std::deque<PagePost>& pages, 
                                      std::deque<FolderPost>& out) {
+    std::cout<<" deserialized " << std::endl;
+    std::deque<PagePost>::const_iterator itr = pages.begin();
+    for(;itr!= pages.end(); itr++) {
+        Json::Value arr(Json::arrayValue);
+        jsn::DeserializeJsonValue(arr, (*itr).data());
 
+        std::cout<<" ARR SIZE : " << arr.size() << std::endl;
+        Json::ValueIterator itr = arr.begin();
+        for(; itr != arr.end(); itr++) {
+            FolderPost fp;
+            if(jsn::DeserializeObject(&fp, *itr))
+                out.push_back(fp);
+            else 
+                std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
+        }
+    }
 }
 
 } //namespace
