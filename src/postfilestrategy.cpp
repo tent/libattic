@@ -391,12 +391,23 @@ FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
         std::string folderpath;
         if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
             std::string folderid;
-            file_manager_->GetFolderPostId(folderpath, folderid);
-            std::string aliased;
-            file_manager_->GetAliasedFilepath(filepath, aliased);
-            file_manager_->SetFileFolderPostId(aliased, folderid);
-            fi->set_folder_post_id(folderid);
+            std::cout<<" getting folder path : " << folderpath << std::endl;
+            if(file_manager_->GetFolderPostId(folderpath, folderid)) {
+                std::cout<<" folder id : " << folderid << std::endl;
+                std::string aliased;
+                file_manager_->GetAliasedFilepath(filepath, aliased);
+                std::cout<<" aliased : " << aliased << std::endl;
+                file_manager_->SetFileFolderPostId(aliased, folderid);
+                fi->set_folder_post_id(folderid);
+            }
+            else {
+                std::cout<<" Could not fild folder post id " << std::endl;
+
+            }
         }
+    }
+    else {
+        std::cout<< " file info exists ... " << std::endl;
     }
     return fi;
 }
