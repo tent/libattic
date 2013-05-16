@@ -116,6 +116,31 @@ static int CreateDirectory(const std::string& path) {
     return status;
 }
 
+// Pass in full folderpath, then popolate the deque with all parent directories
+static void CreateDirectoryTree(const std::string& folderpath, 
+                                const std::string working_dir, 
+                                std::deque<std::string>& out) {
+    try {
+        std::cout<<" incoming path : " << folderpath << std::endl;
+        boost::filesystem::path root(folderpath);
+        boost::filesystem::path working(working_dir);
+
+        if(!boost::filesystem::exists(root)) {
+            std::cout<<" folder does not exist : " << root.string() << std::endl;
+            boost::filesystem::create_directories(root);
+            boost::filesystem::path parent = root;
+            while(parent != working) {
+                std::cout<<" pushing back : " << parent.string() << std::endl;
+                out.push_back(parent.string());
+                parent = parent.parent_path();
+            }
+        }
+    }
+    catch(boost::filesystem::filesystem_error& er) {
+        std::cout<<" error : " << er.what() << std::endl; 
+    }
+}
+
 static void CreateDirectoryTree(const std::string& filepath) {
     // Pass in full filepath /root/directory/some/other/file.txt
     try {
@@ -216,7 +241,6 @@ static void ExtractSubDirectories(const std::string& root,
             file_path = file_path.parent_path();
         }
     }
-
 }
 
 static void RenamePath(const std::string& original_path, const std::string& new_path) {
