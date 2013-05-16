@@ -50,6 +50,8 @@ void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
                 past_aliases_.push_back(itr->first);
             }
         }
+
+        set_folder_post(fi->folder_post_id());
     }
 }
 
@@ -79,6 +81,7 @@ void FilePost::Serialize(Json::Value& root) {
     content["vdata"] = iv_data;
 
     content["size"] = file_size_;
+    content["folder_post"] = folder_post_;
 
     set_content("file_content", content);
 
@@ -106,6 +109,7 @@ void FilePost::Deserialize(Json::Value& root) {
 
     name_           = content.get("name", "").asString();
     relative_path_  = content.get("path", "").asString();
+    folder_post_    = content.get("folder_post", "").asString();
 
     std::string size = content.get("size", "").asString();
     file_size_ = atoi(size.c_str());
@@ -119,6 +123,8 @@ void FilePost::Deserialize(Json::Value& root) {
 
     crypto::Base64DecodeString(key_data, key_data_);
     crypto::Base64DecodeString(iv_data, iv_data_);
+
+
 }
 
 void FilePost::DeserializeChunkPosts(Json::Value& val) {
