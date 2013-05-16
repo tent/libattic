@@ -219,6 +219,51 @@ int Discover(const char* szEntityurl) {
     return status;
 }
 
+int CreateFolder(const char* szFolderpath) {
+    if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    int status = IsLibInitialized();
+
+    if(status == attic::ret::A_OK) {
+        try { 
+            g_pTaskManager->CreateFolder(szFolderpath, NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("hhhhJ23423*", e);
+        }
+
+    }
+
+    return status;
+}
+
+int DeleteFolder(const char* szFolderpath) {
+    if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    int status = IsLibInitialized();
+
+    if(status == attic::ret::A_OK) {
+
+    }
+
+    return status;
+}
+
+int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
+    if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szNewFoldername) return attic::ret::A_FAIL_INVALID_CSTR;
+    int status = IsLibInitialized();
+
+    if(status == attic::ret::A_OK) { 
+        try { 
+            g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("BBKJ23423*", e);
+        }
+    }
+
+    return status;
+}
+
 int PushFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized();
@@ -286,22 +331,7 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     return status;
 }
 
-int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
-    if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(!szNewFoldername) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
 
-    if(status == attic::ret::A_OK) { 
-        try { 
-            g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("BBKJ23423*", e);
-        }
-    }
-
-    return status;
-}
 
 int PollFiles(void) {
     int status = IsLibInitialized();
