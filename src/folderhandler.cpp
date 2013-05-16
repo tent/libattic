@@ -1,6 +1,7 @@
 #include "folderhandler.h"
 
 #include "filesystem.h"
+#include "constants.h"
 
 namespace attic {
 FolderHandler::FolderHandler(FileManager* fm) {
@@ -22,7 +23,10 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
         // Check if there is a corresponding folder entry
         Folder folder;
         if(!file_manager_->GetFolderEntry(fp.folder().folderpath(), folder)) {
-            ret = file_manager_->CreateFolderEntry(fp.folder().folderpath(), fp.id(), folder);
+            ret = file_manager_->CreateFolderEntry(fp.folder().folderpath(), 
+                                                   fp.id(), 
+                                                   fp.folder().parent_post_id(), 
+                                                   folder);
         }
         else {
             if(folder.folder_post_id().empty())
@@ -41,6 +45,7 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
         std::deque<std::string> folder_list;
         fs::CreateDirectoryTree(folderpath, file_manager_->working_directory(), folder_list);
 
+        std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
         for(;itr!= folder_list.end(); itr++) {
             if(!fs::CheckFilepathExists(*itr)) {
@@ -50,8 +55,9 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
             Folder tmp;
             if(!file_manager_->GetFolderEntry(*itr, tmp)) { 
                 // FileManager Entry
+                std::cout<< " Creating folder entry ... " << std::endl;
                 Folder folder;
-                ret = file_manager_->CreateFolderEntry(*itr, "", folder);
+                ret = file_manager_->CreateFolderEntry(*itr, "", "", folder);
                 if(ret)
                     out.push_back(folder);
             }
@@ -65,6 +71,10 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
 
 void FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
     file_manager_->SetFolderPostId(folder.folderpath(), post_id);
+}
+
+void FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& post_id) {
+    file_manager_->SetFolderParentPostId(folder.folderpath(), post_id);
 }
 
 // Pass in full path

@@ -19,6 +19,7 @@ public:
     bool ValidateFolder(FolderPost& fp);
     bool CreateFolder(const std::string& folderpath, std::deque<Folder>& out);
     void SetFolderPostId(Folder& folder, const std::string& post_id);
+    void SetFolderParentPostId(Folder& folder, const std::string& post_id);
     
     void RenameFolder(const std::string& old_folderpath, 
                       const std::string& new_folderpath);
