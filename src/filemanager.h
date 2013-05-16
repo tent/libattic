@@ -62,6 +62,7 @@ public:
     void SetFileDeleted(const std::string& filepath, const bool del = true);
     void SetFilePostId(const std::string& filepath, const std::string& postid);
     void SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
+    void SetFileFolderPostId(const std::string& filepath, const std::string& postid);
 
     // Folder
     bool DoesFolderExist(const std::string& folderpath);
@@ -71,9 +72,11 @@ public:
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
     bool CreateFolderEntry(const std::string& folderpath, 
                            const std::string& folder_post_id,
+                           const std::string& parent_post_id,
                            Folder& out);
     bool UpdateFolderEntry(FolderPost& fp);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
+    bool SetFolderParentPostId(const std::string& folderpath, const std::string& post_id);
     bool UpdateFolderContents(Folder& folder);
 
     // File Queue
