@@ -9,6 +9,7 @@
 #include "syncfiletask.h"
 #include "renametask.h"
 #include "servicetask.h"
+#include "foldertask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -152,6 +153,15 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                                 access_token_,
                                 entity_,
                                 context);
+            break;
+        }
+        case Task::FOLDER:
+        {
+            t = new FolderTask(file_manager_,
+                               credentials_manager_,
+                               access_token_,
+                               entity_,
+                               context);
             break;
         }
         default:
