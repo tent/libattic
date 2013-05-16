@@ -128,12 +128,13 @@ static void CreateDirectoryTree(const std::string& folderpath,
         if(!boost::filesystem::exists(root)) {
             std::cout<<" folder does not exist : " << root.string() << std::endl;
             boost::filesystem::create_directories(root);
-            boost::filesystem::path parent = root;
-            while(parent != working) {
-                std::cout<<" pushing back : " << parent.string() << std::endl;
-                out.push_back(parent.string());
-                parent = parent.parent_path();
-            }
+        }
+
+        boost::filesystem::path parent = root;
+        while(parent != working) {
+            std::cout<<" pushing back : " << parent.string() << std::endl;
+            out.push_back(parent.string());
+            parent = parent.parent_path();
         }
     }
     catch(boost::filesystem::filesystem_error& er) {
