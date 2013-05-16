@@ -307,6 +307,8 @@ int Manifest::QueryAllFiles(FileInfoList& out) {
     return status;
 }
 
+
+
 int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out) {
     int status = ret::A_OK;
     std::string query;
@@ -932,6 +934,31 @@ bool Manifest::QueryForFolderByPostId(const std::string& post_id, Folder& out) {
     return true;
 }
 
+int Manifest::QueryAllFoldersForFolder(const std::string& folderid, FolderList& out) {
+    std::string query;
+    query += "SELECT * FROM ";
+    query += g_foldertable;
+    query += " WHERE parent_post_id=\"";
+    query += folderid;
+    query += "\";";
+    SelectResult res;
+    if(PerformSelect(query.c_str(), res)) {
+        int step = 0;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
+            if(step > 0) {
+                Folder folder;
+                ExtractFolderInfoResults(res, step, folder);
+                out.push_back(folder);
+            }
+        }
+    }
+    else {
+        status = ret::A_FAIL_TO_QUERY_MANIFEST;
+    }
+
+    return status;
+}
 void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out) {
     out.set_folderpath(res.results_[0+step]);
     out.set_folder_post_id(res.results_[1+step]);

@@ -83,16 +83,33 @@ bool FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& pos
 // - marks folder post as deleted (fragment)
 // - deletes all content
 // - marks all content posts as deleted (fragment)
-void FolderHandler::DeleteFolder(const std::string& folderpath) {
+void FolderHandler::DeleteFolder(const std::string& folderpath, 
+                                 std::deque<FileInfo>& file_out,
+                                 std::deque<Folder>& folder_out) {
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
-
+        folder_out.push_back(folder);
+        // Retrieve all folders
+        RetrieveSubFolders(folder, folder_out);
+        // retrieve all file ids
     }
     //  - purge all records of files/folders within, update posts
     //  - remove from folder table
     // Check for local folder
     if(fs::CheckFilepathExists(folderpath)) {
         //  - delete if still exists
+    }
+}
+
+void FolderHandler::RetrieveSubFolders(Folder& folder, std::deque<Folder>& out) {
+    std::string folder_post = folder.folder_post_id();
+    if(!folder_post.empty()) {
+        std::deque<Folder> hold;
+        file_manager_->GetAllFoldersForFolder(folder_post, hold);
+        if(hold.size()){
+            //TODO:: finish
+
+        }
     }
 }
 

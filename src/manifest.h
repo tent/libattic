@@ -65,6 +65,7 @@ class Manifest {
 public:
     typedef std::map<std::string, FileInfo*> EntriesMap;
     typedef std::deque<FileInfo> FileInfoList;
+    typedef std::deque<Folder> FolderList;
 
     Manifest();
     ~Manifest();
@@ -90,6 +91,8 @@ public:
     int QueryAllFiles(FileInfoList& out);
 
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
+
+    int QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
 
     bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filename);

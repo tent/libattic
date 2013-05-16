@@ -9,6 +9,8 @@ namespace attic {
 class FolderTask : public TentTask{
     int CreateFolderPost(Folder& folder, std::string& id_out);
     int CreateFolder();
+
+    int DeleteFolder();
 public:
     FolderTask(FileManager* pFm,
                CredentialsManager* pCm,

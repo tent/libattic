@@ -32,6 +32,7 @@ void FolderTask::RunTask() {
         CreateFolder();
     }
     else if(operation == "DELETE") {
+        DeleteFolder();
 
     }
     else if(operation == "RENAME") {
@@ -40,6 +41,22 @@ void FolderTask::RunTask() {
 
     Callback(status, operation);
     SetFinishedState();
+}
+
+int FolderTask::DeleteFolder() {
+    int status = ret::A_OK;
+    std::string folderpath;
+    context_.get_value("folderpath", folderpath);
+
+    FolderHandler fh(file_manager());
+    std::deque<FileInfo>& file_list;
+    std::deque<Folder>& folder_list;
+    fh.DeleteFolder(folderpath, file_list, folder_list);
+
+    // Set all folders to deleted
+    // Set all files to deleted
+
+    return status;
 }
 
 int FolderTask::CreateFolder() {

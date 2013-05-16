@@ -11,6 +11,7 @@
 namespace attic {
 
 class FolderHandler {
+    void RetrieveSubFolders(Folder& folder, std::deque<Folder>& out);
 
 public:
     FolderHandler(FileManager* fm);
@@ -24,7 +25,10 @@ public:
     void RenameFolder(const std::string& old_folderpath, 
                       const std::string& new_folderpath);
 
-    void DeleteFolder(const std::string& folderpath);
+    void DeleteFolder(const std::string& folderpath, 
+                      std::deque<FileInfo>& file_out,
+                      std::deque<Folder>& folder_out);
+
     void MarkFolderDeleted(FolderPost& fp);
 
 private:

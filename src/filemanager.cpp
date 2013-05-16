@@ -614,6 +614,13 @@ int FileManager::GetAllFileInfoForFolder(const std::string& folderid, std::deque
     return status;
 }
 
+int FileManager::GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out) {
+    Lock();
+    int status = manifest_.QueryAllFoldersForFolder(folderid, out);
+    Unlock();
+    return status;
+}
+
 bool FileManager::LockFile(const std::string& filepath) {
     return file_queue_.LockFile(filepath);
 }
