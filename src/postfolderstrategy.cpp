@@ -6,6 +6,7 @@
 #include "folder.h"
 #include "folderpost.h"
 #include "netlib.h"
+#include "folderhandler.h"
 
 namespace attic { 
 
@@ -19,33 +20,44 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     std::string entity = GetConfigValue("entity");
 
     std::cout<<" POST FOLDER STRATEGY " << std::endl;
-    // Extract all parent directories up to the working directory
-    std::vector<std::string> dirs;
-    ExtractDirectories(filepath, dirs);
-
-    std::vector<std::string>::iterator itr = dirs.begin();
-    for(;itr != dirs.end(); itr++) {
-        Folder folder;
-        if(!file_manager_->GetFolderEntry(*itr, folder)) {
-            std::cout<<" creating folder entry for : " << *itr << std::endl;
-            // Create 
-            file_manager_->CreateFolderEntry(*itr, "");
-        }
-
-        if(folder.folder_post_id().empty()) {
-            // Create Folder Post
-            status = CreateFolderPost(folder);
-            if(status == ret::A_OK) {
-                // Update folder post id;
-                file_manager_->SetFolderPostId(*itr, folder.folder_post_id());
+    std::cout<<" filepath : " << filepath << std::endl;
+    // absolute filepath
+    if(!filepath.empty()) {
+        //Extract Parent Directory
+        std::string folderpath;
+        status = fs::GetParentPath(filepath, folderpath);
+        std::cout<<" folder path : " << folderpath << std::endl;
+        if(!folderpath.empty()) {
+            std::deque<Folder> folder_list;
+            FolderHandler fh(file_manager_);
+            if(fh.CreateFolder(folderpath, folder_list)){
+                std::cout<<" total number of folders : " << folder_list.size() << std::endl;
+                // Folder list comes out child -> parent in that order
+                std::string parent_id = cnst::g_szWorkingPlaceHolder; 
+                // top level folder's parent is working directory
+                std::deque<Folder>::iterator itr = folder_list.end();
+                while(itr!= folder_list.begin()) {
+                    --itr;
+                    std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
+                    // Set Parent post id;
+                    fh.SetFolderParentPostId(*itr, parent_id);
+                    // Create new folder post
+                    CreateFolderPost(*itr, parent_id); 
+                }
+            }
+            else {
+                status = ret::A_FAIL_CREATE_DIRECTORY;
             }
         }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FILEPATH;
     }
 
     return status;
 }
 
-int PostFolderStrategy::CreateFolderPost(Folder& folder) {
+int PostFolderStrategy::CreateFolderPost(Folder& folder, std::string& id_out) {
     int status = ret::A_OK;
 
     // Create folderpost
@@ -61,33 +73,20 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder) {
                      &access_token_,
                      response);
 
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
+
     if(response.code == 200) {
         FolderPost back;
         jsn::DeserializeObject(&back, response.body);
         folder.set_folder_post_id(back.id());
+        id_out = back.id();
     }
     else {
         status = ret::A_FAIL_NON_200;
     }
 
     return status;
-}
-
-void PostFolderStrategy::ExtractDirectories(const std::string& filepath, 
-                                            std::vector<std::string>& directories) {
-    std::cout<<" EXTRACTING DIRECTORIES " << std::endl;
-    std::string working_dir = file_manager_->working_directory();
-    std::string canonical;
-    fs::GetCanonicalPath(filepath, canonical);
-
-    std::cout<<" working dir : " << working_dir << std::endl;
-    std::cout<<" filepath : "<< filepath << std::endl;
-    std::cout<<" canonical : " << canonical << std::endl;
-    
-    directories.push_back(working_dir);
-    utils::ExtractSubPaths(working_dir, canonical, directories);
-    std::cout<<" DIRS EXTRACTED : " << directories.size() << std::endl;
-    std::cout<<" dir : " << directories[0] << std::endl;
 }
 
 }//namespace

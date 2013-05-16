@@ -12,8 +12,7 @@ class FileManager;
 class CredentialsManager;
 
 class PostFolderStrategy : public HttpStrategyInterface {
-    void ExtractDirectories(const std::string& filepath, std::vector<std::string>& directories);
-    int CreateFolderPost(Folder& folder);
+    int CreateFolderPost(Folder& folder, std::string& id_out);
 public:
     PostFolderStrategy() {}
     ~PostFolderStrategy() {}
