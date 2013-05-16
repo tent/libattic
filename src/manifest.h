@@ -105,6 +105,7 @@ public:
     bool IsFolderInManifestWithID(const std::string& folderid);
 
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
+    bool UpdateFolderParentPostId(const std::string& folderpath, const std::string& parent_post_id);
     bool UpdateFolderPath(const std::string& folderid, const std::string& folderpath);
 
     bool GetFolderPostID(const std::string& folderpath, std::string& out);

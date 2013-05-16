@@ -111,7 +111,7 @@ bool Manifest::CreateFolderTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_foldertable;
-    exc += " (folderpath TEXT, post_id TEXT, parent_post_id TEXT";
+    exc += " (folderpath TEXT, post_id TEXT, parent_post_id TEXT,";
     exc += " PRIMARY KEY(folderpath ASC, post_id ASC, parent_post_id ASC));";
 
     return PerformQuery(exc);
@@ -708,6 +708,18 @@ bool Manifest::UpdateFolderPostId(const std::string& folderpath, const std::stri
     return PerformQuery(exc);
 }
 
+bool Manifest::UpdateFolderParentPostId(const std::string& folderpath, 
+                                        const std::string& parent_post_id) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_foldertable;
+    exc += " SET parent_post_id=\"";
+    exc += parent_post_id;
+    exc += "\" WHERE folderpath=\"";
+    exc += folderpath;
+    exc += "\";";
+    return PerformQuery(exc);
+}
 bool Manifest::UpdateFolderPath(const std::string& folderid, const std::string& folderpath) {
     std::string exc;
     exc += "UPDATE ";
@@ -875,6 +887,8 @@ bool Manifest::QueryForFolder(const std::string& folderpath, Folder& out) {
     exc += " WHERE folderpath=\"";
     exc += folderpath;
     exc += "\";";
+
+    std::cout<<" performing : " << exc << std::endl;
 
     SelectResult res;
     if(!PerformSelect(exc, res))
