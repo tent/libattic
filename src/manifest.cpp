@@ -936,6 +936,11 @@ void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step,
     out.set_folderpath(res.results_[0+step]);
     out.set_folder_post_id(res.results_[1+step]);
     out.set_parent_post_id(res.results_[2+step]);
+
+    std::cout<< "results : " << std::endl;
+    std::cout<< "\t" << res.results_[0+step] << std::endl;
+    std::cout<< "\t" << res.results_[1+step] << std::endl;
+    std::cout<< "\t" << res.results_[2+step] << std::endl;
 }
 
 }//namespace
