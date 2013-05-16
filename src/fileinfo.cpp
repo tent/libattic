@@ -1,4 +1,3 @@
-
 #include "fileinfo.h"
 
 #include <fstream>
