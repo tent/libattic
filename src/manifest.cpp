@@ -95,8 +95,8 @@ bool Manifest::CreateInfoTable() {
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
-    exc += " deleted INT, folder_manifest_id TEXT, alias_data TEXT,";
-    exc += " PRIMARY KEY(filepath ASC, folder_manifest_id ASC, metapostid ASC));";
+    exc += " deleted INT, folder_post_id TEXT, alias_data TEXT,";
+    exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
 
     return PerformQuery(exc);
 }
@@ -106,13 +106,13 @@ bool Manifest::CreateInfoTable() {
 //    to denote that its whatever Attic folder was set by the app
 //  * folderid - random id generate upon creation, folderid is used for various index operations in
 //    the folder entry table. We use a folder id to allow the folder to be renamed and its "contents" to remain the same. Without having to update each file individually
-//  * folderpostid - id of the attic-folder post containing the metadata
+//  * post_id - id of the attic-folder post containing the metadata
 bool Manifest::CreateFolderTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_foldertable;
-    exc += " (folderpath TEXT, folderid TEXT, folderpostid TEXT,";
-    exc += " PRIMARY KEY(folderpath ASC, folderid ASC, folderpostid ASC));";
+    exc += " (folderpath TEXT, post_id TEXT, parent_post_id TEXT";
+    exc += " PRIMARY KEY(folderpath ASC, post_id ASC, parent_post_id ASC));";
 
     return PerformQuery(exc);
 }
@@ -312,7 +312,7 @@ int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& 
     std::string query;
     query += "SELECT * FROM ";
     query += g_infotable;
-    query += " WHERE folder_manifest_id=\"";
+    query += " WHERE folder_post_id=\"";
     query += folderid;
     query += "\";";
     SelectResult res;
@@ -361,68 +361,15 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     crypto::Base64DecodeString(b64_key, iv);
     out.set_file_credentials_iv(iv);
     out.set_deleted(atoi(res.results_[10+step]));
-    out.set_folder_manifest_id(res.results_[11+step]);
+    out.set_folder_post_id(res.results_[11+step]);
     std::string b64_alias = res.results_[12+step];
     std::string alias_data;
     crypto::Base64DecodeString(b64_alias, alias_data);
     out.LoadSerializedAliasData(alias_data);
 }
 
-bool Manifest::QueryForFolder(const std::string& folderpath, Folder& out) {
-    std::string exc;
-    exc += "SELECT * FROM ";
-    exc += g_foldertable;
-    exc += " WHERE folderpath=\"";
-    exc += folderpath;
-    exc += "\";";
 
-    SelectResult res;
-    if(!PerformSelect(exc, res))
-        return false;
 
-    int step = 0;
-    for(int i=0; i<res.row_+1; i++) {
-        step = i*res.col_;
-        if(step > 0) {
-            ExtractFolderInfoResults(res, step, out);
-        }
-    }
-
-    if(!step)
-        return false;
-    return true;
-}
-
-bool Manifest::QueryForFolderByPostId(const std::string& post_id, Folder& out) {
-    std::string exc;
-    exc += "SELECT * FROM ";
-    exc += g_foldertable;
-    exc += " WHERE folderpostid=\"";
-    exc += post_id;
-    exc += "\";";
-
-    SelectResult res;
-    if(!PerformSelect(exc, res))
-        return false;
-
-    int step = 0;
-    for(int i=0; i<res.row_+1; i++) {
-        step = i*res.col_;
-        if(step > 0) {
-            ExtractFolderInfoResults(res, step, out);
-        }
-    }
-
-    if(!step)
-        return false;
-    return true;
-}
-
-void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out) {
-    out.set_folderpath(res.results_[0+step]);
-    out.set_manifest_id(res.results_[1+step]);
-    out.set_folder_post_id(res.results_[2+step]);
-}
 //"CREATE TABLE IF NOT EXISTS %s (filename TEXT, filepath TEXT, chunkcount INT, chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT, postversion INT, key BLOB, PRIMARY KEY(filename ASC));",
               
 bool Manifest::InsertFileInfo(const FileInfo& fi) {
@@ -439,7 +386,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
 
     std::string encryptedkey = fi.encrypted_key();
     std::string iv = fi.file_credentials_iv();
-    std::string folder_manifest_id = fi.folder_manifest_id();
+    std::string folder_post_id = fi.folder_post_id();
     
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
@@ -469,7 +416,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_manifest_id, alias_data)";
+    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id, alias_data)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
 
@@ -553,7 +500,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
                 return false;
             }
             
-            ret = sqlite3_bind_text(stmt, 12, folder_manifest_id.c_str(), folder_manifest_id.size(), SQLITE_STATIC);
+            ret = sqlite3_bind_text(stmt, 12, folder_post_id.c_str(), folder_post_id.size(), SQLITE_STATIC);
             if(ret != SQLITE_OK) {
                 printf("version Error message: %s\n", sqlite3_errmsg(db_));
                 return false;
@@ -599,7 +546,7 @@ bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) {
     std::string query;
     query += "SELECT * FROM \"";
     query += g_infotable;
-    query += "\" WHERE folder_manifest_id=\"";
+    query += "\" WHERE folder_post_id=\"";
     query += folderid;
     query += "\";";
 
@@ -613,7 +560,7 @@ bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) {
                 FileInfo fi;
                 ExtractFileInfoResults(res, step, fi);
                 // Update path
-                std::string folderid = fi.folder_manifest_id();
+                std::string folderid = fi.folder_post_id();
                 std::string path;
                 GetFolderPath(folderid, path);
                 // Update alias
@@ -720,6 +667,19 @@ bool Manifest::UpdateFilename(const std::string& filepath, const std::string& ne
     return PerformQuery(exc);
 }
 
+bool Manifest::UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_infotable;
+    exc += " SET folder_post_id=\"";
+    exc += post_id;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+
+    return PerformQuery(exc);
+}
+
 bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& alias_data) {
     std::string encoded;
     crypto::Base64EncodeString(alias_data, encoded);
@@ -735,12 +695,13 @@ bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& a
     return PerformQuery(exc);
 }
 
-bool Manifest::UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid) {
+// Folder Table related methods
+bool Manifest::UpdateFolderPostId(const std::string& folderpath, const std::string& post_id) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
-    exc += " SET folderpostid=\"";
-    exc += folderpostid;
+    exc += " SET post_id=\"";
+    exc += post_id;
     exc += "\" WHERE folderpath=\"";
     exc += folderpath;
     exc += "\";";
@@ -762,7 +723,7 @@ bool Manifest::UpdateFolderPath(const std::string& folderid, const std::string& 
 
 bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out) {
     std::string query;
-    query += "SELECT folderpostid FROM ";
+    query += "SELECT post_id FROM ";
     query += g_foldertable;
     query += " WHERE folderpath=\"";
     query += folderpath;
@@ -784,12 +745,12 @@ bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out) 
     return true;
 }
 
-bool Manifest::GetFolderPath(const std::string& folder_manifest_id, std::string& path_out) {
+bool Manifest::GetFolderPath(const std::string& folder_post_id, std::string& path_out) {
     std::string query;
     query += "SELECT folderpath FROM ";
     query += g_foldertable;
     query += " WHERE folderid=\"";
-    query += folder_manifest_id;
+    query += folder_post_id;
     query+= "\"";
 
     SelectResult res;
@@ -834,20 +795,14 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
     return true;
 }
 
-bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid) {
+bool Manifest::InsertFolderInfo(const std::string& folderpath, 
+                                const std::string& post_id,
+                                const std::string& parentpostid) {
     if(!IsFolderInManifest(folderpath)) {
-        std::string folderid;
-        crypto::GenerateRandomString(folderid);
-
-        while(IsFolderInManifestWithID(folderid)) {
-            folderid.clear();
-            crypto::GenerateRandomString(folderid);
-        }
-
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
         exc += g_foldertable;
-        exc += " (folderpath, folderid, folderpostid) VALUES (?,?,?);";  
+        exc += " (folderpath, post_id, parent_post_id) VALUES (?,?,?);";  
 
         // Prepare statement
         sqlite3_stmt* stmt = NULL;
@@ -860,13 +815,17 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string
                     return false;
                 }
 
-                ret = sqlite3_bind_text(stmt, 2, folderid.c_str(), folderid.size(), SQLITE_STATIC);
+                ret = sqlite3_bind_text(stmt, 2, post_id.c_str(), post_id.size(), SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
                     printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
                 }
 
-                ret = sqlite3_bind_text(stmt, 3, folderpostid.c_str(), folderpostid.size(), SQLITE_STATIC);
+                ret = sqlite3_bind_text(stmt, 
+                                        3, 
+                                        parentpostid.c_str(), 
+                                        parentpostid.size(), 
+                                        SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
                     printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;
@@ -904,10 +863,65 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath, const std::string
     return false;
 }
 
-bool Manifest::RemoveFolderData(const std::string& folderpath)
-{
+bool Manifest::RemoveFolderData(const std::string& folderpath) {
 
     return false;
+}
+
+bool Manifest::QueryForFolder(const std::string& folderpath, Folder& out) {
+    std::string exc;
+    exc += "SELECT * FROM ";
+    exc += g_foldertable;
+    exc += " WHERE folderpath=\"";
+    exc += folderpath;
+    exc += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(exc, res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) {
+            ExtractFolderInfoResults(res, step, out);
+        }
+    }
+
+    if(!step)
+        return false;
+    return true;
+}
+
+bool Manifest::QueryForFolderByPostId(const std::string& post_id, Folder& out) {
+    std::string exc;
+    exc += "SELECT * FROM ";
+    exc += g_foldertable;
+    exc += " WHERE post_id=\"";
+    exc += post_id;
+    exc += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(exc, res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0) {
+            ExtractFolderInfoResults(res, step, out);
+        }
+    }
+
+    if(!step)
+        return false;
+    return true;
+}
+
+void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out) {
+    out.set_folderpath(res.results_[0+step]);
+    out.set_folder_post_id(res.results_[1+step]);
+    out.set_parent_post_id(res.results_[2+step]);
 }
 
 }//namespace

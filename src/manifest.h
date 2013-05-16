@@ -82,23 +82,28 @@ public:
     bool UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath);
     bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
     bool UpdatePastAlias(const std::string& filepath, const std::string& alias_data);
+    bool UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id);
 
 
     bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
     int QueryAllFiles(FileInfoList& out);
+
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
 
     bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filename);
 
     // Folder Table
+    bool InsertFolderInfo(const std::string& folderpath, 
+                          const std::string& folderpostid,
+                          const std::string& parentpostid);
     bool QueryForFolder(const std::string& folderpath, Folder& out);
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
 
     bool IsFolderInManifest(const std::string& folderpath);
     bool IsFolderInManifestWithID(const std::string& folderid);
-    bool InsertFolderInfo(const std::string& folderpath, const std::string& folderpostid);
+
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
     bool UpdateFolderPath(const std::string& folderid, const std::string& folderpath);
 
