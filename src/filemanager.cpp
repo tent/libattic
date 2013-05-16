@@ -462,6 +462,9 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
+    std::cout<<" folderpath : " << folder.folderpath() << std::endl;
+    std::cout<<" folder_post_id : " << folder.folder_post_id() << std::endl;
+    std::cout<<" parent_post_id : " << folder.parent_post_id() << std::endl;
     id_out = folder.folder_post_id();
 
     return ret;
@@ -560,7 +563,8 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
         relative = cnst::g_szWorkingPlaceHolder;
 
     std::cout<<" FOLDER PATH : " << folderpath << std::endl;
-    std::cout<<" SETTING FOLDER POST ID : " << relative << std::endl;
+    std::cout<<" RELATIVE : " << relative << std::endl;
+    std::cout<<" SETTING FOLDER POST ID : " << post_id << std::endl;
 
     bool ret = false;
     Lock();
@@ -584,7 +588,8 @@ bool FileManager::SetFolderParentPostId(const std::string& folderpath, const std
         relative = cnst::g_szWorkingPlaceHolder;
 
     std::cout<<" FOLDER PATH : " << folderpath << std::endl;
-    std::cout<<" SETTING FOLDER POST ID : " << relative << std::endl;
+    std::cout<<" RELATIVE : " << relative << std::endl;
+    std::cout<<" SETTING FOLDER POST ID : " << post_id << std::endl;
 
     bool ret = false;
     Lock();

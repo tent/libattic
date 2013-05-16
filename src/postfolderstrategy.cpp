@@ -33,16 +33,21 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
             if(fh.CreateFolder(folderpath, folder_list)){
                 std::cout<<" total number of folders : " << folder_list.size() << std::endl;
                 // Folder list comes out child -> parent in that order
-                std::string parent_id = cnst::g_szWorkingPlaceHolder; 
+
                 // top level folder's parent is working directory
                 std::deque<Folder>::iterator itr = folder_list.end();
+
+                std::string hold_id = cnst::g_szWorkingPlaceHolder; 
                 while(itr!= folder_list.begin()) {
                     --itr;
                     std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
                     // Set Parent post id;
-                    fh.SetFolderParentPostId(*itr, parent_id);
+                    fh.SetFolderParentPostId(*itr, hold_id); //currently last id
                     // Create new folder post
-                    CreateFolderPost(*itr, parent_id); 
+                    CreateFolderPost(*itr, hold_id); 
+                    // Set Folder Post Id;
+                    if(!fh.SetFolderPostId(*itr, hold_id))
+                        std::cout<<" failed to set folder post id : " << hold_id << std::endl;
                 }
             }
             else {
