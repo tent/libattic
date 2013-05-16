@@ -115,14 +115,6 @@ void FileManager::InsertToManifest (FileInfo* pFi) {
     // Insert into infotable
     manifest_.InsertFileInfo(*pFi);
     Unlock();
-
-    // Folder operations
-    Lock();
-    if(!manifest_.IsFolderInManifest(parent)){
-        // Create folder entry
-        manifest_.InsertFolderInfo(parent, "");
-    }
-    Unlock();
 }
 
 int FileManager::RenameFolder(const std::string& old_folderpath,
@@ -151,11 +143,11 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
         if(!alias_new.empty()) {
             //Update folder path
             Lock();
-            manifest_.UpdateFolderPath(folder.manifest_id(), alias_new);
+            manifest_.UpdateFolderPath(folder.folder_post_id(), alias_new);
             Unlock();
             //Update folder contents
             Lock();
-            bool ret = manifest_.UpdateAllFileInfoForFolder(folder.manifest_id());
+            bool ret = manifest_.UpdateAllFileInfoForFolder(folder.folder_post_id());
             Unlock();
         }
         else {
@@ -429,6 +421,7 @@ bool FileManager::GetFolderEntryByPostId(const std::string& post_id, Folder& fol
     return ret;
 }
 
+// Pass in absoulte folder path
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
     // Check if folder exists
     //  - if it does, fill out class
@@ -464,17 +457,9 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
     return ret;
 }
 
-bool FileManager::GetFolderManifestId(const std::string& folderpath, std::string& id_out) {
-    Folder folder;
-    bool ret = GetFolderEntry(folderpath, folder);
-    id_out = folder.manifest_id();
-
-    return ret;
-}
-
-
 bool FileManager::CreateFolderEntry(const std::string& folderpath, 
-                                    const std::string& folder_post_id) {
+                                    const std::string& folder_post_id,
+                                    Folder& out) {
     // Create Folder Entry
     std::string relative;
     if(!IsPathRelative(folderpath)) {
@@ -489,7 +474,9 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
 
     bool ret = false;
     Lock();
-    ret = manifest_.InsertFolderInfo(relative, folder_post_id);
+    ret = manifest_.InsertFolderInfo(relative, folder_post_id, "");
+    if(ret)
+        ret = manifest_.QueryForFolder(relative, out);
     Unlock();
 
     return ret;
@@ -528,7 +515,8 @@ bool FileManager::UpdateFolderEntry(FolderPost& fp) {
     }
     else {
         // create entry
-        ret = CreateFolderEntry(fp.folder().folderpath(), fp.id());
+        Folder folder;
+        ret = CreateFolderEntry(fp.folder().folderpath(), fp.id(), folder);
     }
     Unlock();
     return ret;
@@ -539,7 +527,7 @@ bool FileManager::UpdateFolderEntry(FolderPost& fp) {
 bool FileManager::UpdateFolderContents(Folder& folder) {
     bool ret = false;
     Lock();
-    ret = manifest_.UpdateAllFileInfoForFolder(folder.manifest_id());
+    ret = manifest_.UpdateAllFileInfoForFolder(folder.folder_post_id());
     Unlock();
 
     return ret;

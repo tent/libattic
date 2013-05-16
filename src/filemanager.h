@@ -64,13 +64,14 @@ public:
     void SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
 
     // Folder
+    bool DoesFolderExist(const std::string& folderpath);
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
 
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
-    bool GetFolderManifestId(const std::string& folderpath, std::string& id_out);
     bool CreateFolderEntry(const std::string& folderpath, 
-                           const std::string& folder_post_id);
+                           const std::string& folder_post_id,
+                           Folder& out);
     bool UpdateFolderEntry(FolderPost& fp);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
     bool UpdateFolderContents(Folder& folder);
