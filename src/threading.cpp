@@ -119,7 +119,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     std::cout<<" extending thread pool " << std::endl;
     int status = ret::A_OK;
 
-    std::cout<<" here " << std::endl;
     // Service worker
     ThreadWorker* servicew = new ThreadWorker(file_manager_, 
                                               credentials_manager_, 
@@ -129,23 +128,17 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     servicew->SetTaskPreference(Task::SERVICE);
     thread_pool_->SpinOffWorker(servicew);
 
-
-    std::cout<<" here " << std::endl;
     // Poll worker
     ThreadWorker* pollw = new ThreadWorker(file_manager_, 
                                            credentials_manager_, 
                                            access_token_, 
                                            entity_,
                                            true); // Strict
-    std::cout<<" yep " << std::endl;
     pollw->SetTaskPreference(Task::POLL);
     pollw->SetTaskPreference(Task::SERVICE, false);
-
-    std::cout<<" yep " << std::endl;
     thread_pool_->SpinOffWorker(pollw);
     
-       // Rename delete
-    std::cout<<" here " << std::endl;
+    // Rename delete
     ThreadWorker* rdw = new ThreadWorker(file_manager_, 
                                          credentials_manager_, 
                                          access_token_, 
@@ -157,19 +150,15 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     rdw->SetTaskPreference(Task::SERVICE, false);
     thread_pool_->SpinOffWorker(rdw);
 
-    std::cout<<" here " << std::endl;
-    /*
-    ThreadWorker* second_rdw = new ThreadWorker();
-    second_rdw->SetTaskPreference(Task::RENAME);
-    second_rdw->SetTaskPreference(Task::DELETE);
-    second_rdw->SetTaskPreference(Task::POLL, false);
-    second_rdw->SetTaskPreference(Task::SERVICE, false);
-    workers_.push_back(second_rdw);
-    boost::thread* second_thread = new boost::thread(NewThreadFunc, second_rdw);
-    threads_.push_back(second_thread);
-    */
+    // Folder Worker
+    ThreadWorker* folderw = new ThreadWorker(file_manager_, 
+                                             credentials_manager_, 
+                                             access_token_, 
+                                             entity_, 
+                                             true); // Strict
+    folderw->SetTaskPreference(Task::FOLDER);
+    thread_pool_->SpinOffWorker(folderw);
 
-    std::cout<<" here " << std::endl;
     // Generic (Push/Pull) workers
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker(file_manager_, credentials_manager_, access_token_, entity_);
@@ -182,18 +171,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
         if(thread_pool_->WorkerCount() >= stride)
             break;
     }
-    std::cout<<" here " << std::endl;
-
-    /*
-    for(unsigned int i=0; i < stride; i++){
-        boost::thread* pt = new boost::thread(NewThreadFunc, pWorker);
-        threads_.push_back(pt);
-        // decide whether or not to keep as a detached thread
-        // std::cout<<"detaching thread ... " << std::endl;
-        // pt->detach();
-    }
-    */
-    std::cout<<" done " << std::endl;
 
     return status;
 }
