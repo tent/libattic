@@ -24,6 +24,7 @@ public:
         PULL,
         RENAME,
         DELETE,                                                         
+        FOLDER,
         SYNC_FILE_TASK,
         // ManifestTask
         QUERYMANIFEST,
