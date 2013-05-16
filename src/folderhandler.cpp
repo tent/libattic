@@ -69,12 +69,12 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
     return ret;
 }
 
-void FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
-    file_manager_->SetFolderPostId(folder.folderpath(), post_id);
+bool FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
+    return file_manager_->SetFolderPostId(folder.folderpath(), post_id);
 }
 
-void FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& post_id) {
-    file_manager_->SetFolderParentPostId(folder.folderpath(), post_id);
+bool FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& post_id) {
+    return file_manager_->SetFolderParentPostId(folder.folderpath(), post_id);
 }
 
 // Pass in full path
