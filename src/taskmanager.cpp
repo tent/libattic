@@ -104,8 +104,45 @@ void TaskManager::OnTaskInsert(Task* t) {
     //status = TaskArbiter::GetInstance()->SpinOffTask(t);
 }
 
+void TaskManager::CreateFolder(const std::string& folderpath, TaskDelegate* pDel) {
+    TaskContext tc;
+    tc.set_value("operation", "CREATE");
+    tc.set_value("folderpath", folderpath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::FOLDER);
+    tc.set_delegate(pDel);
+    PushContextBack(tc);
+}
+
+void TaskManager::RenameFolder(const std::string& original_folderpath, 
+                               const std::string& new_folderpath) {
+    TaskContext tc;
+    tc.set_value("operation", "RENAME");
+    tc.set_value("original_folderpath", original_folderpath);
+    tc.set_value("new_folderpath", new_folderpath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::FOLDER);
+    //tc.set_delegate(pDel);
+    PushContextBack(tc);
+}
+
+void TaskManager::DeleteFolder(const std::string& folderpath, TaskDelegate* pDel) {
+    TaskContext tc;
+    tc.set_value("operation", "DELETE");
+    tc.set_value("folderpath", folderpath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("working_dir", working_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::FOLDER);
+    tc.set_delegate(pDel);
+    PushContextBack(tc);
+}
+
 void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
-    std::cout<<" UPLOADING FILE " << std::endl;
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
@@ -171,19 +208,6 @@ void TaskManager::RenameFile(const std::string& original_filepath,
     tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
     tc.set_value("new_filepath", new_filepath);
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::RENAME);
-    PushContextBack(tc);
-}
-
-void TaskManager::RenameFolder(const std::string& original_folderpath, 
-                               const std::string& new_folderpath) {
-    TaskContext tc;
-    tc.set_value("file_type", "folder");
-    tc.set_value("original_folderpath", original_folderpath);
-    tc.set_value("new_folderpath", new_folderpath);
     tc.set_value("temp_dir", temp_directory_);
     tc.set_value("working_dir", working_directory_);
     tc.set_value("config_dir", config_directory_);

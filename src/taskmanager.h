@@ -41,6 +41,10 @@ public:
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
+    void CreateFolder(const std::string& folderpath, TaskDelegate* pDel);
+    void RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
+    void DeleteFolder(const std::string& folderpath, TaskDelegate* pDel);
+
     // Sync Tasks
     void UploadFile(const std::string& filepath, TaskDelegate* pDel);
     void DownloadFile(const std::string& filepath, TaskDelegate* pDel);
@@ -48,7 +52,7 @@ public:
     void SyncFile(const std::string& postid, TaskDelegate* pDel);
     void DeleteFile(const std::string& filepath, TaskDelegate* pDel);
     void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
-    void RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
+
 
     // Info tasks
     int TaskCount(const Task::TaskType);
