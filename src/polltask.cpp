@@ -13,6 +13,7 @@
 #include "filesystem.h"
 #include "configmanager.h"
 
+#include "folderhandler.h"
 #include "renamehandler.h"
 
 namespace attic {
@@ -121,12 +122,12 @@ void PollTask::RunTask() {
             timer_.stop();
             if(running_) {
                 std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
-                // Check all file posts
-                PollFilePosts();
-                // Check deleted file posts
-                PollDeletedFilePosts();
                 // Check folder posts
                 PollFolderPosts();
+                // Check deleted file posts
+                PollDeletedFilePosts();
+                // Check all file posts
+                PollFilePosts();
             }
             timer_.start();
         }
@@ -166,15 +167,14 @@ void PollTask::PollDeletedFilePosts() {
 }
 
 void PollTask::PollFolderPosts() {
-    RenameHandler rh(file_manager());
+    if(!file_manager())
+        std::cout<<" INVALID FILE MANAGER ? " << std::endl;
+    FolderHandler fh(file_manager());
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry("", folder_list)){
         std::deque<FolderPost>::iterator itr = folder_list.begin();
         for(;itr != folder_list.end(); itr++) {
-            std::cout<<" folder ... " << (*itr).folder().folderpath() << std::endl;
-            // Only checking for rename
-            if(rh.CheckForRename(*itr))
-                std::cout<<"Folder renamed ... " << std::endl;
+            fh.ValidateFolder(*itr);
         }
     }
 }
