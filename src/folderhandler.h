@@ -22,7 +22,6 @@ public:
 
     bool ValidateFolder(FolderPost& fp);
     bool CreateFolder(const std::string& folderpath, std::deque<Folder>& out);
-    bool DoesFolderEntryExist(const std::string& folderpath);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);
     
