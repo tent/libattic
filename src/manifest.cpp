@@ -195,16 +195,23 @@ bool Manifest::IsFileInManifest(const std::string &filepath) {
 
 bool Manifest::IsFolderInManifest(const std::string &folderpath) {
     std::string exc;
-    exc += "SELECT * FROM ";
+    exc += "SELECT EXISTS(SELECT * FROM ";
     exc += g_foldertable;
     exc += " WHERE folderpath=\"";
     exc += folderpath;
-    exc += "\";";
+    exc += "\");";
         
     SelectResult res;
     if(PerformSelect(exc.c_str() ,res)) {
-        if(res.row_)
-            return true;
+        int step = 0;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
+            if(step > 0) {
+                std::string r = res.results_[0+step];
+                if(r == "1")
+                    return true;
+            }
+        }
     }
     return false;
 }
@@ -212,22 +219,26 @@ bool Manifest::IsFolderInManifest(const std::string &folderpath) {
 
 bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
     std::string exc;
-    exc += "SELECT * FROM ";
+    exc += "SELECT EXISTS(SELECT * FROM ";
     exc += g_foldertable;
     exc += " WHERE folderid=\"";
     exc += folderid;
-    exc += "\";";
+    exc += "\");";
         
     SelectResult res;
     if(PerformSelect(exc.c_str() ,res)) {
-        if(res.row_)
-            return true;
+        int step = 0;
+        for(int i=0; i<res.row_+1; i++) {
+            step = i*res.col_;
+            if(step > 0) {
+                std::string r = res.results_[0+step];
+                if(r == "1")
+                    return true;
+            }
+        }
     }
-
     return false;
 }
-
-
 
 bool Manifest::QueryForFile(const std::string &filepath, FileInfo& out) {
     char pexc[1024];
@@ -307,7 +318,23 @@ int Manifest::QueryAllFiles(FileInfoList& out) {
     return status;
 }
 
+bool Manifest::MarkAllFilesDeletedInFolder(const std::string& folderid) {
+    bool ret = false;
+    std::cout<<" folder id : " << folderid << std::endl;
+    std::cout<<" \t1"<<std::endl;
+    FileInfoList file_list;
+    if(QueryAllFilesForFolder(folderid, file_list) == ret::A_OK) {
+        std::cout<<" \t1"<<std::endl;
+        std::cout<<" # of files : " << file_list.size() << std::endl;
+        FileInfoList::iterator itr = file_list.begin();
+        for(;itr!= file_list.end(); itr++) {
+            ret = UpdateFileDeleted((*itr).filepath(), 1);
+        }
+    }
 
+    std::cout<<" \t2"<<std::endl;
+    return ret;
+}
 
 int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out) {
     int status = ret::A_OK;
@@ -380,6 +407,8 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
         return false;
     }
 
+       std::cout<<" INSERT FILE INFO .... " << std::endl;
+
     std::string filename = fi.filename();
     std::string filepath = fi.filepath();
     std::string metapostid = fi.post_id();
@@ -400,27 +429,16 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string alias_encoded;
     crypto::Base64EncodeString(alias_data, alias_encoded);
 
-/*
-    std::cout<< " name : " << filename << std::endl;
-    std::cout<< " path : " << filepath << std::endl;
-    std::cout<< " count : " << fi.chunk_count() << std::endl;
-    std::cout<< " filesize : " << fi.file_size() << std::endl;
-    std::cout<< " meta id : " << metapostid << std::endl;
-    std::cout<< " chunk id : " << cred_data << std::endl;
-    std::cout<< " version : " << fi.post_version() << std::endl;
-    std::cout<< " chunkdata : " << chunkdata << std::endl;
-    std::cout<< " encrypted key : " << encryptedkey << std::endl;
-    std::cout<< " iv : " << iv << std::endl;
-    std::cout<< " deleted : " << fi.deleted() << std::endl;
-    */
 
     std::string query;
-    query += "INSERT OR REPLACE INTO ";
+    if(IsFileInManifest(fi.filepath())) 
+        query += "UPDATE OR REPLACE INTO ";
+    else
+        query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id, alias_data)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
-
 
     // Prepare statement
     sqlite3_stmt* stmt = NULL;
@@ -628,6 +646,7 @@ bool Manifest::UpdateFileDeleted(const std::string& filepath, const int val) {
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc +="\";";
+    std::cout<<" update file deleted : " << exc << std::endl;
     return PerformQuery(exc);
 }
 
@@ -812,6 +831,7 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
 bool Manifest::InsertFolderInfo(const std::string& folderpath, 
                                 const std::string& post_id,
                                 const std::string& parentpostid) {
+    std::cout<<" is folder in manifest ? : " << IsFolderInManifest(folderpath) << std::endl;
     if(!IsFolderInManifest(folderpath)) {
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
@@ -935,6 +955,7 @@ bool Manifest::QueryForFolderByPostId(const std::string& post_id, Folder& out) {
 }
 
 int Manifest::QueryAllFoldersForFolder(const std::string& folderid, FolderList& out) {
+    int status = ret::A_OK;
     std::string query;
     query += "SELECT * FROM ";
     query += g_foldertable;

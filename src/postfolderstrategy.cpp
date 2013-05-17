@@ -30,6 +30,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
         if(!folderpath.empty()) {
             std::deque<Folder> folder_list;
             FolderHandler fh(file_manager_);
+            
             if(fh.CreateFolder(folderpath, folder_list)){
                 std::cout<<" total number of folders : " << folder_list.size() << std::endl;
                 // Folder list comes out child -> parent in that order
@@ -40,14 +41,20 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                 std::string hold_id = cnst::g_szWorkingPlaceHolder; 
                 while(itr!= folder_list.begin()) {
                     --itr;
-                    std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
                     // Set Parent post id;
                     fh.SetFolderParentPostId(*itr, hold_id); //currently last id
                     // Create new folder post
-                    CreateFolderPost(*itr, hold_id); 
-                    // Set Folder Post Id;
-                    if(!fh.SetFolderPostId(*itr, hold_id))
-                        std::cout<<" failed to set folder post id : " << hold_id << std::endl;
+                    if((*itr).folder_post_id().empty()) {
+                        std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
+                        CreateFolderPost(*itr, hold_id); 
+                        // Set Folder Post Id;
+                        if(!fh.SetFolderPostId(*itr, hold_id))
+                            std::cout<<" failed to set folder post id : " << hold_id << std::endl;
+                    }
+                    else { 
+                        // set id for parent
+                        hold_id = (*itr).folder_post_id();
+                    }
                 }
             }
             else {

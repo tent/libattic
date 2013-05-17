@@ -241,7 +241,12 @@ int DeleteFolder(const char* szFolderpath) {
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) {
-
+        try { 
+            g_pTaskManager->DeleteFolder(szFolderpath, NULL);
+        }
+        catch(std::exception& e) {
+            attic::log::LogException("hhhhJ23423*", e);
+        }
     }
 
     return status;

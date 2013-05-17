@@ -1,10 +1,3 @@
-// Manifest file structure
-// Within the manifest file itself the structure of data to read in
-// is as follows. Line by line
-//  Manifest specific: entry count, 
-//      entry : file name, file path, chunk name, chunk count, file size
-//      entry : ...
-
 #ifndef MANIFEST_H_
 #define MANIFEST_H_
 #pragma once
@@ -76,6 +69,7 @@ public:
     bool CreateEmptyManifest();
 
     // File Info
+    bool IsFileInManifest(const std::string &filepath);
     bool InsertFileInfo(const FileInfo& fi);
     bool UpdateFilePostID(const std::string &filename, const std::string &id);
     bool UpdateFileVersion(const std::string& filepath, const std::string& version);
@@ -85,6 +79,7 @@ public:
     bool UpdatePastAlias(const std::string& filepath, const std::string& alias_data);
     bool UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id);
 
+    bool MarkAllFilesDeletedInFolder(const std::string& folderid);
 
     bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
@@ -95,7 +90,7 @@ public:
     int QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
 
     bool RemoveFileInfo(const std::string &filepath);
-    bool IsFileInManifest(const std::string &filename);
+
 
     // Folder Table
     bool InsertFolderInfo(const std::string& folderpath, 
