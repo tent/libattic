@@ -51,6 +51,9 @@ public:
     bool GetCanonicalFilepath(const std::string& relativepath, std::string& out);
     bool GetAliasedFilepath(const std::string& filepath, std::string& out);
 
+    bool MarkFilesInFolderDeleted(const std::string& folder_id);
+    bool MarkFilesInFolderDeleted(const Folder& folder);
+
     bool DoesFileExist(const std::string& filepath);
     int GetAllFileInfo(std::deque<FileInfo>& out);
 

@@ -224,6 +224,18 @@ void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
     }
 }
 
+bool FileManager::MarkFilesInFolderDeleted(const std::string& folder_id) {
+    Lock();
+    std::cout<< " mark files in folder deleted " << std::endl;
+    bool ret = manifest_.MarkAllFilesDeletedInFolder(folder_id);
+    Unlock();
+    return ret;
+}
+
+bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
+    return MarkFilesInFolderDeleted(folder.folder_post_id());
+}
+
 void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
     if(IsPathRelative(filepath)) {
         Lock();
@@ -487,10 +499,13 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
         relative = cnst::g_szWorkingPlaceHolder;
 
     bool ret = false;
+    ret = GetFolderEntry(folderpath, out);
     Lock();
-    ret = manifest_.InsertFolderInfo(relative, folder_post_id, parent_post_id);
-    if(ret)
-        ret = manifest_.QueryForFolder(relative, out);
+    if(!ret) {
+        ret = manifest_.InsertFolderInfo(relative, folder_post_id, parent_post_id);
+        if(ret)
+            ret = manifest_.QueryForFolder(relative, out);
+    }
     Unlock();
 
     return ret;
