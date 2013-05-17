@@ -55,7 +55,7 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
             Folder tmp;
             if(!file_manager_->GetFolderEntry(*itr, tmp)) { 
                 // FileManager Entry
-                std::cout<< " Creating folder entry ... " << std::endl;
+                std::cout<< " Creating folder entry ... for " << *itr << std::endl;
                 Folder folder;
                 ret = file_manager_->CreateFolderEntry(*itr, "", "", folder);
                 if(ret)
@@ -63,6 +63,7 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
             }
             else {
                 out.push_back(tmp);
+                ret = true;
             }
         }
     }
@@ -88,29 +89,45 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
                                  std::deque<Folder>& folder_out) {
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
-        folder_out.push_back(folder);
-        // Retrieve all folders
-        RetrieveSubFolders(folder, folder_out);
-        // retrieve all file ids
-    }
-    //  - purge all records of files/folders within, update posts
-    //  - remove from folder table
-    // Check for local folder
-    if(fs::CheckFilepathExists(folderpath)) {
-        //  - delete if still exists
+        RetrieveAllFilesAndFoldersInFolder(folder, file_out, folder_out);
+        // mark all as deleted
+        std::deque<Folder>::iterator itr = folder_out.begin();
+        for(;itr!= folder_out.end(); itr++) {
+            file_manager_->MarkFilesInFolderDeleted(*itr);
+        }
     }
 }
 
-void FolderHandler::RetrieveSubFolders(Folder& folder, std::deque<Folder>& out) {
-    std::string folder_post = folder.folder_post_id();
-    if(!folder_post.empty()) {
-        std::deque<Folder> hold;
-        file_manager_->GetAllFoldersForFolder(folder_post, hold);
-        if(hold.size()){
-            //TODO:: finish
-
-        }
+int FolderHandler::RetrieveAllFilesAndFoldersInFolder(Folder& folder, 
+                                                      std::deque<FileInfo>& file_out,
+                                                      std::deque<Folder>& folder_out) {
+    int status = ret::A_OK;
+    // Retrieve all folders
+    status = RetrieveSubFolders(folder, folder_out);
+    // retrieve all file ids
+    std::deque<Folder>::iterator itr = folder_out.begin();
+    for(;itr!= folder_out.end();itr++){
+        RetrieveFilesInFolder(*itr, file_out);
     }
+    return status;
+}
+
+int FolderHandler::RetrieveSubFolders(Folder& folder, std::deque<Folder>& out) {
+    int status = ret::A_OK;
+    std::deque<Folder> hold;
+    hold.push_back(folder);
+    while(hold.size()) {
+        std::string folder_id = hold.front().folder_post_id();
+        out.push_back(hold.front());
+        hold.pop_front();
+        status = file_manager_->GetAllFoldersForFolder(folder_id, hold);
+    }
+
+    return status;
+}
+
+int FolderHandler::RetrieveFilesInFolder(Folder& folder, std::deque<FileInfo>& out) {
+    return file_manager_->GetAllFileInfoForFolder(folder.folder_post_id(), out);
 }
 
 void FolderHandler::RenameFolder(const std::string& old_folderpath, 

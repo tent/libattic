@@ -11,14 +11,18 @@
 namespace attic {
 
 class FolderHandler {
-    void RetrieveSubFolders(Folder& folder, std::deque<Folder>& out);
-
+    int RetrieveSubFolders(Folder& folder, std::deque<Folder>& out);
+    int RetrieveFilesInFolder(Folder& folder, std::deque<FileInfo>& out);
+    int RetrieveAllFilesAndFoldersInFolder(Folder& folder, 
+                                           std::deque<FileInfo>& file_out,
+                                           std::deque<Folder>& folder_out);
 public:
     FolderHandler(FileManager* fm);
     ~FolderHandler();
 
     bool ValidateFolder(FolderPost& fp);
     bool CreateFolder(const std::string& folderpath, std::deque<Folder>& out);
+    bool DoesFolderEntryExist(const std::string& folderpath);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);
     
