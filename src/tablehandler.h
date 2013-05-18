@@ -43,8 +43,8 @@ public:
     bool StepStatement(std::string& error_out);
     bool FinalizeStatement(std::string& error_out);
     bool BindInt(unsigned int position, int value, std::string& error_out);
-    bool BindText(unsigned int position, std::string& value, std::string& error_out);
-    bool BindBlob(unsigned int position, std::string& value, std::string& error_out);
+    bool BindText(unsigned int position, const std::string& value, std::string& error_out);
+    bool BindBlob(unsigned int position, const std::string& value, std::string& error_out);
 
     bool ClearStatement();
 private:

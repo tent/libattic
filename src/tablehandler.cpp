@@ -115,7 +115,7 @@ bool TableHandler::BindInt(unsigned int position, int value, std::string& error_
     return false;
 }
 
-bool TableHandler::BindText(unsigned int position, std::string& value, std::string& error_out) {
+bool TableHandler::BindText(unsigned int position, const std::string& value, std::string& error_out) {
     if(stmt_) {
         int ret = sqlite3_bind_text(stmt_, position, value.c_str(), value.size(), SQLITE_STATIC);
         if(ret != SQLITE_OK) {
@@ -132,7 +132,7 @@ bool TableHandler::BindText(unsigned int position, std::string& value, std::stri
     return false;
 }
 
-bool TableHandler::BindBlob(unsigned int position, std::string& value, std::string& error_out) {
+bool TableHandler::BindBlob(unsigned int position, const std::string& value, std::string& error_out) {
     if(stmt_) {
         int ret = sqlite3_bind_blob(stmt_, position, value.c_str(), value.size(), SQLITE_TRANSIENT);
         if(ret != SQLITE_OK) {
