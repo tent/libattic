@@ -17,7 +17,7 @@ public:
 
     bool CreateTable();
     // Insert
-    bool InsertFileInfo(const FileInfo& fi);
+    bool InsertFileInfo(const FileInfo& fi, std::string& error_out);
     bool RemoveFileInfo(const std::string &filepath);
     bool IsFileInManifest(const std::string &filepath);
     // Modify
