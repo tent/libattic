@@ -8,31 +8,11 @@
 #include <map>
 #include <sqlite3.h>
 
+#include "tablehandler.h"
 #include "fileinfo.h"
 #include "folder.h"
 
 namespace attic { 
-
-class SelectResult { 
-    friend class Manifest;
-public:
-    SelectResult() {
-        row_ = 0;
-        col_ = 0;
-    }
-    ~SelectResult() {
-        sqlite3_free_table(results_);
-    }
-
-    std::string operator[](const unsigned int n) { return results_[n]; }
-
-    int row() const { return row_; }
-    int col() const { return col_; }
-private:
-    char** results_;
-    int row_;
-    int col_;
-};
 
 class Manifest {
     // TODO :: abstract table specific methods
