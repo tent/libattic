@@ -49,7 +49,6 @@ int SoftDeleteStrategy::UpdateFilePost(FileInfo* fi) {
         fp.set_fragment(cnst::g_deleted_fragment);
         status = PostFilePost(postid, fp);
     }
-
     return status;
 }
 
@@ -60,7 +59,6 @@ int SoftDeleteStrategy::RetrieveFilePost(const std::string& post_id, FilePost& o
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
         std::cout<<" POST URL : " << posturl << std::endl;
-
 
         Response resp;
         netlib::HttpGet(posturl,
