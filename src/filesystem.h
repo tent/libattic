@@ -23,6 +23,7 @@ static int GetCanonicalPath(const std::string& path, std::string& out);
 static int GetParentPath(const std::string& path, std::string& out);
 static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
+static void CreateDirectoryTreeForFolder(const std::string& folderpath);
 static bool CheckFilepathExists(const std::string& filepath);
 static bool DeleteFile(const std::string& filepath);
 static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out);
@@ -142,6 +143,19 @@ static void CreateDirectoryTree(const std::string& folderpath,
     }
 }
 
+static void CreateDirectoryTreeForFolder(const std::string& folderpath) {
+    try {
+        std::cout<<" incoming path : " << folderpath << std::endl;
+        boost::filesystem::path root(folderpath);
+        if(!boost::filesystem::exists(root)) {
+            std::cout<<" creating path : " << root << std::endl;
+            boost::filesystem::create_directories(root);
+        }
+    }
+    catch(boost::filesystem::filesystem_error& er) {
+        std::cout<<" error : " << er.what() << std::endl; 
+    }
+}
 static void CreateDirectoryTree(const std::string& filepath) {
     // Pass in full filepath /root/directory/some/other/file.txt
     try {

@@ -18,12 +18,25 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
     RenameHandler rh(file_manager_);
     file_manager_->GetCanonicalFilepath(fp.folder().folderpath(), full_filepath);
     bool ret = true;
+
+    std::cout<<"checking for filepath : " << full_filepath << std::endl;
     if(!full_filepath.empty()) {
         // Check if folder exists, if not, create it
         if(!fs::CheckFilepathExists(full_filepath)) {
             // Check for alias
-            if(!rh.CheckForRename(fp))
-                fs::CreateDirectoryTree(full_filepath);
+            if(!rh.CheckForRename(fp)) { 
+                std::cout<<" creating directory tree for " << full_filepath << std::endl;
+                try {
+                    fs::CreateDirectoryTreeForFolder(full_filepath);
+                }
+                catch(std::exception& e) {
+                    std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
+                }
+            }
+            else {
+                std::cout<<" renamed ...? " << std::endl;
+            }
+
         }
 
         // Check if there is a corresponding folder entry
