@@ -142,6 +142,9 @@ int FolderTask::CreateFolder() {
                     hold_id = post_id;
                 }
             }
+            else {
+                hold_id = folder.folder_post_id();
+            }
         }
     }
     return status;
