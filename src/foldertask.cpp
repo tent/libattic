@@ -58,6 +58,7 @@ int FolderTask::RenameFolder() {
     return status;
 }
 
+// TODO :: abstract this logic into one place, probably the folder handler
 int FolderTask::DeleteFolder() {
     int status = ret::A_OK;
     std::string folderpath;

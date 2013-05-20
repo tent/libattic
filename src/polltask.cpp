@@ -126,6 +126,8 @@ void PollTask::RunTask() {
                 PollFolderPosts();
                 // Check deleted file posts
                 PollDeletedFilePosts();
+                // Check deleted folder posts
+                PollDeletedFolderPosts();
                 // Check all file posts
                 PollFilePosts();
             }
@@ -162,6 +164,19 @@ void PollTask::PollDeletedFilePosts() {
         for(;itr!=deleted_list.end(); itr++) {
             std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
             DeleteLocalFile(*itr);
+        }
+    }
+}
+
+void PollTask::PollDeletedFolderPosts() { 
+    FolderHandler fh(file_manager());
+    std::deque<FolderPost> folder_list;
+    if(census_handler_->Inquiry(cnst::g_deleted_fragment, folder_list)){
+        std::cout<<" checking for deleted folders ... " << std::endl;
+        std::deque<FolderPost>::iterator itr = folder_list.begin();
+        for(;itr != folder_list.end(); itr++) {
+            // Delete local folder
+            DeleteLocalFolder(*itr);
         }
     }
 }
@@ -223,6 +238,24 @@ void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will
         else {
             std::string msg = "Invalid trash_path";
             log::LogString("MOA1349", msg);
+        }
+    }
+}
+
+void PollTask::DeleteLocalFolder(const FolderPost& fp) {
+    std::string canonical_path;
+    file_manager()->GetCanonicalFilepath(fp.folder().folderpath(), canonical_path);
+    if(fs::CheckFilepathExists(canonical_path)){
+        // Move to trash
+        std::string trash_path;
+        ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
+        if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
+            // Move to trash;
+            fs::MoveFileToFolder(canonical_path, trash_path);
+        }
+        else {
+            std::string msg = "Invalid trash_path";
+            log::LogString("MMA001001", msg);
         }
     }
 }

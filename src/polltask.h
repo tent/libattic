@@ -28,10 +28,12 @@ class PollTask : public TentTask, public event::EventListener {
     int SyncFiles(std::deque<FilePost>& file_list);
 
     void DeleteLocalFile(const FilePost& fp); // TODO :: temp method, will move to its own job
+    void DeleteLocalFolder(const FolderPost& fp);
 
     void PollFilePosts();
     void PollDeletedFilePosts();
     void PollFolderPosts();
+    void PollDeletedFolderPosts();
 public:
     void PollTaskCB(int a, std::string& b);
 
