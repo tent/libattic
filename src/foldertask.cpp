@@ -126,15 +126,21 @@ int FolderTask::CreateFolder() {
     if(folder_list.size()) {
         std::string hold_id = cnst::g_szWorkingPlaceHolder; 
         std::deque<Folder>::iterator itr = folder_list.end();
-        for(;itr!=folder_list.end(); itr++) {
+        while(itr != folder_list.begin()) {
+            std::cout<<" hold id : " << hold_id << std::endl;
+            itr--;
             // Create Folder Post for each folder that needs it
             Folder folder = *itr;
             std::cout<<"folder path : " << folder.folderpath() << std::endl;
             if(folder.folder_post_id().empty()) {
                 std::string post_id;
+                folder.set_parent_post_id(hold_id);
                 int s = CreateFolderPost(folder, post_id);
-                if(s == ret::A_OK) 
+                if(s == ret::A_OK) { 
                     fh.SetFolderPostId(folder, post_id);
+                    fh.SetFolderParentPostId(folder, hold_id);
+                    hold_id = post_id;
+                }
             }
         }
     }
