@@ -37,11 +37,25 @@ void FolderTask::RunTask() {
         DeleteFolder();
     }
     else if(operation == "RENAME") {
-
+        RenameFolder();
     }
 
     Callback(status, operation);
     SetFinishedState();
+}
+
+int FolderTask::RenameFolder() {
+    int status = ret::A_OK;
+    std::string old_folderpath, new_folderpath;
+    context_.get_value("original_folderpath", old_folderpath);
+    context_.get_value("new_folderpath", new_folderpath);
+    std::deque<FileInfo> file_list;
+    std::deque<Folder> folder_list;
+
+    FolderHandler fh(file_manager());
+    fh.RenameFolder(old_folderpath, new_folderpath);
+
+    return status;
 }
 
 int FolderTask::DeleteFolder() {

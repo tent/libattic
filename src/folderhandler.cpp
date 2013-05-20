@@ -2,6 +2,7 @@
 
 #include "filesystem.h"
 #include "constants.h"
+#include "renamehandler.h"
 
 namespace attic {
 FolderHandler::FolderHandler(FileManager* fm) {
@@ -98,6 +99,48 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
     }
 }
 
+void FolderHandler::RenameFolder(const std::string& old_folderpath, 
+                                 const std::string& new_folderpath) {
+    // Retrieve all sub folders and files
+    std::deque<FileInfo> file_list;
+    std::deque<Folder> folder_list;
+    Folder folder;
+    if(file_manager_->GetFolderEntry(old_folderpath, folder)){
+        RetrieveAllFilesAndFoldersInFolder(folder, file_list, folder_list);
+        std::string aliased_old_path, aliased_new_path;
+        if(file_manager_->GetAliasedFilepath(old_folderpath, aliased_old_path) &&
+           file_manager_->GetAliasedFilepath(new_folderpath, aliased_new_path)) {
+            RenameHandler rh(file_manager_);
+            // Update folderpaths
+            std::deque<Folder>::iterator folder_itr = folder_list.begin();
+            for(;folder_itr!=folder_list.end(); folder_itr++) {
+                size_t pos = (*folder_itr).folderpath().find(aliased_old_path);
+                if(pos != std::string::npos) {
+                    std::string path = aliased_new_path;
+                    path += "/";
+                    path += (*folder_itr).folderpath().substr(pos);
+                    std::cout<<" NEW FOLDER PATH " << path << std::endl;
+                    rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
+                    (*folder_itr).set_folderpath(path);
+                }
+            }
+            // Update filepath
+            std::deque<FileInfo>::iterator file_itr = file_list.begin();
+            for(;file_itr!= file_list.end(); file_itr++) {
+                size_t pos = (*file_itr).filepath().find(aliased_old_path);
+                if(pos != std::string::npos) {
+                    std::string path = aliased_new_path;
+                    path += "/";
+                    path += (*file_itr).filepath().substr(pos);
+                    std::cout<<" NEW FILE PATH " << path << std::endl;
+                    rh.RenameFileLocalCache((*file_itr).filepath(), path);
+                    (*file_itr).set_filepath(path);
+                }
+            }
+        }
+    }
+}
+
 int FolderHandler::RetrieveAllFilesAndFoldersInFolder(Folder& folder, 
                                                       std::deque<FileInfo>& file_out,
                                                       std::deque<Folder>& folder_out) {
@@ -130,14 +173,7 @@ int FolderHandler::RetrieveFilesInFolder(Folder& folder, std::deque<FileInfo>& o
     return file_manager_->GetAllFileInfoForFolder(folder.folder_post_id(), out);
 }
 
-void FolderHandler::RenameFolder(const std::string& old_folderpath, 
-                                 const std::string& new_folderpath) {
-    // Check for local folder
-    // - perform rename
-    // - update local cache
-    // - update post
-    // - update all contents
-}
+
 
 void MarkFolderDeleted(FolderPost& fp) {
     fp.set_fragment(cnst::g_deleted_fragment);

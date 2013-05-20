@@ -16,6 +16,8 @@ class FolderTask : public TentTask{
     int MarkFolderPostDeleted(Folder& folder);
     int MarkFilePostDeleted(FileInfo& fi);
 
+    int RenameFolder();
+
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
     int PostFilePost(const std::string& post_id, FilePost& fp);
     int RetrieveFolderPost(const std::string& post_id, FolderPost& out);
