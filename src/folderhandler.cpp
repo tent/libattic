@@ -109,7 +109,10 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
                                  std::deque<Folder>& folder_out) {
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
+        std::cout<<" retrieving all files and folders in folder : " << folderpath << std::endl;
         RetrieveAllFilesAndFoldersInFolder(folder, file_out, folder_out);
+        std::cout<< " file count : " << file_out.size() << std::endl;
+        std::cout<< " folder count : " << folder_out.size() << std::endl;
         // mark all as deleted
         std::deque<Folder>::iterator itr = folder_out.begin();
         for(;itr!= folder_out.end(); itr++) {
@@ -165,8 +168,10 @@ int FolderHandler::RetrieveAllFilesAndFoldersInFolder(Folder& folder,
                                                       std::deque<Folder>& folder_out) {
     int status = ret::A_OK;
     // Retrieve all folders
+    std::cout<<" retrieving sub folders " << std::endl;
     status = RetrieveSubFolders(folder, folder_out);
     // retrieve all file ids
+    std::cout<<" retrieving files " << std::endl;
     std::deque<Folder>::iterator itr = folder_out.begin();
     for(;itr!= folder_out.end();itr++){
         RetrieveFilesInFolder(*itr, file_out);
@@ -178,11 +183,15 @@ int FolderHandler::RetrieveSubFolders(Folder& folder, std::deque<Folder>& out) {
     int status = ret::A_OK;
     std::deque<Folder> hold;
     hold.push_back(folder);
+    std::string last_id;
     while(hold.size()) {
         std::string folder_id = hold.front().folder_post_id();
         out.push_back(hold.front());
         hold.pop_front();
-        status = file_manager_->GetAllFoldersForFolder(folder_id, hold);
+        if(last_id != folder_id) {
+            status = file_manager_->GetAllFoldersForFolder(folder_id, hold);
+            last_id = folder_id;
+        }
     }
 
     return status;

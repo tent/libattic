@@ -49,6 +49,11 @@ int FolderTask::RenameFolder() {
     std::string old_folderpath, new_folderpath;
     context_.get_value("original_folderpath", old_folderpath);
     context_.get_value("new_folderpath", new_folderpath);
+
+    std::cout<<" renaming folder " << std::endl;
+    std::cout<<" old : "<< old_folderpath << std::endl;
+    std::cout<<" new : " << new_folderpath << std::endl;
+
     std::deque<FileInfo> file_list;
     std::deque<Folder> folder_list;
 
@@ -119,7 +124,8 @@ int FolderTask::CreateFolder() {
     fh.CreateFolder(folderpath, folder_list);
     std::cout<<" folder list size : " << folder_list.size() << std::endl;
     if(folder_list.size()) {
-        std::deque<Folder>::iterator itr = folder_list.begin();
+        std::string hold_id = cnst::g_szWorkingPlaceHolder; 
+        std::deque<Folder>::iterator itr = folder_list.end();
         for(;itr!=folder_list.end(); itr++) {
             // Create Folder Post for each folder that needs it
             Folder folder = *itr;

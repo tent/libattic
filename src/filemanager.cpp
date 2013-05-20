@@ -498,11 +498,15 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
 
+    std::string p_post_id = parent_post_id;
+    if(relative == cnst::g_szWorkingPlaceHolder && parent_post_id.empty())
+        p_post_id = cnst::g_szWorkingPlaceHolder;
+
     bool ret = false;
     ret = GetFolderEntry(folderpath, out);
     Lock();
     if(!ret) {
-        ret = manifest_.InsertFolderInfo(relative, folder_post_id, parent_post_id);
+        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id);
         if(ret)
             ret = manifest_.QueryForFolder(relative, out);
     }
