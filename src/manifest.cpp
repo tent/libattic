@@ -217,12 +217,12 @@ bool Manifest::IsFolderInManifest(const std::string &folderpath) {
 }
 
 
-bool Manifest::IsFolderInManifestWithID(const std::string& folderid) {
+bool Manifest::IsFolderInManifestWithID(const std::string& post_id) {
     std::string exc;
     exc += "SELECT EXISTS(SELECT * FROM ";
     exc += g_foldertable;
-    exc += " WHERE folderid=\"";
-    exc += folderid;
+    exc += " WHERE post_id=\"";
+    exc += post_id;
     exc += "\");";
         
     SelectResult res;

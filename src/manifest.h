@@ -80,7 +80,7 @@ public:
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
 
     bool IsFolderInManifest(const std::string& folderpath);
-    bool IsFolderInManifestWithID(const std::string& folderid);
+    bool IsFolderInManifestWithID(const std::string& post_id);
 
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
     bool UpdateFolderParentPostId(const std::string& folderpath, const std::string& parent_post_id);
