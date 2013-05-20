@@ -31,34 +31,36 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
             std::deque<Folder> folder_list;
             FolderHandler fh(file_manager_);
             
-            if(fh.CreateFolder(folderpath, folder_list)){
-                std::cout<<" total number of folders : " << folder_list.size() << std::endl;
-                // Folder list comes out child -> parent in that order
+            if(!fs::CheckFilepathExists(folderpath)) {
+                if(fh.CreateFolder(folderpath, folder_list)){
+                    std::cout<<" total number of folders : " << folder_list.size() << std::endl;
+                    // Folder list comes out child -> parent in that order
 
-                // top level folder's parent is working directory
-                std::deque<Folder>::iterator itr = folder_list.end();
+                    // top level folder's parent is working directory
+                    std::deque<Folder>::iterator itr = folder_list.end();
 
-                std::string hold_id = cnst::g_szWorkingPlaceHolder; 
-                while(itr!= folder_list.begin()) {
-                    --itr;
-                    // Set Parent post id;
-                    fh.SetFolderParentPostId(*itr, hold_id); //currently last id
-                    // Create new folder post
-                    if((*itr).folder_post_id().empty()) {
-                        std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
-                        CreateFolderPost(*itr, hold_id); 
-                        // Set Folder Post Id;
-                        if(!fh.SetFolderPostId(*itr, hold_id))
-                            std::cout<<" failed to set folder post id : " << hold_id << std::endl;
-                    }
-                    else { 
-                        // set id for parent
-                        hold_id = (*itr).folder_post_id();
+                    std::string hold_id = cnst::g_szWorkingPlaceHolder; 
+                    while(itr!= folder_list.begin()) {
+                        --itr;
+                        // Set Parent post id;
+                        fh.SetFolderParentPostId(*itr, hold_id); //currently last id
+                        // Create new folder post
+                        if((*itr).folder_post_id().empty()) {
+                            std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
+                            CreateFolderPost(*itr, hold_id); 
+                            // Set Folder Post Id;
+                            if(!fh.SetFolderPostId(*itr, hold_id))
+                                std::cout<<" failed to set folder post id : " << hold_id << std::endl;
+                        }
+                        else { 
+                            // set id for parent
+                            hold_id = (*itr).folder_post_id();
+                        }
                     }
                 }
-            }
-            else {
-                status = ret::A_FAIL_CREATE_DIRECTORY;
+                else {
+                    status = ret::A_FAIL_CREATE_DIRECTORY;
+                }
             }
         }
     }
