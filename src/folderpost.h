@@ -22,7 +22,7 @@ public:
 
 
     void PushBackAlias(const std::string& alias)        { past_aliases_.push_back(alias); }
-    std::vector<std::string> GetPastAliases() const     { return past_aliases_; }
+    std::vector<std::string>* GetPastAliases()    { return &past_aliases_; }
 
     const Folder& folder() const                { return folder_; }
     void set_folder(const Folder& folder)       { folder_ = folder; }

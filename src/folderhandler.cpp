@@ -14,12 +14,17 @@ FolderHandler::~FolderHandler() {}
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     std::cout<<" validating folder post " << std::endl;
     std::string full_filepath;
+
+    RenameHandler rh(file_manager_);
     file_manager_->GetCanonicalFilepath(fp.folder().folderpath(), full_filepath);
     bool ret = true;
     if(!full_filepath.empty()) {
         // Check if folder exists, if not, create it
-        if(!fs::CheckFilepathExists(full_filepath)) 
-            fs::CreateDirectoryTree(full_filepath);
+        if(!fs::CheckFilepathExists(full_filepath)) {
+            // Check for alias
+            if(!rh.CheckForRename(fp))
+                fs::CreateDirectoryTree(full_filepath);
+        }
 
         // Check if there is a corresponding folder entry
         Folder folder;
