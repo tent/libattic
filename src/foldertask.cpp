@@ -57,8 +57,40 @@ int FolderTask::DeleteFolder() {
     std::cout << " file list count : " << file_list.size() << std::endl;
     std::cout << " folder list count : " << folder_list.size() << std::endl;
     // Set all folder posts to deleted
+    std::deque<Folder>::iterator folder_itr = folder_list.begin();
+    for(;folder_itr!= folder_list.end(); folder_itr++) {
+        MarkFolderPostDeleted(*folder_itr);
+    }
     // Set all file posts to deleted
+    std::deque<FileInfo>::iterator file_itr = file_list.begin();
+    for(;file_itr != file_list.end(); file_itr++) {
+        MarkFilePostDeleted(*file_itr);
+    }
 
+    return status;
+}
+
+int FolderTask::MarkFolderPostDeleted(Folder& folder) {
+    int status = ret::A_OK;
+    std::string post_id = folder.folder_post_id();
+    FolderPost fp;
+    status = RetrieveFolderPost(post_id, fp);
+    if(status == ret::A_OK) {
+        fp.set_fragment(cnst::g_deleted_fragment);
+        status = PostFolderPost(post_id, fp);
+    }
+    return status;
+}
+
+int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
+    int status = ret::A_OK;
+    std::string post_id = fi.post_id();
+    FilePost fp;
+    status = RetrieveFilePost(post_id, fp);
+    if(status == ret::A_OK) {
+        fp.set_fragment(cnst::g_deleted_fragment);
+        status = PostFilePost(post_id, fp);
+    }
     return status;
 }
 
@@ -119,6 +151,137 @@ int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     }                                                      
     return status;                                         
 }                                                          
+
+// TODO:: abstract to own class, retreive generic post perhaps templated
+int FolderTask::RetrieveFilePost(const std::string& post_id, FilePost& out) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string post_path = GetPostPath();
+        std::string posturl;
+        utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+        std::cout<<" POST URL : " << posturl << std::endl;
+
+        Response resp;
+        netlib::HttpGet(posturl,
+                        NULL,
+                        &access_token(),
+                        resp);
+
+        if(resp.code == 200) {
+            jsn::DeserializeObject(&out, resp.body);
+        }
+        else{
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("175kjas", resp);
+        }
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
+
+int FolderTask::PostFilePost(const std::string& post_id, FilePost& fp) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string post_path = GetPostPath();
+        std::string posturl;
+        utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+        std::cout<<" post url : " << posturl << std::endl;
+        std::cout<<" post type : " << fp.type() << std::endl;
+
+        Parent parent;
+        parent.version = fp.version()->id();
+        fp.PushBackParent(parent);
+
+        std::string body;
+        jsn::SerializeObject(&fp, body);
+        Response resp;
+        netlib::HttpPut(posturl,
+                         fp.type(),
+                         NULL,
+                         body,
+                         &access_token(),
+                         resp);
+        if(resp.code == 200) {
+            std::cout<<" BODY : " << resp.body << std::endl;
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("192151mm", resp);
+        }
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
+
+int FolderTask::RetrieveFolderPost(const std::string& post_id, FolderPost& out) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string post_path = GetPostPath();
+        std::string posturl;
+        utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+        std::cout<<" POST URL : " << posturl << std::endl;
+
+        Response resp;
+        netlib::HttpGet(posturl,
+                        NULL,
+                        &access_token(),
+                        resp);
+
+        if(resp.code == 200) {
+            jsn::DeserializeObject(&out, resp.body);
+        }
+        else{
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("175kjas", resp);
+        }
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
+
+int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string post_path = GetPostPath();
+        std::string posturl;
+        utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+        std::cout<<" post url : " << posturl << std::endl;
+        std::cout<<" post type : " << fp.type() << std::endl;
+
+        Parent parent;
+        parent.version = fp.version()->id();
+        fp.PushBackParent(parent);
+
+        std::string body;
+        jsn::SerializeObject(&fp, body);
+        Response resp;
+        netlib::HttpPut(posturl,
+                         fp.type(),
+                         NULL,
+                         body,
+                         &access_token(),
+                         resp);
+        if(resp.code == 200) {
+            std::cout<<" BODY : " << resp.body << std::endl;
+
+        }
+        else {
+            status = ret::A_FAIL_NON_200;
+            log::LogHttpResponse("192151mm", resp);
+        }
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
 
 
 } //namespace
