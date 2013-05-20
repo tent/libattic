@@ -741,14 +741,14 @@ bool Manifest::UpdateFolderParentPostId(const std::string& folderpath,
     exc += "\";";
     return PerformQuery(exc);
 }
-bool Manifest::UpdateFolderPath(const std::string& folderid, const std::string& folderpath) {
+bool Manifest::UpdateFolderPath(const std::string& post_id, const std::string& folderpath) {
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
     exc += " SET folderpath=\"";
     exc += folderpath;
-    exc += "\" WHERE folderid=\"";
-    exc += folderid;
+    exc += "\" WHERE post_id=\"";
+    exc += post_id;
     exc += "\";";
 
     return PerformQuery(exc);
@@ -782,7 +782,7 @@ bool Manifest::GetFolderPath(const std::string& folder_post_id, std::string& pat
     std::string query;
     query += "SELECT folderpath FROM ";
     query += g_foldertable;
-    query += " WHERE folderid=\"";
+    query += " WHERE post_id=\"";
     query += folder_post_id;
     query+= "\"";
 
@@ -804,7 +804,7 @@ bool Manifest::GetFolderPath(const std::string& folder_post_id, std::string& pat
 
 bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
     std::string query;
-    query += "SELECT folderid FROM ";
+    query += "SELECT post_id FROM ";
     query += g_foldertable;
     query += " WHERE folderpath=\"";
     query += folderpath;

@@ -282,6 +282,7 @@ bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& o
         if(pos != std::string::npos) {
             out.erase(pos, 1);
         }
+        return true;
     }
     return false;
 }

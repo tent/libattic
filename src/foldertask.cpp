@@ -47,6 +47,7 @@ void FolderTask::RunTask() {
 int FolderTask::RenameFolder() {
     int status = ret::A_OK;
     std::string old_folderpath, new_folderpath;
+    // These are absolute paths
     context_.get_value("original_folderpath", old_folderpath);
     context_.get_value("new_folderpath", new_folderpath);
 
