@@ -142,10 +142,8 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
     if(GetFolderEntry(alias_old, folder)){
         if(!alias_new.empty()) {
             //Update folder path
-            folder.PushBackAlias(alias_old);
             Lock();
             manifest_.UpdateFolderPath(folder.folder_post_id(), alias_new);
-            manifest_.UpdateAliasData(folder.folder_post_id(), folder.SerializeAliasData());
             Unlock();
             //Update folder contents
             Lock();
@@ -509,7 +507,7 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     ret = GetFolderEntry(folderpath, out);
     Lock();
     if(!ret) {
-        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, "");
+        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id);
         if(ret)
             ret = manifest_.QueryForFolder(relative, out);
     }
