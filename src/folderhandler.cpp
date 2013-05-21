@@ -63,7 +63,6 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
     if(!folderpath.empty()) { 
         std::deque<std::string> folder_list;
         fs::CreateDirectoryTree(folderpath, file_manager_->working_directory(), folder_list);
-        folder_list.push_back(folderpath);
 
         std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
@@ -205,6 +204,7 @@ int FolderHandler::RetrieveSubFolders(Folder& folder, std::deque<Folder>& out) {
         out.push_back(hold.front());
         hold.pop_front();
         if(last_id != folder_id) {
+            std::cout<<" get all folders for : " << folder_id << std::endl;
             status = file_manager_->GetAllFoldersForFolder(folder_id, hold);
             last_id = folder_id;
         }
