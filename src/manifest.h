@@ -71,8 +71,7 @@ public:
     // Folder Table
     bool InsertFolderInfo(const std::string& folderpath, 
                           const std::string& folderpostid,
-                          const std::string& parentpostid,
-                          const std::string& alias_data);
+                          const std::string& parentpostid);
 
     bool QueryForFolder(const std::string& folderpath, Folder& out);
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
@@ -83,9 +82,6 @@ public:
     bool UpdateFolderPostId(const std::string& folderpath, const std::string& folderpostid);
     bool UpdateFolderParentPostId(const std::string& folderpath, const std::string& parent_post_id);
     bool UpdateFolderPath(const std::string& post_id, const std::string& folderpath);
-
-    bool UpdateAliasData(const std::string& folderpath, const std::string& alias_data);
-    bool UpdateAliasDataByPostId(const std::string& post_id, const std::string& alias_data);
 
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderPath(const std::string& folder_manifest_id, std::string& path_out);
