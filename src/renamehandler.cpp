@@ -40,6 +40,7 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
 int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
                                           const std::string& new_folderpath) {
     int status = ret::A_OK;
+    std::cout<<" rename folder local cache " << std::endl;
     status = file_manager_->RenameFolder(old_folderpath, new_folderpath);
     return status;
 }
