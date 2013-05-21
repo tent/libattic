@@ -70,6 +70,7 @@ int FolderTask::RenameFolder() {
             FolderPost fp;
             status = RetrieveFolderPost((*folder_itr).folder_post_id(), fp);
             if(status == ret::A_OK) {
+                std::cout<<" posting path : " << (*folder_itr).folderpath() << std::endl;
                 fp.set_folder(*folder_itr);
                 PostFolderPost((*folder_itr).folder_post_id(), fp);
             }
@@ -319,6 +320,7 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         utils::FindAndReplace(post_path, "{post}", post_id, posturl);
         std::cout<<" post url : " << posturl << std::endl;
         std::cout<<" post type : " << fp.type() << std::endl;
+        std::cout<<" folderpath : " << fp.folder().folderpath() << std::endl;
 
         Parent parent;
         parent.version = fp.version()->id();

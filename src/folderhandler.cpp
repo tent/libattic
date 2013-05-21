@@ -21,10 +21,10 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 
     std::cout<<"checking for filepath : " << full_filepath << std::endl;
     if(!full_filepath.empty()) {
-        // Check if folder exists, if not, create it
-        if(!fs::CheckFilepathExists(full_filepath)) {
-            // Check for alias
-            if(!rh.CheckForRename(fp)) { 
+
+        if(!rh.CheckForRename(fp)) { 
+            // Check if folder exists, if not, create it
+            if(!fs::CheckFilepathExists(full_filepath)) {
                 std::cout<<" creating directory tree for " << full_filepath << std::endl;
                 try {
                     fs::CreateDirectoryTreeForFolder(full_filepath);
@@ -151,7 +151,8 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                         path.erase(f, 1);
                     std::cout<<" NEW FOLDER PATH " << path << std::endl;
                     rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
-                    (*folder_itr).set_folderpath(aliased_new_path);
+                    //(*folder_itr).set_folderpath(aliased_new_path);
+                    (*folder_itr).set_folderpath(path);
                 }
             }
             // Update filepath
