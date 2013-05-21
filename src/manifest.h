@@ -68,11 +68,12 @@ public:
     int QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
     bool RemoveFileInfo(const std::string &filepath);
 
-
     // Folder Table
     bool InsertFolderInfo(const std::string& folderpath, 
                           const std::string& folderpostid,
-                          const std::string& parentpostid);
+                          const std::string& parentpostid,
+                          const std::string& alias_data);
+
     bool QueryForFolder(const std::string& folderpath, Folder& out);
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
 

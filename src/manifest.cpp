@@ -129,6 +129,7 @@ bool Manifest::PerformQuery(const std::string& query) const {
                            &szError);
 
     if(rc != SQLITE_OK) {
+        std::cout<<" ERROR with query : " << query << std::endl;
         fprintf(stderr, "SQL error: %s\n", szError);
         if(szError) {
             sqlite3_free(szError);
@@ -751,11 +752,14 @@ bool Manifest::UpdateFolderPath(const std::string& post_id, const std::string& f
 }
 
 bool Manifest::UpdateAliasData(const std::string& folderpath, const std::string& alias_data) {
+    std::string alias_encoded;
+    crypto::Base64EncodeString(alias_data, alias_encoded);
+
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
     exc += " SET alias_data=\"";
-    exc += alias_data;
+    exc += alias_encoded;
     exc += "\" WHERE folderpath=\"";
     exc += folderpath;
     exc += "\";";
@@ -763,11 +767,14 @@ bool Manifest::UpdateAliasData(const std::string& folderpath, const std::string&
 }
 
 bool Manifest::UpdateAliasDataByPostId(const std::string& post_id, const std::string& alias_data) {
+    std::string alias_encoded;
+    crypto::Base64EncodeString(alias_data, alias_encoded);
+
     std::string exc;
     exc += "UPDATE ";
     exc += g_foldertable;
     exc += " SET alias_data=\"";
-    exc += alias_data;
+    exc += alias_encoded;
     exc += "\" WHERE post_id=\"";
     exc += post_id;
     exc += "\";";
@@ -874,13 +881,14 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
 
 bool Manifest::InsertFolderInfo(const std::string& folderpath, 
                                 const std::string& post_id,
-                                const std::string& parentpostid) {
+                                const std::string& parentpostid,
+                                const std::string& alias_data) {
     std::cout<<" is folder in manifest ? : " << IsFolderInManifest(folderpath) << std::endl;
     if(!IsFolderInManifest(folderpath)) {
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
         exc += g_foldertable;
-        exc += " (folderpath, post_id, parent_post_id) VALUES (?,?,?);";  
+        exc += " (folderpath, post_id, parent_post_id, alias_data) VALUES (?,?,?,?);";  
 
         // Prepare statement
         sqlite3_stmt* stmt = NULL;
@@ -903,6 +911,18 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath,
                                         3, 
                                         parentpostid.c_str(), 
                                         parentpostid.size(), 
+                                        SQLITE_STATIC);
+                if(ret != SQLITE_OK) {
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
+                    return false;
+                }
+
+                std::string alias_encoded;
+                crypto::Base64EncodeString(alias_data, alias_encoded);
+                ret = sqlite3_bind_text(stmt, 
+                                        4,
+                                        alias_encoded.c_str(),
+                                        alias_encoded.size(),
                                         SQLITE_STATIC);
                 if(ret != SQLITE_OK) {
                     printf("Error message: %s\n", sqlite3_errmsg(db_));
@@ -1028,13 +1048,9 @@ void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step,
     out.set_folderpath(res.results_[0+step]);
     out.set_folder_post_id(res.results_[1+step]);
     out.set_parent_post_id(res.results_[2+step]);
-    out.DeserializeAliasData(res.results_[3+step]);
-
-    std::cout<< "results : " << std::endl;
-    std::cout<< "\t" << res.results_[0+step] << std::endl;
-    std::cout<< "\t" << res.results_[1+step] << std::endl;
-    std::cout<< "\t" << res.results_[2+step] << std::endl;
-    std::cout<< "\t" << res.results_[3+step] << std::endl;
+    std::string alias_decoded;
+    crypto::Base64DecodeString(res.results_[3+step], alias_decoded);
+    out.DeserializeAliasData(alias_decoded);
 }
 
 }//namespace
