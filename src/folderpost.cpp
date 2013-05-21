@@ -24,15 +24,11 @@ void FolderPost::Serialize(Json::Value& root) {
 
     Json::Value folder_content(Json::objectValue);
     Json::Value aliases;
-    SerializePastAliases(aliases);
+    jsn::SerializeVector(*folder_.alias_data(), aliases);
     folder_content["past_aliases"] = aliases;
+
     set_content("folder_content", folder_content);
-
     Post::Serialize(root);
-}
-
-void FolderPost::SerializePastAliases(Json::Value& val) {
-    jsn::SerializeVector(past_aliases_, val);
 }
 
 void FolderPost::Deserialize(Json::Value& root) {
@@ -46,13 +42,10 @@ void FolderPost::Deserialize(Json::Value& root) {
 
     Json::Value folder_content;
     get_content("folder_content", folder_content);
-    DeserializePastAliases(folder_content["past_aliases"]);
+    std::vector<std::string> v;
+    jsn::DeserializeIntoVector(folder_content["past_aliases"], v);
+    folder_.set_alias_data(v);
 }
 
-void FolderPost::DeserializePastAliases(Json::Value& val) {
-    jsn::DeserializeIntoVector(val, past_aliases_);
-    for(int i=0; i<past_aliases_.size();i++)
-        std::cout<<past_aliases_[i]<<std::endl;
-}
 
 }//namespace
