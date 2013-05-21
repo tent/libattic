@@ -50,7 +50,6 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
                                          FolderPost& out) {
     out = fp;
     Folder f = folder;
-    f.PushBackAlias(fp.folder().folderpath());
     out.set_folder(f);
 
     Parent parent;

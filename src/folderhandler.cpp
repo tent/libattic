@@ -122,8 +122,8 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
 
 void FolderHandler::RenameFolder(const std::string& old_folderpath, 
                                  const std::string& new_folderpath,
-                                 std::deque<FileInfo> file_list,
-                                 std::deque<Folder> folder_list) {
+                                 std::deque<FileInfo>& file_list,
+                                 std::deque<Folder>& folder_list) {
     std::cout<<" rename folder called " << std::endl;
     // Retrieve all sub folders and files
     
@@ -151,7 +151,6 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                         path.erase(f, 1);
                     std::cout<<" NEW FOLDER PATH " << path << std::endl;
                     rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
-                    (*folder_itr).PushBackAlias(aliased_old_path);
                     (*folder_itr).set_folderpath(aliased_new_path);
                 }
             }

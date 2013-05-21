@@ -27,8 +27,8 @@ public:
     
     void RenameFolder(const std::string& old_folderpath, 
                       const std::string& new_folderpath,
-                      std::deque<FileInfo> file_list,
-                      std::deque<Folder> folder_list);
+                      std::deque<FileInfo>& file_list,
+                      std::deque<Folder>& folder_list);
 
     void DeleteFolder(const std::string& folderpath, 
                       std::deque<FileInfo>& file_out,
