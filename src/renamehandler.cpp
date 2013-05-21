@@ -48,8 +48,9 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
                                          const Folder& folder,
                                          FolderPost& out) {
     out = fp;
-    out.PushBackAlias(fp.folder().folderpath());
-    out.set_folder(folder);
+    Folder f = folder;
+    f.PushBackAlias(fp.folder().folderpath());
+    out.set_folder(f);
 
     Parent parent;
     parent.version = fp.version()->id();

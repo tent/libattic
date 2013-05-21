@@ -26,7 +26,9 @@ public:
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);
     
     void RenameFolder(const std::string& old_folderpath, 
-                      const std::string& new_folderpath);
+                      const std::string& new_folderpath,
+                      std::deque<FileInfo> file_list,
+                      std::deque<Folder> folder_list);
 
     void DeleteFolder(const std::string& folderpath, 
                       std::deque<FileInfo>& file_out,
