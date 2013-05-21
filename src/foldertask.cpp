@@ -59,7 +59,33 @@ int FolderTask::RenameFolder() {
     std::deque<Folder> folder_list;
 
     FolderHandler fh(file_manager());
-    fh.RenameFolder(old_folderpath, new_folderpath);
+    fh.RenameFolder(old_folderpath, new_folderpath, file_list, folder_list);
+
+    std::deque<Folder>::iterator folder_itr = folder_list.begin();
+    for(;folder_itr != folder_list.end(); folder_itr++) {
+        // Update Folder Post
+        if(!(*folder_itr).folder_post_id().empty()) {
+            FolderPost fp(*folder_itr);
+            PostFolderPost((*folder_itr).folder_post_id(), fp);
+        }
+        else {
+            std::cout<<" EMPTY POST ID " << std::endl;
+        }
+    }
+
+    std::deque<FileInfo>::iterator file_itr = file_list.begin();
+    for(;file_itr != file_list.end(); file_itr++) {
+        FilePost fp;
+        fp.InitializeFilePost(&(*file_itr));
+        if(!fp.id().empty()) {
+            PostFilePost(fp.id(), fp);
+        }
+        else {
+            std::cout<<" EMPTY POST ID " << std::endl;
+        }
+
+
+    }
 
     return status;
 }
