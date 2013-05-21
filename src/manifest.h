@@ -64,11 +64,8 @@ public:
     bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
     int QueryAllFiles(FileInfoList& out);
-
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
-
     int QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
-
     bool RemoveFileInfo(const std::string &filepath);
 
 
@@ -86,9 +83,14 @@ public:
     bool UpdateFolderParentPostId(const std::string& folderpath, const std::string& parent_post_id);
     bool UpdateFolderPath(const std::string& post_id, const std::string& folderpath);
 
+    bool UpdateAliasData(const std::string& folderpath, const std::string& alias_data);
+    bool UpdateAliasDataByPostId(const std::string& post_id, const std::string& alias_data);
+
     bool GetFolderPostID(const std::string& folderpath, std::string& out);
     bool GetFolderPath(const std::string& folder_manifest_id, std::string& path_out);
     bool GetFolderID(const std::string& folderpath, std::string& out);
+    bool GetAliasData(const std::string& folderpath, std::string& out);
+
     bool RemoveFolderData(const std::string& folderpath);
 
     bool UpdateAllFileInfoForFolder(const std::string& folderid);

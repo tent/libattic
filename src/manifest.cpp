@@ -111,7 +111,7 @@ bool Manifest::CreateFolderTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += g_foldertable;
-    exc += " (folderpath TEXT, post_id TEXT, parent_post_id TEXT,";
+    exc += " (folderpath TEXT, post_id TEXT, parent_post_id TEXT, alias_data TEXT,";
     exc += " PRIMARY KEY(folderpath ASC, post_id ASC, parent_post_id ASC));";
 
     return PerformQuery(exc);
@@ -684,7 +684,6 @@ bool Manifest::UpdateFilename(const std::string& filepath, const std::string& ne
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc += "\";";
-
     return PerformQuery(exc);
 }
 
@@ -697,7 +696,6 @@ bool Manifest::UpdateFileFolderPostId(const std::string& filepath, const std::st
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc += "\";";
-
     return PerformQuery(exc);
 }
 
@@ -712,7 +710,6 @@ bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& a
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc += "\";";
-
     return PerformQuery(exc);
 }
 
@@ -750,8 +747,55 @@ bool Manifest::UpdateFolderPath(const std::string& post_id, const std::string& f
     exc += "\" WHERE post_id=\"";
     exc += post_id;
     exc += "\";";
-
     return PerformQuery(exc);
+}
+
+bool Manifest::UpdateAliasData(const std::string& folderpath, const std::string& alias_data) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_foldertable;
+    exc += " SET alias_data=\"";
+    exc += alias_data;
+    exc += "\" WHERE folderpath=\"";
+    exc += folderpath;
+    exc += "\";";
+    return PerformQuery(exc);
+}
+
+bool Manifest::UpdateAliasDataByPostId(const std::string& post_id, const std::string& alias_data) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_foldertable;
+    exc += " SET alias_data=\"";
+    exc += alias_data;
+    exc += "\" WHERE post_id=\"";
+    exc += post_id;
+    exc += "\";";
+   return PerformQuery(exc);
+}
+
+bool Manifest::GetAliasData(const std::string& folderpath, std::string& out) {
+    std::string query;
+    query += "SELECT alias_data FROM ";
+    query += g_foldertable;
+    query += " WHERE folderpath=\"";
+    query += folderpath;
+    query += "\";";
+
+    SelectResult res;
+    if(!PerformSelect(query.c_str(), res))
+        return false;
+
+    int step = 0;
+    for(int i=0; i<res.row_+1; i++) {
+        step = i*res.col_;
+        if(step > 0)
+            out = res.results_[0+step];
+    }
+
+    if(!step)
+        return false;
+    return true;
 }
 
 bool Manifest::GetFolderPostID(const std::string& folderpath, std::string& out) {
@@ -984,11 +1028,13 @@ void Manifest::ExtractFolderInfoResults(const SelectResult& res, const int step,
     out.set_folderpath(res.results_[0+step]);
     out.set_folder_post_id(res.results_[1+step]);
     out.set_parent_post_id(res.results_[2+step]);
+    out.DeserializeAliasData(res.results_[3+step]);
 
     std::cout<< "results : " << std::endl;
     std::cout<< "\t" << res.results_[0+step] << std::endl;
     std::cout<< "\t" << res.results_[1+step] << std::endl;
     std::cout<< "\t" << res.results_[2+step] << std::endl;
+    std::cout<< "\t" << res.results_[3+step] << std::endl;
 }
 
 }//namespace
