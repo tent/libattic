@@ -142,8 +142,10 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
     if(GetFolderEntry(alias_old, folder)){
         if(!alias_new.empty()) {
             //Update folder path
+            folder.PushBackAlias(alias_old);
             Lock();
             manifest_.UpdateFolderPath(folder.folder_post_id(), alias_new);
+            manifest_.UpdateAliasData(folder.folder_post_id(), folder.SerializeAliasData());
             Unlock();
             //Update folder contents
             Lock();
