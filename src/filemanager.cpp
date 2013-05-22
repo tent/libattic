@@ -264,10 +264,10 @@ void FileManager::SetFileFolderPostId(const std::string& filepath, const std::st
 }
 
 void FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
-    FileInfo* fi = GetFileInfo(filepath);
-    if(fi) {
-        fi->set_chunks(map);
-        InsertToManifest(fi);
+    FileInfo fi;
+    if(GetFileInfo(filepath, fi)) {
+        fi.set_chunks(map);
+        InsertToManifest(&fi);
     }
     else {
         std::cout<<" INVALID FILEINFO OBJECT " << std::endl;

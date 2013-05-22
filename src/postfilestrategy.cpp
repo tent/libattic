@@ -338,6 +338,7 @@ void PostFileStrategy::GetMasterKey(std::string& out) {
     mKey.GetMasterKey(out);
 }
 
+// TODO :: abstract parts tofile handler, get rid of this method
 void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred, 
                                       const std::string& filepath, 
                                       const std::string& chunkpostid,
@@ -393,7 +394,9 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
     bool ret = false;
     FileHandler fh(file_manager_);
     if(!fh.DoesFileExist(filepath)) {
-        if(fh.CreateNewFile(filepath, out)) {
+        std::string mk;
+        GetMasterKey(mk);
+        if(fh.CreateNewFile(filepath, mk, out)) {
             FilePost fp;
             fp.InitializeFilePost(&out, false);
             PostHandler<FilePost> ph(access_token_);
@@ -480,6 +483,7 @@ bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
     return ret;
 }
 
+// TODO :: move to file handler
 int PostFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     int status = ret::A_OK;
     
