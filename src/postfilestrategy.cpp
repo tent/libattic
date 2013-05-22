@@ -19,6 +19,7 @@
 #include "censushandler.h"
 #include "chunktransform.h"
 #include "posthandler.h"
+#include "filehandler.h"
 
 #include "sleep.h"
 
@@ -42,32 +43,35 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
 
     if(fs::CheckFilepathExists(filepath)) {
-        FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
-        std::string meta_post_id;
-        status = InitializeFileMetaData(fi, filepath, meta_post_id);
+        FileInfo fi;
+        if(!RetrieveFileInfo(filepath, fi))
+            return ret::A_FAIL_INVALID_FILE_INFO;
+        std::string file_post_id = fi.post_id();
+        status = UpdateFilePostTransitState(file_post_id, true);
+
         std::cout<<" File Meta Data initialization status : " << status << std::endl;
         // Verify key credentials
-        if(!fi->file_credentials().key_empty()) {
-            std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
-            if(status == ret::A_OK && !meta_post_id.empty()) {
+        if(!fi.file_credentials().key_empty()) {
+            std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
+            if(status == ret::A_OK && !file_post_id.empty()) {
                 // Retrieve Chunk posts
                 ChunkPostList chunk_posts;
-                RetrieveChunkPosts(entity, meta_post_id, chunk_posts);
+                RetrieveChunkPosts(entity, file_post_id, chunk_posts);
                 // Extract Chunk info
                 FileInfo::ChunkMap chunk_map;
                 ExtractChunkInfo(chunk_posts, chunk_map);
                 // begin chunking
-                status = ChunkFile(filepath, fi->file_credentials(), meta_post_id, chunk_posts, chunk_map);
+                status = ChunkFile(filepath, fi.file_credentials(), file_post_id, chunk_posts, chunk_map);
                 std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
 
                 if(status == ret::A_OK) { 
                     // Update file info
-                    file_manager_->SetFileChunks(fi->filepath(), chunk_map);
+                    file_manager_->SetFileChunks(fi.filepath(), chunk_map);
                     // Update meta data transit state
-                    status = UpdateFilePostTransitState(meta_post_id, false);
+                    status = UpdateFilePostTransitState(file_post_id, false);
 
                     // Last thing that should happen
-                    if(!UpdateFilePostVersion(fi, meta_post_id)){
+                    if(!UpdateFilePostVersion(&fi, file_post_id)){
                         std::string error = " Failed to update file post version";
                         log::LogString("MASDF@12934", error);
                     }
@@ -77,7 +81,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
                 }
             }
-            else if(status == ret::A_OK && meta_post_id.empty()) {
+            else if(status == ret::A_OK && file_post_id.empty()) {
                 std::cout<<" META POST ID EMPTY " << std::endl;
                 status = ret::A_FAIL_INVALID_POST_ID;
             }
@@ -159,7 +163,7 @@ void PostFileStrategy::ExtractChunkInfo(ChunkPostList& list,
 
 int PostFileStrategy::ChunkFile(const std::string& filepath,
                                 const Credentials& file_credentials,
-                                const std::string& file_meta_post_id,
+                                const std::string& file_post_id,
                                 ChunkPostList& chunk_list,
                                 FileInfo::ChunkMap& chunk_map) {
     // To Chunk a file
@@ -184,7 +188,7 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 cr = new ChunkRequest(entity, 
                                       posts_feed_, 
                                       post_path_, 
-                                      file_meta_post_id, 
+                                      file_post_id, 
                                       access_token_, 
                                       group_count);
                 // Begin new chunk post
@@ -385,207 +389,59 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
     file_manager_->InsertToManifest(fi);
 }
 
-FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = file_manager_->GetFileInfo(filepath);
-    if(!fi) { 
-        // Initialize File Info
-        // Set keys
-        // - filepath
-        // - folder post id
-        // - file post id
-        // Create Other initialization minutia
-        // - Generate file credentials
-        fi = file_manager_->CreateFileInfo();
-        // Get folder id
-        std::string folderpath;
-        if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
-            std::string folderid;
-            std::cout<<" getting folder path : " << folderpath << std::endl;
-            if(file_manager_->GetFolderPostId(folderpath, folderid)) {
-                std::cout<<" folder id : " << folderid << std::endl;
-                std::string aliased;
-                file_manager_->GetAliasedFilepath(filepath, aliased);
-                std::cout<<" aliased : " << aliased << std::endl;
-                fi->set_filepath(aliased);
-                fi->set_folder_post_id(folderid);
-                file_manager_->SetFileFolderPostId(aliased, folderid);
-                fi->set_folder_post_id(folderid);
-                // Create Initial File Post
-                FilePost fp;
-                fp.InitializeFilePost(fi, false);
-                
-                PostHandler<FilePost> ph(access_token_);
-                Response response;
-                int status = ph.Post(posts_feed_, NULL, fp, response);
-                if(status == ret::A_OK) {
-                    Post post;
-                    jsn::DeserializeObject(&post, response.body);
-                    fi->set_post_id(post.id());
-                    Credentials file_cred;
-                    while(file_cred.key_empty())
-                        crypto::GenerateCredentials(file_cred);
-                    fi->set_file_credentials(file_cred);
-                    file_manager_->InsertToManifest(fi);
-                }
-            }
-
-            else {
-                std::cout<<" Could not fild folder post id " << std::endl;
-
-            }
-        }
-    }
-    else {
-        std::cout<< " file info exists ... " << std::endl;
-    }
-    return fi;
-}
-
-int PostFileStrategy::InitializeFileMetaData(FileInfo* fi, 
-                                             const std::string& filepath,
-                                             std::string& post_id_out) {
-    // If file info doesn't have a post, make sure it's created
-    int status = ret::A_OK;
-    // Setup File Meta Data
-    std::string meta_data_post_id = fi->post_id();
-
-    if(meta_data_post_id.empty()) {
-        std::cout<<" creating new post " << std::endl;
-        // Get Folder post id
-        std::string folder_post_id;
-        if(RetrieveFolderPostId(filepath, folder_post_id)) {
-            std::string entity = GetConfigValue("entity");
-
-            Credentials file_cred;
-            while(file_cred.key_empty())
-                crypto::GenerateCredentials(file_cred);
-            UpdateFileInfo(file_cred, filepath, "", "", fi);
-
-            std::string posturl = posts_feed_;
-            // New Post
-            FilePost p;
-            p.InitializeFilePost(fi, false);
-            p.MentionPost(entity, folder_post_id);
-            p.set_fragment(cnst::g_transit_fragment);
-            std::string post_buffer;
-            jsn::SerializeObject(&p, post_buffer);
-
+bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
+    bool ret = false;
+    FileHandler fh(file_manager_);
+    if(!fh.DoesFileExist(filepath)) {
+        if(fh.CreateNewFile(filepath, out)) {
+            FilePost fp;
+            fp.InitializeFilePost(&out, false);
+            PostHandler<FilePost> ph(access_token_);
             Response response;
-            //ConnectionHandler ch;
-            status = netlib::HttpPost(posturl,
-                                      p.type(),
-                                      NULL,
-                                      post_buffer,
-                                      &access_token_,
-                                      response);
-            if(response.code == 200) {
+            if(ph.Post(posts_feed_, NULL, fp, response) == ret::A_OK) {
                 Post post;
                 jsn::DeserializeObject(&post, response.body);
-                file_manager_->SetFilePostId(filepath, post.id());
-
-                meta_data_post_id = post.id();
-                fi->set_post_id(post.id());
-                
-                FileInfo* ffi = RetrieveFileInfo(filepath);
-                std::cout<<"encrypted key : " << ffi->encrypted_key() << std::endl;
-
-                UpdateFileInfo(file_cred, filepath, "", "", fi);
-            }
-            else {
-                status = ret::A_FAIL_NON_200;
-                log::LogHttpResponse("_---_---901", response);
+                out.set_post_id(post.id());
+                fh.UpdateFilePostId(out.filepath(), post.id());
+                return true;
             }
         }
-        else {
-            status = ret::A_FAIL_INVALID_FOLDER_POST;
-        }
     }
-    else {
-        std::cout<<" file post already exists " << std::endl;
-        // Get existing file post, and extract credentials
-        // make sure this has file credentials, if not pull from post
-        std::string posturl;
-        utils::FindAndReplace(post_path_, "{post}", meta_data_post_id, posturl);
-
-        std::cout<<"\t post url : " << posturl << std::endl;
-
-        Response resp;
-        //ConnectionHandler ch;
-        netlib::HttpGet(posturl, NULL, &access_token_, resp);
-
-        if(resp.code == 200) {
-            FilePost fp;
-            jsn::DeserializeObject(&fp, resp.body);
-            Credentials cred;
-            ExtractCredentials(fp, cred);
-            fi->set_file_credentials(cred);
-        }
-        else {
-            log::LogHttpResponse("MASDK@#8", resp);
-        }
-    }
-
-    if(status == ret::A_OK) {
-        status = UpdateFilePostTransitState(meta_data_post_id, true);
-    }
-
-    post_id_out = meta_data_post_id;
-
-    return status;
+    return false;
 }
 
 int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, bool in_transit) {
     int status = ret::A_OK;
-    std::string posturl;
-    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    FilePost p;
-    // Get Existing post
-    Response get_resp;
-    ConnectionHandler ch;
-    netlib::HttpGet(posturl,
-               NULL,
-               &access_token_,
-               get_resp);
+    if(!post_id.empty()) {
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-    if(get_resp.code == 200) {
-        jsn::DeserializeObject(&p, get_resp.body);
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-        log::LogHttpResponse("nmasd981", get_resp);
-    }
+        PostHandler<FilePost> ph(access_token_);
+        FilePost p;
+        Response get_resp;
+        status = ph.Get(posturl, NULL, p, get_resp);
 
-    if(status == ret::A_OK) {
-        Parent parent;
-        parent.version = p.version()->id();
-        // Set its transit state
-        p.clear_fragment();
-        p.PushBackParent(parent);
-        // Put
-        std::string put_buffer;
-        jsn::SerializeObject(&p, put_buffer);
+        if(status == ret::A_OK) {
+            p.clear_fragment();
+            if(in_transit)
+                p.set_fragment(cnst::g_transit_fragment);
 
-        std::cout << " UPDATE FILE POST TYPE : " << p.type() << std::endl;
-
-        Response put_resp;
-        //ConnectionHandler ch;
-        status = netlib::HttpPut(posturl,
-                                 p.type(),
-                                 NULL,
-                                 put_buffer,
-                                 &access_token_,
-                                 put_resp);
-
-        std::cout<< " code " << put_resp.code << std::endl;
-        std::cout<< " body " << put_resp.body << std::endl;
-        if(put_resp.code == 200) {
+            Response put_resp;
+            status = ph.Put(posturl, NULL, p, put_resp);
+            if(status != ret::A_OK) {
+                status = ret::A_FAIL_NON_200;
+                log::LogHttpResponse("PO1090MASDF", put_resp);
+            }
         }
         else {
             status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("PO1090MASDF", put_resp);
+            log::LogHttpResponse("nmasd981", get_resp);
         }
-    }
 
+    }
+    else {
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
     return status;
 }
 

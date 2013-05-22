@@ -34,9 +34,7 @@ private:
                         const std::string& post_version,
                         FileInfo* fi);
 
-    FileInfo* RetrieveFileInfo(const std::string& filepath);
-
-    int InitializeFileMetaData(FileInfo* fi, const std::string& filepath, std::string& post_id_out);
+    bool RetrieveFileInfo(const std::string& filepath, FileInfo& out);
 
     int RetrieveChunkPosts(const std::string& entity,
                            const std::string& post_id,
@@ -44,7 +42,7 @@ private:
 
     int ChunkFile(const std::string& filepath,
                   const Credentials& file_credentials,
-                  const std::string& file_meta_post_id,
+                  const std::string& file_post_id,
                   ChunkPostList& chunk_list,
                   FileInfo::ChunkMap& chunk_map);
 
