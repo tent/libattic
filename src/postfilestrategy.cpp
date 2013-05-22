@@ -18,6 +18,7 @@
 #include "pagepost.h"
 #include "censushandler.h"
 #include "chunktransform.h"
+#include "posthandler.h"
 
 #include "sleep.h"
 
@@ -387,6 +388,13 @@ void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred,
 FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
     FileInfo* fi = file_manager_->GetFileInfo(filepath);
     if(!fi) { 
+        // Initialize File Info
+        // Set keys
+        // - filepath
+        // - folder post id
+        // - file post id
+        // Create Other initialization minutia
+        // - Generate file credentials
         fi = file_manager_->CreateFileInfo();
         // Get folder id
         std::string folderpath;
@@ -398,9 +406,29 @@ FileInfo* PostFileStrategy::RetrieveFileInfo(const std::string& filepath) {
                 std::string aliased;
                 file_manager_->GetAliasedFilepath(filepath, aliased);
                 std::cout<<" aliased : " << aliased << std::endl;
+                fi->set_filepath(aliased);
+                fi->set_folder_post_id(folderid);
                 file_manager_->SetFileFolderPostId(aliased, folderid);
                 fi->set_folder_post_id(folderid);
+                // Create Initial File Post
+                FilePost fp;
+                fp.InitializeFilePost(fi, false);
+                
+                PostHandler<FilePost> ph(access_token_);
+                Response response;
+                int status = ph.Post(posts_feed_, NULL, fp, response);
+                if(status == ret::A_OK) {
+                    Post post;
+                    jsn::DeserializeObject(&post, response.body);
+                    fi->set_post_id(post.id());
+                    Credentials file_cred;
+                    while(file_cred.key_empty())
+                        crypto::GenerateCredentials(file_cred);
+                    fi->set_file_credentials(file_cred);
+                    file_manager_->InsertToManifest(fi);
+                }
             }
+
             else {
                 std::cout<<" Could not fild folder post id " << std::endl;
 

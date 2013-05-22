@@ -60,6 +60,7 @@ public:
     int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
     int GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out);
 
+    int GetFileInfo(const std::string& filepath, FileInfo& out);
     FileInfo* GetFileInfo(const std::string &filepath);
     FileInfo* GetFileInfoByPostId(const std::string& post_id);
 

@@ -399,6 +399,30 @@ FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
     return fi;
 }
 
+
+bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
+    std::string relative;
+    if(!IsPathRelative(filepath)) {
+        AttemptToGetRelativePath(filepath, relative);
+    } 
+    else
+        relative = filepath;
+
+    // Attempt to get relative path
+    if(IsPathRelative(relative)) {
+        Lock();
+        bool ret = manifest_.IsFileInManifest(relative);
+        if(ret)
+            manifest_.QueryForFile(relative, out);
+        Unlock();
+    }
+    else {
+        std::cout<<"GETFILEINFO FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
+    }
+
+    return ret;
+}
+
 FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     FileInfo* pFi = NULL;
     std::string relative;

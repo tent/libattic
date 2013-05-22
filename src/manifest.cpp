@@ -430,12 +430,8 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string alias_encoded;
     crypto::Base64EncodeString(alias_data, alias_encoded);
 
-
     std::string query;
-    if(IsFileInManifest(fi.filepath())) 
-        query += "UPDATE OR REPLACE INTO ";
-    else
-        query += "INSERT OR REPLACE INTO ";
+    query += "INSERT OR REPLACE INTO ";
     query += g_infotable;
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id, alias_data)";

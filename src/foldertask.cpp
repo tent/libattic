@@ -1,8 +1,8 @@
 #include "foldertask.h"
 
 #include "errorcodes.h"
-#include "netlib.h"
 #include "folderhandler.h"
+#include "posthandler.h"
 
 namespace attic {
 FolderTask::FolderTask(FileManager* pFm,
@@ -88,6 +88,7 @@ int FolderTask::RenameFolder() {
     for(;file_itr != file_list.end(); file_itr++) {
         FilePost fp;
         fp.InitializeFilePost(&(*file_itr));
+        std::cout<<" file relative path : " << fp.relative_path() << std::endl;
         if(!fp.id().empty()) {
             PostFilePost(fp.id(), fp);
         }
@@ -191,30 +192,15 @@ int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed(); 
     // Create folderpost                                   
     FolderPost fp(folder);                                 
-    std::string body;                                      
-    jsn::SerializeObject(&fp, body);                       
-    // on success update post id in folder object          
+
+    PostHandler<FolderPost> ph(access_token());
     Response response;                                     
-    netlib::HttpPost(posts_feed,
-                     fp.type(),
-                     NULL,
-                     body,
-                     &access_token(),
-                     response);
+    status = ph.Post(posts_feed, NULL, fp, response);
+    if(status != ret::A_OK)
+        log::LogHttpResponse("lasp151", response);
+    else 
+        std::cout << response.body << std::endl;
 
-    std::cout<<" FOLDER RESPONSE : " << std::endl;
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
-
-    if(response.code == 200) {                             
-        FolderPost back;                                   
-        jsn::DeserializeObject(&back, response.body);      
-        folder.set_folder_post_id(back.id());              
-        id_out = back.id();
-    }                                                      
-    else {                                                 
-        status = ret::A_FAIL_NON_200;                      
-    }                                                      
     return status;                                         
 }                                                          
 
@@ -227,19 +213,13 @@ int FolderTask::RetrieveFilePost(const std::string& post_id, FilePost& out) {
         utils::FindAndReplace(post_path, "{post}", post_id, posturl);
         std::cout<<" POST URL : " << posturl << std::endl;
 
-        Response resp;
-        netlib::HttpGet(posturl,
-                        NULL,
-                        &access_token(),
-                        resp);
-
-        if(resp.code == 200) {
-            jsn::DeserializeObject(&out, resp.body);
-        }
-        else{
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("175kjas", resp);
-        }
+        PostHandler<FilePost> ph(access_token());
+        Response response;
+        status = ph.Get(posturl, NULL, out, response);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("175kjas", response);
+        else 
+            std::cout << response.body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -256,27 +236,14 @@ int FolderTask::PostFilePost(const std::string& post_id, FilePost& fp) {
         std::cout<<" post url : " << posturl << std::endl;
         std::cout<<" post type : " << fp.type() << std::endl;
 
-        Parent parent;
-        parent.version = fp.version()->id();
-        fp.PushBackParent(parent);
 
-        std::string body;
-        jsn::SerializeObject(&fp, body);
-        Response resp;
-        netlib::HttpPut(posturl,
-                         fp.type(),
-                         NULL,
-                         body,
-                         &access_token(),
-                         resp);
-        if(resp.code == 200) {
-            std::cout<<" BODY : " << resp.body << std::endl;
-
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("192151mm", resp);
-        }
+        PostHandler<FilePost> ph(access_token());
+        Response response;
+        status = ph.Put(posturl, NULL, fp, response);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("mas1o8", response);
+        else 
+            std::cout << response.body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -292,19 +259,13 @@ int FolderTask::RetrieveFolderPost(const std::string& post_id, FolderPost& out) 
         utils::FindAndReplace(post_path, "{post}", post_id, posturl);
         std::cout<<" POST URL : " << posturl << std::endl;
 
-        Response resp;
-        netlib::HttpGet(posturl,
-                        NULL,
-                        &access_token(),
-                        resp);
-
-        if(resp.code == 200) {
-            jsn::DeserializeObject(&out, resp.body);
-        }
-        else{
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("175kjas", resp);
-        }
+        PostHandler<FolderPost> ph(access_token());
+        Response response;
+        status = ph.Get(posturl, NULL, out, response);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("asgwolf31", response);
+        else 
+            std::cout << response.body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -322,27 +283,13 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         std::cout<<" post type : " << fp.type() << std::endl;
         std::cout<<" folderpath : " << fp.folder().folderpath() << std::endl;
 
-        Parent parent;
-        parent.version = fp.version()->id();
-        fp.PushBackParent(parent);
-
-        std::string body;
-        jsn::SerializeObject(&fp, body);
-        Response resp;
-        netlib::HttpPut(posturl,
-                         fp.type(),
-                         NULL,
-                         body,
-                         &access_token(),
-                         resp);
-        if(resp.code == 200) {
-            std::cout<<" BODY : " << resp.body << std::endl;
-
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("192151mm", resp);
-        }
+        PostHandler<FolderPost> ph(access_token());
+        Response response;
+        status = ph.Put(posturl, NULL, fp, response);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("naven32109", response);
+        else 
+            std::cout << response.body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
