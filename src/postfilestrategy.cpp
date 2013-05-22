@@ -44,6 +44,7 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
         FileInfo* fi = RetrieveFileInfo(filepath); // null check in method call
         std::string meta_post_id;
         status = InitializeFileMetaData(fi, filepath, meta_post_id);
+        std::cout<<" File Meta Data initialization status : " << status << std::endl;
         // Verify key credentials
         if(!fi->file_credentials().key_empty()) {
             std::cout<<" INITIALIZED META POST ID : "<< meta_post_id << std::endl;
@@ -421,6 +422,7 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
     std::string meta_data_post_id = fi->post_id();
 
     if(meta_data_post_id.empty()) {
+        std::cout<<" creating new post " << std::endl;
         // Get Folder post id
         std::string folder_post_id;
         if(RetrieveFolderPostId(filepath, folder_post_id)) {
@@ -471,10 +473,13 @@ int PostFileStrategy::InitializeFileMetaData(FileInfo* fi,
         }
     }
     else {
+        std::cout<<" file post already exists " << std::endl;
         // Get existing file post, and extract credentials
         // make sure this has file credentials, if not pull from post
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", meta_data_post_id, posturl);
+
+        std::cout<<"\t post url : " << posturl << std::endl;
 
         Response resp;
         //ConnectionHandler ch;
