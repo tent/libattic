@@ -126,8 +126,14 @@ static int HeadRequestEntity(const std::string& entityurl, std::string& linkOut)
 static void ConstructMetaPath(const std::string& entityurl,
                               const std::string& metaendpoint,
                               std::string& out) {
+    std::cout<<" entity url : " << entityurl << std::endl;
+    std::cout<<" meta endpoint : " << metaendpoint << std::endl;
+    // uri decode
+    std::string endpoint = netlib::UriDecode(metaendpoint);
+    std::cout<<" meta endpoint (decoded) : " << endpoint << std::endl;
     // Check if already absolute
-    size_t ent_pos = metaendpoint.find(entityurl);
+    //
+    size_t ent_pos = endpoint.find(entityurl);
     if(ent_pos != std::string::npos && ent_pos != 0) {
         // Construct meta path
         out = entityurl;
