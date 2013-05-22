@@ -60,13 +60,13 @@ public:
     int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
     int GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out);
 
-    int GetFileInfo(const std::string& filepath, FileInfo& out);
+    bool GetFileInfo(const std::string& filepath, FileInfo& out);
     FileInfo* GetFileInfo(const std::string &filepath);
     FileInfo* GetFileInfoByPostId(const std::string& post_id);
 
     void SetFileVersion(const std::string& filepath, const std::string& version);
     void SetFileDeleted(const std::string& filepath, const bool del = true);
-    void SetFilePostId(const std::string& filepath, const std::string& postid);
+    bool SetFilePostId(const std::string& filepath, const std::string& postid);
     void SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
     void SetFileFolderPostId(const std::string& filepath, const std::string& postid);
 

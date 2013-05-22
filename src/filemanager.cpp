@@ -236,17 +236,25 @@ bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
     return MarkFilesInFolderDeleted(folder.folder_post_id());
 }
 
-void FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
-    if(IsPathRelative(filepath)) {
+bool FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
+    std::string relative;
+    if(!IsPathRelative(filepath)) {
+        AttemptToGetRelativePath(filepath, relative);
+    } 
+    else
+        relative = filepath;
+
+    if(!relative.empty()) {
         Lock();
-        manifest_.UpdateFilePostID(filepath, postid);
+        manifest_.UpdateFilePostID(relative, postid);
         Unlock();
     }
-    else {
-        std::cout<<" FILEPATH NOT RELATIVE IN SET POST ID : " << filepath << std::endl;
-    }
+    else
+        return false;
+    return true;
 }
 
+// Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
 void FileManager::SetFileFolderPostId(const std::string& filepath, const std::string& postid) {
     if(IsPathRelative(filepath)) {
         manifest_.UpdateFileFolderPostId(filepath, postid);
@@ -408,10 +416,11 @@ bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     else
         relative = filepath;
 
+    bool ret = false;
     // Attempt to get relative path
     if(IsPathRelative(relative)) {
         Lock();
-        bool ret = manifest_.IsFileInManifest(relative);
+        ret = manifest_.IsFileInManifest(relative);
         if(ret)
             manifest_.QueryForFile(relative, out);
         Unlock();
