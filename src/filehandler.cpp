@@ -56,6 +56,8 @@ bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::strin
     return file_manager_->SetFilePostId(filepath, post_id);
 }
 
+// TODO :: reconsider the relevance of these crypto operations in this class,
+//         perhaps move then to their own class? For now here is fine
 bool FileHandler::EncryptFileKey(const std::string& filepath, 
                                  const std::string& file_key,
                                  const std::string& master_key) {
@@ -87,12 +89,31 @@ bool FileHandler::EncryptFileKey(const std::string& file_key,
                                  const std::string& master_key,
                                  std::string& encrypted_out) {
     if(!master_key.empty() && !file_key.empty() && !file_iv.empty()) {
-        Credentials tcred; 
+        Credentials tcred;                         // Create transient credentials
         tcred.set_key(master_key);                 // master key
         tcred.set_iv(file_iv);                     // file specific iv
         // Encryption call
         crypto::EncryptStringGCM(file_key, tcred, encrypted_out);
         return true;
+    }
+    return false;
+}
+
+// Extract File credentials directly from a filepost
+bool FileHandler::ExtractFileCredetials(const FilePost& fp,
+                                        const std::string& master_key,
+                                        Credentials& out) {
+    if(!master_key.empty()) {
+        Credentials tcred;                         // Create transient credentials
+        tcred.set_key(master_key);                 // master key
+        tcred.set_iv(fp.iv_data());                // file specific iv
+
+        std::string decrypted_key;
+        if(crypto::DecryptStringGCM(fp.key_data(), tcred, decrypted_key) == ret::A_OK) {
+            out.set_key(decrypted_key);
+            out.set_iv(fp.iv_data());
+            return true;
+        }
     }
     return false;
 }

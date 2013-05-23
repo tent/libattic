@@ -5,6 +5,7 @@
 #include <string>
 #include "fileinfo.h"
 #include "filemanager.h"
+#include "filepost.h"
 
 namespace attic { 
 
@@ -33,6 +34,10 @@ public:
                         const std::string& file_iv,
                         const std::string& master_key,
                         std::string& encrypted_out);
+
+    bool ExtractFileCredetials(const FilePost& fp,
+                               const std::string& master_key,
+                               Credentials& out);
 
 private:
     FileManager* file_manager_;
