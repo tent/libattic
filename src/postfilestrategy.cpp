@@ -409,6 +409,9 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
                 return true;
             }
         }
+        else {
+            std::cout<<" FAILED TO CREATE NEW FILE " << std::endl;
+        }
     }
     return false;
 }
