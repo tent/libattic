@@ -28,13 +28,8 @@ private:
                        std::string& nameOut, 
                        ChunkInfo& out);
 
-    void UpdateFileInfo(const Credentials& fileCred, 
-                        const std::string& filepath, 
-                        const std::string& chunkpostid,
-                        const std::string& post_version,
-                        FileInfo* fi);
-
     bool RetrieveFileInfo(const std::string& filepath, FileInfo& out);
+
 
     int RetrieveChunkPosts(const std::string& entity,
                            const std::string& post_id,
@@ -51,6 +46,8 @@ private:
 
     bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
 
+    int RetrieveFilePost(const std::string& post_id, FilePost& out);
+    int UpdateFilePost(FileInfo& fi);
     int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
 
     void GetMasterKey(std::string& out);

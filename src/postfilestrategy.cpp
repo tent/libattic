@@ -44,14 +44,15 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo fi;
-        if(!RetrieveFileInfo(filepath, fi))
+        if(!RetrieveFileInfo(filepath, fi)) // Creats new entry if file is new
             return ret::A_FAIL_INVALID_FILE_INFO;
-        std::string file_post_id = fi.post_id();
-        status = UpdateFilePostTransitState(file_post_id, true);
 
-        std::cout<<" File Meta Data initialization status : " << status << std::endl;
+        std::string file_post_id = fi.post_id();
+        status = UpdateFilePostTransitState(file_post_id, true); // Set file to in transit
+
         // Verify key credentials
         if(!fi.file_credentials().key_empty()) {
+            FileHandler fh(file_manager_);
             std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
             if(status == ret::A_OK && !file_post_id.empty()) {
                 // Retrieve Chunk posts
@@ -66,10 +67,14 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
 
                 if(status == ret::A_OK) { 
                     // Update file info
-                    file_manager_->SetFileChunks(fi.filepath(), chunk_map);
-                    // Update meta data transit state
-                    status = UpdateFilePostTransitState(file_post_id, false);
-
+                    fh.UpdateChunkMap(fi.filepath(), chunk_map);
+                    fh.UpdateFileInfo(fi);
+                    // Update meta data post
+                    status = UpdateFilePost(fi);
+                    if(status == ret::A_OK) {
+                        // Update meta data transit state
+                        status = UpdateFilePostTransitState(file_post_id, false);
+                    }
                     // Last thing that should happen
                     if(!UpdateFilePostVersion(&fi, file_post_id)){
                         std::string error = " Failed to update file post version";
@@ -338,58 +343,6 @@ void PostFileStrategy::GetMasterKey(std::string& out) {
     mKey.GetMasterKey(out);
 }
 
-// TODO :: abstract parts tofile handler, get rid of this method
-void PostFileStrategy::UpdateFileInfo(const Credentials& fileCred, 
-                                      const std::string& filepath, 
-                                      const std::string& chunkpostid,
-                                      const std::string& post_version,
-                                      FileInfo* fi) {
-    std::string filename;
-    utils::ExtractFileName(filepath, filename);
-    unsigned int filesize = utils::CheckFilesize(filepath);
-
-    // Encrypt File Key
-    std::string mk;
-    GetMasterKey(mk);
-
-    fi->set_post_version(post_version);
-
-    // Insert File Data
-    fi->set_chunk_post_id(chunkpostid);
-    fi->set_filepath(filepath);
-    fi->set_filename(filename);
-    fi->set_file_size(filesize);
-    fi->set_file_credentials(fileCred);
-
-    // Encrypt File Key
-    std::string fileKey = fileCred.key();
-    std::string fileIv = fileCred.iv();
-
-    std::cout<<" Update file info file key : " << fileKey << std::endl;
-    std::cout<<" Update file info file iv : " << fileIv << std::endl;
-
-    Credentials fCred;
-    fCred.set_key(mk);
-    fCred.set_iv(fileIv);
-
-    std::string encryptedKey;
-    //crypto::EncryptStringCFB(fileKey, fCred, encryptedKey);
-    crypto::EncryptStringGCM(fileKey, fCred, encryptedKey);
-
-    std::cout<<" Update file ENCRYPTED file key : " << encryptedKey << std::endl;
-    std::string copy_test;
-    copy_test = encryptedKey;
-    std::cout<<" COPY file ENCRYPTED file key : " << copy_test << std::endl;
-    if(encryptedKey == copy_test) { std::cout<<" KEYS ARE THE SAME ! " << std::endl; } else { std::cout<<"KEYS ARE DIFFERENT " << std::endl; }
-
-    fi->set_file_credentials_iv(fileIv);
-    fi->set_file_credentials_key(fileKey);
-    fi->set_encrypted_key(encryptedKey);
-
-    // Insert file info to manifest
-    file_manager_->InsertToManifest(fi);
-}
-
 bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
     bool ret = false;
     FileHandler fh(file_manager_);
@@ -414,6 +367,46 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
         }
     }
     return false;
+}
+
+int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
+    int status = ret::A_OK;
+    if(!fi.post_id().empty()) {
+        FilePost fp;
+        status = RetrieveFilePost(fi.post_id(), fp);
+        if(status == ret::A_OK) {
+            std::string posturl;
+            utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
+            PostHandler<FilePost> ph(access_token_);
+            fp.InitializeFilePost(&fi, false); // update file post
+            Response put_resp; 
+            status = ph.Put(posturl, NULL, fp, put_resp);
+            if(status != ret::A_OK) {
+                log::LogHttpResponse("mao194", put_resp);
+            }
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
+
+int PostFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) {
+    int status = ret::A_OK;
+
+    if(!post_id.empty()) {
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+
+        Response response;
+        PostHandler<FilePost> ph(access_token_);
+        status = ph.Get(posturl, NULL, out, response);
+    }
+    else {
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
 }
 
 int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, bool in_transit) {
@@ -466,7 +459,8 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     if(get_resp.code == 200) {
         FilePost p;
         jsn::DeserializeObject(&p, get_resp.body);
-        file_manager_->SetFileVersion(fi->filepath(), p.version()->id());
+        FileHandler fh(file_manager_);
+        fh.UpdatePostVersion(fi->filepath(), p.version()->id());
         return true;
     }
     return false;
