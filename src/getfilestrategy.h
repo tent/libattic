@@ -24,7 +24,7 @@ class GetFileStrategy : public HttpStrategyInterface {
     int ConstructPostTree(FileInfo* fi, PostTree& tree);
     int RetrieveAndInsert(const std::string& postid, PostTree& tree);
 
-    int RetrieveFilePost(FileInfo* fi, FilePost& out);
+    int RetrieveFilePost(const std::string& post_id, FilePost& out);
 
 
     int RetrieveChunkPosts(const std::string& entity,

@@ -8,7 +8,6 @@
 #include "compression.h"
 #include "crypto.h"
 #include "filesystem.h"
-#include "postutils.h"
 #include "event.h"
 #include "logutils.h"
 #include "connectionhandler.h"
@@ -38,7 +37,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
             if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
             // Retrieve file metadata
             FilePost meta_post;
-            status = RetrieveFilePost(fi, meta_post);
+            status = RetrieveFilePost(fi->post_id(), meta_post);
             if(status == ret::A_OK) {
                 Credentials file_cred;
                 // Get file credentials
@@ -52,7 +51,8 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         // pull chunks
                         status = ConstructFile(cp_list, file_cred, fi);
                         if(status == ret::A_OK) {
-                            // Retrieve associated folder entries and create local cache entries for them
+                            // Retrieve associated folder entries and create local cache 
+                            // entries for them
                             ValidateFolderEntries(meta_post);
                         }
                     }
@@ -76,13 +76,12 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     return status;
 }
  
-int GetFileStrategy::RetrieveFilePost(FileInfo* fi, FilePost& out) { 
+int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) { 
     int status = ret::A_OK;
     std::cout<<" RETRIEVE FILE POST " << std::endl;;
     std::string posturl;
-    std::string postid = fi->post_id();
-    std::cout<<" POST ID : " << postid << std::endl;
-    utils::FindAndReplace(post_path_, "{post}", postid, posturl);
+    std::cout<<" POST ID : " << post_id << std::endl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     // Get Metadata post
     Response resp;
