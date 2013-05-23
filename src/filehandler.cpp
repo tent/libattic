@@ -79,6 +79,15 @@ bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::stri
     return file_manager_->SetFileVersion(filepath, version);
 }
 
+void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
+    out.set_filename(fp.name());
+    out.set_filepath(fp.relative_path());
+    out.set_encrypted_key(fp.key_data());
+    out.set_file_credentials_iv(fp.iv_data());
+    out.set_post_id(fp.id());
+    out.set_post_version(fp.version()->id());
+    out.set_file_size(fp.file_size());
+}
 
 // TODO :: reconsider the relevance of these crypto operations in this class,
 //         perhaps move then to their own class? For now here is fine

@@ -28,7 +28,10 @@ public:
     bool UpdateFileSize(const std::string& filepath, const std::string& size);
     bool UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map);
     bool UpdatePostVersion(const std::string& filepath, const std::string& version);
+    // Utils
+    void DeserializeIntoFileInfo(FilePost& fp, FileInfo& out);
 
+    // Crypto
     bool EncryptFileKey(const std::string& filepath, 
                         const std::string& file_key,
                         const std::string& master_key);
