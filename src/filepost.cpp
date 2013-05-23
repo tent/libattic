@@ -43,6 +43,7 @@ void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
             std::cout<<" INVALID CHUNK LIST : " << std::endl;
         }
 
+        // TODO :: aliases need to be removed
         FileInfo::AliasMap* alias_list = fi->GetAliasMap();
         if(alias_list) {
             FileInfo::AliasMap::iterator itr = alias_list->begin();

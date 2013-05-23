@@ -22,6 +22,9 @@ FileInfo::FileInfo(const std::string& filename,
     filepath_ = filepath;
     post_id_ = postid;
     chunk_post_id_ = chunkpostid;
+    chunk_count_ = 0;
+    file_size_ = 0;
+    deleted_ = false;
 }
 
 FileInfo::~FileInfo() {}
