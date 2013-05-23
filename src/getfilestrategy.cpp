@@ -54,7 +54,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache entries for them
                             ValidateFolderEntries(meta_post);
-
                         }
                     }
                     else {

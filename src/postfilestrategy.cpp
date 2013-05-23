@@ -366,6 +366,11 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
             std::cout<<" FAILED TO CREATE NEW FILE " << std::endl;
         }
     }
+    else {
+        // Actually retrieve the file
+        if(fh.RetrieveFileInfo(filepath, out))
+            return true;
+    }
     return false;
 }
 
