@@ -22,7 +22,12 @@ public:
                        const std::string& master_key,
                        FileInfo& out);
 
+    bool UpdateFileInfo(FileInfo& fi);
     bool UpdateFilePostId(const std::string& filepath, const std::string& post_id);
+    bool UpdateChunkCount(const std::string& filepath, const std::string& count);
+    bool UpdateFileSize(const std::string& filepath, const std::string& size);
+    bool UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map);
+    bool UpdatePostVersion(const std::string& filepath, const std::string& version);
 
     bool EncryptFileKey(const std::string& filepath, 
                         const std::string& file_key,

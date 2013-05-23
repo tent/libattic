@@ -52,9 +52,33 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
     return false;
 }
 
+bool FileHandler::UpdateFileInfo(FileInfo& fi) {
+    return file_manager_->InsertToManifest(&fi);
+}
+
 bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::string& post_id) {
     return file_manager_->SetFilePostId(filepath, post_id);
 }
+
+bool FileHandler::UpdateChunkCount(const std::string& filepath, const std::string& count) {
+
+    return false;
+}
+
+bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string& size) {
+
+
+    return false;
+}
+
+bool FileHandler::UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map) {
+    return file_manager_->SetFileChunks(filepath, map);
+}
+
+bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::string& version) {
+    return file_manager_->SetFileVersion(filepath, version);
+}
+
 
 // TODO :: reconsider the relevance of these crypto operations in this class,
 //         perhaps move then to their own class? For now here is fine
