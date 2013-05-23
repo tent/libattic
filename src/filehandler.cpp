@@ -45,8 +45,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                     crypto::GenerateCredentials(file_cred);
                 out.set_file_credentials(file_cred);
                 EncryptFileKey(out, master_key);
-                file_manager_->InsertToManifest(&out);
-                return true;
+                return file_manager_->InsertToManifest(&out);
             }
         }
     }
@@ -92,8 +91,7 @@ bool FileHandler::EncryptFileKey(const std::string& file_key,
         tcred.set_key(master_key);                 // master key
         tcred.set_iv(file_iv);                     // file specific iv
         // Encryption call
-        std::string encrypted_key;
-        crypto::EncryptStringGCM(file_key, tcred, encrypted_key);
+        crypto::EncryptStringGCM(file_key, tcred, encrypted_out);
         return true;
     }
     return false;
