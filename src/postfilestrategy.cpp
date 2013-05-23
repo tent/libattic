@@ -11,7 +11,6 @@
 #include "connectionhandler.h"
 
 #include "rollsum.h"
-#include "postutils.h"
 #include "logutils.h"
 #include "chunkbuffer.h"
 #include "chunkrequest.h"
@@ -64,10 +63,10 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
                 // begin chunking
                 status = ChunkFile(filepath, fi.file_credentials(), file_post_id, chunk_posts, chunk_map);
                 std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
-
                 if(status == ret::A_OK) { 
                     // Update file info
-                    fh.UpdateChunkMap(fi.filepath(), chunk_map);
+                    fi.set_chunks(chunk_map);
+                    fi.set_chunk_count(chunk_map.size());
                     fh.UpdateFileInfo(fi);
                     // Update meta data post
                     status = UpdateFilePost(fi);
