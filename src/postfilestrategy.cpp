@@ -486,39 +486,6 @@ bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
     return ret;
 }
 
-// TODO :: move to file handler
-int PostFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
-    int status = ret::A_OK;
-    
-    std::string key, iv;
-    key = in.key_data();
-    iv = in.iv_data();
-
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-
-    std::string mk;
-    mKey.GetMasterKey(mk);
-    Credentials FileKeyCred;
-    FileKeyCred.set_key(mk);
-    FileKeyCred.set_iv(iv);
-
-    // Decrypt File Key
-    std::string filekey;
-    //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-    status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
-    std::cout<<" FILE KEY : " << filekey << std::endl;
-    if(status == ret::A_OK) {
-        out.set_key(filekey);
-        out.set_iv(iv);
-    }
-    else { 
-        std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
-    }
-
-    return status;
-}
-
 bool PostFileStrategy::ValidMasterKey() {
     std::string mk;
     GetMasterKey(mk);
