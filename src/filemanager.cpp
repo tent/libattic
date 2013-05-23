@@ -210,12 +210,14 @@ int FileManager::RenameFile(const std::string& old_filepath,
     return status;
 }
 
-void FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
+bool FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
     if(IsPathRelative(filepath)) {
         Lock();
         manifest_.UpdateFileVersion(filepath, version);
         Unlock();
+        return true;
     }
+    return false;
 }
 
 void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
@@ -265,15 +267,17 @@ void FileManager::SetFileFolderPostId(const std::string& filepath, const std::st
         std::cout<<" FILEPATH NOT RELATIVE IN SET POST ID : " << filepath << std::endl;
 }
 
-void FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
+bool FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
     FileInfo fi;
     if(GetFileInfo(filepath, fi)) {
         fi.set_chunks(map);
         InsertToManifest(&fi);
+        return true;
     }
     else {
         std::cout<<" INVALID FILEINFO OBJECT " << std::endl;
     }
+    return false;
 }
 
 FileInfo* FileManager::CreateFileInfo() {
