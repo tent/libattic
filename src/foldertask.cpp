@@ -196,10 +196,16 @@ int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     PostHandler<FolderPost> ph(access_token());
     Response response;                                     
     status = ph.Post(posts_feed, NULL, fp, response);
-    if(status != ret::A_OK)
+
+    if(status != ret::A_OK) {
         log::LogHttpResponse("lasp151", response);
-    else 
+    }
+    else  {
         std::cout << response.body << std::endl;
+        FolderPost p;
+        jsn::DeserializeObject(&p, response.body);
+        id_out = p.id();
+    }
 
     return status;                                         
 }                                                          
