@@ -21,7 +21,6 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 
     std::cout<<"checking for filepath : " << full_filepath << std::endl;
     if(!full_filepath.empty()) {
-
         if(!rh.CheckForRename(fp)) { 
             // Check if folder exists, if not, create it
             if(!fs::CheckFilepathExists(full_filepath)) {
