@@ -6,7 +6,6 @@
 #include "urlparams.h"
 #include "netlib.h"
 #include "jsonserializable.h"
-#include "postutils.h"
 #include "entity.h"
 #include "response.h"
 #include "event.h"
@@ -14,7 +13,10 @@
 #include "taskdelegate.h"
 #include "logutils.h"
 #include "configmanager.h"
+
 #include "renamehandler.h"
+#include "posthandler.h"
+#include "filehandler.h"
 
 namespace attic { 
 
@@ -64,22 +66,11 @@ void SyncFileTask::RunTask() {
 
 int SyncFileTask::SyncMetaData(FilePost& out) {
     int status = ret::A_OK;
-    std::string url;
-    utils::FindAndReplace(GetPostPath(), "{post}", post_id_, url);
+    std::string posturl;
+    utils::FindAndReplace(GetPostPath(), "{post}", post_id_, posturl);
+    PostHandler<FilePost> ph(access_token());
     Response response;
-    AccessToken at = access_token();
-    netlib::HttpGet( url,
-                     NULL,
-                     &at,
-                     response); 
-
-    if(response.code == 200) {
-        jsn::DeserializeObject(&out, response.body);
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
-
+    status = ph.Get(posturl, NULL, out, response);
     return status;
 }
 
@@ -89,11 +80,12 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
 
+    FileHandler fh(file_manager());
     // Check if any aliases exist, and fix
     RenameHandler rh(file_manager());
     if(!rh.CheckForRename(p)) {
         FileInfo fi;
-        postutils::DeserializeFilePostIntoFileInfo(p, fi);
+        fh.DeserializeIntoFileInfo(p, fi);
         // Check if file is in manifest
         //int version = p.GetVersion();
 
