@@ -12,6 +12,7 @@
 #include "logutils.h"
 #include "connectionhandler.h"
 #include "pagepost.h"
+#include "filehandler.h"
 
 namespace attic { 
 
@@ -31,13 +32,14 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
 
     if(!filepath.empty()) { 
-        FileInfo* fi = file_manager_->GetFileInfo(filepath);                                        
-        if(fi) {
-            std::cout<<" FILE : " << filepath << " DELETED : " << fi->deleted() << std::endl;
-            if(fi->deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
+        FileHandler fh(file_manager_);
+        FileInfo fi;
+        if(fh.RetrieveFileInfo(filepath, fi)) {
+            std::cout<<" FILE : " << filepath << " DELETED : " << fi.deleted() << std::endl;
+            if(fi.deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
             // Retrieve file metadata
             FilePost meta_post;
-            status = RetrieveFilePost(fi->post_id(), meta_post);
+            status = RetrieveFilePost(fi.post_id(), meta_post);
             if(status == ret::A_OK) {
                 Credentials file_cred;
                 // Get file credentials
@@ -200,14 +202,15 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
 int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts, 
                                    const Credentials& file_cred, 
-                                   FileInfo* fi) {
+                                   FileInfo& fi) {
     int status = ret::A_OK;
     unsigned int post_count = chunk_posts.size();
     std::cout<<" # CHUNK POSTS : " << post_count << std::endl;
 
     if(post_count > 0) {
         std::string temp_path;
-        GetTemporaryFilepath(fi, temp_path);
+        FileHandler fh(file_manager_);
+        fh.GetTemporaryFilepath(fi, temp_path);
 
         std::ofstream ofs;
         ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
@@ -235,7 +238,7 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
                                 status = RetrieveAttachment(attachment_path, buffer);
                                 if(status == ret::A_OK) {
                                     std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
-                                    //ChunkInfo* ci = fi->GetChunkInfo(itr->second.chunk_name());
+                                    //ChunkInfo* ci = fi.GetChunkInfo(itr->second.chunk_name());
                                     ChunkInfo* ci = cp.GetChunkInfo(itr->second.chunk_name());
                                     std::string chunk;
                                     status = TransformChunk(ci, file_cred.key(), buffer, chunk);
@@ -261,30 +264,18 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
         }
         if(status == ret::A_OK) {
             std::string path;
-            file_manager_->GetCanonicalFilepath(fi->filepath(), path);
-            fs::MoveFile(temp_path, path);
+            if(fh.GetCanonicalFilepath(fi.filepath(), path)) {
+                fs::MoveFile(temp_path, path);
+            }
+            else {
+                std::cout<<" FAILED TO FORM CANONICAL FILEPATH : " << path << std::endl;
+            }
         }
         // delete temp file 
         fs::DeleteFile(temp_path);
     }
 
     return status;
-}
-
-bool GetFileStrategy::GetTemporaryFilepath(FileInfo* fi, std::string& out) { 
-    std::string filename = fi->filename();
-
-    std::string temp_path = file_manager_->temp_directory();
-    if(fs::CheckFilepathExists(temp_path)) {
-        utils::CheckUrlAndAppendTrailingSlash(temp_path);
-        std::string randstr;
-        utils::GenerateRandomString(randstr, 16);
-        temp_path += filename + "_" + randstr;
-        out = temp_path;
-        return true;
-    }
-        
-    return false;
 }
 
 int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& outBuffer) {
@@ -457,11 +448,12 @@ void GetFileStrategy::ValidateFolderEntries(FilePost& fp) {
     RetrieveFolderPosts(fp, folder_list);
     std::cout<< " retrieved " << folder_list.size() << " folder posts " << std::endl;
     if(folder_list.size()) {
+        FileHandler fh(file_manager_);
         // Validate folder entries exist
         std::deque<FolderPost>::iterator itr = folder_list.begin();
         for(;itr!= folder_list.end(); itr++) { 
             std::cout<<" updating folder entries " << std::endl;
-            file_manager_->UpdateFolderEntry((*itr));
+            fh.UpdateFolderEntry((*itr));
         }
     }
 }

@@ -52,6 +52,10 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
     return false;
 }
 
+bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string& out) {
+    return file_manager_->GetCanonicalFilepath(filepath, out);
+}
+
 bool FileHandler::UpdateFileInfo(FileInfo& fi) {
     return file_manager_->InsertToManifest(&fi);
 }
@@ -79,6 +83,10 @@ bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::stri
     return file_manager_->SetFileVersion(filepath, version);
 }
 
+bool FileHandler::UpdateFolderEntry(FolderPost& fp) {
+    return file_manager_->UpdateFolderEntry(fp);
+}
+
 void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
     out.set_filename(fp.name());
     out.set_filepath(fp.relative_path());
@@ -87,6 +95,19 @@ void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
     out.set_post_id(fp.id());
     out.set_post_version(fp.version()->id());
     out.set_file_size(fp.file_size());
+}
+
+bool FileHandler::GetTemporaryFilepath(FileInfo& fi, std::string& path_out) {
+    std::string temp_path = file_manager_->temp_directory();
+    if(fs::CheckFilepathExists(temp_path)) {
+        utils::CheckUrlAndAppendTrailingSlash(temp_path);
+        std::string randstr;
+        utils::GenerateRandomString(randstr, 16);
+        temp_path += fi.filename() + "_" + randstr;
+        path_out = temp_path;
+        return true;
+    }
+    return false;
 }
 
 // TODO :: reconsider the relevance of these crypto operations in this class,

@@ -556,20 +556,21 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     return ret;
 }
 
-bool FileManager::UpdateFolderEntry(FolderPost& fp) {
-    std::cout<<" FOLDER PATH : " << fp.folder().folderpath() << std::endl;
-    std::cout<<" FOLDER POST ID : " << fp.id() << std::endl;
+// TODO :: pass in filepath and id as string, no need for filemanager to know about folderpost
+bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::string& post_id) {
+    std::cout<<" FOLDER PATH : " << folderpath << std::endl;
+    std::cout<<" FOLDER POST ID : " << post_id << std::endl;
 
     bool ret = false;
     Lock();
-    if(manifest_.IsFolderInManifest(fp.folder().folderpath())) {
+    if(manifest_.IsFolderInManifest(folderpath)) {
         std::string id;
-        manifest_.GetFolderPostID(fp.folder().folderpath(), id);
+        manifest_.GetFolderPostID(folderpath, id);
         if(id.empty()) {
             // update id
-            ret = manifest_.UpdateFolderPostId(fp.folder().folderpath(), fp.id());
+            ret = manifest_.UpdateFolderPostId(folderpath, post_id);
         }
-        else if(id != fp.id()) {
+        else if(id != post_id) {
             // throw error
             std::string error = " LOCAL CACHE FOLDER POST ID MISMATCH \n";
             error += "\tpost id : ";

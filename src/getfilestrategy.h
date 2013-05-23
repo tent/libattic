@@ -33,8 +33,7 @@ class GetFileStrategy : public HttpStrategyInterface {
     int ExtractCredentials(FilePost& in, Credentials& out);
     int ConstructFile(ChunkPostList& chunk_posts, 
                       const Credentials& file_cred, 
-                      FileInfo* fi);
-    bool GetTemporaryFilepath(FileInfo* fi, std::string& out);
+                      FileInfo& fi);
     void GetMasterKey(std::string& out);
     bool ValidMasterKey();
 
