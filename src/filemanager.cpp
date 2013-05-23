@@ -105,16 +105,18 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     parent_relative_out = parent_relative;
 }
 
-void FileManager::InsertToManifest (FileInfo* pFi) { 
-    if(!pFi) return;
-    // Calculate relative path
-    std::string relative, parent;
-    ExtractRelativePaths(pFi, relative, parent);
-    pFi->set_filepath(relative);
-    Lock();
-    // Insert into infotable
-    manifest_.InsertFileInfo(*pFi);
-    Unlock();
+bool FileManager::InsertToManifest (FileInfo* pFi) { 
+    if(pFi) {
+        std::cout<< "INSERTING FILEPATH : " << pFi->filepath() << std::endl;
+        if(!pFi->filepath().empty()) {
+            Lock();
+            // Insert into infotable
+            manifest_.InsertFileInfo(*pFi);
+            Unlock();
+            return true;
+        }
+    }
+    return false;
 }
 
 int FileManager::RenameFolder(const std::string& old_folderpath,
@@ -327,13 +329,14 @@ bool FileManager::IsPathRelative(const std::string& filepath) {
 
 bool FileManager::DoesFileExist(const std::string& filepath) {
     bool stat = false;
-    if(IsPathRelative(filepath)) {
+    std::string relative;
+    if(AttemptToGetRelativePath(filepath, relative)) {
         Lock();
-        stat = manifest_.IsFileInManifest(filepath);
+        stat = manifest_.IsFileInManifest(relative);
         Unlock();
     }
     else {
-        std::cout<<" FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
+        std::cout<<"DoesFileExist FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
     }
 
     return stat;

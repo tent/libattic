@@ -38,7 +38,7 @@ public:
                    const std::string& tempDirectory);
     int Shutdown();
 
-    void InsertToManifest (FileInfo* pFi);
+    bool InsertToManifest (FileInfo* pFi);
     int RemoveFile(const std::string &filepath);
     void GetRelativePath(const std::string& filepath, std::string& relative_out);
 
