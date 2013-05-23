@@ -574,13 +574,13 @@ bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::st
             // throw error
             std::string error = " LOCAL CACHE FOLDER POST ID MISMATCH \n";
             error += "\tpost id : ";
-            error += fp.id();
+            error += post_id;
             error += "\n";
             error += "\t conficted id : ";
             error += id;
             error += "\n";
             error += "folderpath : ";
-            error += fp.folder().folderpath();
+            error += folderpath;
             log::LogString("MASDlf", error);
         }
         else {
