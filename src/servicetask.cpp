@@ -33,9 +33,6 @@ void ServiceTask::OnPaused() {}
 void ServiceTask::OnFinished() {
     std::cout<<" SERVICE TASK FINISHED ... " << std::endl;
     event::EventSystem::instance()->Shutdown();
-
-
-
 }
 
 void ServiceTask::RunTask() {

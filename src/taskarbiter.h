@@ -19,7 +19,7 @@ class TaskArbiter : public MutexClass{
 public:
     ~TaskArbiter();
 
-    int Initialize();
+    int Initialize(TaskManager* tm);
     int Shutdown();
 
     static TaskArbiter* GetInstance();

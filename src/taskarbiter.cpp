@@ -11,13 +11,14 @@ TaskArbiter* TaskArbiter::instance_ = 0;
 bool TaskArbiter::initialized_ = false;
 
 TaskArbiter::TaskArbiter() {
-    //task_manager_ = NULL;
+    task_manager_ = NULL;
 }
 
 TaskArbiter::~TaskArbiter() {}
 
-int TaskArbiter::Initialize() {
+int TaskArbiter::Initialize(TaskManager* tm) {
     int status = ret::A_OK;
+    task_manager_ = tm;
     initialized_ = true;
     return status; 
 }
@@ -26,6 +27,7 @@ int TaskArbiter::Shutdown() {
     int status = ret::A_OK;
 
     task_pool_.ClearPool();
+    task_manager_ = NULL;
     // DO THIS LAST ... if you have any mutex derived member varibales it will delete them...
     // and may cause DEADLOCK ...DUH
     if(instance_) {

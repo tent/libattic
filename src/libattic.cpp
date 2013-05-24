@@ -1,10 +1,13 @@
 #include "libattic.h"
-#include "callbackhandler.h"
+
 
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <deque>
+
+
+#include "callbackhandler.h"
 
 #include "utils.h"
 #include "errorcodes.h"
@@ -34,141 +37,24 @@
 #include "servicemanager.h"
 #include "threading.h"
 
+#include "atticservice.h"
+
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
+static attic::AtticService         attic_service; 
 
-static attic::ServiceManager*      g_service_manager = NULL;
-static attic::TaskManager*         g_pTaskManager = NULL;      // move to service
-static attic::ThreadManager*       g_thread_manager = NULL;
-//static TaskArbiter g_Arb;
-
-// var
 static std::string g_AuthorizationURL;// move to client
-//static PhraseToken  g_Pt;// move to client
-
 static bool g_bEnteredPassphrase = false;
-static bool g_bLibInitialized = false;
 
-int IsLibInitialized(bool checkPassphrase = true);
-
-static attic::Client* g_pClient = NULL;
+int IsLibInitialized(bool checkPassphrase = true); // TODO :: remove
 
 //////// API start
 int InitLibAttic(unsigned int threadCount) {
-    int status = attic::ret::A_OK;
-    // Init sequence ORDER MATTERS
-    attic::utils::SeedRand();
-
-    // Get config values
-    std::string workingdir, configdir, tempdir, entityurl;
-    attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigWorkingDir, workingdir);
-    attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigConfigDir, configdir);
-    attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigTempDir, tempdir);
-    attic::ConfigManager::GetInstance()->GetValue(attic::cnst::g_szConfigEntityURL, entityurl);
-
-    std::cout<<" working dir : " << workingdir << std::endl;
-    std::cout<<" config dir : " << configdir << std::endl;
-    std::cout<<" temp dir : " << tempdir << std::endl;
-    std::cout<<" entityurl : " << entityurl << std::endl;
-
-    std::string t;
-    std::cout<<" creating new client ... " << std::endl;
-    if(!workingdir.empty())
-        attic::fs::CreateDirectory(workingdir);
-    if(!configdir.empty())
-        attic::fs::CreateDirectory(configdir);
-    if(!tempdir.empty())
-        attic::fs::CreateDirectory(tempdir);
-    
-    g_pClient = new attic::Client(workingdir,
-                                  configdir,
-                                  tempdir,
-                                  entityurl);
-    status = g_pClient->Initialize();
-
-    if(status == attic::ret::A_OK)  {
-        // Essential
-        status = attic::liba::InitializeTaskManager(&g_pTaskManager,
-                                                     g_pClient->file_manager(),
-                                                     g_pClient->credentials_manager(),
-                                                     g_pClient->access_token(),
-                                                     g_pClient->entity(),
-                                                     g_pClient->temp_directory(),
-                                                     g_pClient->working_directory(),
-                                                     g_pClient->config_directory());
-
-        // Configure the service manager before initializing
-        g_service_manager = new attic::ServiceManager(g_pTaskManager);
-        g_service_manager->Initialize();
-        
-        attic::TaskArbiter::GetInstance()->Initialize();
-        attic::TaskArbiter::GetInstance()->set_task_manager(g_pTaskManager);
-
-        g_thread_manager = new attic::ThreadManager(g_pClient->file_manager(),
-                                                    g_pClient->credentials_manager(),
-                                                    g_pClient->access_token(),
-                                                    g_pClient->entity());
-
-        status = g_thread_manager->Initialize(threadCount + 1);
-        if(status != attic::ret::A_OK) {
-            std::cout<<" FAILED TO START THREAD MANAGER " << std::endl;
-            g_thread_manager->Shutdown();
-            delete g_thread_manager;
-            g_thread_manager = NULL;
-        }
-    }
-
-    status = attic::ConnectionManager::GetInstance()->Initialize(entityurl);
-    std::cout<<" Connection manager initialization status : " << status << std::endl;
-
-    if(status == attic::ret::A_OK) { 
-        g_bLibInitialized = true;
-    }
-
+    int status = attic_service.start(); 
     return status;
 }
 
 int ShutdownLibAttic(void (*callback)(int, void*)) {
-    int status = attic::ret::A_OK;
-
-    // Shutdown threading first, ALWAYS
-    if(g_thread_manager) {
-        g_thread_manager->Shutdown();
-        delete g_thread_manager;
-        g_thread_manager = NULL;
-    }
-     
-    std::cout<<" shutting down task arbiter " << std::endl;
-    status = attic::TaskArbiter::GetInstance()->Shutdown();
-    std::cout<<" shutting down task manager " << std::endl;
-    status = attic::liba::ShutdownTaskManager(&g_pTaskManager);
-    //attic::event::ShutdownEventSystem();
-    g_pTaskManager = NULL;
-    if(g_service_manager) {
-        g_service_manager->Shutdown();
-        delete g_service_manager;
-        g_service_manager = NULL;
-    }
-
-    if(g_pClient) {
-        std::cout<<" shutting down client ... " << std::endl;
-        g_pClient->Shutdown();
-
-        std::cout<<" cleaning up client ! ... " << std::endl;
-        delete g_pClient;
-        g_pClient = NULL;
-    }
-
-    std::cout<<" shutting down config manager " << std::endl;
-    attic::ConfigManager::GetInstance()->Shutdown();
-    status = attic::ConnectionManager::GetInstance()->Shutdown();
-
-    std::cout<<" calling back .. " << std::endl;
-    if(callback)
-        callback(status, NULL);
-
-    g_bLibInitialized = false;
-
-    std::cout<<" done  " << std::endl;
+    int status = attic_service.stop();
     return status;
 }
 
@@ -225,7 +111,7 @@ int CreateFolder(const char* szFolderpath) {
 
     if(status == attic::ret::A_OK) {
         try { 
-            g_pTaskManager->CreateFolder(szFolderpath, NULL);
+            attic_service.task_manager()->CreateFolder(szFolderpath, NULL);
         }
         catch(std::exception& e) {
             attic::log::LogException("hhhhJ23423*", e);
@@ -242,7 +128,7 @@ int DeleteFolder(const char* szFolderpath) {
 
     if(status == attic::ret::A_OK) {
         try { 
-            g_pTaskManager->DeleteFolder(szFolderpath, NULL);
+            attic_service.task_manager()->DeleteFolder(szFolderpath, NULL);
         }
         catch(std::exception& e) {
             attic::log::LogException("hhhhJ23423*", e);
@@ -259,7 +145,7 @@ int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
 
     if(status == attic::ret::A_OK) { 
         try { 
-            g_pTaskManager->RenameFolder(szOldFolderpath, szNewFoldername);
+            attic_service.task_manager()->RenameFolder(szOldFolderpath, szNewFoldername);
         }
         catch(std::exception& e) {
             attic::log::LogException("BBKJ23423*", e);
@@ -326,7 +212,7 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
 
     if(status == attic::ret::A_OK) { 
         try { 
-            g_pTaskManager->RenameFile(szOldFilepath, szNewFilepath);
+            attic_service.task_manager()->RenameFile(szOldFilepath, szNewFilepath);
         }
         catch(std::exception& e) {
             attic::log::LogException("ASDKJ23423*", e);
@@ -336,15 +222,13 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     return status;
 }
 
-
-
 int PollFiles(void) {
     int status = IsLibInitialized();
 
     if(status == attic::ret::A_OK) {
         try { 
             if(status == attic::ret::A_OK)
-                g_pTaskManager->PollFiles(NULL);
+                attic_service.task_manager()->PollFiles(NULL);
         }
         catch(std::exception& e) {
             std::cout<<" caught : " << e.what() << std::endl;
@@ -363,10 +247,10 @@ int RegisterPassphrase(const char* szPass) {
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
-        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
         // Generate Master Key
         std::string master_key;
-        g_pClient->credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
+        attic_service.credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
 
         std::string passphrase(szPass);
         std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
@@ -390,7 +274,7 @@ int EnterPassphrase(const char* szPass) {
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
-        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
 
         std::string passphrase(szPass);
         std::cout<<" PASSED IN : " << szPass << std::endl;
@@ -401,9 +285,9 @@ int EnterPassphrase(const char* szPass) {
         status = ps.EnterPassphrase(szPass, pt, master_key);
 
         if(status == attic::ret::A_OK) {
-            g_pClient->set_phrase_token(pt);
-            g_pClient->credentials_manager()->set_master_key(master_key);
-            g_pClient->SavePhraseToken();
+            attic_service.client()->set_phrase_token(pt);
+            attic_service.credentials_manager()->set_master_key(master_key);
+            attic_service.client()->SavePhraseToken();
             g_bEnteredPassphrase = true;
         }
     }
@@ -417,7 +301,7 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
-        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
 
         std::cout<<" Changing passphrase " << std::endl;
         std::string recovery_key;
@@ -435,7 +319,7 @@ int EnterRecoveryKey(const char* szRecovery) {
     if(status == attic::ret::A_OK) {
         status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
-        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
 
         std::string temp_pass;
         status = ps.EnterRecoveryKey(szRecovery, temp_pass);
@@ -464,7 +348,7 @@ int RegisterQuestionAnswerKey(const char* q1,
 
     int status = IsLibInitialized(false);
     /*
-    int status = g_pClient->LoadEntity(true);
+    int status = attic_service.client()->LoadEntity(true);
     if(status == attic::ret::A_OK) {
         std::string questionOne(q1);
         std::string questionTwo(q2);
@@ -473,14 +357,14 @@ int RegisterQuestionAnswerKey(const char* q1,
         std::string answerTwo(a2);
         std::string answerThree(a3);
 
-        if(g_pClient->credentials_manager()) {
+        if(attic_service.client()->credentials_manager()) {
             attic::MasterKey mk;
             std::string masterkey;
-            g_pClient->credentials_manager()->GetMasterKeyCopy(mk);
+            attic_service.client()->credentials_manager()->GetMasterKeyCopy(mk);
             mk.GetMasterKey(masterkey);
-            attic::Entity ent = g_pClient->entity();
+            attic::Entity ent = attic_service.client()->entity();
             status = attic::pass::RegisterRecoveryQuestionsWithAttic(masterkey, 
-                                                              g_pClient->credentials_manager(),
+                                                              attic_service.client()->credentials_manager(),
                                                               ent, 
                                                               questionOne,
                                                               questionTwo,
@@ -507,7 +391,7 @@ int EnterQuestionAnswerKey(const char* q1,
 
     int status = attic::ret::A_OK;
     /*
-    int status = g_pClient->LoadEntity(true);
+    int status = attic_service.client()->LoadEntity(true);
     if(status == attic::ret::A_OK) {
         std::string questionOne(q1);
         std::string questionTwo(q2);
@@ -516,10 +400,10 @@ int EnterQuestionAnswerKey(const char* q1,
         std::string answerTwo(a2);
         std::string answerThree(a3);
 
-        if(g_pClient->credentials_manager()) {
+        if(attic_service.client()->credentials_manager()) {
             std::string mkOut;
-            attic::Entity ent = g_pClient->entity();
-            status = attic::pass::EnterRecoveryQuestions(g_pClient->credentials_manager(),
+            attic::Entity ent = attic_service.client()->entity();
+            status = attic::pass::EnterRecoveryQuestions(attic_service.client()->credentials_manager(),
                                                   ent,
                                                   questionOne,
                                                   questionTwo,
@@ -534,7 +418,7 @@ int EnterQuestionAnswerKey(const char* q1,
                 std::string new_recovery_key;
                 status = attic::pass::RegisterPassphraseWithAttic(temppass, 
                                                            mkOut,
-                                                           g_pClient,
+                                                           attic_service.client(),
                                                            new_recovery_key);
 
                 if(status == attic::ret::A_OK) {
@@ -561,7 +445,7 @@ int PhraseStatus() {
 
 int IsLibInitialized(bool checkPassphrase) {
     int status = attic::ret::A_OK;
-    if(!g_bLibInitialized) status = attic::ret::A_FAIL_LIB_INIT;
+    if(!attic_service.running()) status = attic::ret::A_FAIL_LIB_INIT;
     return status;
 }
 
@@ -575,7 +459,7 @@ int GetFileList(void(*callback)(int, char**, int, int)) {
 
         // TODO :: reimplement this
         //if(status == attic::ret::A_OK)
-            //g_pTaskManager->QueryManifest(callback);
+            //attic_service.task_manager()->QueryManifest(callback);
     }
 
     return status;
@@ -646,14 +530,14 @@ int Resume(void) {
     int status = attic::ret::A_OK;
     attic::event::RaiseEvent(attic::event::Event::RESUME, "", NULL);
     // TODO :: re-implement this
-    //g_pTaskManager->ScanAtticFolder(NULL);
+    //attic_service.task_manager()->ScanAtticFolder(NULL);
     return status;
 }
 
 int ScanAtticFolder() { 
     int status = attic::ret::A_OK;
     // TODO :: re-implement
-    //g_pTaskManager->ScanAtticFolder(NULL); k
+    //attic_service.task_manager()->ScanAtticFolder(NULL); k
     return status;
 }
 
@@ -666,7 +550,8 @@ void SetConfigValue(const char* szKey, const char* szValue) {
 int HasCredentialsPost() {
     int status = IsLibInitialized();
     if(status == attic::ret::A_OK) {
-        attic::pass::Passphrase ps(g_pClient->entity(), g_pClient->access_token());
+        attic::pass::Passphrase ps(attic_service.client()->entity(), 
+                                   attic_service.client()->access_token());
         bool retval = ps.HasCredentialsPost();
         if(!retval)
             status = attic::ret::A_FAIL;
