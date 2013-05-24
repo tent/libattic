@@ -64,7 +64,7 @@ void ThreadWorker::Run() {
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
         if(task) { 
-            std::cout<<" shutting down task ... : " task.type() << std::endl;
+            std::cout<<" shutting down task ... : "<< task->type() << std::endl;
             task->OnFinished();
             task_factory_.ReclaimTask(task);
             task = NULL;

@@ -58,6 +58,85 @@ int AtticService::stop() {
     return status;
 }
 
+int AtticService::UploadFile(const std::string& filepath) {
+    int status = ret::A_OK;
+    if(running_)
+        event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::DownloadFile(const std::string& filepath) {
+    int status = ret::A_OK;
+    if(running_)
+        event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::MarkFileDeleted(const std::string& filepath) {
+    int status = ret::A_OK;
+    if(running_)
+        attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+ 
+int AtticService::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->RenameFile(old_filepath, new_filepath);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::CreateFolder(const std::string& folderpath) { 
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->CreateFolder(folderpath, NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::DeleteFolder(const std::string& folderpath) {
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->DeleteFolder(folderpath, NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath) {
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->RenameFolder(old_folderpath, new_folderpath);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+// TODO :: toggling polling should be event driven, TODO :: fix this
+int AtticService::EnablePolling() {
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->PollFiles(NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::DisablePolling() {
+    int status = ret::A_OK;
+    // TODO :: this
+    return status;
+}
+
 void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigWorkingDir, working_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, config_dir_);

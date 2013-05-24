@@ -40,11 +40,13 @@ public:
     int start();
     int stop();
 
-    int UploadFile();
-    int DownloadFile();
-    int MarkFileDeleted();
-    int RenameFile();
-    int RenameFolder();
+    int UploadFile(const std::string& filepath);
+    int DownloadFile(const std::string& filepath);
+    int MarkFileDeleted(const std::string& filepath);
+    int RenameFile(const std::string& old_filepath, const std::string& new_filepath);
+    int CreateFolder(const std::string& folderpath);
+    int DeleteFolder(const std::string& folderpath);
+    int RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath);
     int EnablePolling();
     int DisablePolling();
 

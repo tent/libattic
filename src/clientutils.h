@@ -21,48 +21,6 @@ static void ConstructMetaPath(const std::string& entityurl,
                               const std::string& metaendpoint,
                               std::string& out);
 
-
-
-    // UPDATE ALL OF THIS V03
-static void RetrieveEntityProfiles(const AccessToken* at, Entity& ent) {
-    /*
-    unsigned int profcount = ent.GetProfileCount();
-    if(profcount) {
-        const Entity::UrlList* ProfUrlList = ent.GetProfileUrlList();
-        Entity::UrlList::const_iterator itr = ProfUrlList->begin();
-
-        std::cout<<" profile list size : " << ProfUrlList->size() << std::endl;
-        if(at)
-            std::cout<<" TOKEN : " << at->GetAccessToken() << std::endl;
-
-        while(itr != ProfUrlList->end()) {
-            Response response;
-            
-            netlib::HttpGet( *itr, 
-                             NULL,
-                             at,
-                             response);
- 
-            if(response.code == 200) {
-                std::cout<<" RETRIEVE ENTITY PROFILES " << std::endl;
-                std::cout<<" code : " << response.code << std::endl;
-                std::cout<<" body : " << response.body << std::endl;
-                // Deserialize into Profile Object
-                Profile* pProf = new Profile();
-                jsn::DeserializeObject(pProf, response.body);
-                
-                // Push back into entity
-                ent.PushBackProfile(pProf);
-            }
-            itr++;
-        }
-
-        Entity::ProfileList* pProfList = ent.GetProfileList();
-        if(pProfList)
-            ent.SetActiveProfile(&*pProfList->begin());
-   }
-   */
-}
 static int Discover(const std::string& entityurl, const AccessToken* at, Entity& entOut) {
     int status = ret::A_OK;
 
@@ -160,28 +118,7 @@ static void ExtractLink(const std::string& link, std::string& out) {
     out = link.substr(begin+1, diff);
 }
 
-static int InitEntity(const std::string& entityurl, const AccessToken* at, Entity& entOut) {
-    int status = ret::A_OK;
 
-    // Grab entity api root etc
-    RetrieveEntityProfiles(at, entOut);
-    
-    /*
-    // Set Api root
-    Profile* pProf = entOut.GetActiveProfile();
-    if(pProf) {
-        std::string apiroot;
-        pProf->GetApiRoot(apiroot);
-        entOut.SetApiRoot(apiroot);
-        entOut.SetEntityUrl(entityurl);
-    }
-    else {
-        status = ret::A_FAIL_INVALID_PTR;
-    }
-    */
-
-    return status;
-}
 
 
 

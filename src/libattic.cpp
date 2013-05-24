@@ -1,43 +1,12 @@
 #include "libattic.h"
 
-
-#include <fstream>
 #include <string>
-#include <sstream>
-#include <deque>
-
-
-#include "callbackhandler.h"
-
-#include "utils.h"
-#include "errorcodes.h"
-#include "apputils.h"
-#include "tentapp.h"
-
-#include "taskfactory.h"
-#include "taskarbiter.h"
-
-#include "constants.h"
-#include "credentials.h"
-
-#include "libatticutils.h"
-
-#include "taskmanager.h"
-
-#include "event.h"
+#include "atticservice.h"
 #include "callbackhandler.h"
 #include "passphrase.h"
-
-#include "atticclient.h"
-#include "clientutils.h"
 #include "configmanager.h"
-
-#include "logutils.h"
-#include "filesystem.h"
-#include "servicemanager.h"
-#include "threading.h"
-
-#include "atticservice.h"
+#include "apputils.h"
+#include "clientutils.h"
 
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
 static attic::AtticService         attic_service; 
@@ -107,136 +76,50 @@ int Discover(const char* szEntityurl) {
 
 int CreateFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) {
-        try { 
-            attic_service.task_manager()->CreateFolder(szFolderpath, NULL);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("hhhhJ23423*", e);
-        }
-
-    }
-
+    int status = attic_service.CreateFolder(szFolderpath);
     return status;
 }
 
 int DeleteFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) {
-        try { 
-            attic_service.task_manager()->DeleteFolder(szFolderpath, NULL);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("hhhhJ23423*", e);
-        }
-    }
-
+    int status = attic_service.DeleteFolder(szFolderpath);
     return status;
 }
 
-int RenameFolder(const char* szOldFolderpath, const char* szNewFoldername) {
+int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath) {
     if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(!szNewFoldername) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) { 
-        try { 
-            attic_service.task_manager()->RenameFolder(szOldFolderpath, szNewFoldername);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("BBKJ23423*", e);
-        }
-    }
-
+    if(!szNewFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    int status = attic_service.RenameFolder(szOldFolderpath, szNewFolderpath);
     return status;
 }
 
 int PushFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK){
-        try {
-            std::string filepath(szFilePath);
-            attic::event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("TOP#!FKDA", e);
-        }
-    }
+    int status = attic_service.UploadFile(szFilePath);
     return status;
 }
 
 int PullFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK){
-        try {
-            std::string filepath(szFilePath);
-            attic::event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("TOP1414", e);
-        }
-    }
-
+    int status = attic_service.DownloadFile(szFilePath);
     return attic::ret::A_OK;
 }
 
 int DeleteFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) {
-        try { 
-            std::string filepath(szFilePath);
-            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("TOP1349", e);
-        }
-    }
-    
+    int status = attic_service.MarkFileDeleted(szFilePath);
     return status;
 }
 
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) { 
-        try { 
-            attic_service.task_manager()->RenameFile(szOldFilepath, szNewFilepath);
-        }
-        catch(std::exception& e) {
-            attic::log::LogException("ASDKJ23423*", e);
-        }
-    }
-
+    int status = attic_service.RenameFile(szOldFilepath, szNewFilepath);
     return status;
 }
 
 int PollFiles(void) {
-    int status = IsLibInitialized();
-
-    if(status == attic::ret::A_OK) {
-        try { 
-            if(status == attic::ret::A_OK)
-                attic_service.task_manager()->PollFiles(NULL);
-        }
-        catch(std::exception& e) {
-            std::cout<<" caught : " << e.what() << std::endl;
-            attic::log::LogException("TOP12341", e);
-        }
-    }
-
-    return status;
+    return attic_service.EnablePolling();
 }
 
 
