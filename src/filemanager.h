@@ -80,7 +80,7 @@ public:
                            const std::string& folder_post_id,
                            const std::string& parent_post_id,
                            Folder& out);
-    bool UpdateFolderEntry(FolderPost& fp);
+    bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
     bool SetFolderParentPostId(const std::string& folderpath, const std::string& post_id);
     bool UpdateFolderContents(Folder& folder);

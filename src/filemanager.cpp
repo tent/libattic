@@ -588,14 +588,6 @@ bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::st
             ret = true;
         }
     }
-    else {
-        // create entry
-        Folder folder;
-        ret = CreateFolderEntry(fp.folder().folderpath(), 
-                                fp.id(),
-                                fp.folder().parent_post_id(), 
-                                folder);
-    }
     Unlock();
     return ret;
 }
