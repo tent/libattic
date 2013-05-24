@@ -13,6 +13,9 @@
 
 namespace attic { 
 
+
+// TODO :: master key and access token can probably be moved into the local cache
+//         this would eliminate the need for this class (A GOOD THING) 
 // TODO :: the necessity of this whole class needs to be re-thought,
 //          alot of generic methods are here that can be abstracted to 
 //          a more functional namespace, reducing locks.

@@ -84,7 +84,7 @@ bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::stri
 }
 
 bool FileHandler::UpdateFolderEntry(FolderPost& fp) {
-    return file_manager_->UpdateFolderEntry(fp);
+    return file_manager_->UpdateFolderEntry(fp.folder().folderpath(), fp.id());
 }
 
 void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
