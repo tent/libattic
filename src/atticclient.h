@@ -29,14 +29,14 @@ public:
     Client(const std::string& workingdir, 
            const std::string& configdir, 
            const std::string& tempdir, 
-           const std::string& entityurl);
+           const std::string& entityurl,
+           const AccessToken& at);
 
     ~Client();
 
     int Initialize();
     int Shutdown();
 
-    int LoadAccessToken();
     int LoadPhraseToken();
     int LoadAppFromFile();
     int LoadEntity(bool override=false);
@@ -44,8 +44,8 @@ public:
     int SaveAppToFile();
     int SavePhraseToken();
 
-    FileManager* file_manager()                 { return &file_manager_; }
-    CredentialsManager* credentials_manager()   { return &credentials_manager_; }
+//    FileManager* file_manager()                 { return file_manager_; }
+ //   CredentialsManager* credentials_manager()   { return credentials_manager_; }
 
     const TentApp& tent_app() const             { return tent_app_; }
     const Entity& entity() const                { return entity_; }
@@ -68,8 +68,6 @@ public:
 
 private:
     TentApp             tent_app_;
-    FileManager         file_manager_;
-    CredentialsManager  credentials_manager_;
     Entity              entity_;
     AccessToken         access_token_;
     PhraseToken         phrase_token_;
