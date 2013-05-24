@@ -46,6 +46,7 @@ int AtticService::start() {
 int AtticService::stop() {
     int status = ret::A_OK;
     status = ShutdownThreadManager();
+    status = ShutdownTaskArbiter();
     status = ShutdownTaskManager();
     status = ShutdownServiceManager();
     status = ShutdownTaskManager();

@@ -46,16 +46,13 @@ void ThreadWorker::Run() {
         }
 
         if(state() == ThreadWorker::FINISHED) {
-            std::cout<<" THREAD WORKER FINISHED " << std::endl;
             // Do some finished step, then idle
             SetState(ThreadWorker::IDLE);
         }
 
         if(state() == ThreadWorker::SHUTDOWN) {
-            std::cout<<" THREAD EXIT " << std::endl;
             SetThreadExit();
             if(task) {
-                std::cout<<" TASK STILL EXISTS?!?!?!?! " << std::endl;
                 task->OnFinished();
                 task_factory_.ReclaimTask(task);
                 task = NULL;
@@ -67,14 +64,13 @@ void ThreadWorker::Run() {
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
         if(task) { 
-//            delete task;
- //           task = NULL;
+            std::cout<<" shutting down task ... : " task.type() << std::endl;
             task->OnFinished();
             task_factory_.ReclaimTask(task);
             task = NULL;
         }
     }
-    
+    std::cout<<" worker exiting ... " << std::endl;
 }
 
 void ThreadWorker::PollTask(Task** task) {
