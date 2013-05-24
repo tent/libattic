@@ -398,7 +398,6 @@ int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
 
 int PostFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) {
     int status = ret::A_OK;
-
     if(!post_id.empty()) {
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
@@ -423,12 +422,10 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
         FilePost p;
         Response get_resp;
         status = ph.Get(posturl, NULL, p, get_resp);
-
         if(status == ret::A_OK) {
             p.clear_fragment();
             if(in_transit)
                 p.set_fragment(cnst::g_transit_fragment);
-
             Response put_resp;
             status = ph.Put(posturl, NULL, p, put_resp);
             if(status != ret::A_OK) {
@@ -440,7 +437,6 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
             status = ret::A_FAIL_NON_200;
             log::LogHttpResponse("nmasd981", get_resp);
         }
-
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -451,37 +447,17 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
 bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::string& meta_post_id) {
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", meta_post_id, posturl);
-
-    // Get Existing post
+    // Get latest post and update cache
+    PostHandler<FilePost> ph(access_token_);
+    FilePost p;
     Response get_resp;
-    ConnectionHandler ch;
-    netlib::HttpGet(posturl,
-               NULL,
-               &access_token_,
-               get_resp);
-
-    if(get_resp.code == 200) {
-        FilePost p;
-        jsn::DeserializeObject(&p, get_resp.body);
+    int status = ph.Get(posturl, NULL, p, get_resp);
+    if(status == ret::A_OK) {
         FileHandler fh(file_manager_);
         fh.UpdatePostVersion(fi->filepath(), p.version()->id());
         return true;
     }
     return false;
-}
-
-bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
-    // Get Parent folder
-    std::string folderpath;
-    fs::GetParentPath(filepath, folderpath);
-
-    bool ret = false;
-    Folder folder;
-    if(file_manager_->GetFolderEntry(folderpath, folder)) {
-        id_out = folder.folder_post_id();
-        ret = true;
-    }
-    return ret;
 }
 
 bool PostFileStrategy::ValidMasterKey() {

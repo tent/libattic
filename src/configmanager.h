@@ -24,11 +24,12 @@ public:
     bool GetValue(const std::string& key, std::string& out);
     void SetValue(const std::string& key, const std::string& value);
 
+    std::string toString();
 private:
     typedef std::map<std::string, std::string> ConfigMap;
-    ConfigMap m_ConfigMap;
+    ConfigMap config_map_;
 
-    static ConfigManager* m_pInstance;
+    static ConfigManager* instance_;
 };
 
 } //namespace

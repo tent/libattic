@@ -142,6 +142,8 @@ void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, config_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigTempDir, temp_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigEntityURL, entity_url_);
+    std::cout<< " loading config values : " << std::endl;
+    std::cout<< ConfigManager::GetInstance()->toString() << std::endl;
 }
 
 int AtticService::ValidateDirectories() {
@@ -151,6 +153,11 @@ int AtticService::ValidateDirectories() {
         fs::CreateDirectory(working_dir_);
         fs::CreateDirectory(config_dir_);
         fs::CreateDirectory(temp_dir_);
+
+        fs::GetCanonicalPath(working_dir_, working_dir_);
+        fs::GetCanonicalPath(config_dir_, config_dir_);
+        fs::GetCanonicalPath(temp_dir_, temp_dir_);
+
     }
     else {
         status = ret::A_FAIL_VALIDATE_DIRECTORY;

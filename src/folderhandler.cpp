@@ -62,6 +62,7 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
     if(!folderpath.empty()) { 
         std::deque<std::string> folder_list;
         fs::CreateDirectoryTree(folderpath, file_manager_->working_directory(), folder_list);
+        std::cout<<" working directory : " << std::endl;
 
         if(!folder_list.size())
             folder_list.push_back(folderpath);

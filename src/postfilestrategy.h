@@ -44,8 +44,6 @@ private:
     void ExtractChunkInfo(ChunkPostList& list,
                           FileInfo::ChunkMap& out);
 
-    bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
-
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
     int UpdateFilePost(FileInfo& fi);
     int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
