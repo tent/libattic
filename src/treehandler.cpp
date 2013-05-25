@@ -1,30 +1,54 @@
 #include "treehandler.h"
 
 #include "utils.h"
+#include "posthandler.h"
 
-TreeHandler::TreeHandler(const std::string& post_path) {
+namespace attic { 
+
+TreeHandler::TreeHandler(const AccessToken& at, 
+                         const std::string& post_path) {
+    access_token_ = at;
     post_path_ = post_path;
 }
 
 TreeHandler::~TreeHandler() {}
 
 bool TreeHandler::ConstructPostTree(const std::string& post_id, PostTree& out) {
-    std::string posturl;
-    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    // first - path, second - id
+    PostPair post_pair(post_path_, post_id);
+    post_queue_.push_back(post_pair);
 
-    FilePost fp;
-    if(RetrievePost(posturl, fp)) {
-        if(fp.version()->parents().size()) {
-            Version::ParentList::iterator itr = fp.version()->parents().begin();
-            for(;itr!= fp.version()->parents().end(); itr++) {
-                std::string version_id = itr->version;
-                std::string post = itr->post; // if this is not empty then use this id 
-
+    while(post_queue_.size()) {
+        std::string posturl;
+        utils::FindAndReplace(post_queue_.front().first, 
+                              "{post}", 
+                              post_queue_.front().second, 
+                              posturl);
+        post_queue_.pop_front();
+        FilePost fp;
+        if(RetrievePost(posturl, fp)) {
+            // Push into tree
+            out.PushBackPost(&fp);
+            // extract id's from parents
+            if(fp.version().parents().size()) {
+                Version::ParentList::const_iterator itr = fp.version().parents().begin();
+                for(;itr!= fp.version().parents().end(); itr++) {
+                    PostPair parent_p;
+                    parent_p.second = itr->version;
+                    if(!itr->post.empty())
+                        parent_p.first = itr->post;
+                    else
+                        parent_p.first = post_path_;
+                    post_queue_.push_back(parent_p);
+                }
             }
         }
+        else {
+            return false;
+        }
     }
-
-    return false;
+    
+    return true;
 }
 
 bool TreeHandler::RetrievePost(const std::string& post_url, FilePost& out) {
@@ -35,3 +59,4 @@ bool TreeHandler::RetrievePost(const std::string& post_url, FilePost& out) {
     return false;
 }
 
+} //namespace

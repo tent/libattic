@@ -2,18 +2,30 @@
 #define TREEHANDLER_H_
 #pragma once
 
+#include <deque>
 #include <string>
 #include "posttree.h"
+#include "filepost.h"
+#include "accesstoken.h"
 
-class TreeHandler() {
-    bool RetrievePost(const std::string& post_url, std::string& next_id, FilePost& out);
+namespace attic { 
+
+class TreeHandler {
+    bool RetrievePost(const std::string& post_url, FilePost& out);
 public:
-    TreeHandler(const std::string& post_path);
+    TreeHandler(const AccessToken& at, 
+                const std::string& post_path);
     ~TreeHandler();
 
     bool ConstructPostTree(const std::string& post_id, PostTree& out);
 private:
-    std::string post_path_
+    typedef std::pair<std::string, std::string> PostPair; // path, id
+    std::deque<PostPair> post_queue_;
+    std::string post_path_;
+    AccessToken access_token_;
+
 };
+
+} //namespace
 #endif
 
