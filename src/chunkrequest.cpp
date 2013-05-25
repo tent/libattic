@@ -45,7 +45,7 @@ void ChunkRequest::set_parent_post(const ChunkPost& cp) {
 void ChunkRequest::BeginRequest() {
     if(request_type_ == "PUT") {
         Parent parent;
-        parent.version = parent_post_.version()->id();
+        parent.version = parent_post_.version().id();
         post_.PushBackParent(parent);
     }
 

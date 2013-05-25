@@ -89,7 +89,7 @@ int SoftDeleteStrategy::PostFilePost(const std::string& post_id, FilePost& fp) {
         std::cout<<" post type : " << fp.type() << std::endl;
 
         Parent parent;
-        parent.version = fp.version()->id();
+        parent.version = fp.version().id();
         fp.PushBackParent(parent);
 
         std::string body;

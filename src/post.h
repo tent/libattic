@@ -38,6 +38,8 @@ struct Parent : public JsonSerializable {
 
 class Version : public JsonSerializable {
 public:
+    typedef std::vector<Parent> ParentList;
+
     const std::string& id() const           { return id_; }
     const std::string& published_at() const { return published_at_; }
     const std::string& received_at() const  { return received_at_; } 
@@ -51,11 +53,9 @@ public:
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
 
-    ParentList* parents() { return &parents_; }
+    const ParentList& parents() const { return parents_; }
 private:
-    typedef std::vector<Parent> ParentList;
     ParentList parents_;
-
     std::string id_; // Post version identifier
     std::string published_at_;
     std::string received_at_;
@@ -99,7 +99,7 @@ public:
     const std::string& type() const     { return type_; }
     unsigned int published_at() const   { return published_at_; }
     unsigned int received_at() const    { return received_at_; }
-    Version* version()            { return &version_; }
+    const Version& version() const      { return version_; }
 
     const std::string& version_id() const { return version_.id(); }
 

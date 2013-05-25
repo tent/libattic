@@ -33,7 +33,7 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
     out.set_name(fi.filename());
 
     Parent parent;
-    parent.version = fp.version()->id();
+    parent.version = fp.version().id();
     out.PushBackParent(parent);
 }
 
@@ -53,7 +53,7 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
     out.set_folder(f);
 
     Parent parent;
-    parent.version = fp.version()->id();
+    parent.version = fp.version().id();
     out.PushBackParent(parent);
 }
 

@@ -353,7 +353,7 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
     } 
     else {
         Parent parent;
-        parent.version = temp.version()->id();
+        parent.version = temp.version().id();
         temp.PushBackParent(parent);
         jsn::SerializeObject(&temp, body);
         status = netlib::HttpPut(url, 

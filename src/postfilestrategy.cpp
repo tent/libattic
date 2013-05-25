@@ -454,7 +454,7 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     int status = ph.Get(posturl, NULL, p, get_resp);
     if(status == ret::A_OK) {
         FileHandler fh(file_manager_);
-        fh.UpdatePostVersion(fi->filepath(), p.version()->id());
+        fh.UpdatePostVersion(fi->filepath(), p.version().id());
         return true;
     }
     return false;

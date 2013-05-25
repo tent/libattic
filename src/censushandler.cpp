@@ -24,7 +24,7 @@ bool CensusHandler::Inquiry(const std::string& fragment,
         if(out.size()) {
             SetReceivedAt(cnst::g_attic_file_type, 
                           fragment, 
-                          out.front().version()->received_at());
+                          out.front().version().received_at());
         }
         return true;
     }
@@ -41,7 +41,7 @@ bool CensusHandler::Inquiry(const std::string& fragment,
         if(out.size()) {
             SetReceivedAt(cnst::g_attic_folder_type, 
                           fragment, 
-                          out.front().version()->received_at());
+                          out.front().version().received_at());
         }
         return true;
     }

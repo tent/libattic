@@ -60,9 +60,9 @@ int PostHandler<T>::Post(const std::string& post_url,
     int status = ret::A_OK;
     std::cout<<" post url : " << post_url << std::endl;
 
-    if(!post.version()->id().empty()) {
+    if(!post.version().id().empty()) {
         Parent parent;
-        parent.version = post.version()->id();
+        parent.version = post.version().id();
         post.PushBackParent(parent);
     }
 
@@ -91,9 +91,9 @@ int PostHandler<T>::Put(const std::string& post_url,
     int status = ret::A_OK;
     std::cout<<" post url : " << post_url << std::endl;
 
-    if(!post.version()->id().empty()) {
+    if(!post.version().id().empty()) {
         Parent parent;
-        parent.version = post.version()->id();
+        parent.version = post.version().id();
         post.PushBackParent(parent);
     }
 

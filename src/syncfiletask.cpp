@@ -104,7 +104,7 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
                 bPull = true;
             }
 
-            if(pLocal_fi->post_version() != p.version()->id())
+            if(pLocal_fi->post_version() != p.version().id())
                 bPull = true;
         }
         else {
