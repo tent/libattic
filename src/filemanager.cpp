@@ -211,21 +211,23 @@ int FileManager::RenameFile(const std::string& old_filepath,
 }
 
 bool FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
+    bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        manifest_.UpdateFileVersion(filepath, version);
+        ret = manifest_.UpdateFileVersion(filepath, version);
         Unlock();
-        return true;
     }
-    return false;
+    return ret;
 }
 
-void FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
+bool FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
+    bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        manifest_.UpdateFileDeleted(filepath, del);
+        ret = manifest_.UpdateFileDeleted(filepath, del);
         Unlock();
     }
+    return ret;
 }
 
 bool FileManager::MarkFilesInFolderDeleted(const std::string& folder_id) {
@@ -259,25 +261,43 @@ bool FileManager::SetFilePostId(const std::string &filepath, const std::string& 
 }
 
 // Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
-void FileManager::SetFileFolderPostId(const std::string& filepath, const std::string& postid) {
+bool FileManager::SetFileFolderPostId(const std::string& filepath, const std::string& postid) {
+    bool ret = false;
     if(IsPathRelative(filepath)) {
-        manifest_.UpdateFileFolderPostId(filepath, postid);
+        Lock();
+        ret = manifest_.UpdateFileFolderPostId(filepath, postid);
+        Unlock();
     }
-    else 
-        std::cout<<" FILEPATH NOT RELATIVE IN SET POST ID : " << filepath << std::endl;
+    return ret;
+}
+
+bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath) {
+    bool ret = false;
+    if(IsPathRelative(old_filepath) && IsPathRelative(new_filepath)) {
+        Lock();
+        ret = manifest_.UpdateFilepath(old_filepath, new_filepath);
+        Unlock();
+    }
+    return ret;
 }
 
 bool FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
     FileInfo fi;
     if(GetFileInfo(filepath, fi)) {
         fi.set_chunks(map);
-        InsertToManifest(&fi);
-        return true;
-    }
-    else {
-        std::cout<<" INVALID FILEINFO OBJECT " << std::endl;
+        return InsertToManifest(&fi);
     }
     return false;
+}
+
+bool FileManager::SetFileChunkCount(const std::string& filepath, const std::string& count) {
+    bool ret = false;
+    if(IsPathRelative(filepath)) {
+        Lock();
+        ret = manifest_.UpdateFileChunkCount(filepath, count);
+        Unlock();
+    }
+    return ret;
 }
 
 FileInfo* FileManager::CreateFileInfo() {

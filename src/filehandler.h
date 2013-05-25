@@ -26,6 +26,7 @@ public:
     bool GetCanonicalFilepath(const std::string& filepath, std::string& out);
 
     bool UpdateFileInfo(FileInfo& fi);
+    bool UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath);
     bool UpdateFilePostId(const std::string& filepath, const std::string& post_id);
     bool UpdateChunkCount(const std::string& filepath, const std::string& count);
     bool UpdateFileSize(const std::string& filepath, const std::string& size);

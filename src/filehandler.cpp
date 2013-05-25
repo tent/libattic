@@ -60,18 +60,21 @@ bool FileHandler::UpdateFileInfo(FileInfo& fi) {
     return file_manager_->InsertToManifest(&fi);
 }
 
+bool FileHandler::UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath) {
+    return file_manager_->SetNewFilepath(old_filepath, new_filepath);
+}
+
 bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::string& post_id) {
     return file_manager_->SetFilePostId(filepath, post_id);
 }
 
 bool FileHandler::UpdateChunkCount(const std::string& filepath, const std::string& count) {
-
-    return false;
+    return file_manager_->SetFileChunkCount(filepath, count);
 }
 
 bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string& size) {
-
-
+    // TODO:: this
+    std::cout<< " fh IMPLEMENT THIS " << std::endl;
     return false;
 }
 

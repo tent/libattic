@@ -58,6 +58,7 @@ public:
     bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
     bool UpdatePastAlias(const std::string& filepath, const std::string& alias_data);
     bool UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id);
+    bool UpdateFileChunkCount(const std::string& filepath, const std::string& chunk_count);
 
     bool MarkAllFilesDeletedInFolder(const std::string& folderid);
 

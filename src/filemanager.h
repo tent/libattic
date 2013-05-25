@@ -65,10 +65,12 @@ public:
     FileInfo* GetFileInfoByPostId(const std::string& post_id);
 
     bool SetFileVersion(const std::string& filepath, const std::string& version);
-    void SetFileDeleted(const std::string& filepath, const bool del = true);
+    bool SetFileDeleted(const std::string& filepath, const bool del = true);
     bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
-    void SetFileFolderPostId(const std::string& filepath, const std::string& postid);
+    bool SetFileChunkCount(const std::string& filepath, const std::string& count);
+    bool SetFileFolderPostId(const std::string& filepath, const std::string& postid);
+    bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
 
     // Folder
     bool DoesFolderExist(const std::string& folderpath);

@@ -696,6 +696,18 @@ bool Manifest::UpdateFileFolderPostId(const std::string& filepath, const std::st
     return PerformQuery(exc);
 }
 
+bool Manifest::UpdateFileChunkCount(const std::string& filepath, const std::string& chunk_count) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += g_infotable;
+    exc += " SET chunkcount=\"";
+    exc += chunk_count;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+    return PerformQuery(exc);
+}
+
 bool Manifest::UpdatePastAlias(const std::string& filepath, const std::string& alias_data) {
     std::string encoded;
     crypto::Base64EncodeString(alias_data, encoded);
