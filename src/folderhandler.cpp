@@ -220,10 +220,12 @@ int FolderHandler::RetrieveFilesInFolder(Folder& folder, std::deque<FileInfo>& o
     return file_manager_->GetAllFileInfoForFolder(folder.folder_post_id(), out);
 }
 
-
-
-void MarkFolderDeleted(FolderPost& fp) {
+void FolderHandler::MarkFolderDeleted(FolderPost& fp) {
     fp.set_fragment(cnst::g_deleted_fragment);
+}
+
+bool FolderHandler::GetFolderById(const std::string& folder_id, Folder& out) {
+    return file_manager_->GetFolderEntryByPostId(folder_id, out);
 }
 
 }//namespace

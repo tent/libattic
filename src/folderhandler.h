@@ -36,6 +36,8 @@ public:
 
     void MarkFolderDeleted(FolderPost& fp);
 
+    bool GetFolderById(const std::string& folder_id, Folder& out);
+
 private:
     FileManager* file_manager_;
 };
