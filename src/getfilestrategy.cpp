@@ -1,5 +1,6 @@
 #include "getfilestrategy.h"
 
+#include <sstream>
 #include <iostream>
 #include <boost/timer/timer.hpp>
 
@@ -271,7 +272,6 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     int status = ret::A_OK;
 
     std::cout<<" RETRIEVING ATTACHEMNT : " << url << std::endl;
-
     boost::timer::cpu_timer::cpu_timer t;
     Response response;
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
@@ -286,15 +286,21 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
         std::cout<<" FAILED BODY : " << response.body << std::endl;
         status = ret::A_FAIL_NON_200;
     }
+
     if(elapsed > 0) {
         std::cout<<" elapsed : "<< elapsed << std::endl;
         std::cout<<" buffer size : "<< outBuffer.size() << std::endl;
 
-        // Raise event
-        char szSpeed[256] = {'\0'};
-        //snprintf(szSpeed, 256, "%u", bps);
-        event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
+        std::ostringstream speed;
+        speed << (outBuffer.size() / elapsed) << std::endl; // bytes per nanosecod
+        event::RaiseEvent(event::Event::DOWNLOAD_SPEED, speed.str(), NULL);
     }
+
+    /*
+    std::ostringstream oss;
+    oss << outBuffer.size() << std::endl;
+    event::RaiseEvent(event::Event::DOWNLOAD_TRANSFERRED, oss.str(), NULL);
+    */
     return status;                                                                        
 }
 

@@ -16,6 +16,8 @@ class SyncFileTask : public TentTask {
     int SyncMetaData(FilePost& out);
     
     int ProcessFileInfo(FilePost& p);
+    void ValidateFileInfo(FileInfo& incoming, FileInfo& local);
+    void ValidateFilepath(FileInfo& fi);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
 public:
     SyncFileTask(FileManager* pFm,
