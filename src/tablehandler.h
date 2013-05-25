@@ -23,6 +23,7 @@ public:
 
     int row() const { return row_; }
     int col() const { return col_; }
+    char** results() const { return results_; }
 private:
     char** results_;
     int row_;
@@ -34,10 +35,10 @@ public:
     TableHandler(sqlite3* db, const std::string& name);
     virtual ~TableHandler();
     virtual bool CreateTable() = 0;
+
+protected:
     bool Exec(const std::string& query, std::string& error_out) const;
     bool Select(const std::string& select, SelectResult& out, std::string& error_out) const;
-
-    const std::string& table_name() const { return table_name_; }
 
     bool PrepareStatement(const std::string& statement, std::string& error_out);
     bool StepStatement(std::string& error_out);
@@ -46,7 +47,11 @@ public:
     bool BindText(unsigned int position, const std::string& value, std::string& error_out);
     bool BindBlob(unsigned int position, const std::string& value, std::string& error_out);
 
+    bool ResetStatement();
     bool ClearStatement();
+
+    const std::string& table_name() const { return table_name_; }
+    sqlite3* db() const { return db_; }
 private:
     sqlite3* db_;
     sqlite3_stmt* stmt_;

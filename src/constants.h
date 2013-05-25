@@ -55,6 +55,9 @@ static const char* g_content_type_header = "application/vnd.tent.post.v0+json";
 static const char* g_children_header = "application/vnd.tent.post-children.v0+json";
 static const char* g_token_type = "https://tent.io/oauth/hawk-token"; // token type
 
+// table names
+static const char* g_filetable = "filetable";
+static const char* g_foldertable = "foldertable";
 }} //namespace
 #endif
 

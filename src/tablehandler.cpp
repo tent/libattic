@@ -149,9 +149,16 @@ bool TableHandler::BindBlob(unsigned int position, const std::string& value, std
     return false;
 }
 
+bool TableHandler::ResetStatement() {
+    sqlite3_reset(stmt_);
+    return true;
+}
+
 bool TableHandler::ClearStatement() {
-    // TODO :: probably some other step with clearing a non finalized statement, look it up at some point
+    std::string error;
+    FinalizeStatement(error);
     stmt_ = NULL;
+    return true;
 }
 
 

@@ -60,13 +60,13 @@ public:
     bool UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id);
     bool UpdateFileChunkCount(const std::string& filepath, const std::string& chunk_count);
 
-    bool MarkAllFilesDeletedInFolder(const std::string& folderid);
-
     bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
     int QueryAllFiles(FileInfoList& out);
     int QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);
     int QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
+
+    bool MarkAllFilesDeletedInFolder(const std::string& folderid);
     bool RemoveFileInfo(const std::string &filepath);
 
     // Folder Table
