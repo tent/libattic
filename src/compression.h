@@ -44,7 +44,7 @@ static int CompressString(const std::string& in, std::string& out, const int nDe
     return status;
 }
 
-static int DecompressString(std::string& in, std::string& out) {
+static int DecompressString(const std::string& in, std::string& out) {
     int status = ret::A_OK;
     try {
         CryptoPP::StringSource( in,

@@ -13,6 +13,8 @@
 #include "connectionhandler.h"
 #include "pagepost.h"
 #include "filehandler.h"
+#include "posthandler.h"
+#include "chunktransform.h"
 
 namespace attic { 
 
@@ -87,20 +89,12 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
 
     // Get Metadata post
     Response resp;
-    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+    PostHandler<FilePost> ph(access_token_);
+    status = ph.Get(posturl, NULL, out, resp);
 
     std::cout<<" POST URL : "<< posturl << std::endl;
     std::cout<<" CODE : " << resp.code << std::endl;
     std::cout<<" BODY : " << resp.body << std::endl;
-
-    if(resp.code == 200) {
-        if(!jsn::DeserializeObject(&out, resp.body)) {
-            std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
-        }
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
 
     return status;
 }
@@ -120,17 +114,13 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
 
     Response response;
-    netlib::HttpGet(posts_feed,
-                    &params,
-                    &access_token_,
-                    response);
-
+    PostHandler<PagePost> ph(access_token_);
+    PagePost pp;
+    status = ph.Get(posts_feed, &params, pp, response);
     std::cout<<" CODE : " << response.code << std::endl;
     std::cout<<" BODY : " << response.body << std::endl;
 
-    if(response.code == 200) {
-        PagePost pp;
-        jsn::DeserializeObject(&pp, response.body);
+    if(status == ret::A_OK) {
         Json::Value chunk_post_arr(Json::arrayValue);
         jsn::DeserializeJson(pp.data(), chunk_post_arr);
 
@@ -159,7 +149,6 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
         log::LogHttpResponse("FA332ASDF3", response);
         status = ret::A_FAIL_NON_200;
     }
-
     return status;
 }
 
@@ -287,6 +276,7 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     Response response;
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
+    boost::timer::nanosecond_type const elapsed(time.system + time.user);
 
     if(response.code == 200) {
         outBuffer = response.body;
@@ -296,18 +286,13 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
         std::cout<<" FAILED BODY : " << response.body << std::endl;
         status = ret::A_FAIL_NON_200;
     }
-    
-    long elapsed = time.user;
-    // to milliseconds
-    elapsed *= 0.000001;
-    std::cout<<" ELAPSED : "<< elapsed << std::endl;
     if(elapsed > 0) {
+        std::cout<<" elapsed : "<< elapsed << std::endl;
         std::cout<<" buffer size : "<< outBuffer.size() << std::endl;
-        unsigned int bps = (outBuffer.size()/elapsed);
-        std::cout<<" BPS : " << bps << std::endl;
+
         // Raise event
         char szSpeed[256] = {'\0'};
-        snprintf(szSpeed, 256, "%u", bps);
+        //snprintf(szSpeed, 256, "%u", bps);
         event::RaiseEvent(event::Event::DOWNLOAD_SPEED, std::string(szSpeed), NULL);
     }
     return status;                                                                        
@@ -318,79 +303,24 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
                                     const std::string& chunkBuffer, 
                                     std::string& out) {
     int status = ret::A_OK;
-
     if(ci) {
-        std::string iv = ci->iv();
-
-        Credentials cred;
-        cred.set_key(filekey);
-        cred.set_iv(iv);
-
-        std::cout<< " TRANSFORMING CHUNK " << std::endl;
-        std::cout<< " key : " << filekey << std::endl;;
-        std::cout<< " IV : " << iv << std::endl;
-        std::cout<< " SIZEOF : " << chunkBuffer.size() << std::endl;
-
-        std::string rawhash;
-        crypto::GenerateHash(chunkBuffer, rawhash);
-        std::cout<<" RAW HASH : " << rawhash << std::endl;
-
-        // Base64Decode
-        std::string base64Chunk;
-        crypto::Base64DecodeString(chunkBuffer, base64Chunk);
-
-        std::string cipherhash;
-        crypto::GenerateHash(base64Chunk, cipherhash);
-        std::cout<<" CIPHER HASH : " << cipherhash << std::endl;
-        std::string ci_cipherhash = ci->ciphertext_mac();
-        if(ci_cipherhash == cipherhash) {
-            std::cout<<" Ciphertext Hashes match! " << std::endl;
-            std::cout<<" decrypting ... " << std::endl;
-            // Decrypt
-            std::string decryptedChunk;
-            //status = crypto::DecryptStringCFB(base64Chunk, cred, decryptedChunk);
-            status = crypto::DecryptStringGCM(base64Chunk, cred, decryptedChunk);
-            if(status == ret::A_OK) {
-                // Decompress
-                std::string decryptedHash;
-                crypto::GenerateHash(decryptedChunk, decryptedHash);
-                std::cout<<" DECRYPTED HASH : " << decryptedHash << std::endl;
-                std::cout<<" DECRYPTED SIZE : " << decryptedChunk.size() << std::endl;
-                std::string decompressedChunk;
-                status = compress::DecompressString(decryptedChunk, decompressedChunk);
-                if(status == ret::A_OK) { 
-                    //Verify chunk Check plaintext hmac
-                    std::string local_hash;
-                    crypto::GenerateHash(decompressedChunk, local_hash);
-                    std::string plaintexthash = ci->plaintext_mac();
-
-                    std::cout<<" LOCAL HASH : " << local_hash << std::endl;
-                    std::cout<<" CI HASH : " << plaintexthash << std::endl;
-
-                    if(local_hash == plaintexthash) {
-                        std::cout<<" ---- HASHES ARE THE SAME ---- " << std::endl;
-                        out = decompressedChunk;
-                        std::cout<<" decomp chunk : " << decompressedChunk.size() << std::endl;
-                        std::cout<<" size of chunk : " << out.size() << std::endl;
-                    }
-                    else
-                        status = ret::A_FAIL_INVALID_CHUNK_HASH;
-                }
+        ChunkTransform ct(chunkBuffer, filekey);
+        if(ct.TransformIn(ci)) {
+            if(ct.ciphertext_hash() == ci->ciphertext_mac() && 
+               ct.plaintext_hash() == ci->plaintext_mac()) {
+                    std::cout<<" ^^^---- HASHES ARE THE SAME ----^^^" << std::endl;
+                    out = ct.finalized_data();
+                    std::cout<<" decomp chunk : " << out.size() << std::endl;
+                    std::cout<<" size of chunk : " << out.size() << std::endl;
             }
-        }
-        else {
-            std::string message("Invalid Ciphertext hash compare\n");
-            message += " chunk hash : " + ci_cipherhash + "\n";
-            message += " local hash : " + cipherhash + "\n";
-            log::LogString("1PRF123X", message);
-            status = ret::A_FAIL_INVALID_CHUNK_HASH;
+            else {
+                status = ret::A_FAIL_INVALID_CHUNK_HASH;
+            }
         }
     }
     else { 
-        std::cout<<" INVALID CHUNK INFO PTR " << std::endl; 
         status = ret::A_FAIL_INVALID_PTR;
     }
-
     return status;
 }
 
@@ -400,7 +330,6 @@ int GetFileStrategy::ConstructPostTree(FileInfo* fi, PostTree& tree) {
         std::cout<<"BUILDING POST TREE " << std::endl;
         std::string posturl;
         std::string postid = fi->post_id();
-
         status = RetrieveAndInsert(postid, tree);
     }
     return status;
@@ -412,22 +341,16 @@ int GetFileStrategy::RetrieveAndInsert(const std::string& postid, PostTree& tree
     utils::FindAndReplace(post_path_, "{post}", postid, posturl);
 
     Response resp;
-    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+    FilePost fp;
+    PostHandler<FilePost> ph(access_token_);
+    status = ph.Get(posturl, NULL, fp, resp);
 
     std::cout<<" POST URL : "<< posturl << std::endl;
     std::cout<<" CODE : " << resp.code << std::endl;
     std::cout<<" BODY : " << resp.body << std::endl;
 
-    if(resp.code == 200) {
-        FilePost fp;
-        if(jsn::DeserializeObject(&fp, resp.body)) {
-            tree.PushBackPost(&fp);
-        }
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
-
+    if(status == ret::A_OK)
+        tree.PushBackPost(&fp);
     return status;
 }
 
@@ -472,24 +395,21 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     Response resp;
-    netlib::HttpGet(posturl, NULL, &access_token_, resp);
+    FolderPost fp;
+    PostHandler<FolderPost> ph(access_token_);
+    int status = ph.Get(posturl, NULL, fp, resp);
 
     std::cout<<" POST URL : "<< posturl << std::endl;
     std::cout<<" CODE : " << resp.code << std::endl;
     std::cout<<" BODY : " << resp.body << std::endl;
 
-    if(resp.code == 200) {
-        FolderPost fp;
-        if(!jsn::DeserializeObject(&fp, resp.body)) {
-            if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) {
-                return true;
-            }
-        }
+    if(status == ret::A_OK) {
+        if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) 
+            return true;
     }
     else {
         log::LogHttpResponse("MASDKF111", resp);
     }
-
     return false;
 }
 

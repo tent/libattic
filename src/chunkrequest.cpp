@@ -91,7 +91,7 @@ int ChunkRequest::ProcessTransform(ChunkTransform& ct,
     }
     else {
         // Transform chunk
-        ct.Transform();
+        ct.TransformOut();
         out.set_chunk_name(ct.name());
         out.set_plaintext_mac(ct.plaintext_hash());
         out.set_ciphertext_mac(ct.ciphertext_hash());

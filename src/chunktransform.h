@@ -6,17 +6,26 @@
 
 namespace attic {
 
+class ChunkInfo;
+
 class ChunkTransform {
     void GenerateChunkName();
     void Compress(const std::string& in, std::string& out);
     void Encrypt(const std::string& in, std::string& out);
     void Encode(const std::string& in, std::string& out);
     void GenerateVerificationHash(std::string& out);
+
+    void Decode(const std::string& in, std::string& out);
+    void Decrypt(const std::string& in, std::string& out);
+    void Decompress(const std::string& in, std::string& out);
 public:
     ChunkTransform(const std::string& chunk, const std::string& file_key);
     ~ChunkTransform();
 
-    void Transform();
+    // Outbound transformation
+    bool TransformOut();    
+    // Inbound transformation
+    bool TransformIn(const ChunkInfo* ci);
 
     const std::string& file_key() const             { return file_key_; }
     const std::string& chunk_iv() const             { return chunk_iv_; }
