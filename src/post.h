@@ -50,6 +50,8 @@ public:
 
     void Serialize(Json::Value& root);
     void Deserialize(Json::Value& root);
+
+    ParentList* parents() { return &parents_; }
 private:
     typedef std::vector<Parent> ParentList;
     ParentList parents_;
