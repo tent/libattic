@@ -673,6 +673,30 @@ bool FileManager::SetFolderParentPostId(const std::string& folderpath, const std
     return ret;
 }
 
+bool FileManager::SetFolderDeleted(const std::string& folderpath, bool del) {
+    std::string relative;
+    if(!IsPathRelative(folderpath)) {
+        GetRelativePath(folderpath, relative);
+    }
+    else {
+        relative = folderpath;
+    }
+
+    if(relative.empty())
+        relative = cnst::g_szWorkingPlaceHolder;
+
+    std::cout<<" FOLDER PATH : " << folderpath << std::endl;
+    std::cout<<" RELATIVE : " << relative << std::endl;
+
+    bool ret = false;
+    Lock();
+    if(manifest_.IsFolderInManifest(relative))
+        ret = manifest_.UpdateFolderDeleted(relative, del);
+    Unlock();
+ 
+    return ret;
+}
+
 int FileManager::GetAllFileInfo(std::deque<FileInfo>& out) {
     Lock();
     int status = manifest_.QueryAllFiles(out);

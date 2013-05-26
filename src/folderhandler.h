@@ -30,6 +30,8 @@ public:
                       std::deque<FileInfo>& file_list,
                       std::deque<Folder>& folder_list);
 
+    void DeleteFolder(const std::string& folderpath);
+
     void DeleteFolder(const std::string& folderpath, 
                       std::deque<FileInfo>& file_out,
                       std::deque<Folder>& folder_out);
