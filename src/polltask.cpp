@@ -225,6 +225,8 @@ bool PollTask::IsFileInQueue(const std::string& filepath) {
 }
 
 void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will move to its own job
+    FolderHandler fh(file_manager());
+    fh.DeleteFolder(fp.relative_path());
     std::string canonical_path;
     file_manager()->GetCanonicalFilepath(fp.relative_path(), canonical_path);
     if(fs::CheckFilepathExists(canonical_path)){
@@ -260,27 +262,5 @@ void PollTask::DeleteLocalFolder(const FolderPost& fp) {
     }
 }
 
-// Could be alot, spin off on worker
-/*
-void DeleteFiles() {
-std::cout<<" file marked for deletion " << std::endl;
-        std::string canonical_path;
-        fm->GetCanonicalFilepath(filepath, canonical_path);
-        if(fs::CheckFilepathExists(canonical_path)){
-            // Move to trash
-            std::string trash_path;
-            ConfigManager::GetInstance()->GetValue("trash_path", trash_path);
-            if(!trash_path.empty() && fs::CheckFilepathExists(trash_path)) {
-                // Move to trash;
-                fs::MoveFileToFolder(canonical_path, trash_path);
-            }
-            else {
-                std::string msg = "Invalid trash_path";
-                log::LogString("MOA1349", msg);
-            }
-        }
-}
-*/
-
-
 }//namespace
+
