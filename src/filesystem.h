@@ -264,6 +264,13 @@ static void RenamePath(const std::string& original_path, const std::string& new_
 }
 
 
+static void ErrorCheckPathDoubleQuotes(std::string& path) {
+    size_t pos = path.find("//");
+    while(pos != std::string::npos) {
+        path.replace(pos, 2, "/");
+        pos = path.find("//");
+    }
+}
 
 }}//namespace
 #endif

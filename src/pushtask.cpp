@@ -37,19 +37,25 @@ void PushTask::OnPaused() {
 void PushTask::RunTask() {
     // Run the task
     std::string filepath = TentTask::filepath();
-    int status = ret::A_OK;
-    if(!file_manager()->IsFileLocked(filepath)) {
-        file_manager()->LockFile(filepath);
-        event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
-        status = PushFile(filepath);
-        event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
-        file_manager()->UnlockFile(filepath);
+    int status = ret::A_FAIL_PATH_DOESNT_EXIST;
+    if(fs::CheckFilepathExists(filepath)) {
+        if(!file_manager()->IsFileLocked(filepath)) {
+            file_manager()->LockFile(filepath);
+            std::cout<<" PUSH NOTIFY ON PATH : " << filepath << std::endl;
+            event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
+            status = PushFile(filepath);
+            event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+            file_manager()->UnlockFile(filepath);
+        }
+        else {
+            std::string error = " File is locked by other task, finishing task\n";
+            error += " file : " + filepath + "\n";
+            log::LogString("333MA!941", error);
+            status = ret::A_FAIL_FILE_IN_USE;
+        }
     }
     else {
-        std::string error = " File is locked by other task, finishing task\n";
-        error += " file : " + filepath + "\n";
-        log::LogString("333MA!941", error);
-        status = ret::A_FAIL_FILE_IN_USE;
+        std::cout<<" FILEPATH DOES NOT EXIST : " << filepath << std::endl;
     }
 
     Callback(status, filepath);

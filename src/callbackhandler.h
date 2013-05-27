@@ -6,9 +6,11 @@
 #include <deque>
 #include "event.h"
 
+#include "taskdelegate.h"
+
 namespace attic { 
 
-class CallbackHandler : public event::EventListener {
+class CallbackHandler : public event::EventListener { //, public TaskDelegate {
     void Notify(const event::Event& event);
 public:
     typedef void(*EventCallback)(int, int, const char*);
@@ -19,9 +21,18 @@ public:
     void RegisterCallback(event::Event::EventType type, EventCallback cb);
     void OnEventRaised(const event::Event& event);
 
+
+    typedef void(*DelegateCallback)(int, int, const char*);
+    void RegisterDelegateCallback(int type, DelegateCallback cb);
+
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var);
 private:
     typedef std::deque<EventCallback> CallbackList;
-    std::map<event::Event::EventType, CallbackList>  m_CallbackMap;
+    std::map<event::Event::EventType, CallbackList>  callback_map_;
+    std::map<int, DelegateCallback>             delegate_map_;
 };
 
 } //namespace

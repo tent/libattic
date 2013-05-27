@@ -85,6 +85,7 @@ public:
     bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
     bool SetFolderParentPostId(const std::string& folderpath, const std::string& post_id);
+    bool SetFolderDeleted(const std::string& folderpath, bool del);
     bool UpdateFolderContents(Folder& folder);
 
     // File Queue

@@ -3,7 +3,7 @@
 #pragma once
 
 #include <string>
-#include "callbackhandler.h"
+//#include "callbackhandler.h"
 #include "atticclient.h"
 #include "servicemanager.h"
 #include "taskmanager.h"
@@ -70,7 +70,7 @@ private:
     CredentialsManager* credentials_manager_;
     Client*             client_;
 
-    CallbackHandler callback_handler_;
+//    CallbackHandler callback_handler_;
 
     // File paths should all be absolute paths
     std::string working_dir_;

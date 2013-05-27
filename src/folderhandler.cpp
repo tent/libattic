@@ -100,6 +100,12 @@ bool FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& pos
     return file_manager_->SetFolderParentPostId(folder.folderpath(), post_id);
 }
 
+void FolderHandler::DeleteFolder(const std::string& folderpath) {
+    std::deque<FileInfo> file_list;
+    std::deque<Folder> folder_list;
+    DeleteFolder(folderpath, file_list, folder_list);
+}
+
 // Pass in full path
 // - deletes folder from drive
 // - removes folder from local cache
@@ -111,6 +117,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
                                  std::deque<Folder>& folder_out) {
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
+        file_manager_->SetFolderDeleted(folderpath, true);
         std::cout<<" retrieving all files and folders in folder : " << folderpath << std::endl;
         RetrieveAllFilesAndFoldersInFolder(folder, file_out, folder_out);
         std::cout<< " file count : " << file_out.size() << std::endl;
@@ -118,6 +125,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
         // mark all as deleted
         std::deque<Folder>::iterator itr = folder_out.begin();
         for(;itr!= folder_out.end(); itr++) {
+            file_manager_->SetFolderDeleted((*itr).folderpath(), true);
             file_manager_->MarkFilesInFolderDeleted(*itr);
         }
     }
