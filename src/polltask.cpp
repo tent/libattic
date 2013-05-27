@@ -122,12 +122,12 @@ void PollTask::RunTask() {
             timer_.stop();
             if(running_) {
                 std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
+                // Check deleted folder posts
+                PollDeletedFolderPosts();
                 // Check folder posts
                 PollFolderPosts();
                 // Check deleted file posts
                 PollDeletedFilePosts();
-                // Check deleted folder posts
-                PollDeletedFolderPosts();
                 // Check all file posts
                 PollFilePosts();
             }
