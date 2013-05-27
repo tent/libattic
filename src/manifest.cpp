@@ -849,13 +849,14 @@ bool Manifest::GetFolderID(const std::string& folderpath, std::string& out) {
 
 bool Manifest::InsertFolderInfo(const std::string& folderpath, 
                                 const std::string& post_id,
-                                const std::string& parentpostid) {
+                                const std::string& parentpostid,
+                                const bool deleted) {
     std::cout<<" is folder in manifest ? : " << IsFolderInManifest(folderpath) << std::endl;
     if(!IsFolderInManifest(folderpath)) {
         std::string exc;
         exc += "INSERT OR REPLACE INTO ";
         exc += g_foldertable;
-        exc += " (folderpath, post_id, parent_post_id) VALUES (?,?,?);";  
+        exc += " (folderpath, post_id, parent_post_id, deleted) VALUES (?,?,?,?);";  
 
         // Prepare statement
         sqlite3_stmt* stmt = NULL;
@@ -879,6 +880,11 @@ bool Manifest::InsertFolderInfo(const std::string& folderpath,
                                         parentpostid.c_str(), 
                                         parentpostid.size(), 
                                         SQLITE_STATIC);
+                if(ret != SQLITE_OK) {
+                    printf("Error message: %s\n", sqlite3_errmsg(db_));
+                    return false;
+                }
+                ret = sqlite3_bind_int(stmt, 4, deleted);
                 if(ret != SQLITE_OK) {
                     printf("Error message: %s\n", sqlite3_errmsg(db_));
                     return false;

@@ -14,6 +14,7 @@
 #include "connectionhandler.h"
 #include "pagepost.h"
 #include "filehandler.h"
+#include "folderhandler.h"
 #include "posthandler.h"
 #include "chunktransform.h"
 
@@ -35,9 +36,17 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
 
     if(!filepath.empty()) { 
-        FileHandler fh(file_manager_);
+        FileHandler fi_hdlr(file_manager_);
+        FolderHandler fl_hdlr(file_manager_);
+        
         FileInfo fi;
-        if(fh.RetrieveFileInfo(filepath, fi)) {
+        if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
+            Folder folder;
+            if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder))
+                return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+            if(folder.deleted())
+                return ret::A_FAIL_PULL_DELETED_FOLDER;
+
             std::cout<<" FILE : " << filepath << " DELETED : " << fi.deleted() << std::endl;
             if(fi.deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
             // Retrieve file metadata
@@ -53,8 +62,11 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         ChunkPostList cp_list;
                         RetrieveChunkPosts(entity, meta_post.id(), cp_list);
                         // put file posts in order
+                        std::string destination;
+                        ConstructFilepath(fi, folder, destination);
                         // pull chunks
-                        status = ConstructFile(cp_list, file_cred, fi);
+                        std::cout<<" DESTINATION : " << destination << std::endl;
+                        status = ConstructFile(cp_list, file_cred, fi, destination);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache 
                             // entries for them
@@ -192,7 +204,8 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
 int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts, 
                                    const Credentials& file_cred, 
-                                   FileInfo& fi) {
+                                   FileInfo& fi, 
+                                   const std::string& destination_path) {
     int status = ret::A_OK;
     unsigned int post_count = chunk_posts.size();
     std::cout<<" # CHUNK POSTS : " << post_count << std::endl;
@@ -254,11 +267,9 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
         }
         if(status == ret::A_OK) {
             std::string path;
-            if(fh.GetCanonicalFilepath(fi.filepath(), path)) {
-                fs::MoveFile(temp_path, path);
-            }
-            else {
-                std::cout<<" FAILED TO FORM CANONICAL FILEPATH : " << path << std::endl;
+            // TODO :: verify path 
+            if(!destination_path.empty()) {
+                fs::MoveFile(temp_path, destination_path);
             }
         }
         // delete temp file 
@@ -417,6 +428,13 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
         log::LogHttpResponse("MASDKF111", resp);
     }
     return false;
+}
+
+void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
+    std::string path;
+    file_manager_->GetCanonicalFilepath(folder.folderpath(), path);
+    utils::CheckUrlAndAppendTrailingSlash(path);
+    out = path + fi.filename();
 }
 
 }//namespace
