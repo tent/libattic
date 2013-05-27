@@ -567,7 +567,7 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     ret = GetFolderEntry(folderpath, out);
     Lock();
     if(!ret) {
-        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id);
+        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, false);
         if(ret)
             ret = manifest_.QueryForFolder(relative, out);
     }

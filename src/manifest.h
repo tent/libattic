@@ -72,7 +72,8 @@ public:
     // Folder Table
     bool InsertFolderInfo(const std::string& folderpath, 
                           const std::string& folderpostid,
-                          const std::string& parentpostid);
+                          const std::string& parentpostid,
+                          const bool deleted);
 
     bool QueryForFolder(const std::string& folderpath, Folder& out);
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
