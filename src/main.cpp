@@ -66,7 +66,6 @@ TEST(ATTIC_SERVICE, START_STOP)
 TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
 {
     std::string test("This is a test string, of some sort of data, it's pretty great");
-    std::cout<<" TESTING COMPRESSION " << std::endl;
 
     // Compress
     std::string compressed;
@@ -120,12 +119,6 @@ TEST(CREDENTIALS, ISEMPTY)
 
     ASSERT_EQ(cred.key_empty(), false);
     ASSERT_EQ(cred.iv_empty(), false);
-}
-
-TEST(CRYPTO, SIZES)
-{
-    std::cout<< " MAXKEYLEN : " << CryptoPP::AES::MAX_KEYLENGTH << std::endl;
-    std::cout<< " BLOCKSIZE : " << CryptoPP::AES::BLOCKSIZE << std::endl;
 }
 
 TEST(CRYPTO, BASE32)
@@ -279,36 +272,6 @@ TEST(SCRYPT, ENCODE)
     ASSERT_EQ(res, 0);
 }
 
-TEST(REINTERPREST, CAST)
-{
-    byte bkey[CryptoPP::AES::MAX_KEYLENGTH];
-    byte bkey1[CryptoPP::AES::MAX_KEYLENGTH];
-    
-    std::string key("whatkjdfjsdkajfsk");
-
-    memcpy( bkey, 
-            reinterpret_cast<const unsigned char*>(key.c_str()), 
-            key.size());
-
-    memcpy( bkey1, 
-            reinterpret_cast<const unsigned char*>(key.c_str()), 
-            key.size());
-
-    /*
-    memcpy( bkey, 
-            reinterpret_cast<const unsigned char*>(key.c_str()), 
-            CryptoPP::AES::MAX_KEYLENGTH);
-
-    memcpy( bkey1, 
-            reinterpret_cast<const unsigned char*>(key.c_str()), 
-            CryptoPP::AES::MAX_KEYLENGTH);
-            */
-
-    int res =  strcmp( reinterpret_cast<const char*>(bkey), 
-                       reinterpret_cast<const char*>(bkey1));
-    ASSERT_EQ(res, 0);
-}
-
 TEST(FILESYSTEM, RELATIVETO)
 {
     std::string relative;
@@ -316,13 +279,14 @@ TEST(FILESYSTEM, RELATIVETO)
     ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
 }
 
-TEST(FILESYSTEM, GETCANONICALPATH)
-{
-    std::string path("./data/oglisv.pdf");
-    std::string absolute;
-    attic::fs::GetCanonicalPath(path, absolute);
+TEST(FILESYSTEM, EXTRACT_DOUBLE_QUOTES) {
+    std::string wrong("//this//is//totally//the//wrong//path//right.md");
+    std::string right("/this/is/totally/the/wrong/path/right.md");
+    attic::fs::ErrorCheckPathDoubleQuotes(wrong);
+    ASSERT_EQ(wrong, right);
 }
 
+/*
 TEST(FILESYSTEM, SUBDIRECTORIES)
 {
     std::string root("data");
@@ -336,15 +300,14 @@ TEST(FILESYSTEM, SUBDIRECTORIES)
         std::cout<< *itr << std::endl;
     }
 }
+*/
 
 TEST(AUTHCODE, GENERATE)
 {
     std::string authcode;
     attic::utils::GenerateRandomString(authcode, 32);
-    std::cout<<" AUTH CODE : " << authcode << std::endl;
     std::string encoded;
     attic::crypto::Base32EncodeString(authcode, encoded);
-    std::cout<<" ENCODED : " << encoded << std::endl;
     std::string decoded;
     attic::crypto::Base32DecodeString(encoded, decoded);
     ASSERT_EQ(decoded, authcode);
@@ -409,8 +372,6 @@ TEST(CHUNKINFO, SERIALIZATION)
     std::string output;
     attic::jsn::SerializeObject(&ci, output);
 
-    std::cout<<" SERIALIZED : " << output << std::endl;
-
     attic::ChunkInfo ci2;
     attic::jsn::DeserializeObject(&ci2, output);
     
@@ -451,6 +412,7 @@ TEST(PARAMS, ENCODE)
 }
 */
 
+/*
 TEST(PARAMS, DECODE) {
     std::string encoded = "?before_post=http%3A%2F%2Fbb216a47d970.alpha.attic.is+A3QNgRslTgFL7izr76eXiQ&limit=2&since_time=0";
     std::cout << " encoded :" << encoded << std::endl;
@@ -470,16 +432,9 @@ TEST(PARAMS, DECODE) {
     std::cout<< " test encoded : " << test_encode << std::endl;
 
 }
+*/
 
-TEST(FILEINFO, POSTVERSION)
-{
-    attic::FileInfo fi;
-    std::cout<<" POST VERSION : " << fi.post_version() << std::endl;
-
-    fi.set_post_version("12");
-    std::cout<<" POST VERSION : " << fi.post_version() << std::endl;
-}
-
+/*
 TEST(FILESYSTEM, SCAN)
 {
     std::vector<std::string> paths;
@@ -488,7 +443,8 @@ TEST(FILESYSTEM, SCAN)
         std::cout<<paths[i]<<std::endl;
     }
 }
-
+*/
+/*
 TEST(SOCKET, CONNECTION) {
     boost::asio::io_service io_service;
     attic::Connection con(&io_service);
@@ -498,9 +454,10 @@ TEST(SOCKET, CONNECTION) {
     catch(std::exception& e) {
         std::cout<<e.what()<< std::endl;
     }
-
 }
+*/
 
+/*
 TEST(CHUNKBUFFER, TEST) {
     attic::ChunkBuffer cb;
     if(cb.OpenFile("./data/cfs.mp4")) { 
@@ -517,7 +474,9 @@ TEST(CHUNKBUFFER, TEST) {
         ofs.close();
     }
 }
+*/
 
+/*
 #include "taskcontext.h"
 
 TEST(SIZE, TEST) {
@@ -537,6 +496,7 @@ TEST(SIZE, TEST) {
 
 
 }
+*/
 
 
 int main (int argc, char* argv[]) {
