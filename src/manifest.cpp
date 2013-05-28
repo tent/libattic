@@ -393,6 +393,7 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     crypto::Base64DecodeString(b64_key, iv);
     out.set_file_credentials_iv(iv);
     out.set_deleted(atoi(res.results_[10+step]));
+    std::cout<<" EXTRACTING FOLDER ID : " << res.results_[11+step] << std::endl;
     out.set_folder_post_id(res.results_[11+step]);
     std::string b64_alias = res.results_[12+step];
     std::string alias_data;

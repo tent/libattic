@@ -19,6 +19,7 @@
 #include "chunktransform.h"
 #include "posthandler.h"
 #include "filehandler.h"
+#include "folderhandler.h"
 
 #include "sleep.h"
 
@@ -54,6 +55,16 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             FileHandler fh(file_manager_);
             std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
             if(status == ret::A_OK && !file_post_id.empty()) {
+                // Set folder post id
+                std::string folder_id;
+                if(RetrieveFolderPostId(filepath, folder_id) && !folder_id.empty()) {
+                    fi.set_folder_post_id(folder_id);
+                }
+                else {
+                    std::cout<<" FAILED TO GET FOLDER POST ID : " << folder_id << std::endl;
+                    return ret::A_FAIL_INVALID_FOLDER_POST;
+                }
+                
                 // Retrieve Chunk posts
                 ChunkPostList chunk_posts;
                 RetrieveChunkPosts(entity, file_post_id, chunk_posts);
@@ -370,6 +381,27 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
         if(fh.RetrieveFileInfo(filepath, out))
             return true;
     }
+    return false;
+}
+
+bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
+    // Get folderpath
+    std::cout<<" incoming filepath : " << filepath << std::endl;
+    size_t pos = filepath.rfind("/");
+    if(pos != std::string::npos) {
+        std::string folderpath = filepath.substr(0, pos);
+        utils::CheckUrlAndAppendTrailingSlash(folderpath);
+
+        FolderHandler fh(file_manager_);
+        Folder folder;
+        if(fh.GetFolder(folderpath, folder)){
+            if(!folder.folder_post_id().empty()) {
+                id_out = folder.folder_post_id();
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
