@@ -236,5 +236,8 @@ bool FolderHandler::GetFolderById(const std::string& folder_id, Folder& out) {
     return file_manager_->GetFolderEntryByPostId(folder_id, out);
 }
 
+bool FolderHandler::GetFolder(const std::string& folderpath, Folder& out) {
+    return file_manager_->GetFolderEntry(folderpath, out);
+}
 }//namespace
 
