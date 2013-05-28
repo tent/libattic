@@ -10,7 +10,7 @@
 
 namespace attic { 
 
-class CallbackHandler : public event::EventListener { //, public TaskDelegate {
+class CallbackHandler : public TaskDelegate, public event::EventListener {
     void Notify(const event::Event& event);
 public:
     typedef void(*EventCallback)(int, int, const char*);
@@ -24,11 +24,10 @@ public:
 
     typedef void(*DelegateCallback)(int, int, const char*);
     void RegisterDelegateCallback(int type, DelegateCallback cb);
-
     void Callback(const int type,
                   const int code,
                   const int state,
-                  const std::string& var);
+                  const std::string& var) const;
 private:
     typedef std::deque<EventCallback> CallbackList;
     std::map<event::Event::EventType, CallbackList>  callback_map_;

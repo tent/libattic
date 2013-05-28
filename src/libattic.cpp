@@ -95,6 +95,7 @@ int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath) {
 
 int PushFile(const char* szFilePath) {
     if(!szFilePath) return attic::ret::A_FAIL_INVALID_CSTR;
+    std::cout << " PUSHING FILE : " << szFilePath << std::endl;
     int status = attic_service.UploadFile(szFilePath);
     return status;
 }
