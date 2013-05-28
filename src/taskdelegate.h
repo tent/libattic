@@ -9,10 +9,13 @@ namespace attic {
 
 class TaskDelegate {
 public:                                                         
-    TaskDelegate() {
+    TaskDelegate() {}
+    ~TaskDelegate() {}
+
+    void Initialize() {
         crypto::GenerateRandomString(identifier_);
     }
-    ~TaskDelegate() {}
+
                                                                                 
     virtual void Callback(const int type,
                           const int code,
