@@ -25,20 +25,19 @@ void CallbackHandler::Notify(const event::Event& event) {
 
 }
 
-void CallbackHandler::Callback(const int type,
-                               const int code,
-                               const int state,
-                               const std::string& var) const {
-
-    std::map<int, DelegateCallback>::const_iterator itr = delegate_map_.find(type);
-    if(itr != delegate_map_.end()) { 
-        itr->second(type, code, var.c_str());
+TaskDelegate* CallbackHandler::RegisterDelegateCallback(int type, cbh::DelegateCallback cb) {
+    TaskDelegate* del = NULL;
+    if(cb) {
+        del = new TaskCallback(this, cb);
+        std::string id = del->GenerateIdentifier();
+        while(delegate_map_.find(id) != delegate_map_.end())
+            id = del->GenerateIdentifier();
+        delegate_map_[id] = del;
     }
+    return del;
 }
 
-void CallbackHandler::RegisterDelegateCallback(int type, DelegateCallback cb) {
-    delegate_map_[type] = cb;
-}
+void RemoveDelegate(const std::string& id);
 
 } //namespace
 
