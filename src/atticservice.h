@@ -50,6 +50,8 @@ public:
     int EnablePolling();
     int DisablePolling();
 
+    int QueryManifest(TaskDelegate* cb);
+
     int RegisterPassphrase();
     int EnterPassphrase();
     int ChangePassphrase();
