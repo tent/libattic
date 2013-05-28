@@ -239,5 +239,14 @@ bool FolderHandler::GetFolderById(const std::string& folder_id, Folder& out) {
 bool FolderHandler::GetFolder(const std::string& folderpath, Folder& out) {
     return file_manager_->GetFolderEntry(folderpath, out);
 }
+
+bool FolderHandler::IsFolderInCache(const std::string& folderpath) {
+    return file_manager_->DoesFolderExist(folderpath);
+}
+
+bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
+    return file_manager_->SetFolderDeleted(folderpath, del);
+}
+
 }//namespace
 

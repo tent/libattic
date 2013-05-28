@@ -40,7 +40,8 @@ public:
 
     bool GetFolderById(const std::string& folder_id, Folder& out);
     bool GetFolder(const std::string& folderpath, Folder& out);
-
+    bool IsFolderInCache(const std::string& folderpath);
+    bool SetFolderDeleted(const std::string& folderpath, bool del);
 private:
     FileManager* file_manager_;
 };
