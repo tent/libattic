@@ -28,9 +28,12 @@ void CallbackHandler::Notify(const event::Event& event) {
 void CallbackHandler::Callback(const int type,
                                const int code,
                                const int state,
-                               const std::string& var) {
-    if(delegate_map_[type])
-        delegate_map_[type](type, code, var.c_str());
+                               const std::string& var) const {
+
+    std::map<int, DelegateCallback>::const_iterator itr = delegate_map_.find(type);
+    if(itr != delegate_map_.end()) { 
+        itr->second(type, code, var.c_str());
+    }
 }
 
 void CallbackHandler::RegisterDelegateCallback(int type, DelegateCallback cb) {

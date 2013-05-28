@@ -38,6 +38,7 @@ void PushTask::RunTask() {
     // Run the task
     std::string filepath = TentTask::filepath();
     int status = ret::A_FAIL_PATH_DOESNT_EXIST;
+    std::cout<<" checking filepath exists : " << filepath << std::endl;
     if(fs::CheckFilepathExists(filepath)) {
         if(!file_manager()->IsFileLocked(filepath)) {
             file_manager()->LockFile(filepath);

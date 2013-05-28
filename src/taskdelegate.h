@@ -3,18 +3,26 @@
 #pragma once
 
 #include <string>
+#include "crypto.h"
 
 namespace attic { 
 
 class TaskDelegate {
 public:                                                         
-    TaskDelegate() {}
+    TaskDelegate() {
+        crypto::GenerateRandomString(identifier_);
+    }
     ~TaskDelegate() {}
                                                                                 
     virtual void Callback(const int type,
                           const int code,
                           const int state,
                           const std::string& var) const = 0;
+
+    const std::string& identifier() const { return identifier_; }
+private:
+    std::string identifier_;
+
 };
 
 }//namespace

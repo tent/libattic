@@ -143,6 +143,7 @@ void TaskManager::DeleteFolder(const std::string& folderpath, TaskDelegate* pDel
 }
 
 void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* pDel) {
+    std::cout<<" task manager recieving filepath : " << filepath << std::endl;
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
