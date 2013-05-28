@@ -532,6 +532,21 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     return ret;
 }
 
+bool FileManager::DoesFolderExist(const std::string& folderpath) {
+    std::string relative;
+    if(!IsPathRelative(folderpath))
+        GetAliasedFilepath(folderpath, relative);
+    else
+        relative = folderpath;
+
+    if(relative.empty())
+        relative = cnst::g_szWorkingPlaceHolder;
+    Lock();
+    bool ret = manifest_.IsFolderInManifest(relative);
+    Unlock();
+    return ret;
+}
+
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
