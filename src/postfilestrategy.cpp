@@ -390,7 +390,7 @@ bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
     size_t pos = filepath.rfind("/");
     if(pos != std::string::npos) {
         std::string folderpath = filepath.substr(0, pos);
-        utils::CheckUrlAndAppendTrailingSlash(folderpath);
+        utils::CheckUrlAndRemoveTrailingSlash(folderpath);
 
         FolderHandler fh(file_manager_);
         Folder folder;
