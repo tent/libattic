@@ -12,26 +12,36 @@ namespace attic {
 
 namespace cbh {
     typedef void(*DelegateCallback)(int, int, const char*);
+    typedef void(*QueryCallback)(int, char**, int, int);
 };
+
 class CallbackHandler;
 
-class TaskCallback : public TaskDelegate {
+class ManifestCallback : public TaskDelegate { 
 public:
-    TaskCallback(CallbackHandler* handler, cbh::DelegateCallback cb) {
-        cb_ = cb;
-        owner_ = handler;
-    }
+    ManifestCallback(CallbackHandler* handler, cbh::QueryCallback cb);
 
     void Callback(const int type,
                   const int code,
                   const int state,
-                  const std::string& var) const {
-        // callback 
-        if(cb_)
-            cb_(type, var.size(), var.c_str());  
-        // remove self 
-    }
+                  const std::string& var) const;
 
+    void Callback(const int code, 
+                  char** buffer,
+                  const int stride,
+                  const int total); 
+private:
+    cbh::QueryCallback cb_;
+    CallbackHandler* owner_;
+};
+
+class TaskCallback : public TaskDelegate {
+public:
+    TaskCallback(CallbackHandler* handler, cbh::DelegateCallback cb);
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var) const;
 private:
     cbh::DelegateCallback cb_;
     CallbackHandler* owner_;
