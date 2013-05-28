@@ -47,7 +47,16 @@ void TaskCallback::Callback(const int type,
 }
 
 CallbackHandler::CallbackHandler() {}
-CallbackHandler::~CallbackHandler() {}
+CallbackHandler::~CallbackHandler() {
+    std::map<std::string, TaskDelegate*>::iterator itr = delegate_map_.begin();
+    for(;itr != delegate_map_.end(); itr++) {
+        if(itr->second) {
+            delete itr->second;
+            itr->second = NULL;
+        }
+    }
+    delegate_map_.clear();
+}
 
 void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallback cb) {
     event::RegisterForEvent(this, type);
@@ -73,12 +82,25 @@ TaskDelegate* CallbackHandler::RegisterDelegateCallback(int type, cbh::DelegateC
     TaskDelegate* del = NULL;
     if(cb) {
         del = new TaskCallback(this, cb);
-        std::string id = del->GenerateIdentifier();
-        while(delegate_map_.find(id) != delegate_map_.end())
-            id = del->GenerateIdentifier();
-        delegate_map_[id] = del;
+        InsertDelegateIntoMap(del);
     }
     return del;
+}
+
+TaskDelegate* CallbackHandler::RegisterManifestCallback(cbh::QueryCallback cb) {
+    TaskDelegate* del = NULL;
+    if(cb) {
+        del = new ManifestCallback(this, cb);
+        InsertDelegateIntoMap(del);
+    }
+    return del;
+}
+
+void CallbackHandler::InsertDelegateIntoMap(TaskDelegate* del) {
+    std::string id = del->GenerateIdentifier();
+    while(delegate_map_.find(id) != delegate_map_.end())
+        id = del->GenerateIdentifier();
+    delegate_map_[id] = del;
 }
 
 void CallbackHandler::RemoveDelegate(const std::string& id) {

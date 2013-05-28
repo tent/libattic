@@ -49,6 +49,7 @@ private:
 
 class CallbackHandler : public event::EventListener {
     void Notify(const event::Event& event);
+    void InsertDelegateIntoMap(TaskDelegate* del);
 public:
     typedef void(*EventCallback)(int, int, const char*);
 
@@ -59,6 +60,7 @@ public:
     void OnEventRaised(const event::Event& event);
 
     TaskDelegate* RegisterDelegateCallback(int type, cbh::DelegateCallback cb);
+    TaskDelegate* RegisterManifestCallback(cbh::QueryCallback cb);
     void RemoveDelegate(const std::string& id);
 private:
     typedef std::deque<EventCallback> CallbackList;
