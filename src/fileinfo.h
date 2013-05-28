@@ -93,8 +93,8 @@ private:
 
     std::string     filename_;   // File within directory
     std::string     filepath_;   // Directory
-    std::string     post_id_; // Id of the post the file is potentially attached to
-    std::string     chunk_post_id_; // Id of the chunk post
+    std::string     post_id_; // Id of the post the file is potentially attached to 
+    std::string     chunk_post_id_; // Id of the chunk post                 // depricated
 
     std::string     encryption_algorithm_; // Algorithm used to encrypt chunks
     std::string     hashing_algorithm_;

@@ -96,6 +96,7 @@ void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
     out.set_encrypted_key(fp.key_data());
     out.set_file_credentials_iv(fp.iv_data());
     out.set_post_id(fp.id());
+    out.set_folder_post_id(fp.folder_post());
     out.set_post_version(fp.version().id());
     out.set_file_size(fp.file_size());
 }
