@@ -4,6 +4,7 @@
 
 #include "task.h"
 #include "filemanager.h"
+#include "callbackhandler.h"
 
 namespace attic { 
 
@@ -32,7 +33,8 @@ protected:
     void Callback(int code, char** pCharArr, int stride, int total) {
         if(context_.delegate()) {
             if(context_.delegate()->type() == TaskDelegate::MANIFEST) {
-
+                ManifestCallback* p = static_cast<ManifestCallback*>(context_.delegate());
+                p->Callback(code, pCharArr, stride, total);
             }
         }
     }

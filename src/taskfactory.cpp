@@ -69,12 +69,12 @@ Task* TaskFactory::CreateNewManifestTask(const TaskContext& context,
     switch(context.type()) {
         case Task::QUERYMANIFEST:
         {
-            t = new QueryFilesTask(file_manager_, context, callback);
+            t = new QueryFilesTask(file_manager_, context);
             break;
         }
         case Task::SCANDIRECTORY:
         {
-            t = new ScanDirectoryTask(file_manager_, context, callback);
+            t = new ScanDirectoryTask(file_manager_, context);
             break;
         }
         default:

@@ -63,7 +63,7 @@ private:
 
 class PollDelegate : public TaskDelegate {
 public:
-    PollDelegate(PollTask* p){
+    PollDelegate(PollTask* p):TaskDelegate(TaskDelegate::TASK) {
         m_pTask = p;
     }
     ~PollDelegate(){}
