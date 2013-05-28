@@ -32,8 +32,10 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::string filepath = GetConfigValue("filepath");
     std::string post_attachment = GetConfigValue("post_attachment");
     std::string entity = GetConfigValue("entity");
+    std::cout<<" starting get file strategy ... " << std::endl;
 
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
+    std::cout<<" valid master key " << std::endl;
 
     if(!filepath.empty()) { 
         FileHandler fi_hdlr(file_manager_);
@@ -42,10 +44,19 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             Folder folder;
-            if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder))
+            if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder)) {
+                std::cout<<" 1231540" << std::endl;
+                std::string error("failed to find folder on download : ");
+                error += fi.folder_post_id();
+                log::LogString("sdfjka111", error);
                 return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
-            if(folder.deleted())
+            }
+            if(folder.deleted()) {
+                std::cout<<" 123asdfas1540" << std::endl;
+                std::string error("folder deleted");
+                log::LogString("asdfaiikjkej", error);
                 return ret::A_FAIL_PULL_DELETED_FOLDER;
+            }
 
             std::cout<<" FILE : " << filepath << " DELETED : " << fi.deleted() << std::endl;
             if(fi.deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
@@ -82,6 +93,9 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
             }
         }
         else {
+            std::string error("failed to find filepath : ");
+            error += filepath;
+            log::LogString("smmma0149", error);
             status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
         }
     }
@@ -89,7 +103,8 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
         std::cout<<" FILEPATH EMPTY : " << filepath << std::endl;
     }
-    
+
+    std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
     return status;
 }
  

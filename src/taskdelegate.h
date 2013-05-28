@@ -12,11 +12,12 @@ public:
     TaskDelegate() {}
     ~TaskDelegate() {}
 
-    void Initialize() {
+    const std::string& GenerateIdentifier() {
+        identifier_.clear();
         crypto::GenerateRandomString(identifier_);
+        return identifier_;
     }
 
-                                                                                
     virtual void Callback(const int type,
                           const int code,
                           const int state,
