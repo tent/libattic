@@ -311,7 +311,10 @@ FileInfo* FileManager::CreateFileInfo() {
 bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& out) {
     size_t pos = filepath.find(working_directory_);
     if(pos != std::string::npos) {
-        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + filepath.substr(pos+working_directory_.size());
+        out = std::string(cnst::g_szWorkingPlaceHolder);
+        std::string right = filepath.substr(pos+working_directory_.size());
+        if(right.size())
+            out += "/" + right;
         pos = out.find("//");
         if(pos != std::string::npos) {
             out.erase(pos, 1);
@@ -443,6 +446,13 @@ FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
     return fi;
 }
 
+bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out) {
+    Lock();
+    bool ret = manifest_.QueryForFileByPostId(post_id, out);
+    Unlock();
+    return ret;
+}
+
 
 bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     std::string relative;
@@ -522,6 +532,7 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
         // Make Relative
         //GetRelativePath(folderpath, relative);
         GetAliasedFilepath(folderpath, relative);
+
     }
     else {
         relative = folderpath;
@@ -530,6 +541,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
 
+    // Normalize Folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(relative);
     std::cout<<" Searching for folder entry : " << relative << std::endl;
 
     Lock();
@@ -559,10 +572,12 @@ bool FileManager::DoesFolderExist(const std::string& folderpath) {
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
-    std::cout<<" folderpath : " << folder.folderpath() << std::endl;
-    std::cout<<" folder_post_id : " << folder.folder_post_id() << std::endl;
-    std::cout<<" parent_post_id : " << folder.parent_post_id() << std::endl;
-    id_out = folder.folder_post_id();
+    if(ret) {
+        std::cout<<" folderpath : " << folder.folderpath() << std::endl;
+        std::cout<<" folder_post_id : " << folder.folder_post_id() << std::endl;
+        std::cout<<" parent_post_id : " << folder.parent_post_id() << std::endl;
+        id_out = folder.folder_post_id();
+    }
 
     return ret;
 }
