@@ -24,7 +24,7 @@ static void LogException(const std::string& error_ident, std::exception& e) {
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
 }
 
-static void LogString(const std::string& error_ident, std::string& buffer) {
+static void LogString(const std::string& error_ident, std::string buffer) {
     std::ostringstream error;
     error << error_ident << std::endl;
     error << buffer << std::endl;

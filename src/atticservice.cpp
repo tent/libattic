@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "filesystem.h"
 #include "errorcodes.h"
+#include "logutils.h"
 
 namespace attic {
 
@@ -59,6 +60,9 @@ int AtticService::stop() {
 }
 
 int AtticService::UploadFile(const std::string& filepath) {
+    std::ostringstream msg;
+    msg << "Uploading file: " << filepath << " to " << std::endl;
+    log::LogString("mappp1io93", msg.str());
     int status = ret::A_OK;
     if(running_)
         event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
@@ -68,6 +72,9 @@ int AtticService::UploadFile(const std::string& filepath) {
 }
 
 int AtticService::DownloadFile(const std::string& filepath) {
+    std::ostringstream msg;
+    msg << "Downloading file: " << filepath << " to " << std::endl;
+    log::LogString("kdsfppp", msg.str());
     int status = ret::A_OK;
     if(running_)
         event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
@@ -77,6 +84,9 @@ int AtticService::DownloadFile(const std::string& filepath) {
 }
 
 int AtticService::MarkFileDeleted(const std::string& filepath) {
+    std::ostringstream msg;
+    msg << "Marking File Deleted: " << filepath << " to " << std::endl;
+    log::LogString("ma910xxxxx00", msg.str());
     int status = ret::A_OK;
     if(running_)
         attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
@@ -86,6 +96,9 @@ int AtticService::MarkFileDeleted(const std::string& filepath) {
 }
  
 int AtticService::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
+    std::ostringstream msg;
+    msg << "Renaming file : " << old_filepath << " to " << new_filepath << std::endl;
+    log::LogString("ma91000", msg.str());   
     int status = ret::A_OK;
     if(running_)
         task_manager_->RenameFile(old_filepath, new_filepath);
@@ -95,6 +108,9 @@ int AtticService::RenameFile(const std::string& old_filepath, const std::string&
 }
 
 int AtticService::CreateFolder(const std::string& folderpath) { 
+    std::ostringstream msg;
+    msg << "Creating folder : " << folderpath << std::endl;
+    log::LogString("masdfg011p", msg.str());
     int status = ret::A_OK;
     if(running_)
         task_manager_->CreateFolder(folderpath, NULL);
@@ -104,6 +120,9 @@ int AtticService::CreateFolder(const std::string& folderpath) {
 }
 
 int AtticService::DeleteFolder(const std::string& folderpath) {
+    std::ostringstream msg;
+    msg << "Deleting folder : " << folderpath << std::endl;
+    log::LogString("masdfgp", msg.str());
     int status = ret::A_OK;
     if(running_)
         task_manager_->DeleteFolder(folderpath, NULL);
@@ -113,6 +132,10 @@ int AtticService::DeleteFolder(const std::string& folderpath) {
 }
 
 int AtticService::RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath) {
+    std::ostringstream msg;
+    msg << "Renaming folder : " << old_folderpath << " to " << new_folderpath << std::endl;
+    std::string tmp = msg.str();
+    log::LogString("aksnmdf", tmp);
     int status = ret::A_OK;
     if(running_)
         task_manager_->RenameFolder(old_folderpath, new_folderpath);

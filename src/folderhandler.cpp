@@ -35,9 +35,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             else {
                 std::cout<<" renamed ...? " << std::endl;
             }
-
         }
-
         // Check if there is a corresponding folder entry
         Folder folder;
         if(!file_manager_->GetFolderEntry(fp.folder().folderpath(), folder)) {
