@@ -87,6 +87,12 @@ void TaskManager::OnEventRaised(const event::Event& event) {
                 SyncFile(event.value, event.delegate);
                 break;
             }
+        case event::Event::REQUEST_UPLOAD_FILE:
+            {
+                std::cout<<" creating process upload file task " << std::endl;
+                ProcessUploadFile(event.value, event.delegate);
+                break;
+            }
         default:
             std::cout<<"received unknown event"<<std::endl;
     }
@@ -142,6 +148,7 @@ void TaskManager::DeleteFolder(const std::string& folderpath, TaskDelegate* del)
     PushContextBack(tc);
 }
 
+// Begins upload process
 void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
     std::cout<<" task manager recieving filepath : " << filepath << std::endl;
     TaskContext tc;
@@ -153,6 +160,14 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
     tc.set_delegate(del);
     PushContextBack(tc);
     upload_count++;
+}
+
+// Begins actual file processing (upload)
+void ProcessUploadFile(const std::string& postid, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("post_id", postid);
+    tc.set_delegate(del);
+    PushContextBack(tc);
 }
 
 void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* del) {
@@ -231,9 +246,6 @@ TaskContext TaskManager::CreateServiceContext(void) {
     tc.set_type(Task::SERVICE);
     return tc;
 }
-
-
-
 
 void TaskManager::PushContextBack(TaskContext& tc) {
     cxt_mtx.Lock();

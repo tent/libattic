@@ -10,6 +10,7 @@
 #include "renametask.h"
 #include "servicetask.h"
 #include "foldertask.h"
+#include "uploadtask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -164,14 +165,21 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                                context);
             break;
         }
+        case Task::UPLOADFILE:
+        {
+            t = new UploadTask(file_manager_,
+                               credentials_manager_,
+                               access_token_,
+                               entity_,
+                               context);
+            break;
+        }
         default:
         {
             std::cout<<" CREATING UNKNOWN TASK " << std::endl;
             std::cout<< " TASK TYPE : " << context.type() << std::endl;
         }
     }
-
-
     return t;
 }
 
