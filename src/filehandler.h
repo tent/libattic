@@ -18,6 +18,7 @@ public:
     bool DoesFileExist(const std::string& filepath);
 
     bool RetrieveFileInfo(const std::string& filepath, FileInfo& out);
+    bool RetrieveFileInfoById(const std::string& post_id, FileInfo& out);
 
     bool CreateNewFile(const std::string& filepath, 
                        const std::string& master_key,
