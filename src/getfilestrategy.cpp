@@ -32,7 +32,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::string filepath = GetConfigValue("filepath");
     std::string post_attachment = GetConfigValue("post_attachment");
     std::string entity = GetConfigValue("entity");
-    std::cout<<" starting get file strategy ... " << std::endl;
+    std::cout<<" starting get file strategy ... for :" << filepath << std::endl;
 
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
     std::cout<<" valid master key " << std::endl;
@@ -45,15 +45,17 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             Folder folder;
             if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder)) {
-                std::cout<<" 1231540" << std::endl;
                 std::string error("failed to find folder on download : ");
                 error += fi.folder_post_id();
+                error += " for file : ";
+                error += fi.filepath();
                 log::LogString("sdfjka111", error);
                 return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
             }
             if(folder.deleted()) {
-                std::cout<<" 123asdfas1540" << std::endl;
                 std::string error("folder deleted");
+                error += " for file : ";
+                error += fi.filepath();
                 log::LogString("asdfaiikjkej", error);
                 return ret::A_FAIL_PULL_DELETED_FOLDER;
             }
