@@ -325,12 +325,21 @@ bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
     std::string relative, canonical;
     std::cout<<" RELATIVE IN : " << relativepath << std::endl;
     if(IsPathRelative(relativepath)) {
+        // Extract second half of path
+        std::string right_fp;
+        size_t left = relativepath.find("/");
+        if(left != std::string::npos) {
+            right_fp = relativepath.substr(left);
+        }
+        // Replace working
         size_t pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
         if(pos != std::string::npos) {
+            if(!right_fp.empty()) {
             out = working_directory_ + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
-
-            
-
+            }
+            else{ 
+                out = working_directory_;
+            }
             std::cout<<" OUT : " << out << std::endl;
             return true;
         }
