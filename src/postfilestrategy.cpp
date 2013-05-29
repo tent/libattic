@@ -25,13 +25,9 @@
 
 namespace attic { 
 
-PostFileStrategy::PostFileStrategy() {}
-PostFileStrategy::~PostFileStrategy() {}
-
-int PostFileStrategy::Execute(FileManager* pFileManager,
-                              CredentialsManager* pCredentialsManager) {
+int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     int status = ret::A_OK;
-    status = InitInstance(pFileManager, pCredentialsManager);
+    status = InitInstance(fm, cm);
     // Initialize meta post
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");

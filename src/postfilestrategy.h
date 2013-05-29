@@ -14,6 +14,7 @@
 #include "fileinfo.h"
 #include "filepost.h"
 
+/* This strategy will begin the file chunking pipeline */
 namespace attic {
 
 class FileManager;
@@ -59,11 +60,10 @@ private:
     bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
 public:
     std::map<std::string, bool> verification_map_;
-    PostFileStrategy();
-    ~PostFileStrategy();
+    PostFileStrategy() {}
+    ~PostFileStrategy() {}
 
-    int Execute(FileManager* pFileManager,
-                CredentialsManager* pCredentialsManager);
+    int Execute(FileManager* fm, CredentialsManager* cm);
 
 
 };
