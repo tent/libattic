@@ -164,12 +164,13 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                 size_t pos = (*folder_itr).folderpath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
-                    utils::CheckUrlAndAppendTrailingSlash(path);
                     path += (*folder_itr).folderpath().substr(pos+aliased_old_path.size());
                     size_t f = path.find("//");
                     if(f!= std::string::npos)
                         path.erase(f, 1);
                     std::cout<<" NEW FOLDER PATH " << path << std::endl;
+                    // Normalize path
+                    utils::CheckUrlAndRemoveTrailingSlash(path);
                     rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
                     //(*folder_itr).set_folderpath(aliased_new_path);
                     (*folder_itr).set_folderpath(path);
@@ -181,7 +182,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                 size_t pos = (*file_itr).filepath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
-                    utils::CheckUrlAndAppendTrailingSlash(path);
+                    utils::CheckUrlAndRemoveTrailingSlash(path);
                     path += (*file_itr).filepath().substr(pos);
                     std::cout<<" NEW FILE PATH " << path << std::endl;
                     std::cout<<" aliased new path : " << aliased_new_path << std::endl;

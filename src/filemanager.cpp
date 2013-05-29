@@ -578,8 +578,10 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     if(relative == cnst::g_szWorkingPlaceHolder && parent_post_id.empty())
         p_post_id = cnst::g_szWorkingPlaceHolder;
 
+    // Normalize Folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(relative);
     bool ret = false;
-    ret = GetFolderEntry(folderpath, out);
+    ret = GetFolderEntry(relative, out);
     if(!ret) {
         Lock();
         ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, false);

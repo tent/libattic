@@ -31,6 +31,7 @@ class GetFileStrategy : public HttpStrategyInterface {
                            const std::string& post_id,
                            ChunkPostList& out);
     int ExtractCredentials(FilePost& in, Credentials& out);
+    int ConstructFilepath(const FileInfo& fi, std::string& out);
     void ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
     int ConstructFile(ChunkPostList& chunk_posts, 
                       const Credentials& file_cred, 

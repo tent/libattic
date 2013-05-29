@@ -282,9 +282,10 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
         }
         if(status == ret::A_OK) {
             std::string path;
-            // TODO :: verify path 
-            if(!destination_path.empty()) {
-                fs::MoveFile(temp_path, destination_path);
+            status = ConstructFilepath(fi, path);
+            if(status == ret::A_OK) {
+                if(!destination_path.empty())
+                    fs::MoveFile(temp_path, destination_path);
             }
         }
         // delete temp file 
@@ -443,6 +444,30 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
         log::LogHttpResponse("MASDKF111", resp);
     }
     return false;
+}
+
+int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
+    int status = ret::A_OK;
+    if(!fi.folder_post_id().empty()) {
+        std::string posturl;
+        utils::FindAndReplace(post_path_, "{post}", fi.folder_post_id(), posturl);
+
+        Response resp;
+        FolderPost fp;
+        PostHandler<FolderPost> ph(access_token_);
+        status = ph.Get(posturl, NULL, fp, resp);
+        if(status == ret::A_OK) {
+            ConstructFilepath(fi, fp.folder(), out);
+            std::cout<<" constructed path : " << out << std::endl;
+        }
+    }
+    else {
+        std::ostringstream err;
+        err << " Empty folder post id for file info : " << fi.filepath() << std::endl;
+        log::LogString("ma-___", err.str());
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
 }
 
 void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
