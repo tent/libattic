@@ -285,7 +285,10 @@ int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts,
             status = ConstructFilepath(fi, path);
             if(status == ret::A_OK) {
                 if(!destination_path.empty())
-                    fs::MoveFile(temp_path, destination_path);
+                    fs::MoveFile(temp_path, path);
+            }
+            else {
+                std::cout<<" failed to move path : "<< path << std::endl;
             }
         }
         // delete temp file 
@@ -459,6 +462,13 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
         if(status == ret::A_OK) {
             ConstructFilepath(fi, fp.folder(), out);
             std::cout<<" constructed path : " << out << std::endl;
+        }
+        else {
+            std::ostringstream err;
+            err << "failed to retrieve folder post : " << posturl << std::endl;
+            err << "response : " << resp.code << std::endl;
+            err << " body : " << resp.body << std::endl;
+            log::LogString("00301--1-0-10", err.str());
         }
     }
     else {
