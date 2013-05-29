@@ -580,14 +580,13 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
 
     bool ret = false;
     ret = GetFolderEntry(folderpath, out);
-    Lock();
     if(!ret) {
+        Lock();
         ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, false);
         if(ret)
             ret = manifest_.QueryForFolder(relative, out);
+        Unlock();
     }
-    Unlock();
-
     return ret;
 }
 

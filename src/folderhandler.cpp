@@ -56,14 +56,17 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 //  - Creates an entry in the local cache
 //  - Creates folder on disk if one doesn't already exist
 bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folder>& out) {
+    // Normalize Folderpath
+    std::string fpath = folderpath;
+    utils::CheckUrlAndRemoveTrailingSlash(fpath);
     bool ret = false;
-    if(!folderpath.empty()) { 
+    if(!fpath.empty()) { 
         std::deque<std::string> folder_list;
-        fs::CreateDirectoryTree(folderpath, file_manager_->working_directory(), folder_list);
+        fs::CreateDirectoryTree(fpath, file_manager_->working_directory(), folder_list);
         std::cout<<" working directory : " << std::endl;
 
         if(!folder_list.size())
-            folder_list.push_back(folderpath);
+            folder_list.push_back(fpath);
 
         std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
@@ -88,6 +91,14 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
         }
     }
     return ret;
+}
+
+bool FolderHandler::InsertFolder(const FolderPost& fp) {
+    Folder f;
+    return file_manager_->CreateFolderEntry(fp.folder().folderpath(),
+                                            fp.id(),
+                                            fp.folder().parent_post_id(),
+                                            f);
 }
 
 bool FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
