@@ -57,7 +57,6 @@ private:
 
     bool UpdateFilePostVersion(const FileInfo* fi, const std::string& meta_post_id);
 
-    bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
 public:
     std::map<std::string, bool> verification_map_;
     PostFileStrategy() {}
