@@ -163,7 +163,7 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
 }
 
 // Begins actual file processing (upload)
-void ProcessUploadFile(const std::string& postid, TaskDelegate* del) {
+void TaskManager::ProcessUploadFile(const std::string& postid, TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("post_id", postid);
     tc.set_delegate(del);

@@ -7,6 +7,7 @@
 namespace attic {
 
 class UploadTask : public TentTask { 
+    int ProcessFile(const std::string& post_id);
 public:
     UploadTask(FileManager* fm,
                CredentialsManager* cm,
