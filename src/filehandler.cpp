@@ -37,14 +37,16 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                 std::cout<<" folder path : " << folderpath << std::endl;
                 std::cout<<" folder id : " << folderid << std::endl;
                 std::cout<<" aliased : " << aliased << std::endl;
-                out.set_filepath(aliased);
-                out.set_folder_post_id(folderid);
-                out.set_filename(filename);
+                out.set_filename(filename);             // set filename
+                out.set_filepath(aliased);              // set filepath
+                out.set_folder_post_id(folderid);       // set folder id
                 Credentials file_cred;
                 while(file_cred.key_empty())
                     crypto::GenerateCredentials(file_cred);
-                out.set_file_credentials(file_cred);
+                out.set_file_credentials(file_cred);    // set credentials
                 EncryptFileKey(out, master_key);
+                // set filesize
+                out.set_file_size(utils::CheckFilesize(filepath));
                 return file_manager_->InsertToManifest(&out);
             }
         }
