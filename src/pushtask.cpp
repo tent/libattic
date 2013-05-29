@@ -5,9 +5,11 @@
 #include "errorcodes.h"
 #include "event.h"
 #include "taskdelegate.h"
+#include "filehandler.h"
 
 #include "postfilestrategy.h"
 #include "postfolderstrategy.h"
+#include "postmetastrategy.h"
 
 namespace attic {
 
@@ -83,12 +85,28 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("entity", entity);
 
         PostFolderStrategy pfs;             // Check (and create) if directory posts exist
-        PostFileStrategy ps;                // Chunk and upload
+        PostMetaStrategy pmetas;            // Create meta strategy
+        //PostFileStrategy ps;              // Chunk and upload
         // push back post folder strategy
         pushcontext.PushBack(&pfs);
-        pushcontext.PushBack(&ps); 
-
+        pushcontext.PushBack(&pmetas);
+        //pushcontext.PushBack(&ps); 
         status = pushcontext.ExecuteAll();
+        if(status == ret::A_OK) {
+            std::cout<<" pushing file ... " << filepath << std::endl;
+            FileHandler fh(file_manager());
+            FileInfo fi;
+            fh.RetrieveFileInfo(filepath, fi);
+            std::cout<<" post id : " << fi.post_id() << std::endl;
+            if(!fi.post_id().empty()) {
+                // raise event to a start upload pipeline
+                std::cout<<" raising event " << std::endl;
+                event::RaiseEvent(event::Event::REQUEST_UPLOAD_FILE, fi.post_id(), NULL);
+            }
+            else {
+                status = ret::A_FAIL_INVALID_POST_ID;
+            }
+        }
     }
     else {
         status = ret::A_FAIL_OPEN_FILE;

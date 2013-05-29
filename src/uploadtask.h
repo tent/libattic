@@ -3,11 +3,13 @@
 #pragma once
 
 #include "tenttask.h"
+#include "fileinfo.h"
 
 namespace attic {
 
 class UploadTask : public TentTask { 
-    int ProcessFile(const std::string& post_id);
+    int RetrieveFileInfo(const std::string& post_id, FileInfo& out);
+    int ProcessFile(const FileInfo& fi);
 public:
     UploadTask(FileManager* fm,
                CredentialsManager* cm,

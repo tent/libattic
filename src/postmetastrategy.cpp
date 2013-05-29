@@ -15,17 +15,25 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
-    if(!ValidMasterKey()) {
+    std::cout<<" posting meta data strategy ... " << filepath << std::endl;
+
+    if(ValidMasterKey()) {
+        std::cout<<" valid master key " << std::endl;
         FileHandler fh(file_manager_);
         if(!fh.DoesFileExist(filepath)) {
+            std::cout<<" does file exist ... yes " << std::endl;
             // File doesn't exist yet, create meta post
             FileInfo fi;
             status = CreateFileEntry(filepath, fi);
+            std::cout<<" create file entry : " << status << std::endl;
             if (status == ret::A_OK)
                 status = CreateFileMetaPost(filepath, fi);
         }
         else {
-            status = ret::A_FAIL_FILE_ALREADY_EXISTS;
+           // no nead to throw an error, postfilestrategy should dif the hashes 
+           // and really determine if it should acutally be re-uploaded
+           //
+           // status = ret::A_FAIL_FILE_ALREADY_EXISTS;
         }
     }
     else {
@@ -69,6 +77,7 @@ bool PostMetaStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
         utils::CheckUrlAndRemoveTrailingSlash(folderpath);
         FolderHandler fh(file_manager_);
         Folder folder;
+        std::cout<<" getting folder : " << folderpath << std::endl;
         if(fh.GetFolder(folderpath, folder)){
             if(!folder.folder_post_id().empty()) {
                 id_out = folder.folder_post_id();

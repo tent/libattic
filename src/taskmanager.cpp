@@ -44,6 +44,7 @@ int TaskManager::Initialize() {
         event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
         event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
         event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
+        event::RegisterForEvent(this, event::Event::REQUEST_UPLOAD_FILE);
         //event::RegisterForEvent(this, event::Event::POLL);
     }
 
@@ -166,6 +167,7 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
 void TaskManager::ProcessUploadFile(const std::string& postid, TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("post_id", postid);
+    tc.set_type(Task::UPLOADFILE);
     tc.set_delegate(del);
     PushContextBack(tc);
 }

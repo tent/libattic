@@ -1,5 +1,8 @@
 #include "uploadtask.h"
 
+#include "filehandler.h"
+#include "postfilestrategy.h"
+
 namespace attic { 
 
 UploadTask::UploadTask(FileManager* fm,
@@ -24,7 +27,10 @@ void UploadTask::RunTask() {
     std::string post_id;
     context_.get_value("post_id", post_id);
     if(!post_id.empty()) { 
-        status = ProcessFile(post_id);
+        FileInfo fi;
+        status = RetrieveFileInfo(post_id, fi);
+        if(status == ret::A_OK)
+            status = ProcessFile(fi);
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -34,11 +40,35 @@ void UploadTask::RunTask() {
     SetFinishedState();
 }
 
-int UploadTask::ProcessFile(const std::string& post_id) {
+int UploadTask::RetrieveFileInfo(const std::string& post_id, FileInfo& out) {
+    int status = ret::A_OK;
+    FileHandler fh(file_manager());
+    if(!fh.RetrieveFileInfoById(post_id, out))
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
+    return status;
+}
+
+int UploadTask::ProcessFile(const FileInfo& fi) {
     int status = ret::A_OK;
 
-    // Retrieve File Info
+    HttpStrategyContext pushcontext(file_manager(), credentials_manager());
+    PostFileStrategy ps;
 
+    std::string post_path = GetPostPath();
+    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity().entity();
+
+    std::string filepath;
+    FileHandler fh(file_manager());
+    fh.GetCanonicalFilepath(fi.filepath(), filepath);
+
+    pushcontext.SetConfigValue("post_path", post_path);
+    pushcontext.SetConfigValue("posts_feed", posts_feed);
+    pushcontext.SetConfigValue("filepath", filepath);
+    pushcontext.SetConfigValue("entity", entity);
+    pushcontext.SetConfigValue("post_id", fi.post_id());
+    pushcontext.PushBack(&ps);
+    status = pushcontext.ExecuteAll();
     return status;
 }
 
