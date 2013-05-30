@@ -29,8 +29,23 @@ void UploadTask::RunTask() {
     if(!post_id.empty()) { 
         FileInfo fi;
         status = RetrieveFileInfo(post_id, fi);
-        if(status == ret::A_OK)
-            status = ProcessFile(fi);
+        if(status == ret::A_OK) {
+            std::string filepath;
+            file_manager()->GetCanonicalFilepath(fi.filepath(), filepath);
+            if(!file_manager()->IsFileLocked(filepath)) {
+                file_manager()->LockFile(filepath);
+                event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
+                status = ProcessFile(fi);
+                event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+                file_manager()->UnlockFile(filepath);
+            }
+            else {
+                std::string error = " File is locked by other task, finishing task\n";
+                error += " file : " + filepath + "\n";
+                log::LogString("333MA!941", error);
+                status = ret::A_FAIL_FILE_IN_USE;
+            }
+        }
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
