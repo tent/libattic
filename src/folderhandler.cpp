@@ -71,18 +71,16 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath, std::deque<Fo
         std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
         for(;itr!= folder_list.end(); itr++) {
-            /*
             if(!fs::CheckFilepathExists(*itr)) {
                 // Check for local folder, create if doesn't exist
                 fs::CreateDirectory(*itr);
             }    
-            */
             Folder tmp;
             if(!file_manager_->GetFolderEntry(*itr, tmp)) { 
                 // FileManager Entry
                 std::cout<< " Creating folder entry ... for " << *itr << std::endl;
                 std::string path;
-                file_manager_->GetAliasedFilepath(folderpath, path);
+                file_manager_->GetAliasedFilepath(*itr, path);
                 utils::CheckUrlAndRemoveTrailingSlash(path);
                 Folder folder;
                 folder.set_folderpath(path);
