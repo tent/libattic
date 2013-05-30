@@ -3,6 +3,7 @@
 #include "crypto.h"
 #include "compression.h"
 #include "chunkinfo.h"
+#include "logutils.h"
 
 namespace attic {
 
@@ -32,16 +33,29 @@ bool ChunkTransform::TransformOut() {
 
 bool ChunkTransform::TransformIn(const ChunkInfo* ci) {
     if(ci) {
+        chunk_iv_.clear();
         chunk_iv_ = ci->iv();
         // Decode
         std::string decoded_data;
         Decode(data_, decoded_data);
         // Decrypt
         std::string decrypted_data;
-        Decrypt(decoded_data, decrypted_data);
-        // Decompress
-        Decompress(decrypted_data, finalized_data_);
-        return true;
+        int status = Decrypt(decoded_data, decrypted_data);
+        if(status == ret::A_OK) {
+            // Decompress
+            Decompress(decrypted_data, finalized_data_);
+            return true;
+        }
+        std::ostringstream err;
+        err << " Failed to transform chunk : " << ci->chunk_name() << std::endl;
+        std::string fk, iv;
+        crypto::Base64EncodeString(file_key_, fk);
+        crypto::Base64EncodeString(chunk_iv_, iv);
+        err << " file key size : " << file_key_.size() << std::endl;
+        err << " file key : " << fk << std::endl;
+        err << " chunk iv size : " << chunk_iv_.size() << std::endl;
+        err << " chunk iv : " << iv << std::endl;
+        log::LogString("0210410123", err.str());
     }
     return false;
 }
@@ -73,13 +87,13 @@ void ChunkTransform::Encrypt(const std::string& in, std::string& out) {
     crypto::GenerateHash(out, ciphertext_hash_);
 }
 
-void ChunkTransform::Decrypt(const std::string& in, std::string& out) {
+int ChunkTransform::Decrypt(const std::string& in, std::string& out) {
     crypto::GenerateHash(in, ciphertext_hash_);
     // generate ciphertext hash
     Credentials chunk_cred;
     chunk_cred.set_iv(chunk_iv_);
     chunk_cred.set_key(file_key_);
-    crypto::DecryptStringGCM(in, chunk_cred, out);
+    return crypto::DecryptStringGCM(in, chunk_cred, out);
 }
 
 void ChunkTransform::Encode(const std::string& in, std::string& out) {

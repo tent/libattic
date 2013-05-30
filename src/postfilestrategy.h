@@ -23,14 +23,7 @@ class PostFileStrategy : public HttpStrategyInterface {
 public:
     typedef std::map<unsigned int, ChunkPost> ChunkPostList; // key, chunk group
 private:
-    int TransformChunk(const std::string& chunk, 
-                       const std::string& fileKey,
-                       std::string& finalizedOut, 
-                       std::string& nameOut, 
-                       ChunkInfo& out);
-
     bool RetrieveFileInfo(const std::string& filepath, FileInfo& out);
-
 
     int RetrieveChunkPosts(const std::string& entity,
                            const std::string& post_id,

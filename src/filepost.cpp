@@ -124,8 +124,6 @@ void FilePost::Deserialize(Json::Value& root) {
 
     crypto::Base64DecodeString(key_data, key_data_);
     crypto::Base64DecodeString(iv_data, iv_data_);
-
-
 }
 
 void FilePost::DeserializeChunkPosts(Json::Value& val) {

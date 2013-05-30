@@ -121,6 +121,54 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.iv_empty(), false);
 }
 
+// run credentials through the filepost upload / download process
+TEST(CREDENTIALS, GENERATE) {
+    std::string master_key("qwertyuiopasdfghjklzxcvbnmasdfgh");
+    for(int i=0; i<100; i++) {
+        attic::Credentials local_cred;
+        // Generate file credentials
+        attic::crypto::GenerateCredentials(local_cred);
+        // Encry file key
+        attic::Credentials tcred;   // transiet cred
+        tcred.set_key(master_key);
+        tcred.set_iv(local_cred.iv());
+
+        std::string local_key = local_cred.key();
+        std::string encrypted_key;
+        attic::crypto::EncryptStringGCM(local_key, tcred, encrypted_key);
+
+        attic::Credentials enc_cred; // Final encrytred file key
+        enc_cred.set_iv(local_cred.iv());
+
+        // encode key and iv
+        std::string b64_key, b64_iv;
+        attic::crypto::Base64EncodeString(encrypted_key, b64_key);
+        attic::crypto::Base64EncodeString(enc_cred.iv(), b64_iv);
+
+        // reverse the process
+        std::string key, iv;
+        attic::crypto::Base64DecodeString(b64_key, key);
+        attic::crypto::Base64DecodeString(b64_iv, iv);
+
+        // create transient cred
+        attic::Credentials dtcred;
+        dtcred.set_key(master_key);
+        dtcred.set_iv(iv);
+
+        std::string decrypted_key;
+        attic::crypto::DecryptStringGCM(key, dtcred, decrypted_key);
+
+        /*
+        std::cout<<" key attempt : " << i << " ";
+        if(local_cred.key() != decrypted_key )
+            std::cout<<" failed " << std::endl;
+        else
+            std::cout<<" passed " << std::endl;
+            */
+        ASSERT_EQ(strcmp(local_cred.key().c_str(), decrypted_key.c_str()), 0);
+    }
+}
+
 TEST(CRYPTO, BASE32)
 {
     std::string teststring("this is my test string, that I'm going to base32 encode");
@@ -497,6 +545,8 @@ TEST(SIZE, TEST) {
 
 }
 */
+
+
 
 
 int main (int argc, char* argv[]) {

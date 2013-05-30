@@ -204,23 +204,38 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
     std::string mk;
     GetMasterKey(mk);
-    std::cout << "MASTER KEY : " << mk << std::endl;
-    Credentials FileKeyCred;
-    FileKeyCred.set_key(mk);
-    FileKeyCred.set_iv(iv);
+    if(!mk.empty()) {
+        Credentials FileKeyCred;
+        FileKeyCred.set_key(mk);
+        FileKeyCred.set_iv(iv);
 
-    // Decrypt File Key
-    std::string filekey;
-    //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-    status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
-    std::cout<<" ORIGINAL KEY : " << key << std::endl;
-    std::cout<<" FILE KEY : " << filekey << std::endl;
-    if(status == ret::A_OK) {
-        out.set_key(filekey);
-        out.set_iv(iv);
+        // Decrypt File Key
+        std::string filekey;
+        //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
+        status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
+        if(status == ret::A_OK) {
+            out.set_key(filekey);
+            out.set_iv(iv);
+        }
+        else { 
+            std::string b64_key, b64_iv;
+            crypto::Base64EncodeString(in.key_data(), b64_key);
+            crypto::Base64EncodeString(in.iv_data(), b64_iv);
+            std::ostringstream err;
+            err << " Failed to construct file key " << std::endl;
+            err << " master key size : " << mk.size() << std::endl;
+            err << " b64_iv : " << b64_iv << std::endl;
+            err << " iv size : " << iv.size() << std::endl;
+            err << " b64_key : " << b64_key << std::endl;
+            err << " key size : " << key.size() << std::endl;
+            log::LogString("815092", err.str());
+        }
     }
-    else { 
-        std::cout<<" FAILED TO BUILD FILE KEY " << std::endl;
+    else {
+        std::ostringstream err;
+        err << " Invalid master key trying to extract credentials" << std::endl;
+        log::LogString("1239120951", err.str());
+        status = ret::A_FAIL_INVALID_MASTERKEY;
     }
 
     return status;

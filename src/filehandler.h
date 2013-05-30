@@ -50,9 +50,17 @@ public:
                         const std::string& master_key,
                         std::string& encrypted_out);
 
+    bool DecryptFileKey(const std::string& encrypted_key,
+                        const std::string& file_iv,
+                        const std::string& master_key,
+                        std::string& decrypted_out);
     bool ExtractFileCredetials(const FilePost& fp,
                                const std::string& master_key,
                                Credentials& out);
+
+    
+
+
 
 private:
     FileManager* file_manager_;

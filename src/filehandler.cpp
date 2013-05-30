@@ -60,7 +60,9 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                 while(file_cred.key_empty())
                     crypto::GenerateCredentials(file_cred);
                 out.set_file_credentials(file_cred);    // set credentials
+
                 EncryptFileKey(out, master_key); // sets encryted file key on file info
+                // verify key
                 // set filesize
                 out.set_file_size(utils::CheckFilesize(filepath));
                 return file_manager_->InsertToManifest(&out);
@@ -154,6 +156,14 @@ bool FileHandler::EncryptFileKey(FileInfo& fi, const std::string& master_key) {
                           master_key, 
                           encrypted_key)) {
             fi.set_encrypted_key(encrypted_key);
+            // Verify Encryption
+            std::string decrypted_key;
+            DecryptFileKey(encrypted_key, fi.file_credentials_iv(), master_key, decrypted_key);
+            if(decrypted_key != fi.file_credentials_key())
+                std::cout<<" FAILED TO VERIFY ENCRYPTED KEY ! " << std::endl;
+            else
+                std::cout<<" KEY VERIFIED " << std::endl;
+
             return true;
         }
     }
@@ -170,6 +180,21 @@ bool FileHandler::EncryptFileKey(const std::string& file_key,
         tcred.set_iv(file_iv);                     // file specific iv
         // Encryption call
         crypto::EncryptStringGCM(file_key, tcred, encrypted_out);
+        return true;
+    }
+    return false;
+}
+
+bool FileHandler::DecryptFileKey(const std::string& encrypted_key,
+                                 const std::string& file_iv,
+                                 const std::string& master_key,
+                                 std::string& decrypted_out) {
+
+    if(!master_key.empty() && !encrypted_key.empty() && !file_iv.empty()) {
+        Credentials tcred;                         // Create transient credentials
+        tcred.set_key(master_key);                 // master key
+        tcred.set_iv(file_iv);                     // file specific iv
+        crypto::DecryptStringGCM(encrypted_key, tcred, decrypted_out);
         return true;
     }
     return false;

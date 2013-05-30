@@ -270,72 +270,6 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
     return true;
 }
 
-int PostFileStrategy::TransformChunk(const std::string& chunk, 
-                                     const std::string& fileKey,
-                                     std::string& finalizedOut, 
-                                     std::string& nameOut, 
-                                     ChunkInfo& out) {
-    int status = ret::A_OK;
-    Credentials chunkCred;
-    chunkCred.set_key(fileKey);
-
-    // Calculate plaintext hash
-    std::string plaintextHash;
-    crypto::GenerateHash(chunk, plaintextHash);
-    std::cout<<" PLAINTEXT : " << plaintextHash << std::endl;
-
-    // create chunk name (hex encoded plaintext hash)
-    std::string chunkName;
-    utils::StringToHex(plaintextHash, chunkName);
-
-    // Compress
-    std::string compressedChunk;
-    compress::CompressString(chunk, compressedChunk);
-
-    std::string compressedHash;
-    crypto::GenerateHash(compressedChunk, compressedHash);
-    std::cout<<" COMPRESSED HASH : " << compressedHash << std::endl;
-
-    // Encrypt
-    std::string encryptedChunk;
-    std::string iv;
-    crypto::GenerateIv(iv);
-    chunkCred.set_iv(iv);
-
-    std::cout<<" FILE KEY : " << fileKey << std::endl;
-    std::cout<< " IV : " << iv << std::endl;
-    //crypto::EncryptStringCFB(compressedChunk, chunkCred, encryptedChunk);
-    crypto::EncryptStringGCM(compressedChunk, chunkCred, encryptedChunk);
-
-    // Base64 Encode
-    std::string finishedChunk;
-    crypto::Base64EncodeString(encryptedChunk, finishedChunk);
-    finalizedOut = finishedChunk;
-
-    std::string ciphertextHash;
-    crypto::GenerateHash(encryptedChunk, ciphertextHash);
-    std::cout<<" CIPHER TEXT : " << ciphertextHash << std::endl;
-
-    // Verification Hash, has of base64 encoded chunk, used to verify each chunk is 
-    // successfully uplaoded
-    std::string ver;
-    crypto::GenerateHexEncodedHmac(finalizedOut, ver);
-    std::cout<<" VERIFICATION PRE : " << ver << std::endl;
-    ver = ver.substr(0, 64);
-    std::cout<<" VERIFICATION HASH : " << ver << std::endl;
-    verification_map_[ver] = true;
-
-    // Fill Out Chunk info object
-    out.set_chunk_name(chunkName);
-    out.set_plaintext_mac(plaintextHash);
-    out.set_ciphertext_mac(ciphertextHash);
-    out.set_iv(iv);
-
-    nameOut = chunkName;
-
-    return status;
-}
-
 void PostFileStrategy::GetMasterKey(std::string& out) {
     MasterKey mKey;
     credentials_manager_->GetMasterKeyCopy(mKey);
@@ -429,6 +363,7 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     Response get_resp;
     int status = ph.Get(posturl, NULL, p, get_resp);
     if(status == ret::A_OK) {
+        std::cerr << " UPDATE VERSION : \n " << get_resp.body << std::endl;
         FileHandler fh(file_manager_);
         fh.UpdatePostVersion(fi->filepath(), p.version().id());
         return true;

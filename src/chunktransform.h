@@ -16,7 +16,7 @@ class ChunkTransform {
     void GenerateVerificationHash(std::string& out);
 
     void Decode(const std::string& in, std::string& out);
-    void Decrypt(const std::string& in, std::string& out);
+    int Decrypt(const std::string& in, std::string& out);
     void Decompress(const std::string& in, std::string& out);
 public:
     ChunkTransform(const std::string& chunk, const std::string& file_key);
