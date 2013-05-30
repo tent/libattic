@@ -4,6 +4,7 @@
 #include "crypto.h"
 #include "credentials.h"
 #include "utils.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -30,6 +31,13 @@ bool FileHandler::RetrieveFileInfoById(const std::string& post_id, FileInfo& out
 bool FileHandler::CreateNewFile(const std::string& filepath, 
                                 const std::string& master_key,
                                 FileInfo& out) {
+    if(master_key.empty()) {
+        std::ostringstream err;
+        err << " Invalid master key : "<< master_key << std::endl;
+        log::LogString("0010-12851-", err.str());
+        return false;
+    }
+
     if(!file_manager_->DoesFileExist(filepath)) {
         std::string folderpath;
         if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
@@ -52,7 +60,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                 while(file_cred.key_empty())
                     crypto::GenerateCredentials(file_cred);
                 out.set_file_credentials(file_cred);    // set credentials
-                EncryptFileKey(out, master_key);
+                EncryptFileKey(out, master_key); // sets encryted file key on file info
                 // set filesize
                 out.set_file_size(utils::CheckFilesize(filepath));
                 return file_manager_->InsertToManifest(&out);

@@ -73,7 +73,7 @@ public:
     void set_chunk_post_id(const std::string &id)           { chunk_post_id_ = id; }
     void set_post_version(const std::string& version)       { post_version_ = version; }
 
-    void set_file_credentials(const Credentials& cred)      { file_credentials_ = cred; }
+    void set_file_credentials(const Credentials& cred);
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
     void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 

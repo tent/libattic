@@ -181,4 +181,10 @@ bool FileInfo::DoesChunkExist(const std::string& chunk_name) {
     return false;
 }
 
+void FileInfo::set_file_credentials(const Credentials& cred) { 
+    file_credentials_ = cred; 
+    set_file_credentials_key(cred.key());
+    set_file_credentials_iv(cred.iv());
+}
+
 }//namespace

@@ -80,7 +80,6 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 }
                 else {
                     // TODO :: Undo the file to the last good version, or delete if no last good version
-
                 }
             }
             else if(status == ret::A_OK && file_post_id.empty()) {
@@ -89,8 +88,11 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
             }
         }
         else {
-            std::string error = "Invalid file key during post file ";
-            log::LogString("KJASDmmm++234", error);
+            std::ostringstream err;
+            err<< "Invalid file key during post file  " << std::endl;
+            err<< "\t filename : " << filepath << std::endl;
+            err<< "\t postid : " << file_post_id << std::endl;
+            log::LogString("KJASDmmm++234", err.str());
             status = ret::A_FAIL_INVALID_FILE_KEY;
         }
     }
