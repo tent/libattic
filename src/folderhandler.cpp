@@ -59,12 +59,12 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath, std::deque<Fo
     // Normalize Folderpath
     std::string fpath = folderpath;
     utils::CheckUrlAndRemoveTrailingSlash(fpath);
-    bool ret = false;
     if(!fpath.empty()) { 
         std::deque<std::string> folder_list;
         fs::CreateDirectoryTree(fpath, file_manager_->working_directory(), folder_list);
         std::cout<<" working directory : " << std::endl;
 
+        std::cout<<" fpath : " << fpath << std::endl;
         if(!folder_list.size())
             folder_list.push_back(fpath);
 
@@ -87,12 +87,12 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath, std::deque<Fo
                 out.push_back(folder);
             }
             else {
+                std::cout<< "already exists pushing back " << std::endl;
                 out.push_back(tmp);
-                ret = true;
             }
         }
     }
-    return ret;
+    return true;
 }
 
 bool FolderHandler::InsertFolder(const Folder& folder) {

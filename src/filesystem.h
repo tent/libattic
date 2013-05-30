@@ -137,6 +137,7 @@ static void CreateDirectoryTree(const std::string& folderpath,
             out.push_back(parent.string());
             parent = parent.parent_path();
         }
+        out.push_back(parent.string());
     }
     catch(boost::filesystem::filesystem_error& er) {
         std::cout<<" error : " << er.what() << std::endl; 
