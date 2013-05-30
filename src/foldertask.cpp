@@ -189,7 +189,7 @@ int FolderTask::CreateFolder() {
     }
     else {
         std::deque<Folder> folder_list;
-        fh.CreateFolder(folderpath, folder_list);
+        fh.RetrieveFolders(folderpath, folder_list);
         std::cout<<" folder list size : " << folder_list.size() << std::endl;
         if(folder_list.size()) {
             std::string hold_id = cnst::g_szWorkingPlaceHolder; 
@@ -199,14 +199,14 @@ int FolderTask::CreateFolder() {
                 itr--;
                 // Create Folder Post for each folder that needs it
                 Folder folder = *itr;
+                if(folder.parent_post_id().empty())
+                    folder.set_parent_post_id(hold_id);
                 std::cout<<"folder path : " << folder.folderpath() << std::endl;
                 if(folder.folder_post_id().empty()) {
                     std::string post_id;
-                    folder.set_parent_post_id(hold_id);
                     int s = CreateFolderPost(folder, post_id);
                     if(s == ret::A_OK) { 
-                        fh.SetFolderPostId(folder, post_id);
-                        fh.SetFolderParentPostId(folder, hold_id);
+                        fh.InsertFolder(folder);
                         hold_id = post_id;
                     }
                 }
@@ -236,6 +236,7 @@ int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
         std::cout << response.body << std::endl;
         FolderPost p;
         jsn::DeserializeObject(&p, response.body);
+        folder = p.folder();
         id_out = p.id();
     }
 

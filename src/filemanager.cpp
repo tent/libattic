@@ -695,7 +695,7 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
         err << "Set folder post id collision " << std::endl;
         err << " id already set : " << id << std::endl;
         err << " trying to insert id : " <<  post_id << std::endl;
-        log::LogString("MASDlf", err.str());
+        log::LogString("mm01000-1---09f", err.str());
     }
     return ret;
 }

@@ -55,7 +55,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 // Pass in an absolute folderpath
 //  - Creates an entry in the local cache
 //  - Creates folder on disk if one doesn't already exist
-bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folder>& out) {
+bool FolderHandler::RetrieveFolders(const std::string& folderpath, std::deque<Folder>& out) {
     // Normalize Folderpath
     std::string fpath = folderpath;
     utils::CheckUrlAndRemoveTrailingSlash(fpath);
@@ -71,18 +71,22 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
         std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
         for(;itr!= folder_list.end(); itr++) {
+            /*
             if(!fs::CheckFilepathExists(*itr)) {
                 // Check for local folder, create if doesn't exist
                 fs::CreateDirectory(*itr);
             }    
+            */
             Folder tmp;
             if(!file_manager_->GetFolderEntry(*itr, tmp)) { 
                 // FileManager Entry
                 std::cout<< " Creating folder entry ... for " << *itr << std::endl;
+                std::string path;
+                file_manager_->GetAliasedFilepath(folderpath, path);
+                utils::CheckUrlAndRemoveTrailingSlash(path);
                 Folder folder;
-                ret = file_manager_->CreateFolderEntry(*itr, "", "", folder);
-                if(ret)
-                    out.push_back(folder);
+                folder.set_folderpath(path);
+                out.push_back(folder);
             }
             else {
                 out.push_back(tmp);
@@ -91,6 +95,14 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
         }
     }
     return ret;
+}
+
+bool FolderHandler::InsertFolder(const Folder& folder) {
+    Folder f;
+    return file_manager_->CreateFolderEntry(folder.folderpath(),
+                                            folder.folder_post_id(),
+                                            folder.parent_post_id(),
+                                            f);
 }
 
 bool FolderHandler::InsertFolder(const FolderPost& fp) {

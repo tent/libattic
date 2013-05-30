@@ -45,12 +45,19 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             Folder folder;
             if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder)) {
-                std::string error("failed to find folder on download : ");
-                error += fi.folder_post_id();
-                error += " for file : ";
-                error += fi.filepath();
-                log::LogString("sdfjka111", error);
-                return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+                FolderPost fp;
+                if(RetrieveFolderPost(fi.folder_post_id(), fp)) {
+                    folder = fp.folder();
+                }
+                else {
+                    std::ostringstream err;
+                    err << " failed to find folder in manifest, attempt to pull post" << std::endl;
+                    err << " alleged post id : " << fi.folder_post_id() << std::endl;
+                    err << " for file : " ;
+                    err << fi.filepath() << std::endl;
+                    log::LogString("sdfjka111", err.str());
+                    return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+                }
             }
             if(folder.deleted()) {
                 std::string error("folder deleted");
@@ -112,9 +119,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
  
 int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) { 
     int status = ret::A_OK;
-    std::cout<<" RETRIEVE FILE POST " << std::endl;;
     std::string posturl;
-    std::cout<<" POST ID : " << post_id << std::endl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     // Get Metadata post
@@ -128,6 +133,8 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
 
     return status;
 }
+
+
 
 int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
                                         const std::string& post_id,

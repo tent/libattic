@@ -21,7 +21,8 @@ public:
     ~FolderHandler();
 
     bool ValidateFolder(FolderPost& fp);
-    bool CreateFolder(const std::string& folderpath, std::deque<Folder>& out);
+    bool RetrieveFolders(const std::string& folderpath, std::deque<Folder>& out);
+    bool InsertFolder(const Folder& folder);
     bool InsertFolder(const FolderPost& fp);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);

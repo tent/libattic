@@ -10,6 +10,8 @@
 #include "chunkpost.h"
 #include "posttree.h"
 #include "filepost.h"
+#include "folderpost.h"
+#include "folder.h"
 
 namespace attic { 
 
@@ -25,7 +27,6 @@ class GetFileStrategy : public HttpStrategyInterface {
     int RetrieveAndInsert(const std::string& postid, PostTree& tree);
 
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
-
 
     int RetrieveChunkPosts(const std::string& entity,
                            const std::string& post_id,

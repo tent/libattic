@@ -32,7 +32,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
             std::deque<Folder> folder_list;
             FolderHandler fh(file_manager_);
             
-            if(fh.CreateFolder(folderpath, folder_list)){
+            if(fh.RetrieveFolders(folderpath, folder_list)){
                 std::cout<<" total number of folders : " << folder_list.size() << std::endl;
                 // Folder list comes out child -> parent in that order
 
@@ -43,17 +43,19 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                 while(itr!= folder_list.begin()) {
                     --itr;
                     // Set Parent post id;
-                    fh.SetFolderParentPostId(*itr, hold_id); //currently last id
+                    if((*itr).parent_post_id().empty())
+                        fh.SetFolderParentPostId(*itr, hold_id); //currently last id
                     // Create new folder post
                     if((*itr).folder_post_id().empty()) {
                         std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
-                        CreateFolderPost(*itr, hold_id); 
-                        // Set Folder Post Id;
-                        if(!fh.SetFolderPostId(*itr, hold_id)) { 
-                            std::cout<<" failed to set folder post id : " << hold_id << std::endl;
+                        status = CreateFolderPost(*itr, hold_id); 
+                        if(status == ret::A_OK) {
+                            fh.InsertFolder(*itr);
+                            hold_id = (*itr).folder_post_id();
                         }
                     }
                     else { 
+                        // Post already exists
                         // set id for parent
                         hold_id = (*itr).folder_post_id();
                     }
@@ -75,7 +77,6 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
 
 int PostFolderStrategy::CreateFolderPost(Folder& folder, std::string& id_out) {
     int status = ret::A_OK;
-
     // Create folderpost
     FolderPost fp(folder);
     std::string body;
@@ -88,10 +89,6 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder, std::string& id_out) {
                      body,
                      &access_token_,
                      response);
-
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
-
     if(response.code == 200) {
         FolderPost back;
         jsn::DeserializeObject(&back, response.body);
@@ -99,9 +96,13 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder, std::string& id_out) {
         id_out = back.id();
     }
     else {
+        std::ostringstream err;
+        err << " Non 200 return on Create Folder post " << std::endl;
+        err << " code : " << response.code << std::endl;
+        err << " body : " << response.body << std::endl;
+        log::LogString("eskuus90___", err.str());
         status = ret::A_FAIL_NON_200;
     }
-
     return status;
 }
 
