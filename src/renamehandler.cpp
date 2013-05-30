@@ -41,7 +41,14 @@ int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
                                           const std::string& new_folderpath) {
     int status = ret::A_OK;
     std::cout<<" rename folder local cache " << std::endl;
-    status = file_manager_->RenameFolder(old_folderpath, new_folderpath);
+    std::string ofp = old_folderpath;
+    std::string nfp = new_folderpath;
+    // Normalize paths
+    utils::CheckUrlAndRemoveTrailingSlash(ofp);
+    utils::CheckUrlAndRemoveTrailingSlash(nfp);
+    std::cout<<" \t old : " << ofp << std::endl;
+    std::cout<<" \t new : " << nfp << std::endl;
+    status = file_manager_->RenameFolder(ofp, nfp);
     return status;
 }
 

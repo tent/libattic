@@ -21,14 +21,14 @@ class HttpStrategyInterface {
 protected:
     std::string GetConfigValue(const std::string& key) { return config_map_[key]; }
 
-    int InitInstance(FileManager* pFileManager,
-                     CredentialsManager* pCredentialsManager);
+    int InitInstance(FileManager* fm,
+                     CredentialsManager* cm);
 public:
     HttpStrategyInterface();
     ~HttpStrategyInterface();
 
-    virtual int Execute(FileManager* pFileManager,
-                        CredentialsManager* pCredentialsManager)=0;
+    virtual int Execute(FileManager* fm,
+                        CredentialsManager* cm)=0;
 
     // Takes ownership of the delegate.
     // Will delete previous delegate if set more than once
@@ -57,8 +57,8 @@ class HttpStrategyContext {
 public:
     typedef std::map<std::string, std::string> ConfigMap;
 
-    HttpStrategyContext(FileManager* pFileManager,
-                        CredentialsManager* pCredentialsManager);
+    HttpStrategyContext(FileManager* fm,
+                        CredentialsManager* cm);
 
     ~HttpStrategyContext();
 

@@ -159,6 +159,33 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     folderw->SetTaskPreference(Task::FOLDER);
     thread_pool_->SpinOffWorker(folderw);
 
+    // Folder Worker
+    ThreadWorker* folderw2 = new ThreadWorker(file_manager_, 
+                                             credentials_manager_, 
+                                             access_token_, 
+                                             entity_, 
+                                             true); // Strict
+    folderw2->SetTaskPreference(Task::FOLDER);
+    thread_pool_->SpinOffWorker(folderw2);
+
+    // Dedicated upload
+    ThreadWorker* pushw = new ThreadWorker(file_manager_, 
+                                             credentials_manager_, 
+                                             access_token_, 
+                                             entity_, 
+                                             true); // Strict
+    pushw->SetTaskPreference(Task::PUSH);
+    thread_pool_->SpinOffWorker(pushw);
+
+    // Dedicated download
+    ThreadWorker* pullw = new ThreadWorker(file_manager_, 
+                                           credentials_manager_, 
+                                           access_token_, 
+                                           entity_, 
+                                           true); // Strict
+    pullw->SetTaskPreference(Task::PULL);
+    thread_pool_->SpinOffWorker(pullw);
+
     // Generic (Push/Pull) workers
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker(file_manager_, credentials_manager_, access_token_, entity_);

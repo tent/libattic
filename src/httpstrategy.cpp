@@ -16,11 +16,11 @@ HttpStrategyInterface::~HttpStrategyInterface() {
         task_delegate_ = NULL;
     }
 }
-int HttpStrategyInterface::InitInstance(FileManager* pFileManager,
-                                        CredentialsManager* pCredentialsManager) {
+int HttpStrategyInterface::InitInstance(FileManager* fm,
+                                        CredentialsManager* cm) {
     int status = ret::A_OK;
-    file_manager_ = pFileManager;
-    credentials_manager_ = pCredentialsManager;
+    file_manager_ = fm;
+    credentials_manager_ = cm;
     if(!file_manager_) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     if(!credentials_manager_) return ret::A_FAIL_INVALID_CREDENTIALSMANAGER_INSTANCE;
     credentials_manager_->GetAccessTokenCopy(access_token_);
@@ -43,10 +43,10 @@ void HttpStrategyInterface::Callback(const int tasktype,
         task_delegate_->Callback(tasktype, code, taskstate, var);
 }
 
-HttpStrategyContext::HttpStrategyContext(FileManager* pFileManager,
-                                         CredentialsManager* pCredentialsManager) {
-    file_manager_ = pFileManager;
-    credentials_manager_ = pCredentialsManager;
+HttpStrategyContext::HttpStrategyContext(FileManager* fm,
+                                         CredentialsManager* cm) {
+    file_manager_ = fm;
+    credentials_manager_ = cm;
     strategy_itr_ = strategies_.begin();
 }
 

@@ -25,18 +25,15 @@
 
 namespace attic { 
 
-PostFileStrategy::PostFileStrategy() {}
-PostFileStrategy::~PostFileStrategy() {}
-
-int PostFileStrategy::Execute(FileManager* pFileManager,
-                              CredentialsManager* pCredentialsManager) {
+int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     int status = ret::A_OK;
-    status = InitInstance(pFileManager, pCredentialsManager);
+    status = InitInstance(fm, cm);
     // Initialize meta post
     post_path_ = GetConfigValue("post_path");
     posts_feed_ = GetConfigValue("posts_feed");
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
+    std::string post_id = GetConfigValue("post_id");
 
     std::cout<<" starting upload : " << filepath << std::endl;
     // Check Master Key before doing anything else
@@ -55,16 +52,6 @@ int PostFileStrategy::Execute(FileManager* pFileManager,
             FileHandler fh(file_manager_);
             std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
             if(status == ret::A_OK && !file_post_id.empty()) {
-                // Set folder post id
-                std::string folder_id;
-                if(RetrieveFolderPostId(filepath, folder_id) && !folder_id.empty()) {
-                    fi.set_folder_post_id(folder_id);
-                }
-                else {
-                    std::cout<<" FAILED TO GET FOLDER POST ID : " << folder_id << std::endl;
-                    return ret::A_FAIL_INVALID_FOLDER_POST;
-                }
-                
                 // Retrieve Chunk posts
                 ChunkPostList chunk_posts;
                 RetrieveChunkPosts(entity, file_post_id, chunk_posts);
@@ -354,54 +341,9 @@ void PostFileStrategy::GetMasterKey(std::string& out) {
 }
 
 bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
-    bool ret = false;
     FileHandler fh(file_manager_);
-    if(!fh.DoesFileExist(filepath)) {
-        std::string mk;
-        GetMasterKey(mk);
-        if(fh.CreateNewFile(filepath, mk, out)) {
-            FilePost fp;
-            fp.InitializeFilePost(&out, false);
-            PostHandler<FilePost> ph(access_token_);
-            Response response;
-            if(ph.Post(posts_feed_, NULL, fp, response) == ret::A_OK) {
-                Post post;
-                jsn::DeserializeObject(&post, response.body);
-                out.set_post_id(post.id());
-                fh.UpdateFilePostId(out.filepath(), post.id());
-                return true;
-            }
-        }
-        else {
-            std::cout<<" FAILED TO CREATE NEW FILE " << std::endl;
-        }
-    }
-    else {
-        // Actually retrieve the file
-        if(fh.RetrieveFileInfo(filepath, out))
-            return true;
-    }
-    return false;
-}
-
-bool PostFileStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
-    // Get folderpath
-    std::cout<<" incoming filepath : " << filepath << std::endl;
-    size_t pos = filepath.rfind("/");
-    if(pos != std::string::npos) {
-        std::string folderpath = filepath.substr(0, pos);
-        utils::CheckUrlAndRemoveTrailingSlash(folderpath);
-
-        FolderHandler fh(file_manager_);
-        Folder folder;
-        if(fh.GetFolder(folderpath, folder)){
-            if(!folder.folder_post_id().empty()) {
-                id_out = folder.folder_post_id();
-                return true;
-            }
-        }
-    }
-
+    if(fh.RetrieveFileInfo(filepath, out))
+        return true;
     return false;
 }
 

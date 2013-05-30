@@ -50,6 +50,9 @@ int FolderTask::RenameFolder() {
     // These are absolute paths
     context_.get_value("original_folderpath", old_folderpath);
     context_.get_value("new_folderpath", new_folderpath);
+    // Normalize folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(old_folderpath);
+    utils::CheckUrlAndRemoveTrailingSlash(new_folderpath);
 
     std::cout<<" renaming folder " << std::endl;
     std::cout<<" old : "<< old_folderpath << std::endl;
@@ -105,6 +108,8 @@ int FolderTask::DeleteFolder() {
     int status = ret::A_OK;
     std::string folderpath;
     context_.get_value("folderpath", folderpath);
+    // Normalize folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(folderpath);
 
     FolderHandler fh(file_manager());
     std::deque<FileInfo> file_list;
@@ -155,32 +160,59 @@ int FolderTask::CreateFolder() {
     int status = ret::A_OK;
     std::string folderpath;
     context_.get_value("folderpath", folderpath);
-
+    std::cout<<" creating folder ... " << std::endl;
+    // Normalize folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(folderpath);
     FolderHandler fh(file_manager());
-    std::deque<Folder> folder_list;
-    fh.CreateFolder(folderpath, folder_list);
-    std::cout<<" folder list size : " << folder_list.size() << std::endl;
-    if(folder_list.size()) {
-        std::string hold_id = cnst::g_szWorkingPlaceHolder; 
-        std::deque<Folder>::iterator itr = folder_list.end();
-        while(itr != folder_list.begin()) {
-            std::cout<<" hold id : " << hold_id << std::endl;
-            itr--;
-            // Create Folder Post for each folder that needs it
-            Folder folder = *itr;
-            std::cout<<"folder path : " << folder.folderpath() << std::endl;
-            if(folder.folder_post_id().empty()) {
-                std::string post_id;
-                folder.set_parent_post_id(hold_id);
-                int s = CreateFolderPost(folder, post_id);
-                if(s == ret::A_OK) { 
-                    fh.SetFolderPostId(folder, post_id);
-                    fh.SetFolderParentPostId(folder, hold_id);
-                    hold_id = post_id;
-                }
+    // Check if folder posts was previously deleted
+    if(fh.IsFolderInCache(folderpath)) {
+        std::cout<<" folder is in cache " << std::endl;
+        Folder folder;
+        fh.GetFolder(folderpath, folder);
+        if(folder.deleted()) {
+            std::cout<<" folder deleted " << std::endl;
+            // "Un-delete" folder (post)
+            folder.set_deleted(false);
+            fh.SetFolderDeleted(folderpath, false);
+            // Update post
+            FolderPost fp;
+            status = RetrieveFolderPost(folder.folder_post_id(), fp);
+            if(status == ret::A_OK) {
+                fp.set_folder(folder);
+                fp.clear_fragment();
+                status = PostFolderPost(folder.folder_post_id(), fp);
             }
-            else {
-                hold_id = folder.folder_post_id();
+        }
+        else {
+            std::cout<<" duplicate post creation " << std::endl;
+        }
+    }
+    else {
+        std::deque<Folder> folder_list;
+        fh.CreateFolder(folderpath, folder_list);
+        std::cout<<" folder list size : " << folder_list.size() << std::endl;
+        if(folder_list.size()) {
+            std::string hold_id = cnst::g_szWorkingPlaceHolder; 
+            std::deque<Folder>::iterator itr = folder_list.end();
+            while(itr != folder_list.begin()) {
+                std::cout<<" hold id : " << hold_id << std::endl;
+                itr--;
+                // Create Folder Post for each folder that needs it
+                Folder folder = *itr;
+                std::cout<<"folder path : " << folder.folderpath() << std::endl;
+                if(folder.folder_post_id().empty()) {
+                    std::string post_id;
+                    folder.set_parent_post_id(hold_id);
+                    int s = CreateFolderPost(folder, post_id);
+                    if(s == ret::A_OK) { 
+                        fh.SetFolderPostId(folder, post_id);
+                        fh.SetFolderParentPostId(folder, hold_id);
+                        hold_id = post_id;
+                    }
+                }
+                else {
+                    hold_id = folder.folder_post_id();
+                }
             }
         }
     }

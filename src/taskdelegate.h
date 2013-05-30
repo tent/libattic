@@ -9,7 +9,15 @@ namespace attic {
 
 class TaskDelegate {
 public:                                                         
-    TaskDelegate() {}
+    enum DelegateType {
+        TASK=0,
+        MANIFEST
+    };
+
+    TaskDelegate(DelegateType type) {
+        type_ = type;
+    }
+
     ~TaskDelegate() {}
 
     const std::string& GenerateIdentifier() {
@@ -24,9 +32,10 @@ public:
                           const std::string& var) const = 0;
 
     const std::string& identifier() const { return identifier_; }
+    int type() { return type_; }
 private:
+    DelegateType type_;
     std::string identifier_;
-
 };
 
 }//namespace

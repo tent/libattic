@@ -8,13 +8,11 @@
 namespace attic { 
 
 ScanDirectoryTask::ScanDirectoryTask(FileManager* fm,
-                                     const TaskContext& context,
-                                     void (*callback)(int, char**, int, int))
+                                     const TaskContext& context)
                                      :
                                      ManifestTask(Task::SCANDIRECTORY,
                                                   fm,
-                                                  context,
-                                                  callback) {
+                                                  context) {
 }
 
 ScanDirectoryTask::~ScanDirectoryTask() {}

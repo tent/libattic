@@ -61,8 +61,9 @@ public:
     int GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out);
 
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
-    FileInfo* GetFileInfo(const std::string &filepath);
-    FileInfo* GetFileInfoByPostId(const std::string& post_id);
+    bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
+    FileInfo* GetFileInfo(const std::string &filepath);         // depricated
+    FileInfo* GetFileInfoByPostId(const std::string& post_id);  // depricated
 
     bool SetFileVersion(const std::string& filepath, const std::string& version);
     bool SetFileDeleted(const std::string& filepath, const bool del = true);

@@ -8,13 +8,11 @@
 namespace attic { 
 
 QueryFilesTask::QueryFilesTask(FileManager* pFm,                       
-                               const TaskContext& context,
-                               void (*callback)(int, char**, int, int))
+                               const TaskContext& context)
                                :
                                ManifestTask(Task::QUERYMANIFEST,
                                             pFm,
-                                            context,
-                                            callback) {
+                                            context) {
     m_Stride = 0;
 }
 
@@ -30,7 +28,6 @@ void QueryFilesTask::RunTask() {
 
 int QueryFilesTask::CreateCStringListsAndCallBack(std::deque<FileInfo>& vec) {
     int status = ret::A_OK;
-
     unsigned int size = vec.size();
     char** buf = new char*[size];
     for(int j=0; j<size; j++) {
@@ -41,7 +38,6 @@ int QueryFilesTask::CreateCStringListsAndCallBack(std::deque<FileInfo>& vec) {
         memset(buf[j], '\0', fp.size()+1);
         memcpy(buf[j], fp.c_str(), fp.size());
     }
-
     Callback(status, buf, size, size);
 }
 

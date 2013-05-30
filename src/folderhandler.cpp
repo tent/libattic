@@ -35,9 +35,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             else {
                 std::cout<<" renamed ...? " << std::endl;
             }
-
         }
-
         // Check if there is a corresponding folder entry
         Folder folder;
         if(!file_manager_->GetFolderEntry(fp.folder().folderpath(), folder)) {
@@ -58,14 +56,17 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 //  - Creates an entry in the local cache
 //  - Creates folder on disk if one doesn't already exist
 bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folder>& out) {
+    // Normalize Folderpath
+    std::string fpath = folderpath;
+    utils::CheckUrlAndRemoveTrailingSlash(fpath);
     bool ret = false;
-    if(!folderpath.empty()) { 
+    if(!fpath.empty()) { 
         std::deque<std::string> folder_list;
-        fs::CreateDirectoryTree(folderpath, file_manager_->working_directory(), folder_list);
+        fs::CreateDirectoryTree(fpath, file_manager_->working_directory(), folder_list);
         std::cout<<" working directory : " << std::endl;
 
         if(!folder_list.size())
-            folder_list.push_back(folderpath);
+            folder_list.push_back(fpath);
 
         std::cout<<" # of folders " << folder_list.size() << std::endl;
         std::deque<std::string>::iterator itr = folder_list.begin();
@@ -90,6 +91,14 @@ bool FolderHandler::CreateFolder(const std::string& folderpath, std::deque<Folde
         }
     }
     return ret;
+}
+
+bool FolderHandler::InsertFolder(const FolderPost& fp) {
+    Folder f;
+    return file_manager_->CreateFolderEntry(fp.folder().folderpath(),
+                                            fp.id(),
+                                            fp.folder().parent_post_id(),
+                                            f);
 }
 
 bool FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
@@ -155,12 +164,13 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                 size_t pos = (*folder_itr).folderpath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
-                    utils::CheckUrlAndAppendTrailingSlash(path);
                     path += (*folder_itr).folderpath().substr(pos+aliased_old_path.size());
                     size_t f = path.find("//");
                     if(f!= std::string::npos)
                         path.erase(f, 1);
                     std::cout<<" NEW FOLDER PATH " << path << std::endl;
+                    // Normalize path
+                    utils::CheckUrlAndRemoveTrailingSlash(path);
                     rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
                     //(*folder_itr).set_folderpath(aliased_new_path);
                     (*folder_itr).set_folderpath(path);
@@ -172,7 +182,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                 size_t pos = (*file_itr).filepath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
-                    utils::CheckUrlAndAppendTrailingSlash(path);
+                    utils::CheckUrlAndRemoveTrailingSlash(path);
                     path += (*file_itr).filepath().substr(pos);
                     std::cout<<" NEW FILE PATH " << path << std::endl;
                     std::cout<<" aliased new path : " << aliased_new_path << std::endl;
@@ -239,5 +249,14 @@ bool FolderHandler::GetFolderById(const std::string& folder_id, Folder& out) {
 bool FolderHandler::GetFolder(const std::string& folderpath, Folder& out) {
     return file_manager_->GetFolderEntry(folderpath, out);
 }
+
+bool FolderHandler::IsFolderInCache(const std::string& folderpath) {
+    return file_manager_->DoesFolderExist(folderpath);
+}
+
+bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
+    return file_manager_->SetFolderDeleted(folderpath, del);
+}
+
 }//namespace
 

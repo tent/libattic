@@ -31,6 +31,7 @@ struct Event {
         REQUEST_PULL,
         REQUEST_DELETE,
         REQUEST_SYNC_POST,
+        REQUEST_UPLOAD_FILE,
         SYNC,
         POLL,
         UPLOAD_SPEED,

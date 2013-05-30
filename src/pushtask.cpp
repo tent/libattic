@@ -5,9 +5,11 @@
 #include "errorcodes.h"
 #include "event.h"
 #include "taskdelegate.h"
+#include "filehandler.h"
 
 #include "postfilestrategy.h"
 #include "postfolderstrategy.h"
+#include "postmetastrategy.h"
 
 namespace attic {
 
@@ -40,20 +42,7 @@ void PushTask::RunTask() {
     int status = ret::A_FAIL_PATH_DOESNT_EXIST;
     std::cout<<" checking filepath exists : " << filepath << std::endl;
     if(fs::CheckFilepathExists(filepath)) {
-        if(!file_manager()->IsFileLocked(filepath)) {
-            file_manager()->LockFile(filepath);
-            std::cout<<" PUSH NOTIFY ON PATH : " << filepath << std::endl;
-            event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
-            status = PushFile(filepath);
-            event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
-            file_manager()->UnlockFile(filepath);
-        }
-        else {
-            std::string error = " File is locked by other task, finishing task\n";
-            error += " file : " + filepath + "\n";
-            log::LogString("333MA!941", error);
-            status = ret::A_FAIL_FILE_IN_USE;
-        }
+        status = PushFile(filepath);
     }
     else {
         std::cout<<" FILEPATH DOES NOT EXIST : " << filepath << std::endl;
@@ -83,12 +72,26 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("entity", entity);
 
         PostFolderStrategy pfs;             // Check (and create) if directory posts exist
-        PostFileStrategy ps;                // Chunk and upload
+        PostMetaStrategy pmetas;            // Create meta strategy
         // push back post folder strategy
         pushcontext.PushBack(&pfs);
-        pushcontext.PushBack(&ps); 
-
+        pushcontext.PushBack(&pmetas);
         status = pushcontext.ExecuteAll();
+        if(status == ret::A_OK) {
+            std::cout<<" pushing file ... " << filepath << std::endl;
+            FileHandler fh(file_manager());
+            FileInfo fi;
+            fh.RetrieveFileInfo(filepath, fi);
+            std::cout<<" post id : " << fi.post_id() << std::endl;
+            if(!fi.post_id().empty()) {
+                // raise event to a start upload pipeline
+                std::cout<<" raising event " << std::endl;
+                event::RaiseEvent(event::Event::REQUEST_UPLOAD_FILE, fi.post_id(), NULL);
+            }
+            else {
+                status = ret::A_FAIL_INVALID_POST_ID;
+            }
+        }
     }
     else {
         status = ret::A_FAIL_OPEN_FILE;

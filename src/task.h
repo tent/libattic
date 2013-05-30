@@ -20,7 +20,8 @@ public:
     enum TaskType {                                                                   
         // TentTask
         UNKNOWN=0,
-        PUSH,
+        PUSH,       // Begin upload process, just setup the metadata, spin off pushfile task
+        UPLOADFILE,   // Does not deal with setting up metadata post, just upoads chunks
         PULL,
         RENAME,
         DELETE,                                                         

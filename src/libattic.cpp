@@ -76,12 +76,14 @@ int Discover(const char* szEntityurl) {
 
 int CreateFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    std::cout<<" CREATE FOLDER : " << szFolderpath << std::endl;
     int status = attic_service.CreateFolder(szFolderpath);
     return status;
 }
 
 int DeleteFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    std::cout<<" DELETE FOLDER : " << szFolderpath << std::endl;
     int status = attic_service.DeleteFolder(szFolderpath);
     return status;
 }
@@ -340,12 +342,9 @@ int GetFileList(void(*callback)(int, char**, int, int)) {
 
     if(status == attic::ret::A_OK) {
         status = IsLibInitialized();
-
-        // TODO :: reimplement this
-        //if(status == attic::ret::A_OK)
-            //attic_service.task_manager()->QueryManifest(callback);
+        attic::TaskDelegate* del = g_CallbackHandler.RegisterManifestCallback(callback);
+        status = attic_service.QueryManifest(del);
     }
-
     return status;
 }
 

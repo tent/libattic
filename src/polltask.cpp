@@ -245,6 +245,14 @@ void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will
 }
 
 void PollTask::DeleteLocalFolder(const FolderPost& fp) {
+    // check if folder is in cache
+    FolderHandler fh(file_manager());
+    if(!fh.IsFolderInCache(fp.folder().folderpath())){
+        fh.InsertFolder(fp);
+    }
+
+    fh.SetFolderDeleted(fp.folder().folderpath(), true);
+    // perform local operations
     std::string canonical_path;
     file_manager()->GetCanonicalFilepath(fp.folder().folderpath(), canonical_path);
     if(fs::CheckFilepathExists(canonical_path)){

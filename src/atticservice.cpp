@@ -137,6 +137,12 @@ int AtticService::DisablePolling() {
     return status;
 }
 
+int AtticService::QueryManifest(TaskDelegate* cb) {
+    int status = ret::A_OK;
+    task_manager_->QueryManifest(cb);
+    return status;
+}
+
 void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigWorkingDir, working_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, config_dir_);

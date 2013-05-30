@@ -311,7 +311,10 @@ FileInfo* FileManager::CreateFileInfo() {
 bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& out) {
     size_t pos = filepath.find(working_directory_);
     if(pos != std::string::npos) {
-        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + filepath.substr(pos+working_directory_.size());
+        out = std::string(cnst::g_szWorkingPlaceHolder);
+        std::string right = filepath.substr(pos+working_directory_.size());
+        if(right.size())
+            out += "/" + right;
         pos = out.find("//");
         if(pos != std::string::npos) {
             out.erase(pos, 1);
@@ -325,12 +328,21 @@ bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
     std::string relative, canonical;
     std::cout<<" RELATIVE IN : " << relativepath << std::endl;
     if(IsPathRelative(relativepath)) {
+        // Extract second half of path
+        std::string right_fp;
+        size_t left = relativepath.find("/");
+        if(left != std::string::npos) {
+            right_fp = relativepath.substr(left);
+        }
+        // Replace working
         size_t pos = relativepath.find(cnst::g_szWorkingPlaceHolder);
         if(pos != std::string::npos) {
+            if(!right_fp.empty()) {
             out = working_directory_ + "/" + relativepath.substr(pos + strlen(cnst::g_szWorkingPlaceHolder) + 1);
-
-            
-
+            }
+            else{ 
+                out = working_directory_;
+            }
             std::cout<<" OUT : " << out << std::endl;
             return true;
         }
@@ -434,6 +446,13 @@ FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
     return fi;
 }
 
+bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out) {
+    Lock();
+    bool ret = manifest_.QueryForFileByPostId(post_id, out);
+    Unlock();
+    return ret;
+}
+
 
 bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     std::string relative;
@@ -513,6 +532,7 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
         // Make Relative
         //GetRelativePath(folderpath, relative);
         GetAliasedFilepath(folderpath, relative);
+
     }
     else {
         relative = folderpath;
@@ -521,6 +541,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
 
+    // Normalize Folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(relative);
     std::cout<<" Searching for folder entry : " << relative << std::endl;
 
     Lock();
@@ -532,13 +554,30 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     return ret;
 }
 
+bool FileManager::DoesFolderExist(const std::string& folderpath) {
+    std::string relative;
+    if(!IsPathRelative(folderpath))
+        GetAliasedFilepath(folderpath, relative);
+    else
+        relative = folderpath;
+
+    if(relative.empty())
+        relative = cnst::g_szWorkingPlaceHolder;
+    Lock();
+    bool ret = manifest_.IsFolderInManifest(relative);
+    Unlock();
+    return ret;
+}
+
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
-    std::cout<<" folderpath : " << folder.folderpath() << std::endl;
-    std::cout<<" folder_post_id : " << folder.folder_post_id() << std::endl;
-    std::cout<<" parent_post_id : " << folder.parent_post_id() << std::endl;
-    id_out = folder.folder_post_id();
+    if(ret) {
+        std::cout<<" folderpath : " << folder.folderpath() << std::endl;
+        std::cout<<" folder_post_id : " << folder.folder_post_id() << std::endl;
+        std::cout<<" parent_post_id : " << folder.parent_post_id() << std::endl;
+        id_out = folder.folder_post_id();
+    }
 
     return ret;
 }
@@ -563,16 +602,17 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     if(relative == cnst::g_szWorkingPlaceHolder && parent_post_id.empty())
         p_post_id = cnst::g_szWorkingPlaceHolder;
 
+    // Normalize Folderpath
+    utils::CheckUrlAndRemoveTrailingSlash(relative);
     bool ret = false;
-    ret = GetFolderEntry(folderpath, out);
-    Lock();
+    ret = GetFolderEntry(relative, out);
     if(!ret) {
+        Lock();
         ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, false);
         if(ret)
             ret = manifest_.QueryForFolder(relative, out);
+        Unlock();
     }
-    Unlock();
-
     return ret;
 }
 

@@ -12,8 +12,7 @@ class QueryFilesTask : public ManifestTask {
     int CreateCStringListsAndCallBack(std::deque<FileInfo>& vec);
 public:
     QueryFilesTask(FileManager* pFm,
-                   const TaskContext& context,
-                   void (*callback)(int, char**, int, int));
+                   const TaskContext& context);
 
     ~QueryFilesTask();
 

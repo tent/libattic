@@ -20,6 +20,10 @@ bool FileHandler::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
     return file_manager_->GetFileInfo(filepath, out);
 }
 
+bool FileHandler::RetrieveFileInfoById(const std::string& post_id, FileInfo& out) {
+    return file_manager_->GetFileInfoByPostId(post_id, out);
+}
+
 // Note* there are 3 keys that file info objects are queried by, this only sets two of them,
 // if the third is not set, a new file with the same path and folderid can be created for a 
 // duplicate entry
@@ -30,6 +34,9 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
         std::string folderpath;
         if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
             std::string folderid;
+            std::cout<< " checking folderpath : " << folderpath << std::endl;
+            utils::CheckUrlAndRemoveTrailingSlash(folderpath);
+            std::cout<< " checking folderpath : " << folderpath << std::endl;
             if(file_manager_->GetFolderPostId(folderpath, folderid)) {
                 std::string aliased, filename;
                 utils::ExtractFileName(filepath, filename);
@@ -37,14 +44,17 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                 std::cout<<" folder path : " << folderpath << std::endl;
                 std::cout<<" folder id : " << folderid << std::endl;
                 std::cout<<" aliased : " << aliased << std::endl;
-                out.set_filepath(aliased);
-                out.set_folder_post_id(folderid);
-                out.set_filename(filename);
+                out.set_filename(filename);             // set filename
+                out.set_filepath(aliased);              // set filepath
+                out.set_folder_post_id(folderid);       // set folder id
+                out.set_chunk_count(0);
                 Credentials file_cred;
                 while(file_cred.key_empty())
                     crypto::GenerateCredentials(file_cred);
-                out.set_file_credentials(file_cred);
+                out.set_file_credentials(file_cred);    // set credentials
                 EncryptFileKey(out, master_key);
+                // set filesize
+                out.set_file_size(utils::CheckFilesize(filepath));
                 return file_manager_->InsertToManifest(&out);
             }
         }

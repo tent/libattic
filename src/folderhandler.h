@@ -22,6 +22,7 @@ public:
 
     bool ValidateFolder(FolderPost& fp);
     bool CreateFolder(const std::string& folderpath, std::deque<Folder>& out);
+    bool InsertFolder(const FolderPost& fp);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);
     
@@ -40,7 +41,8 @@ public:
 
     bool GetFolderById(const std::string& folder_id, Folder& out);
     bool GetFolder(const std::string& folderpath, Folder& out);
-
+    bool IsFolderInCache(const std::string& folderpath);
+    bool SetFolderDeleted(const std::string& folderpath, bool del);
 private:
     FileManager* file_manager_;
 };
