@@ -42,9 +42,14 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                 std::string hold_id = cnst::g_szWorkingPlaceHolder; 
                 while(itr!= folder_list.begin()) {
                     --itr;
+                    std::cout<<" HOLD ID : " << hold_id << std::endl;
+                    std::cout<<" processing folder : " << (*itr).folderpath() << std::endl;
+
                     // Set Parent post id;
-                    if((*itr).parent_post_id().empty())
-                        fh.SetFolderParentPostId(*itr, hold_id); //currently last id
+                    if((*itr).parent_post_id().empty())    
+                        (*itr).set_parent_post_id(hold_id);
+                    else
+                        std::cout<< " PARENT POST NOT EMPTY : " << (*itr).parent_post_id() << std::endl;
                     // Create new folder post
                     if((*itr).folder_post_id().empty()) {
                         std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
