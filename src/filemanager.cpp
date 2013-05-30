@@ -680,11 +680,23 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
     std::cout<<" SETTING FOLDER POST ID : " << post_id << std::endl;
 
     bool ret = false;
+    std::string id;
     Lock();
-    if(manifest_.IsFolderInManifest(relative))
-        ret = manifest_.UpdateFolderPostId(relative, post_id);
+    manifest_.GetFolderID(relative, id);
     Unlock();
- 
+    if(id.empty()) {
+        Lock();
+        if(manifest_.IsFolderInManifest(relative))
+            ret = manifest_.UpdateFolderPostId(relative, post_id);
+        Unlock();
+    }
+    else {
+        std::ostringstream err;
+        err << "Set folder post id collision " << std::endl;
+        err << " id already set : " << id << std::endl;
+        err << " trying to insert id : " <<  post_id << std::endl;
+        log::LogString("MASDlf", err.str());
+    }
     return ret;
 }
 

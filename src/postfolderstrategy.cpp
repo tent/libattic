@@ -7,6 +7,7 @@
 #include "folderpost.h"
 #include "netlib.h"
 #include "folderhandler.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -48,8 +49,9 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                         std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
                         CreateFolderPost(*itr, hold_id); 
                         // Set Folder Post Id;
-                        if(!fh.SetFolderPostId(*itr, hold_id))
+                        if(!fh.SetFolderPostId(*itr, hold_id)) { 
                             std::cout<<" failed to set folder post id : " << hold_id << std::endl;
+                        }
                     }
                     else { 
                         // set id for parent
