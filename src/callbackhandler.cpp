@@ -60,7 +60,9 @@ CallbackHandler::~CallbackHandler() {
 
 void CallbackHandler::RegisterCallback(event::Event::EventType type, EventCallback cb) {
     event::RegisterForEvent(this, type);
+    cbm_mtx_.Lock();
     callback_map_[type].push_back(cb);
+    cbm_mtx_.Unlock();
 }
 
 void CallbackHandler::OnEventRaised(const event::Event& event) {
@@ -69,13 +71,14 @@ void CallbackHandler::OnEventRaised(const event::Event& event) {
 }
 
 void CallbackHandler::Notify(const event::Event& event) {
+    cbm_mtx_.Lock();
     CallbackList::iterator itr = callback_map_[event.type].begin();
     for(;itr!=callback_map_[event.type].end(); itr++) {
         if(*itr) {
             (*itr)(event.type, event.status, event.value.c_str());
         }
     }
-
+    cbm_mtx_.Unlock();
 }
 
 TaskDelegate* CallbackHandler::RegisterDelegateCallback(int type, cbh::DelegateCallback cb) {
@@ -98,12 +101,15 @@ TaskDelegate* CallbackHandler::RegisterManifestCallback(cbh::QueryCallback cb) {
 
 void CallbackHandler::InsertDelegateIntoMap(TaskDelegate* del) {
     std::string id = del->GenerateIdentifier();
+    del_mtx_.Lock();
     while(delegate_map_.find(id) != delegate_map_.end())
         id = del->GenerateIdentifier();
     delegate_map_[id] = del;
+    del_mtx_.Unlock();
 }
 
 void CallbackHandler::RemoveDelegate(const std::string& id) {
+    del_mtx_.Lock();
     std::map<std::string, TaskDelegate*>::iterator itr = delegate_map_.find(id);
     if(itr != delegate_map_.end()) {
         TaskDelegate* p = itr->second;
@@ -114,6 +120,7 @@ void CallbackHandler::RemoveDelegate(const std::string& id) {
             p = NULL;
         }
     }
+    del_mtx_.Unlock();
 }
 
 } //namespace

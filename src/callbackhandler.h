@@ -5,7 +5,7 @@
 #include <map>
 #include <deque>
 #include "event.h"
-
+#include "mutexclass.h"
 #include "taskdelegate.h"
 
 namespace attic { 
@@ -66,6 +66,9 @@ private:
     typedef std::deque<EventCallback> CallbackList;
     std::map<event::Event::EventType, CallbackList>  callback_map_;
     std::map<std::string, TaskDelegate*>             delegate_map_;
+
+    MutexClass del_mtx_;
+    MutexClass cbm_mtx_;
 };
 
 } //namespace
