@@ -77,6 +77,15 @@ bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string&
 }
 
 bool FileHandler::UpdateFileInfo(FileInfo& fi) {
+    // REMOVE
+    std::cerr << "-----------------------------------------" << std::endl;
+    std::cerr << " Post file strategy " << std::endl;
+    std::cerr << " retrieved file info " << std::endl;
+    std::string b64_iv;
+    crypto::Base64EncodeString(fi.file_credentials_iv(), b64_iv);
+    std::cerr << " iv : " << b64_iv << std::endl;
+    std::cerr << "-----------------------------------------" << std::endl;
+    // REMOVE //
     return file_manager_->InsertToManifest(&fi);
 }
 

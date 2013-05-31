@@ -18,6 +18,7 @@
 #include "errorcodes.h"
 #include "credentials.h"
 #include "utils.h"
+#include "bsf.h" // base64 
 
 extern "C"
 {
@@ -469,17 +470,23 @@ static void HexDecodeString(const std::string& input, std::string& output) {
 }
 
 static void Base64EncodeString(const std::string& input, std::string& output) {
-    CryptoPP::StringSource( input, 
-                            true, 
-                            new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
-                                                        false) // Insert line breaks false
+    output = base64_encode(reinterpret_cast<unsigned const char*>(input.c_str()), input.size());
+    /*
+    CryptoPP::StringSource(input, 
+                           true, 
+                           new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
+                                                       false) // Insert line breaks false
                           );
+                          */
 }
 
 static void Base64DecodeString(const std::string& input, std::string& output) {
+    output = base64_decode(input);
+    /*
     CryptoPP::StringSource( input,
                             true,
                             new CryptoPP::Base64Decoder(new CryptoPP::StringSink(output)));
+                            */
 }
 
 static void Base32EncodeString(const std::string& input, std::string& output) {

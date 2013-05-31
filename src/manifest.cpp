@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "crypto.h"
 
+#include "bsf.h"
+
 namespace attic {
 
 static const std::string g_infotable("infotable");
@@ -95,7 +97,7 @@ bool Manifest::CreateInfoTable() {
     exc += g_infotable;
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
-    exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
+    exc += " postversion TEXT, encryptedkey TEXT, iv TEXT,";
     exc += " deleted INT, folder_post_id TEXT, alias_data TEXT,";
     exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
 
@@ -366,6 +368,7 @@ int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& 
     return status;
 }
 
+
 void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out) {
     out.set_filename(res.results_[0+step]);
     out.set_filepath(res.results_[1+step]);
@@ -390,7 +393,19 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     //out.set_file_credentials_iv(res.results_[9+step]);
     std::string b64_iv = res.results_[9+step];
     std::string iv;
-    crypto::Base64DecodeString(b64_key, iv);
+    iv = base64_decode(b64_iv);
+//    crypto::Base64DecodeString(b64_key, iv);
+    // REMOVE
+    std::ostringstream err;
+    err << " &&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+    err << " Extracting base 64 iv : " << b64_iv << " size : " << b64_iv.size() << std::endl;
+    err << " Extracting iv (decoded) size : " << iv.size() << std::endl;
+    std::string val_b64;
+    crypto::Base64EncodeString(iv, val_b64);
+    err << " validate b64 iv : " << val_b64 << std::endl;
+    err << " &&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
+    std::cerr << err.str();
+    // REMOVE //
     out.set_file_credentials_iv(iv);
     out.set_deleted(atoi(res.results_[10+step]));
     std::cout<<" EXTRACTING FOLDER ID : " << res.results_[11+step] << std::endl;
@@ -420,7 +435,6 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
     std::string cred_data = fi.file_credentials().asString();
 
     std::string encryptedkey = fi.encrypted_key();
-    std::string iv = fi.file_credentials_iv();
     std::string folder_post_id = fi.folder_post_id();
     
     std::string chunkdata;
@@ -498,7 +512,7 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
 
             std::string b64_key;
             crypto::Base64EncodeString(encryptedkey, b64_key);
-            ret = sqlite3_bind_blob(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
+            ret = sqlite3_bind_text(stmt, 9, b64_key.c_str(), b64_key.size(), SQLITE_TRANSIENT);
             //std::cout<<" BASE 64 KEY ENCRYPTED : " << b64_key << std::endl;
 
             if(ret != SQLITE_OK) {
@@ -507,8 +521,14 @@ bool Manifest::InsertFileInfo(const FileInfo& fi) {
             }
 
             std::string b64_iv;
-            crypto::Base64EncodeString(iv, b64_iv);
-            ret = sqlite3_bind_blob(stmt, 10, b64_iv.c_str(), b64_iv.size(), SQLITE_TRANSIENT);
+            crypto::Base64EncodeString(fi.file_credentials_iv(), b64_iv);
+            std::ostringstream err;
+            err << "***********************" << std::endl;
+            err << " Inserting b64 iv : " << b64_iv << " size : " << b64_iv.size() << std::endl;
+            err << " size of iv (not encoded ) : " << fi.file_credentials_iv().size() << std::endl;
+            err << "***********************" << std::endl;
+            std::cerr << err.str();
+            ret = sqlite3_bind_text(stmt, 10, b64_iv.c_str(), b64_iv.size(), SQLITE_TRANSIENT);
             if(ret != SQLITE_OK) {
                 printf(" iv Error message: %s\n", sqlite3_errmsg(db_));
                 return false;

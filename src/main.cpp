@@ -546,6 +546,46 @@ TEST(SIZE, TEST) {
 }
 */
 
+TEST(BASE64, ENCODEDECODE) {
+    std::string b("JQselvZZ6QBWutuaRg13TQ==");
+
+    for(int i=0; i<100; i++) {
+        std::string d;
+        attic::crypto::Base64DecodeString(b, d);
+
+        std::string e;
+        attic::crypto::Base64EncodeString(d, e);
+
+    }
+}
+
+TEST(BASE64, TEST) {
+    CryptoPP::AutoSeededRandomPool  g_Rnd;
+
+    for(int i=0; i<1000; i++) {
+        byte iv[CryptoPP::AES::BLOCKSIZE]; 
+        g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE);
+        std::string hold;
+        hold.append(reinterpret_cast<const char*>(iv), CryptoPP::AES::BLOCKSIZE);
+
+        std::string output;
+        CryptoPP::StringSource(hold, 
+                               true, 
+                               new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
+                                                           false)
+                               );
+
+        std::string original;
+        CryptoPP::StringSource(output,
+                               true,
+                               new CryptoPP::Base64Decoder(new CryptoPP::StringSink(original))
+                               );
+
+        if(original != hold) {
+            std::cout<<" FAIL " << std::endl;
+        }
+    }
+}
 
 
 

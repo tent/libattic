@@ -3,6 +3,8 @@
 #include <string.h>
 #include "errorcodes.h"
 
+#include "crypto.h"
+
 namespace attic {
 
 Credentials::Credentials() {
@@ -41,6 +43,8 @@ std::string Credentials::asString() const {
 int Credentials::set_key(const std::string& key) { 
     int status = ret::A_OK;
 
+    status = set_key(reinterpret_cast<const byte*>(key.c_str()), GetKeySize());
+    /*
     if(key.size() <= GetKeySize()) {
         memset(byte_key_, '\0', GetKeySize()+1);
         memcpy(byte_key_, key.c_str(), key.size());
@@ -49,7 +53,7 @@ int Credentials::set_key(const std::string& key) {
     else {
         status = ret::A_FAIL_KEYSIZE_MISMATCH;
     }
-
+    */
 
     return status;
 }
@@ -72,6 +76,16 @@ int Credentials::set_key(const byte* pKey, const unsigned int length) {
 
 int Credentials::set_iv(const std::string& iv) { 
     int status = ret::A_OK;
+    /*
+    std::string val_b64;
+    crypto::Base64EncodeString(iv, val_b64);
+    std::ostringstream err;
+    err << "(((" << std::endl;
+    err << " Setting iv for : " << val_b64 << std::endl;
+    err << " (unecoded) size : " << iv.size() << std::endl;
+    err << "(((" << std::endl;
+    std::cerr << err.str();
+    */
 
     if(iv.size() <= GetIvSize()) {
         memset(byte_iv_, '\0', GetIvSize()+1);

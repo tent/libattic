@@ -41,8 +41,20 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
 
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo fi;
-        if(!RetrieveFileInfo(filepath, fi)) // Creats new entry if file is new
+        if(!RetrieveFileInfo(filepath, fi))
             return ret::A_FAIL_INVALID_FILE_INFO;
+
+        // REMOVE
+        std::ostringstream err;
+        err << "-----------------------------------------" << std::endl;
+        err << " Post file strategy " << std::endl;
+        err << " retrieved file info " << std::endl;
+        std::string b64_iv;
+        crypto::Base64EncodeString(fi.file_credentials_iv(), b64_iv);
+        err << " iv : " << b64_iv << std::endl;
+        err << "-----------------------------------------" << std::endl;
+        std::cerr << err;
+        // REMOVE //
 
         std::string file_post_id = fi.post_id();
         status = UpdateFilePostTransitState(file_post_id, true); // Set file to in transit
