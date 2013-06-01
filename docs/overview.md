@@ -1,11 +1,20 @@
-TODO update this
-## Master Key
+# Libattic
+Libattic encapsulates base attic functionality. This includes uploading, downloading, chunkig, and ecrypting files. Attic
+provides a means of storing encrypted files in tent posts.
 
-Each user has a randomly generated *master key* that is used to encrypt *file
-keys*. The *master key* is encrypted with AES-256-CFB using the *user key* and
+## Keys
+### Master Key
+
+Each user has a generated *master key* that is used to encrypt *file
+keys*. The *master key* is encrypted with AES-512-CFB using the *user key* and
 stored in the Tent profile section for Attic.
 
-## User Key
+### File Key
+Each file upon first upload is generated a unique key associated with it's corresponding post. Each file key is encrypted
+with the user's master key. This allows us, if needed, to re-encrpyt the keys without having to generate and re-encrypt
+files.
+ 
+### User Key *Passphrase*
 
 The *user key* is derived from a user-supplied password using
 [scrypt](http://www.tarsnap.com/scrypt.html), with a salt stored in the Tent
@@ -13,7 +22,7 @@ profile section for Attic.
 
 ## Process
 
-1. File is created/modified.
+1. Library is called, with filepath to file.
 2. File is broken into chunks.
 3. Chunks are compressed.
 4. Chunks are encrypted.
@@ -86,60 +95,6 @@ encrypted chunk has not been tampered with.
 Files are stored in Tent as a set of posts that contain the file metadata and
 chunks. Each file has one post that contains the metadata and keys for the file.
 The chunks are stored as attachments to a series of posts for each file.
-
-#### File metadata post
-
-`https://cupcake.io/types/post/attic-file/v0.1.0`
-
-Property | Required | Type | Description
--------- | -------- | ---- | -----------
-name | Required | String | Name of the file
-size | Required | Integer | The filesize in bytes of the uncompressed file.
-type | Optional | String | The MIME type of the file, if known (using [libmagic](https://en.wikipedia.org/wiki/Libmagic) and file extension heuristics).
-keydata | Required | String | The base64 encoded encryption key and authentication key for the file. This data is encrypted using the master key.
-chunk_ids | Required | Array | An array of chunk identifiers that should be concatenated together to recreate the file
-chunk_posts | Required | Array | An array of the identifiers of the posts containing chunk attachments for this file
-
-#### Chunk store post
-
-`https://cupcake.io/types/post/attic-chunks/v0.1.0`
-
-This post has one field, `chunks`, an array of objects; one for each chunk attached to the post with three fields:
-
-- `plaintext_mac`: The plaintext authenticator, hex encoded.
-- `ciphertext_mac`: The ciphertext authenticator, hex encoded.
-- `iv`: The base64 encoded IV used to encrypt the chunk.
-
-Each chunk is an attachment, the filename is the hex encoded plaintext
-authenticator. The content-type should be set to `application/octet-stream`.
-Each post should be capped at 100 chunks.
-
-#### Folder post
-
-`https://cupcake.io/types/post/attic-folder/v0.1.0`
-
-_depricated_
-This post has one field, `children`, which is an object. The keys are the names
-of the children (files and folders) of the folder. The values are an object with
-two fields:
-
-Folder posts no longer contain information about what's in them, they conatain their
-relative directory path and act as an anchor for file posts to mention. 
-
-`id`: The post id of the object.
-
-_depricated_
-`type: Either `file` or `folder`.
-
-#### Profile section 
-
-_depricated_
-`https://cupcake.io/types/profile/attic/v0.1.0`
-
-- `master_key`: The base64 encoded encrypted *master key* used by the entity.
-- `user_key_salt`: The base64 encoded salt for the *user key*.
-- `root_folder`: The identifier of the root folder post.
-
 
 ## Update/Sync
 

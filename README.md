@@ -1,5 +1,5 @@
 # Build Notes
-1. Clang or GCC
+1. Clang 3.3 or greater, GCC 4.7 (Any C++11 compatible copiler should do)
 2. CMake 2.8.10 or greater required, for use of objects
 
 ## Dependencies
