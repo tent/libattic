@@ -1,5 +1,6 @@
 #include "metatask.h"
 
+#include <iostream>
 #include "filehandler.h"
 #include "treehandler.h"
 
@@ -36,11 +37,9 @@ void MetaTask::RunTask() {
             status = RetrieveFileInfoHistory(fi.post_id());
     }
     
-
     Callback(status, operation);
     SetFinishedState();
 }
-
 
 int MetaTask::RetrieveFileInfoHistory(const std::string& post_id) {
     int status = ret::A_OK;
@@ -49,10 +48,15 @@ int MetaTask::RetrieveFileInfoHistory(const std::string& post_id) {
 
     PostTree tree;
     if(th.ConstructPostTree(post_id, tree)) {
-
+        std::cout<<" NODE COUNT : " << tree.node_count() << std::endl;
     }
+    else {
+        std::cout<<" failed to create post tree " << std::endl;
+    }
+
     return status;
 }
+
 
 } // namespace
 
