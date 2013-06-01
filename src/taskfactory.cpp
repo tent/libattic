@@ -11,6 +11,7 @@
 #include "servicetask.h"
 #include "foldertask.h"
 #include "uploadtask.h"
+#include "metatask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -135,7 +136,6 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                                  access_token_,
                                  entity_,
                                  context);
-
             break;
         }
         case Task::POLL:
@@ -172,6 +172,15 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                                access_token_,
                                entity_,
                                context);
+            break;
+        }
+        case Task::META:
+        {
+            t = new MetaTask(file_manager_,
+                             credentials_manager_,
+                             access_token_,
+                             entity_,
+                             context);
             break;
         }
         default:

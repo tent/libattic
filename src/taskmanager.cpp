@@ -222,7 +222,6 @@ void TaskManager::PollFiles(TaskDelegate* del) { // This will need to be a direc
 void TaskManager::RenameFile(const std::string& original_filepath, 
                              const std::string& new_filepath) {
     TaskContext tc;
-    std::cout<<" RENAME FILE " << std::endl;
     tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
     tc.set_value("new_filepath", new_filepath);
@@ -237,6 +236,15 @@ void TaskManager::QueryManifest(TaskDelegate* del) {
     TaskContext tc;
     tc.set_type(Task::QUERYMANIFEST);
     tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::CreatePostTree(const std::string& filepath,
+                                 TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "LINEAGE");
+    tc.set_value("filepath", filepath);
+    tc.set_type(Task::META);
     PushContextBack(tc);
 }
 

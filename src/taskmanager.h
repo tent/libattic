@@ -59,7 +59,7 @@ public:
 
     // Service Tasks
     void QueryManifest(TaskDelegate* del);
-
+    void CreatePostTree(const std::string& filepath, TaskDelegate* del);
 
     // Info tasks
     int TaskCount(const Task::TaskType);
