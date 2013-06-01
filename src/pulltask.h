@@ -15,8 +15,8 @@ class TaskDelegate;
 class PullTask: public TentTask {
     int PullFile(const std::string& filepath);
 public:
-    PullTask(FileManager* pFm, 
-             CredentialsManager* pCm,
+    PullTask(FileManager* fm, 
+             CredentialsManager* cm,
              const AccessToken& at,
              const Entity& entity,
              const TaskContext& context);

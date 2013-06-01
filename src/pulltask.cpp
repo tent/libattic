@@ -12,15 +12,15 @@
 
 namespace attic { 
 
-PullTask::PullTask(FileManager* pFm, 
-                   CredentialsManager* pCm,
+PullTask::PullTask(FileManager* fm, 
+                   CredentialsManager* cm,
                    const AccessToken& at,
                    const Entity& entity,
                    const TaskContext& context)
                    :
                    TentTask(Task::PULL,
-                            pFm,
-                            pCm,
+                            fm,
+                            cm,
                             at,
                             entity,
                             context)
