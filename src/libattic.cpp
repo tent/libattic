@@ -132,6 +132,7 @@ int PollFiles(void) {
 
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int)) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
 
     attic::TaskDelegate* del = g_CallbackHandler.RegisterFileHistoryCallback(callback);
     int status = attic_service.GetFileHistory(szFilepath, del);
