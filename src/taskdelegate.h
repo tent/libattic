@@ -7,11 +7,19 @@
 
 namespace attic { 
 
+namespace cbh {
+    typedef void(*DelegateCallback)(int, int, const char*);
+    typedef void(*QueryCallback)(int, char**, int, int);
+    typedef void(*HistoryCallback)(int, const char*, int, int);
+};
+
+class CallbackHandler;
 class TaskDelegate {
 public:                                                         
     enum DelegateType {
         TASK=0,
-        MANIFEST
+        MANIFEST,
+        FILEHISTORY
     };
 
     TaskDelegate(DelegateType type) {
@@ -36,6 +44,56 @@ public:
 private:
     DelegateType type_;
     std::string identifier_;
+};
+
+class HistoryCallback : public TaskDelegate {
+public:
+    HistoryCallback(CallbackHandler* handler, cbh::HistoryCallback cb);
+    ~HistoryCallback() {}
+
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var) const;
+
+    void Callback(const int code, 
+                  const char* buffer,
+                  const int stride,
+                  const int total); 
+private:
+    cbh::HistoryCallback cb_;
+    CallbackHandler* owner_;
+};
+
+class ManifestCallback : public TaskDelegate { 
+public:
+    ManifestCallback(CallbackHandler* handler, cbh::QueryCallback cb);
+    ~ManifestCallback() {}
+
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var) const;
+
+    void Callback(const int code, 
+                  char** buffer,
+                  const int stride,
+                  const int total); 
+private:
+    cbh::QueryCallback cb_;
+    CallbackHandler* owner_;
+};
+
+class TaskCallback : public TaskDelegate {
+public:
+    TaskCallback(CallbackHandler* handler, cbh::DelegateCallback cb);
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var) const;
+private:
+    cbh::DelegateCallback cb_;
+    CallbackHandler* owner_;
 };
 
 }//namespace
