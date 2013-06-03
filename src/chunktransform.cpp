@@ -7,13 +7,44 @@
 
 namespace attic {
 
+ChunkTransform::ChunkTransform(const std::string& chunk, const char* key, unsigned int size) {
+    data_ = chunk;
+    file_key_.append(key, size);
+    std::ostringstream err;
+    err << "ChunkTransform ctor (c_str version)" << std::endl;
+    err << " Binary key size : " << size << std::endl;
+    std::string fk;
+    crypto::Base64EncodeString(file_key_, fk);
+    err<< " setting chunk transform key : " << fk << std::endl;
+    std::cerr << err.str() << std::endl;
+}
+
 ChunkTransform::ChunkTransform(const std::string& chunk, const std::string& file_key) {
     data_ = chunk;
-    file_key_ = file_key;
+    //file_key_ = file_key;
+    file_key_.append(file_key.c_str(), file_key.size());
+    std::ostringstream err;
+    err << "ChunkTransform ctor" << std::endl;
+    err << " Binary key size : " << file_key.size() << std::endl;
+    std::string fk;
+    crypto::Base64EncodeString(file_key_, fk);
+    err<< " setting chunk transform key : " << fk << std::endl;
+    std::cerr << err.str() << std::endl;
 }
 
 ChunkTransform::~ChunkTransform() {
 
+}
+
+void ChunkTransform::Reset() {
+    chunk_iv_.clear();
+    file_key_.clear();
+    name_.clear();
+    plaintext_hash_.clear();
+    ciphertext_hash_.clear();
+    verification_hash_.clear();
+    data_.clear();
+    finalized_data_.clear();
 }
 
 bool ChunkTransform::TransformOut() {
@@ -28,6 +59,18 @@ bool ChunkTransform::TransformOut() {
     Encode(encrypted_data, finalized_data_);
     // Generate verification hash
     GenerateVerificationHash(verification_hash_);
+
+    std::ostringstream err;
+    err <<"------------ Transform OUT -----------" << std::endl;
+    err <<" Chunk name : " << name_ << std::endl;
+    std::string fk, iv;
+    crypto::Base64EncodeString(file_key_, fk);
+    crypto::Base64EncodeString(chunk_iv_, iv);
+    err << " file key : " << fk << std::endl;
+    err << " chunk iv : " << iv << std::endl;
+    err << " data size : " << data_.size() << std::endl;
+    err << "-------------------------------------" << std::endl;
+    std::cerr << err.str() << std::endl;
     return true;
 }
 
@@ -47,6 +90,7 @@ bool ChunkTransform::TransformIn(const ChunkInfo* ci) {
             return true;
         }
         std::ostringstream err;
+        err <<"------------ Transform IN ------------" << std::endl;
         err << " Failed to transform chunk : " << ci->chunk_name() << std::endl;
         std::string fk, iv;
         crypto::Base64EncodeString(file_key_, fk);
@@ -55,6 +99,9 @@ bool ChunkTransform::TransformIn(const ChunkInfo* ci) {
         err << " file key : " << fk << std::endl;
         err << " chunk iv size : " << chunk_iv_.size() << std::endl;
         err << " chunk iv : " << iv << std::endl;
+        err << " data size : " << data_.size() << std::endl;
+        err << "-------------------------------------" << std::endl;
+        std::cerr << err.str() << std::endl;
         log::LogString("0210410123", err.str());
     }
     return false;

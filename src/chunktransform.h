@@ -19,8 +19,11 @@ class ChunkTransform {
     int Decrypt(const std::string& in, std::string& out);
     void Decompress(const std::string& in, std::string& out);
 public:
+    ChunkTransform(const std::string& chunk, const char* key, unsigned int size);
     ChunkTransform(const std::string& chunk, const std::string& file_key);
     ~ChunkTransform();
+
+    void Reset();
 
     // Outbound transformation
     bool TransformOut();    
