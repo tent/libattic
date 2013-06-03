@@ -25,6 +25,7 @@ MetaTask::~MetaTask() {}
 
 
 void MetaTask::RunTask() {
+    std::cout<<" RUNNING META TASK " << std::endl;
     int status = ret::A_OK;
     std::string operation, filepath;
     context_.get_value("operation", operation);
@@ -37,7 +38,14 @@ void MetaTask::RunTask() {
             status = RetrieveFileInfoHistory(fi.post_id());
     }
     
-    Callback(status, operation);
+    std::cout<<"calling back? " << std::endl;
+    if(callback_delegate() && callback_delegate()->type() == TaskDelegate::FILEHISTORY) {
+        std::cout<<" FILE HISTORY CALLBACK " << std::endl;
+        std::string str("test callback");
+        static_cast<HistoryCallback*>(callback_delegate())->Callback(1, str.c_str(), 2, 3);
+    }
+    else
+        Callback(status, operation);
     SetFinishedState();
 }
 

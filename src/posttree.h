@@ -25,7 +25,7 @@ public:
     ~PostTree();
 
     void PushBackPost(Post* p);
-    unsigned int node_count();
+    unsigned int node_count() { return node_count_; }
 private:
     boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> graph_;
     // Maps contain pointer to the same nodes, each provides a way to look up 
