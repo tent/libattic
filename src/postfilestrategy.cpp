@@ -49,11 +49,14 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
         err << "-----------------------------------------" << std::endl;
         err << " Post file strategy " << std::endl;
         err << " retrieved file info " << std::endl;
-        std::string b64_iv;
+        err << " filepath : " << filepath << std::endl;
+        std::string b64_iv, b64_key;
         crypto::Base64EncodeString(fi.file_credentials_iv(), b64_iv);
+        crypto::Base64EncodeString(fi.file_credentials_key(), b64_key);
         err << " iv : " << b64_iv << std::endl;
+        err << " key : " << b64_key << std::endl;
         err << "-----------------------------------------" << std::endl;
-        std::cerr << err;
+        std::cerr << err.str() << std::endl;
         // REMOVE //
 
         std::string file_post_id = fi.post_id();
@@ -282,17 +285,33 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
     return true;
 }
 
-void PostFileStrategy::GetMasterKey(std::string& out) {
+bool PostFileStrategy::GetMasterKey(std::string& out) {
     MasterKey mKey;
     credentials_manager_->GetMasterKeyCopy(mKey);
     mKey.GetMasterKey(out);
+    if(out.size())
+        return true;
+    return false;
 }
 
 bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
+    bool ret = false;
     FileHandler fh(file_manager_);
-    if(fh.RetrieveFileInfo(filepath, out))
-        return true;
-    return false;
+    if(fh.RetrieveFileInfo(filepath, out)) {
+        // Decrypt file key
+        std::cout<<" Decrypting file key ... " << std::endl;
+        std::string mk;
+        if(GetMasterKey(mk)) {
+            std::string file_key;
+            std::cout<<" master key : " << mk << std::endl;
+            std::cout<<" file iv : "<< out.file_credentials_iv() << std::endl;
+            std::cout<<" encrypted key : " << out.encrypted_key() << std::endl;
+            ret = fh.DecryptFileKey(out.encrypted_key(), out.file_credentials_iv(), mk, file_key);
+            out.set_file_credentials_key(file_key);
+            std::cout<< " decrypting success? : " << ret << std::endl;
+        }
+    }
+    return ret;
 }
 
 int PostFileStrategy::UpdateFilePost(FileInfo& fi) {

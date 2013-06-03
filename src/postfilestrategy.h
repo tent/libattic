@@ -42,7 +42,7 @@ private:
     int UpdateFilePost(FileInfo& fi);
     int UpdateFilePostTransitState(const std::string& post_id, bool in_transit);
 
-    void GetMasterKey(std::string& out);
+    bool GetMasterKey(std::string& out);
 
     bool ValidMasterKey();
 
