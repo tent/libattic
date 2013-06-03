@@ -143,6 +143,12 @@ int AtticService::QueryManifest(TaskDelegate* cb) {
     return status;
 }
 
+int AtticService::GetFileHistory(const std::string& filepath, TaskDelegate* cb) {
+    int status = ret::A_OK;
+    task_manager_->GetFileHistory(filepath, cb);
+    return status;
+}
+
 void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigWorkingDir, working_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, config_dir_);

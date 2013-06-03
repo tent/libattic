@@ -2,49 +2,6 @@
 
 namespace attic { 
 
-ManifestCallback::ManifestCallback(CallbackHandler* handler, 
-                                   cbh::QueryCallback cb) : TaskDelegate(TaskDelegate::MANIFEST) {
-    cb_ = cb;
-    owner_ = handler; 
-}
-
-void ManifestCallback::Callback(const int type,
-                                const int code,
-                                const int state,
-                                const std::string& var) const {
-    // callback 
-    // remove self 
-    if(owner_)
-        owner_->RemoveDelegate(identifier());
-}
-
-void ManifestCallback::Callback(const int code, 
-                                char** buffer,
-                                const int stride,
-                                const int total) {
-    if(cb_)
-        cb_(code, buffer, stride, total);
-    if(owner_)
-        owner_->RemoveDelegate(identifier());
-}
-
-TaskCallback::TaskCallback(CallbackHandler* handler, 
-                           cbh::DelegateCallback cb) : TaskDelegate(TaskDelegate::TASK) {
-    cb_ = cb;
-    owner_ = handler;
-}
-
-void TaskCallback::Callback(const int type,
-                            const int code,
-                            const int state,
-                            const std::string& var) const {
-    // callback 
-    if(cb_)
-        cb_(type, var.size(), var.c_str());  
-    // remove self 
-    if(owner_)
-        owner_->RemoveDelegate(identifier());
-}
 
 CallbackHandler::CallbackHandler() {}
 CallbackHandler::~CallbackHandler() {
@@ -94,6 +51,15 @@ TaskDelegate* CallbackHandler::RegisterManifestCallback(cbh::QueryCallback cb) {
     TaskDelegate* del = NULL;
     if(cb) {
         del = new ManifestCallback(this, cb);
+        InsertDelegateIntoMap(del);
+    }
+    return del;
+}
+
+TaskDelegate* CallbackHandler::RegisterFileHistoryCallback(cbh::HistoryCallback cb) {
+    TaskDelegate* del = NULL;
+    if(cb) {
+        del = new HistoryCallback(this, cb);
         InsertDelegateIntoMap(del);
     }
     return del;

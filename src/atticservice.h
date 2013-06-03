@@ -51,6 +51,7 @@ public:
     int DisablePolling();
 
     int QueryManifest(TaskDelegate* cb);
+    int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
 
     int RegisterPassphrase();
     int EnterPassphrase();
