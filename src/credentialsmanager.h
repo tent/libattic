@@ -61,45 +61,46 @@ public:
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
     void GetMasterKeyCopy(MasterKey& key) {
         Lock();
-        key = m_MasterKey; 
+        key = master_key_;
         Unlock();
     }
     void GetAccessTokenCopy(AccessToken& tk) {
         Lock(); 
-        tk = m_AccessToken; 
+        tk = access_token_; 
         Unlock();
     }
 
     void SetConfigDirectory(const std::string& dir) {
         Lock();
-        m_ConfigDirectory = dir; 
+        config_directory_ = dir; 
         Unlock();
     }
 
     void SetAccessToken(const AccessToken& at) {
         Lock(); 
-        m_AccessToken = at; 
+        access_token_ = at; 
         Unlock();
     }
 
     void SetMasterKey(const MasterKey& mk) {
         Lock();
-        m_MasterKey = mk; 
+        master_key_ = mk; 
         Unlock();
     }
 
     void set_master_key(const std::string& masterkey) {
         MasterKey mk;
+
         mk.SetMasterKey(masterkey);
         SetMasterKey(mk);
     }
 
 private:
-    MasterKey       m_MasterKey;    // Master Key used to encrypt sqlitedb
-    AccessToken     m_AccessToken;  // Access Token used to auth during tent posts
-    PhraseToken     m_PhraseToken;
+    MasterKey       master_key_;    // Master Key used to encrypt sqlitedb
+    AccessToken     access_token_;  // Access Token used to auth during tent posts
+    PhraseToken     phrase_token_;
 
-    std::string     m_ConfigDirectory;
+    std::string     config_directory_;
 };
 
 } //namespace

@@ -23,7 +23,7 @@ int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer) {
     int status = ret::A_OK;
 
     Lock();
-    if(!jsn::DeserializeObject(&m_AccessToken, buffer))
+    if(!jsn::DeserializeObject(&access_token_, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
 
@@ -35,7 +35,7 @@ int CredentialsManager::WriteOutAccessToken() {
     ConstructAccessTokenPath(path);
 
     Lock();
-    int status = m_AccessToken.SaveToFile(path);
+    int status = access_token_.SaveToFile(path);
     Unlock();
     return status;
 }
@@ -47,7 +47,7 @@ int CredentialsManager::LoadAccessToken() {
     std::cout<<" ACCESSTOKEN PATH : " << path << std::endl;
 
     Lock();
-    int status = m_AccessToken.LoadFromFile(path);
+    int status = access_token_.LoadFromFile(path);
     Unlock();
     return status;
 }
@@ -55,7 +55,7 @@ int CredentialsManager::LoadAccessToken() {
 int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer) {
     int status = ret::A_OK;
     Lock();
-    if(!jsn::DeserializeObject(&m_PhraseToken, buffer))
+    if(!jsn::DeserializeObject(&phrase_token_, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
     Unlock();
 
@@ -67,7 +67,7 @@ int CredentialsManager::WriteOutPhraseToken() {
     ConstructPhraseTokenPath(path);
 
     Lock();
-    int status = m_PhraseToken.SaveToFile(path);
+    int status = phrase_token_.SaveToFile(path);
     Unlock();
     return status;
 }
@@ -77,7 +77,7 @@ int CredentialsManager::LoadPhraseToken() {
     ConstructPhraseTokenPath(path);
 
     Lock();
-    int status = m_PhraseToken.LoadFromFile(path);
+    int status = phrase_token_.LoadFromFile(path);
     Unlock();
 
     return status;
@@ -154,8 +154,8 @@ int CredentialsManager::EnterPassphrase(const std::string& pass,
 void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
     // do not lock, used internally
     // Construct path
-    std::cout<<" cred manager config dir : " << m_ConfigDirectory << std::endl;
-    out = m_ConfigDirectory;
+    std::cout<<" cred manager config dir : " << config_directory_ << std::endl;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szAuthTokenName);                       
 
@@ -164,14 +164,14 @@ void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
 void CredentialsManager::ConstructManifestPath(std::string& out) {
     // do not lock, used internally
     // Construct path
-    out = m_ConfigDirectory;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szManifestName);     
 }
 
 
 void CredentialsManager::ConstructPhraseTokenPath(std::string& out) {
-    out = m_ConfigDirectory;
+    out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szPhraseTokenName);
 }
