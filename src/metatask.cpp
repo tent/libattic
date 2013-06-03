@@ -34,35 +34,46 @@ void MetaTask::RunTask() {
     if(operation == "LINEAGE") {
         FileHandler fh(file_manager());
         FileInfo fi;
-        if(fh.RetrieveFileInfo(filepath, fi)) 
-            status = RetrieveFileInfoHistory(fi.post_id());
+        if(fh.RetrieveFileInfo(filepath, fi))  {
+            PostTree tree;
+            status = RetrieveFileInfoHistory(fi.post_id(), tree);
+            if(status == ret::A_OK) {
+                std::string serialized;
+                tree.ReturnSerializedTree(serialized);
+                if(callback_delegate() && 
+                   callback_delegate()->type() == TaskDelegate::FILEHISTORY) {
+                    std::cout<<" FILE HISTORY CALLBACK " << std::endl;
+                    std::string str("test callback");
+                    static_cast<HistoryCallback*>(callback_delegate())->Callback(0,
+                                                                            serialized.c_str(), 
+                                                                            serialized.size(), 
+                                                                            tree.node_count());
+                }
+            }
+        }
     }
     
-    std::cout<<"calling back? " << std::endl;
-    if(callback_delegate() && callback_delegate()->type() == TaskDelegate::FILEHISTORY) {
-        std::cout<<" FILE HISTORY CALLBACK " << std::endl;
-        std::string str("test callback");
-        static_cast<HistoryCallback*>(callback_delegate())->Callback(1, str.c_str(), 2, 3);
-    }
-    else
-        Callback(status, operation);
+    Callback(status, operation);
     SetFinishedState();
 }
 
-int MetaTask::RetrieveFileInfoHistory(const std::string& post_id) {
+int MetaTask::RetrieveFileInfoHistory(const std::string& post_id, PostTree& out) {
     int status = ret::A_OK;
     std::string post_path = GetPostPath();
     TreeHandler th(access_token(), post_path);
 
-    PostTree tree;
-    if(th.ConstructPostTree(post_id, tree)) {
-        std::cout<<" NODE COUNT : " << tree.node_count() << std::endl;
+    if(th.ConstructPostTree(post_id, out)) {
+        std::cout<<" NODE COUNT : " << out.node_count() << std::endl;
     }
     else {
         std::cout<<" failed to create post tree " << std::endl;
     }
 
     return status;
+}
+
+void MetaTask::SerializePostTree(PostTree& tree, std::string& out) {
+
 }
 
 

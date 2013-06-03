@@ -6,8 +6,6 @@
 #include <map>
 #include <deque>
 
-#include <boost/graph/adjacency_list.hpp>
-
 #include "post.h"
 
 namespace attic { 
@@ -16,6 +14,7 @@ struct PostNode {
     std::string post_id;
     std::deque<PostNode*> parents;
     std::deque<PostNode*> children;
+    Post post;
     unsigned int node_id;
 };
 
@@ -24,14 +23,15 @@ public:
     PostTree();
     ~PostTree();
 
+    void ClearNodes();
     void PushBackPost(Post* p);
     unsigned int node_count() { return node_count_; }
+
+    void ReturnSerializedTree(std::string& out);
 private:
-    boost::adjacency_list<boost::listS, boost::vecS, boost::directedS> graph_;
     // Maps contain pointer to the same nodes, each provides a way to look up 
     // values.
-    std::map<std::string, PostNode*> url_nodes_; // Post node, key url
-    std::map<unsigned int, PostNode*> id_nodes_; // Post node, key id
+    std::map<std::string, PostNode*> url_nodes_; // Post node, key id
 
     std::string post_url_; // seed post
     unsigned int node_count_;
