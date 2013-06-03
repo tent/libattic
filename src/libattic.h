@@ -66,11 +66,14 @@ int DeleteFolder(const char* szFolderpath);
 int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath);
 
 // File Operations
-int PushFile(const char* szFilePath);
-int PullFile(const char* szFilePath);
-int DeleteFile(const char* szFilePath);
+int PushFile(const char* szFilepath);
+int PullFile(const char* szFilepath);
+int DeleteFile(const char* szFilepath);
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath);
 int PollFiles(void);
+
+// Meta operations
+int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
 
 // Pause / Resume polling
 int Pause(void);

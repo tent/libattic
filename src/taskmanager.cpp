@@ -232,6 +232,15 @@ void TaskManager::RenameFile(const std::string& original_filepath,
     PushContextBack(tc);
 }
 
+void TaskManager::GetFileHistory(const std::string& filepath, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "LINEAGE");
+    tc.set_value("filepath", filepath);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
 void TaskManager::QueryManifest(TaskDelegate* del) {
     TaskContext tc;
     tc.set_type(Task::QUERYMANIFEST);

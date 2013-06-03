@@ -57,6 +57,8 @@ public:
     void DeleteFile(const std::string& filepath, TaskDelegate* del);
     void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
 
+    void GetFileHistory(const std::string& filepath, TaskDelegate* del);
+
     // Service Tasks
     void QueryManifest(TaskDelegate* del);
     void CreatePostTree(const std::string& filepath, TaskDelegate* del);

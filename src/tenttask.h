@@ -99,6 +99,7 @@ protected:
         return post_path;
     }
 
+    TaskDelegate* callback_delegate() { return callback_delegate_; }
 
 private:
     AccessToken          access_token_;
