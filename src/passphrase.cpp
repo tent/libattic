@@ -78,8 +78,8 @@ int Passphrase::EnterPassphrase(const std::string& passphrase,
         std::string masterkey = p.master_key();
         std::string salt = p.salt();
 
-        std::cout<< " MASTER KEY : " << masterkey << std::endl;
-        std::cout<< " SALT : " << salt << std::endl;
+        //std::cout<< " MASTER KEY : " << masterkey << std::endl;
+        //std::cout<< " SALT : " << salt << std::endl;
         //  generate phrase key 
         std::string phrasekey;
         GeneratePhraseKey(passphrase, salt, phrasekey);
@@ -103,6 +103,7 @@ int Passphrase::EnterPassphrase(const std::string& passphrase,
         }
     }
 
+    std::cout<<" enterpass phrase status : " << status << std::endl;
     return status;
 }
 
@@ -183,9 +184,11 @@ int Passphrase::DecryptKey(const std::string& key,
                            std::string& key_out) {
     int status = ret::A_OK;
 
+    /*
     std::cout<<" input key : " << key << std::endl;
     std::cout<<" passphrase : " << phrasekey << std::endl;
     std::cout<<" salt : " << salt << std::endl;
+    */
 
     Credentials cred;
     cred.set_key(phrasekey);
