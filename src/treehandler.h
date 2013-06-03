@@ -7,11 +7,12 @@
 #include "posttree.h"
 #include "filepost.h"
 #include "accesstoken.h"
+#include "urlparams.h"
 
 namespace attic { 
 
 class TreeHandler {
-    bool RetrievePost(const std::string& post_url, FilePost& out);
+    bool RetrievePost(const std::string& post_url, UrlParams* params, FilePost& out);
 public:
     TreeHandler(const AccessToken& at, 
                 const std::string& post_path);
@@ -23,7 +24,6 @@ private:
     std::deque<PostPair> post_queue_;
     std::string post_path_;
     AccessToken access_token_;
-
 };
 
 } //namespace
