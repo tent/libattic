@@ -34,6 +34,7 @@ Makefile
 # swapfiles
 *.swp
 *.swo
+*.swn
 
 # libs
 *.a
