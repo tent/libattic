@@ -389,11 +389,24 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     std::string key;
     crypto::Base64DecodeString(b64_key, key);
     out.set_encrypted_key(key);
+    // REMOVE //
+    std::string val_b64key;
+    crypto::Base64EncodeString(key, val_b64key);
+    std::ostringstream ker;
+    ker <<"99999999999"<<std::endl;
+    ker <<" Extracting base 64 key "<< b64_key << " size : " << b64_key.size() << std::endl;
+    ker <<" Decoded size : " << key.size() << std::endl;
+    ker << " Validate b64 key : " << val_b64key << std::endl;
+    ker <<"99999999999"<< std::endl;
+    std::cerr << ker.str() << std::endl;
+    // REMOVE //
     // IV (Base64 encoded)
     //out.set_file_credentials_iv(res.results_[9+step]);
     std::string b64_iv = res.results_[9+step];
     std::string iv;
     iv = base64_decode(b64_iv);
+
+    out.set_file_credentials_iv(iv);
 //    crypto::Base64DecodeString(b64_key, iv);
     // REMOVE
     std::ostringstream err;
@@ -406,7 +419,7 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     err << " &&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
     std::cerr << err.str();
     // REMOVE //
-    out.set_file_credentials_iv(iv);
+
     out.set_deleted(atoi(res.results_[10+step]));
     std::cout<<" EXTRACTING FOLDER ID : " << res.results_[11+step] << std::endl;
     out.set_folder_post_id(res.results_[11+step]);
