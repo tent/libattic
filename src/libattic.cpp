@@ -8,8 +8,6 @@
 #include "apputils.h"
 #include "clientutils.h"
 
-
-
 static attic::CallbackHandler      g_CallbackHandler;          // move to service
 static attic::AtticService         attic_service; 
 

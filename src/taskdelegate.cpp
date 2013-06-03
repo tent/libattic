@@ -25,8 +25,12 @@ void HistoryCallback::Callback(const int code,
                                const char* buffer,
                                const int stride,
                                const int total) {
-    if(cb_)
+    if(cb_) {
         cb_(code, buffer, stride, total);
+    }
+    else {
+        std::cout<<" TRYING TO CALLBACK INVALID CALLBACK " << std::endl;
+    }
     if(owner_)
         owner_->RemoveDelegate(identifier());
 }
