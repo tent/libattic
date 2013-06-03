@@ -12,7 +12,10 @@
 namespace attic { 
 
 class TreeHandler {
-    bool RetrievePost(const std::string& post_url, UrlParams* params, FilePost& out);
+    bool RetrievePost(const std::string& post_url, 
+                      UrlParams* params, 
+                      FilePost& out,
+                      std::string& raw);
 public:
     TreeHandler(const AccessToken& at, 
                 const std::string& post_path);

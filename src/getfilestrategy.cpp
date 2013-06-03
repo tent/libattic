@@ -384,36 +384,6 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
     return status;
 }
 
-int GetFileStrategy::ConstructPostTree(FileInfo* fi, PostTree& tree) { 
-    int status = ret::A_OK;
-    if(fi) {
-        std::cout<<"BUILDING POST TREE " << std::endl;
-        std::string posturl;
-        std::string postid = fi->post_id();
-        status = RetrieveAndInsert(postid, tree);
-    }
-    return status;
-}
-
-int GetFileStrategy::RetrieveAndInsert(const std::string& postid, PostTree& tree) {
-    int status = ret::A_OK;
-    std::string posturl;
-    utils::FindAndReplace(post_path_, "{post}", postid, posturl);
-
-    Response resp;
-    FilePost fp;
-    PostHandler<FilePost> ph(access_token_);
-    status = ph.Get(posturl, NULL, fp, resp);
-
-    std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-
-    if(status == ret::A_OK)
-        tree.PushBackPost(&fp);
-    return status;
-}
-
 bool GetFileStrategy::ValidMasterKey() {
     std::string mk;
     GetMasterKey(mk);

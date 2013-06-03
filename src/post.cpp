@@ -137,6 +137,7 @@ void Post::get_content(const std::string& key, Json::Value& out) {
 }
 
 void Post::Serialize(Json::Value& root) {
+    std::cout<<" SERIALIZE POST " << std::endl;
     // General Post
     if(!id_.empty())
         root["id"] = id_;

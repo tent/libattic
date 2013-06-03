@@ -31,18 +31,24 @@ bool TreeHandler::ConstructPostTree(const std::string& post_id, PostTree& out) {
         FilePost fp;
 
         bool pass = false;
+        std::string raw;
         if(version.empty()) {
-            pass = RetrievePost(posturl, NULL, fp);
+            pass = RetrievePost(posturl, NULL, fp, raw);
         }
         else {
             UrlParams params;
             params.AddValue("version", version);
-            pass = RetrievePost(posturl, &params, fp);
+            pass = RetrievePost(posturl, &params, fp, raw);
         }
 
         if(pass) {
-            // Push into tree
-            out.PushBackPost(&fp);
+            if(version != fp.version().id()) {
+                version = fp.version().id();
+                // Push into tree
+                out.PushBackPost(&fp, raw);
+            }
+            else
+                break;
             // extract id's from parents
             if(fp.version().parents().size()) {
                 Version::ParentList::const_iterator itr = fp.version().parents().begin();
@@ -64,11 +70,15 @@ bool TreeHandler::ConstructPostTree(const std::string& post_id, PostTree& out) {
     return true;
 }
 
-bool TreeHandler::RetrievePost(const std::string& post_url, UrlParams* params, FilePost& out) {
+bool TreeHandler::RetrievePost(const std::string& post_url, 
+                               UrlParams* params, 
+                               FilePost& out,
+                               std::string& raw) {
     Response resp;
     PostHandler<FilePost> ph(access_token_);
     if(ph.Get(post_url, params, out, resp) == ret::A_OK) {
         std::cout<<" TREE RESPONSE : " << resp.body << std::endl;
+        raw = resp.body;
         return true;
     }
     return false;

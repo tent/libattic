@@ -9,7 +9,6 @@
 namespace attic {
 
 class MetaTask : public TentTask {
-    void SerializePostTree(PostTree& tree, std::string& out);
     int RetrieveFileInfoHistory(const std::string& post_id, PostTree& out);
 public:
     MetaTask(FileManager* fm, 

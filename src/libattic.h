@@ -29,7 +29,6 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
 // Api begin
 int InitLibAttic(unsigned int threadCount = 10);
-
 int ShutdownLibAttic(void (*callback)(int, void*));
 
 // Master Key
@@ -38,7 +37,6 @@ int EnterRecoveryKey(const char* szRecovery);
 int RegisterPassphrase(const char* szPass);
 int ChangePassphrase(const char* szOld, const char* szNew);
 int GetPhraseStatus();
-
 
 // Register for Events
 // Event Type, Event Status, data
@@ -73,7 +71,15 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath);
 int PollFiles(void);
 
 // Meta operations
+/* GetFileHistory
+ *  Returns file history in a json formatted string.
+ *  callback :
+ *      (?, serialized string, len, # of nodes)
+ */
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
+int DeletePostVersion(const char* szPostId, const char* szVersion);
+int RestoreVersion(const char* szPostId, const char* szVersion);
+int SaveVersion(const char* szPostId, const char* szVersion, const char* szFolderpath);
 
 // Pause / Resume polling
 int Pause(void);

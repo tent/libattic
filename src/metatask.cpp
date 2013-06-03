@@ -43,7 +43,6 @@ void MetaTask::RunTask() {
                 if(callback_delegate() && 
                    callback_delegate()->type() == TaskDelegate::FILEHISTORY) {
                     std::cout<<" FILE HISTORY CALLBACK " << std::endl;
-                    std::string str("test callback");
                     static_cast<HistoryCallback*>(callback_delegate())->Callback(0,
                                                                             serialized.c_str(), 
                                                                             serialized.size(), 
@@ -53,7 +52,7 @@ void MetaTask::RunTask() {
         }
     }
     
-    Callback(status, operation);
+    //Callback(status, operation);
     SetFinishedState();
 }
 
@@ -70,10 +69,6 @@ int MetaTask::RetrieveFileInfoHistory(const std::string& post_id, PostTree& out)
     }
 
     return status;
-}
-
-void MetaTask::SerializePostTree(PostTree& tree, std::string& out) {
-
 }
 
 

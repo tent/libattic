@@ -23,8 +23,6 @@ class GetFileStrategy : public HttpStrategyInterface {
                        const std::string& filekey,
                        const std::string& chunkBuffer, 
                        std::string& out);
-    int ConstructPostTree(FileInfo* fi, PostTree& tree);
-    int RetrieveAndInsert(const std::string& postid, PostTree& tree);
 
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
 
