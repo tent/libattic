@@ -149,6 +149,7 @@ void PollTask::PollFilePosts() {
     std::deque<FilePost> file_list;
     if(census_handler_->Inquiry("", file_list)) {
         std::cout<<" Syncing files ... " << std::endl;
+        std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
         int status = SyncFiles(file_list);
         if(status != ret::A_OK)
             std::cout<<" POLLING ERR : " << status << std::endl;
@@ -159,7 +160,7 @@ void PollTask::PollDeletedFilePosts() {
     std::deque<FilePost> deleted_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) {
         std::cout<<" Checking for deleted files ... " << std::endl;
-        std::cout<<" deleted files ... : " << deleted_list.size();
+        std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
         std::deque<FilePost>::iterator itr = deleted_list.begin();
         for(;itr!=deleted_list.end(); itr++) {
             std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
@@ -173,6 +174,7 @@ void PollTask::PollDeletedFolderPosts() {
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, folder_list)){
         std::cout<<" checking for deleted folders ... " << std::endl;
+        std::cout<<" Retreived : " << folder_list.size() << " deleted folders " << std::endl;
         std::deque<FolderPost>::iterator itr = folder_list.begin();
         for(;itr != folder_list.end(); itr++) {
             // Delete local folder
@@ -187,6 +189,7 @@ void PollTask::PollFolderPosts() {
     FolderHandler fh(file_manager());
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry("", folder_list)){
+        std::cout<<" Retreived : " << folder_list.size() << " folders " << std::endl;
         std::deque<FolderPost>::iterator itr = folder_list.begin();
         for(;itr != folder_list.end(); itr++) {
             fh.ValidateFolder(*itr);

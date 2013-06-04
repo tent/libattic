@@ -56,11 +56,7 @@ void SyncFileTask::RunTask() {
             log::LogException("UJaoe3234", e);
         }
     }
-    else {
-        std::cout<<" ...failed to get metadata ... status : " << status << std::endl;
-    }
-
-    //std::cout<<" ...sync file task finished ... " << std::endl;
+    
     Callback(status, post_id_);
     SetFinishedState();
 }
@@ -72,6 +68,9 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     PostHandler<FilePost> ph(access_token());
     Response response;
     status = ph.Get(posturl, NULL, out, response);
+    if(status != ret::A_OK) {
+        log::LogHttpResponse("1284124", response);
+    }
     return status;
 }
 
