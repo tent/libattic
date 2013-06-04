@@ -61,7 +61,10 @@ int AtticService::stop() {
 int AtticService::UploadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
-        event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+        if(IsMasterKeyValid())
+            event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -70,7 +73,10 @@ int AtticService::UploadFile(const std::string& filepath) {
 int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
-        event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+        if(IsMasterKeyValid())
+            event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -79,7 +85,10 @@ int AtticService::DownloadFile(const std::string& filepath) {
 int AtticService::MarkFileDeleted(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
-        attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+        if(IsMasterKeyValid())
+            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -88,7 +97,10 @@ int AtticService::MarkFileDeleted(const std::string& filepath) {
 int AtticService::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->RenameFile(old_filepath, new_filepath);
+        if(IsMasterKeyValid())
+            task_manager_->RenameFile(old_filepath, new_filepath);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -97,7 +109,10 @@ int AtticService::RenameFile(const std::string& old_filepath, const std::string&
 int AtticService::CreateFolder(const std::string& folderpath) { 
     int status = ret::A_OK;
     if(running_)
-        task_manager_->CreateFolder(folderpath, NULL);
+        if(IsMasterKeyValid())
+            task_manager_->CreateFolder(folderpath, NULL);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -106,7 +121,10 @@ int AtticService::CreateFolder(const std::string& folderpath) {
 int AtticService::DeleteFolder(const std::string& folderpath) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->DeleteFolder(folderpath, NULL);
+        if(IsMasterKeyValid())
+            task_manager_->DeleteFolder(folderpath, NULL);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -115,7 +133,10 @@ int AtticService::DeleteFolder(const std::string& folderpath) {
 int AtticService::RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->RenameFolder(old_folderpath, new_folderpath);
+        if(IsMasterKeyValid())
+            task_manager_->RenameFolder(old_folderpath, new_folderpath);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -336,5 +357,14 @@ int AtticService::ShutdownFileManager() {
     return status;
 }
 
+bool AtticService::IsMasterKeyValid() {
+    MasterKey mk;
+    credentials_manager_->GetMasterKeyCopy(mk);
+    std::string key;
+    mk.GetMasterKey(key);
+    if(!key.empty())
+        return true;
+    return false;
+}
 
 }// namespace

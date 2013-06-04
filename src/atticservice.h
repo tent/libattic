@@ -15,6 +15,7 @@
 namespace attic {
 
 class AtticService {
+    bool IsMasterKeyValid();
     void LoadConfigValues();
     int ValidateDirectories();
     // Order does matter for init and shutdown sequence

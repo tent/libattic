@@ -12,6 +12,9 @@
 
 namespace attic { 
 
+/* Post handler can be templated with any class deriving from Post
+ *
+ */
 template <class T>
 class PostHandler {
 public:

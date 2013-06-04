@@ -148,7 +148,6 @@ bool RenameHandler::CheckForRename(FilePost& fp) {
             }
         }
     }
-    std::cout << " FAILED TO RENAME " << std::endl;
     return false;
 }
 
