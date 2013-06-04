@@ -16,10 +16,9 @@ static bool g_bEnteredPassphrase = false;
 
 int IsLibInitialized(bool checkPassphrase = true); // TODO :: remove
 
-#include <cstdio> // REMOVE
+
 //////// API start
 int InitLibAttic(unsigned int threadCount) {
-    freopen( "log.txt", "w", stderr ); // REMOVE
     int status = attic_service.start(); 
     return status;
 }

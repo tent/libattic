@@ -5,6 +5,13 @@
 #include "utils.h"
 
 namespace attic {
+
+AccessToken::AccessToken() {
+    time_offset_ = "0";
+}
+
+AccessToken::~AccessToken() {}
+
 ret::eCode AccessToken::SaveToFile(const std::string& filepath) {
     std::ofstream ofs;
 

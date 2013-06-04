@@ -704,6 +704,81 @@ static int ResolveHost(boost::asio::io_service& io_service,
     return status;
 }
 
+static void BuildAuthHeader(const std::string& url,
+                            const std::string& request_method,
+                            const AccessToken& at,
+                            std::string& out) {
+    /*
+    at->access_token(),
+    at->hawk_key(),
+    at->app_id(),
+    */
+                 
+    out.clear();
+    // Set Hawk id
+    out.append("Hawk id=\"");
+    out.append(at.hawk_key().c_str());
+    out.append("\", ");
+    // Get time stamp
+    time_t t = time(0);
+    t += at.time_offset();
+    char tb[256];
+    memset(tb, '\0', 256);
+    snprintf(tb, (sizeof(time_t)*256), "%ld", t);
+    // set time stamp
+    out.append("ts=\"");
+    out.append(tb);
+    out.append("\", ");
+    // Generate nonce
+    std::string nonce;
+    GenerateNonce(nonce);
+    // Set nonce
+    out.append("nonce=\"");
+    out.append(nonce);
+    out.append("\", ");
+
+    Url u(url);
+    std::string port;
+    if(u.HasPort())
+        port = u.port();
+    else {
+        if(u.scheme() == std::string("https"))
+            port.append("443");
+        else
+            port.append("80");
+    }
+    // set request string
+    std::string requestString;
+    requestString.append("hawk.1.header\n"); // type
+    requestString.append(tb); // time 
+    requestString.append("\n");
+    requestString.append(nonce); // nonce 
+    requestString.append("\n");
+    requestString.append(request_method); // method
+    requestString.append("\n");
+    std::string uri;
+    u.GetRequestURI(uri);
+    requestString.append(uri); // request uri
+    requestString.append("\n");
+    requestString.append(u.host()); // host
+    requestString.append("\n");
+    requestString.append(port); // port
+    requestString.append("\n\n\n");
+    requestString.append(at.app_id()); // appid
+    requestString.append("\n\n");
+
+    std::string signedreq;
+    SignRequest(requestString, at.hawk_key(), signedreq);
+
+    out.append("mac=\"");
+    out.append(signedreq.c_str());
+    out.append("\", ");
+    
+    out.append("app=\"");
+    out.append(at.app_id());
+    out.append("\"");
+}
+
 static void BuildAuthHeader(const std::string& url, 
                             const std::string& requestMethod, 
                             const std::string& macid, 
@@ -720,6 +795,7 @@ static void BuildAuthHeader(const std::string& url,
     out.append("\", ");
 
     time_t t = time(0);
+    //t+=1000000; // REMOVE
     char tb[256];
     snprintf(tb, (sizeof(time_t)*256), "%ld", t);
 
@@ -774,8 +850,7 @@ static void BuildAuthHeader(const std::string& url,
     out.append("\"");
 }
 
-static void GenerateNonce(std::string &out)
-{
+static void GenerateNonce(std::string &out) {
     out.clear();
     std::string seed;
     for(int i=0; i<3; i++)

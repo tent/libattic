@@ -295,6 +295,7 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
             netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
 
             std::cout<<" CODE : " << response.code << std::endl;
+            std::cout<<" HEADER : " << response.header.asString() << std::endl;
             std::cout<<" BODY : " << response.body << std::endl;
 
             if(response.code == 200) {

@@ -587,6 +587,17 @@ TEST(BASE64, TEST) {
     }
 }
 
+TEST(STRTOL, TEST) {
+    std::string ts("1370368446");
+
+    time_t tb = strtol(ts.c_str(), NULL, 0);  
+    std::cout << " (string) " << ts << std::endl;
+    std::cout << " (time_t) " << tb << std::endl;
+
+    time_t e = 1370368446;
+    ASSERT_EQ(tb, e);
+}
+
 
 
 int main (int argc, char* argv[]) {
