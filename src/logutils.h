@@ -2,10 +2,21 @@
 #define LOGUTILS_H_
 #pragma once
 
+#define CERR_OUT 0
+
+#if CERR_OUT
+#include <cstdio> 
+#endif
+
 #include "event.h"
 #include "response.h"
 
 namespace attic { namespace log {
+static void LogToStdErr() {
+#if CERR_OUT
+    freopen( "log.txt", "a", stderr );
+#endif
+}
 
 static void LogHttpResponse(const std::string& error_ident, const Response& resp) {
     std::ostringstream error;
@@ -15,6 +26,9 @@ static void LogHttpResponse(const std::string& error_ident, const Response& resp
     error << "Headers : " << resp.header.asString() << std::endl;
     error << "Body : " << resp.body << std::endl;
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+#if CERR_OUT
+    cerr << error.str() << std::endl;
+#endif
 }
 
 static void LogException(const std::string& error_ident, std::exception& e) {
@@ -22,6 +36,20 @@ static void LogException(const std::string& error_ident, std::exception& e) {
     error << error_ident << std::endl;
     error << "Exception thrown : " << e.what() << std::endl;
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+
+#if CERR_OUT
+    cerr << error.str();
+#endif
+}
+
+static void LogStream(const std::string& error_ident, std::ostringstream& buffer){
+    std::ostringstream error;
+    error << error_ident << std::endl;
+    error << buffer << std::endl;
+    event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+#if CERR_OUT
+    cerr << error.str();
+#endif
 }
 
 static void LogString(const std::string& error_ident, std::string buffer) {
@@ -29,6 +57,9 @@ static void LogString(const std::string& error_ident, std::string buffer) {
     error << error_ident << std::endl;
     error << buffer << std::endl;
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
+#if CERR_OUT
+    cerr << error.str();
+#endif
 }
 
 

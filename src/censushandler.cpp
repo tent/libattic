@@ -90,7 +90,6 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                         &access_token_,
                         resp);
         if(resp.code == 200) {
-            std::cerr<< " PAGE : " << resp.body << std::endl;
             std::cout<< "query timeline result : " << resp.body << std::endl;
             PagePost pp;
             jsn::DeserializeObject(&pp, resp.body);

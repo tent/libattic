@@ -64,32 +64,6 @@ int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& 
         fi.set_post_id(post.id());
         FileHandler fh(file_manager_);
         fh.UpdateFilePostId(fi.filepath(), post.id());
-        std::ostringstream lg;
-        // REMOVE
-        FileInfo tfi;
-        fh.RetrieveFileInfoById(post.id(), tfi);
-        std::string b64_fi_key, b64_fi_iv;
-        std::string b64_key_post, b64_key_pre;
-        crypto::Base64EncodeString(fp.key_data(), b64_key_pre);
-        crypto::Base64EncodeString(post.key_data(), b64_key_post);
-        crypto::Base64EncodeString(fi.file_credentials_key(), b64_fi_key);
-        lg << " fp : " << filepath << std::endl;
-        lg << " post (pre) : " << b64_key_pre << std::endl;
-        lg << " post (post) : " << b64_key_post << std::endl;
-        lg << " fi : " << b64_fi_key << std::endl;
-
-        std::string b64_iv_post, b64_iv_pre;
-        std::string manifest_iv;
-        crypto::Base64EncodeString(fp.iv_data(), b64_iv_pre);
-        crypto::Base64EncodeString(post.iv_data(), b64_iv_post);
-        crypto::Base64EncodeString(fi.file_credentials_iv(), b64_fi_iv);
-        crypto::Base64EncodeString(tfi.file_credentials_iv(), manifest_iv);
-        lg << " iv (pre) : " << b64_iv_pre << std::endl;
-        lg << " iv (post) : " << b64_iv_post << std::endl;
-        lg << " fi : " << b64_fi_iv << std::endl;
-        lg << " tfi : "  << manifest_iv << std::endl;
-        lg << response.body << std::endl;
-        std::cerr << lg.str() << std::endl;
     }
     return status;
 }

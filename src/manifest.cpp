@@ -369,6 +369,12 @@ int Manifest::QueryAllFilesForFolder(const std::string& folderid, FileInfoList& 
 }
 
 
+/* Note : Remember the manifest is a point of data contention, any string set here NEEDS avoid 
+ *        copy on write, make sure the string is EXCLICITLY COPIED out of here whether this is 
+ *        by the append method or some other means, just make sure to avoid copy on write and 
+ *        any other operation that possibly uses references in the underlying implementation
+ *        instead of directly copying the buffer.
+ */
 void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out) {
     out.set_filename(res.results_[0+step]);
     out.set_filepath(res.results_[1+step]);
@@ -389,39 +395,13 @@ void Manifest::ExtractFileInfoResults(const SelectResult& res, const int step, F
     std::string key;
     crypto::Base64DecodeString(b64_key, key);
     out.set_encrypted_key(key);
-    // REMOVE //
-    std::string val_b64key;
-    crypto::Base64EncodeString(key, val_b64key);
-    std::ostringstream ker;
-    ker <<"99999999999"<<std::endl;
-    ker <<" Extracting base 64 key "<< b64_key << " size : " << b64_key.size() << std::endl;
-    ker <<" Decoded size : " << key.size() << std::endl;
-    ker << " Validate b64 key : " << val_b64key << std::endl;
-    ker <<"99999999999"<< std::endl;
-    std::cerr << ker.str() << std::endl;
-    // REMOVE //
     // IV (Base64 encoded)
     //out.set_file_credentials_iv(res.results_[9+step]);
     std::string b64_iv = res.results_[9+step];
     std::string iv;
     iv = base64_decode(b64_iv);
-
     out.set_file_credentials_iv(iv);
-//    crypto::Base64DecodeString(b64_key, iv);
-    // REMOVE
-    std::ostringstream err;
-    err << " &&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
-    err << " Extracting base 64 iv : " << b64_iv << " size : " << b64_iv.size() << std::endl;
-    err << " Extracting iv (decoded) size : " << iv.size() << std::endl;
-    std::string val_b64;
-    crypto::Base64EncodeString(iv, val_b64);
-    err << " validate b64 iv : " << val_b64 << std::endl;
-    err << " &&&&&&&&&&&&&&&&&&&&&&&&&&" << std::endl;
-    std::cerr << err.str();
-    // REMOVE //
-
     out.set_deleted(atoi(res.results_[10+step]));
-    std::cout<<" EXTRACTING FOLDER ID : " << res.results_[11+step] << std::endl;
     out.set_folder_post_id(res.results_[11+step]);
     std::string b64_alias = res.results_[12+step];
     std::string alias_data;

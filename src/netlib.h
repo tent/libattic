@@ -809,8 +809,7 @@ static void SignRequest( const std::string &request,
                                 false));
     }
     catch(const CryptoPP::Exception& e) {
-        std::cerr << e.what() << std::endl;
-        exit(1);
+        log::LogString("57192834415", e.what());
     }
 
     // Hex encoding, ignore this for now

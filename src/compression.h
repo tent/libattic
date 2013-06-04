@@ -6,6 +6,8 @@
 #include <mqueue.h>
 #include <channels.h>
 
+#include "logutils.h"
+
 namespace attic { namespace compress {
 
 static int CompressString(const std::string& in, std::string& out, const int nDeflateLevel = 1) {
@@ -36,8 +38,7 @@ static int CompressString(const std::string& in, std::string& out, const int nDe
         comparison.ChannelMessageSeriesEnd("1");
     }
     catch(std::exception &e) {
-        // Some sort of logging
-        std::cerr << e.what() << std::endl;
+        log::LogException("918418123-", e);
         status = ret::A_FAIL_COMPRESS;
     }
 
@@ -52,8 +53,7 @@ static int DecompressString(const std::string& in, std::string& out) {
                                 new CryptoPP::Gunzip(new CryptoPP::StringSink(out)));
     }
     catch(std::exception &e) {
-        // Some sort of logging
-        std::cerr << e.what() << std::endl;
+        log::LogException("9571284573", e);
         status = ret::A_FAIL_COMPRESS;
     }
     return status;

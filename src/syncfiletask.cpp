@@ -114,10 +114,12 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
                 fm->InsertToManifest(&fi);
             }
             else { 
-                std::cerr<<" INVALID IV DATA : " << std::endl;
-                std::cerr<<" filename : " << fi.filepath() << std::endl;
-                std::cerr<<" file info : " << fi.file_credentials_iv() << std::endl;
-                std::cerr<<" file post : " << p.iv_data() << std::endl;
+                std::ostringstream err;
+                err<<" INVALID IV DATA : " << std::endl;
+                err<<" filename : " << fi.filepath() << std::endl;
+                err<<" file info : " << fi.file_credentials_iv() << std::endl;
+                err<<" file post : " << p.iv_data() << std::endl;
+                log::LogString("149128591245", err.str());
             }
             // Doesn't exist in the manifest
             bPull = true;

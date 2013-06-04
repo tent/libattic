@@ -44,21 +44,6 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
         if(!RetrieveFileInfo(filepath, fi))
             return ret::A_FAIL_INVALID_FILE_INFO;
 
-        // REMOVE
-        std::ostringstream err;
-        err << "-----------------------------------------" << std::endl;
-        err << " Post file strategy " << std::endl;
-        err << " retrieved file info " << std::endl;
-        err << " filepath : " << filepath << std::endl;
-        std::string b64_iv, b64_key;
-        crypto::Base64EncodeString(fi.file_credentials_iv(), b64_iv);
-        crypto::Base64EncodeString(fi.file_credentials_key(), b64_key);
-        err << " iv : " << b64_iv << std::endl;
-        err << " key : " << b64_key << std::endl;
-        err << "-----------------------------------------" << std::endl;
-        std::cerr << err.str() << std::endl;
-        // REMOVE //
-
         std::string file_post_id = fi.post_id();
         status = UpdateFilePostTransitState(file_post_id, true); // Set file to in transit
 
@@ -394,7 +379,6 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     Response get_resp;
     int status = ph.Get(posturl, NULL, p, get_resp);
     if(status == ret::A_OK) {
-        std::cerr << " UPDATE VERSION : \n " << get_resp.body << std::endl;
         FileHandler fh(file_manager_);
         fh.UpdatePostVersion(fi->filepath(), p.version().id());
         return true;
