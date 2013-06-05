@@ -9,7 +9,7 @@ bool FileTable::CreateTable() {
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
-    exc += " deleted INT, folder_post_id TEXT, alias_data TEXT,";
+    exc += " deleted INT, folder_post_id TEXT,";
     exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
     std::string error;
     bool ret = Exec(exc, error);
@@ -45,11 +45,6 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
 
-    std::string alias_data;
-    fi.GetSerializedAliasData(alias_data);
-
-    std::string alias_encoded;
-    crypto::Base64EncodeString(alias_data, alias_encoded);
 
     std::string cred_data = fi.file_credentials().asString();
     std::string b64_cred_data;
@@ -70,7 +65,7 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
         query += "INSERT OR REPLACE INTO ";
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id, alias_data)";
+    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
@@ -88,7 +83,6 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     ret = BindBlob(10, b64_iv, error);              if(!ret) return ret;
     ret = BindInt(11, fi.deleted(), error);         if(!ret) return ret;
     ret = BindText(12, fi.folder_post_id(), error); if(!ret) return ret;
-    ret = BindText(13, alias_encoded, error);       if(!ret) return ret;
     ret = StepStatement(error);                     if(!ret) return ret;
     ret = FinalizeStatement(error);                 if(!ret) return ret;
     return ret;

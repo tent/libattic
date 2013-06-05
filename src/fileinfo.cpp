@@ -74,28 +74,6 @@ int FileInfo::PushChunkBack(ChunkInfo& chunk) {
     return status;
 }
 
-void FileInfo::PushBackAlias(const std::string& alias) {
-    past_aliases_[alias] = false;
-}
-
-bool FileInfo::HasAlias(const std::string& alias) {
-    if(past_aliases_.find(alias) != past_aliases_.end())
-        return true;
-    return false;
-}
-
-void FileInfo::GetSerializedAliasData(std::string& out) const {
-    std::map<std::string, bool>::const_iterator itr = past_aliases_.begin();
-
-    Json::Value alias_array(Json::arrayValue);
-    for(;itr != past_aliases_.end(); itr++) {
-        alias_array.append(itr->first);
-    }
-
-    Json::StyledWriter writer;
-    out = writer.write(alias_array);
-}
-
 ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname) {
     if(chunks_.find(chunkname) != chunks_.end()) 
         return &chunks_[chunkname];
@@ -121,18 +99,6 @@ void FileInfo::GetSerializedChunkData(std::string& out) const {
         Json::StyledWriter writer;
         out = writer.write(val);
     }
-}
-
-bool FileInfo::LoadSerializedAliasData(const std::string& data) {
-    Json::Value root;
-    Json::Reader reader;
-    if(reader.parse(data, root)) {
-        Json::ValueIterator itr = root.begin();
-        for(; itr != root.end(); itr++) {
-            past_aliases_[itr.key().asString()] = false;
-        }
-    }
-    return false;
 }
 
 bool FileInfo::LoadSerializedChunkData(const std::string& data) {

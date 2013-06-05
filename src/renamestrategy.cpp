@@ -39,6 +39,10 @@ int RenameStrategy::RenameFile() {
     std::string new_filepath = GetConfigValue("new_filepath");
     std::string entity = GetConfigValue("entity");
 
+    std::cout<<" Rename File : " << std::endl;
+    std::cout<<"\t old filepath : " << old_filepath << std::endl;
+    std::cout<<"\t new filepath : " << new_filepath << std::endl;
+
     RenameHandler rh(file_manager_);
     status = rh.RenameFileLocalCache(old_filepath, new_filepath);
     if(status == ret::A_OK) {
@@ -57,6 +61,8 @@ int RenameStrategy::RenameFile() {
             status = ret::A_FAIL_INVALID_FILE_INFO;
         }
     }
+
+    std::cout<<" Rename File status : " << status << std::endl;
 
     return status;
 }
@@ -141,8 +147,6 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePos
     std::cout<<" body : " << response.body << std::endl;
     return status;
 }
-
-
 
 int RenameStrategy::RetrieveFilePost(const std::string& post_id, FilePost& fp) {
     int status = ret::A_OK;

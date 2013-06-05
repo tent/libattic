@@ -32,7 +32,6 @@ class Manifest {
     void CheckIfTableExists(const std::string &tableName);
 
     void ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out);
-    bool PushBackAlias(const std::string& filepath, const std::string& alias);
 
     void ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out);
 public:
@@ -56,7 +55,6 @@ public:
     bool UpdateFileDeleted(const std::string& filepath, const int val);
     bool UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath);
     bool UpdateFilename(const std::string& filepath, const std::string& new_filename);
-    bool UpdatePastAlias(const std::string& filepath, const std::string& alias_data);
     bool UpdateFileFolderPostId(const std::string& filepath, const std::string& post_id);
     bool UpdateFileChunkCount(const std::string& filepath, const std::string& chunk_count);
 

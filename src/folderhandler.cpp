@@ -197,7 +197,6 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                     std::cout<<" NEW FILE PATH " << path << std::endl;
                     std::cout<<" aliased new path : " << aliased_new_path << std::endl;
 
-                    (*file_itr).PushBackAlias((*file_itr).filepath());
                     rh.RenameFileLocalCache((*file_itr).filepath(), path);
                     (*file_itr).set_filepath(aliased_new_path);
                 }

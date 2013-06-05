@@ -186,18 +186,12 @@ int FileManager::RenameFile(const std::string& old_filepath,
 
     FileInfo* fi = GetFileInfo(alias_old);
     if(fi && !alias_new.empty()) {
-        fi->PushBackAlias(alias_old);
-        std::string alias_data;
-        fi->GetSerializedAliasData(alias_data);
-
         std::string filename;
         utils::ExtractFileName(alias_new, filename);
-        std::cout<<" SERIALIZED ALIAS DATA : " << alias_data << std::endl;
 
         Lock();
         bool s = manifest_.UpdateFilepath(alias_old, alias_new);
         if(s) s = manifest_.UpdateFilename(alias_new, filename);
-        if(s) s = manifest_.UpdatePastAlias(alias_new, alias_data);
         Unlock();
         if(!s) {
             std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;

@@ -28,7 +28,6 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
                                        const FileInfo& fi, 
                                        FilePost& out) {
     out = fp;
-    out.PushBackAlias(fp.relative_path()); // Push back old path
     out.set_relative_path(fi.filepath());
     out.set_name(fi.filename());
 
