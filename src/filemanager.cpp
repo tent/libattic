@@ -181,8 +181,13 @@ int FileManager::RenameFile(const std::string& old_filepath,
     else
         alias_new = new_filepath;
 
+    // retrieve new folder post
+    std::string folderpath;
+    utils::ExtractFolderpath(alias_new, folderpath);
+
     std::cout<<" ALIAS OLD : " << alias_old << std::endl;
     std::cout<<" ALIAS NEW : " << alias_new << std::endl;
+    std::cout<<" FOLDER PATH : " << folderpath << std::endl;
 
     FileInfo* fi = GetFileInfo(alias_old);
     if(fi && !alias_new.empty()) {
@@ -190,8 +195,15 @@ int FileManager::RenameFile(const std::string& old_filepath,
         utils::ExtractFileName(alias_new, filename);
 
         Lock();
-        bool s = manifest_.UpdateFilepath(alias_old, alias_new);
-        if(s) s = manifest_.UpdateFilename(alias_new, filename);
+        bool s = manifest_.UpdateFilepath(alias_old, alias_new); // update filepath
+        if(s) s = manifest_.UpdateFilename(alias_new, filename); // update filename
+        if(s) {
+            Folder folder;
+            if(manifest_.QueryForFolder(folderpath, folder)) {
+                std::cout<<" FOLDER POST ID : " << folder.folder_post_id() << std::endl;
+                s = manifest_.UpdateFileFolderPostId(alias_new, folder.folder_post_id());
+            }
+        }
         Unlock();
         if(!s) {
             std::cout<<" FAILED TO UPDATE FILEAPTH " << std::endl;

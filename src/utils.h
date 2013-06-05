@@ -152,6 +152,12 @@ static void ExtractFileName(const std::string& filepath, std::string& out) {
      }
 }
 
+static void ExtractFolderpath(const std::string& filepath, std::string& out) {
+    size_t pos = filepath.rfind("/");
+    if(pos != std::string::npos)
+        out = filepath.substr(0, pos);
+}
+
 static bool CheckAndRemoveRelativePath(const std::string &filepath, std::string &out) {
     if(filepath.size()) {
         if(filepath[0] == '.') {

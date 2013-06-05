@@ -19,8 +19,10 @@ RenameHandler::~RenameHandler() {
 int RenameHandler::RenameFileLocalCache(const std::string& old_filepath, 
                                         const std::string& new_filepath) {
     int status = ret::A_OK;
+    // rename file (filepath and filename)
     status = file_manager_->RenameFile(old_filepath,
                                        new_filepath);
+    // update folder post id
     return status;
 }
 
@@ -30,6 +32,7 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
     out = fp;
     out.set_relative_path(fi.filepath());
     out.set_name(fi.filename());
+    out.set_folder_post(fi.folder_post_id());
 
     Parent parent;
     parent.version = fp.version().id();
