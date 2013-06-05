@@ -83,6 +83,12 @@ int RenameTask::RenameFolder(const std::string& file_type,
     rename_context.PushBack(&rs);
     status = rename_context.ExecuteAll();
 
+    std::ostringstream err;
+    err << " renaming folder " << std::endl;
+    err << "\t old " << old_folderpath << std::endl;
+    err << "\t new " << new_folderpath << std::endl;
+    err << "\t success? " << status << std::endl;
+    log::LogString("0919285", err.str());
 
     return status;
 }
