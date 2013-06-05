@@ -14,14 +14,12 @@ FileInfo::FileInfo() {
 
 FileInfo::FileInfo(const std::string& filename,
                    const std::string& filepath,
-                   const std::string& postid,
-                   const std::string& chunkpostid) {
+                   const std::string& postid) {
     FileInfo::FileInfo();
 
     filename_ = filename;
     filepath_ = filepath;
     post_id_ = postid;
-    chunk_post_id_ = chunkpostid;
     chunk_count_ = 0;
     file_size_ = 0;
     deleted_ = false;

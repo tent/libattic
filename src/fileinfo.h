@@ -18,9 +18,7 @@ public:
 
     FileInfo(const std::string& filename,
              const std::string& filepath,
-             const std::string& postid,
-             const std::string& chunkpostid);
-
+             const std::string& postid);
     FileInfo();  
     ~FileInfo(); 
 
@@ -42,7 +40,6 @@ public:
     const std::string& filename() const             { return filename_; }
     const std::string& filepath() const             { return filepath_; }
     const std::string& post_id() const              { return post_id_; }
-    const std::string& chunk_post_id() const        { return chunk_post_id_; }
 
     const Credentials& file_credentials() const     { return file_credentials_; }
     const std::string& file_credentials_key() const { return file_credentials_.key(); }
@@ -64,7 +61,6 @@ public:
     void set_file_size(const unsigned int unFileSize)       { file_size_ = unFileSize; }
 
     void set_post_id(const std::string &id)                 { post_id_ = id; }
-    void set_chunk_post_id(const std::string &id)           { chunk_post_id_ = id; }
     void set_post_version(const std::string& version)       { post_version_ = version; }
 
     void set_file_credentials(const Credentials& cred);
@@ -87,7 +83,6 @@ private:
     std::string     filename_;   // File within directory
     std::string     filepath_;   // Directory
     std::string     post_id_; // Id of the post the file is potentially attached to 
-    std::string     chunk_post_id_; // Id of the chunk post                 // depricated
 
     std::string     encryption_algorithm_; // Algorithm used to encrypt chunks
     std::string     hashing_algorithm_;

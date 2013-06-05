@@ -48,9 +48,9 @@ private:
     std::string name_;                  // Name of file
     std::string relative_path_;         // Relative file path within attic folder 
     std::string folder_post_;           // Id of the parent folder post
-    std::string key_data_;
-    std::string iv_data_;
-    std::string checksum_;
+    std::string key_data_;              // This key should be encrypted
+    std::string iv_data_;               // This iv should not be encrypted
+    std::string checksum_;              // checksum of the file
 
     unsigned int file_size_;
 };

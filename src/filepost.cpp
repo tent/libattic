@@ -1,7 +1,5 @@
 #include "filepost.h"
 
-#include <stdio.h>
-
 #include "fileinfo.h"
 #include "constants.h"
 #include "errorcodes.h"
