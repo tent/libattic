@@ -21,10 +21,6 @@ namespace attic {
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
-    void PushBackFile(const std::string& filepath);
-    void RemoveFile(const std::string& filepath);
-    bool IsFileInQueue(const std::string& filepath);
-
     int SyncFiles(std::deque<FilePost>& file_list);
 
     void DeleteLocalFile(const FilePost& fp); // TODO :: temp method, will move to its own job
@@ -53,7 +49,6 @@ public:
     void RunTask();
 
 private:
-    std::map<std::string, bool> processing_queue_; // Files currently being processed
     PollDelegate* delegate_;
     boost::timer::cpu_timer timer_;
 

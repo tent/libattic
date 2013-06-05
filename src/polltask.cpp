@@ -94,14 +94,7 @@ void PollTask::OnEventRaised(const event::Event& event){
 }
 void PollTask::PollTaskCB(int a, std::string& b) {
     std::cout<<" POLL TASK CALLBACK HIT " << std::endl;
-    std::string returnpost = b;
-    if(processing_queue_.find(returnpost) != processing_queue_.end()) {
-        // remove it from the map
-        processing_queue_.erase(returnpost);
-    }
-    else {
-        std::cout<<" POSTID NOT FOUND IN QUEUE ?!?!? " << b << std::endl;
-    }
+    std::cout<<" CB " << a << " : " << b << std::endl;
 }
 
 void PollTask::RunTask() {
@@ -121,7 +114,6 @@ void PollTask::RunTask() {
             total_elapsed = 0;
             timer_.stop();
             if(running_) {
-                std::cout<<" processing queue size : " << processing_queue_.size() << std::endl;
                 // Check deleted folder posts
                 PollDeletedFolderPosts();
                 // Check folder posts
@@ -202,29 +194,12 @@ int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
     // Process Posts
     std::deque<FilePost>::iterator itr = file_list.begin();
     for(;itr != file_list.end(); itr++) {
-        if(processing_queue_.find((*itr).id()) == processing_queue_.end()) {
-            processing_queue_[(*itr).id()] = true;
-            std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
-            event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
-                              (*itr).id(),
-                              delegate_);
-        }
+        std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
+        event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                          (*itr).id(),
+                          delegate_);
     }
     return status;
-}
-
-void PollTask::PushBackFile(const std::string& filepath) {
-    processing_queue_[filepath] = true;
-}
-
-void PollTask::RemoveFile(const std::string& filepath) {
-    processing_queue_.erase(filepath);
-}
-
-bool PollTask::IsFileInQueue(const std::string& filepath) {
-    if(processing_queue_.find(filepath)!= processing_queue_.end())
-        return true;
-    return false;
 }
 
 void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will move to its own job
