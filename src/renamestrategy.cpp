@@ -5,9 +5,9 @@
 #include "credentialsmanager.h"
 #include "fileinfo.h"
 #include "utils.h"
-#include "netlib.h"
 #include "jsonserializable.h"
 #include "renamehandler.h"
+#include "posthandler.h"
 
 namespace attic {
 
@@ -98,94 +98,60 @@ int RenameStrategy::RenameFolder() {
 int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& fp) {
     int status = ret::A_OK;
 
-    std::cout<<" RETRIEVE FOLDER POST " << std::endl;
-
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    std::cout<<" POST URL : " << posturl << std::endl;
 
+    PostHandler<FolderPost> ph(access_token_);
     Response response;
-    netlib::HttpGet(posturl,
-                    NULL,
-                    &access_token_,
-                    response);
-    std::cout<<" CODE : " << response.code << std::endl;
-    std::cout<<" BODY : " << response.body << std::endl;
-    if(response.code == 200) {
-        jsn::DeserializeObject(&fp, response.body);
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
+    status = ph.Get(posturl, NULL, fp, response);
 
     return status;
 }
 
 int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id, const FolderPost& fp) {
     int status = ret::A_OK;
-    std::string body;
-    FolderPost p = fp;
-    jsn::SerializeObject(&p, body);
 
-    status = UpdatePost(post_id, fp.type(), body);
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+    FolderPost p = fp;
+
+    PostHandler<FolderPost> ph(access_token_);
+    Response response;
+    status = ph.Put(posturl, NULL, p, response);
+
+    std::cout<<" Update Folder Meta Post " << std::endl;
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
     return status;
 }
 
 int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePost& fp) {
     int status = ret::A_OK;
-    std::string body;
-    FilePost p = fp;
-    jsn::SerializeObject(&p, body);
-
-    status = UpdatePost(post_id, fp.type(), body);
-    return status;
-}
-
-int RenameStrategy::UpdatePost(const std::string& post_id, 
-                               const std::string& post_type, 
-                               const std::string& body) {
-    int status = ret::A_OK;
 
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    std::cout<<" POST URL : " << posturl << std::endl;
-    Response resp;
-    netlib::HttpPut(posturl,
-                    post_type,
-                    NULL,
-                    body,
-                    &access_token_,
-                    resp);
+    FilePost p = fp;
 
-    if(resp.code == 200) {
+    PostHandler<FilePost> ph(access_token_);
+    Response response;
+    status = ph.Put(posturl, NULL, p, response);
 
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
-    std::cout<<" code : " << resp.code << std::endl;
-    std::cout<<" body : " << resp.body << std::endl;
-
+    std::cout<<" Update File Meta Post " << std::endl;
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
     return status;
 }
+
+
 
 int RenameStrategy::RetrieveFilePost(const std::string& post_id, FilePost& fp) {
     int status = ret::A_OK;
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-    std::cout<<" POST URL : " << posturl << std::endl;
 
+    PostHandler<FilePost> ph(access_token_);
     Response response;
-    netlib::HttpGet(posturl,
-                    NULL,
-                    &access_token_,
-                    response);
-    if(response.code == 200) {
-        jsn::DeserializeObject(&fp, response.body);
-    }
-    else {
-        status = ret::A_FAIL_NON_200;
-    }
+    status = ph.Get(posturl, NULL, fp, response);
 
     return status;
 }

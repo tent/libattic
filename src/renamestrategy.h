@@ -22,9 +22,6 @@ class RenameStrategy : public HttpStrategyInterface {
 
     int UpdateFileMetaPost(const std::string& post_id, const FilePost& fp);
     int UpdateFolderMetaPost(const std::string& post_id, const FolderPost& fp); 
-    int UpdatePost(const std::string& post_id, 
-                   const std::string& post_type, 
-                   const std::string& body);
 public:
     RenameStrategy();
     ~RenameStrategy();
