@@ -25,24 +25,6 @@ void FilePost::InitializeFilePost(FileInfo* fi,  bool is_public) {
         // attic post key info
         set_key_data(fi->encrypted_key());
         set_iv_data(fi->file_credentials_iv());
-        // set chunk info
-        PushBackChunkPostId(fi->chunk_post_id()); // TODO :: change this to a mention
-        FileInfo::ChunkMap* chunk_list = fi->GetChunkInfoList();
-        if(chunk_list) {
-            std::cout<<" CHUNK LIST SIZE : " << chunk_list->size() << std::endl;
-            FileInfo::ChunkMap::iterator itr = chunk_list->begin();
-
-            std::string identifier;
-            for(;itr != chunk_list->end(); itr++) {
-                identifier.clear();
-                identifier = itr->second.checksum();
-                PushBackChunkIdentifier(identifier);
-            }
-        }
-        else {
-            std::cout<<" INVALID CHUNK LIST : " << std::endl;
-        }
-
         set_folder_post(fi->folder_post_id());
     }
 }
@@ -52,14 +34,6 @@ void FilePost::Serialize(Json::Value& root) {
     content["name"] = name_;
     content["path"] = relative_path_;
     
-    Json::Value chunkposts;//(Json::objectValue);
-    SerializeChunkPosts(chunkposts);
-    content["chunk_posts"] = chunkposts;
-
-    Json::Value chunkids;
-    SerializeChunkIds(chunkids);
-    content["chunk_ids"] = chunkids;
-
     std::string key_data;
     crypto::Base64EncodeString(key_data_, key_data);
     content["kdata"] = key_data;
@@ -76,14 +50,6 @@ void FilePost::Serialize(Json::Value& root) {
     Post::Serialize(root);
 }
 
-void FilePost::SerializeChunkPosts(Json::Value& val) {
-    jsn::SerializeVector(chunk_posts_, val);
-}
-
-void FilePost::SerializeChunkIds(Json::Value& val) { 
-    jsn::SerializeVector(chunk_ids_, val);
-}
-
 void FilePost::Deserialize(Json::Value& root) {
     std::cout<<" deserializing file post " << std::endl;
     Post::Deserialize(root);
@@ -98,22 +64,11 @@ void FilePost::Deserialize(Json::Value& root) {
     std::string size = content.get("size", "").asString();
     file_size_ = atoi(size.c_str());
 
-    DeserializeChunkPosts(content["chunk_posts"]);
-    DeserializeChunkIds(content["chunk_ids"]);
-
     std::string key_data = content["kdata"].asString();
     std::string iv_data = content["vdata"].asString();
 
     crypto::Base64DecodeString(key_data, key_data_);
     crypto::Base64DecodeString(iv_data, iv_data_);
-}
-
-void FilePost::DeserializeChunkPosts(Json::Value& val) {
-    jsn::DeserializeIntoVector(val, chunk_posts_);
-}
-
-void FilePost::DeserializeChunkIds(Json::Value& val) {
-    jsn::DeserializeIntoVector(val, chunk_ids_);
 }
 
 } //namespace
