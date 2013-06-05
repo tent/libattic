@@ -37,6 +37,8 @@ int Connection::Initialize(const std::string& url) {
     using boost::asio::ip::tcp;
     int status = ret::A_OK;
     socket_ = new tcp::socket(io_service_);
+    // Disable Nagle's algorithm
+    socket_.set_option(tcp::no_delay(true));
 
     /*
     if(!SetTimeout())
