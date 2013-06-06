@@ -2,6 +2,7 @@
 #define LOGUTILS_H_
 #pragma once
 
+#define DEBUG_OUT 1
 #define CERR_OUT 0
 
 #if CERR_OUT
@@ -52,13 +53,27 @@ static void LogStream(const std::string& error_ident, std::ostringstream& buffer
 #endif
 }
 
-static void LogString(const std::string& error_ident, std::string buffer) {
+static void LogString (const std::string& error_ident, std::string buffer){
     std::ostringstream error;
     error << error_ident << std::endl;
     error << buffer << std::endl;
     event::RaiseEvent(event::Event::ERROR_NOTIFY, error.str(), NULL);
 #if CERR_OUT
     cerr << error.str();
+#endif
+}
+
+// just an alaias for log string
+static void ls(const std::string& error_ident, std::string buffer) {
+    LogString(error_ident, buffer);
+}
+
+static void LogDebugString(const std::string& id, const std::string& buffer) {
+#if DEBUG_OUT
+    std::ostringstream dbg;
+    dbg << id << std::endl;
+    dbg << buffer << std::endl;;
+    event::RaiseEvent(event::Event::DEBUG_NOTIFY, dbg.str(), NULL);
 #endif
 }
 

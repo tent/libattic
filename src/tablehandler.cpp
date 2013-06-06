@@ -61,6 +61,9 @@ bool TableHandler::PrepareStatement(const std::string& statement, std::string& e
 
     if(ret != SQLITE_OK) {
         error_out = "Failed to prepare statement";
+        error_out += " code : \n";
+        error_out += " statement : " + statement;
+        error_out += ret;
         stmt = NULL;
         return false;
     }

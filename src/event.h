@@ -43,6 +43,7 @@ struct Event {
         RECOVERY_KEY,
         TEMPORARY_PASS,
         ERROR_NOTIFY,
+        DEBUG_NOTIFY,
         PAUSE_RESUME_NOTIFY,
         PAUSE,
         RESUME
