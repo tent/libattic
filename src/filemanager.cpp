@@ -37,7 +37,7 @@ int FileManager::RemoveFile(const std::string &filepath) {
     int status = ret::A_OK;
 
     Lock();
-    if(!manifest_.RemoveFileInfo(filepath))
+    if(!manifest_.file_table()->RemoveFileInfo(filepath))
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     Unlock();
 
@@ -106,17 +106,17 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
 }
 
 bool FileManager::InsertToManifest (FileInfo* pFi) { 
+    bool ret = false;
     if(pFi) {
         std::cout<< "INSERTING FILEPATH : " << pFi->filepath() << std::endl;
         if(!pFi->filepath().empty()) {
             Lock();
             // Insert into infotable
-            manifest_.InsertFileInfo(*pFi);
+            ret = manifest_.file_table()->InsertFileInfo(*pFi);
             Unlock();
-            return true;
         }
     }
-    return false;
+    return ret;
 }
 
 int FileManager::RenameFolder(const std::string& old_folderpath,
@@ -145,7 +145,7 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
         if(!alias_new.empty()) {
             //Update folder path
             Lock();
-            manifest_.UpdateFolderPath(folder.folder_post_id(), alias_new);
+            manifest_.folder_table()->set_folderpath(folder.folder_post_id(), alias_new);
             Unlock();
             //Update folder contents
             Lock();
@@ -195,13 +195,13 @@ int FileManager::RenameFile(const std::string& old_filepath,
         utils::ExtractFileName(alias_new, filename);
 
         Lock();
-        bool s = manifest_.UpdateFilepath(alias_old, alias_new); // update filepath
-        if(s) s = manifest_.UpdateFilename(alias_new, filename); // update filename
+        bool s = manifest_.file_table()->set_filepath(alias_old, alias_new); // update filepath
+        if(s) s = manifest_.file_table()->set_filename(alias_new, filename); // update filename
         if(s) {
             Folder folder;
-            if(manifest_.QueryForFolder(folderpath, folder)) {
+            if(manifest_.folder_table()->QueryForFolder(folderpath, folder)) {
                 std::cout<<" FOLDER POST ID : " << folder.folder_post_id() << std::endl;
-                s = manifest_.UpdateFileFolderPostId(alias_new, folder.folder_post_id());
+                s = manifest_.file_table()->set_folder_post_id(alias_new, folder.folder_post_id());
             }
         }
         Unlock();
@@ -220,7 +220,7 @@ bool FileManager::SetFileVersion(const std::string& filepath, const std::string&
     bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        ret = manifest_.UpdateFileVersion(filepath, version);
+        ret = manifest_.file_table()->set_file_version(filepath, version);
         Unlock();
     }
     return ret;
@@ -230,7 +230,7 @@ bool FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
     bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        ret = manifest_.UpdateFileDeleted(filepath, del);
+        ret = manifest_.file_table()->set_file_deleted(filepath, del);
         Unlock();
     }
     return ret;
@@ -239,7 +239,7 @@ bool FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
 bool FileManager::MarkFilesInFolderDeleted(const std::string& folder_id) {
     Lock();
     std::cout<< " mark files in folder deleted " << std::endl;
-    bool ret = manifest_.MarkAllFilesDeletedInFolder(folder_id);
+    bool ret = manifest_.file_table()->MarkAllFilesDeletedInFolder(folder_id);
     Unlock();
     return ret;
 }
@@ -258,7 +258,7 @@ bool FileManager::SetFilePostId(const std::string &filepath, const std::string& 
 
     if(!relative.empty()) {
         Lock();
-        manifest_.UpdateFilePostID(relative, postid);
+        manifest_.file_table()->set_file_post_id(relative, postid);
         Unlock();
     }
     else
@@ -271,7 +271,7 @@ bool FileManager::SetFileFolderPostId(const std::string& filepath, const std::st
     bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        ret = manifest_.UpdateFileFolderPostId(filepath, postid);
+        ret = manifest_.file_table()->set_folder_post_id(filepath, postid);
         Unlock();
     }
     return ret;
@@ -281,7 +281,7 @@ bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::str
     bool ret = false;
     if(IsPathRelative(old_filepath) && IsPathRelative(new_filepath)) {
         Lock();
-        ret = manifest_.UpdateFilepath(old_filepath, new_filepath);
+        ret = manifest_.file_table()->set_filepath(old_filepath, new_filepath);
         Unlock();
     }
     return ret;
@@ -300,7 +300,7 @@ bool FileManager::SetFileChunkCount(const std::string& filepath, const std::stri
     bool ret = false;
     if(IsPathRelative(filepath)) {
         Lock();
-        ret = manifest_.UpdateFileChunkCount(filepath, count);
+        ret = manifest_.file_table()->set_chunk_count(filepath, count);
         Unlock();
     }
     return ret;
@@ -374,7 +374,7 @@ bool FileManager::DoesFileExist(const std::string& filepath) {
     std::string relative;
     if(AttemptToGetRelativePath(filepath, relative)) {
         Lock();
-        stat = manifest_.IsFileInManifest(relative);
+        stat = manifest_.file_table()->IsFileInManifest(relative);
         Unlock();
     }
     else {
@@ -445,7 +445,7 @@ FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
     if(!post_id.empty()) {
         Lock();
         fi = file_info_factory_.CreateFileInfoObject();
-        manifest_.QueryForFileByPostId(post_id, *fi);
+        manifest_.file_table()->QueryForFileByPostId(post_id, *fi);
         Unlock();
     }
 
@@ -454,7 +454,7 @@ FileInfo* FileManager::GetFileInfoByPostId(const std::string& post_id) {
 
 bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out) {
     Lock();
-    bool ret = manifest_.QueryForFileByPostId(post_id, out);
+    bool ret = manifest_.file_table()->QueryForFileByPostId(post_id, out);
     Unlock();
     return ret;
 }
@@ -472,9 +472,9 @@ bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     // Attempt to get relative path
     if(IsPathRelative(relative)) {
         Lock();
-        ret = manifest_.IsFileInManifest(relative);
+        ret = manifest_.file_table()->IsFileInManifest(relative);
         if(ret)
-            manifest_.QueryForFile(relative, out);
+            manifest_.file_table()->QueryForFile(relative, out);
         Unlock();
     }
     else {
@@ -497,7 +497,7 @@ FileInfo* FileManager::GetFileInfo(const std::string &filepath) {
     if(IsPathRelative(relative)) {
         Lock();
         pFi = file_info_factory_.CreateFileInfoObject();
-        manifest_.QueryForFile(relative, *pFi);
+        manifest_.file_table()->QueryForFile(relative, *pFi);
         Unlock();
 
         if(pFi) {
@@ -521,7 +521,7 @@ bool FileManager::GetFolderEntryByPostId(const std::string& post_id, Folder& fol
     bool ret = false;
     if(!post_id.empty()) {
         Lock();
-        ret = manifest_.QueryForFolderByPostId(post_id, folder);
+        ret = manifest_.folder_table()->QueryForFolderByPostId(post_id, folder);
         Unlock();
     }
     return ret;
@@ -552,7 +552,7 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     std::cout<<" Searching for folder entry : " << relative << std::endl;
 
     Lock();
-    bool ret = manifest_.QueryForFolder(relative, folder);
+    bool ret = manifest_.folder_table()->QueryForFolder(relative, folder);
     Unlock();
 
     std::cout<<" Query for folder : " << ret << std::endl;
@@ -570,7 +570,7 @@ bool FileManager::DoesFolderExist(const std::string& folderpath) {
     if(relative.empty())
         relative = cnst::g_szWorkingPlaceHolder;
     Lock();
-    bool ret = manifest_.IsFolderInManifest(relative);
+    bool ret = manifest_.folder_table()->IsFolderInManifest(relative);
     Unlock();
     return ret;
 }
@@ -614,9 +614,9 @@ bool FileManager::CreateFolderEntry(const std::string& folderpath,
     ret = GetFolderEntry(relative, out);
     if(!ret) {
         Lock();
-        ret = manifest_.InsertFolderInfo(relative, folder_post_id, p_post_id, false);
+        ret = manifest_.folder_table()->InsertFolderInfo(relative, folder_post_id, p_post_id, false);
         if(ret)
-            ret = manifest_.QueryForFolder(relative, out);
+            ret = manifest_.folder_table()->QueryForFolder(relative, out);
         Unlock();
     }
     return ret;
@@ -629,12 +629,12 @@ bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::st
 
     bool ret = false;
     Lock();
-    if(manifest_.IsFolderInManifest(folderpath)) {
+    if(manifest_.folder_table()->IsFolderInManifest(folderpath)) {
         std::string id;
-        manifest_.GetFolderPostID(folderpath, id);
+        manifest_.folder_table()->GetFolderPostID(folderpath, id);
         if(id.empty()) {
             // update id
-            ret = manifest_.UpdateFolderPostId(folderpath, post_id);
+            ret = manifest_.folder_table()->set_folder_post_id(folderpath, post_id);
         }
         else if(id != post_id) {
             // throw error
@@ -688,12 +688,12 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
     bool ret = false;
     std::string id;
     Lock();
-    manifest_.GetFolderID(relative, id);
+    manifest_.folder_table()->GetFolderId(relative, id);
     Unlock();
     if(id.empty()) {
         Lock();
-        if(manifest_.IsFolderInManifest(relative))
-            ret = manifest_.UpdateFolderPostId(relative, post_id);
+        if(manifest_.folder_table()->IsFolderInManifest(relative))
+            ret = manifest_.folder_table()->set_folder_post_id(relative, post_id);
         Unlock();
     }
     else {
@@ -724,8 +724,8 @@ bool FileManager::SetFolderParentPostId(const std::string& folderpath, const std
 
     bool ret = false;
     Lock();
-    if(manifest_.IsFolderInManifest(relative))
-        ret = manifest_.UpdateFolderParentPostId(relative, post_id);
+    if(manifest_.folder_table()->IsFolderInManifest(relative))
+        ret = manifest_.folder_table()->set_folder_parent_post_id(relative, post_id);
     Unlock();
  
     return ret;
@@ -748,8 +748,8 @@ bool FileManager::SetFolderDeleted(const std::string& folderpath, bool del) {
 
     bool ret = false;
     Lock();
-    if(manifest_.IsFolderInManifest(relative))
-        ret = manifest_.UpdateFolderDeleted(relative, del);
+    if(manifest_.folder_table()->IsFolderInManifest(relative))
+        ret = manifest_.folder_table()->set_folder_deleted(relative, del);
     Unlock();
  
     return ret;
@@ -757,21 +757,21 @@ bool FileManager::SetFolderDeleted(const std::string& folderpath, bool del) {
 
 int FileManager::GetAllFileInfo(std::deque<FileInfo>& out) {
     Lock();
-    int status = manifest_.QueryAllFiles(out);
+    int status = manifest_.file_table()->QueryAllFiles(out);
     Unlock();
     return status;
 }
 
 int FileManager::GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out) {
     Lock();
-    int status = manifest_.QueryAllFilesForFolder(folderid, out);
+    int status = manifest_.file_table()->QueryAllFilesForFolder(folderid, out);
     Unlock();
     return status;
 }
 
 int FileManager::GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out) {
     Lock();
-    int status = manifest_.QueryAllFoldersForFolder(folderid, out);
+    int status = manifest_.folder_table()->QueryAllFoldersForFolder(folderid, out);
     Unlock();
     return status;
 }
