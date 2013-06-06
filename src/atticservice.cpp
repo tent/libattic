@@ -62,7 +62,7 @@ int AtticService::UploadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
         if(IsMasterKeyValid())
-            event::RaiseEvent(attic::event::Event::REQUEST_PUSH, filepath, NULL);
+            task_manager_->UploadFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
@@ -74,7 +74,7 @@ int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
         if(IsMasterKeyValid())
-            event::RaiseEvent(attic::event::Event::REQUEST_PULL, filepath, NULL);
+            task_manager_->DownloadFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
@@ -86,7 +86,7 @@ int AtticService::MarkFileDeleted(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_)
         if(IsMasterKeyValid())
-            attic::event::RaiseEvent(attic::event::Event::REQUEST_DELETE, filepath, NULL);
+            task_manager_->DeleteFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
@@ -190,7 +190,6 @@ int AtticService::ValidateDirectories() {
         fs::GetCanonicalPath(working_dir_, working_dir_);
         fs::GetCanonicalPath(config_dir_, config_dir_);
         fs::GetCanonicalPath(temp_dir_, temp_dir_);
-
     }
     else {
         status = ret::A_FAIL_VALIDATE_DIRECTORY;
@@ -209,7 +208,7 @@ int AtticService::InitializeFileManager() {
     return status;
 }
 
-// TODO :: REFACTOR get rid of credentials manager
+// TODO :: REFACTOR (possibly) get rid of credentials manager
 int AtticService::InitializeCredentialsManager() {
     int status = ret::A_OK;
     if(!credentials_manager_) {
