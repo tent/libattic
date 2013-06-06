@@ -20,9 +20,7 @@ AtticService::AtticService() {
     running_ = false;
 }
 
-AtticService::~AtticService() {
-
-}
+AtticService::~AtticService() {}
 
 int AtticService::start() {
     int status = ret::A_OK;
@@ -60,11 +58,12 @@ int AtticService::stop() {
 
 int AtticService::UploadFile(const std::string& filepath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->UploadFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -72,11 +71,12 @@ int AtticService::UploadFile(const std::string& filepath) {
 
 int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->DownloadFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -84,11 +84,12 @@ int AtticService::DownloadFile(const std::string& filepath) {
 
 int AtticService::MarkFileDeleted(const std::string& filepath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->DeleteFile(filepath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -96,11 +97,12 @@ int AtticService::MarkFileDeleted(const std::string& filepath) {
  
 int AtticService::RenameFile(const std::string& old_filepath, const std::string& new_filepath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->RenameFile(old_filepath, new_filepath);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -108,11 +110,12 @@ int AtticService::RenameFile(const std::string& old_filepath, const std::string&
 
 int AtticService::CreateFolder(const std::string& folderpath) { 
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->CreateFolder(folderpath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -120,11 +123,12 @@ int AtticService::CreateFolder(const std::string& folderpath) {
 
 int AtticService::DeleteFolder(const std::string& folderpath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->DeleteFolder(folderpath, NULL);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -132,18 +136,19 @@ int AtticService::DeleteFolder(const std::string& folderpath) {
 
 int AtticService::RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath) {
     int status = ret::A_OK;
-    if(running_)
+    if(running_) {
         if(IsMasterKeyValid())
             task_manager_->RenameFolder(old_folderpath, new_folderpath);
         else 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
 }
 
 // TODO :: toggling polling should be event driven, TODO :: fix this
-int AtticService::EnablePolling() {
+int AtticService::BeginPolling() {
     int status = ret::A_OK;
     if(running_)
         task_manager_->PollFiles(NULL);
@@ -152,21 +157,39 @@ int AtticService::EnablePolling() {
     return status;
 }
 
-int AtticService::DisablePolling() {
+int AtticService::Pause() {
     int status = ret::A_OK;
-    // TODO :: this
+    if(running_)
+        event::RaiseEvent(event::Event::PAUSE, "", NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::Resume() {
+    int status = ret::A_OK;
+    if(running_)
+        event::RaiseEvent(event::Event::RESUME, "", NULL);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
 }
 
 int AtticService::QueryManifest(TaskDelegate* cb) {
     int status = ret::A_OK;
-    task_manager_->QueryManifest(cb);
+    if(running_)
+        task_manager_->QueryManifest(cb);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
 }
 
 int AtticService::GetFileHistory(const std::string& filepath, TaskDelegate* cb) {
     int status = ret::A_OK;
-    task_manager_->GetFileHistory(filepath, cb);
+    if(running_)
+        task_manager_->GetFileHistory(filepath, cb);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
 }
 

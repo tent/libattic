@@ -171,6 +171,7 @@ bool FileTable::set_chunk_count(const std::string& filepath, const std::string& 
 
 bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     bool ret = false;
+    std::string query;
     return  ret;
 }
 

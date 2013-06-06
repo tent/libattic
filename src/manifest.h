@@ -50,6 +50,7 @@ public:
     // File Info
     bool IsFileInManifest(const std::string &filepath);
     bool InsertFileInfo(const FileInfo& fi);
+
     bool UpdateFilePostID(const std::string &filename, const std::string &id);
     bool UpdateFileVersion(const std::string& filepath, const std::string& version);
     bool UpdateFileDeleted(const std::string& filepath, const int val);

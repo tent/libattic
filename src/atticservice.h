@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-//#include "callbackhandler.h"
 #include "atticclient.h"
 #include "servicemanager.h"
 #include "taskmanager.h"
@@ -12,6 +11,10 @@
 #include "filemanager.h"
 #include "credentialsmanager.h"
 
+/* Attic Service
+ *  Service to direct spawning of threads, insertion of tasks, and management of
+ *  subsystems, allowing communication into the lib.
+ */
 namespace attic {
 
 class AtticService {
@@ -48,8 +51,9 @@ public:
     int CreateFolder(const std::string& folderpath);
     int DeleteFolder(const std::string& folderpath);
     int RenameFolder(const std::string& old_folderpath, const std::string& new_folderpath);
-    int EnablePolling();
-    int DisablePolling();
+    int BeginPolling();
+    int Pause(); // Polling
+    int Resume(); // Pollling
 
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
@@ -73,8 +77,6 @@ private:
     FileManager*        file_manager_;
     CredentialsManager* credentials_manager_;
     Client*             client_;
-
-//    CallbackHandler callback_handler_;
 
     // File paths should all be absolute paths
     std::string working_dir_;

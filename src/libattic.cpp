@@ -123,7 +123,7 @@ int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
 }
 
 int PollFiles(void) {
-    return attic_service.EnablePolling();
+    return attic_service.BeginPolling();
 }
 
 
@@ -416,15 +416,13 @@ void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
 
 int Pause(void) { 
     int status = attic::ret::A_OK;
-    attic::event::RaiseEvent(attic::event::Event::PAUSE, "", NULL);
+    status = attic_service.Pause();
     return status;
 }
 
 int Resume(void) {
     int status = attic::ret::A_OK;
-    attic::event::RaiseEvent(attic::event::Event::RESUME, "", NULL);
-    // TODO :: re-implement this
-    //attic_service.task_manager()->ScanAtticFolder(NULL);
+    status = attic_service.Resume();
     return status;
 }
 
