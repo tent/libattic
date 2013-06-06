@@ -222,6 +222,7 @@ void TaskManager::PollFiles(TaskDelegate* del) { // This will need to be a direc
 void TaskManager::RenameFile(const std::string& original_filepath, 
                              const std::string& new_filepath) {
     TaskContext tc;
+    std::cout<<" Renaming file : " << original_filepath << " to " << new_filepath << std::endl;
     tc.set_value("file_type", "file");
     tc.set_value("original_filepath", original_filepath);
     tc.set_value("new_filepath", new_filepath);

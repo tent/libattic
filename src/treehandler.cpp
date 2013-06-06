@@ -13,55 +13,58 @@ TreeHandler::TreeHandler(const AccessToken& at,
 
 TreeHandler::~TreeHandler() {}
 
-bool TreeHandler::ConstructPostTree(const std::string& post_id, PostTree& out) {
-    // first - path, second - id
-    PostPair post_pair(post_path_, post_id);
-    post_queue_.push_back(post_pair);
+bool TreeHandler::ConstructPostTree(const std::string& post_path, 
+                                    const std::string& post_id, 
+                                    PostTree& out) {
+    typedef std::pair<std::string, std::string> PostPair; // path, version
+    std::deque<PostPair> post_queue;
+
     std::cout<<" original post id : " << post_id << std::endl;
     std::string posturl;
-    std::cout<<" finding : " << post_queue_.front().first << std::endl;
-    std::cout<<" for : " << post_queue_.front().second << std::endl;
-    utils::FindAndReplace(post_queue_.front().first, 
+    utils::FindAndReplace(post_path, 
                           "{post}", 
-                          post_queue_.front().second, 
+                          post_id, 
                           posturl);
-    std::string version;
-    while(post_queue_.size()) {
-        post_queue_.pop_front();
-        FilePost fp;
 
+    PostPair one;
+    one.first = posturl;
+    one.second = "";
+    post_queue.push_back(one);
+
+    // input id (if version get version else get latest)
+    // retrieve post
+    //  look at parents version
+    //  set parent version
+
+    while(post_queue.size()) {
+        std::string url = post_queue.front().first;
+        std::string version = post_queue.front().second;
+        post_queue.pop_front();
+
+        FilePost fp;
         bool pass = false;
         std::string raw;
         if(version.empty()) {
-            pass = RetrievePost(posturl, NULL, fp, raw);
+            pass = RetrievePost(url, NULL, fp, raw);
         }
         else {
             UrlParams params;
             params.AddValue("version", version);
-            pass = RetrievePost(posturl, &params, fp, raw);
+            pass = RetrievePost(url, &params, fp, raw);
         }
 
         if(pass) {
-            if(version != fp.version().id()) {
-                version = fp.version().id();
-                // Push into tree
-                out.PushBackPost(&fp, raw);
-            }
-            else
-                break;
+            // Push back last post
+            out.PushBackPost(&fp, raw);
             // extract id's from parents
             if(fp.version().parents().size()) {
+                std::cout<<" PARENT SIZE : " << fp.version().parents().size() << std::endl;
                 Version::ParentList::const_iterator itr = fp.version().parents().begin();
                 for(;itr!= fp.version().parents().end(); itr++) {
                     PostPair parent_p;
-                    if(version == itr->version)
-                        break;
-                    version = itr->version;
-                    if(!itr->post.empty())
-                        parent_p.first = itr->post;
-                    else
-                        parent_p.first = post_path_;
-                    post_queue_.push_back(parent_p);
+                    parent_p.first = posturl; // TODO if parent post is a different url or id, handle
+                    parent_p.second = itr->version;
+                    post_queue.push_back(parent_p);
                 }
             }
         }

@@ -61,7 +61,7 @@ int MetaTask::RetrieveFileInfoHistory(const std::string& post_id, PostTree& out)
     std::string post_path = GetPostPath();
     TreeHandler th(access_token(), post_path);
 
-    if(th.ConstructPostTree(post_id, out)) {
+    if(th.ConstructPostTree(post_path, post_id, out)) {
         std::cout<<" NODE COUNT : " << out.node_count() << std::endl;
     }
     else {

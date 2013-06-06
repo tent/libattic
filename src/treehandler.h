@@ -21,10 +21,11 @@ public:
                 const std::string& post_path);
     ~TreeHandler();
 
-    bool ConstructPostTree(const std::string& post_id, PostTree& out);
+    bool ConstructPostTree(const std::string& post_path, 
+                           const std::string& post_id, 
+                           PostTree& out);
 private:
-    typedef std::pair<std::string, std::string> PostPair; // path, id
-    std::deque<PostPair> post_queue_;
+
     std::string post_path_;
     AccessToken access_token_;
 };

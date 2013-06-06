@@ -90,7 +90,6 @@ int RenameStrategy::RenameFolder() {
                 rh.UpdateFolderMetaPost(fp, folder, new_fp);
                 status = UpdateFolderMetaPost(new_fp.id(), new_fp);
             }
-
         }
         else { 
             std::cout<<" COULD NOT FIND FOLDERPATH : " << new_folderpath << std::endl;
