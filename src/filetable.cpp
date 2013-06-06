@@ -15,9 +15,8 @@ bool FileTable::CreateTable() {
     exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
     std::string error;
     bool ret = Exec(exc, error);
-    if(!ret) {
+    if(!ret)
         log::LogString("manifest_09214", error);
-    }
     return ret; 
 }
 
@@ -50,7 +49,6 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
 
-
     std::string cred_data = fi.file_credentials().asString();
     std::string b64_cred_data;
     crypto::Base64EncodeString(cred_data, b64_cred_data);
@@ -64,32 +62,29 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     crypto::Base64EncodeString(iv, b64_iv);
 
     std::string query;
-    if(IsFileInManifest(fi.filepath())) 
-        query += "UPDATE OR REPLACE INTO ";
-    else
-        query += "INSERT OR REPLACE INTO ";
+    query += "INSERT OR REPLACE INTO ";
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
     bool ret = false;
-    ret = PrepareStatement(query, error);           if(!ret) return ret;
-    ret = BindText(1, fi.filename(), error);        if(!ret) return ret;
-    ret = BindText(2, fi.filepath(), error);        if(!ret) return ret;
-    ret = BindInt(3, fi.chunk_count(), error);      if(!ret) return ret;
-    ret = BindBlob(4, chunkdata, error);            if(!ret) return ret;
-    ret = BindInt(5, fi.file_size(), error);        if(!ret) return ret;
-    ret = BindText(6, fi.post_id(), error);         if(!ret) return ret;
-    ret = BindText(7, b64_cred_data, error);        if(!ret) return ret;
-    ret = BindText(8, fi.post_version(), error);    if(!ret) return ret;
-    ret = BindText(9, b64_key, error);              if(!ret) return ret;
-    ret = BindBlob(10, b64_iv, error);              if(!ret) return ret;
-    ret = BindInt(11, fi.deleted(), error);         if(!ret) return ret;
-    ret = BindText(12, fi.folder_post_id(), error); if(!ret) return ret;
-    ret = StepStatement(error);                     if(!ret) return ret;
-    ret = FinalizeStatement(error);                 if(!ret) return ret;
+    ret = PrepareStatement(query, error);           if(!ret) {log::ls("m_140s",error);return ret;}
+    ret = BindText(1, fi.filename(), error);        if(!ret) {log::ls("m_141s",error);return ret;}
+    ret = BindText(2, fi.filepath(), error);        if(!ret) {log::ls("m_142s",error);return ret;}
+    ret = BindInt(3, fi.chunk_count(), error);      if(!ret) {log::ls("m_143s",error);return ret;}
+    ret = BindBlob(4, chunkdata, error);            if(!ret) {log::ls("m_144s",error);return ret;}
+    ret = BindInt(5, fi.file_size(), error);        if(!ret) {log::ls("m_145s",error);return ret;}
+    ret = BindText(6, fi.post_id(), error);         if(!ret) {log::ls("m_146s",error);return ret;}
+    ret = BindText(7, b64_cred_data, error);        if(!ret) {log::ls("m_147s",error);return ret;}
+    ret = BindText(8, fi.post_version(), error);    if(!ret) {log::ls("m_148s",error);return ret;}
+    ret = BindText(9, b64_key, error);              if(!ret) {log::ls("m_149s",error);return ret;}
+    ret = BindBlob(10, b64_iv, error);              if(!ret) {log::ls("m_150s",error);return ret;}
+    ret = BindInt(11, fi.deleted(), error);         if(!ret) {log::ls("m_151s",error);return ret;}
+    ret = BindText(12, fi.folder_post_id(), error); if(!ret) {log::ls("m_152s",error);return ret;}
+    ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
+    ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
     return ret;
 }
 
@@ -134,44 +129,157 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
     out.set_folder_post_id(res.results()[11+step]);
 }
 
-bool FileTable::set_file_post_id(const std::string &filename, const std::string &id) {
+bool FileTable::set_file_post_id(const std::string &filepath, const std::string &id) {
     bool ret = false;
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += table_name();
+    exc += "\" SET metapostid=\"";
+    exc += id;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc +="\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_svn298140jfs", error);
     return  ret;
 }
 
 bool FileTable::set_file_version(const std::string& filepath, const std::string& version) {
     bool ret = false;
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += table_name();
+    exc += "\" SET postversion=\"";
+    exc += version;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc +="\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_102941m129i8412", error);
     return  ret;
 }
 
 bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
     bool ret = false;
+    char szDel[256] = {'\0'};
+    snprintf(szDel, 256, "%d", val);
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += table_name();
+    exc += "\" SET deleted=\"";
+    exc += std::string(szDel);
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc +="\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_s1000101s", error);
     return  ret;
 }
 
 bool FileTable::set_filepath(const std::string& old_filepath, const std::string& new_filepath) {
     bool ret = false;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET filepath=\"";
+    exc += new_filepath;
+    exc += "\" WHERE filepath=\"";
+    exc += old_filepath;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_0nsv9188ds5", error);
     return  ret;
 }
 
 bool FileTable::set_filename(const std::string& filepath, const std::string& new_filename) {
     bool ret = false;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET filename=\"";
+    exc += new_filename;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_0012588ms5", error);
     return  ret;
 }
 
 bool FileTable::set_folder_post_id(const std::string& filepath, const std::string& post_id) {
     bool ret = false;
-    return  ret;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET folder_post_id=\"";
+    exc += post_id;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_010158mgs5", error);
+    return ret;
 }
 
 bool FileTable::set_chunk_count(const std::string& filepath, const std::string& chunk_count) {
     bool ret = false;
-    return  ret;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET chunkcount=\"";
+    exc += chunk_count;
+    exc += "\" WHERE filepath=\"";
+    exc += filepath;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_01058g55", error);
+    return ret;
 }
 
 bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     bool ret = false;
     std::string query;
+    query += "SELECT * FROM ";
+    query += table_name();
+    query += " WHERE filepath=\"";
+    query += filepath;
+    query += "\";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0)
+                ExtractFileInfoResults(res, step, out);
+        }
+        ret = true;
+    }
+    else {
+        log::LogString("manifest_8i09255", error);
+    }
     return  ret;
 }
 
@@ -190,9 +298,8 @@ bool FileTable::QueryForFileByPostId(const std::string& post_id, FileInfo& out) 
         int step = 0;
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
-            if(step > 0) {
+            if(step > 0)
                 ExtractFileInfoResults(res, step, out);
-            }
         }
         ret = true;
     }
@@ -264,9 +371,8 @@ bool FileTable::MarkAllFilesDeletedInFolder(const std::string& folderid) {
     FileInfoList file_list;
     if(QueryAllFilesForFolder(folderid, file_list) == ret::A_OK) {
         FileInfoList::iterator itr = file_list.begin();
-        for(;itr!= file_list.end(); itr++) {
+        for(;itr!= file_list.end(); itr++)
             ret = set_file_deleted((*itr).filepath(), 1);
-        }
     }
     return ret;
 }

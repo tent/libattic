@@ -23,7 +23,7 @@ class FileTable : public TableHandler {
 public:
     typedef std::deque<FileInfo> FileInfoList;
     
-    ~FileTable() {TableHandler::~TableHandler();}
+    ~FileTable() {}
 
     bool CreateTable();
     bool IsFileInManifest(const std::string &filepath);
@@ -31,7 +31,7 @@ public:
     bool InsertFileInfo(const FileInfo& fi);
     bool RemoveFileInfo(const std::string &filepath);
 
-    bool set_file_post_id(const std::string &filename, const std::string &id);
+    bool set_file_post_id(const std::string &filepath, const std::string &id);
     bool set_file_version(const std::string& filepath, const std::string& version);
     bool set_file_deleted(const std::string& filepath, const int val);
     bool set_filepath(const std::string& old_filepath, const std::string& new_filepath);
