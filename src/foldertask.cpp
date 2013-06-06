@@ -82,6 +82,7 @@ int FolderTask::RenameFolder() {
             }
         }
         else {
+
             std::cout<<" EMPTY POST ID " << std::endl;
         }
     }

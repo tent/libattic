@@ -77,6 +77,25 @@ static void LogDebugString(const std::string& id, const std::string& buffer) {
 #endif
 }
 
+class dbg {
+public:
+    dbg(){}
+    ~dbg(){}
+
+
+    std::ostream& push_ostream(std::ostream& os) {
+        stream << os;
+        return os;
+    }
+private:
+    std::ostringstream stream;
+};
+
+std::ostream& operator<<(std::ostream& os, dbg& buffer) {
+    return buffer.push_ostream(os);
+}
+
+
 
 }}//namespace
 #endif
