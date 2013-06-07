@@ -2,40 +2,31 @@
 #define CREDENTIALS_H_
 #pragma once
 
+#include <sodium.h>
 #include <string>
 #include <stdio.h>
-#include <aes.h>
-
-#include "jsonserializable.h"
 
 namespace attic { 
 
-class Credentials : public JsonSerializable {
+class Credentials  {
 public:
     Credentials();
     ~Credentials();
 
-    virtual void Serialize(Json::Value& root);
-    virtual void Deserialize(Json::Value& root);
-
-    void GetSerializedCredentials(std::string& out);
-
-    std::string asString() const;
-
-    size_t GetKeySize() const { return sizeof(byte) * CryptoPP::AES::MAX_KEYLENGTH; }
-    size_t GetIvSize() const { return sizeof(byte) * CryptoPP::AES::BLOCKSIZE; } 
+    unsigned int GetKeySize() const { return sizeof(unsigned char) * crypto_secretbox_KEYBYTES; }
+    unsigned int GetIvSize() const { return sizeof(unsigned char) * crypto_secretbox_NONCEBYTES; } 
 
     const std::string& key() const { return key_; }
     const std::string& iv() const { return iv_; }
 
-    const byte* byte_key() const { return byte_key_; }
-    const byte* byte_iv() const { return byte_iv_; }
+    const unsigned char* byte_key() const { return byte_key_; }
+    const unsigned char* byte_iv() const { return byte_iv_; }
 
     int set_key(const std::string& key);
-    int set_key(const byte* pKey, const unsigned int length);
+    int set_key(const unsigned char* key, const unsigned int len);
 
     int set_iv(const std::string& iv); 
-    int set_iv(const byte* pIv, const unsigned int length);
+    int set_iv(const unsigned char* iv, const unsigned int len);
 
     bool byte_key_empty();
     bool byte_iv_empty();
@@ -47,8 +38,8 @@ private:
     std::string key_;
     std::string iv_;
 
-    byte byte_key_[CryptoPP::AES::MAX_KEYLENGTH+1];
-    byte byte_iv_[CryptoPP::AES::BLOCKSIZE+1]; 
+    unsigned char byte_key_[crypto_secretbox_KEYBYTES];
+    unsigned char byte_iv_[crypto_secretbox_NONCEBYTES]; 
 };
 
 } //namespace

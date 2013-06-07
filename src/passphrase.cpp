@@ -299,19 +299,13 @@ int Passphrase::CreatePhraseToken(const std::string& master_key, PhraseToken& ou
     if(status == ret::A_OK) {
         // Generate Salt
         std::string salt;
-        status = crypto::GenerateSalt(salt);
-        status = crypto::CheckSalt(salt);
-
-        if(status == ret::A_OK) {
-            out.set_salt(salt);
-
-            // Generate Passphrase Key 
-            Credentials cred;
-            crypto::GenerateKeyFromPassphrase(master_key, salt, cred);
-            
-            // Set the key generated from phrase
-            out.set_phrase_key(cred.key());
-        }
+        crypto::GenerateNonce(salt);
+        out.set_salt(salt);
+        // Generate Passphrase Key 
+        Credentials cred;
+        crypto::GenerateKeyFromPassphrase(master_key, salt, cred);
+        // Set the key generated from phrase
+        out.set_phrase_key(cred.key());
     }
 
     return status;

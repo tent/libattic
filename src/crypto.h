@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 
+// Depricated
 #include <hex.h>         
 #include <filters.h>     
 #include <gcm.h>         
@@ -14,6 +15,9 @@
 #include <base32.h>
 #include <base64.h>
 #include <files.h>
+// Depricated //
+
+#include <sodium.h>
 
 #include "errorcodes.h"
 #include "credentials.h"
@@ -34,17 +38,30 @@ extern "C"
 }
 
 namespace attic { namespace crypto {
+// new
+static bool ScryptEncode(const std::string &input, 
+                         const std::string &salt,
+                         const unsigned int size,
+                         std::string &out);
 
+static void GenerateKey(std::string& out);
+static void GenerateIv(std::string& out);
+static void GenerateNonce(std::string& out);
+static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out);
+static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out);
+static int EnterKeyFromPassphrase(const std::string& pass, const std::string& iv, Credentials& out);
+static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
+static Credentials GenerateCredentials();
+static void GenerateCredentials(Credentials& cred);
+
+// Old
 static const int TAG_SIZE = 16;
 static const int SALT_SIZE = 16;
 static CryptoPP::AutoSeededRandomPool  g_Rnd;                // Random pool used for key generation
 static unsigned int                    g_Stride = 400000;    // Size of stride used when encrypting
 
 
-static Credentials GenerateCredentials();
-static void GenerateCredentials(Credentials& cred);
 static void GenerateIv(std::string& out);
-static void GenerateSha256Hash(const std::string& source, std::string& hash_out);
 static bool GenerateHash( const std::string& source, std::string& hash_out);
 static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out);
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
@@ -70,14 +87,6 @@ static int GenerateKeyFromPassphrase( const std::string& pass,
                                       const std::string& salt,
                                       Credentials& out);
 
-static bool ScryptEncode( const std::string &input, 
-                          const std::string &salt,
-                          std::string &out,
-                          unsigned int size);
-
-static int CheckSalt(const std::string& salt);
-static int GenerateSalt(std::string& out);
-
 static int GenerateHMACForString(const std::string& input,
                                  const Credentials& cred,
                                  std::string& macOut);
@@ -85,34 +94,6 @@ static int GenerateHMACForString(const std::string& input,
 static int VerifyHMACForString(const std::string& input,
                                const Credentials& cred,
                                const std::string& mac);
-
-static Credentials GenerateCredentials() {
-    // This is returning a copy on purpose, 
-    // When this is called, credentials should 
-    // be used, then stored (if needed), and fall 
-    // out of scope as quickly as possible
-    Credentials cred;
-    GenerateCredentials(cred);
-    return cred;
-}
-
-static void GenerateCredentials(Credentials& cred) {
-    byte key[CryptoPP::AES::MAX_KEYLENGTH+1];
-    byte iv[CryptoPP::AES::BLOCKSIZE+1]; 
-
-    g_Rnd.GenerateBlock(key, cred.GetKeySize());   // Generate a random key
-    g_Rnd.GenerateBlock(iv, cred.GetIvSize());     // Generate a random IV
-
-    cred.set_key(key, CryptoPP::AES::MAX_KEYLENGTH);
-    cred.set_iv(iv, CryptoPP::AES::BLOCKSIZE);
-}
-
-static void GenerateIv(std::string& out) {
-    byte iv[CryptoPP::AES::BLOCKSIZE];
-    memset(iv, 0, CryptoPP::AES::BLOCKSIZE);
-    g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE); 
-    out.append(reinterpret_cast<char*>(iv), CryptoPP::AES::BLOCKSIZE);
-}
 
 static void GenerateSha256Hash(const std::string& source, std::string& hash_out) {
     CryptoPP::SHA256 hash;
@@ -280,95 +261,7 @@ static int DecryptStringGCM(const std::string& cipher,
 
 
 
-static int GenerateKeyFromPassphrase(const std::string& pass, 
-                                     const std::string& salt,
-                                     Credentials& out) {
-    int status = ret::A_OK;
-    std::string outKey; //, outIv;
 
-    // Check salt for size and correctness
-    status = CheckSalt(salt);
-    if(status == ret::A_OK) {
-        ScryptEncode(pass, salt, outKey, CryptoPP::AES::MAX_KEYLENGTH); // MAX_KEYLENGTH for AES is 32
-        //ScryptEncode(name, outIv, CryptoPP::AES::BLOCKSIZE);
-        byte key[CryptoPP::AES::MAX_KEYLENGTH+1];
-        memset(key, '\0', CryptoPP::AES::MAX_KEYLENGTH+1);
-        memcpy(key, outKey.c_str(), CryptoPP::AES::MAX_KEYLENGTH);
-        out.set_key(key, CryptoPP::AES::MAX_KEYLENGTH);
-
-        byte iv[CryptoPP::AES::BLOCKSIZE+1];
-        memset(iv, '\0', CryptoPP::AES::BLOCKSIZE+1);
-        memcpy(iv, salt.c_str(), salt.size());
-        out.set_iv(iv, salt.size());
-    }
-
-    return status;
-}
-
-static bool ScryptEncode(const std::string &input, 
-                         const std::string &salt,
-                         std::string &out,
-                         unsigned int size) {
-    // Note* pass in 16 bit salt
-    //uint8_t salt[32]; // 16 <- do 16, 64 or 128
-
-    uint8_t* password;
-    size_t plen;
-
-    uint64_t N = 16384;
-    uint32_t r = 8;
-    uint32_t p = 1;
-
-    //uint8_t dk[64]; // Derived key
-    uint8_t dk[size]; // Derived key
-
-    byte* pInput = new byte[input.size()];
-    memcpy(pInput, reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
-
-    byte* pSalt = new byte[salt.size()];
-    memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
-
-    crypto_scrypt( pInput,
-                   input.size(),
-                   pSalt,
-                   salt.size(),
-                   N,
-                   r,
-                   p,
-                   dk,
-                   size);
-    
-
-    out.append( reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
-
-    if(pInput) {
-        delete[] pInput;
-        pInput = NULL;
-    }
-
-    if(pSalt) {
-        delete[] pSalt;
-        pSalt = NULL;
-    }
-
-    return true;
-}
-
-static int CheckSalt(const std::string& salt) {
-    int status = ret::A_OK;
-
-    // Check for correct size
-    if(salt.size() != SALT_SIZE) {
-        status = ret::A_FAIL_SCRYPT_INVALID_SALT_SIZE;
-    }
-    return status;
-}
-
-static int GenerateSalt(std::string& out) {
-    int status = ret::A_OK;
-    utils::GenerateRandomString(out, SALT_SIZE);
-    return status;
-}
 
 static int GenerateHMACForString(const std::string& input,
                                  const Credentials& cred,
@@ -507,6 +400,143 @@ static void GenerateRandomString(std::string& out, const unsigned int size = 16)
     std::string intermed;
     intermed.append(reinterpret_cast<const char*>(pcbScratch), BLOCKSIZE);
     Base64EncodeString(intermed, out);
+}
+
+
+// New NACL STUFF
+//
+//
+//
+static Credentials GenerateCredentials() {
+    Credentials cred;
+    GenerateCredentials(cred);
+    return cred;
+}
+
+static void GenerateCredentials(Credentials& cred) {
+    std::string key, iv;
+    GenerateIv(iv);
+    GenerateKey(key);
+    cred.set_key(key);
+    cred.set_iv(iv);
+}
+
+static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out) {
+    std::string buffer;
+    // append buffer, (required by nacl)
+    buffer.append(32,0);
+    // append data
+    buffer.append(in.c_str(), in.size());
+    // ciphertext
+    unsigned char c[buffer.size()];
+    if(crypto_secretbox(c,  
+                        reinterpret_cast<const unsigned char*>(buffer.c_str()),
+                        buffer.size(),
+                        cred.byte_iv(),
+                        cred.byte_key()) == 0) {
+        out.append(reinterpret_cast<const char*>(c), buffer.size());
+        return true;
+    }
+    return false;
+}
+
+static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
+    unsigned char m[in.size()];
+    if(crypto_secretbox_open(m, 
+                             reinterpret_cast<const unsigned char*>(in.c_str()),
+                             in.size(),
+                             cred.byte_iv(),
+                             cred.byte_key()) == 0) {
+        out.append(reinterpret_cast<const char*>(m), in.size());
+        // remove padding
+        out.erase(0, 32);
+        return true;
+    }
+    return false;
+}
+
+static void GenerateKey(std::string& out) {
+    unsigned char key[crypto_secretbox_KEYBYTES];
+    randombytes(key, crypto_secretbox_KEYBYTES);
+    out.append(reinterpret_cast<const char*>(key), crypto_secretbox_KEYBYTES);
+}
+
+static void GenerateNonce(std::string& out) {
+    unsigned char nonce[crypto_secretbox_NONCEBYTES];
+    randombytes(nonce, crypto_secretbox_NONCEBYTES);
+    out.append(reinterpret_cast<const char*>(nonce), crypto_secretbox_NONCEBYTES);
+}
+
+static void GenerateIv(std::string& out) {
+    GenerateNonce(out);
+}
+
+static int EnterKeyFromPassphrase(const std::string& pass, const std::string& iv, Credentials& out) {
+    int status = ret::A_OK;
+    std::string key;
+    ScryptEncode(pass, iv, out.GetKeySize(), key);
+    // Set key
+    status = out.set_key(key);
+    if(status == ret::A_OK) {
+        // Set iv
+        status = out.set_iv(iv);
+    }
+    return status;
+}
+
+static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out) {
+    int status = ret::A_OK;
+    std::string key, salt;
+    GenerateNonce(salt);
+    status = EnterKeyFromPassphrase(pass, salt, out);
+    return status;
+}
+
+static bool ScryptEncode(const std::string &input, 
+                         const std::string &salt,
+                         const unsigned int size,
+                         std::string &out) {
+    // Note* pass in 16 bit salt
+    //uint8_t salt[32]; // 16 <- do 16, 64 or 128
+
+    uint8_t* password;
+    size_t plen;
+
+    uint64_t N = 16384;
+    uint32_t r = 8;
+    uint32_t p = 1;
+
+    //uint8_t dk[64]; // Derived key
+    uint8_t dk[size]; // Derived key
+
+    byte* pInput = new byte[input.size()];
+    memcpy(pInput, reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
+
+    byte* pSalt = new byte[salt.size()];
+    memcpy(pSalt, reinterpret_cast<const unsigned char*>(salt.c_str()), salt.size());
+
+    crypto_scrypt( pInput,
+                   input.size(),
+                   pSalt,
+                   salt.size(),
+                   N,
+                   r,
+                   p,
+                   dk,
+                   size);
+    out.append(reinterpret_cast<char*>(dk), sizeof(uint8_t)*size);
+
+    if(pInput) {
+        delete[] pInput;
+        pInput = NULL;
+    }
+
+    if(pSalt) {
+        delete[] pSalt;
+        pSalt = NULL;
+    }
+
+    return true;
 }
 
 }} //namespace

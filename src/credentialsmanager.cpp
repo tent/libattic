@@ -115,22 +115,17 @@ int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken&
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
 
     if(status == ret::A_OK) {
-
         // Generate Salt
         std::string salt;
-        status = crypto::GenerateSalt(salt);
-        status = crypto::CheckSalt(salt);
+        crypto::GenerateNonce(salt);
+        ptOut.set_salt(salt);
 
-        if(status == ret::A_OK) {
-            ptOut.set_salt(salt);
-
-            // Generate Passphrase Key 
-            Credentials cred;
-            crypto::GenerateKeyFromPassphrase(pass, salt, cred);
-            
-            // Set the key generated from phrase
-            ptOut.set_phrase_key(cred.key());
-        }
+        // Generate Passphrase Key 
+        Credentials cred;
+        crypto::GenerateKeyFromPassphrase(pass, salt, cred);
+        
+        // Set the key generated from phrase
+        ptOut.set_phrase_key(cred.key());
     }
     Unlock();
     return status;

@@ -219,7 +219,7 @@ TEST(CRYPTO, ENCRYPTIONCFB)
 
     ASSERT_EQ(plaintext, decryptedtext);
 }
-
+/*
 TEST(CRYPTO, CREDENCRYPTIONGCM)
 {
     attic::Credentials masterkey;
@@ -272,6 +272,7 @@ TEST(CRYPTO, CREDENCRYPTIONGCM)
     ASSERT_EQ(status, 0);
     ASSERT_EQ(key, deckey);
 }
+*/
 
 /*
 TEST(CRYPTO, FILEHASH) {
@@ -288,16 +289,12 @@ TEST(SCRYPT, ENTER_PASSPHRASE)
     attic::Credentials cred, cred1;
 
     std::string pw("password");
-    std::string iv;
-    attic::crypto::GenerateSalt(iv); 
 
     int status = attic::crypto::GenerateKeyFromPassphrase( pw,
-                                               iv,
                                                cred);
     
     ASSERT_EQ(status, 0);
     status = attic::crypto::GenerateKeyFromPassphrase( pw ,
-                                  iv,
                                   cred1);
 
     ASSERT_EQ(status, 0);
@@ -309,12 +306,11 @@ TEST(SCRYPT, ENCODE)
 {
     std::string input("thisistestinput");
     std::string iv;
-
-    attic::crypto::GenerateSalt(iv); 
+    attic::crypto::GenerateNonce(iv); 
 
     std::string out, out1;
-    attic::crypto::ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
-    attic::crypto::ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
+    attic::crypto::ScryptEncode(input, iv, crypto_secretbox_KEYBYTES, out);
+    attic::crypto::ScryptEncode(input, iv, crypto_secretbox_KEYBYTES, out1);
 
     int res =  strcmp(out.c_str(), out1.c_str());
     ASSERT_EQ(res, 0);
@@ -559,33 +555,6 @@ TEST(BASE64, ENCODEDECODE) {
     }
 }
 
-TEST(BASE64, TEST) {
-    CryptoPP::AutoSeededRandomPool  g_Rnd;
-
-    for(int i=0; i<1000; i++) {
-        byte iv[CryptoPP::AES::BLOCKSIZE]; 
-        g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE);
-        std::string hold;
-        hold.append(reinterpret_cast<const char*>(iv), CryptoPP::AES::BLOCKSIZE);
-
-        std::string output;
-        CryptoPP::StringSource(hold, 
-                               true, 
-                               new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
-                                                           false)
-                               );
-
-        std::string original;
-        CryptoPP::StringSource(output,
-                               true,
-                               new CryptoPP::Base64Decoder(new CryptoPP::StringSink(original))
-                               );
-
-        if(original != hold) {
-            std::cout<<" FAIL " << std::endl;
-        }
-    }
-}
 
 TEST(STRTOL, TEST) {
     std::string ts("1370368446");
@@ -598,7 +567,100 @@ TEST(STRTOL, TEST) {
     ASSERT_EQ(tb, e);
 }
 
+#include <sodium.h>
+TEST(SODIUM, SHA256) {
+    std::string test("1248i9184591iujwidejgisdjg\0184912gt");
+    unsigned char out[crypto_hash_sha512_BYTES];
+    sodium_init();
+    crypto_hash_sha512(out, reinterpret_cast<const unsigned char*>(test.c_str()),test.size());
+    for(int i=0; i<crypto_hash_sha512_BYTES; i++) {
+        printf("%02x",(unsigned int) out[i]);
+    }
 
+}
+
+unsigned char firstkey[32] = {
+     0x1b,0x27,0x55,0x64,0x73,0xe9,0x85,0xd4
+         ,0x62,0xcd,0x51,0x19,0x7a,0x9a,0x46,0xc7
+         ,0x60,0x09,0x54,0x9e,0xac,0x64,0x74,0xf2
+         ,0x06,0xc4,0xee,0x08,0x44,0xf6,0x83,0x89
+} ;
+
+unsigned char nonce[16] = {
+     0x69,0x69,0x6e,0xe9,0x55,0xb6,0x2b,0x73
+         ,0xcd,0x62,0xbd,0xa8,0x75,0xfc,0x73,0xd6
+} ;
+
+TEST(SODIUM, aes156STREAM) {
+    std::string test("1248i9184591iujwidejgisdjg\0184912gt");
+    test += " this is my test string, yep";
+    unsigned char c[test.size()];
+    crypto_stream_aes256estream_xor(c, 
+                                    reinterpret_cast<const unsigned char*>(test.c_str()),
+                                    test.size(),
+                                    nonce,
+                                    firstkey);
+    for (int i = 32;i < 163;++i) {
+            //printf(",0x%02x",(unsigned int) c[i]);
+             //   if (i % 8 == 7) printf("\n");
+                  }
+      //printf("\n");
+
+    unsigned char p[test.size()]; 
+    crypto_stream_aes256estream_xor(p, 
+                                    c,
+                                    test.size(),
+                                    nonce,
+                                    firstkey);
+
+    std::cout<<" original : " << test << std::endl;
+    std::string output;
+    output.append(reinterpret_cast<const char*>(p), test.size());
+    std::cout<<" decrypted : " << output << std::endl;
+
+    ASSERT_EQ(test, output);
+}
+
+TEST(SODIUM, SECRET_BOX) {
+    char pad[32]={0};
+    
+    std::string msg;
+    //msg.append(pad, 32);
+    msg.append(32, 0);
+    msg += "this is my test message";
+
+    std::cout<<msg.size()<< std::endl;
+    std::cout<<" original msg : " << msg << std::endl;
+    std::cout<<msg.size()<< std::endl;
+    unsigned char ciphertext[msg.size()];
+    unsigned char key[crypto_secretbox_KEYBYTES];
+    randombytes(key, crypto_secretbox_KEYBYTES);
+    unsigned char iv[crypto_secretbox_NONCEBYTES];
+    randombytes(iv, crypto_secretbox_NONCEBYTES);
+
+    int result = crypto_secretbox(ciphertext, 
+                                  reinterpret_cast<const unsigned char*>(msg.c_str()), 
+                                  msg.size(),
+                                  iv, 
+                                  key);
+
+    unsigned char m2[msg.size()];
+    std::string f;
+    if (crypto_secretbox_open(m2,
+                              ciphertext,
+                              msg.size(),
+                              iv,
+                              key) == 0) {
+        f.append(reinterpret_cast<const char*>(m2), msg.size());
+        std::cout<<" opened the box : " << f << std::endl;
+        std::cout<<f.size() << std::endl;
+        std::cout<< f.substr(32) << std::endl;
+    }
+    else {
+        std::cout<<" ciphertext fails verification" << std::endl;
+    }
+    ASSERT_EQ(f, msg);
+}
 
 int main (int argc, char* argv[]) {
    int status = 0;
