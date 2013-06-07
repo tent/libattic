@@ -106,7 +106,6 @@ ExternalProject_Add(boost
 #--with-test --with-regex --with-date_time --with-filesystem --with-program_options 
 )
 
-
 ExternalProject_Get_Property(boost INSTALL_DIR)
 set(BOOST_DIR ${INSTALL_DIR})
 include_directories(${BOOST_DIR}/include)
@@ -129,6 +128,23 @@ set_property(TARGET boost_timer PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libb
 add_library(boost_chrono STATIC IMPORTED)
 set_property(TARGET boost_chrono PROPERTY IMPORTED_LOCATION ${BOOST_DIR}/lib/libboost_chrono.a)
 
+# libsodium
+set (nacl_ver 0.4.1)
+ExternalProject_Add(libsodium
+    URL http://download.dnscrypt.org/libsodium/releases/libsodium-${nacl_ver}.tar.gz 
+    BUILD_IN_SOURCE 1
+    CONFIGURE_COMMAND <SOURCE_DIR>/autogen.sh
+    BUILD_COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> 
+    INSTALL_COMMAND make -j4
+)
+
+ExternalProject_Get_Property(libsodium INSTALL_DIR)
+set(NACL_DIR ${INSTALL_DIR})
+include_directories(${NACL_DIR}/src/libsodium/src/libsodium/include)
+
+add_library(nacl_lib STATIC IMPORTED)
+set_property(TARGET nacl_lib PROPERTY IMPORTED_LOCATION ${NACL_DIR}/src/libsodium//src/libsodium/.libs/libsodium.a)
+
 
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
@@ -140,12 +156,13 @@ if(ATTIC_STATIC_LIB)
                           boost_datetime
                           boost_timer
                           boost_chrono
+                          nacl_lib
                           pthread
                           ssl)
 
 
     include(mergestaticlibs)
-    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime boost_timer boost_chrono)
+    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime boost_timer boost_chrono nacl_lib)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
@@ -160,6 +177,7 @@ if(ATTIC_BINARY)
                           boost_chrono
                           pthread
                           crypto
+                          nacl_lib
                           dl
                           ssl
                           rt
