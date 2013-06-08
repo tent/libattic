@@ -49,7 +49,7 @@ static void GenerateIv(std::string& out);
 static void GenerateNonce(std::string& out);
 static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out);
 static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out);
-static int EnterKeyFromPassphrase(const std::string& pass, const std::string& iv, Credentials& out);
+static int EnterPassphrase(const std::string& pass, const std::string& iv, Credentials& out);
 static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
 static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
@@ -471,7 +471,7 @@ static void GenerateIv(std::string& out) {
     GenerateNonce(out);
 }
 
-static int EnterKeyFromPassphrase(const std::string& pass, const std::string& iv, Credentials& out) {
+static int EnterPassphrase(const std::string& pass, const std::string& iv, Credentials& out) {
     int status = ret::A_OK;
     std::string key;
     ScryptEncode(pass, iv, out.GetKeySize(), key);
@@ -488,7 +488,7 @@ static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out) 
     int status = ret::A_OK;
     std::string key, salt;
     GenerateNonce(salt);
-    status = EnterKeyFromPassphrase(pass, salt, out);
+    status = EnterPassphrase(pass, salt, out);
     return status;
 }
 

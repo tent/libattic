@@ -41,17 +41,6 @@ public:
     int LoadPhraseToken();
 
     // Pass Phrase
-    int EnterPassphrase( const std::string& pass, 
-                         std::string& salt, 
-                         std::string& keyOut);
-
-    int RegisterPassphrase( const std::string& pass, 
-                            PhraseToken& ptOut);
-
-    int ChangePassphrase( const std::string& oldpass, 
-                          const std::string& newpass, 
-                          PhraseToken& ptOut);
-    
     int GenerateMasterKey( std::string& keyOut);
     void GenerateMasterKey( MasterKey& mkOut);
     void CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut);

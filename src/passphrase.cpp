@@ -271,7 +271,7 @@ void Passphrase::GeneratePhraseKey(const std::string& passphrase,
                                    const std::string& salt,
                                    std::string& key_out) {
     Credentials cred;
-    crypto::GenerateKeyFromPassphrase(passphrase, salt, cred);
+    crypto::EnterPassphrase(passphrase, salt, cred);
     // Create Passphrase token
     key_out = cred.key();
 }
@@ -297,15 +297,12 @@ int Passphrase::CreatePhraseToken(const std::string& master_key, PhraseToken& ou
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
 
     if(status == ret::A_OK) {
-        // Generate Salt
-        std::string salt;
-        crypto::GenerateNonce(salt);
-        out.set_salt(salt);
         // Generate Passphrase Key 
         Credentials cred;
-        crypto::GenerateKeyFromPassphrase(master_key, salt, cred);
+        crypto::GenerateKeyFromPassphrase(master_key, cred);
         // Set the key generated from phrase
         out.set_phrase_key(cred.key());
+        out.set_salt(cred.iv());
     }
 
     return status;
