@@ -1,18 +1,27 @@
 #include "credentials.h"
 
+
+#include <sys/mman.h>
 #include <string.h>
 #include "errorcodes.h"
 
 #include "crypto.h"
+
 
 namespace attic {
 
 Credentials::Credentials() {
     memset(byte_key_, 0, crypto_secretbox_KEYBYTES);
     memset(byte_iv_, 0, crypto_secretbox_NONCEBYTES);
+    mlock(this, sizeof(Credentials));
 }
 
-Credentials::~Credentials() {}
+Credentials::~Credentials() {
+    key_.clear();
+    iv_.clear();
+    crypto::SecureZeroMemory(byte_key_, crypto_secretbox_KEYBYTES);
+    crypto::SecureZeroMemory(byte_iv_, crypto_secretbox_NONCEBYTES);
+}
 
 int Credentials::set_key(const std::string& key) { 
     int status = ret::A_OK;
