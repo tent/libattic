@@ -14,10 +14,12 @@ class ChunkTransform {
     bool Encrypt(const std::string& in, std::string& out);
     void Encode(const std::string& in, std::string& out);
     void GenerateVerificationHash(std::string& out);
+    void Compose(const std::string& in, std::string& out);
 
     void Decode(const std::string& in, std::string& out);
     bool Decrypt(const std::string& in, std::string& out);
     void Decompress(const std::string& in, std::string& out);
+    void Decompose(const std::string& in, std::string& out);
 public:
     ChunkTransform(const std::string& chunk, const char* key, unsigned int size);
     ChunkTransform(const std::string& chunk, const std::string& file_key);
@@ -51,6 +53,7 @@ private:
     std::string data_;
     std::string finalized_data_;
 };
+
 
 } //namespace
 #endif
