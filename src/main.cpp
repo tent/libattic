@@ -121,21 +121,6 @@ TEST(CRYPTO, BASE64)
     ASSERT_EQ(teststring, decoded);
 }
 
-TEST(CRYPTO, HMAC)
-{
-    int status = attic::ret::A_OK;
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
-
-    std::string plaintext("this is my plain text");
-
-    std::string macout;
-    status = attic::crypto::GenerateHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, attic::ret::A_OK);
-
-    status = attic::crypto::VerifyHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, attic::ret::A_OK);
-}
-
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {
     std::string passphrase("password");
@@ -274,6 +259,64 @@ TEST(CHUNKINFO, SERIALIZATION)
     attic::jsn::SerializeObject(&ci2, output2);
 
     ASSERT_EQ(output, output2);
+}
+
+TEST(CHUNK, COMPOSE_DECOMPOSE) {
+    std::string payload("this is my test data, ksajdkfjkasjdgkasjdga");
+    std::string iv("test iv, not a real iv");
+
+    std::string composed;
+    unsigned char format = 1;
+    composed.append(format, 1);
+
+    char ivsize[4];
+    unsigned int n = iv.size();
+    ivsize[0] = (n >> 24) & 0xFF;
+    ivsize[1] = (n >> 16) & 0xFF;
+    ivsize[2] = (n >> 8) & 0xFF;
+    ivsize[3] = n & 0xFF;
+
+    composed.append(ivsize, 4);
+    /*
+    printf("%x %x %x %x\n", (unsigned char)ivsize[0],
+                            (unsigned char)ivsize[1],
+                            (unsigned char)ivsize[2],
+                            (unsigned char)ivsize[3]);
+                            */
+
+    composed.append(iv.c_str(), n);
+
+    unsigned int data_size = payload.size();
+    char datasize[4] = {0};
+    datasize[0] = (data_size >> 24) & 0xFF;
+    datasize[1] = (data_size >> 16) & 0xFF;
+    datasize[2] = (data_size >> 8) & 0xFF;
+    datasize[3] = data_size & 0xFF;
+
+    composed.append(datasize, 4);
+    composed.append(payload.c_str(), data_size);
+
+    int offset = 0;
+    unsigned char fmt = composed[0];
+    offset++;
+    unsigned int iv_back = 0;
+    std::string eiv = composed.substr(offset, 4);
+    for(int i=0; i < sizeof(iv_back); i++) {
+        iv_back = (iv_back << 8) + eiv[i];
+    }
+    offset += 4;
+    ASSERT_EQ(iv_back, iv.size());
+    ASSERT_EQ(iv, composed.substr(offset, iv_back));
+    offset += iv_back;
+
+    unsigned int d_back = 0;
+    std::string ddata = composed.substr(offset, 4);
+    for(int i=0; i<sizeof(d_back); i++) {
+        d_back = (d_back<<8) + ddata[i];
+    }
+    offset += 4;
+    ASSERT_EQ(d_back, payload.size());
+    ASSERT_EQ(composed.substr(offset, d_back), payload);
 }
 
 /*
