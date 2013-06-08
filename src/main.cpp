@@ -286,20 +286,18 @@ TEST(CRYPTO, FILEHASH) {
 
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {
-    attic::Credentials cred, cred1;
+    std::string passphrase("password");
 
-    std::string pw("password");
+    attic::Credentials cred;                                  
+    // Will generate credentials from passphrase
+    attic::crypto::GenerateKeyFromPassphrase(passphrase, cred);
 
-    int status = attic::crypto::GenerateKeyFromPassphrase( pw,
-                                               cred);
-    
-    ASSERT_EQ(status, 0);
-    status = attic::crypto::GenerateKeyFromPassphrase( pw ,
-                                  cred1);
 
-    ASSERT_EQ(status, 0);
+    attic::Credentials cred1;
+    // Enter passphrase and known salt
+    attic::crypto::EnterPassphrase(passphrase, cred.iv(), cred1);   
+
     ASSERT_EQ(cred.key(), cred1.key());
-    ASSERT_EQ(cred.iv(), cred1.iv());
 }
 
 TEST(SCRYPT, ENCODE)
