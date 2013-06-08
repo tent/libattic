@@ -14,7 +14,7 @@ namespace attic {
 class FileInfo {
     void ExtractFilename(const std::string &filepath, std::string &out);
 public:
-    typedef std::map<std::string, ChunkInfo> ChunkMap;
+    typedef std::map<std::string, ChunkInfo> ChunkMap; // key : chunk: name // value : chunk
 
     FileInfo(const std::string& filename,
              const std::string& filepath,
@@ -32,7 +32,6 @@ public:
 
     void GetSerializedChunkData(std::string& out) const;
     bool LoadSerializedChunkData(const std::string& data);
-    bool LoadSerializedChunkPost(const std::string& data);
     bool HasEncryptedKey();
     bool IsValid() { return !filename_.empty(); }
     

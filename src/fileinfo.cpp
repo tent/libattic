@@ -80,23 +80,15 @@ ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname) {
 
 void FileInfo::GetSerializedChunkData(std::string& out) const {
     ChunkMap::const_iterator itr = chunks_.begin();
-    std::vector<std::string> chunkList;
-
-    std::string chunk;
+    Json::Value chunk_list;
     for(;itr != chunks_.end(); itr++) {
-        ChunkInfo ci = itr->second;
-        chunk.clear();
-        jsn::SerializeObject(&ci, chunk);
-        chunkList.push_back(chunk);
+        ChunkInfo ci = itr->second; // we copy because of the constness ... 
+        Json::Value c;
+        jsn::SerializeObject(&ci, c);
+        chunk_list.append(c);
     }
-
-    if(chunkList.size() > 0) {
-        Json::Value val;
-        jsn::SerializeVector(chunkList, val);
-
-        Json::StyledWriter writer;
-        out = writer.write(val);
-    }
+    Json::StyledWriter writer;
+    out = writer.write(chunk_list);
 }
 
 bool FileInfo::LoadSerializedChunkData(const std::string& data) {
@@ -110,25 +102,15 @@ bool FileInfo::LoadSerializedChunkData(const std::string& data) {
         return false;
     }
 
-    std::vector<std::string> chunkList;
-    jsn::DeserializeIntoVector(root, chunkList);
-
-    std::vector<std::string>::iterator itr = chunkList.begin();
-
-    for(;itr != chunkList.end(); itr++) {
-        ChunkInfo ci = ChunkInfo();
+    Json::ValueIterator itr = root.begin();
+    for(; itr != root.end(); itr++) {
+        ChunkInfo ci;
         jsn::DeserializeObject(&ci, *itr);
-
         std::string name = ci.chunk_name();
         if(chunks_.find(name) == chunks_.end()) {
             chunks_[name] = ci;
         }
     }
-
-    return true;
-}
-
-bool FileInfo::LoadSerializedChunkPost(const std::string& data) {
 
     return true;
 }
