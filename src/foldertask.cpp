@@ -90,8 +90,7 @@ int FolderTask::RenameFolder() {
     std::cout<<" file size : " << file_list.size() << std::endl;
     std::deque<FileInfo>::iterator file_itr = file_list.begin();
     for(;file_itr != file_list.end(); file_itr++) {
-        FilePost fp;
-        fp.InitializeFilePost(&(*file_itr));
+        FilePost fp(*file_itr);
         std::cout<<" file relative path : " << fp.relative_path() << std::endl;
         if(!fp.id().empty()) {
             PostFilePost(fp.id(), fp);

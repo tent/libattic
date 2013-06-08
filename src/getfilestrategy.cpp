@@ -86,7 +86,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         ConstructFilepath(fi, folder, destination);
                         // pull chunks
                         std::cout<<" DESTINATION : " << destination << std::endl;
-                        status = ConstructFile(cp_list, file_cred, fi, destination);
+                        status = ConstructFile(fi, file_cred, destination);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache 
                             // entries for them
@@ -239,79 +239,81 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
     return status;
 }
 
-int GetFileStrategy::ConstructFile(ChunkPostList& chunk_posts, 
-                                   const Credentials& file_cred, 
-                                   FileInfo& fi, 
+int GetFileStrategy::ConstructFile(FileInfo& fi,
+                                   const Credentials& file_cred,
                                    const std::string& destination_path) {
+    typedef std::map<unsigned int, ChunkInfo> ChunkList;
     int status = ret::A_OK;
-    unsigned int post_count = chunk_posts.size();
-    std::cout<<" # CHUNK POSTS : " << post_count << std::endl;
 
-    if(post_count > 0) {
-        std::string temp_path;
-        FileHandler fh(file_manager_);
-        fh.GetTemporaryFilepath(fi, temp_path);
+    std::string temp_path;
+    FileHandler fh(file_manager_);
+    fh.GetTemporaryFilepath(fi, temp_path);
 
-        std::ofstream ofs;
-        ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-        if(ofs.is_open()) {
+    std::ofstream ofs;
+    ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+    if(ofs.is_open()) {
+        // Get all chunk credentials
+        // move them into a map, key position value chunk info
+        // interate through them using the digest against the attachemnts endpoint
+        // construct
+        FileInfo::ChunkMap* chunk_map = fi.GetChunkInfoList();
+        if(chunk_map->size()) {
+            ChunkList chunk_list;
+            FileInfo::ChunkMap::iterator map_itr = chunk_map->begin();
+            for(;map_itr!=chunk_map->end(); map_itr++) {
+                chunk_list[map_itr->second.position()] = map_itr->second;
+            }
+
             std::string post_attachment = GetConfigValue("post_attachment");
-            for(unsigned int i=0; i < post_count; i++) {
-                if(chunk_posts.find(i) != chunk_posts.end()) {
-                    ChunkPost cp = chunk_posts.find(i)->second;
-                    unsigned int chunk_count = cp.chunk_info_list_size();
-                    std::cout<<" CHUNK COUNT : " << chunk_count << std::endl;
-                    for(unsigned int j=0; j<chunk_count; j++) {
-                        ChunkPost::ChunkInfoList::iterator itr = cp.chunk_info_list()->find(j);
-                        if(itr != cp.chunk_info_list()->end()) {
-                            std::cout<<" FOUND CHUNK # : " << i << std::endl;
-                            // Get attachment
-                            if(cp.has_attachment(itr->second.chunk_name())) {
-                                Attachment attch = cp.get_attachment(itr->second.chunk_name());
-                                std::string attachment_path;
-                                utils::FindAndReplace(post_attachment,
-                                                      "{digest}",
-                                                      attch.digest,
-                                                      attachment_path);
-                                std::cout<<" attachment path : " << attachment_path << std::endl;
-                                std::string buffer;
-                                status = RetrieveAttachment(attachment_path, buffer);
-                                if(status == ret::A_OK) {
-                                    std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
-                                    //ChunkInfo* ci = fi.GetChunkInfo(itr->second.chunk_name());
-                                    ChunkInfo* ci = cp.GetChunkInfo(itr->second.chunk_name());
-                                    std::string chunk;
-                                    status = TransformChunk(ci, file_cred.key(), buffer, chunk);
-                                    if(status == ret::A_OK) {
-                                        // Append to file 
-                                        ofs.write(chunk.c_str(), chunk.size());
-                                    }
-                                    else {
-                                        std::cout<<" FAILED TRANSFORM " << std::endl;
-                                        std::cout<<" STATUS : "<< status << std::endl;
-                                        break;
-                                    }
-                                }
-                            }
+            for(unsigned int i=0; i<chunk_list.size(); i++) {
+                ChunkList::iterator itr = chunk_list.find(i);
+                if(itr!= chunk_list.end()) {
+                    std::cout<<" FOUND CHUNK # : " << i << std::endl;
+                    // Get attachment
+                    std::string attachment_path;
+                    utils::FindAndReplace(post_attachment,
+                                          "{digest}",
+                                          itr->second.digest(),
+                                          attachment_path);
+                    std::cout<<" attachment path : " << attachment_path << std::endl;
+                    std::string buffer;
+                    status = RetrieveAttachment(attachment_path, buffer);
+                    if(status == ret::A_OK) {
+                        std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
+                        std::string chunk;
+                        status = TransformChunk(&itr->second, file_cred.key(), buffer, chunk);
+                        if(status == ret::A_OK) {
+                            // Append to file 
+                            ofs.write(chunk.c_str(), chunk.size());
+                        }
+                        else {
+                            std::cout<<" FAILED TRANSFORM " << std::endl;
+                            std::cout<<" STATUS : "<< status << std::endl;
+                            break;
                         }
                     }
                 }
                 else {
-                    std::cout<<" INVALID CHUNK POST " << std::endl;
+                    status = ret::A_FAIL_MISSING_CHUNK;
+                    break;
                 }
             }
-            ofs.close();
         }
+        else {
+            status = ret::A_FAIL_ZERO_CHUNK_COUNT;
+        }
+        ofs.close();
+    }
+
+    if(status == ret::A_OK) {
+        std::string path;
+        status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
-            std::string path;
-            status = ConstructFilepath(fi, path);
-            if(status == ret::A_OK) {
-                if(!destination_path.empty())
-                    fs::MoveFile(temp_path, path);
-            }
-            else {
-                std::cout<<" failed to move path : "<< path << std::endl;
-            }
+            if(!destination_path.empty())
+                fs::MoveFile(temp_path, path);
+        }
+        else {
+            std::cout<<" failed to move path : "<< path << std::endl;
         }
         // delete temp file 
         fs::DeleteFile(temp_path);

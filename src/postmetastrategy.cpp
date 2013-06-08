@@ -54,8 +54,7 @@ int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out
 
 int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& fi) {
     int status = ret::A_OK;
-    FilePost fp;
-    fp.InitializeFilePost(&fi, false);
+    FilePost fp(fi);
     fp.set_fragment(cnst::g_transit_fragment);
     PostHandler<FilePost> ph(access_token_);
     Response response;

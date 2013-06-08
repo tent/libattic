@@ -203,14 +203,14 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 else {
                     new_group = true;
                 }
-
                 cr->BeginRequest();
             }
             // Transform chunk
             ChunkInfo ci;
             ChunkTransform ct(chunk, file_key);
             cr->ProcessTransform(ct, chunk_count, ci);
-            verification_map_[ci.verification_hash()] = true;
+            verification_map_[ci.digest()] = true;
+
             chunk_map[ci.chunk_name()] = ci;
             
             chunk_count++;
@@ -254,8 +254,6 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
         std::cout<< itr_cp->second.digest << std::endl;
         std::string decoded;
         if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
-
-
             std::string error = "Failed to validate attachment integrity.\n";
             error += "\t filepath : " + filepath + "\n";
             error += "\t attachment name : " + itr_cp->second.name + "\n";
@@ -311,13 +309,12 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
 int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
     int status = ret::A_OK;
     if(!fi.post_id().empty()) {
-        FilePost fp;
+        FilePost fp(fi);
         status = RetrieveFilePost(fi.post_id(), fp);
         if(status == ret::A_OK) {
             std::string posturl;
             utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
             PostHandler<FilePost> ph(access_token_);
-            fp.InitializeFilePost(&fi, false); // update file post
             Response put_resp; 
             status = ph.Put(posturl, NULL, fp, put_resp);
             if(status != ret::A_OK) {
