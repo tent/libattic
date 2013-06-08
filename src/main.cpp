@@ -63,27 +63,6 @@ TEST(ATTIC_SERVICE, START_STOP)
 }
 */
 
-TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
-{
-    std::string test("This is a test string, of some sort of data, it's pretty great");
-
-    // Compress
-    std::string compressed;
-    attic::compress::CompressString(test, compressed);
-    // Encrypt
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
-    std::string encrypted;
-    attic::crypto::EncryptStringCFB(compressed, cred, encrypted);
-    // Decrypt
-    std::string decrypted;
-    attic::crypto::DecryptStringCFB(encrypted, cred, decrypted);
-    // Decompress
-    std::string decompressed;
-    attic::compress::DecompressString(decrypted, decompressed);
-
-    ASSERT_EQ(test, decompressed);
-
-}
 
 TEST(COMPRESS, COMPRESSSTRING)
 {
@@ -121,54 +100,6 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.iv_empty(), false);
 }
 
-// run credentials through the filepost upload / download process
-TEST(CREDENTIALS, GENERATE) {
-    std::string master_key("qwertyuiopasdfghjklzxcvbnmasdfgh");
-    for(int i=0; i<100; i++) {
-        attic::Credentials local_cred;
-        // Generate file credentials
-        attic::crypto::GenerateCredentials(local_cred);
-        // Encry file key
-        attic::Credentials tcred;   // transiet cred
-        tcred.set_key(master_key);
-        tcred.set_iv(local_cred.iv());
-
-        std::string local_key = local_cred.key();
-        std::string encrypted_key;
-        attic::crypto::EncryptStringGCM(local_key, tcred, encrypted_key);
-
-        attic::Credentials enc_cred; // Final encrytred file key
-        enc_cred.set_iv(local_cred.iv());
-
-        // encode key and iv
-        std::string b64_key, b64_iv;
-        attic::crypto::Base64EncodeString(encrypted_key, b64_key);
-        attic::crypto::Base64EncodeString(enc_cred.iv(), b64_iv);
-
-        // reverse the process
-        std::string key, iv;
-        attic::crypto::Base64DecodeString(b64_key, key);
-        attic::crypto::Base64DecodeString(b64_iv, iv);
-
-        // create transient cred
-        attic::Credentials dtcred;
-        dtcred.set_key(master_key);
-        dtcred.set_iv(iv);
-
-        std::string decrypted_key;
-        attic::crypto::DecryptStringGCM(key, dtcred, decrypted_key);
-
-        /*
-        std::cout<<" key attempt : " << i << " ";
-        if(local_cred.key() != decrypted_key )
-            std::cout<<" failed " << std::endl;
-        else
-            std::cout<<" passed " << std::endl;
-            */
-        ASSERT_EQ(strcmp(local_cred.key().c_str(), decrypted_key.c_str()), 0);
-    }
-}
-
 TEST(CRYPTO, BASE32)
 {
     std::string teststring("this is my test string, that I'm going to base32 encode");
@@ -204,85 +135,6 @@ TEST(CRYPTO, HMAC)
     status = attic::crypto::VerifyHMACForString( plaintext, cred, macout);
     ASSERT_EQ(status, attic::ret::A_OK);
 }
-
-TEST(CRYPTO, ENCRYPTIONCFB)
-{
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
-
-    std::string plaintext("this is my plain text");
-
-    std::string cyphertext;
-    attic::crypto::EncryptStringCFB(plaintext, cred, cyphertext);
-
-    std::string decryptedtext;
-    attic::crypto::DecryptStringCFB(cyphertext, cred, decryptedtext);
-
-    ASSERT_EQ(plaintext, decryptedtext);
-}
-/*
-TEST(CRYPTO, CREDENCRYPTIONGCM)
-{
-    attic::Credentials masterkey;
-
-    std::string phrase("this is a test");
-    std::string iv;
-    attic::crypto::GenerateSalt(iv);
-
-    // Genterate key from passphrase
-    int status = attic::crypto::GenerateKeyFromPassphrase(phrase,
-                                                   iv,
-                                                   masterkey);
-    ASSERT_EQ(status, 0);
-
-    attic::Credentials cred; // Credentials to encrypt
-    cred = attic::crypto::GenerateCredentials();
-
-    std::string key = cred.key();
-
-    attic::Credentials intercred; // credentials used to encrypt file key
-                           // master key
-                           // file specific iv
-
-    std::string mk = masterkey.key();
-    std::string fileiv = cred.iv();
-
-    intercred.set_key(mk);
-    intercred.set_iv(fileiv);
-
-    std::string enckey;
-    status = attic::crypto::EncryptStringGCM(key, intercred, enckey);
-    ASSERT_EQ(status, 0);
-
-    // Generate key again for good measure
-    attic::Credentials mkcopy;
-    status = attic::crypto::GenerateKeyFromPassphrase(phrase,
-                                               iv,
-                                               mkcopy);
-    ASSERT_EQ(status, 0);
-
-    attic::Credentials intercred1;
-    std::string mk1 = mkcopy.key();
-
-    intercred1.set_key(mk1);
-    intercred1.set_iv(fileiv);
-
-    std::string deckey;
-    status = attic::crypto::DecryptStringGCM(enckey, intercred1, deckey);
-
-    ASSERT_EQ(status, 0);
-    ASSERT_EQ(key, deckey);
-}
-*/
-
-/*
-TEST(CRYPTO, FILEHASH) {
-
-   std::string filepath = "./data/m4.mp4";
-   std::string hash_out;
-   attic::crypto::GenerateFileHash(filepath, hash_out);
-   std::cout<<" FILE HASH : " << hash_out << std::endl;
-}
-*/
 
 TEST(SCRYPT, ENTER_PASSPHRASE)
 {

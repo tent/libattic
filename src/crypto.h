@@ -67,22 +67,6 @@ static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
 static void GenerateRandomString(std::string& out, const unsigned int size);
 
-static int EncryptStringCFB( const std::string& data,
-                             const Credentials& cred,
-                             std::string& out);
-
-static int DecryptStringCFB( const std::string& cipher,
-                             const Credentials& cred,
-                             std::string& out);
-
-static int EncryptStringGCM( const std::string& data,
-                             const Credentials& cred,
-                             std::string& out);
-
-static int DecryptStringGCM( const std::string& cipher,
-                             const Credentials& cred,
-                             std::string& out);
-
 static int GenerateKeyFromPassphrase( const std::string& pass, 
                                       const std::string& salt,
                                       Credentials& out);
@@ -95,18 +79,7 @@ static int VerifyHMACForString(const std::string& input,
                                const Credentials& cred,
                                const std::string& mac);
 
-static void GenerateSha256Hash(const std::string& source, std::string& hash_out) {
-    CryptoPP::SHA256 hash;
-    CryptoPP::StringSource src(source.c_str(), 
-                               true,
-                               new CryptoPP::HashFilter( hash,
-                                   new CryptoPP::Base64Encoder (
-                                       new CryptoPP::StringSink(hash_out),
-                                       false
-                                       )
-                                   )
-                              );
-}
+
 
 static bool GenerateHash(const std::string& source, std::string& hash_out) {
     CryptoPP::SHA512 hash;
@@ -149,118 +122,6 @@ static void GenerateFileHash(const std::string& filepath, std::string& hash_out)
                                    )
                               );
 } 
-
-static int EncryptStringCFB(const std::string& data,
-                            const Credentials& cred,
-                            std::string& out) {
-    int status = ret::A_OK;
-
-    try {
-        std::string cipher;
-
-        CryptoPP::CFB_Mode<CryptoPP::AES>::Encryption e;
-        e.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
-
-        CryptoPP::StringSource( data,  // Plaintext
-                                true, 
-                                new CryptoPP::StreamTransformationFilter( e,
-                                    new CryptoPP::StringSink(out)
-                                ) // StreamTransformationFilter      
-                              ); // StringSource
-    }
-    catch (CryptoPP::Exception &e) {
-        status = ret::A_FAIL_ENCRYPT;
-    }
-
-    return status;
-}
-
-static int DecryptStringCFB(const std::string& cipher,
-                            const Credentials& cred,
-                            std::string& out) {
-    int status = ret::A_OK;
-
-    try {
-        CryptoPP::CFB_Mode<CryptoPP::AES>::Decryption d;        
-        d.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
-
-        CryptoPP::StringSource( cipher, 
-                                true, 
-                                new CryptoPP::StreamTransformationFilter( d,
-                                    new CryptoPP::StringSink( out )
-                                         ) // StreamTransformationFilter
-                               ); // StringSource
-    }
-    catch (CryptoPP::Exception &e) {
-        std::cout<<" EXCEPTION : " << e.what() << std::endl;
-        status = ret::A_FAIL_DECRYPT;
-    }                                                            
-
-    return status;
-}
-
-static int EncryptStringGCM(const std::string& data,
-                            const Credentials& cred,
-                            std::string& out) {
-    int status = ret::A_OK;
-    try {
-        CryptoPP::GCM<CryptoPP::AES>::Encryption e;
-        e.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
-
-        CryptoPP::StringSource( data,
-                                true,
-                                new CryptoPP::AuthenticatedEncryptionFilter( e,
-                                new CryptoPP::StringSink(out),
-                                false,
-                                TAG_SIZE)
-                              );
-    }
-    catch (CryptoPP::Exception &e) {
-        std::cout<<" FAILED TO ENCRYPT GCM " << std::endl;
-        status = ret::A_FAIL_ENCRYPT;
-    }
-
-    return status;
-}
-
-static int DecryptStringGCM(const std::string& cipher,
-                            const Credentials& cred,
-                            std::string& out) {
-    try {
-        CryptoPP::GCM<CryptoPP::AES>::Decryption d;        
-        d.SetKeyWithIV(cred.byte_key(), cred.GetKeySize(), cred.byte_iv(), cred.GetIvSize());
-
-        // Recovered Plain Data                                                             
-        std::string rpdata;                                                                 
-        CryptoPP::AuthenticatedDecryptionFilter df ( d,                                              
-                                                     new CryptoPP::StringSink(rpdata),
-                                                     CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS, 
-                                                     TAG_SIZE          
-                                                   );                                                             
-        CryptoPP::StringSource( cipher,                                                      
-                                true,                                                 
-                                new CryptoPP::Redirector( df /*  , PASS_EVERYTHING */ )
-                              ); // StringSource
-
-        // If the object does not throw, here's the only                 
-        //  opportunity to check the data's integrity                    
-        if (df.GetLastResult() == true ) {
-            //std::cout<< "recovered text : " << rpdata << "\n";           
-            // Write out data to ofstream
-            out = rpdata;
-        }                                                                
-
-    }
-    catch (CryptoPP::Exception &e) {
-        std::cout << " Error : DecryptStringGCM : " << e.what() << std::endl;
-        //std::cerr << e.what() << "\n";                           
-        return ret::A_FAIL_DECRYPT;
-    }                                                            
-    return ret::A_OK;
-}
-
-
-
 
 
 static int GenerateHMACForString(const std::string& input,

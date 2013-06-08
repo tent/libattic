@@ -179,7 +179,7 @@ bool FileHandler::EncryptFileKey(const std::string& file_key,
         tcred.set_key(master_key);                 // master key
         tcred.set_iv(file_iv);                     // file specific iv
         // Encryption call
-        crypto::EncryptStringGCM(file_key, tcred, encrypted_out);
+        crypto::Encrypt(file_key, tcred, encrypted_out);
         return true;
     }
     return false;
@@ -194,7 +194,7 @@ bool FileHandler::DecryptFileKey(const std::string& encrypted_key,
         Credentials tcred;                         // Create transient credentials
         tcred.set_key(master_key);                 // master key
         tcred.set_iv(file_iv);                     // file specific iv
-        crypto::DecryptStringGCM(encrypted_key, tcred, decrypted_out);
+        crypto::Decrypt(encrypted_key, tcred, decrypted_out);
         return true;
     }
     return false;
@@ -210,7 +210,7 @@ bool FileHandler::ExtractFileCredetials(const FilePost& fp,
         tcred.set_iv(fp.iv_data());                // file specific iv
 
         std::string decrypted_key;
-        if(crypto::DecryptStringGCM(fp.key_data(), tcred, decrypted_key) == ret::A_OK) {
+        if(crypto::Decrypt(fp.key_data(), tcred, decrypted_key)) {
             out.set_key(decrypted_key);
             out.set_iv(fp.iv_data());
             return true;

@@ -35,12 +35,14 @@ bool ChunkTransform::TransformOut() {
     Compress(data_, compressed_data);
     // Encrypt
     std::string encrypted_data;
-    Encrypt(compressed_data, encrypted_data);
-    // Encode
-    Encode(encrypted_data, finalized_data_);
-    // Generate verification hash
-    GenerateVerificationHash(verification_hash_);
-    return true;
+    if(Encrypt(compressed_data, encrypted_data)) {
+        // Encode
+        Encode(encrypted_data, finalized_data_);
+        // Generate verification hash
+        GenerateVerificationHash(verification_hash_);
+        return true;
+    }
+    return false;
 }
 
 bool ChunkTransform::TransformIn(const ChunkInfo* ci) {
@@ -52,8 +54,7 @@ bool ChunkTransform::TransformIn(const ChunkInfo* ci) {
         Decode(data_, decoded_data);
         // Decrypt
         std::string decrypted_data;
-        int status = Decrypt(decoded_data, decrypted_data);
-        if(status == ret::A_OK) {
+        if(Decrypt(decoded_data, decrypted_data)) {
             // Decompress
             Decompress(decrypted_data, finalized_data_);
             return true;
@@ -92,23 +93,24 @@ void ChunkTransform::Decompress(const std::string& in, std::string& out) {
     crypto::GenerateHash(out, plaintext_hash_);
 }
 
-void ChunkTransform::Encrypt(const std::string& in, std::string& out) {
+bool ChunkTransform::Encrypt(const std::string& in, std::string& out) {
     Credentials chunk_cred;
     crypto::GenerateIv(chunk_iv_);
     chunk_cred.set_iv(chunk_iv_);
     chunk_cred.set_key(file_key_);
-    crypto::EncryptStringGCM(in, chunk_cred, out);
+    bool ret = crypto::Encrypt(in, chunk_cred, out);
     // generate ciphertext hash
     crypto::GenerateHash(out, ciphertext_hash_);
+    return ret;
 }
 
-int ChunkTransform::Decrypt(const std::string& in, std::string& out) {
+bool ChunkTransform::Decrypt(const std::string& in, std::string& out) {
     crypto::GenerateHash(in, ciphertext_hash_);
     // generate ciphertext hash
     Credentials chunk_cred;
     chunk_cred.set_iv(chunk_iv_);
     chunk_cred.set_key(file_key_);
-    return crypto::DecryptStringGCM(in, chunk_cred, out);
+    return crypto::Decrypt(in, chunk_cred, out);
 }
 
 void ChunkTransform::Encode(const std::string& in, std::string& out) {

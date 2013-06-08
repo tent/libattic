@@ -211,9 +211,7 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
         // Decrypt File Key
         std::string filekey;
-        //crypto::DecryptStringCFB(key, FileKeyCred, filekey);
-        status = crypto::DecryptStringGCM(key, FileKeyCred, filekey);
-        if(status == ret::A_OK) {
+        if(crypto::Decrypt(key, FileKeyCred, filekey)) {
             out.set_key(filekey);
             out.set_iv(iv);
         }

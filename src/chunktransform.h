@@ -11,12 +11,12 @@ class ChunkInfo;
 class ChunkTransform {
     void GenerateChunkName();
     void Compress(const std::string& in, std::string& out);
-    void Encrypt(const std::string& in, std::string& out);
+    bool Encrypt(const std::string& in, std::string& out);
     void Encode(const std::string& in, std::string& out);
     void GenerateVerificationHash(std::string& out);
 
     void Decode(const std::string& in, std::string& out);
-    int Decrypt(const std::string& in, std::string& out);
+    bool Decrypt(const std::string& in, std::string& out);
     void Decompress(const std::string& in, std::string& out);
 public:
     ChunkTransform(const std::string& chunk, const char* key, unsigned int size);
