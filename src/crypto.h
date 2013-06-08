@@ -44,6 +44,7 @@ static bool ScryptEncode(const std::string &input,
                          const unsigned int size,
                          std::string &out);
 
+static bool GenerateHash(const std::string& source, std::string& hash_out);
 static void GenerateKey(std::string& out);
 static void GenerateIv(std::string& out);
 static void GenerateNonce(std::string& out);
@@ -55,160 +56,15 @@ static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
 
 // Old
-static const int TAG_SIZE = 16;
-static const int SALT_SIZE = 16;
-static CryptoPP::AutoSeededRandomPool  g_Rnd;                // Random pool used for key generation
-static unsigned int                    g_Stride = 400000;    // Size of stride used when encrypting
-
-
-static void GenerateIv(std::string& out);
-static bool GenerateHash( const std::string& source, std::string& hash_out);
-static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out);
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
 static void GenerateRandomString(std::string& out, const unsigned int size);
-
-static int GenerateKeyFromPassphrase( const std::string& pass, 
-                                      const std::string& salt,
-                                      Credentials& out);
-
-static int GenerateHMACForString(const std::string& input,
-                                 const Credentials& cred,
-                                 std::string& macOut);
-
-static int VerifyHMACForString(const std::string& input,
-                               const Credentials& cred,
-                               const std::string& mac);
-
-
-
-static bool GenerateHash(const std::string& source, std::string& hash_out) {
-    CryptoPP::SHA512 hash;
-
-    CryptoPP::StringSource src(source.c_str(), 
-                               true,
-                               new CryptoPP::HashFilter( hash,
-                                   new CryptoPP::Base64Encoder (
-                                       new CryptoPP::StringSink(hash_out),
-                                       false
-                                       )
-                                   )
-                              );
-    return true;
-}
-
-static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out) {
-    CryptoPP::SHA512 hash;
-    CryptoPP::StringSource src(source, 
-                               true,
-                               new CryptoPP::HashFilter( hash,
-                                   new CryptoPP::HexEncoder(
-                                       new CryptoPP::StringSink(hash_out),
-                                       false
-                                       )
-                                   )
-                              );
-    return true;
-
-}
-static void GenerateFileHash(const std::string& filepath, std::string& hash_out) {
-    CryptoPP::SHA512 hash;
-    CryptoPP::FileSource src(filepath.c_str(),
-                             true,
-                             new CryptoPP::HashFilter( hash,
-                                   new CryptoPP::Base64Encoder (
-                                       new CryptoPP::StringSink(hash_out),
-                                       false
-                                       )
-                                   )
-                              );
-} 
-
-
-static int GenerateHMACForString(const std::string& input,
-                                 const Credentials& cred,
-                                 std::string& macOut)
-{
-    int status = ret::A_OK;
-    std::string mac;
-    try {
-        CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.byte_key(), cred.GetKeySize());
-        CryptoPP::StringSource( input,
-                                true,
-                                new CryptoPP::HashFilter( hmac,
-                                    new CryptoPP::StringSink(mac)
-                                    )
-                              );
-    }
-    catch(const CryptoPP::Exception& e) {
-        // Log error 
-        std::cout << e.what() << std::endl;
-        status = ret::A_FAIL_HMAC;
-    }
-
-    if(status == ret::A_OK) {
-        std::string hexencoded;
-        // Encode to hex
-        CryptoPP::StringSource( mac, 
-                      true,
-                      new CryptoPP::HexEncoder(
-                         new CryptoPP::StringSink(hexencoded)
-                         ) // HexEncoder
-                     ); // StringSource
-
-        if(!hexencoded.empty())
-            macOut = hexencoded;
-        else
-            status = ret::A_FAIL_HEX_ENCODE;
-    }
-
-    return status;
-}
-
-static int VerifyHMACForString( const std::string& input,
-                                const Credentials& cred,
-                                const std::string& mac)
-
-{
-    int status = ret::A_OK;
-
-    try {
-        // Decode hmac
-        std::string decoded;
-        CryptoPP::StringSource ss(mac,
-                                  true,
-                                  new CryptoPP::HexDecoder(
-                                       new CryptoPP::StringSink(decoded)
-                            ) // HexDecoder
-        ); // StringSource
-
-        if(!decoded.empty()) {
-            CryptoPP::HMAC<CryptoPP::SHA512> hmac(cred.byte_key(), cred.GetKeySize());
-
-            const int flags = CryptoPP::HashVerificationFilter::THROW_EXCEPTION | CryptoPP::HashVerificationFilter::HASH_AT_END;
-        
-            CryptoPP::StringSource(input + decoded, 
-                                   true, 
-                                   new CryptoPP::HashVerificationFilter(hmac, NULL, flags)
-                                   ); // StringSource
-        }
-        else {
-            status = ret::A_FAIL_HEX_DECODE;
-        }
-    }
-    catch(const CryptoPP::Exception& e) {
-        std::cout << e.what() << std::endl;
-        status = ret::A_FAIL_HMAC_VERIFY;
-    }
-
-    return status;
-}
-
 
 static void HexEncodeString(const std::string& input, std::string& output) {
     CryptoPP::StringSource(input,
                            true,
                            new CryptoPP::HexEncoder(
-                             new CryptoPP::StringSink(output)
+                             new CryptoPP::StringSink(output),
+                             false // Caps
                            ) // HexEncoder
                           ); // StringSource
 }
@@ -268,6 +124,28 @@ static void GenerateRandomString(std::string& out, const unsigned int size = 16)
 //
 //
 //
+static bool GenerateHash(const std::string& source, std::string& hash_out) {
+    unsigned char out[crypto_hash_sha512_BYTES];
+    crypto_hash_sha512(out, 
+                       reinterpret_cast<const unsigned char*>(source.c_str()),
+                       source.size());
+    std::string ver;
+    ver.append(reinterpret_cast<const char*>(out), crypto_hash_sha512_BYTES);
+    Base64EncodeString(ver, hash_out);
+    return true;
+}
+
+static bool GenerateHexEncodedHmac(const std::string& source, std::string& hash_out) {
+    unsigned char out[crypto_hash_sha512_BYTES];
+    crypto_hash_sha512(out, 
+                       reinterpret_cast<const unsigned char*>(source.c_str()),
+                       source.size());
+    std::string ver;
+    ver.append(reinterpret_cast<const char*>(out), crypto_hash_sha512_BYTES);
+    HexEncodeString(ver, hash_out);
+    return true;
+}
+
 static Credentials GenerateCredentials() {
     Credentials cred;
     GenerateCredentials(cred);
@@ -398,6 +276,10 @@ static bool ScryptEncode(const std::string &input,
     }
 
     return true;
+}
+
+static void SecureZeroMemory(void * const p, const size_t len) {
+    sodium_memzero(p, len);
 }
 
 }} //namespace

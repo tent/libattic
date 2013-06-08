@@ -254,12 +254,21 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
         std::cout<< itr_cp->second.digest << std::endl;
         std::string decoded;
         if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
+
+
             std::string error = "Failed to validate attachment integrity.\n";
             error += "\t filepath : " + filepath + "\n";
             error += "\t attachment name : " + itr_cp->second.name + "\n";
             char buf[256] = {'\0'};
             snprintf(buf, 256, "%u", itr_cp->second.size);
             error += "\t size : " + std::string(buf) + "\n";
+            error += "verification map contents : \n";
+
+            std::map<std::string, bool>::iterator v_itr = verification_map_.begin();
+            for(; v_itr!= verification_map_.end(); v_itr++) {
+                error += v_itr->first;
+                error += "\n";
+            }
             log::LogString("MAS021n124", error);
             return false;
         }
