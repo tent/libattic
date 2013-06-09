@@ -170,18 +170,21 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
     unsigned char format = in[0];
     std::cout<<"FORMAT : " << format << std::endl;
     unsigned int offset = 1;
+    std::cout<<" offset : " << offset << std::endl;
     if(format == CHUNK_FORMAT) {
         unsigned int iv_size = 0;
         iv_size = (iv_size << 8) + in[offset];
         iv_size = (iv_size << 8) + in[offset+1];
         iv_size = (iv_size << 8) + in[offset+2];
         iv_size = (iv_size << 8) + in[offset+3];
-        offset+=4;
+        offset += 4;
+        std::cout<<" offset : " << offset << std::endl;
 
         std::cout<<" IV SIZE : " << iv_size << std::endl;
         chunk_iv_ = in.substr(offset, iv_size);
         std::cout<<" IV : " << chunk_iv_ << std::endl;
-        offset+= iv_size;
+        offset += iv_size;
+        std::cout<<" offset : " << offset << std::endl;
 
         unsigned int data_size = 0;
         data_size = (data_size << 8) + in[offset];
@@ -189,9 +192,12 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
         data_size = (data_size << 8) + in[offset+2];
         data_size = (data_size << 8) + in[offset+3];
         offset+=4;
+        std::cout<<" offset : " << offset << std::endl;
         std::cout<<" DATA SIZE : " << data_size << std::endl;
 
-        out = in.substr(offset, data_size);
+        // TODO :: THIS IS A HACK!, FOR SOME REASON THE DATA SIZE IS NOT COMING OUT CORRECLTY
+        //out = in.substr(offset, data_size);
+        out = in.substr(offset);
     }
 }
 
