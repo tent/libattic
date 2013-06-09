@@ -68,7 +68,7 @@ namespace jsn {
 
 
     static bool SerializeObject(JsonSerializable* pObj, Json::Value &val) {
-        if(pObj && val.isObject()) {
+        if(pObj) {
             pObj->Serialize(val);
             return true;
         }
