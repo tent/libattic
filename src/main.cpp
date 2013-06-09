@@ -64,8 +64,7 @@ TEST(ATTIC_SERVICE, START_STOP)
 */
 
 
-TEST(COMPRESS, COMPRESSSTRING)
-{
+TEST(COMPRESS, COMPRESSSTRING) {
     std::string in("this is my test string it is a pretty decent test string");
     std::string out;
 
@@ -77,8 +76,7 @@ TEST(COMPRESS, COMPRESSSTRING)
     ASSERT_EQ(in, decomp);
 }
 
-TEST(NETLIB, EXTRACTHOSTANDPATH)
-{
+TEST(NETLIB, EXTRACTHOSTANDPATH) {
     std::string url = "https://manuel.tent.is/tent/posts";
     std::string protocol, host, path;
 
@@ -87,8 +85,7 @@ TEST(NETLIB, EXTRACTHOSTANDPATH)
     ASSERT_EQ(path, std::string("/tent/posts"));
 }
 
-TEST(CREDENTIALS, ISEMPTY)
-{
+TEST(CREDENTIALS, ISEMPTY) {
     attic::Credentials cred;
 
     ASSERT_EQ(cred.key_empty(), true);
@@ -100,8 +97,7 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.iv_empty(), false);
 }
 
-TEST(CRYPTO, BASE32)
-{
+TEST(CRYPTO, BASE32) {
     std::string teststring("this is my test string, that I'm going to base32 encode");
     std::string encoded;
     attic::crypto::Base32EncodeString(teststring, encoded);
@@ -111,8 +107,7 @@ TEST(CRYPTO, BASE32)
     ASSERT_EQ(teststring, decoded);
 }
 
-TEST(CRYPTO, BASE64)
-{
+TEST(CRYPTO, BASE64) {
     std::string teststring("this is my test string, that I'm going to base64 encode");
     std::string encoded;
     attic::crypto::Base64EncodeString(teststring, encoded);
@@ -121,24 +116,46 @@ TEST(CRYPTO, BASE64)
     ASSERT_EQ(teststring, decoded);
 }
 
-TEST(SCRYPT, ENTER_PASSPHRASE)
-{
+TEST(CRYPTO, KEY_ENCRYPTION) {
+
+    attic::Credentials cred, master_cred;
+    attic::crypto::GenerateCredentials(cred);
+    attic::crypto::GenerateCredentials(master_cred);
+    // Encrypt
+    std::string master_key = master_cred.key();
+
+    attic::Credentials tcred; // transient credentials
+    tcred.set_key(master_key);
+    tcred.set_iv(cred.iv());
+
+    std::string encrypted_key;
+    attic::crypto::Encrypt(cred.key(), tcred, encrypted_key);
+
+    std::string b64_key;
+    attic::crypto::Base64EncodeString(encrypted_key, b64_key);
+
+    std::string b64_dkey;
+    attic::crypto::Base64DecodeString(b64_key, b64_dkey);
+    // Decrypt
+    std::string decrypted_key;
+    attic::crypto::Decrypt(b64_dkey, tcred, decrypted_key);
+
+    ASSERT_EQ(cred.key(), decrypted_key);
+}
+
+TEST(SCRYPT, ENTER_PASSPHRASE) {
     std::string passphrase("password");
 
     attic::Credentials cred;                                  
     // Will generate credentials from passphrase
     attic::crypto::GenerateKeyFromPassphrase(passphrase, cred);
-
-
     attic::Credentials cred1;
     // Enter passphrase and known salt
     attic::crypto::EnterPassphrase(passphrase, cred.iv(), cred1);   
-
     ASSERT_EQ(cred.key(), cred1.key());
 }
 
-TEST(SCRYPT, ENCODE)
-{
+TEST(SCRYPT, ENCODE) {
     std::string input("thisistestinput");
     std::string iv;
     attic::crypto::GenerateNonce(iv); 
@@ -151,8 +168,7 @@ TEST(SCRYPT, ENCODE)
     ASSERT_EQ(res, 0);
 }
 
-TEST(FILESYSTEM, RELATIVETO)
-{
+TEST(FILESYSTEM, RELATIVETO) {
     std::string relative;
     attic::fs::MakePathRelative("foo/bar", "this/foo/test/something/what.txt", relative);
     ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
@@ -166,8 +182,7 @@ TEST(FILESYSTEM, EXTRACT_DOUBLE_QUOTES) {
 }
 
 /*
-TEST(FILESYSTEM, SUBDIRECTORIES)
-{
+TEST(FILESYSTEM, SUBDIRECTORIES) {
     std::string root("data");
     std::string test("data/test/folder/this/is/mine/what.pdf");
 
@@ -181,8 +196,7 @@ TEST(FILESYSTEM, SUBDIRECTORIES)
 }
 */
 
-TEST(AUTHCODE, GENERATE)
-{
+TEST(AUTHCODE, GENERATE) {
     std::string authcode;
     attic::utils::GenerateRandomString(authcode, 32);
     std::string encoded;
@@ -194,8 +208,7 @@ TEST(AUTHCODE, GENERATE)
 }
 
 /*
-TEST(MANIFEST, INSERTFILEINFO)
-{
+TEST(MANIFEST, INSERTFILEINFO) {
     attic::FileInfo fi( "somefile.pdf",
                  "foo/bar/somefile.pdf",
                  "kjsadkfj-3412",
@@ -212,8 +225,7 @@ TEST(MANIFEST, INSERTFILEINFO)
     mf.Shutdown();
 }
 
-TEST(MANIFEST, INSERTFILEPOSTID)
-{
+TEST(MANIFEST, INSERTFILEPOSTID) {
     Manifest mf;
     std::string dir("");
     mf.SetDirectory(dir);
@@ -227,8 +239,7 @@ TEST(MANIFEST, INSERTFILEPOSTID)
     mf.Shutdown();
 }
 
-TEST(MANIFEST, REMOVEFILEINFO)
-{
+TEST(MANIFEST, REMOVEFILEINFO) {
     Manifest mf;
     std::string dir("");
     mf.SetDirectory(dir);
@@ -241,8 +252,35 @@ TEST(MANIFEST, REMOVEFILEINFO)
     mf.Shutdown();
 }
 */
-TEST(CHUNKINFO, SERIALIZATION) 
-{
+
+TEST(FILEINFO, SERIALIZATION) {
+    attic::FileInfo fi;
+    fi.set_filepath("<working>/data.pdf");
+    fi.set_filename("data.pdf");
+    fi.set_file_credentials(attic::crypto::GenerateCredentials());
+    fi.set_folder_post_id("folder_post_id");
+    fi.set_encrypted_key("encrypted_key");
+    fi.set_chunk_count(1);
+    fi.set_file_size(124);
+
+    attic::ChunkInfo ci;
+    ci.set_chunk_name("chunk name");
+    ci.set_checksum("checksum");
+    ci.set_plaintext_mac("plaintext mac");
+    ci.set_ciphertext_mac("ciphertext mac");
+    ci.set_iv("iv");
+    ci.set_position(0);
+
+
+
+    fi.PushChunkBack(ci);
+
+    std::string chunk_data;
+    fi.GetSerializedChunkData(chunk_data);
+    std::cout<<" CHUNK DATA : " << chunk_data << std::endl;
+}
+
+TEST(CHUNKINFO, SERIALIZATION) {
     attic::ChunkInfo ci("name", "supersummmmmmm");
     ci.set_ciphertext_mac("aksdjfkasdfCIPHER");
     ci.set_plaintext_mac("THIS IS MY PLAIN TEXT MAC MOFO ");
@@ -258,7 +296,91 @@ TEST(CHUNKINFO, SERIALIZATION)
     std::string output2;
     attic::jsn::SerializeObject(&ci2, output2);
 
+    Json::Value c(Json::nullValue);
+    if(attic::jsn::SerializeObject(&ci, c))
+        std::cout<<" TRUE " << std::endl;
+    else
+        std::cout<<" FALSE " << std::endl;
+
+//std::cout<<" STRING : " << s << std::endl;
+    attic::jsn::PrintOutJsonValue(&c);
+
     ASSERT_EQ(output, output2);
+}
+
+#define CHUNK_FORMAT 1
+void Compose(const std::string& in, const std::string& iv, std::string& out) {
+    // Compose the chunk data to its format
+    // Format version | iv len | iv | data len | data
+    unsigned char format = CHUNK_FORMAT;
+    std::cout<<" FORMAT : " << format << std::endl;
+    out.append(format, 1);
+
+    unsigned int iv_size = iv.size();
+    char ivsize[4] = {0};
+    ivsize[0] = (iv_size >> 24) & 0xFF;
+    ivsize[1] = (iv_size >> 16) & 0xFF;
+    ivsize[2] = (iv_size >> 8) & 0xFF;
+    ivsize[3] = iv_size & 0xFF;
+    std::cout<<" IV SIZE : " << iv_size << std::endl;
+
+    out.append(ivsize, 4);
+    out.append(iv.c_str(), iv_size);
+
+    unsigned int data_size = in.size();
+    char datasize[4] = {0};
+    datasize[0] = (data_size >> 24) & 0xFF;
+    datasize[1] = (data_size >> 16) & 0xFF;
+    datasize[2] = (data_size >> 8) & 0xFF;
+    datasize[3] = data_size & 0xFF;
+    std::cout<<" DATA SIZE : " << data_size << std::endl;
+
+    out.append(datasize, 4);
+    out.append(in.c_str(), data_size);
+}
+
+void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
+    unsigned char format = in[0];
+    std::cout<<"FORMAT : " << format << std::endl;
+    unsigned int offset = 1;
+    if(format == CHUNK_FORMAT) {
+        unsigned int iv_size = 0;
+        iv_size = (iv_size << 8) + in[offset];
+        iv_size = (iv_size << 8) + in[offset+1];
+        iv_size = (iv_size << 8) + in[offset+2];
+        iv_size = (iv_size << 8) + in[offset+3];
+        offset+=4;
+
+        std::cout<<" IV SIZE : " << iv_size << std::endl;
+        iv_out = in.substr(offset, iv_size);
+        std::cout<<" IV : " << iv_out << std::endl;
+        offset+= iv_size;
+
+        unsigned int data_size = 0;
+        data_size = (data_size << 8) + in[offset];
+        data_size = (data_size << 8) + in[offset+1];
+        data_size = (data_size << 8) + in[offset+2];
+        data_size = (data_size << 8) + in[offset+3];
+        offset+=4;
+        std::cout<<" DATA SIZE : " << data_size << std::endl;
+
+        out = in.substr(offset, data_size);
+    }
+}
+
+TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){ 
+    std::string payload("this is my test data, ksajdkfjkasjdgkasjdga");
+    std::string iv("test iv, not a real iv");
+
+    std::string composed;
+    Compose(payload, iv, composed);
+
+    std::string iv_out;
+    std::string decomposed;
+    Decompose(composed, iv_out, decomposed);
+
+    ASSERT_EQ(iv, iv_out);
+    ASSERT_EQ(payload, decomposed);
 }
 
 TEST(CHUNK, COMPOSE_DECOMPOSE) {
@@ -320,8 +442,7 @@ TEST(CHUNK, COMPOSE_DECOMPOSE) {
 }
 
 /*
-TEST(PARAMS, ENCODE) 
-{
+TEST(PARAMS, ENCODE) {
     UrlParams params;                                                                  
     params.AddValue(std::string("post_types"), std::string(attic::cnst::g_szFolderPostType)); 
     params.AddValue(std::string("limit"), std::string("200"));                     
@@ -372,8 +493,7 @@ TEST(PARAMS, DECODE) {
 */
 
 /*
-TEST(FILESYSTEM, SCAN)
-{
+TEST(FILESYSTEM, SCAN) {
     std::vector<std::string> paths;
     attic::fs::ScanDirectory("./data", paths);
     for(unsigned int i=0; i<paths.size(); i++) {
