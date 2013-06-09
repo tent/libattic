@@ -78,9 +78,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 status = ExtractCredentials(meta_post, file_cred);
                 if(status == ret::A_OK) {
                     if(!file_cred.key_empty()) {
-                        // Query for chunkposts mentioning metadata
-                        ChunkPostList cp_list;
-                        RetrieveChunkPosts(entity, meta_post.id(), cp_list);
                         // put file posts in order
                         std::string destination;
                         ConstructFilepath(fi, folder, destination);
@@ -204,6 +201,9 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
     std::string mk;
     GetMasterKey(mk);
+    std::cout<<" master key : " << mk << std::endl;
+    std::cout<<" file key (encrypted) : " << key << std::endl;
+    std::cout<<" iv data : " << iv << std::endl;
     if(!mk.empty()) {
         Credentials FileKeyCred;
         FileKeyCred.set_key(mk);
@@ -258,12 +258,15 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
         // construct
         FileInfo::ChunkMap* chunk_map = fi.GetChunkInfoList();
         if(chunk_map->size()) {
+            std::cout<<" CHUNK MAP SIZE : " << chunk_map->size();
             ChunkList chunk_list;
             FileInfo::ChunkMap::iterator map_itr = chunk_map->begin();
             for(;map_itr!=chunk_map->end(); map_itr++) {
+                std::cout<<" \tchunk name : " << map_itr->second.chunk_name() << std::endl;
+                std::cout<<" \tpushing back position : " << map_itr->second.position() << std::endl;
                 chunk_list[map_itr->second.position()] = map_itr->second;
             }
-
+            std::cout<<" CHUNK LIST SIZE : " << chunk_list.size() << std::endl;
             std::string post_attachment = GetConfigValue("post_attachment");
             for(unsigned int i=0; i<chunk_list.size(); i++) {
                 ChunkList::iterator itr = chunk_list.find(i);
@@ -315,9 +318,11 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
         else {
             std::cout<<" failed to move path : "<< path << std::endl;
         }
-        // delete temp file 
-        fs::DeleteFile(temp_path);
     }
+
+    // delete temp file 
+    if(fs::CheckFilepathExists(temp_path))
+        fs::DeleteFile(temp_path);
 
     return status;
 }

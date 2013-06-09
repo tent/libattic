@@ -65,9 +65,9 @@ public:
     void set_file_credentials(const Credentials& cred);
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
-    void set_encrypted_key(const std::string& key)          { encrypted_key_.append(key.c_str(), key.size()); } 
-    void set_folder_post_id(const std::string& id)      { folder_post_id_ = id; }
-    //void set_deleted(const std::string& deleted)            { deleted_ = atoi(deleted.c_str()); }
+    void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 
+    void set_folder_post_id(const std::string& id)          { folder_post_id_ = id; }
+    //void set_deleted(const std::string& deleted)          { deleted_ = atoi(deleted.c_str()); }
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
 private:    

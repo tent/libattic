@@ -64,6 +64,8 @@ int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& 
         fi.set_post_id(post.id());
         FileHandler fh(file_manager_);
         fh.UpdateFilePostId(fi.filepath(), post.id());
+        
+        std::cout<<" File meta post : " << response.body << std::endl;
     }
     return status;
 }

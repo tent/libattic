@@ -80,13 +80,16 @@ ChunkInfo* FileInfo::GetChunkInfo(const std::string& chunkname) {
 
 void FileInfo::GetSerializedChunkData(std::string& out) const {
     ChunkMap::const_iterator itr = chunks_.begin();
-    Json::Value chunk_list;
+    Json::Value chunk_list(Json::arrayValue);
+
     for(;itr != chunks_.end(); itr++) {
-        ChunkInfo ci = itr->second; // we copy because of the constness ... 
         Json::Value c;
+        ChunkInfo ci = itr->second; // we copy because of the constness ... 
         jsn::SerializeObject(&ci, c);
         chunk_list.append(c);
     }
+
+    Json::Value list;
     Json::StyledWriter writer;
     out = writer.write(chunk_list);
 }

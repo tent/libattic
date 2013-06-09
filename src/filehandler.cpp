@@ -161,8 +161,13 @@ bool FileHandler::EncryptFileKey(FileInfo& fi, const std::string& master_key) {
             DecryptFileKey(encrypted_key, fi.file_credentials_iv(), master_key, decrypted_key);
             if(decrypted_key != fi.file_credentials_key())
                 std::cout<<" FAILED TO VERIFY ENCRYPTED KEY ! " << std::endl;
-            else
+            else {
                 std::cout<<" KEY VERIFIED " << std::endl;
+                std::cout<<" master key : " << master_key << std::endl;
+                std::cout<<" encrypted key : " << encrypted_key << std::endl;
+                std::cout<<" decrypted key : " << decrypted_key << std::endl;
+                std::cout<<" iv : " << fi.file_credentials_iv() << std::endl;
+            }
 
             return true;
         }
