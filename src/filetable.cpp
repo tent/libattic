@@ -9,7 +9,7 @@ bool FileTable::CreateTable() {
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
-    exc += " chunkdata BLOB, filesize INT, metapostid TEXT, credential_data TEXT,";
+    exc += " chunkdata BLOB, filesize INT, metapostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, folder_post_id TEXT,";
     exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
@@ -49,9 +49,8 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     std::string chunkdata;
     fi.GetSerializedChunkData(chunkdata);
 
-    std::string cred_data = fi.file_credentials().asString();
-    std::string b64_cred_data;
-    crypto::Base64EncodeString(cred_data, b64_cred_data);
+    std::string local_key = fi.file_credentials().key();
+    std::string local_iv = fi.file_credentials().iv();
 
     std::string encryptedkey = fi.encrypted_key();
     std::string b64_key;
@@ -65,8 +64,9 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     query += "INSERT OR REPLACE INTO ";
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " credential_data, postversion, encryptedkey, iv, deleted, folder_post_id)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+    query += " postversion, encryptedkey, iv,";
+    query += " deleted, folder_post_id)";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
     bool ret = false;
@@ -77,12 +77,11 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     ret = BindBlob(4, chunkdata, error);            if(!ret) {log::ls("m_144s",error);return ret;}
     ret = BindInt(5, fi.file_size(), error);        if(!ret) {log::ls("m_145s",error);return ret;}
     ret = BindText(6, fi.post_id(), error);         if(!ret) {log::ls("m_146s",error);return ret;}
-    ret = BindText(7, b64_cred_data, error);        if(!ret) {log::ls("m_147s",error);return ret;}
-    ret = BindText(8, fi.post_version(), error);    if(!ret) {log::ls("m_148s",error);return ret;}
-    ret = BindText(9, b64_key, error);              if(!ret) {log::ls("m_149s",error);return ret;}
-    ret = BindBlob(10, b64_iv, error);              if(!ret) {log::ls("m_150s",error);return ret;}
-    ret = BindInt(11, fi.deleted(), error);         if(!ret) {log::ls("m_151s",error);return ret;}
-    ret = BindText(12, fi.folder_post_id(), error); if(!ret) {log::ls("m_152s",error);return ret;}
+    ret = BindText(7, fi.post_version(), error);    if(!ret) {log::ls("m_149s",error);return ret;}
+    ret = BindText(8, b64_key, error);              if(!ret) {log::ls("m_140.1s",error);return ret;}
+    ret = BindBlob(9, b64_iv, error);               if(!ret) {log::ls("m_150s",error);return ret;}
+    ret = BindInt(10, fi.deleted(), error);         if(!ret) {log::ls("m_151s",error);return ret;}
+    ret = BindText(11, fi.folder_post_id(), error); if(!ret) {log::ls("m_152s",error);return ret;}
     ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
     ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
     return ret;
@@ -104,29 +103,23 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
     out.set_filepath(res.results()[1+step]);
     out.set_chunk_count(res.results()[2+step]);
     out.LoadSerializedChunkData(res.results()[3+step]);
+
     out.set_file_size(res.results()[4+step]);
     out.set_post_id(res.results()[5+step]);
-    std::string b64_cred_data = res.results()[6+step];
-    std::string cred_data;
-    crypto::Base64DecodeString(b64_cred_data, cred_data);
-    Credentials cred;
-    jsn::DeserializeObject(&cred, cred_data);
-    out.set_file_credentials(cred);
-    out.set_post_version(res.results()[7+step]);
-    //out.set_encrypted_key(res.results()[8+step]);
+    out.set_post_version(res.results()[6+step]);
     // File Key (Base64 encoded)
-    std::string b64_key = res.results()[8+step];
+    std::string b64_key = res.results()[7+step];
     std::string key;
     crypto::Base64DecodeString(b64_key, key);
     out.set_encrypted_key(key);
     // IV (Base64 encoded)
-    //out.set_file_credentials_iv(res.results()[9+step]);
-    std::string b64_iv = res.results()[9+step];
+    std::string b64_iv = res.results()[8+step];
     std::string iv;
     crypto::Base64DecodeString(b64_iv, iv);
     out.set_file_credentials_iv(iv);
-    out.set_deleted(atoi(res.results()[10+step]));
-    out.set_folder_post_id(res.results()[11+step]);
+
+    out.set_deleted(atoi(res.results()[9+step]));
+    out.set_folder_post_id(res.results()[10+step]);
 }
 
 bool FileTable::set_file_post_id(const std::string &filepath, const std::string &id) {

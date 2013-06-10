@@ -29,11 +29,9 @@ int RenameHandler::RenameFileLocalCache(const std::string& old_filepath,
 void RenameHandler::UpdateFileMetaPost(FilePost& fp, 
                                        const FileInfo& fi, 
                                        FilePost& out) {
-    out = fp;
-    out.set_relative_path(fi.filepath());
-    out.set_name(fi.filename());
-    out.set_folder_post(fi.folder_post_id());
 
+    out = fp;
+    out.set_file_info(fi);
     Parent parent;
     parent.version = fp.version().id();
     out.PushBackParent(parent);

@@ -203,14 +203,14 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 else {
                     new_group = true;
                 }
-
                 cr->BeginRequest();
             }
             // Transform chunk
             ChunkInfo ci;
             ChunkTransform ct(chunk, file_key);
             cr->ProcessTransform(ct, chunk_count, ci);
-            verification_map_[ci.verification_hash()] = true;
+            verification_map_[ci.digest()] = true;
+
             chunk_map[ci.chunk_name()] = ci;
             
             chunk_count++;
@@ -260,6 +260,13 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
             char buf[256] = {'\0'};
             snprintf(buf, 256, "%u", itr_cp->second.size);
             error += "\t size : " + std::string(buf) + "\n";
+            error += "verification map contents : \n";
+
+            std::map<std::string, bool>::iterator v_itr = verification_map_.begin();
+            for(; v_itr!= verification_map_.end(); v_itr++) {
+                error += v_itr->first;
+                error += "\n";
+            }
             log::LogString("MAS021n124", error);
             return false;
         }
@@ -302,13 +309,12 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
 int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
     int status = ret::A_OK;
     if(!fi.post_id().empty()) {
-        FilePost fp;
+        FilePost fp(fi);
         status = RetrieveFilePost(fi.post_id(), fp);
         if(status == ret::A_OK) {
             std::string posturl;
             utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
             PostHandler<FilePost> ph(access_token_);
-            fp.InitializeFilePost(&fi, false); // update file post
             Response put_resp; 
             status = ph.Put(posturl, NULL, fp, put_resp);
             if(status != ret::A_OK) {

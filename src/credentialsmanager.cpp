@@ -105,52 +105,6 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
     return ret::A_OK;
 }
 
-//TODO:: rename this, confusing
-int CredentialsManager::RegisterPassphrase(const std::string& pass, PhraseToken& ptOut) { // Depricated
-
-    int status = ret::A_OK;
-    Lock();
-    // TODO :: perhaps check profile if these things exist
-    if(pass.empty())
-        status = ret::A_FAIL_EMPTY_PASSPHRASE;
-
-    if(status == ret::A_OK) {
-
-        // Generate Salt
-        std::string salt;
-        status = crypto::GenerateSalt(salt);
-        status = crypto::CheckSalt(salt);
-
-        if(status == ret::A_OK) {
-            ptOut.set_salt(salt);
-
-            // Generate Passphrase Key 
-            Credentials cred;
-            crypto::GenerateKeyFromPassphrase(pass, salt, cred);
-            
-            // Set the key generated from phrase
-            ptOut.set_phrase_key(cred.key());
-        }
-    }
-    Unlock();
-    return status;
-}
-
-// Depricated
-int CredentialsManager::EnterPassphrase(const std::string& pass, 
-                                        std::string& salt, 
-                                        std::string& keyOut) 
-{
-    Lock();
-    Credentials cred;
-    crypto::GenerateKeyFromPassphrase(pass, salt, cred);
-    // Create Passphrase token
-    keyOut = cred.key();
-    Unlock();
-
-    return ret::A_OK;
-}
-
 void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
     // do not lock, used internally
     // Construct path

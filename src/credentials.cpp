@@ -1,85 +1,65 @@
 #include "credentials.h"
 
+
+#include <sys/mman.h>
 #include <string.h>
 #include "errorcodes.h"
 
 #include "crypto.h"
 
+
 namespace attic {
 
 Credentials::Credentials() {
-    memset(byte_key_, '\0', CryptoPP::AES::MAX_KEYLENGTH+1);
-    memset(byte_iv_, '\0', CryptoPP::AES::BLOCKSIZE+1);
+    memset(byte_key_, 0, crypto_secretbox_KEYBYTES);
+    memset(byte_iv_, 0, crypto_secretbox_NONCEBYTES);
+    mlock(this, sizeof(Credentials));
 }
 
-Credentials::~Credentials() {}
-
-void Credentials::Serialize(Json::Value& root) {
-    root["key"] = key_;
-    root["iv"] = iv_;
-}
-
-void Credentials::Deserialize(Json::Value& root) {
-    std::string key, iv;
-    key = root.get("key", "").asString();
-    iv = root.get("iv", "").asString();
-
-    // Do not set directly
-    set_key(key); 
-    set_iv(iv);
-}
-
-void Credentials::GetSerializedCredentials(std::string& out) {
-    jsn::SerializeObject(this, out);
-}
-
-std::string Credentials::asString() const {
-    Credentials obj = *this;
-    std::string out;
-    jsn::SerializeObject(&obj, out);
-    return out;
+Credentials::~Credentials() {
+    key_.clear();
+    iv_.clear();
+    crypto::SecureZeroMemory(byte_key_, crypto_secretbox_KEYBYTES);
+    crypto::SecureZeroMemory(byte_iv_, crypto_secretbox_NONCEBYTES);
 }
 
 int Credentials::set_key(const std::string& key) { 
     int status = ret::A_OK;
-    status = set_key(reinterpret_cast<const byte*>(key.c_str()), GetKeySize());
+    status = set_key(reinterpret_cast<const unsigned char*>(key.c_str()), key.size());
     return status;
 }
 
-int Credentials::set_key(const byte* pKey, const unsigned int length) {
+int Credentials::set_key(const unsigned char* key, const unsigned int len) {
     int status = ret::A_OK;
-
-    if(length <= GetKeySize()) {
-        memset(byte_key_, '\0', GetKeySize()+1);
-        memcpy(byte_key_, pKey, length);
+    if(len <= GetKeySize()) {
+        memset(byte_key_, 0, GetKeySize());
+        memcpy(byte_key_, key, len);
         key_.clear();
-        key_.append(reinterpret_cast<const char*>(byte_key_), length);
+        key_.append(reinterpret_cast<const char*>(byte_key_), len);
     }
     else {
         status = ret::A_FAIL_KEYSIZE_MISMATCH;
     }
-
     return status;
 }
 
 int Credentials::set_iv(const std::string& iv) { 
     int status = ret::A_OK;
-    status = set_iv(reinterpret_cast<const byte*>(iv.c_str()), iv.size());
+    status = set_iv(reinterpret_cast<const unsigned char*>(iv.c_str()), iv.size());
     return status;
 }
 
-int Credentials::set_iv(const byte* pIv, const unsigned int length) {
+int Credentials::set_iv(const unsigned char* iv, const unsigned int len) {
     int status = ret::A_OK;
-    if(length <= GetIvSize()) {
-        memset(byte_iv_, '\0', CryptoPP::AES::BLOCKSIZE+1);
-        memcpy(byte_iv_, pIv, length);
+    if(len <= GetIvSize()) {
+        memset(byte_iv_, 0, crypto_secretbox_NONCEBYTES);
+        memcpy(byte_iv_, iv, len);
         iv_.clear();
-        iv_.append(reinterpret_cast<const char*>(byte_iv_), length);
+        iv_.append(reinterpret_cast<const char*>(byte_iv_), len);
     }
     else {
         status = ret::A_FAIL_IVSIZE_MISMATCH;
     }
-
     return status;
 }
 
