@@ -303,7 +303,7 @@ int AtticService::InitializeThreadManager() {
                                             at,
                                             client_->entity());
         // TODO :: setup a configurable way to set the thread count
-        status = thread_manager_->Initialize(12); 
+        status = thread_manager_->Initialize(16); 
     }
     return status;
 }

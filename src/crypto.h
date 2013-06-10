@@ -7,14 +7,8 @@
 
 // Depricated
 #include <hex.h>         
-#include <filters.h>     
-#include <gcm.h>         
-#include <hmac.h>
-#include <aes.h>
-#include <osrng.h>
 #include <base32.h>
 #include <base64.h>
-#include <files.h>
 // Depricated //
 
 #include <sodium.h>
@@ -104,21 +98,6 @@ static void Base32DecodeString(const std::string& input, std::string& output) {
                            true,
                            new CryptoPP::Base32Decoder(new CryptoPP::StringSink(output)));
 }
-
-
-static void GenerateRandomString(std::string& out, const unsigned int size = 16) {
-    const unsigned int BLOCKSIZE = size * 8;
-    byte pcbScratch[BLOCKSIZE];
-    // Random Block
-    CryptoPP::AutoSeededRandomPool rng;
-    rng.GenerateBlock( pcbScratch, BLOCKSIZE );
-
-    // Output
-    std::string intermed;
-    intermed.append(reinterpret_cast<const char*>(pcbScratch), BLOCKSIZE);
-    Base64EncodeString(intermed, out);
-}
-
 
 // New NACL STUFF
 //
