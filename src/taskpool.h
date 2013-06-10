@@ -30,6 +30,15 @@ public:
     TaskContext::ContextQueue* operator[](const Task::TaskType type) {
         return &context_map_[type];
     }
+
+    std::string stats() {
+        std::ostringstream stats;
+        ContextMap::iterator itr = context_map_.begin();
+        for(;itr!= context_map_.end(); itr++) {
+            stats << " task type : " << itr->first << " task count : " << itr->second.size() << std::endl;
+        }
+        return stats.str();
+    }
 private:
     unsigned int total_task_count_;
     unsigned int active_task_count_;

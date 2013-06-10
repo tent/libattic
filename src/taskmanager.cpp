@@ -5,6 +5,7 @@
 #include "credentialsmanager.h"
 #include "filemanager.h"
 #include "taskdelegate.h"
+#include "logutils.h"
 
 namespace attic {
 
@@ -90,7 +91,9 @@ void TaskManager::OnEventRaised(const event::Event& event) {
             }
         case event::Event::REQUEST_UPLOAD_FILE:
             {
-                std::cout<<" creating process upload file task " << std::endl;
+                std::ostringstream err;
+                err  <<" creating process upload file task " << event.value << std::endl;
+                log::LogString("tm8515", err.str());
                 ProcessUploadFile(event.value, event.delegate);
                 break;
             }
@@ -275,12 +278,21 @@ void TaskManager::PushContextBack(TaskContext& tc) {
 
 void TaskManager::RetrieveContextQueue(TaskContext::ContextQueue& out) {
     cxt_mtx.Lock();
-//    std::cout<<" context queue size (before) : " << context_queue_.size() << std::endl;
-    //std::cout<<" outgoing queue size (before) : " << out.size() << std::endl;
-    out = context_queue_;
-    context_queue_.clear();
-    //std::cout<<" context queue size (after) : " << context_queue_.size() << std::endl;
-    //std::cout<<" outgoing queue size (after) : " << out.size() << std::endl;
+    if(context_queue_.size()) {
+        std::ostringstream err;
+        err << "Retrieving context tasks " << std::endl;
+        err << " context queue size (before) : " << context_queue_.size() << std::endl;
+        TaskContext::ContextQueue::iterator itr = context_queue_.begin();
+        int i = 0; // TODO :: FOR LOGGING ONLY, TAKE OUT
+        for(;itr != context_queue_.end(); itr++) {
+            out.push_back(*itr);
+            i++;
+        }
+        err << " pushed back " << i << " items " << std::endl;
+        context_queue_.clear();
+        err << " context queue size (after) : " << context_queue_.size() << std::endl;
+        log::LogString("tm015", err.str());
+    }
     cxt_mtx.Unlock();
 }
 

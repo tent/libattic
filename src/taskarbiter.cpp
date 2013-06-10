@@ -4,6 +4,7 @@
 #include "taskqueue.h"
 #include "pulltask.h"
 #include "threading.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -66,6 +67,13 @@ void TaskArbiter::RetrieveTasks() {
         TaskContext::ContextQueue::iterator itr = cq.begin();
         for(;itr!=cq.end();itr++) {
             task_pool_.PushBack(*itr);
+        }
+
+        if(cq.size()) {
+            std::ostringstream err;
+            err << " Task Arbiter Retrieve Tasks \n";
+            err << task_pool_.stats() << std::endl;
+            log::LogString("sadg912", err.str());
         }
     }
 }

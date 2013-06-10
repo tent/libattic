@@ -3,7 +3,7 @@
 #include <iostream>
 #include <boost/thread/thread.hpp>
 
-
+#include "logutils.h"
 #include "sleep.h"
 #include "taskarbiter.h"
 
@@ -35,6 +35,11 @@ void ThreadWorker::Run() {
             // Get a job
             task = RetrieveTask();
             if(!task) { sleep::sleep_seconds(1); }
+            else {
+                std::ostringstream err;
+                err << " Thread worker retrieved task type : " << task->type() << std::endl;
+                log::LogString("worker_32482", err.str());
+            }
         }
 
         if(task)  {
