@@ -168,13 +168,22 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     folderw2->SetTaskPreference(Task::FOLDER);
     thread_pool_->SpinOffWorker(folderw2);
 
-    // Dedicated upload
+    // Dedicated push
     ThreadWorker* pushw = new ThreadWorker(file_manager_, 
                                              credentials_manager_, 
                                              access_token_, 
                                              entity_, 
                                              true); // Strict
     pushw->SetTaskPreference(Task::PUSH);
+    thread_pool_->SpinOffWorker(pushw);
+
+    // Dedicated upload
+    ThreadWorker* pushw = new ThreadWorker(file_manager_, 
+                                             credentials_manager_, 
+                                             access_token_, 
+                                             entity_, 
+                                             true); // Strict
+    pushw->SetTaskPreference(Task::UPLOADFILE);
     thread_pool_->SpinOffWorker(pushw);
 
     // Dedicated download
