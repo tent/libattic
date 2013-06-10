@@ -195,20 +195,23 @@ int Passphrase::DecryptKey(const std::string& key,
     cred.set_iv(salt);
 
     std::string decrypted_key;
-    //status = crypto::DecryptStringCFB(key, cred, decrypted_key);
-    status = crypto::DecryptStringGCM(key, cred, decrypted_key);
-    std::cout<<" DECRYPT STATUS : " << status << std::endl;
-    std::cout<<" DECRYPTED KEY : " << decrypted_key << std::endl;
-    if(status == ret::A_OK) {
-        if(CheckSentinelBytes(decrypted_key)) {
-            key_out = decrypted_key.substr(8);
+    if(crypto::Decrypt(key, cred, decrypted_key)) {
+        std::cout<<" DECRYPT STATUS : " << status << std::endl;
+        std::cout<<" DECRYPTED KEY : " << decrypted_key << std::endl;
+        if(status == ret::A_OK) {
+            if(CheckSentinelBytes(decrypted_key)) {
+                key_out = decrypted_key.substr(8);
+            }
+            else {
+                status = ret::A_FAIL_SENTINEL_MISMATCH;
+            }
         }
         else {
             status = ret::A_FAIL_SENTINEL_MISMATCH;
         }
     }
     else {
-        status = ret::A_FAIL_SENTINEL_MISMATCH;
+        status = ret::A_FAIL_DECRYPT;
     }
 
     return status;
@@ -271,7 +274,7 @@ void Passphrase::GeneratePhraseKey(const std::string& passphrase,
                                    const std::string& salt,
                                    std::string& key_out) {
     Credentials cred;
-    crypto::GenerateKeyFromPassphrase(passphrase, salt, cred);
+    crypto::EnterPassphrase(passphrase, salt, cred);
     // Create Passphrase token
     key_out = cred.key();
 }
@@ -285,8 +288,7 @@ void Passphrase::EncryptKeyWithPassphrase(const std::string& key,
     enc.set_key(phrasekey);
     enc.set_iv(salt);
     // Encrypt MasterKey with passphrase key
-    //crypto::EncryptStringCFB(key, enc, key_out);
-    crypto::EncryptStringGCM(key, enc, key_out);
+    crypto::Encrypt(key, enc, key_out);
 
 }
 
@@ -297,21 +299,12 @@ int Passphrase::CreatePhraseToken(const std::string& master_key, PhraseToken& ou
         status = ret::A_FAIL_EMPTY_PASSPHRASE;
 
     if(status == ret::A_OK) {
-        // Generate Salt
-        std::string salt;
-        status = crypto::GenerateSalt(salt);
-        status = crypto::CheckSalt(salt);
-
-        if(status == ret::A_OK) {
-            out.set_salt(salt);
-
-            // Generate Passphrase Key 
-            Credentials cred;
-            crypto::GenerateKeyFromPassphrase(master_key, salt, cred);
-            
-            // Set the key generated from phrase
-            out.set_phrase_key(cred.key());
-        }
+        // Generate Passphrase Key 
+        Credentials cred;
+        crypto::GenerateKeyFromPassphrase(master_key, cred);
+        // Set the key generated from phrase
+        out.set_phrase_key(cred.key());
+        out.set_salt(cred.iv());
     }
 
     return status;

@@ -23,7 +23,7 @@ public:
     const std::string& plaintext_mac() const        { return plaintext_mac_; }
     const std::string& ciphertext_mac() const       { return ciphertext_mac_; }
     const std::string& iv() const                   { return iv_; }
-    const std::string& verification_hash() const    { return verification_hash_; }
+    const std::string& digest() const               { return digest_; }
 
     int group() const                               { return group_; }
     unsigned int position() const                   { return position_; }
@@ -35,7 +35,7 @@ public:
     void set_iv(const std::string& iv)                  { iv_ = iv; }
     void set_position(const unsigned int position)      { position_ = position; }
     void set_group(const int g)                         { group_ = g; }
-    void set_verification_hash(const std::string& hash) { verification_hash_ = hash; }
+    void set_digest(const std::string& hash)            { digest_ = hash; }
 
     bool HasIv() const { return !iv_.empty(); }
 private:
@@ -44,7 +44,7 @@ private:
     std::string plaintext_mac_;     // Hash of the chunk
     std::string ciphertext_mac_;    // Hash of the Iv
     std::string iv_;                // Iv used to encrypt chunk
-    std::string verification_hash_; // Hash used after the entire chunk has been transformed and encoded, used to compare against the servers' digest to verify chunk integrity
+    std::string digest_;            // Hash used after the entire chunk has been transformed and encoded, used to compare against the servers' digest to verify chunk integrity
 
     unsigned int position_;         // Position in the order of chunks
     int group_;                     // chunk group designation -1 = unassigned

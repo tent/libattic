@@ -96,7 +96,7 @@ int ChunkRequest::ProcessTransform(ChunkTransform& ct,
         out.set_plaintext_mac(ct.plaintext_hash());
         out.set_ciphertext_mac(ct.ciphertext_hash());
         out.set_iv(ct.chunk_iv());
-        out.set_verification_hash(ct.verification_hash());
+        out.set_digest(ct.verification_hash());
         out.set_position(position);
         status = PushBackChunk(out, ct.finalized_data(), position);
     }

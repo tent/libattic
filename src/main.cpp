@@ -63,30 +63,8 @@ TEST(ATTIC_SERVICE, START_STOP)
 }
 */
 
-TEST(PROCESS, COMPRESS_ENCRYPT_DECRYPT_COMPRESS)
-{
-    std::string test("This is a test string, of some sort of data, it's pretty great");
 
-    // Compress
-    std::string compressed;
-    attic::compress::CompressString(test, compressed);
-    // Encrypt
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
-    std::string encrypted;
-    attic::crypto::EncryptStringCFB(compressed, cred, encrypted);
-    // Decrypt
-    std::string decrypted;
-    attic::crypto::DecryptStringCFB(encrypted, cred, decrypted);
-    // Decompress
-    std::string decompressed;
-    attic::compress::DecompressString(decrypted, decompressed);
-
-    ASSERT_EQ(test, decompressed);
-
-}
-
-TEST(COMPRESS, COMPRESSSTRING)
-{
+TEST(COMPRESS, COMPRESSSTRING) {
     std::string in("this is my test string it is a pretty decent test string");
     std::string out;
 
@@ -98,8 +76,7 @@ TEST(COMPRESS, COMPRESSSTRING)
     ASSERT_EQ(in, decomp);
 }
 
-TEST(NETLIB, EXTRACTHOSTANDPATH)
-{
+TEST(NETLIB, EXTRACTHOSTANDPATH) {
     std::string url = "https://manuel.tent.is/tent/posts";
     std::string protocol, host, path;
 
@@ -108,8 +85,7 @@ TEST(NETLIB, EXTRACTHOSTANDPATH)
     ASSERT_EQ(path, std::string("/tent/posts"));
 }
 
-TEST(CREDENTIALS, ISEMPTY)
-{
+TEST(CREDENTIALS, ISEMPTY) {
     attic::Credentials cred;
 
     ASSERT_EQ(cred.key_empty(), true);
@@ -121,56 +97,7 @@ TEST(CREDENTIALS, ISEMPTY)
     ASSERT_EQ(cred.iv_empty(), false);
 }
 
-// run credentials through the filepost upload / download process
-TEST(CREDENTIALS, GENERATE) {
-    std::string master_key("qwertyuiopasdfghjklzxcvbnmasdfgh");
-    for(int i=0; i<100; i++) {
-        attic::Credentials local_cred;
-        // Generate file credentials
-        attic::crypto::GenerateCredentials(local_cred);
-        // Encry file key
-        attic::Credentials tcred;   // transiet cred
-        tcred.set_key(master_key);
-        tcred.set_iv(local_cred.iv());
-
-        std::string local_key = local_cred.key();
-        std::string encrypted_key;
-        attic::crypto::EncryptStringGCM(local_key, tcred, encrypted_key);
-
-        attic::Credentials enc_cred; // Final encrytred file key
-        enc_cred.set_iv(local_cred.iv());
-
-        // encode key and iv
-        std::string b64_key, b64_iv;
-        attic::crypto::Base64EncodeString(encrypted_key, b64_key);
-        attic::crypto::Base64EncodeString(enc_cred.iv(), b64_iv);
-
-        // reverse the process
-        std::string key, iv;
-        attic::crypto::Base64DecodeString(b64_key, key);
-        attic::crypto::Base64DecodeString(b64_iv, iv);
-
-        // create transient cred
-        attic::Credentials dtcred;
-        dtcred.set_key(master_key);
-        dtcred.set_iv(iv);
-
-        std::string decrypted_key;
-        attic::crypto::DecryptStringGCM(key, dtcred, decrypted_key);
-
-        /*
-        std::cout<<" key attempt : " << i << " ";
-        if(local_cred.key() != decrypted_key )
-            std::cout<<" failed " << std::endl;
-        else
-            std::cout<<" passed " << std::endl;
-            */
-        ASSERT_EQ(strcmp(local_cred.key().c_str(), decrypted_key.c_str()), 0);
-    }
-}
-
-TEST(CRYPTO, BASE32)
-{
+TEST(CRYPTO, BASE32) {
     std::string teststring("this is my test string, that I'm going to base32 encode");
     std::string encoded;
     attic::crypto::Base32EncodeString(teststring, encoded);
@@ -180,8 +107,7 @@ TEST(CRYPTO, BASE32)
     ASSERT_EQ(teststring, decoded);
 }
 
-TEST(CRYPTO, BASE64)
-{
+TEST(CRYPTO, BASE64) {
     std::string teststring("this is my test string, that I'm going to base64 encode");
     std::string encoded;
     attic::crypto::Base64EncodeString(teststring, encoded);
@@ -190,138 +116,59 @@ TEST(CRYPTO, BASE64)
     ASSERT_EQ(teststring, decoded);
 }
 
-TEST(CRYPTO, HMAC)
-{
-    int status = attic::ret::A_OK;
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
+TEST(CRYPTO, KEY_ENCRYPTION) {
 
-    std::string plaintext("this is my plain text");
+    attic::Credentials cred, master_cred;
+    attic::crypto::GenerateCredentials(cred);
+    attic::crypto::GenerateCredentials(master_cred);
+    // Encrypt
+    std::string master_key = master_cred.key();
 
-    std::string macout;
-    status = attic::crypto::GenerateHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, attic::ret::A_OK);
+    attic::Credentials tcred; // transient credentials
+    tcred.set_key(master_key);
+    tcred.set_iv(cred.iv());
 
-    status = attic::crypto::VerifyHMACForString( plaintext, cred, macout);
-    ASSERT_EQ(status, attic::ret::A_OK);
+    std::string encrypted_key;
+    attic::crypto::Encrypt(cred.key(), tcred, encrypted_key);
+
+    std::string b64_key;
+    attic::crypto::Base64EncodeString(encrypted_key, b64_key);
+
+    std::string b64_dkey;
+    attic::crypto::Base64DecodeString(b64_key, b64_dkey);
+    // Decrypt
+    std::string decrypted_key;
+    attic::crypto::Decrypt(b64_dkey, tcred, decrypted_key);
+
+    ASSERT_EQ(cred.key(), decrypted_key);
 }
 
-TEST(CRYPTO, ENCRYPTIONCFB)
-{
-    attic::Credentials cred = attic::crypto::GenerateCredentials();
+TEST(SCRYPT, ENTER_PASSPHRASE) {
+    std::string passphrase("password");
 
-    std::string plaintext("this is my plain text");
-
-    std::string cyphertext;
-    attic::crypto::EncryptStringCFB(plaintext, cred, cyphertext);
-
-    std::string decryptedtext;
-    attic::crypto::DecryptStringCFB(cyphertext, cred, decryptedtext);
-
-    ASSERT_EQ(plaintext, decryptedtext);
-}
-
-TEST(CRYPTO, CREDENCRYPTIONGCM)
-{
-    attic::Credentials masterkey;
-
-    std::string phrase("this is a test");
-    std::string iv;
-    attic::crypto::GenerateSalt(iv);
-
-    // Genterate key from passphrase
-    int status = attic::crypto::GenerateKeyFromPassphrase(phrase,
-                                                   iv,
-                                                   masterkey);
-    ASSERT_EQ(status, 0);
-
-    attic::Credentials cred; // Credentials to encrypt
-    cred = attic::crypto::GenerateCredentials();
-
-    std::string key = cred.key();
-
-    attic::Credentials intercred; // credentials used to encrypt file key
-                           // master key
-                           // file specific iv
-
-    std::string mk = masterkey.key();
-    std::string fileiv = cred.iv();
-
-    intercred.set_key(mk);
-    intercred.set_iv(fileiv);
-
-    std::string enckey;
-    status = attic::crypto::EncryptStringGCM(key, intercred, enckey);
-    ASSERT_EQ(status, 0);
-
-    // Generate key again for good measure
-    attic::Credentials mkcopy;
-    status = attic::crypto::GenerateKeyFromPassphrase(phrase,
-                                               iv,
-                                               mkcopy);
-    ASSERT_EQ(status, 0);
-
-    attic::Credentials intercred1;
-    std::string mk1 = mkcopy.key();
-
-    intercred1.set_key(mk1);
-    intercred1.set_iv(fileiv);
-
-    std::string deckey;
-    status = attic::crypto::DecryptStringGCM(enckey, intercred1, deckey);
-
-    ASSERT_EQ(status, 0);
-    ASSERT_EQ(key, deckey);
-}
-
-/*
-TEST(CRYPTO, FILEHASH) {
-
-   std::string filepath = "./data/m4.mp4";
-   std::string hash_out;
-   attic::crypto::GenerateFileHash(filepath, hash_out);
-   std::cout<<" FILE HASH : " << hash_out << std::endl;
-}
-*/
-
-TEST(SCRYPT, ENTER_PASSPHRASE)
-{
-    attic::Credentials cred, cred1;
-
-    std::string pw("password");
-    std::string iv;
-    attic::crypto::GenerateSalt(iv); 
-
-    int status = attic::crypto::GenerateKeyFromPassphrase( pw,
-                                               iv,
-                                               cred);
-    
-    ASSERT_EQ(status, 0);
-    status = attic::crypto::GenerateKeyFromPassphrase( pw ,
-                                  iv,
-                                  cred1);
-
-    ASSERT_EQ(status, 0);
+    attic::Credentials cred;                                  
+    // Will generate credentials from passphrase
+    attic::crypto::GenerateKeyFromPassphrase(passphrase, cred);
+    attic::Credentials cred1;
+    // Enter passphrase and known salt
+    attic::crypto::EnterPassphrase(passphrase, cred.iv(), cred1);   
     ASSERT_EQ(cred.key(), cred1.key());
-    ASSERT_EQ(cred.iv(), cred1.iv());
 }
 
-TEST(SCRYPT, ENCODE)
-{
+TEST(SCRYPT, ENCODE) {
     std::string input("thisistestinput");
     std::string iv;
-
-    attic::crypto::GenerateSalt(iv); 
+    attic::crypto::GenerateNonce(iv); 
 
     std::string out, out1;
-    attic::crypto::ScryptEncode(input, iv, out, CryptoPP::AES::MAX_KEYLENGTH);
-    attic::crypto::ScryptEncode(input, iv, out1, CryptoPP::AES::MAX_KEYLENGTH);
+    attic::crypto::ScryptEncode(input, iv, crypto_secretbox_KEYBYTES, out);
+    attic::crypto::ScryptEncode(input, iv, crypto_secretbox_KEYBYTES, out1);
 
     int res =  strcmp(out.c_str(), out1.c_str());
     ASSERT_EQ(res, 0);
 }
 
-TEST(FILESYSTEM, RELATIVETO)
-{
+TEST(FILESYSTEM, RELATIVETO) {
     std::string relative;
     attic::fs::MakePathRelative("foo/bar", "this/foo/test/something/what.txt", relative);
     ASSERT_EQ(relative, std::string("../../this/foo/test/something/what.txt"));
@@ -335,8 +182,7 @@ TEST(FILESYSTEM, EXTRACT_DOUBLE_QUOTES) {
 }
 
 /*
-TEST(FILESYSTEM, SUBDIRECTORIES)
-{
+TEST(FILESYSTEM, SUBDIRECTORIES) {
     std::string root("data");
     std::string test("data/test/folder/this/is/mine/what.pdf");
 
@@ -350,8 +196,7 @@ TEST(FILESYSTEM, SUBDIRECTORIES)
 }
 */
 
-TEST(AUTHCODE, GENERATE)
-{
+TEST(AUTHCODE, GENERATE) {
     std::string authcode;
     attic::utils::GenerateRandomString(authcode, 32);
     std::string encoded;
@@ -363,8 +208,7 @@ TEST(AUTHCODE, GENERATE)
 }
 
 /*
-TEST(MANIFEST, INSERTFILEINFO)
-{
+TEST(MANIFEST, INSERTFILEINFO) {
     attic::FileInfo fi( "somefile.pdf",
                  "foo/bar/somefile.pdf",
                  "kjsadkfj-3412",
@@ -381,8 +225,7 @@ TEST(MANIFEST, INSERTFILEINFO)
     mf.Shutdown();
 }
 
-TEST(MANIFEST, INSERTFILEPOSTID)
-{
+TEST(MANIFEST, INSERTFILEPOSTID) {
     Manifest mf;
     std::string dir("");
     mf.SetDirectory(dir);
@@ -396,8 +239,7 @@ TEST(MANIFEST, INSERTFILEPOSTID)
     mf.Shutdown();
 }
 
-TEST(MANIFEST, REMOVEFILEINFO)
-{
+TEST(MANIFEST, REMOVEFILEINFO) {
     Manifest mf;
     std::string dir("");
     mf.SetDirectory(dir);
@@ -410,8 +252,35 @@ TEST(MANIFEST, REMOVEFILEINFO)
     mf.Shutdown();
 }
 */
-TEST(CHUNKINFO, SERIALIZATION) 
-{
+
+TEST(FILEINFO, SERIALIZATION) {
+    attic::FileInfo fi;
+    fi.set_filepath("<working>/data.pdf");
+    fi.set_filename("data.pdf");
+    fi.set_file_credentials(attic::crypto::GenerateCredentials());
+    fi.set_folder_post_id("folder_post_id");
+    fi.set_encrypted_key("encrypted_key");
+    fi.set_chunk_count(1);
+    fi.set_file_size(124);
+
+    attic::ChunkInfo ci;
+    ci.set_chunk_name("chunk name");
+    ci.set_checksum("checksum");
+    ci.set_plaintext_mac("plaintext mac");
+    ci.set_ciphertext_mac("ciphertext mac");
+    ci.set_iv("iv");
+    ci.set_position(0);
+
+
+
+    fi.PushChunkBack(ci);
+
+    std::string chunk_data;
+    fi.GetSerializedChunkData(chunk_data);
+    std::cout<<" CHUNK DATA : " << chunk_data << std::endl;
+}
+
+TEST(CHUNKINFO, SERIALIZATION) {
     attic::ChunkInfo ci("name", "supersummmmmmm");
     ci.set_ciphertext_mac("aksdjfkasdfCIPHER");
     ci.set_plaintext_mac("THIS IS MY PLAIN TEXT MAC MOFO ");
@@ -427,12 +296,160 @@ TEST(CHUNKINFO, SERIALIZATION)
     std::string output2;
     attic::jsn::SerializeObject(&ci2, output2);
 
+    Json::Value c(Json::nullValue);
+    if(attic::jsn::SerializeObject(&ci, c))
+        std::cout<<" TRUE " << std::endl;
+    else
+        std::cout<<" FALSE " << std::endl;
+
+//std::cout<<" STRING : " << s << std::endl;
+    attic::jsn::PrintOutJsonValue(&c);
+
     ASSERT_EQ(output, output2);
 }
 
+#define CHUNK_FORMAT 1
+void Compose(const std::string& in, const std::string& iv, std::string& out) {
+    // Compose the chunk data to its format
+    // Format version | iv len | iv | data len | data
+    unsigned char format = CHUNK_FORMAT;
+    std::cout<<" FORMAT : " << format << std::endl;
+    out.append(format, 1);
+
+    unsigned int iv_size = iv.size();
+    char ivsize[4] = {0};
+    ivsize[0] = (iv_size >> 24) & 0xFF;
+    ivsize[1] = (iv_size >> 16) & 0xFF;
+    ivsize[2] = (iv_size >> 8) & 0xFF;
+    ivsize[3] = iv_size & 0xFF;
+    std::cout<<" IV SIZE : " << iv_size << std::endl;
+
+    out.append(ivsize, 4);
+    out.append(iv.c_str(), iv_size);
+
+    unsigned int data_size = in.size();
+    char datasize[4] = {0};
+    datasize[0] = (data_size >> 24) & 0xFF;
+    datasize[1] = (data_size >> 16) & 0xFF;
+    datasize[2] = (data_size >> 8) & 0xFF;
+    datasize[3] = data_size & 0xFF;
+    std::cout<<" DATA SIZE : " << data_size << std::endl;
+
+    out.append(datasize, 4);
+    out.append(in.c_str(), data_size);
+}
+
+void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
+    unsigned char format = in[0];
+    std::cout<<"FORMAT : " << format << std::endl;
+    unsigned int offset = 1;
+    std::cout<<" offset : " << offset << std::endl;
+    if(format == CHUNK_FORMAT) {
+        unsigned int iv_size = 0;
+        iv_size = (iv_size << 8) + in[offset];
+        iv_size = (iv_size << 8) + in[offset+1];
+        iv_size = (iv_size << 8) + in[offset+2];
+        iv_size = (iv_size << 8) + in[offset+3];
+        offset+=4;
+        std::cout<<" offset : " << offset << std::endl;
+
+        std::cout<<" IV SIZE : " << iv_size << std::endl;
+        iv_out = in.substr(offset, iv_size);
+        std::cout<<" IV : " << iv_out << std::endl;
+        offset+= iv_size;
+        std::cout<<" offset : " << offset << std::endl;
+
+        unsigned int data_size = 0;
+        data_size = (data_size << 8) + in[offset];
+        data_size = (data_size << 8) + in[offset+1];
+        data_size = (data_size << 8) + in[offset+2];
+        data_size = (data_size << 8) + in[offset+3];
+        offset+=4;
+        std::cout<<" offset : " << offset << std::endl;
+        std::cout<<" DATA SIZE : " << data_size << std::endl;
+
+        out = in.substr(offset, data_size);
+    }
+}
+
+TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){ 
+    std::string payload;
+    payload.append("this is my test data,09412");
+    payload.append("\0", 1);
+    payload.append("djfklgjsdg9012345ksajdkfjkasjdgkasjdga");
+    std::string iv("test iv, not a real iv");
+
+    std::string composed;
+    Compose(payload, iv, composed);
+
+    std::string iv_out;
+    std::string decomposed;
+    Decompose(composed, iv_out, decomposed);
+
+    ASSERT_EQ(iv, iv_out);
+    ASSERT_EQ(payload, decomposed);
+}
+
+TEST(CHUNK, COMPOSE_DECOMPOSE) {
+    std::string payload("this is my test data, ksajdkfjkasjdgkasjdga");
+    std::string iv("test iv, not a real iv");
+
+    std::string composed;
+    unsigned char format = 1;
+    composed.append(format, 1);
+
+    char ivsize[4];
+    unsigned int n = iv.size();
+    ivsize[0] = (n >> 24) & 0xFF;
+    ivsize[1] = (n >> 16) & 0xFF;
+    ivsize[2] = (n >> 8) & 0xFF;
+    ivsize[3] = n & 0xFF;
+
+    composed.append(ivsize, 4);
+    /*
+    printf("%x %x %x %x\n", (unsigned char)ivsize[0],
+                            (unsigned char)ivsize[1],
+                            (unsigned char)ivsize[2],
+                            (unsigned char)ivsize[3]);
+                            */
+
+    composed.append(iv.c_str(), n);
+
+    unsigned int data_size = payload.size();
+    char datasize[4] = {0};
+    datasize[0] = (data_size >> 24) & 0xFF;
+    datasize[1] = (data_size >> 16) & 0xFF;
+    datasize[2] = (data_size >> 8) & 0xFF;
+    datasize[3] = data_size & 0xFF;
+
+    composed.append(datasize, 4);
+    composed.append(payload.c_str(), data_size);
+
+    int offset = 0;
+    unsigned char fmt = composed[0];
+    offset++;
+    unsigned int iv_back = 0;
+    std::string eiv = composed.substr(offset, 4);
+    for(int i=0; i < sizeof(iv_back); i++) {
+        iv_back = (iv_back << 8) + eiv[i];
+    }
+    offset += 4;
+    ASSERT_EQ(iv_back, iv.size());
+    ASSERT_EQ(iv, composed.substr(offset, iv_back));
+    offset += iv_back;
+
+    unsigned int d_back = 0;
+    std::string ddata = composed.substr(offset, 4);
+    for(int i=0; i<sizeof(d_back); i++) {
+        d_back = (d_back<<8) + ddata[i];
+    }
+    offset += 4;
+    ASSERT_EQ(d_back, payload.size());
+    ASSERT_EQ(composed.substr(offset, d_back), payload);
+}
+
 /*
-TEST(PARAMS, ENCODE) 
-{
+TEST(PARAMS, ENCODE) {
     UrlParams params;                                                                  
     params.AddValue(std::string("post_types"), std::string(attic::cnst::g_szFolderPostType)); 
     params.AddValue(std::string("limit"), std::string("200"));                     
@@ -483,8 +500,7 @@ TEST(PARAMS, DECODE) {
 */
 
 /*
-TEST(FILESYSTEM, SCAN)
-{
+TEST(FILESYSTEM, SCAN) {
     std::vector<std::string> paths;
     attic::fs::ScanDirectory("./data", paths);
     for(unsigned int i=0; i<paths.size(); i++) {
@@ -559,33 +575,6 @@ TEST(BASE64, ENCODEDECODE) {
     }
 }
 
-TEST(BASE64, TEST) {
-    CryptoPP::AutoSeededRandomPool  g_Rnd;
-
-    for(int i=0; i<1000; i++) {
-        byte iv[CryptoPP::AES::BLOCKSIZE]; 
-        g_Rnd.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE);
-        std::string hold;
-        hold.append(reinterpret_cast<const char*>(iv), CryptoPP::AES::BLOCKSIZE);
-
-        std::string output;
-        CryptoPP::StringSource(hold, 
-                               true, 
-                               new CryptoPP::Base64Encoder(new CryptoPP::StringSink(output), 
-                                                           false)
-                               );
-
-        std::string original;
-        CryptoPP::StringSource(output,
-                               true,
-                               new CryptoPP::Base64Decoder(new CryptoPP::StringSink(original))
-                               );
-
-        if(original != hold) {
-            std::cout<<" FAIL " << std::endl;
-        }
-    }
-}
 
 TEST(STRTOL, TEST) {
     std::string ts("1370368446");
@@ -598,7 +587,100 @@ TEST(STRTOL, TEST) {
     ASSERT_EQ(tb, e);
 }
 
+#include <sodium.h>
+TEST(SODIUM, SHA256) {
+    std::string test("1248i9184591iujwidejgisdjg\0184912gt");
+    unsigned char out[crypto_hash_sha512_BYTES];
+    sodium_init();
+    crypto_hash_sha512(out, reinterpret_cast<const unsigned char*>(test.c_str()),test.size());
+    for(int i=0; i<crypto_hash_sha512_BYTES; i++) {
+        printf("%02x",(unsigned int) out[i]);
+    }
 
+}
+
+unsigned char firstkey[32] = {
+     0x1b,0x27,0x55,0x64,0x73,0xe9,0x85,0xd4
+         ,0x62,0xcd,0x51,0x19,0x7a,0x9a,0x46,0xc7
+         ,0x60,0x09,0x54,0x9e,0xac,0x64,0x74,0xf2
+         ,0x06,0xc4,0xee,0x08,0x44,0xf6,0x83,0x89
+} ;
+
+unsigned char nonce[16] = {
+     0x69,0x69,0x6e,0xe9,0x55,0xb6,0x2b,0x73
+         ,0xcd,0x62,0xbd,0xa8,0x75,0xfc,0x73,0xd6
+} ;
+
+TEST(SODIUM, aes156STREAM) {
+    std::string test("1248i9184591iujwidejgisdjg\0184912gt");
+    test += " this is my test string, yep";
+    unsigned char c[test.size()];
+    crypto_stream_aes256estream_xor(c, 
+                                    reinterpret_cast<const unsigned char*>(test.c_str()),
+                                    test.size(),
+                                    nonce,
+                                    firstkey);
+    for (int i = 32;i < 163;++i) {
+            //printf(",0x%02x",(unsigned int) c[i]);
+             //   if (i % 8 == 7) printf("\n");
+                  }
+      //printf("\n");
+
+    unsigned char p[test.size()]; 
+    crypto_stream_aes256estream_xor(p, 
+                                    c,
+                                    test.size(),
+                                    nonce,
+                                    firstkey);
+
+    std::cout<<" original : " << test << std::endl;
+    std::string output;
+    output.append(reinterpret_cast<const char*>(p), test.size());
+    std::cout<<" decrypted : " << output << std::endl;
+
+    ASSERT_EQ(test, output);
+}
+
+TEST(SODIUM, SECRET_BOX) {
+    char pad[32]={0};
+    
+    std::string msg;
+    //msg.append(pad, 32);
+    msg.append(32, 0);
+    msg += "this is my test message";
+
+    std::cout<<msg.size()<< std::endl;
+    std::cout<<" original msg : " << msg << std::endl;
+    std::cout<<msg.size()<< std::endl;
+    unsigned char ciphertext[msg.size()];
+    unsigned char key[crypto_secretbox_KEYBYTES];
+    randombytes(key, crypto_secretbox_KEYBYTES);
+    unsigned char iv[crypto_secretbox_NONCEBYTES];
+    randombytes(iv, crypto_secretbox_NONCEBYTES);
+
+    int result = crypto_secretbox(ciphertext, 
+                                  reinterpret_cast<const unsigned char*>(msg.c_str()), 
+                                  msg.size(),
+                                  iv, 
+                                  key);
+
+    unsigned char m2[msg.size()];
+    std::string f;
+    if (crypto_secretbox_open(m2,
+                              ciphertext,
+                              msg.size(),
+                              iv,
+                              key) == 0) {
+        f.append(reinterpret_cast<const char*>(m2), msg.size());
+        std::cout<<" opened the box : " << f << std::endl;
+        std::cout<<f.size() << std::endl;
+        std::cout<< f.substr(32) << std::endl;
+    }
+    else {
+        std::cout<<" ciphertext fails verification" << std::endl;
+    }
+    ASSERT_EQ(f, msg);
+}
 
 int main (int argc, char* argv[]) {
    int status = 0;

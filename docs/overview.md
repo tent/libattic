@@ -56,6 +56,16 @@ the need to re-upload the entire file.
 Each chunk is individually processed through the
 compression/encryption/authentication/upload pipeline.
 
+#### Chunk Format
+
+`Format Version` | `Iv Length` | `Iv` | `Data Length` | `Data` 
+
+* Format version - describes the version of the chunk layout format | `1 byte` (char)
+* Iv Length - length of the Iv | `4 bytes` (unsigned int)
+* Iv - Initialization vector of chunk
+* Data Length - length of data | `4 bytes` (unsigned int)
+* Data - binary payload
+
 ### Compression
 
 Chunks are compressed with zlib.

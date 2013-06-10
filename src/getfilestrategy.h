@@ -32,10 +32,11 @@ class GetFileStrategy : public HttpStrategyInterface {
     int ExtractCredentials(FilePost& in, Credentials& out);
     int ConstructFilepath(const FileInfo& fi, std::string& out);
     void ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
-    int ConstructFile(ChunkPostList& chunk_posts, 
-                      const Credentials& file_cred, 
-                      FileInfo& fi,
-                      const std::string& destination_path);
+
+    int ConstructFile(FileInfo& fi,
+                  const Credentials& file_cred,
+                  const std::string& destination_path);
+
     void GetMasterKey(std::string& out);
     bool ValidMasterKey();
 
