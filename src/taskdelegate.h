@@ -30,7 +30,7 @@ public:
 
     const std::string& GenerateIdentifier() {
         identifier_.clear();
-        crypto::GenerateRandomString(identifier_);
+        utils::GenerateRandomString(identifier_);
         return identifier_;
     }
 
