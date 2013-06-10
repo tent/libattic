@@ -138,6 +138,7 @@ void Post::get_content(const std::string& key, Json::Value& out) {
 
 void Post::Serialize(Json::Value& root) {
     std::cout<<" SERIALIZE POST " << std::endl;
+    Json::Value post(Json::objectValue);
     // General Post
     if(!id_.empty())
         root["id"] = id_;
@@ -150,16 +151,16 @@ void Post::Serialize(Json::Value& root) {
     if(licenses_.size() > 0) {
         Json::Value licenses;
         jsn::SerializeVector(licenses_, licenses);
-        root["licenses"] = licenses;
+        post["licenses"] = licenses;
     }
 
     if(!type_.empty())
-        root["type"] = type_;
+        post["type"] = type_;
    
     if(content_.size() > 0) {
         Json::Value content(Json::objectValue);
         jsn::SerializeMapIntoObject(content, content_);
-        root["content"] = content;
+        post["content"] = content;
     }
 
     if(attachments_.size() > 0) {
@@ -170,7 +171,7 @@ void Post::Serialize(Json::Value& root) {
             itr->second.Serialize(attachment);
             attachment_arr.append(attachment);
         }
-        root["attachments"] = attachment_arr;
+        post["attachments"] = attachment_arr;
     }
 
     if(mentions_.size() > 0) {
@@ -181,7 +182,7 @@ void Post::Serialize(Json::Value& root) {
             jsn::SerializeObject(&(*itr), mention);
             mentions_array.append(mention);
         }
-        root["mentions"] = mentions_array;
+        post["mentions"] = mentions_array;
     }
 
     /*
@@ -193,39 +194,40 @@ void Post::Serialize(Json::Value& root) {
     if(views_.size() > 0) {
         Json::Value views(Json::objectValue);
         jsn::SerializeMapIntoObject(views, views_);
-        root["views"] = views;
+        post["views"] = views;
     }
 
     Json::Value permissions(Json::objectValue);
     jsn::SerializeObject(&permissions_, permissions);
-    root["permissions"] = permissions;
+    post["permissions"] = permissions;
 
     Json::Value version(Json::objectValue);
     jsn::SerializeObject(&version_, version);
-    root["version"] = version;
+    post["version"] = version;
+    root["post"] = post;
 }
 
 void Post::Deserialize(Json::Value& root) {
+    Json::Value post = root["post"];
     // General Post
-    id_             = root.get("id", "").asString();
-    entity_         = root.get("entity", "").asString();
-    std::string pub = root.get("published_at", "").asString();
+    id_             = post.get("id", "").asString();
+    entity_         = post.get("entity", "").asString();
+    std::string pub = post.get("published_at", "").asString();
     published_at_   = atoi(pub.c_str());
-    std::string rec = root.get("received_at", "").asString();
-    type_           = root.get("type", "").asString();
+    std::string rec = post.get("received_at", "").asString();
+    type_           = post.get("type", "").asString();
     if(type_.find("#") != std::string::npos)
         base_type_ = type_.substr(0, type_.find("#")+1);
 
     received_at_    = atoi(rec.c_str());
 
-    jsn::DeserializeObject(&version_, root["version"]);
-    jsn::DeserializeIntoVector(root["licenses"], licenses_);
-
-    jsn::DeserializeObjectValueIntoMap(root["content"], content_);
+    jsn::DeserializeObject(&version_, post["version"]);
+    jsn::DeserializeIntoVector(post["licenses"], licenses_);
+    jsn::DeserializeObjectValueIntoMap(post["content"], content_);
     
     // Deserialize this into an array of objects
     Json::Value jsn_attch(Json::arrayValue);
-    jsn_attch = root["attachments"];
+    jsn_attch = post["attachments"];
 
     if(jsn_attch.size() > 0) {
         Json::ValueIterator itr = jsn_attch.begin();           
@@ -248,7 +250,7 @@ void Post::Deserialize(Json::Value& root) {
     }
 
     Json::Value mentions_array(Json::arrayValue);
-    mentions_array = root["mentions"];
+    mentions_array = post["mentions"];
 
     if(mentions_array.size() > 0) {
         Json::ValueIterator itr = mentions_array.begin();
@@ -264,12 +266,12 @@ void Post::Deserialize(Json::Value& root) {
         }
     }
 
-    if(!root["app"].isNull()) {
-        tent_app_.Deserialize(root["app"]);
+    if(!post["app"].isNull()) {
+        tent_app_.Deserialize(post["app"]);
     }
 
-    jsn::DeserializeObjectValueIntoMap(root["views"], views_);
-    jsn::DeserializeObject(&permissions_,root["permissions"]);
+    jsn::DeserializeObjectValueIntoMap(post["views"], views_);
+    jsn::DeserializeObject(&permissions_,post["permissions"]);
 }
 
 bool Post::has_attachment(const std::string& name) {
