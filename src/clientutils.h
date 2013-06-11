@@ -10,6 +10,7 @@
 #include "entity.h"
 #include "entitypost.h"
 #include "accesstoken.h"
+#include "envelope.h"
 
 namespace attic { namespace client {
 
@@ -35,9 +36,14 @@ static int Discover(const std::string& entityurl, const AccessToken* at, Entity&
         std::cout<<" CODE : " << response.code << std::endl;
         std::cout<<" BODY : " << response.body << std::endl;
         if(response.code == 200) {
-            EntityPost ep;
-            jsn::DeserializeObject(&ep, response.body);
 
+            Envelope env;
+            jsn::DeserializeObject(&env, response.body);
+
+
+            EntityPost ep;
+            Post p = env.post();
+            post::ConvertPost(p, ep);
             std::cout<<" here " << std::endl;
             entOut = ep.entity();
 

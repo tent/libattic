@@ -1,5 +1,4 @@
-#include "pagepost.h"
-
+#include "envelope.h"
 
 namespace attic { 
 
@@ -26,13 +25,24 @@ void Pages::Deserialize(Json::Value& root) {
     last_ = root.get("last", "").asString();
 }
 
-void PagePost::Serialize(Json::Value& root) {
+void Envelope::Serialize(Json::Value& root) {
 
 }
 
-void PagePost::Deserialize(Json::Value& root) {
+void Envelope::Deserialize(Json::Value& root) {
     pages_.Deserialize(root["pages"]);
     jsn::SerializeJsonValue(root["data"], data_);
+
+    Json::Value posts(Json::arrayValue);
+    posts = root["posts"];
+    Json::ValueIterator posts_itr = posts.begin();
+    for(;posts_itr!= posts.end(); posts_itr++) {
+        Post p;
+        jsn::DeserializeObject(&p, *posts_itr);
+        posts_.push_back(p);
+    }
+
+    jsn::DeserializeObject(&post_, root["post"]);
 }
 
 

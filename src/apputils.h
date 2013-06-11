@@ -141,7 +141,11 @@ static int SendAppRegRequest(const std::string& app_path,
                     client::ExtractLink(link_header, path_out);
                 }
             }
-            jsn::DeserializeObject(&app, response.body);
+            Envelope env;
+            jsn::DeserializeObject(&env, response.body);
+            Post p = env.post();
+            post::DeserializePostIntoObject(p, &app);
+
         }
         else {
             status = ret::A_FAIL_NON_200;
@@ -160,7 +164,12 @@ static int RetrieveAppCredentials(const std::string cred_path, TentApp& app) {
     std::cout<<" BODY : " << resp.body << std::endl;
            
     if(resp.code == 200) {
+        Envelope env;
+        jsn::DeserializeObject(&env, resp.body);
+        Post envp = env.post();
         AppPost p;
+        post::DeserializePostIntoObject(envp, &p);
+
         jsn::DeserializeObject(&p, resp.body);
         app.set_hawk_key_id(p.id());
         Json::Value hawk_key;
@@ -241,7 +250,9 @@ static int RegisterApp(const std::string& app_path,
                 std::cout<< " CODE : " << cred_resp.code << std::endl;
                 std::cout<< " BODY : " << cred_resp.body << std::endl;
             }
-            if(jsn::DeserializeObject(&app, response.body)) {
+            Envelope app_env;
+            if(jsn::DeserializeObject(&app_env, response.body)) {
+                post::DeserializePostIntoObject(app_env.post(), &app);
                 status = SaveAppToFile(app, configdir);
             }
             else { 

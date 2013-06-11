@@ -12,6 +12,8 @@
 
 namespace attic { 
 
+    // TODO :: HANDLE RESPONSES AS ENVELOPES BRAH
+
 /* Post handler can be templated with any class deriving from Post
  *
  */

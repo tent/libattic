@@ -1,8 +1,10 @@
-#ifndef PAGEPOST_H_
-#define PAGEPOST_H_
+#ifndef ENVELOPE_H_
+#define ENVELOPE_H_
 #pragma once
 
+#include <map>
 #include <string>
+#include <deque>
 #include "post.h"
 
 namespace attic { 
@@ -27,18 +29,28 @@ private:
     std::string last_;
 };
 
-class PagePost : public Post { 
+class Envelope : public JsonSerializable { 
 public:
-    PagePost() {}
-    ~PagePost() {}
+    Envelope() {}
+    ~Envelope() {}
 
     void Serialize(Json::Value& root);  
     void Deserialize(Json::Value& root);
 
     const Pages& pages() const { return pages_; }
+
     const std::string& data() const { return data_; }
+    const Post& post() const { return post_; }
 private:
-    Pages pages_;
+    Pages                               pages_;
+    std::deque<Post>                    posts_;
+    std::deque<Mention>                 mentions_;
+    std::deque<Version>                 versions_;
+    std::deque<Reference>               reference_;
+    std::map<std::string, Profile>      profiles_;
+
+    Post                         post_;      // Singleton post
+
     std::string data_;
 };
 

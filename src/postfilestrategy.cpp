@@ -14,7 +14,7 @@
 #include "logutils.h"
 #include "chunkbuffer.h"
 #include "chunkrequest.h"
-#include "pagepost.h"
+#include "envelope.h"
 #include "censushandler.h"
 #include "chunktransform.h"
 #include "posthandler.h"
@@ -122,7 +122,7 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
                response);
 
     if(response.code == 200) {
-        PagePost pp;
+        Envelope pp;
         jsn::DeserializeObject(&pp, response.body);
 
         Json::Value chunk_post_arr(Json::arrayValue);

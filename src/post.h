@@ -14,6 +14,30 @@
 
 namespace attic {
 
+
+
+struct Profile : public JsonSerializable {
+    std::string name;               // max len 256
+    std::string bio;                // max len 256
+    std::string avatar_digest;
+    std::string website;
+    std::string location;           // max len 256
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
+struct Reference : public JsonSerializable {
+    std::string entity;
+    std::string original_entity;
+    std::string post;
+    std::string version;
+    std::string type;
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
 struct Mention : public JsonSerializable {
     std::string entity;     // Required
     std::string original_entity;
@@ -86,7 +110,7 @@ public:
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void get_content(const std::string& key, Json::Value& out);
+    bool get_content(const std::string& key, Json::Value& out) const;
 
     unsigned int attachments_count()            { return attachments_.size(); }
     AttachmentMap* attachments()                { return &attachments_; }
@@ -139,6 +163,28 @@ private:
     Permissions                         permissions_;
     Version                             version_;
 };
+
+// Post Utility functions
+namespace post {
+
+static void ConvertPost(Post& in, Post& out) {
+    std::string buffer;
+    jsn::SerializeObject(&in, buffer);
+    jsn::DeserializeObject(&out, buffer);
+}
+
+static void DeserializePostIntoObject(const Post& in, JsonSerializable* out) {
+    if(out) {
+        Json::Value buffer;
+        Post p = in;
+        jsn::SerializeObject(&p, buffer);
+        jsn::DeserializeObject(out, buffer);
+    }
+}
+
+}// namespace
+
+
 
 }//namespace
 #endif

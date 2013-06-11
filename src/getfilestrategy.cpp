@@ -12,7 +12,7 @@
 #include "event.h"
 #include "logutils.h"
 #include "connectionhandler.h"
-#include "pagepost.h"
+#include "envelope.h"
 #include "filehandler.h"
 #include "folderhandler.h"
 #include "posthandler.h"
@@ -131,8 +131,6 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
     return status;
 }
 
-
-
 int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
                                         const std::string& post_id,
                                         ChunkPostList& out) {
@@ -148,8 +146,8 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
 
     Response response;
-    PostHandler<PagePost> ph(access_token_);
-    PagePost pp;
+    PostHandler<Envelope> ph(access_token_);
+    Envelope pp;
     status = ph.Get(posts_feed, &params, pp, response);
     std::cout<<" CODE : " << response.code << std::endl;
     std::cout<<" BODY : " << response.body << std::endl;

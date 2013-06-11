@@ -14,7 +14,7 @@
 #include "taskdelegate.h"
 #include "event.h"
 #include "censushandler.h"
-#include "pagepost.h"
+
 
 namespace attic { 
 

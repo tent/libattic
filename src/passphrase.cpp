@@ -3,7 +3,7 @@
 #include "crypto.h"
 #include "logutils.h"
 #include "connectionhandler.h"
-#include "pagepost.h"
+#include "envelope.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -407,7 +407,7 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     if(response.code == 200) {
         // There should be only one, either way, take the top most in the array
         //  - later do this to sort by newest
-        PagePost p;
+        Envelope p;
         jsn::DeserializeObject(&p , response.body);
         Json::Value arr(Json::arrayValue);
         jsn::DeserializeJson(p.data(), arr);
