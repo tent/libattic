@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include <json/json.h>
 
@@ -680,6 +681,34 @@ TEST(SODIUM, SECRET_BOX) {
         std::cout<<" ciphertext fails verification" << std::endl;
     }
     ASSERT_EQ(f, msg);
+}
+
+TEST(SODIUM, CRYPTO_GENERICHASH) {
+    std::string data("The quick brown fox jumps over the lazy dog");
+    crypto_generichash_state st; // state
+    unsigned char hash[64];
+    crypto_generichash_init(&st, NULL, NULL, 64);
+    for(int i=0; i<data.size(); i++) {
+        unsigned char a[] = {static_cast<unsigned char>(data[i])};
+        crypto_generichash_update(&st, a, 1);
+    }
+    crypto_generichash_final(&st, hash, 64);
+
+    std::string final_hash;
+    for(int i=0; i<64; i++)  {
+        char b[20] = {'\0'};
+        snprintf(b, 20, "%02x",(unsigned int) hash[i]);
+        final_hash += b;
+    }
+    std::string upper;
+    for(unsigned int i=0; i<final_hash.size(); i++) 
+        upper += toupper(final_hash[i]);
+    //std::cout<<" hash : " << upper << std::endl;
+
+    // test vector from wikipedia
+    // http://en.wikipedia.org/wiki/BLAKE_%28hash_function%29
+    std::string test_answer = "A8ADD4BDDDFD93E4877D2746E62817B116364A1FA7BC148D95090BC7333B3673F82401CF7AA2E4CB1ECD90296E3F14CB5413F8ED77BE73045B13914CDCD6A918";
+    ASSERT_EQ(upper, test_answer);
 }
 
 int main (int argc, char* argv[]) {
