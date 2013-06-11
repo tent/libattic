@@ -5,9 +5,9 @@
 #include "filesystem.h"
 #include "folder.h"
 #include "folderpost.h"
-#include "netlib.h"
 #include "folderhandler.h"
 #include "logutils.h"
+#include "posthandler.h"
 
 namespace attic { 
 
@@ -84,29 +84,15 @@ int PostFolderStrategy::CreateFolderPost(Folder& folder, std::string& id_out) {
     int status = ret::A_OK;
     // Create folderpost
     FolderPost fp(folder);
-    std::string body;
-    jsn::SerializeObject(&fp, body);
-    // on success update post id in folder object
-    Response response;
-    netlib::HttpPost(posts_feed_,
-                     fp.type(),
-                     NULL,
-                     body,
-                     &access_token_,
-                     response);
-    if(response.code == 200) {
-        FolderPost back;
-        jsn::DeserializeObject(&back, response.body);
+    PostHandler<FolderPost> ph(access_token_);
+    status = ph.Post(posts_feed_, NULL, fp);
+    if(status == ret::A_OK) {
+        FolderPost back = ph.GetReturnPost();
         folder.set_folder_post_id(back.id());
         id_out = back.id();
     }
     else {
-        std::ostringstream err;
-        err << " Non 200 return on Create Folder post " << std::endl;
-        err << " code : " << response.code << std::endl;
-        err << " body : " << response.body << std::endl;
-        log::LogString("eskuus90___", err.str());
-        status = ret::A_FAIL_NON_200;
+        log::LogHttpResponse("eskuus90___", ph.response());
     }
     return status;
 }
