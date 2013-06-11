@@ -57,15 +57,13 @@ int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& 
     FilePost fp(fi);
     fp.set_fragment(cnst::g_transit_fragment);
     PostHandler<FilePost> ph(access_token_);
-    Response response;
-    if(ph.Post(posts_feed_, NULL, fp, response) == ret::A_OK) {
-        FilePost post;
-        jsn::DeserializeObject(&post, response.body);
+    if(ph.Post(posts_feed_, NULL, fp) == ret::A_OK) {
+        FilePost post = ph.GetReturnPost();
         fi.set_post_id(post.id());
         FileHandler fh(file_manager_);
         fh.UpdateFilePostId(fi.filepath(), post.id());
         
-        std::cout<<" File meta post : " << response.body << std::endl;
+        std::cout<<" File meta post : " << ph.response().body << std::endl;
     }
     return status;
 }

@@ -224,18 +224,14 @@ int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed(); 
     // Create folderpost                                   
     FolderPost fp(folder);                                 
-
     PostHandler<FolderPost> ph(access_token());
-    Response response;                                     
-    status = ph.Post(posts_feed, NULL, fp, response);
-
+    status = ph.Post(posts_feed, NULL, fp);
     if(status != ret::A_OK) {
-        log::LogHttpResponse("lasp151", response);
+        log::LogHttpResponse("lasp151", ph.response());
     }
     else  {
-        std::cout << response.body << std::endl;
-        FolderPost p;
-        jsn::DeserializeObject(&p, response.body);
+        std::cout << ph.response().body << std::endl;
+        FolderPost p = ph.GetReturnPost();
         folder = p.folder();
         id_out = p.id();
     }
@@ -253,12 +249,11 @@ int FolderTask::RetrieveFilePost(const std::string& post_id, FilePost& out) {
         std::cout<<" POST URL : " << posturl << std::endl;
 
         PostHandler<FilePost> ph(access_token());
-        Response response;
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
         if(status != ret::A_OK)
-            log::LogHttpResponse("175kjas", response);
+            log::LogHttpResponse("175kjas", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -277,12 +272,11 @@ int FolderTask::PostFilePost(const std::string& post_id, FilePost& fp) {
 
 
         PostHandler<FilePost> ph(access_token());
-        Response response;
-        status = ph.Put(posturl, NULL, fp, response);
+        status = ph.Put(posturl, NULL, fp);
         if(status != ret::A_OK)
-            log::LogHttpResponse("mas1o8", response);
+            log::LogHttpResponse("mas1o8", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -299,12 +293,11 @@ int FolderTask::RetrieveFolderPost(const std::string& post_id, FolderPost& out) 
         std::cout<<" POST URL : " << posturl << std::endl;
 
         PostHandler<FolderPost> ph(access_token());
-        Response response;
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
         if(status != ret::A_OK)
-            log::LogHttpResponse("asgwolf31", response);
+            log::LogHttpResponse("asgwolf31", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -323,12 +316,11 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         std::cout<<" folderpath : " << fp.folder().folderpath() << std::endl;
 
         PostHandler<FolderPost> ph(access_token());
-        Response response;
-        status = ph.Put(posturl, NULL, fp, response);
+        status = ph.Put(posturl, NULL, fp);
         if(status != ret::A_OK)
-            log::LogHttpResponse("naven32109", response);
+            log::LogHttpResponse("naven32109", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;

@@ -120,14 +120,12 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     // Get Metadata post
-    Response resp;
     PostHandler<FilePost> ph(access_token_);
-    status = ph.Get(posturl, NULL, out, resp);
+    status = ph.Get(posturl, NULL, out);
 
     std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
     return status;
 }
 
@@ -145,12 +143,11 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
     params.SerializeToString(prm);
     std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
 
-    Response response;
     PostHandler<Envelope> ph(access_token_);
     Envelope pp;
-    status = ph.Get(posts_feed, &params, pp, response);
-    std::cout<<" CODE : " << response.code << std::endl;
-    std::cout<<" BODY : " << response.body << std::endl;
+    status = ph.Get(posts_feed, &params, pp);
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
 
     if(status == ret::A_OK) {
         Json::Value chunk_post_arr(Json::arrayValue);
@@ -178,7 +175,7 @@ int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
         }
     }
     else { 
-        log::LogHttpResponse("FA332ASDF3", response);
+        log::LogHttpResponse("FA332ASDF3", ph.response());
         status = ret::A_FAIL_NON_200;
     }
     return status;
@@ -427,21 +424,20 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-    Response resp;
     FolderPost fp;
     PostHandler<FolderPost> ph(access_token_);
-    int status = ph.Get(posturl, NULL, fp, resp);
+    int status = ph.Get(posturl, NULL, fp);
 
     std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
 
     if(status == ret::A_OK) {
         if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) 
             return true;
     }
     else {
-        log::LogHttpResponse("MASDKF111", resp);
+        log::LogHttpResponse("MASDKF111", ph.response());
     }
     return false;
 }
@@ -452,20 +448,15 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", fi.folder_post_id(), posturl);
 
-        Response resp;
         FolderPost fp;
         PostHandler<FolderPost> ph(access_token_);
-        status = ph.Get(posturl, NULL, fp, resp);
+        status = ph.Get(posturl, NULL, fp);
         if(status == ret::A_OK) {
             ConstructFilepath(fi, fp.folder(), out);
             std::cout<<" constructed path : " << out << std::endl;
         }
         else {
-            std::ostringstream err;
-            err << "failed to retrieve folder post : " << posturl << std::endl;
-            err << "response : " << resp.code << std::endl;
-            err << " body : " << resp.body << std::endl;
-            log::LogString("00301--1-0-10", err.str());
+            log::LogHttpResponse("00301--1-0-10", ph.response());
         }
     }
     else {

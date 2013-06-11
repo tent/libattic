@@ -17,6 +17,7 @@
 #include "libatticutils.h"
 #include "urlparams.h"
 #include "apppost.h"
+#include "posthandler.h"
 
 namespace attic { namespace app {
 static int StartupAppInstance(TentApp& app,
@@ -121,35 +122,22 @@ static int SendAppRegRequest(const std::string& app_path,
     app_post.set_url(app.app_url());
     app_post.set_redirect_uri(app.redirect_uri());
     
-    std::string serialized;
-    if(jsn::SerializeObject(&app_post, serialized)) {
-        Response response;
-        status = netlib::HttpPost(app_path, 
-                                  app_post.type(),
-                                  NULL,
-                                  serialized,
-                                  NULL,
-                                  response);
+    PostHandler<AppPost> ph;
+    status = ph.Post(app_path, NULL, app_post);
+    std::cout<<" HEADERS : " << ph.response().header.asString() << std::endl;
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
 
-        std::cout<<" HEADERS : " << response.header.asString() << std::endl;
-        std::cout<<" CODE : " << response.code << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-        if(response.code == 200) {
-            if(!response.header["Link"].empty()) {
-                std::string link_header = response.header["Link"];
-                if(link_header.find(cnst::g_cred_rel) != -1){
-                    client::ExtractLink(link_header, path_out);
-                }
+    if(status == ret::A_OK) {
+        Response response = ph.response();
+        if(!response.header["Link"].empty()) {
+            std::string link_header = response.header["Link"];
+            if(link_header.find(cnst::g_cred_rel) != -1){
+                client::ExtractLink(link_header, path_out);
             }
-            Envelope env;
-            jsn::DeserializeObject(&env, response.body);
-            Post p = env.post();
-            post::DeserializePostIntoObject(p, &app);
-
         }
-        else {
-            status = ret::A_FAIL_NON_200;
-        }
+        AppPost p = ph.GetReturnPost();
+        post::DeserializePostIntoObject(p, &app);
     }
 
     return status;
@@ -158,19 +146,14 @@ static int SendAppRegRequest(const std::string& app_path,
 static int RetrieveAppCredentials(const std::string cred_path, TentApp& app) {
     int status = ret::A_OK;
     std::cout<<" CRED PATH : " << cred_path << std::endl;
-    Response resp;
-    status = netlib::HttpGet(cred_path, NULL, NULL, resp);
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-           
-    if(resp.code == 200) {
-        Envelope env;
-        jsn::DeserializeObject(&env, resp.body);
-        Post envp = env.post();
-        AppPost p;
-        post::DeserializePostIntoObject(envp, &p);
 
-        jsn::DeserializeObject(&p, resp.body);
+    AppPost p;
+    PostHandler<AppPost> ph;
+    status = ph.Get(cred_path, NULL, p);
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
+           
+    if(status == ret::A_OK) {
         app.set_hawk_key_id(p.id());
         Json::Value hawk_key;
         p.get_content("hawk_key", hawk_key);
@@ -224,49 +207,29 @@ static int RegisterApp(const std::string& app_path,
     app_post.set_redirect_uri(app.redirect_uri());
     
     std::cout<<" APP PATH : " << app_path << std::endl;
+    PostHandler<AppPost> ph;
+    status = ph.Post(app_path, NULL, app_post);
 
-    std::string serialized;
-    if(jsn::SerializeObject(&app_post, serialized)) {
-        Response response;
-        status = netlib::HttpPost(app_path, 
-                                  app_post.type(),
-                                  NULL,
-                                  serialized,
-                                  NULL,
-                                  response);
+    Response response = ph.response();
+    std::cout<< " HEADER : " << response.header["Link"] << std::endl;
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " BODY : " << response.body << std::endl;
 
-        std::cout<< " HEADER : " << response.header["Link"] << std::endl;
-        std::cout<< " CODE : " << response.code << std::endl;
-        std::cout<< " BODY : " << response.body << std::endl;
+    if(status == ret::A_OK) {
+        if(!response.header["Link"].empty()) {
+            std::string cred_link;
+            if(response.header["Link"].find("https://tent.io/rels/credentials") != -1)
+                client::ExtractMetaLink(response, cred_link);
 
-        if(response.code == 200) {
-            if(!response.header["Link"].empty()) {
-                std::string cred_link;
-                if(response.header["Link"].find("https://tent.io/rels/credentials") != -1)
-                    client::ExtractMetaLink(response, cred_link);
-                
-                Response cred_resp;
-                netlib::HttpGet(cred_link, NULL, NULL, cred_resp);
-                std::cout<< " CODE : " << cred_resp.code << std::endl;
-                std::cout<< " BODY : " << cred_resp.body << std::endl;
-            }
-            Envelope app_env;
-            if(jsn::DeserializeObject(&app_env, response.body)) {
-                post::DeserializePostIntoObject(app_env.post(), &app);
+            PostHandler<TentApp> app_ph;
+            status = app_ph.Get(cred_link, NULL, app);
+            
+            std::cout<< " CODE : " << app_ph.response().code << std::endl;
+            std::cout<< " BODY : " << app_ph.response().body << std::endl;
+            if(status == ret::A_OK)
                 status = SaveAppToFile(app, configdir);
-            }
-            else { 
-                status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
-            }
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
         }
     }
-    else {
-        status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
-    }
-
     return status;
 }
 

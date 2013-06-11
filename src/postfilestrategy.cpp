@@ -315,10 +315,9 @@ int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
             std::string posturl;
             utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
             PostHandler<FilePost> ph(access_token_);
-            Response put_resp; 
-            status = ph.Put(posturl, NULL, fp, put_resp);
+            status = ph.Put(posturl, NULL, fp);
             if(status != ret::A_OK) {
-                log::LogHttpResponse("mao194", put_resp);
+                log::LogHttpResponse("mao194", ph.response());
             }
         }
     }
@@ -334,9 +333,8 @@ int PostFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-        Response response;
         PostHandler<FilePost> ph(access_token_);
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -352,22 +350,22 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
 
         PostHandler<FilePost> ph(access_token_);
         FilePost p;
-        Response get_resp;
-        status = ph.Get(posturl, NULL, p, get_resp);
+        status = ph.Get(posturl, NULL, p);
         if(status == ret::A_OK) {
             p.clear_fragment();
             if(in_transit)
                 p.set_fragment(cnst::g_transit_fragment);
-            Response put_resp;
-            status = ph.Put(posturl, NULL, p, put_resp);
+
+            ph.Flush();
+            status = ph.Put(posturl, NULL, p);
             if(status != ret::A_OK) {
                 status = ret::A_FAIL_NON_200;
-                log::LogHttpResponse("PO1090MASDF", put_resp);
+                log::LogHttpResponse("PO1090MASDF", ph.response());
             }
         }
         else {
             status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("nmasd981", get_resp);
+            log::LogHttpResponse("nmasd981", ph.response());
         }
     }
     else {
@@ -382,8 +380,7 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     // Get latest post and update cache
     PostHandler<FilePost> ph(access_token_);
     FilePost p;
-    Response get_resp;
-    int status = ph.Get(posturl, NULL, p, get_resp);
+    int status = ph.Get(posturl, NULL, p);
     if(status == ret::A_OK) {
         FileHandler fh(file_manager_);
         fh.UpdatePostVersion(fi->filepath(), p.version().id());

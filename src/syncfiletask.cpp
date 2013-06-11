@@ -66,10 +66,9 @@ int SyncFileTask::SyncMetaData(FilePost& out) {
     std::string posturl;
     utils::FindAndReplace(GetPostPath(), "{post}", post_id_, posturl);
     PostHandler<FilePost> ph(access_token());
-    Response response;
-    status = ph.Get(posturl, NULL, out, response);
+    status = ph.Get(posturl, NULL, out);
     if(status != ret::A_OK) {
-        log::LogHttpResponse("1284124", response);
+        log::LogHttpResponse("1284124", ph.response());
     }
     return status;
 }

@@ -77,11 +77,10 @@ bool TreeHandler::RetrievePost(const std::string& post_url,
                                UrlParams* params, 
                                FilePost& out,
                                std::string& raw) {
-    Response resp;
     PostHandler<FilePost> ph(access_token_);
-    if(ph.Get(post_url, params, out, resp) == ret::A_OK) {
-        std::cout<<" TREE RESPONSE : " << resp.body << std::endl;
-        raw = resp.body;
+    if(ph.Get(post_url, params, out) == ret::A_OK) {
+        std::cout<<" TREE RESPONSE : " << ph.response().body << std::endl;
+        raw = ph.GetReturnPostAsString();
         return true;
     }
     return false;

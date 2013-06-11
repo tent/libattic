@@ -22,6 +22,8 @@ public:
     void ParseString(const std::string& in);
     void ReturnAsString(std::string& out) const ;
 
+    void clear() { values_.clear(); }
+
     std::string asString() const;
 
 private:

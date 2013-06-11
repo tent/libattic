@@ -102,14 +102,11 @@ int RenameStrategy::RenameFolder() {
 
 int RenameStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost& fp) {
     int status = ret::A_OK;
-
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     PostHandler<FolderPost> ph(access_token_);
-    Response response;
-    status = ph.Get(posturl, NULL, fp, response);
-
+    status = ph.Get(posturl, NULL, fp);
     return status;
 }
 
@@ -121,12 +118,11 @@ int RenameStrategy::UpdateFolderMetaPost(const std::string& post_id, const Folde
     FolderPost p = fp;
 
     PostHandler<FolderPost> ph(access_token_);
-    Response response;
-    status = ph.Put(posturl, NULL, p, response);
+    status = ph.Put(posturl, NULL, p);
 
     std::cout<<" Update Folder Meta Post " << std::endl;
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
+    std::cout<<" code : " << ph.response().code << std::endl;
+    std::cout<<" body : " << ph.response().body << std::endl;
     return status;
 }
 
@@ -138,12 +134,11 @@ int RenameStrategy::UpdateFileMetaPost(const std::string& post_id, const FilePos
     FilePost p = fp;
 
     PostHandler<FilePost> ph(access_token_);
-    Response response;
-    status = ph.Put(posturl, NULL, p, response);
+    status = ph.Put(posturl, NULL, p);
 
     std::cout<<" Update File Meta Post " << std::endl;
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
+    std::cout<<" code : " << ph.response().code << std::endl;
+    std::cout<<" body : " << ph.response().body << std::endl;
     return status;
 }
 
@@ -153,9 +148,7 @@ int RenameStrategy::RetrieveFilePost(const std::string& post_id, FilePost& fp) {
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     PostHandler<FilePost> ph(access_token_);
-    Response response;
-    status = ph.Get(posturl, NULL, fp, response);
-
+    status = ph.Get(posturl, NULL, fp);
     return status;
 }
 
