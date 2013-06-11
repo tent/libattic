@@ -170,10 +170,10 @@ int ThreadManager::ExtendPool(unsigned int stride) {
 
     // Dedicated push
     ThreadWorker* pushw = new ThreadWorker(file_manager_, 
-                                             credentials_manager_, 
-                                             access_token_, 
-                                             entity_, 
-                                             true); // Strict
+                                           credentials_manager_, 
+                                           access_token_, 
+                                           entity_, 
+                                           true); // Strict
     pushw->SetTaskPreference(Task::PUSH);
     thread_pool_->SpinOffWorker(pushw);
     for(int i=0;i<7;i++) {

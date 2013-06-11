@@ -52,7 +52,9 @@ bool TaskArbiter::RequestTaskContext(TaskContext& out) {
 }
 
 bool TaskArbiter::RequestTaskContext(Task::TaskType type, TaskContext& out) {
-    return task_pool_.RequestTaskContext(type, out);
+    bool ret = task_pool_.RequestTaskContext(type, out);
+    if(ret) std::cout<<" retrieved task of type : " << out.type() << std::endl;
+    return ret;
 }
 
 unsigned int TaskArbiter::ActiveTaskCount() {
@@ -66,6 +68,9 @@ void TaskArbiter::RetrieveTasks() {
         TaskContext::ContextQueue::iterator itr = cq.begin();
         for(;itr!=cq.end();itr++) {
             task_pool_.PushBack(*itr);
+        }
+        if(cq.size()) {
+            std::cout<< "pushing back " << cq.size() << " tasks " << std::endl;
         }
     }
 }

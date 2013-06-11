@@ -21,6 +21,7 @@ void TaskPool::ClearPool() {
 
 void TaskPool::PushBack(const TaskContext& tc) {
     Lock();
+    std::cout<<" Pushing back task context of type : " << tc.type() << std::endl;
     context_map_[tc.type()].push_back(tc);
     total_task_count_++;
     Unlock();

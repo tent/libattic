@@ -35,6 +35,9 @@ void ThreadWorker::Run() {
             // Get a job
             task = RetrieveTask();
             if(!task) { sleep::sleep_seconds(1); }
+            else {
+                std::cout<<" WORKER GOT A TASK! type : " << task->type() << std::endl;
+            }
         }
 
         if(task)  {
@@ -160,8 +163,11 @@ Task* ThreadWorker::RetrieveTask() {
         success = TaskArbiter::GetInstance()->RequestTaskContext(tc);
 
     Task* t = NULL;
-    if(success)
+    if(success) { 
+        std::cout<<" Successfully retreived context " << std::endl;
+        std::cout<<" type : "<< tc.type()<< std::endl;
         t = task_factory_.GetTentTask(tc);
+    }
 
     return t;
 }
