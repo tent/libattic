@@ -31,6 +31,8 @@ private:
 
 class Envelope : public JsonSerializable { 
 public:
+    typedef std::deque<Post> PostQueue;
+
     Envelope() {}
     ~Envelope() {}
 
@@ -42,10 +44,10 @@ public:
     const std::string& data() const { return data_; }
     const Post& post() const { return post_; }
 
-    std::deque<Post>* posts() { return &posts_; }
+    PostQueue* posts() { return &posts_; }
 private:
     Pages                               pages_;
-    std::deque<Post>                    posts_;
+    PostQueue                           posts_;
     std::deque<Mention>                 mentions_;
     std::deque<Version>                 versions_;
     std::deque<Reference>               reference_;
