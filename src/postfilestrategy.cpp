@@ -114,13 +114,10 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
     params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
 
     Response response;
-
-    //ConnectionHandler ch;
     netlib::HttpGet(posts_feed,
-               &params,
-               &access_token_,
-               response);
-
+                    &params,
+                    &access_token_,
+                    response);
     if(response.code == 200) {
         Envelope pp;
         jsn::DeserializeObject(&pp, response.body);
@@ -142,24 +139,20 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
         log::LogHttpResponse("FA332JMA3", response);
         status = ret::A_FAIL_NON_200;
     }
-
     return status;
 }
 
 void PostFileStrategy::ExtractChunkInfo(ChunkPostList& list,
                                         FileInfo::ChunkMap& out) {
     ChunkPostList::iterator itr = list.begin();
-
     for(;itr != list.end(); itr++) {
         ChunkPost::ChunkInfoList::iterator cp_itr = itr->second.chunk_info_list()->begin();
         for(;cp_itr != itr->second.chunk_info_list()->end(); cp_itr++) {
             ChunkInfo ci = cp_itr->second;
-
             if(ci.group() == -1) { // debug
                 std::cout<<" CHUNK INFO GROUP NOT SET " << std::endl;
                 ci.set_group(itr->first);
             }
-
             out[ci.chunk_name()] = ci;
         }
     }
@@ -212,7 +205,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
             verification_map_[ci.digest()] = true;
 
             chunk_map[ci.chunk_name()] = ci;
-            
             chunk_count++;
             if(cb.BufferEmpty() || chunk_count >= 30) {
                 // End chunk post
@@ -228,8 +220,10 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 if(response.code == 200) { 
                     // Verifiy chunks made it to the server
                     std::cout<<" cr response : " << response.body << std::endl;
+                    Envelope env;
+                    jsn::DeserializeObject(&env, response.body);
                     ChunkPost cp;
-                    jsn::DeserializeObject(&cp, response.body);
+                    post::DeserializePostIntoObject(env.post(), &cp);
                     if(!VerifyChunks(cp, filepath)) {
                         status = ret::A_FAIL_ATTACHMENT_VERIFICATION;
                         break;
