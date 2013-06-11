@@ -4,6 +4,7 @@
 #include "logutils.h"
 #include "connectionhandler.h"
 #include "envelope.h"
+#include "posthandler.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -184,10 +185,10 @@ int Passphrase::DecryptKey(const std::string& key,
                            std::string& key_out) {
     int status = ret::A_OK;
 
-    /*
     std::cout<<" input key : " << key << std::endl;
     std::cout<<" passphrase : " << phrasekey << std::endl;
     std::cout<<" salt : " << salt << std::endl;
+    /*
     */
 
     Credentials cred;
@@ -378,46 +379,31 @@ int Passphrase::PushAtticCredentials(const AtticPost& post) {
 int Passphrase::RetrieveCredentialsPost(AtticPost& out) { 
     int status = ret::A_OK;
     std::string url = entity_.GetPreferredServer().posts_feed();
-
-    std::cout<<" RETRIEVING CRED POST " << std::endl;
+    // setup params to query for credentials post, there should only ever exist one
     UrlParams params;
     params.AddValue(std::string("types"), std::string(cnst::g_attic_cred_type));
     std::string prm;
     params.SerializeToString(prm);
-    std::cout<<" PARAMS : " << prm << std::endl;
 
-    Response response;
-    //ConnectionHandler ch;
-    netlib::HttpGet(url,
-               &params,
-               &access_token_,
-               response);
-
-    /*
-    netlib::HttpGet(url,
-                   &params,
-                   &access_token_,
-                   response);
-                   */
-
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" header : " << response.header.asString() << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
-
-    if(response.code == 200) {
-        // There should be only one, either way, take the top most in the array
-        //  - later do this to sort by newest
-        Envelope p;
-        jsn::DeserializeObject(&p , response.body);
-        Json::Value arr(Json::arrayValue);
-        jsn::DeserializeJson(p.data(), arr);
-        Json::ValueIterator itr = arr.begin();
-        if(itr!= arr.end())
-            jsn::DeserializeObject(&out, *itr);
+    Post p;
+    PostHandler<Post> ph(access_token_);
+    status = ph.Get(url, &params, p);
+    std::cout<<" Credentials Post response " << std::endl;
+    std::cout<<" code : " << ph.response().code << std::endl;
+    std::cout<<" header : " << ph.response().header.asString() << std::endl;
+    std::cout<<" body : " << ph.response().body << std::endl;
+    if(status == ret::A_OK) {
+        Envelope env;
+        jsn::DeserializeObject(&env , ph.response().body);
+        if(env.posts()->size()) {
+            post::DeserializePostIntoObject(env.posts()->front(), &out);
+        }
+        else {
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+        }
     }
-    else { 
-        status = ret::A_FAIL_NON_200; 
-        log::LogHttpResponse("FNDNL329Q", response);
+    else {
+        log::LogHttpResponse("FNDNL329Q", ph.response());
     }
 
     return status;

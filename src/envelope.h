@@ -41,6 +41,8 @@ public:
 
     const std::string& data() const { return data_; }
     const Post& post() const { return post_; }
+
+    std::deque<Post>* posts() { return &posts_; }
 private:
     Pages                               pages_;
     std::deque<Post>                    posts_;
