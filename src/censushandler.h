@@ -17,16 +17,15 @@ namespace attic {
 class CensusHandler {
     int QueryTimeline(const std::string& post_type,
                       const std::string& fragment, 
-                      std::deque<Envelope>& out);
+                      std::deque<Post>& out);
 
     void SetReceivedAt(const std::string& post_type,
                        const std::string& fragment, 
                        const std::string& time);
 
-   
-    void DeserializePages(const std::deque<Envelope>& pages, 
+    void DeserializePages(const std::deque<Post>& posts, 
                           std::deque<FilePost>& out);
-    void DeserializePages(const std::deque<Envelope>& pages, 
+    void DeserializePages(const std::deque<Post>& posts, 
                           std::deque<FolderPost>& out);
 public:
     CensusHandler(const std::string& posts_feed, const AccessToken& at);

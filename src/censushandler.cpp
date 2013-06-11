@@ -17,14 +17,14 @@ CensusHandler::~CensusHandler() {}
 
 bool CensusHandler::Inquiry(const std::string& fragment, 
                             std::deque<FilePost>& out)  {
-    std::deque<Envelope> page_list;
-    int status = QueryTimeline(cnst::g_attic_file_type, fragment, page_list);
-    if(page_list.size() && status == ret::A_OK) {
-        DeserializePages(page_list, out);
-        if(out.size()) {
+    std::deque<Post> post_list;
+    int status = QueryTimeline(cnst::g_attic_file_type, fragment, post_list);
+    if(post_list.size() && status == ret::A_OK) {
+        DeserializePages(post_list, out);
+        if(post_list.size()) {
             SetReceivedAt(cnst::g_attic_file_type, 
                           fragment, 
-                          out.front().version().received_at());
+                          post_list.back().version().received_at());
         }
         return true;
     }
@@ -34,14 +34,14 @@ bool CensusHandler::Inquiry(const std::string& fragment,
 bool CensusHandler::Inquiry(const std::string& fragment, 
                             std::deque<FolderPost>& out) {
 
-    std::deque<Envelope> page_list;
-    int status = QueryTimeline(cnst::g_attic_folder_type, fragment, page_list);
-    if(page_list.size() && status == ret::A_OK) {
-        DeserializePages(page_list, out);
+    std::deque<Post> post_list;
+    int status = QueryTimeline(cnst::g_attic_folder_type, fragment, post_list);
+    if(post_list.size() && status == ret::A_OK) {
+        DeserializePages(post_list, out);
         if(out.size()) {
             SetReceivedAt(cnst::g_attic_folder_type, 
                           fragment, 
-                          out.front().version().received_at());
+                          post_list.back().version().received_at());
         }
         return true;
     }
@@ -58,7 +58,7 @@ void CensusHandler::SetReceivedAt(const std::string& post_type,
 
 int CensusHandler::QueryTimeline(const std::string& post_type, 
                                  const std::string& fragment, 
-                                 std::deque<Envelope>& out) {
+                                 std::deque<Post>& out) {
     int status = ret::A_OK;
 
     std::string pt = post_type + "#" + fragment;
@@ -93,7 +93,13 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
             std::cout<< "query timeline result : " << resp.body << std::endl;
             Envelope pp;
             jsn::DeserializeObject(&pp, resp.body);
-            out.push_back(pp);
+            // Go through posts
+            if(pp.posts()->size()){
+                Envelope::PostQueue::iterator itr = pp.posts()->begin(); 
+                for(;itr!=pp.posts()->end(); itr++) {
+                    out.push_back(*itr);
+                }
+            }
 
             try {
                 if(pp.pages().next().empty()) {
@@ -122,43 +128,25 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
     return status;
 }
 
-void CensusHandler::DeserializePages(const std::deque<Envelope>& pages, 
+void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
                                      std::deque<FilePost>& out) {
     std::cout<<" deserialized " << std::endl;
-    std::deque<Envelope>::const_iterator itr = pages.begin();
-    for(;itr!= pages.end(); itr++) {
-        Json::Value arr(Json::arrayValue);
-        jsn::DeserializeJsonValue(arr, (*itr).data());
-
-        std::cout<<" ARR SIZE : " << arr.size() << std::endl;
-        Json::ValueIterator itr = arr.begin();
-        for(; itr != arr.end(); itr++) {
-            FilePost fp;
-            if(jsn::DeserializeObject(&fp, *itr))
-                out.push_back(fp);
-            else 
-                std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
-        }
+    std::deque<Post>::const_iterator itr = posts.begin();
+    for(;itr!= posts.end(); itr++) {
+        FilePost fp;
+        post::DeserializePostIntoObject(*itr, &fp);
+        out.push_back(fp);
     }
 }
 
-void CensusHandler::DeserializePages(const std::deque<Envelope>& pages, 
+void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
                                      std::deque<FolderPost>& out) {
     std::cout<<" deserialized " << std::endl;
-    std::deque<Envelope>::const_iterator itr = pages.begin();
-    for(;itr!= pages.end(); itr++) {
-        Json::Value arr(Json::arrayValue);
-        jsn::DeserializeJsonValue(arr, (*itr).data());
-
-        std::cout<<" ARR SIZE : " << arr.size() << std::endl;
-        Json::ValueIterator itr = arr.begin();
-        for(; itr != arr.end(); itr++) {
-            FolderPost fp;
-            if(jsn::DeserializeObject(&fp, *itr))
-                out.push_back(fp);
-            else 
-                std::cout<<" FAILED TO DESERIALIZE FILE POST " << std::endl;
-        }
+    std::deque<Post>::const_iterator itr = posts.begin();
+    for(;itr!= posts.end(); itr++) {
+        FolderPost fp;
+        post::DeserializePostIntoObject(*itr, &fp);
+        out.push_back(fp);
     }
 }
 
