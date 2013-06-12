@@ -35,10 +35,24 @@ public:
     bool UpdatePostVersion(const std::string& filepath, const std::string& version);
     bool UpdateFolderEntry(FolderPost& fp);
     // Utils
-    void DeserializeIntoFileInfo(FilePost& fp, FileInfo& out);
+    void PrepareFilePost(FileInfo& fi,
+                         const std::string& master_key,
+                         FilePost& out); 
+    void DeserializeIntoFileInfo(FilePost& fp, 
+                                 const std::string& master_key,
+                                 FileInfo& out);
     bool GetTemporaryFilepath(FileInfo& fi, std::string& path_out);
 
     // Crypto
+    void PrepareCargo(FileInfo& fi, 
+                      const std::string& master_key, 
+                      std::string& cargo_out);
+
+    void UnpackCargo(FilePost& fp, 
+                     const std::string& master_key,
+                     Cargo& open_cargo);
+
+    bool RollFileMac(const std::string& filepath, std::string& out);
     bool EncryptFileKey(const std::string& filepath, 
                         const std::string& file_key,
                         const std::string& master_key);
@@ -57,11 +71,6 @@ public:
     bool ExtractFileCredetials(const FilePost& fp,
                                const std::string& master_key,
                                Credentials& out);
-
-    
-
-
-
 private:
     FileManager* file_manager_;
 };

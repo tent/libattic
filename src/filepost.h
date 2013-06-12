@@ -7,10 +7,21 @@
 
 #include "post.h"
 #include "fileinfo.h"
+#include "crypto.h"
 
 namespace attic { 
 
 
+// Cargo, is a file's sensative metadata. This needs to be serialized and encrypted, before
+// it is sent off into the nether
+struct Cargo : public JsonSerializable {
+    std::string filename;
+    std::string filepath;
+    std::string plaintext_mac;
+
+    void Serialize(Json::Value& root);  
+    void Deserialize(Json::Value& root);
+};
 
 /* FilePost
  *  Specific post file for a file's metadata. Just basic file info goes here. This post
@@ -20,6 +31,7 @@ namespace attic {
  */
 
 class FilePost : public Post {
+    
     void SerializeChunkData(Json::Value& root);
     void DeserializeChunkData(Json::Value& root);
 public:
@@ -36,9 +48,13 @@ public:
     const std::string& iv_data() const              { return fi_.file_credentials_iv(); }
     const std::string& folder_post() const          { return fi_.folder_post_id(); }
     unsigned int file_size() const                  { return fi_.file_size(); }
+    const std::string& cargo() const                { return cargo_; }
 
     void set_file_info(const FileInfo& fi)          { fi_ = fi; }
+    void set_cargo(const std::string& c)            { cargo_ = c; }
+
 private:
+    std::string cargo_; // NOTE* this should be encrypted
     FileInfo    fi_;
 };
 

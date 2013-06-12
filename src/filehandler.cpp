@@ -28,7 +28,7 @@ bool FileHandler::RetrieveFileInfoById(const std::string& post_id, FileInfo& out
 // Note* there are 3 keys that file info objects are queried by, this only sets two of them,
 // if the third is not set, a new file with the same path and folderid can be created for a 
 // duplicate entry
-bool FileHandler::CreateNewFile(const std::string& filepath, 
+bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                                 const std::string& master_key,
                                 FileInfo& out) {
     if(master_key.empty()) {
@@ -60,6 +60,20 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                 while(file_cred.key_empty())
                     crypto::GenerateCredentials(file_cred);
                 out.set_file_credentials(file_cred);    // set credentials
+
+                // Generate plaintext mac for file
+                std::string plaintext_mac;
+                if(RollFileMac(filepath, plaintext_mac)) {
+                    std::cout<<" plaintext mac : " << plaintext_mac << std::endl;
+                    out.set_plaintext_mac(plaintext_mac);
+                }
+                else {
+                    std::ostringstream err;
+                    err << "Failed to generate plaintext mac for file : " << std::endl;
+                    err << "\t " << filepath << std::endl;
+                    log::LogString("19240=-124i8", err.str());
+                }
+
 
                 EncryptFileKey(out, master_key); // sets encryted file key on file info
                 // verify key
@@ -110,7 +124,67 @@ bool FileHandler::UpdateFolderEntry(FolderPost& fp) {
     return file_manager_->UpdateFolderEntry(fp.folder().folderpath(), fp.id());
 }
 
-void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
+void FileHandler::PrepareCargo(FileInfo& fi, 
+                               const std::string& master_key, 
+                               std::string& cargo_out) {
+    Cargo c;
+    c.filename = fi.filename();
+    c.filepath = fi.filepath();
+    c.plaintext_mac = fi.plaintext_mac();
+
+    std::string cargo_buffer;
+    jsn::SerializeObject(&c, cargo_buffer);
+
+    std::string file_key;
+    DecryptFileKey(fi.encrypted_key(),
+                   fi.file_credentials_iv(),
+                   master_key,
+                   file_key);
+
+    // transient credentials
+    Credentials t_cred;
+    t_cred.set_key(file_key);
+    t_cred.set_iv(fi.file_credentials_iv());
+
+    std::string encrypted_cargo;
+    crypto::Encrypt(cargo_buffer, t_cred, encrypted_cargo);
+    crypto::Base64EncodeString(encrypted_cargo, cargo_out);
+}
+
+void FileHandler::UnpackCargo(FilePost& fp, 
+                              const std::string& master_key,
+                              Cargo& open_cargo) {
+    std::string file_key;
+    DecryptFileKey(fp.key_data(),
+                   fp.iv_data(),
+                   master_key,
+                   file_key);
+
+    // transient credentials
+    Credentials t_cred;
+    t_cred.set_key(file_key);
+    t_cred.set_iv(fp.iv_data());
+
+    std::string decrypted_cargo;
+    crypto::Decrypt(fp.cargo(), t_cred, decrypted_cargo);
+    std::cout<<" DECRYPTED CARGO : " << decrypted_cargo << std::endl;
+    jsn::DeserializeObject(&open_cargo, decrypted_cargo);
+}
+
+void FileHandler::PrepareFilePost(FileInfo& fi, 
+                                  const std::string& master_key,
+                                  FilePost& out) {
+    out.set_file_info(fi);
+    // Prepare cargo
+    std::string cargo;
+    PrepareCargo(fi, master_key, cargo);
+    out.set_cargo(cargo);
+}
+
+void FileHandler::DeserializeIntoFileInfo(FilePost& fp, 
+                                          const std::string& master_key,
+                                          FileInfo& out) {
+    // TODO :: once cargo is working remove set file name set filepath
     out.set_filename(fp.name());
     out.set_filepath(fp.relative_path());
     out.set_encrypted_key(fp.key_data());
@@ -119,6 +193,13 @@ void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
     out.set_folder_post_id(fp.folder_post());
     out.set_post_version(fp.version().id());
     out.set_file_size(fp.file_size());
+
+    // Unpack Cargo
+    Cargo cargo;
+    UnpackCargo(fp, master_key, cargo);
+    out.set_filename(cargo.filename);
+    out.set_filepath(cargo.filepath);
+    out.set_plaintext_mac(cargo.plaintext_mac);
 }
 
 bool FileHandler::GetTemporaryFilepath(FileInfo& fi, std::string& path_out) {
@@ -225,5 +306,12 @@ bool FileHandler::ExtractFileCredetials(const FilePost& fp,
 }
 
 
+bool FileHandler::RollFileMac(const std::string& filepath, std::string& out) {
+    bool ret = false;
+    if(fs::CheckFilepathExists(filepath)) {
+        ret = crypto::GeneratePlaintextHashForFile(filepath, out);
+    }
+    return ret;
+}
 
 }//namespace

@@ -46,6 +46,7 @@ public:
     const std::string& encrypted_key() const        { return encrypted_key_; }
     const std::string& post_version() const         { return post_version_; }
     const std::string& folder_post_id() const       { return folder_post_id_; }
+    const std::string& plaintext_mac() const        { return plaintext_mac_; }
 
     bool deleted() const                            { return deleted_; }
     unsigned int chunk_count() const                { return chunk_count_; }
@@ -62,6 +63,7 @@ public:
     void set_post_id(const std::string &id)                 { post_id_ = id; }
     void set_post_version(const std::string& version)       { post_version_ = version; }
 
+
     void set_file_credentials(const Credentials& cred);
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
@@ -70,28 +72,33 @@ public:
     //void set_deleted(const std::string& deleted)          { deleted_ = atoi(deleted.c_str()); }
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
+    void set_plaintext_mac(const std::string& mac) { 
+        // avoid cow
+        plaintext_mac_.append(mac.c_str(), mac.size());
+    }
+
 private:    
     ChunkMap        chunks_;
     Credentials     file_credentials_; // File Specific credentials 
                                        // Key is used to encrypt chunks, an iv is specific to chunk
                                        // Iv is used to encrypt this key
     std::string     encrypted_key_;
+    std::string     folder_post_id_;    // folder post id in the manifest
 
-    std::string     folder_post_id_; // folder post id in the manifest
-
-    std::string     filename_;   // File within directory
-    std::string     filepath_;   // Directory
-    std::string     post_id_; // Id of the post the file is potentially attached to 
+    std::string     filename_;          // File within directory
+    std::string     filepath_;          // Directory
+    std::string     post_id_;           // Id of the post the file is potentially attached to 
 
     std::string     encryption_algorithm_; // Algorithm used to encrypt chunks
     std::string     hashing_algorithm_;
     std::string     compression_algorithm_;
     std::string     compression_level_;
+    std::string     plaintext_mac_;         // hmac of entire file 32 bytes
 
-    std::string     post_version_; // Version of the post the file is attached to
-    unsigned int    chunk_count_; // depricated
-    unsigned int    file_size_;   // Filesize, not compressed
-    bool            deleted_; // Is the file deleted? // soft delete
+    std::string     post_version_;      // Version of the post the file is attached to
+    unsigned int    chunk_count_;       // depricated
+    unsigned int    file_size_;         // Filesize, not compressed
+    bool            deleted_;           // Is the file deleted? // soft delete
 };
 
 }//namespace
