@@ -111,6 +111,15 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
             else if(!fs::CheckFilepathExists(canonical_path)) {
                 bPull = true;
             }
+            else if(fs::CheckFilepathExists(canonical_path)) {
+                // compare hashes
+                std::cout<<" comparing hashes : " << std::endl;
+                std::cout<<"\t local hash : " << pLocal_fi->plaintext_hash() << std::endl;
+                std::cout<<"\t incoming hash : " << fi.plaintext_hash() << std::endl;
+                if(pLocal_fi->plaintext_hash() != fi.plaintext_hash()) {
+                    bPull = true;
+                }
+            }
 
             if(pLocal_fi->post_version() != p.version().id())
                 bPull = true;
