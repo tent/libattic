@@ -180,16 +180,20 @@ static bool Encrypt(const std::string& in, const Credentials& cred, std::string&
 }
 
 static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
-    unsigned char m[in.size()];
-    if(crypto_secretbox_open(m, 
-                             reinterpret_cast<const unsigned char*>(in.c_str()),
-                             in.size(),
-                             cred.byte_iv(),
-                             cred.byte_key()) == 0) {
-        out.append(reinterpret_cast<const char*>(m), in.size());
-        // remove padding
-        out.erase(0, 32);
-        return true;
+    if(in.size()) {
+        std::string decrypt_buffer;
+        decrypt_buffer.append(in.c_str(), in.size());
+        unsigned char m[in.size()];
+        if(crypto_secretbox_open(m, 
+                                 reinterpret_cast<const unsigned char*>(decrypt_buffer.c_str()),
+                                 decrypt_buffer.size(),
+                                 cred.byte_iv(),
+                                 cred.byte_key()) == 0) {
+            out.append(reinterpret_cast<const char*>(m), in.size());
+            // remove padding
+            out.erase(0, 32);
+            return true;
+        }
     }
     return false;
 }

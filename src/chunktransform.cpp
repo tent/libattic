@@ -193,35 +193,26 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
     std::cout<<"\t FORMAT : " << format << std::endl;
     unsigned int offset = 1;
     if(format == CHUNK_FORMAT) {
-        unsigned char ivs_buffer[4];
-        ivs_buffer[0] = in[offset];
-        ivs_buffer[1] = in[offset+1];
-        ivs_buffer[2] = in[offset+2];
-        ivs_buffer[3] = in[offset+3];
         unsigned int iv_size = 0;
-        iv_size = (iv_size << 8) + ivs_buffer[0];
-        iv_size = (iv_size << 8) + ivs_buffer[1];
-        iv_size = (iv_size << 8) + ivs_buffer[2];
-        iv_size = (iv_size << 8) + ivs_buffer[3];
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+1]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+2]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset += 4;
         std::cout<<"\t IV SIZE : " << iv_size << std::endl;
         chunk_iv_ = in.substr(offset, iv_size);
         std::cout<<"\t IV : " << chunk_iv_ << std::endl;
         offset += iv_size;
 
-        unsigned char ds_buffer[4];
-        ds_buffer[0] = in[offset];
-        ds_buffer[1] = in[offset+1];
-        ds_buffer[2] = in[offset+2];
-        ds_buffer[3] = in[offset+3];
         unsigned int data_size = 0;
-        data_size = (data_size << 8) + ds_buffer[0];
-        data_size = (data_size << 8) + ds_buffer[1];
-        data_size = (data_size << 8) + ds_buffer[2];
-        data_size = (data_size << 8) + ds_buffer[3];
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+1]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+2]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset+=4;
         std::cout<<"\t data size : " << data_size << std::endl;
         out = in.substr(offset, data_size);
+    std::cout<<" ************************************************** " << std::endl;
     }
 }
 
