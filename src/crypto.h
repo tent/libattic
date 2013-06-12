@@ -181,17 +181,22 @@ static bool Encrypt(const std::string& in, const Credentials& cred, std::string&
 
 static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
     if(in.size()) {
+        std::cout<<" Decrypt call " << std::endl;
+        std::cout<<" buffer size : " << in.size() << std::endl;
         std::string decrypt_buffer;
         decrypt_buffer.append(in.c_str(), in.size());
-        unsigned char m[in.size()];
+        unsigned char m[decrypt_buffer.size()];
         if(crypto_secretbox_open(m, 
                                  reinterpret_cast<const unsigned char*>(decrypt_buffer.c_str()),
                                  decrypt_buffer.size(),
                                  cred.byte_iv(),
                                  cred.byte_key()) == 0) {
-            out.append(reinterpret_cast<const char*>(m), in.size());
+            std::cout<<" successfully decrpyted " << std::endl;
+            out.append(reinterpret_cast<const char*>(m), decrypt_buffer.size());
+            std::cout<< " removing padding " << std::endl;
             // remove padding
             out.erase(0, 32);
+            std::cout<<" padding removed ? " << std::endl;
             return true;
         }
     }
