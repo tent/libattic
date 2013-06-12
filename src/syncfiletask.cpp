@@ -78,14 +78,22 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     FileManager* fm = file_manager();
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
     std::string filepath = p.relative_path();
+    std::cout<<" processing : " << filepath << std::endl;
     FileHandler fh(file_manager());
     // Check if any aliases exist, and fix
     RenameHandler rh(file_manager());
     if(!rh.CheckForRename(p)) {
         FileInfo fi;
         std::string master_key;
-        if(GetMasterKey(master_key))
+        if(GetMasterKey(master_key)) { 
+            std::cout<<" deserializing into file info " << std::endl;
             fh.DeserializeIntoFileInfo(p, master_key, fi);
+            std::cout<<" name : " << fi.filename() << std::endl;
+            std::cout<<" path : " << fi.filepath() << std::endl;
+        }
+        else {
+            std::cout<<" failed to get master key " << std::endl;
+        }
         // Check if file is in manifest
         //int version = p.GetVersion();
 
@@ -111,6 +119,7 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
             std::cout<<" NOT IN MANIFEST PULL " << std::endl;
             // Insert into manifest
             if(fi.file_credentials_iv() == p.iv_data()) {
+                std::cout<<" inserting into manifest " << std::endl;
                 fm->InsertToManifest(&fi);
             }
             else { 

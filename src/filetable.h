@@ -38,7 +38,7 @@ public:
     bool set_filename(const std::string& filepath, const std::string& new_filename);
     bool set_folder_post_id(const std::string& filepath, const std::string& post_id);
     bool set_chunk_count(const std::string& filepath, const std::string& chunk_count);
-    bool set_plaintext_mac(const std::string& filepath, const std::string& mac);
+    bool set_plaintext_hash(const std::string& filepath, const std::string& hash);
 
     bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);

@@ -17,7 +17,7 @@ namespace attic {
 struct Cargo : public JsonSerializable {
     std::string filename;
     std::string filepath;
-    std::string plaintext_mac;
+    std::string plaintext_hash;
 
     void Serialize(Json::Value& root);  
     void Deserialize(Json::Value& root);
@@ -48,11 +48,14 @@ public:
     const std::string& iv_data() const              { return fi_.file_credentials_iv(); }
     const std::string& folder_post() const          { return fi_.folder_post_id(); }
     unsigned int file_size() const                  { return fi_.file_size(); }
+    const FileInfo::ChunkMap chunk_data()           { return *(fi_.GetChunkInfoList()); }
+    const std::string& plaintext_hash() const       { return fi_.plaintext_hash(); }
     const std::string& cargo() const                { return cargo_; }
 
     void set_file_info(const FileInfo& fi)          { fi_ = fi; }
     void set_cargo(const std::string& c)            { cargo_ = c; }
 
+    const FileInfo& fi() const { return fi_; }
 private:
     std::string cargo_; // NOTE* this should be encrypted
     FileInfo    fi_;

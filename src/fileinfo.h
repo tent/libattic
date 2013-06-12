@@ -46,7 +46,7 @@ public:
     const std::string& encrypted_key() const        { return encrypted_key_; }
     const std::string& post_version() const         { return post_version_; }
     const std::string& folder_post_id() const       { return folder_post_id_; }
-    const std::string& plaintext_mac() const        { return plaintext_mac_; }
+    const std::string& plaintext_hash() const        { return plaintext_hash_; }
 
     bool deleted() const                            { return deleted_; }
     unsigned int chunk_count() const                { return chunk_count_; }
@@ -72,9 +72,9 @@ public:
     //void set_deleted(const std::string& deleted)          { deleted_ = atoi(deleted.c_str()); }
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
-    void set_plaintext_mac(const std::string& mac) { 
+    void set_plaintext_hash(const std::string& hash) { 
         // avoid cow
-        plaintext_mac_.append(mac.c_str(), mac.size());
+        plaintext_hash_.append(hash.c_str(), hash.size());
     }
 
 private:    
@@ -93,7 +93,7 @@ private:
     std::string     hashing_algorithm_;
     std::string     compression_algorithm_;
     std::string     compression_level_;
-    std::string     plaintext_mac_;         // hmac of entire file 32 bytes
+    std::string     plaintext_hash_;         // hash of entire file 32 bytes
 
     std::string     post_version_;      // Version of the post the file is attached to
     unsigned int    chunk_count_;       // depricated

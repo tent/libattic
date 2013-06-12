@@ -11,7 +11,7 @@ bool FileTable::CreateTable() {
     exc += " (filename TEXT, filepath TEXT, chunkcount INT,";
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
-    exc += " deleted INT, folder_post_id TEXT, plaintext_mac TEXT,";
+    exc += " deleted INT, folder_post_id TEXT, plaintext_hash TEXT,";
     exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
     std::string error;
     bool ret = Exec(exc, error);
@@ -65,7 +65,7 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " postversion, encryptedkey, iv,";
-    query += " deleted, folder_post_id, plaintext_mac)";
+    query += " deleted, folder_post_id, plaintext_hash)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
@@ -82,7 +82,7 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     ret = BindBlob(9, b64_iv, error);               if(!ret) {log::ls("m_150s",error);return ret;}
     ret = BindInt(10, fi.deleted(), error);         if(!ret) {log::ls("m_151s",error);return ret;}
     ret = BindText(11, fi.folder_post_id(), error); if(!ret) {log::ls("m_152s",error);return ret;}
-    ret = BindText(12, fi.plaintext_mac(), error);  if(!ret) {log::ls("m_152.1s",error);return ret;}
+    ret = BindText(12, fi.plaintext_hash(), error); if(!ret) {log::ls("m_152.1s",error);return ret;}
     ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
     ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
     return ret;
@@ -121,7 +121,7 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
 
     out.set_deleted(atoi(res.results()[9+step]));
     out.set_folder_post_id(res.results()[10+step]);
-    out.set_plaintext_mac(res.results()[11+step]);
+    out.set_plaintext_hash(res.results()[11+step]);
 }
 
 bool FileTable::set_file_post_id(const std::string &filepath, const std::string &id) {
@@ -252,13 +252,13 @@ bool FileTable::set_chunk_count(const std::string& filepath, const std::string& 
     return ret;
 }
 
-bool FileTable::set_plaintext_mac(const std::string& filepath, const std::string& mac) {
+bool FileTable::set_plaintext_hash(const std::string& filepath, const std::string& hash) {
     bool ret = false;
     std::string exc;
     exc += "UPDATE ";
     exc += table_name();
-    exc += " SET plaintext_mac=\"";
-    exc += mac;
+    exc += " SET plaintext_hash=\"";
+    exc += hash;
     exc += "\" WHERE filepath=\"";
     exc += filepath;
     exc += "\";";

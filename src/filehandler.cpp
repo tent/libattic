@@ -62,10 +62,10 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                 out.set_file_credentials(file_cred);    // set credentials
 
                 // Generate plaintext mac for file
-                std::string plaintext_mac;
-                if(RollFileMac(filepath, plaintext_mac)) {
-                    std::cout<<" plaintext mac : " << plaintext_mac << std::endl;
-                    out.set_plaintext_mac(plaintext_mac);
+                std::string plaintext_hash;
+                if(RollFileMac(filepath, plaintext_hash)) {
+                    std::cout<<" plaintext mac : " << plaintext_hash << std::endl;
+                    out.set_plaintext_hash(plaintext_hash);
                 }
                 else {
                     std::ostringstream err;
@@ -130,7 +130,7 @@ void FileHandler::PrepareCargo(FileInfo& fi,
     Cargo c;
     c.filename = fi.filename();
     c.filepath = fi.filepath();
-    c.plaintext_mac = fi.plaintext_mac();
+    c.plaintext_hash = fi.plaintext_hash();
 
     std::string cargo_buffer;
     jsn::SerializeObject(&c, cargo_buffer);
@@ -185,21 +185,28 @@ void FileHandler::DeserializeIntoFileInfo(FilePost& fp,
                                           const std::string& master_key,
                                           FileInfo& out) {
     // TODO :: once cargo is working remove set file name set filepath
-    out.set_filename(fp.name());
-    out.set_filepath(fp.relative_path());
+
     out.set_encrypted_key(fp.key_data());
     out.set_file_credentials_iv(fp.iv_data());
     out.set_post_id(fp.id());
     out.set_folder_post_id(fp.folder_post());
     out.set_post_version(fp.version().id());
     out.set_file_size(fp.file_size());
+    out.set_chunks(fp.chunk_data());
+    out.set_chunk_count(fp.chunk_data().size());
+
+    out.set_filename(fp.name());
+    out.set_filepath(fp.relative_path());
+    out.set_plaintext_hash(fp.plaintext_hash());
 
     // Unpack Cargo
+    /*
     Cargo cargo;
     UnpackCargo(fp, master_key, cargo);
     out.set_filename(cargo.filename);
     out.set_filepath(cargo.filepath);
-    out.set_plaintext_mac(cargo.plaintext_mac);
+    out.set_plaintext_hash(cargo.plaintext_hash);
+    */
 }
 
 bool FileHandler::GetTemporaryFilepath(FileInfo& fi, std::string& path_out) {
