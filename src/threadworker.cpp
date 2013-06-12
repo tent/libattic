@@ -148,7 +148,11 @@ Task* ThreadWorker::RetrieveTask() {
     for(;itr!= task_preference_.end(); itr++) {
         if(itr->second) { 
             success = TaskArbiter::GetInstance()->RequestTaskContext(itr->first, tc);
-            if(success) std::cout<<" worker retrieved context " << std::endl;
+            if(success) {
+                std::cout<<" worker retrieved context " << std::endl;
+                std::cout<<" success : " << success << std::endl;
+                break;
+            }
         }
     }
 
