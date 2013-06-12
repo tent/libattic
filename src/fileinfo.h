@@ -74,6 +74,7 @@ public:
 
     void set_plaintext_hash(const std::string& hash) { 
         // avoid cow
+        plaintext_hash_.clear();
         plaintext_hash_.append(hash.c_str(), hash.size());
     }
 

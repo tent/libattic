@@ -60,6 +60,12 @@ int PushTask::PushFile(const std::string& filepath) {
         if(!file_manager()) std::cout<<" Invalid File Manager " << std::endl;
         if(!credentials_manager()) std::cout<<" Invalid Cred Manager " << std::endl;
 
+        // if file is divergent, or non existant locall, push
+        if(!DetectFileDivergence(filepath)) {
+            status = ret::A_FAIL_DUPLICATE_UPLOAD_ATTEMPT;
+            return status;
+        }
+
         HttpStrategyContext pushcontext(file_manager(), credentials_manager());
 
         std::string post_path = GetPostPath();
@@ -70,6 +76,9 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("posts_feed", posts_feed);
         pushcontext.SetConfigValue("filepath", filepath);
         pushcontext.SetConfigValue("entity", entity);
+
+
+
 
         PostFolderStrategy pfs;             // Check (and create) if directory posts exist
         PostMetaStrategy pmetas;            // Create meta strategy
@@ -96,10 +105,34 @@ int PushTask::PushFile(const std::string& filepath) {
     else {
         status = ret::A_FAIL_OPEN_FILE;
     }
-
     std::cout<<" end push task status : " << status << std::endl;
-
     return status;
+}
+
+bool PushTask::DetectFileDivergence(const std::string& filepath) {
+    bool ret = true;
+    // Check for local cache
+    //  if locally cached
+    //      compare hashes
+    //      if different upload
+    //      else
+    //      abort
+    std::cout<< "validating file : " << filepath << std::endl;
+    if(fs::CheckFilepathExists(filepath)) {
+        FileInfo local;
+        if(file_manager()->GetFileInfo(filepath, local)) {
+            std::string hash;
+            if(crypto::GeneratePlaintextHashForFile(filepath, hash)) {
+                std::cout<<" plaintext hash : " << hash << std::endl;
+                std::cout<<" cached hash : " << local.plaintext_hash() << std::endl;
+                if(local.plaintext_hash() == hash) {
+                    std::cout<<" DUPLICATE UPLOAD ATTEMPT CAUGHT " << std::endl;
+                    ret = false;
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 }//namespace
