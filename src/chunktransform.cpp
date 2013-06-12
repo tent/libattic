@@ -136,6 +136,10 @@ void ChunkTransform::GenerateVerificationHash(std::string& out) {
 }
 
 void ChunkTransform::Compose(const std::string& in, std::string& out) {
+    // Encode buffer
+    std::string b64_buffer;
+    Encode(in, b64_buffer);
+
     // Compose the chunk data to its format
     // Format version | iv len | iv | data len | data
     unsigned char format = CHUNK_FORMAT;
@@ -153,7 +157,7 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     out.append(chunk_iv_.c_str(), iv_size);
     std::cout<<" IV : " << chunk_iv_ << std::endl;
 
-    unsigned int data_size = in.size();
+    unsigned int data_size = b64_buffer.size();
     char datasize[4] = {0};
     datasize[0] = (data_size >> 24) & 0xFF;
     datasize[1] = (data_size >> 16) & 0xFF;
@@ -161,11 +165,12 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     datasize[3] = data_size & 0xFF;
     std::cout<<" DATA SIZE : " << data_size << std::endl;
     out.append(datasize, 4);
-    out.append(in.c_str(), data_size);
+    out.append(b64_buffer.c_str(), data_size);
     std::cout<<" TOTAL BUFFER SIZE COMPOSE : " << out.size() << std::endl;
 }
 
 void ChunkTransform::Decompose(const std::string& in, std::string& out) {
+    
     std::cout<<" TOTAL BUFFER SIZE DECOMPOSE : " << in.size() << std::endl;
     unsigned char format = in[0];
     std::cout<<"FORMAT : " << format << std::endl;
@@ -195,9 +200,9 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
         std::cout<<" offset : " << offset << std::endl;
         std::cout<<" DATA SIZE : " << data_size << std::endl;
 
-        // TODO :: THIS IS A HACK!, FOR SOME REASON THE DATA SIZE IS NOT COMING OUT CORRECLTY
-        //out = in.substr(offset, data_size);
-        out = in.substr(offset);
+        // Decode buffer
+        std::string b64_buffer = in.substr(offset, data_size);
+        Decode(b64_buffer, out);
     }
 }
 
