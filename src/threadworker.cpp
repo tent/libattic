@@ -55,23 +55,14 @@ void ThreadWorker::Run() {
 
         if(state() == ThreadWorker::SHUTDOWN) {
             SetThreadExit();
-            if(task) {
-                task->OnFinished();
-                task_factory_.ReclaimTask(task);
-                task = NULL;
-            }
+            RelinquishTask(&task);
         }
         sleep::sleep_milliseconds(100);
     }
 
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
-        if(task) { 
-            std::cout<<" shutting down task ... : "<< task->type() << std::endl;
-            task->OnFinished();
-            task_factory_.ReclaimTask(task);
-            task = NULL;
-        }
+        RelinquishTask(&task);
     }
     std::cout<<" worker exiting ... " << std::endl;
 }
@@ -155,12 +146,16 @@ Task* ThreadWorker::RetrieveTask() {
     // Retrieve task based on preference first, then just any old task
     PreferenceMap::iterator itr = task_preference_.begin();
     for(;itr!= task_preference_.end(); itr++) {
-        if(itr->second)
+        if(itr->second) { 
             success = TaskArbiter::GetInstance()->RequestTaskContext(itr->first, tc);
+            if(success) std::cout<<" worker retrieved context " << std::endl;
+        }
     }
 
-    if(!success && !strict_)
+    if(!success && !strict_) {
         success = TaskArbiter::GetInstance()->RequestTaskContext(tc);
+        if(success) std::cout<<" worker retrieved context .1" << std::endl;
+    }
 
     Task* t = NULL;
     if(success) { 
@@ -170,6 +165,15 @@ Task* ThreadWorker::RetrieveTask() {
     }
 
     return t;
+}
+
+void ThreadWorker::RelinquishTask(Task** task) {
+    if(*task) { 
+        std::cout<<" shutting down task ... : "<< (*task)->type() << std::endl;
+        (*task)->OnFinished();
+        task_factory_.ReclaimTask(*task);
+        (*task) = NULL;
+    }
 }
 
 

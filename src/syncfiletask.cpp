@@ -83,7 +83,9 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     RenameHandler rh(file_manager());
     if(!rh.CheckForRename(p)) {
         FileInfo fi;
-        fh.DeserializeIntoFileInfo(p, fi);
+        std::string master_key;
+        if(GetMasterKey(master_key))
+            fh.DeserializeIntoFileInfo(p, master_key, fi);
         // Check if file is in manifest
         //int version = p.GetVersion();
 

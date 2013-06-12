@@ -26,6 +26,7 @@ class ThreadWorker : public MutexClass {
     void SetState(ThreadState t);
 
     Task* RetrieveTask();
+    void RelinquishTask(Task** task);
 public:
     ThreadWorker(FileManager* fm,
                  CredentialsManager* cm,

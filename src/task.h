@@ -62,6 +62,8 @@ public:
     void PushBackContextValue(const std::string& key, const std::string& value) {
         context_.set_value(key, value);
     }
+
+    const TaskContext& context() const { return context_; }
 protected:
     TaskContext context_;
 

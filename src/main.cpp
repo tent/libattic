@@ -42,6 +42,7 @@
 #include "callbackhandler.h"
 #include "atticclient.h"
 #include "chunkbuffer.h"
+#include "fileroller.h"
 
 
 // Temporary test, hooked up to localhost tent server
@@ -709,6 +710,17 @@ TEST(SODIUM, CRYPTO_GENERICHASH) {
     // http://en.wikipedia.org/wiki/BLAKE_%28hash_function%29
     std::string test_answer = "A8ADD4BDDDFD93E4877D2746E62817B116364A1FA7BC148D95090BC7333B3673F82401CF7AA2E4CB1ECD90296E3F14CB5413F8ED77BE73045B13914CDCD6A918";
     ASSERT_EQ(upper, test_answer);
+}
+
+TEST(SODIUM, FILEROLLER) {
+    /*
+    attic::FileRoller fr("miami.mp4");
+    std::string hash;
+    if(fr.Digest(hash))
+        std::cout<<"hash out : " << hash << std::endl;
+    else
+        std::cout<<" failed to digest " << std::endl;
+        */
 }
 
 int main (int argc, char* argv[]) {

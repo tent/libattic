@@ -271,15 +271,6 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
     return true;
 }
 
-bool PostFileStrategy::GetMasterKey(std::string& out) {
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-    mKey.GetMasterKey(out);
-    if(out.size())
-        return true;
-    return false;
-}
-
 bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
     bool ret = false;
     FileHandler fh(file_manager_);
@@ -381,17 +372,6 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
         return true;
     }
     return false;
-}
-
-bool PostFileStrategy::ValidMasterKey() {
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("MASDF1000", error);
-        return false;
-    }
-    return true;
 }
 
 }//namespace

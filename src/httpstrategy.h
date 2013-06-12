@@ -39,6 +39,20 @@ public:
                   const int taskstate, 
                   const std::string& var);
 protected:
+    bool GetMasterKey(std::string& out) {
+        MasterKey mKey;
+        credentials_manager_->GetMasterKeyCopy(mKey);
+        mKey.GetMasterKey(out);
+        if(out.size())
+            return true;
+        return false;
+    }
+    bool ValidMasterKey() {
+        std::string mk;
+        return GetMasterKey(mk);
+    }
+
+protected:
     ConfigMap               config_map_;
     CredentialsManager*     credentials_manager_;
     FileManager*            file_manager_;

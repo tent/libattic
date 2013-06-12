@@ -82,6 +82,7 @@ public:
         }
         return false;
     }
+
 protected:
     void Callback(const int code, const std::string& var) {
         if(callback_delegate_) { 
@@ -101,6 +102,19 @@ protected:
 
     TaskDelegate* callback_delegate() { return callback_delegate_; }
 
+    bool GetMasterKey(std::string& out) {
+        MasterKey mKey;
+        credentials_manager_->GetMasterKeyCopy(mKey);
+        mKey.GetMasterKey(out);
+        if(out.size())
+            return true;
+        return false;
+    }
+
+    bool ValidMasterKey() {
+        std::string mk;
+        return GetMasterKey(mk);
+    }
 private:
     AccessToken          access_token_;
     Entity               entity_;
