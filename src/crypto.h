@@ -16,6 +16,7 @@
 #include "errorcodes.h"
 #include "credentials.h"
 #include "utils.h"
+#include "fileroller.h"
 
 extern "C"
 {
@@ -32,6 +33,12 @@ extern "C"
 }
 
 namespace attic { namespace crypto {
+
+#include <sys/mman.h>
+static void m_lock(void* p, size_t len) {
+    mlock(p, len);
+}
+
 // new
 static bool ScryptEncode(const std::string &input, 
                          const std::string &salt,
@@ -48,6 +55,9 @@ static int EnterPassphrase(const std::string& pass, const std::string& iv, Crede
 static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
 static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
+static bool GeneratePlaintextHashForFile(const std::string& filepath, std::string& hash_out);
+
+
 
 // Old
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
@@ -129,6 +139,16 @@ static Credentials GenerateCredentials() {
     Credentials cred;
     GenerateCredentials(cred);
     return cred;
+}
+
+static bool GeneratePlaintextHashForFile(const std::string& filepath, std::string& hash_out) {
+    bool ret = false;
+    FileRoller fr(filepath);
+    std::string hash;
+    ret = fr.Digest(hash);
+    if(ret)
+        Base64EncodeString(hash, hash_out);
+    return ret;
 }
 
 static void GenerateCredentials(Credentials& cred) {
