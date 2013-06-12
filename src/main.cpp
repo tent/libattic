@@ -314,8 +314,12 @@ TEST(CHUNKINFO, SERIALIZATION) {
 void Compose(const std::string& in, const std::string& iv, std::string& out) {
     // Compose the chunk data to its format
     // Format version | iv len | iv | data len | data
+    //
+    std::cout<<"*****************************************************" << std::endl;
+    std::cout<<" compose " << std::endl;
+    std::cout<<"\t buffer size : " << in.size() << std::endl;
     unsigned char format = CHUNK_FORMAT;
-    std::cout<<" FORMAT : " << format << std::endl;
+    std::cout<<"\t FORMAT : " << format << std::endl;
     out.append(format, 1);
 
     unsigned int iv_size = iv.size();
@@ -324,7 +328,7 @@ void Compose(const std::string& in, const std::string& iv, std::string& out) {
     ivsize[1] = (iv_size >> 16) & 0xFF;
     ivsize[2] = (iv_size >> 8) & 0xFF;
     ivsize[3] = iv_size & 0xFF;
-    std::cout<<" IV SIZE : " << iv_size << std::endl;
+    std::cout<<"\t IV SIZE : " << iv_size << std::endl;
 
     out.append(reinterpret_cast<const char*>(ivsize), 4);
     out.append(iv.c_str(), iv_size);
@@ -335,17 +339,30 @@ void Compose(const std::string& in, const std::string& iv, std::string& out) {
     datasize[1] = (data_size >> 16) & 0xFF;
     datasize[2] = (data_size >> 8) & 0xFF;
     datasize[3] = data_size & 0xFF;
-    std::cout<<" DATA SIZE : " << data_size << std::endl;
+    std::cout<<"\t DATA SIZE : " << data_size << std::endl;
+    unsigned int verify = 0;
+    verify = (verify << 8) + datasize[0];
+    verify = (verify << 8) + datasize[1];
+    verify = (verify << 8) + datasize[2];
+    verify = (verify << 8) + datasize[3];
+    std::cout<<"\t VERIFY SIZE : " << verify << std::endl;
 
+    std::cout<<"\t composed size : " << out.size() << std::endl;
     out.append(reinterpret_cast<const char*>(datasize), 4);
+
+
     out.append(in.c_str(), data_size);
+    std::cout<<"*****************************************************" << std::endl;
 }
 
 void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
+    std::cout<<"*****************************************************" << std::endl;
+    std::cout<<" decompose " << std::endl;
+    std::cout<<"\t buffer size : " << in.size() << std::endl;
     unsigned char format = in[0];
-    std::cout<<"FORMAT : " << format << std::endl;
+    std::cout<<"\t FORMAT : " << format << std::endl;
     unsigned int offset = 1;
-    std::cout<<" offset : " << offset << std::endl;
+    std::cout<<"\t offset : " << offset << std::endl;
     if(format == CHUNK_FORMAT) {
         unsigned int iv_size = 0;
         iv_size = (iv_size << 8) + in[offset];
@@ -353,25 +370,33 @@ void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
         iv_size = (iv_size << 8) + in[offset+2];
         iv_size = (iv_size << 8) + in[offset+3];
         offset+=4;
-        std::cout<<" offset : " << offset << std::endl;
+        std::cout<<"\t offset : " << offset << std::endl;
 
-        std::cout<<" IV SIZE : " << iv_size << std::endl;
+        std::cout<<"\t IV SIZE : " << iv_size << std::endl;
         iv_out = in.substr(offset, iv_size);
-        std::cout<<" IV : " << iv_out << std::endl;
+        std::cout<<"\t IV : " << iv_out << std::endl;
         offset+= iv_size;
-        std::cout<<" offset : " << offset << std::endl;
+        std::cout<<"\t offset : " << offset << std::endl;
 
         unsigned int data_size = 0;
-        data_size = (data_size << 8) + in[offset];
-        data_size = (data_size << 8) + in[offset+1];
-        data_size = (data_size << 8) + in[offset+2];
-        data_size = (data_size << 8) + in[offset+3];
-        offset+=4;
-        std::cout<<" offset : " << offset << std::endl;
-        std::cout<<" DATA SIZE : " << data_size << std::endl;
+        unsigned char ds_buffer[4];
+        ds_buffer[0] = in[offset];
+        ds_buffer[1] = in[offset+1];
+        ds_buffer[2] = in[offset+2];
+        ds_buffer[3] = in[offset+3];
 
+        data_size = (data_size << 8) + ds_buffer[0];
+        data_size = (data_size << 8) + ds_buffer[1];
+        data_size = (data_size << 8) + ds_buffer[2];
+        data_size = (data_size << 8) + ds_buffer[3];
+        offset+=4;
+        std::cout<<"\t offset : " << offset << std::endl;
+        std::cout<<"\t DATA SIZE : " << data_size << std::endl;
         out = in.substr(offset, data_size);
+        std::string all = in.substr(offset);
+        std::cout<<"\t back end size : " << all.size() << std::endl;
     }
+    std::cout<<"*****************************************************" << std::endl;
 }
 
 TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){ 
@@ -381,42 +406,41 @@ TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){
     //payload.append("djfklgjsdg9012345ksajdkfjkasjdgkasjdga");
 
     std::ifstream ifs;
-    ifs.open("oa.pdf", std::ios::in | std::ios::binary);
+    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
     if(ifs.is_open()) {
         ifs.seekg (0, std::ios::end);
         unsigned int size = ifs.tellg();
         ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
 
-        char data[size];
+        char* data = new char[size];
         ifs.read(data, size);
         payload.append(data, size);
+        delete data;
+        data = NULL;
     }
 
-    std::string b64_payload;
-    attic::crypto::Base64EncodeString(payload, b64_payload);
-
-
-    std::cout<<" payload size : " << b64_payload.size() << std::endl;
+    std::cout<< "payload size : " << payload.size() << std::endl;
     std::string iv("test iv, not a real iv");
 
     std::string composed;
-    Compose(b64_payload, iv, composed);
-
+    Compose(payload, iv, composed);
+/*
     std::string b64_encoded;
     attic::crypto::Base64EncodeString(composed, b64_encoded);
 
     std::string b64_decoded;
     attic::crypto::Base64DecodeString(b64_encoded, b64_decoded);
+    */
 
     std::string iv_out;
     std::string decomposed;
-    Decompose(b64_decoded, iv_out, decomposed);
+    //Decompose(b64_decoded, iv_out, decomposed);
+    Decompose(composed, iv_out, decomposed);
     std::cout<<" decomposed size : " << decomposed.size() << std::endl;
-    std::string b64_decomp;
-    attic::crypto::Base64DecodeString(decomposed, b64_decomp);
 
     ASSERT_EQ(iv, iv_out);
-    ASSERT_EQ(payload.size(), b64_decomp.size());
+    ASSERT_EQ(payload.size(), decomposed.size());
     //ASSERT_EQ(payload, decomposed);
 }
 

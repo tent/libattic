@@ -163,6 +163,7 @@ static bool Encrypt(const std::string& in, const Credentials& cred, std::string&
     std::string buffer;
     // append buffer, (required by nacl)
     buffer.append(32,0);
+    std::cout<<" encrypt buffer size : " << buffer.size() << std::endl;
     // append data
     buffer.append(in.c_str(), in.size());
     // ciphertext
