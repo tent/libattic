@@ -1,6 +1,7 @@
 #include "foldertask.h"
 
 #include "errorcodes.h"
+#include "filehandler.h"
 #include "folderhandler.h"
 #include "posthandler.h"
 
@@ -90,17 +91,31 @@ int FolderTask::RenameFolder() {
     std::cout<<" file size : " << file_list.size() << std::endl;
     std::deque<FileInfo>::iterator file_itr = file_list.begin();
     for(;file_itr != file_list.end(); file_itr++) {
-        FilePost fp(*file_itr);
-
-        if(!fp.id().empty()) {
-            PostFilePost(fp.id(), fp);
-        }
-        else {
-            std::cout<<" EMPTY POST ID " << std::endl;
-        }
+        UpdateFilePost((*file_itr), (*file_itr).post_id());
     }
 
     return status;
+}
+
+bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
+    bool ret = false;
+    //  Retrieve latest
+    if(!post_id.empty()) {
+        FilePost p;
+        if(RetrieveFilePost(post_id, p) == ret::A_OK) {
+            std::string master_key;
+            GetMasterKey(master_key);
+            //  update cargo
+            FileHandler fh(file_manager());
+            std::string cargo;
+            fh.PrepareCargo(fi, master_key, cargo);
+            p.set_cargo(cargo);
+            //  post 
+            if(PostFilePost(p.id(), p) == ret::A_OK)
+                ret = true;
+        }
+    }
+    return ret;
 }
 
 // TODO :: abstract this logic into one place, probably the folder handler

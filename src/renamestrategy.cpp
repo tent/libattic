@@ -8,6 +8,7 @@
 #include "jsonserializable.h"
 #include "renamehandler.h"
 #include "posthandler.h"
+#include "filehandler.h"
 
 namespace attic {
 
@@ -51,8 +52,14 @@ int RenameStrategy::RenameFile() {
             FilePost p;
             status = RetrieveFilePost(fi->post_id(), p);
             if(status == ret::A_OK) {
+                std::string master_key;
+                GetMasterKey(master_key);
+                FileHandler fh(file_manager_);
+                std::string cargo;
+                fh.PrepareCargo(*fi, master_key, cargo);
                 FilePost new_p;
                 rh.UpdateFileMetaPost(p, *fi, new_p);
+                new_p.set_cargo(cargo);
                 status = UpdateFileMetaPost(fi->post_id(), new_p);
             }
         }
