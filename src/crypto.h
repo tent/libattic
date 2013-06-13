@@ -50,7 +50,7 @@ static void GenerateKey(std::string& out);
 static void GenerateIv(std::string& out);
 static void GenerateNonce(std::string& out);
 static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out);
-static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out);
+static bool Decrypt(const std::string in, const Credentials& cred, std::string& out);
 static int EnterPassphrase(const std::string& pass, const std::string& iv, Credentials& out);
 static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
 static Credentials GenerateCredentials();
@@ -179,14 +179,15 @@ static bool Encrypt(const std::string& in, const Credentials& cred, std::string&
     return false;
 }
 
-static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
+static bool Decrypt(const std::string in, const Credentials& cred, std::string& out) {
+    bool ret = false;
     if(in.size()) {
         std::cout<<" Decrypt call " << std::endl;
         std::cout<<" buffer size : " << in.size() << std::endl;
-        unsigned char m[in.size()];
+        unsigned char* m = new unsigned char[in.size()];
         std::cout<<" buffer size : " << in.size() << std::endl;
 
-        unsigned char decrypt_buffer[in.size()];
+        unsigned char* decrypt_buffer = new unsigned char[in.size()];
         memcpy(decrypt_buffer, in.c_str(), in.size());
 
         std::cout<<" opening the box " << std::endl;
@@ -201,10 +202,20 @@ static bool Decrypt(const std::string& in, const Credentials& cred, std::string&
             // remove padding
             out.erase(0, 32);
             std::cout<<" padding removed ? " << std::endl;
-            return true;
+            ret = true;
+        }
+
+        if(m) {
+            delete m;
+            m = NULL;
+        }
+
+        if(decrypt_buffer) {
+            delete decrypt_buffer;
+            decrypt_buffer = NULL;
         }
     }
-    return false;
+    return ret;
 }
 
 static void GenerateKey(std::string& out) {
