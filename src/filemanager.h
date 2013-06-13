@@ -75,6 +75,7 @@ public:
 
     // Folder
     bool DoesFolderExist(const std::string& folderpath);
+    bool DoesFolderExistById(const std::string& post_id);
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
 

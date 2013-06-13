@@ -575,6 +575,16 @@ bool FileManager::DoesFolderExist(const std::string& folderpath) {
     return ret;
 }
 
+bool FileManager::DoesFolderExistById(const std::string& post_id) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        Lock();
+        ret = manifest_.folder_table()->IsFolderInManifestWithID(post_id);
+        Unlock();
+    }
+    return ret;
+}
+
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     Folder folder;
     bool ret = GetFolderEntry(folderpath, folder);
