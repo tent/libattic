@@ -78,8 +78,6 @@ int PushTask::PushFile(const std::string& filepath) {
         pushcontext.SetConfigValue("entity", entity);
 
 
-
-
         PostFolderStrategy pfs;             // Check (and create) if directory posts exist
         PostMetaStrategy pmetas;            // Create meta strategy
         // push back post folder strategy

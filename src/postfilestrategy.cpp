@@ -340,7 +340,6 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
             p.clear_fragment();
             if(in_transit)
                 p.set_fragment(cnst::g_transit_fragment);
-
             ph.Flush();
             status = ph.Put(posturl, NULL, p);
             if(status != ret::A_OK) {

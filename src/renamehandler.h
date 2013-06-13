@@ -30,7 +30,7 @@ public:
                               const Folder& folder,
                               FolderPost& out);
    
-    bool CheckForRename(FilePost& fp);
+    bool CheckForRename(FileInfo& fi, const std::string& post_id);
     bool CheckForRename(FolderPost& fp);
 private:
     FileManager* file_manager_;

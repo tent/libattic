@@ -77,29 +77,26 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     int status = ret::A_OK;
     FileManager* fm = file_manager();
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
-    std::string filepath = p.relative_path();
-    std::cout<<" processing : " << filepath << std::endl;
+
     FileHandler fh(file_manager());
+    FileInfo fi;
+    std::string master_key;
+    if(GetMasterKey(master_key)) { 
+        std::cout<<" deserializing into file info " << std::endl;
+        fh.DeserializeIntoFileInfo(p, master_key, fi);
+        std::cout<<" name : " << fi.filename() << std::endl;
+        std::cout<<" path : " << fi.filepath() << std::endl;
+    }
+    else {
+        std::cout<<" failed to get master key " << std::endl;
+        return ret::A_FAIL_INVALID_MASTERKEY;
+    }
     // Check if any aliases exist, and fix
     RenameHandler rh(file_manager());
-    if(!rh.CheckForRename(p)) {
-        FileInfo fi;
-        std::string master_key;
-        if(GetMasterKey(master_key)) { 
-            std::cout<<" deserializing into file info " << std::endl;
-            fh.DeserializeIntoFileInfo(p, master_key, fi);
-            std::cout<<" name : " << fi.filename() << std::endl;
-            std::cout<<" path : " << fi.filepath() << std::endl;
-        }
-        else {
-            std::cout<<" failed to get master key " << std::endl;
-        }
-        // Check if file is in manifest
-        //int version = p.GetVersion();
-
+    if(!rh.CheckForRename(fi, p.id())) {
         // Get Local file info
+        std::string filepath = fi.filepath();
         FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
-
         bool bPull = false;
         if(pLocal_fi) {
             std::string canonical_path;
@@ -120,7 +117,6 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
                     bPull = true;
                 }
             }
-
             if(pLocal_fi->post_version() != p.version().id())
                 bPull = true;
         }
@@ -186,7 +182,7 @@ void SyncFileTask::ValidateFilepath(FileInfo& fi) {
 int SyncFileTask::RaisePullRequest(const FilePost& p, FileInfo& fi) {
     int status = ret::A_OK;
 
-    std::string filepath = p.relative_path();
+    std::string filepath = fi.filepath();
     if(!filepath.empty()) { 
         event::RaiseEvent(event::Event::REQUEST_PULL, filepath, NULL);
         processing_queue_[filepath] = true;

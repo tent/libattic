@@ -54,7 +54,10 @@ int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out
 
 int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& fi) {
     int status = ret::A_OK;
-    FilePost fp(fi);
+    FileHandler fh(file_manager_);
+    std::string master_key = GetMasterKey();
+    FilePost fp;
+    fh.PrepareFilePost(fi, master_key, fp);
     fp.set_fragment(cnst::g_transit_fragment);
     PostHandler<FilePost> ph(access_token_);
     if(ph.Post(posts_feed_, NULL, fp) == ret::A_OK) {
@@ -86,23 +89,6 @@ bool PostMetaStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
         }
     }
     return false;
-}
-
-bool PostMetaStrategy::ValidMasterKey() {
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("019288--1908-50", error);
-        return false;
-    }
-    return true;
-}
-
-void PostMetaStrategy::GetMasterKey(std::string& out) {
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-    mKey.GetMasterKey(out);
 }
 
 } // namespace

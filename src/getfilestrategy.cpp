@@ -331,6 +331,8 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
     boost::timer::nanosecond_type const elapsed(time.system + time.user);
+    //std::cout<<" time : " << time << std::endl;
+    std::cout<<" elapsed : "<< elapsed << std::endl;
 
     if(response.code == 200) {
         outBuffer = response.body;

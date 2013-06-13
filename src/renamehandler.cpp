@@ -107,19 +107,20 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
     return false;
 }
 
-bool RenameHandler::CheckForRename(FilePost& fp) {
+// Checks FileInfo (preferably generated from a file post against the local cache)
+bool RenameHandler::CheckForRename(FileInfo& fi, const std::string& post_id) {
     std::cout<<" CHECKING FOR RENAME " << std::endl;
-    FileInfo* fi = file_manager_->GetFileInfoByPostId(fp.id());
-    if(fi) {
+    FileInfo* local_fi = file_manager_->GetFileInfoByPostId(post_id);
+    if(local_fi) {
         // If filepaths are the same
-        if(fi->filepath() != fp.relative_path()){
+        if(local_fi->filepath() != fi.filepath()){
             std::cout<< " FILEPATHS DIFFER, RENAME " << std::endl;
             // Update Local cache
-            std::string old_filepath = fi->filepath();
-            std::string new_filepath = fp.relative_path();
+            std::string old_filepath = local_fi->filepath();
+            std::string new_filepath = fi.filepath();
 
-            std::cout << "local filepath : " << fi->filepath() << std::endl;
-            std::cout << "post filepath : " << fp.relative_path() << std::endl;
+            std::cout << "local filepath : " << local_fi->filepath() << std::endl;
+            std::cout << "post filepath : " << fi.filepath() << std::endl;
             int status = RenameFileLocalCache(old_filepath, new_filepath);
             std::cout<<" new filepath : " << new_filepath << std::endl;
             if(status == ret::A_OK) {
