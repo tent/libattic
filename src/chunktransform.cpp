@@ -149,14 +149,9 @@ void ChunkTransform::GenerateVerificationHash(std::string& out) {
 }
 
 void ChunkTransform::Compose(const std::string& in, std::string& out) {
-    std::cout<<" ************************************************** " << std::endl;
-    std::cout<<" Compose " << std::endl;
-    std::cout<<"\t data in size : " << in.size() << std::endl;
-
     // Compose the chunk data to its format
     // Format version | iv len | iv | data len | data
     unsigned char format = CHUNK_FORMAT;
-    std::cout<<"\t FORMAT : " << format << std::endl;
     out.append(format, 1);
 
     unsigned int iv_size = chunk_iv_.size();
@@ -165,10 +160,8 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     ivsize[1] = (iv_size >> 16) & 0xFF;
     ivsize[2] = (iv_size >> 8) & 0xFF;
     ivsize[3] = iv_size & 0xFF;
-    std::cout<<"\t IV SIZE : " << iv_size << std::endl;
     out.append(ivsize, 4);
     out.append(chunk_iv_.c_str(), iv_size);
-    std::cout<<"\t IV : " << chunk_iv_ << std::endl;
 
     unsigned int data_size = in.size();
     char datasize[4] = {0};
@@ -177,20 +170,12 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     datasize[2] = (data_size >> 8) & 0xFF;
     datasize[3] = data_size & 0xFF;
 
-    std::cout<<"\t data size : " << data_size << std::endl;
     out.append(datasize, 4);
     out.append(in.c_str(), data_size);
-    std::cout<<"\t total compose buffer size : " << out.size() << std::endl;
-    std::cout<<" ************************************************** " << std::endl;
 }
 
 void ChunkTransform::Decompose(const std::string& in, std::string& out) {
-    std::cout<<" ************************************************** " << std::endl;
-    std::cout<<" Decompose  " << std::endl;
-    std::cout<<"\t incoming size : "  << in.size() << std::endl;
-
     unsigned char format = in[0];
-    std::cout<<"\t FORMAT : " << format << std::endl;
     unsigned int offset = 1;
     if(format == CHUNK_FORMAT) {
         unsigned int iv_size = 0;
@@ -199,9 +184,7 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
         iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+2]);
         iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset += 4;
-        std::cout<<"\t IV SIZE : " << iv_size << std::endl;
         chunk_iv_ = in.substr(offset, iv_size);
-        std::cout<<"\t IV : " << chunk_iv_ << std::endl;
         offset += iv_size;
 
         unsigned int data_size = 0;
@@ -210,9 +193,7 @@ void ChunkTransform::Decompose(const std::string& in, std::string& out) {
         data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+2]);
         data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset+=4;
-        std::cout<<"\t data size : " << data_size << std::endl;
         out = in.substr(offset, data_size);
-    std::cout<<" ************************************************** " << std::endl;
     }
 }
 
