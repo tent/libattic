@@ -50,7 +50,7 @@ static void GenerateKey(std::string& out);
 static void GenerateIv(std::string& out);
 static void GenerateNonce(std::string& out);
 static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out);
-static bool Decrypt(const std::string in, const Credentials& cred, std::string& out);
+static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out);
 static int EnterPassphrase(const std::string& pass, const std::string& iv, Credentials& out);
 static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
 static Credentials GenerateCredentials();
@@ -160,59 +160,48 @@ static void GenerateCredentials(Credentials& cred) {
 }
 
 static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out) {
+    bool ret = false;
     std::string buffer;
     // append buffer, (required by nacl)
     buffer.append(32,0);
-    std::cout<<" encrypt buffer size : " << buffer.size() << std::endl;
     // append data
     buffer.append(in.c_str(), in.size());
     // ciphertext
-    unsigned char c[buffer.size()];
+    unsigned char* c = new unsigned char[buffer.size()];
     if(crypto_secretbox(c,  
                         reinterpret_cast<const unsigned char*>(buffer.c_str()),
                         buffer.size(),
                         cred.byte_iv(),
                         cred.byte_key()) == 0) {
         out.append(reinterpret_cast<const char*>(c), buffer.size());
-        return true;
+        ret = true;
     }
-    return false;
+
+    if(c) {
+        delete c;
+        c = NULL;
+    }
+    return ret;
 }
 
-static bool Decrypt(const std::string in, const Credentials& cred, std::string& out) {
+static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
     bool ret = false;
     if(in.size()) {
-        std::cout<<" Decrypt call " << std::endl;
-        std::cout<<" buffer size : " << in.size() << std::endl;
         unsigned char* m = new unsigned char[in.size()];
-        std::cout<<" buffer size : " << in.size() << std::endl;
-
-        unsigned char* decrypt_buffer = new unsigned char[in.size()];
-        memcpy(decrypt_buffer, in.c_str(), in.size());
-
-        std::cout<<" opening the box " << std::endl;
         if(crypto_secretbox_open(m, 
-                                 decrypt_buffer,
+                                 reinterpret_cast<const unsigned char*>(in.c_str()),
                                  in.size(),
                                  cred.byte_iv(),
                                  cred.byte_key()) == 0) {
-            std::cout<<" successfully decrpyted " << std::endl;
             out.append(reinterpret_cast<const char*>(m), in.size());
-            std::cout<< " removing padding " << std::endl;
             // remove padding
             out.erase(0, 32);
-            std::cout<<" padding removed ? " << std::endl;
             ret = true;
         }
 
         if(m) {
             delete m;
             m = NULL;
-        }
-
-        if(decrypt_buffer) {
-            delete decrypt_buffer;
-            decrypt_buffer = NULL;
         }
     }
     return ret;
