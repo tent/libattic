@@ -189,16 +189,17 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
             // Update filepath
             std::deque<FileInfo>::iterator file_itr = file_list.begin();
             for(;file_itr!= file_list.end(); file_itr++) {
+                std::cout<<" finding old path : " << aliased_old_path << std::endl;
                 size_t pos = (*file_itr).filepath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
                     utils::CheckUrlAndRemoveTrailingSlash(path);
-                    path += (*file_itr).filepath().substr(pos);
+                    path += (*file_itr).filepath().substr(pos+aliased_old_path.size());
                     std::cout<<" NEW FILE PATH " << path << std::endl;
                     std::cout<<" aliased new path : " << aliased_new_path << std::endl;
 
                     rh.RenameFileLocalCache((*file_itr).filepath(), path);
-                    (*file_itr).set_filepath(aliased_new_path);
+                    (*file_itr).set_filepath(path);
                 }
             }
         }

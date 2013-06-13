@@ -64,30 +64,16 @@ int FolderTask::RenameFolder() {
 
     FolderHandler fh(file_manager());
     fh.RenameFolder(old_folderpath, new_folderpath, file_list, folder_list);
-
     std::cout<<" updating posts ... " << std::endl;
     std::cout<<" folder size : " << folder_list.size() << std::endl;
+
+    // Update folder post
     std::deque<Folder>::iterator folder_itr = folder_list.begin();
     for(;folder_itr != folder_list.end(); folder_itr++) {
-        // Update Folder Post
-        if(!(*folder_itr).folder_post_id().empty()) {
-            FolderPost fp;
-            status = RetrieveFolderPost((*folder_itr).folder_post_id(), fp);
-            if(status == ret::A_OK) {
-                std::cout<<" posting path : " << (*folder_itr).folderpath() << std::endl;
-                fp.set_folder(*folder_itr);
-                PostFolderPost((*folder_itr).folder_post_id(), fp);
-            }
-            else {
-                std::cout<<" fialed to retrieve folder post " << std::endl;
-            }
-        }
-        else {
-
-            std::cout<<" EMPTY POST ID " << std::endl;
-        }
+        UpdateFolderPost((*folder_itr), (*folder_itr).folder_post_id());
     }
 
+    // Update corresponding file posts
     std::cout<<" file size : " << file_list.size() << std::endl;
     std::deque<FileInfo>::iterator file_itr = file_list.begin();
     for(;file_itr != file_list.end(); file_itr++) {
@@ -95,6 +81,27 @@ int FolderTask::RenameFolder() {
     }
 
     return status;
+}
+
+bool FolderTask::UpdateFolderPost(Folder& folder, const std::string post_id) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        FolderPost fp;
+        if(RetrieveFolderPost(folder.folder_post_id(), fp) == ret::A_OK) {
+            fp.set_folder(folder);
+            if(PostFolderPost(post_id, fp) == ret::A_OK)
+                ret = true;
+        }
+    }
+    else {
+        std::ostringstream err;
+        err << " Empty Folder Post id : " << std::endl;
+        err << " entry : " << folder.folderpath();
+        err << " \t\t " << folder.folder_post_id();
+        err << " \t\t " << folder.parent_post_id();
+        log::LogString("folder_18912512", err.str());
+    }
+    return ret;
 }
 
 bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
@@ -109,11 +116,22 @@ bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
             FileHandler fh(file_manager());
             std::string cargo;
             fh.PrepareCargo(fi, master_key, cargo);
+
+            // set new filepath locally and in cargo
+
+
             p.set_cargo(cargo);
             //  post 
             if(PostFilePost(p.id(), p) == ret::A_OK)
                 ret = true;
         }
+    }
+    else { 
+        std::ostringstream err;
+        err << " Empty File Post id : " << std::endl;
+        err << " entry : " << fi.filepath();
+        err << " \t\t " << fi.post_id();
+        log::LogString("folder_18912512", err.str());
     }
     return ret;
 }
