@@ -37,10 +37,11 @@ void FilePost::Serialize(Json::Value& root) {
     content["cargo"] = cargo_;
 
     // Sensative data, these will be moved into cargo
+    /*
     content["name"] = fi_.filename();
     content["path"] = fi_.filepath();
     content["plaintext_hash"] = fi_.plaintext_hash();
-    
+    */
 
     std::string key_data;
     crypto::Base64EncodeString(fi_.encrypted_key(), key_data);
@@ -79,9 +80,11 @@ void FilePost::Deserialize(Json::Value& root) {
     get_content("file_content", content);
     cargo_ = content.get("cargo", "").asString();
     // sensative data, will be moved to cargo, remember to remove once cargo works
+    /*
     fi_.set_filename(content.get("name", "").asString());
     fi_.set_filepath(content.get("path", "").asString());
     fi_.set_plaintext_hash(content.get("plaintext_hash","").asString());
+    */
 
     fi_.set_folder_post_id(content.get("folder_post", "").asString());
     std::string size = content.get("size", "").asString();

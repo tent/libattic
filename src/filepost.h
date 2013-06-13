@@ -42,14 +42,13 @@ public:
     void Serialize(Json::Value& root);  
     void Deserialize(Json::Value& root);
 
-    const std::string& name() const                 { return fi_.filename(); }
-    const std::string& relative_path() const        { return fi_.filepath(); }
+    // Note* methods to retrieve name, filepath, and hash data where purposefully left out
+    //  this is senstative information stored in the file posts' cargo.
     const std::string& key_data() const             { return fi_.encrypted_key(); }
     const std::string& iv_data() const              { return fi_.file_credentials_iv(); }
     const std::string& folder_post() const          { return fi_.folder_post_id(); }
     unsigned int file_size() const                  { return fi_.file_size(); }
     const FileInfo::ChunkMap chunk_data()           { return *(fi_.GetChunkInfoList()); }
-    const std::string& plaintext_hash() const       { return fi_.plaintext_hash(); }
     const std::string& cargo() const                { return cargo_; }
 
     void set_file_info(const FileInfo& fi)          { fi_ = fi; }

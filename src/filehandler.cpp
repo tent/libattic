@@ -165,8 +165,12 @@ void FileHandler::UnpackCargo(FilePost& fp,
     t_cred.set_key(file_key);
     t_cred.set_iv(fp.iv_data());
 
+    std::cout<<" ENCRYPTED CARGO : " << fp.cargo() << std::endl;
+    std::string encrypted_cargo;
+    crypto::Base64DecodeString(fp.cargo(), encrypted_cargo);
+
     std::string decrypted_cargo;
-    crypto::Decrypt(fp.cargo(), t_cred, decrypted_cargo);
+    crypto::Decrypt(encrypted_cargo, t_cred, decrypted_cargo);
     std::cout<<" DECRYPTED CARGO : " << decrypted_cargo << std::endl;
     jsn::DeserializeObject(&open_cargo, decrypted_cargo);
 }
@@ -195,18 +199,12 @@ void FileHandler::DeserializeIntoFileInfo(FilePost& fp,
     out.set_chunks(fp.chunk_data());
     out.set_chunk_count(fp.chunk_data().size());
 
-    out.set_filename(fp.name());
-    out.set_filepath(fp.relative_path());
-    out.set_plaintext_hash(fp.plaintext_hash());
-
     // Unpack Cargo
-    /*
     Cargo cargo;
     UnpackCargo(fp, master_key, cargo);
     out.set_filename(cargo.filename);
     out.set_filepath(cargo.filepath);
     out.set_plaintext_hash(cargo.plaintext_hash);
-    */
 }
 
 bool FileHandler::GetTemporaryFilepath(FileInfo& fi, std::string& path_out) {
