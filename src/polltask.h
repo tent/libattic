@@ -23,7 +23,7 @@ class PollDelegate;
 class PollTask : public TentTask, public event::EventListener {
     int SyncFiles(std::deque<FilePost>& file_list);
 
-    void DeleteLocalFile(const FilePost& fp); // TODO :: temp method, will move to its own job
+    void DeleteLocalFile(const FileInfo& fi); // TODO :: temp method, will move to its own job
     void DeleteLocalFolder(const FolderPost& fp);
 
     void PollFilePosts();

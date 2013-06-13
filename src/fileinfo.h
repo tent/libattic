@@ -87,7 +87,7 @@ private:
     std::string     folder_post_id_;    // folder post id in the manifest
 
     std::string     filename_;          // File within directory
-    std::string     filepath_;          // Directory
+    std::string     filepath_;          // Relative filepath
     std::string     post_id_;           // Id of the post the file is potentially attached to 
 
     std::string     encryption_algorithm_; // Algorithm used to encrypt chunks

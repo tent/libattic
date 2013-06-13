@@ -47,6 +47,13 @@ protected:
             return true;
         return false;
     }
+
+    std::string GetMasterKey() {
+        std::string master_key;
+        GetMasterKey(master_key);
+        return master_key;
+    }
+
     bool ValidMasterKey() {
         std::string mk;
         return GetMasterKey(mk);

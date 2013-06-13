@@ -13,6 +13,7 @@
 #include "filesystem.h"
 #include "configmanager.h"
 
+#include "filehandler.h"
 #include "folderhandler.h"
 #include "renamehandler.h"
 
@@ -151,12 +152,25 @@ void PollTask::PollFilePosts() {
 void PollTask::PollDeletedFilePosts() {
     std::deque<FilePost> deleted_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) {
-        std::cout<<" Checking for deleted files ... " << std::endl;
-        std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
-        std::deque<FilePost>::iterator itr = deleted_list.begin();
-        for(;itr!=deleted_list.end(); itr++) {
-            std::cout<<"deleting ... " << (*itr).relative_path() << std::endl;
-            DeleteLocalFile(*itr);
+        FileHandler fh(file_manager());
+        std::string master_key;
+        if(GetMasterKey(master_key)) {
+            std::deque<FileInfo> file_list;
+
+            std::deque<FilePost>::iterator fp_itr = deleted_list.begin();
+            for(;fp_itr!=deleted_list.end(); fp_itr++) {
+                FileInfo fi;
+                fh.DeserializeIntoFileInfo((*fp_itr), master_key, fi);
+                file_list.push_back(fi);
+            }
+
+            std::cout<<" Checking for deleted files ... " << std::endl;
+            std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
+            std::deque<FileInfo>::iterator fi_itr = file_list.begin();
+            for(;fi_itr!=file_list.end(); fi_itr++) {
+                std::cout<<"deleting ... " << (*fi_itr).filepath() << std::endl;
+                DeleteLocalFile(*fi_itr);
+            }
         }
     }
 }
@@ -202,11 +216,11 @@ int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
     return status;
 }
 
-void PollTask::DeleteLocalFile(const FilePost& fp){ // TODO :: temp method, will move to its own job
-    FolderHandler fh(file_manager());
-    fh.DeleteFolder(fp.relative_path());
+void PollTask::DeleteLocalFile(const FileInfo& fi){ // TODO :: temp method, will move to its own job
+    //FolderHandler fh(file_manager());
+    //fh.DeleteFolder(fp.relative_path());
     std::string canonical_path;
-    file_manager()->GetCanonicalFilepath(fp.relative_path(), canonical_path);
+    file_manager()->GetCanonicalFilepath(fi.filepath(), canonical_path);
     if(fs::CheckFilepathExists(canonical_path)){
         // Move to trash
         std::string trash_path;
