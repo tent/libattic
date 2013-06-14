@@ -45,6 +45,9 @@
 #include "fileroller.h"
 
 
+#define BUFFERSIZE 1000
+#include <b64/encode.h>
+
 // Temporary test, hooked up to localhost tent server
 /*
 TEST(ATTIC_SERVICE, START_STOP)
@@ -111,11 +114,62 @@ TEST(CRYPTO, BASE32) {
 
 TEST(CRYPTO, BASE64) {
     std::string teststring("this is my test string, that I'm going to base64 encode");
+    std::string payload;
+    std::ifstream ifs;
+    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ios::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
+
+        char* data = new char[size];
+        ifs.read(data, size);
+        payload.append(data, size);
+        delete data;
+        data = NULL;
+    }
     std::string encoded;
-    attic::crypto::Base64EncodeString(teststring, encoded);
-    std::string decoded;
-    attic::crypto::Base64DecodeString(encoded, decoded);
-    ASSERT_EQ(teststring, decoded);
+    attic::crypto::Base64EncodeString(payload, encoded);
+    //std::string decoded;
+    //attic::crypto::Base64DecodeString(encoded, decoded);
+    //ASSERT_EQ(teststring, decoded);
+}
+
+TEST(LIBB64, ENCODE) { 
+    std::string teststring("this is my test string, that I'm going to base64 encode");
+
+    std::string payload = teststring;
+    /*
+    std::string payload;
+    std::ifstream ifs;
+    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ios::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
+
+        char* data = new char[size];
+        ifs.read(data, size);
+        payload.append(data, size);
+        delete data;
+        data = NULL;
+    }
+    */
+
+    base64::encoder e;
+    std::istringstream str(payload);
+    std::ostringstream ostr;
+    e.encode(str, ostr);
+    //std::cout<<" ENCODED : " << ostr.str() << std::endl;
+    //
+    std::string encoded;
+    attic::crypto::Base64EncodeString(payload, encoded);
+    
+
+    ASSERT_EQ(encoded, ostr.str());
+
 }
 
 TEST(CRYPTO, KEY_ENCRYPTION) {
@@ -401,10 +455,11 @@ void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
 
 TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){ 
     std::string payload;
-    //payload.append("this is my test data,09412");
+    payload.append("this is my test data,09412");
     //payload.append("\0", 1);
     //payload.append("djfklgjsdg9012345ksajdkfjkasjdgkasjdga");
 
+    /*
     std::ifstream ifs;
     ifs.open("aho.pdf", std::ios::in | std::ios::binary);
     if(ifs.is_open()) {
@@ -419,6 +474,7 @@ TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){
         delete data;
         data = NULL;
     }
+    */
 
     std::cout<< "payload size : " << payload.size() << std::endl;
     std::string iv("test iv, not a real iv");
@@ -774,6 +830,9 @@ TEST(SODIUM, FILEROLLER) {
         std::cout<<" failed to digest " << std::endl;
         */
 }
+
+
+
 
 int main (int argc, char* argv[]) {
    int status = 0;

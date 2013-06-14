@@ -91,6 +91,7 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
         std::cout<<" failed to get master key " << std::endl;
         return ret::A_FAIL_INVALID_MASTERKEY;
     }
+
     // Check if any aliases exist, and fix
     RenameHandler rh(file_manager());
     if(!rh.CheckForRename(fi, p.id())) {
