@@ -22,6 +22,8 @@ ThreadWorker::ThreadWorker(FileManager* fm,
     entity_ = ent;
 
     task_factory_.Initialize(file_manager_, credentials_manager_, access_token_, entity_);
+
+    thread_ = NULL;
 }
 
 ThreadWorker::~ThreadWorker() {}
@@ -35,9 +37,6 @@ void ThreadWorker::Run() {
             // Get a job
             task = RetrieveTask();
             if(!task) { sleep::sleep_seconds(1); }
-            else {
-                std::cout<<" WORKER GOT A TASK! type : " << task->type() << std::endl;
-            }
         }
 
         if(task)  {
@@ -71,7 +70,6 @@ void ThreadWorker::PollTask(Task** task) {
     switch((*task)->state()) {
         case Task::IDLE:
             {
-                std::cout<<" starting task " << std::endl;
                 // Start the task
                 (*task)->OnStart();
                 (*task)->SetRunningState();
@@ -79,21 +77,18 @@ void ThreadWorker::PollTask(Task** task) {
             }
         case Task::RUNNING:
             {
-                //std::cout<<" running task " << std::endl;
                 (*task)->RunTask();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::PAUSED:
             {
-                std::cout<< " task paused " << std::endl;
                 (*task)->OnPaused();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::FINISHED:
             {
-                std::cout<< " task finished " << std::endl;
                 (*task)->OnFinished();
                 task_factory_.ReclaimTask(*task);
                 (*task) = NULL;
@@ -103,7 +98,6 @@ void ThreadWorker::PollTask(Task** task) {
             }
         default:
             {
-                std::cout<<" default " << std::endl;
                 break;
             }
     };
@@ -111,29 +105,29 @@ void ThreadWorker::PollTask(Task** task) {
 
 int ThreadWorker::state() {
     int t;
-    Lock();
+    state_mtx_.Lock();
     t = state_;
-    Unlock();
+    state_mtx_.Unlock();
     return t;
 }
 
 void ThreadWorker::SetState(ThreadState t) {
-    Lock();
+    state_mtx_.Lock();
     if(state_ != ThreadWorker::EXIT)
         state_ = t;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetThreadExit() {
-    Lock();
+    state_mtx_.Lock();
     state_ = ThreadWorker::EXIT;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetThreadShutdown() {
-    Lock();
+    state_mtx_.Lock();
     state_ = ThreadWorker::SHUTDOWN;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetTaskPreference(Task::TaskType type, bool active) {
@@ -149,22 +143,18 @@ Task* ThreadWorker::RetrieveTask() {
         if(itr->second) { 
             success = TaskArbiter::GetInstance()->RequestTaskContext(itr->first, tc);
             if(success) {
-                std::cout<<" worker retrieved context " << std::endl;
-                std::cout<<" success : " << success << std::endl;
                 break;
             }
         }
     }
 
     if(!success && !strict_) {
+        if(strict_) { std::cout << " STRICT THREAD WORKER REQUESTING RANDOM TASK ! " << std::endl; } 
         success = TaskArbiter::GetInstance()->RequestTaskContext(tc);
-        if(success) std::cout<<" worker retrieved context .1" << std::endl;
     }
 
     Task* t = NULL;
     if(success) { 
-        std::cout<<" Successfully retreived context " << std::endl;
-        std::cout<<" type : "<< tc.type()<< std::endl;
         t = task_factory_.GetTentTask(tc);
     }
 
