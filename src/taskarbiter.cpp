@@ -57,7 +57,6 @@ bool TaskArbiter::RequestTaskContext(TaskContext& out) {
 bool TaskArbiter::RequestTaskContext(Task::TaskType type, TaskContext& out) {
     bool ret = task_pool_.RequestTaskContext(type, out);
     if(ret) {
-        std::cout<<" retrieved task of type : " << out.type() << std::endl;
         RemoveFromFilter(out);
     }
     return ret;

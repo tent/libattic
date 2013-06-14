@@ -29,7 +29,6 @@ public:
             crypto_generichash_init(&st, NULL, NULL, 32);
 
             char* data = NULL;
-            std::cout<<" size : " << size << std::endl;
             while((size - bytes_read) > 0) { 
                 unsigned int read = 0;
                 if((size - bytes_read) < window) {

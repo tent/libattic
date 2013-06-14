@@ -42,16 +42,11 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
         std::string folderpath;
         if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
             std::string folderid;
-            std::cout<< " checking folderpath : " << folderpath << std::endl;
             utils::CheckUrlAndRemoveTrailingSlash(folderpath);
-            std::cout<< " checking folderpath : " << folderpath << std::endl;
             if(file_manager_->GetFolderPostId(folderpath, folderid)) {
                 std::string aliased, filename;
                 utils::ExtractFileName(filepath, filename);
                 file_manager_->GetAliasedFilepath(filepath, aliased);
-                std::cout<<" folder path : " << folderpath << std::endl;
-                std::cout<<" folder id : " << folderid << std::endl;
-                std::cout<<" aliased : " << aliased << std::endl;
                 out.set_filename(filename);             // set filename
                 out.set_filepath(aliased);              // set filepath
                 out.set_folder_post_id(folderid);       // set folder id
@@ -64,7 +59,6 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                 // Generate plaintext mac for file
                 std::string plaintext_hash;
                 if(RollFileMac(filepath, plaintext_hash)) {
-                    std::cout<<" plaintext mac : " << plaintext_hash << std::endl;
                     out.set_plaintext_hash(plaintext_hash);
                 }
                 else {
@@ -165,13 +159,13 @@ void FileHandler::UnpackCargo(FilePost& fp,
     t_cred.set_key(file_key);
     t_cred.set_iv(fp.iv_data());
 
-    std::cout<<" ENCRYPTED CARGO : " << fp.cargo() << std::endl;
+    //std::cout<<" ENCRYPTED CARGO : " << fp.cargo() << std::endl;
     std::string encrypted_cargo;
     crypto::Base64DecodeString(fp.cargo(), encrypted_cargo);
 
     std::string decrypted_cargo;
     crypto::Decrypt(encrypted_cargo, t_cred, decrypted_cargo);
-    std::cout<<" DECRYPTED CARGO : " << decrypted_cargo << std::endl;
+    //std::cout<<" DECRYPTED CARGO : " << decrypted_cargo << std::endl;
     jsn::DeserializeObject(&open_cargo, decrypted_cargo);
 }
 
@@ -248,11 +242,13 @@ bool FileHandler::EncryptFileKey(FileInfo& fi, const std::string& master_key) {
             if(decrypted_key != fi.file_credentials_key())
                 std::cout<<" FAILED TO VERIFY ENCRYPTED KEY ! " << std::endl;
             else {
+                /*
                 std::cout<<" KEY VERIFIED " << std::endl;
                 std::cout<<" master key : " << master_key << std::endl;
                 std::cout<<" encrypted key : " << encrypted_key << std::endl;
                 std::cout<<" decrypted key : " << decrypted_key << std::endl;
                 std::cout<<" iv : " << fi.file_credentials_iv() << std::endl;
+                */
             }
 
             return true;

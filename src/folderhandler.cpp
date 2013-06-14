@@ -87,7 +87,6 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath, std::deque<Fo
                 out.push_back(folder);
             }
             else {
-                std::cout<< "already exists pushing back " << std::endl;
                 out.push_back(tmp);
             }
         }

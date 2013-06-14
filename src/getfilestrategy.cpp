@@ -35,7 +35,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::cout<<" starting get file strategy ... for :" << filepath << std::endl;
 
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
-    std::cout<<" valid master key " << std::endl;
 
     if(!filepath.empty()) { 
         FileHandler fi_hdlr(file_manager_);
@@ -67,7 +66,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 return ret::A_FAIL_PULL_DELETED_FOLDER;
             }
 
-            std::cout<<" FILE : " << filepath << " DELETED : " << fi.deleted() << std::endl;
             if(fi.deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
             // Retrieve file metadata
             FilePost meta_post;
@@ -82,7 +80,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                         std::string destination;
                         ConstructFilepath(fi, folder, destination);
                         // pull chunks
-                        std::cout<<" DESTINATION : " << destination << std::endl;
                         status = ConstructFile(fi, file_cred, destination);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache 
@@ -107,7 +104,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     }
     else {
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-        std::cout<<" FILEPATH EMPTY : " << filepath << std::endl;
     }
 
     std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
@@ -122,69 +118,7 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
     // Get Metadata post
     PostHandler<FilePost> ph(access_token_);
     status = ph.Get(posturl, NULL, out);
-
-    std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << ph.response().code << std::endl;
-    std::cout<<" BODY : " << ph.response().body << std::endl;
     return status;
-}
-
-int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
-                                        const std::string& post_id,
-                                        ChunkPostList& out) {
-    int status = ret::A_OK;
-    std::cout<<" retrieving chunk posts ... " << std::endl;
-    std::string posts_feed = GetConfigValue("posts_feed");
-    UrlParams params;
-    params.AddValue(std::string("mentions"), entity + " " + post_id);
-    params.AddValue(std::string("types"), std::string(cnst::g_attic_chunk_type));
-
-    std::string prm;
-    params.SerializeToString(prm);
-    std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
-
-    PostHandler<Envelope> ph(access_token_);
-    Envelope pp;
-    status = ph.Get(posts_feed, &params, pp);
-    std::cout<<" CODE : " << ph.response().code << std::endl;
-    std::cout<<" BODY : " << ph.response().body << std::endl;
-
-    if(status == ret::A_OK) {
-        Json::Value chunk_post_arr(Json::arrayValue);
-        jsn::DeserializeJson(pp.data(), chunk_post_arr);
-
-        std::cout<<" TOTAL POST COUNT : " << chunk_post_arr.size() << std::endl;
-        Json::ValueIterator itr = chunk_post_arr.begin();
-        for(; itr != chunk_post_arr.end(); itr++) {
-            Post gp;
-            jsn::DeserializeObject(&gp, (*itr));
-            // There should never be more than one post in the same group
-            std::cout<<" CHUNK POST TYPE : " << gp.type() << std::endl;
-            if(gp.type().find(cnst::g_attic_chunk_type) != std::string::npos) {
-                ChunkPost p;
-                jsn::DeserializeObject(&p, (*itr));
-                std::cout<<"TYPE : " << p.type() << std::endl;
-                std::cout<<" PUSHING BACK GROUP : " << p.group() << std::endl;
-                if(out.find(p.group()) == out.end()) {
-                    out[p.group()] = p;
-                    std::cout<<" CHUNK INFO LIST SIZE : " << p.chunk_info_list_size() << std::endl;
-                }
-                else 
-                    std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
-            }
-        }
-    }
-    else { 
-        log::LogHttpResponse("FA332ASDF3", ph.response());
-        status = ret::A_FAIL_NON_200;
-    }
-    return status;
-}
-
-void GetFileStrategy::GetMasterKey(std::string& out) {
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-    mKey.GetMasterKey(out);
 }
 
 int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
@@ -196,9 +130,6 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
     std::string mk;
     GetMasterKey(mk);
-    std::cout<<" master key : " << mk << std::endl;
-    std::cout<<" file key (encrypted) : " << key << std::endl;
-    std::cout<<" iv data : " << iv << std::endl;
     if(!mk.empty()) {
         Credentials FileKeyCred;
         FileKeyCred.set_key(mk);
@@ -386,17 +317,6 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
     return status;
 }
 
-bool GetFileStrategy::ValidMasterKey() {
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("MASDP2823", error);
-        return false;
-    }
-    return true;
-}
-
 void GetFileStrategy::ValidateFolderEntries(FilePost& fp) {
     std::cout<<" Validating folder entires ... " << std::endl;
     std::deque<FolderPost> folder_list;
@@ -429,10 +349,6 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
     FolderPost fp;
     PostHandler<FolderPost> ph(access_token_);
     int status = ph.Get(posturl, NULL, fp);
-
-    std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << ph.response().code << std::endl;
-    std::cout<<" BODY : " << ph.response().body << std::endl;
 
     if(status == ret::A_OK) {
         if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) 

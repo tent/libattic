@@ -73,7 +73,6 @@ void FilePost::SerializeChunkData(Json::Value& root) {
 }
 
 void FilePost::Deserialize(Json::Value& root) {
-    std::cout<<" deserializing file post " << std::endl;
     Post::Deserialize(root);
 
     Json::Value content;

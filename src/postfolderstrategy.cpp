@@ -20,20 +20,16 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
-    std::cout<<" POST FOLDER STRATEGY " << std::endl;
-    std::cout<<" filepath : " << filepath << std::endl;
     // absolute filepath
     if(!filepath.empty()) {
         //Extract Parent Directory
         std::string folderpath;
         status = fs::GetParentPath(filepath, folderpath);
-        std::cout<<" folder path : " << folderpath << std::endl;
         if(!folderpath.empty()) {
             std::deque<Folder> folder_list;
             FolderHandler fh(file_manager_);
             
             if(fh.RetrieveFolders(folderpath, folder_list)){
-                std::cout<<" total number of folders : " << folder_list.size() << std::endl;
                 // Folder list comes out child -> parent in that order
 
                 // top level folder's parent is working directory
@@ -42,17 +38,11 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                 std::string hold_id = cnst::g_szWorkingPlaceHolder; 
                 while(itr!= folder_list.begin()) {
                     --itr;
-                    std::cout<<" HOLD ID : " << hold_id << std::endl;
-                    std::cout<<" processing folder : " << (*itr).folderpath() << std::endl;
-
                     // Set Parent post id;
                     if((*itr).parent_post_id().empty())    
                         (*itr).set_parent_post_id(hold_id);
-                    else
-                        std::cout<< " PARENT POST NOT EMPTY : " << (*itr).parent_post_id() << std::endl;
                     // Create new folder post
                     if((*itr).folder_post_id().empty()) {
-                        std::cout<<"creating post for : " << (*itr).folderpath() << std::endl;
                         status = CreateFolderPost(*itr, hold_id); 
                         if(status == ret::A_OK) {
                             fh.InsertFolder(*itr);

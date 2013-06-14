@@ -1,5 +1,6 @@
 #include "connectionhandler.h"
 
+#include "logutils.h"
 
 namespace attic { 
 
@@ -77,8 +78,6 @@ int ConnectionHandler::HttpPut(const std::string& url,
                                const AccessToken* at, 
                                Response& out) {
     int status = ret::A_OK;
-
-    std::cout<<" type : " << post_type << std::endl;
     std::string local_url = url;
     if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
 
@@ -176,12 +175,13 @@ int ConnectionHandler::HttpRequest(const std::string& url,
             manager_instance_->ReclaimConnection(sock);
         }
         else {
-            std::cout<<" INVALID SOCKET " << std::endl;
+            std::ostringstream err;
+            err << " Attempted to write to invalid socket " << std::endl;
+            log::LogString("connection_194185", err.str());
         }
-
     }
     catch (std::exception& e) {
-        std::cout << "Exception: " << e.what() << "\n";
+        log::LogException("connection_18415", e);
     }
 
     return status;

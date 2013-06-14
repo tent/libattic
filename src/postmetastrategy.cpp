@@ -15,17 +15,12 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
-    std::cout<<" posting meta data strategy ... " << filepath << std::endl;
-
     if(ValidMasterKey()) {
-        std::cout<<" valid master key " << std::endl;
         FileHandler fh(file_manager_);
         if(!fh.DoesFileExist(filepath)) {
-            std::cout<<" does file exist ... yes " << std::endl;
             // File doesn't exist yet, create meta post
             FileInfo fi;
             status = CreateFileEntry(filepath, fi);
-            std::cout<<" create file entry : " << status << std::endl;
             if (status == ret::A_OK)
                 status = CreateFileMetaPost(filepath, fi);
         }
@@ -65,22 +60,18 @@ int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& 
         fi.set_post_id(post.id());
         FileHandler fh(file_manager_);
         fh.UpdateFilePostId(fi.filepath(), post.id());
-        
-        std::cout<<" File meta post : " << ph.response().body << std::endl;
     }
     return status;
 }
 
 bool PostMetaStrategy::RetrieveFolderPostId(const std::string& filepath, std::string& id_out) {
     // Get folderpath
-    std::cout<<" incoming filepath : " << filepath << std::endl;
     size_t pos = filepath.rfind("/");
     if(pos != std::string::npos) {
         std::string folderpath = filepath.substr(0, pos);
         utils::CheckUrlAndRemoveTrailingSlash(folderpath);
         FolderHandler fh(file_manager_);
         Folder folder;
-        std::cout<<" getting folder : " << folderpath << std::endl;
         if(fh.GetFolder(folderpath, folder)){
             if(!folder.folder_post_id().empty()) {
                 id_out = folder.folder_post_id();

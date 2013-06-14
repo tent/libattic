@@ -1,7 +1,5 @@
 #include "post.h"
 
-#include <stdio.h>
-
 namespace attic {
 
 void Profile::Serialize(Json::Value& root) {
@@ -176,7 +174,6 @@ bool Post::get_content(const std::string& key, Json::Value& out) const {
 }
 
 void Post::Serialize(Json::Value& root) {
-    std::cout<<" SERIALIZE POST " << std::endl;
     // General Post
     if(!id_.empty())
         root["id"] = id_;

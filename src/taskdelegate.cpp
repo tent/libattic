@@ -1,6 +1,7 @@
 #include "taskdelegate.h"
 
 #include "callbackhandler.h"
+#include "taskcontext.h"
 
 namespace attic {
 

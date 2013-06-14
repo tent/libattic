@@ -50,7 +50,6 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
         // Verify key credentials
         if(!fi.file_credentials().key_empty()) {
             FileHandler fh(file_manager_);
-            std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
             if(status == ret::A_OK && !file_post_id.empty()) {
                 // Retrieve Chunk posts
                 ChunkPostList chunk_posts;
@@ -60,7 +59,6 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 ExtractChunkInfo(chunk_posts, chunk_map);
                 // begin chunking
                 status = ChunkFile(filepath, fi.file_credentials(), file_post_id, chunk_posts, chunk_map);
-                std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
                 if(status == ret::A_OK) { 
                     // Update file info
                     fi.set_chunks(chunk_map);
@@ -83,7 +81,6 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 }
             }
             else if(status == ret::A_OK && file_post_id.empty()) {
-                std::cout<<" META POST ID EMPTY " << std::endl;
                 status = ret::A_FAIL_INVALID_POST_ID;
             }
         }
@@ -132,7 +129,7 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
             if(out.find(p.group()) == out.end())
                 out[p.group()] = p;
             else 
-                std::cout<<" DUPLICATE GROUP CHUNL POST, RESOLVE " << std::endl;
+                std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
         }
     }
     else { 
@@ -219,7 +216,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 }
                 if(response.code == 200) { 
                     // Verifiy chunks made it to the server
-                    std::cout<<" cr response : " << response.body << std::endl;
                     Envelope env;
                     jsn::DeserializeObject(&env, response.body);
                     ChunkPost cp;
@@ -242,7 +238,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
 }
 
 bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) {
-    std::cout<<" verification map size : " << verification_map_.size() << std::endl;
     Post::AttachmentMap::iterator itr_cp = cp.attachments()->begin();
     for(;itr_cp != cp.attachments()->end(); itr_cp++) {
         std::cout<< itr_cp->second.digest << std::endl;
@@ -264,9 +259,6 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
             log::LogString("MAS021n124", error);
             return false;
         }
-        else {
-            std::cout<<" ATTACHMENT DIGEST FOUND " << std::endl;
-        }
     }
     return true;
 }
@@ -276,16 +268,11 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
     FileHandler fh(file_manager_);
     if(fh.RetrieveFileInfo(filepath, out)) {
         // Decrypt file key
-        std::cout<<" Decrypting file key ... " << std::endl;
         std::string mk;
         if(GetMasterKey(mk)) {
             std::string file_key;
-            std::cout<<" master key : " << mk << std::endl;
-            std::cout<<" file iv : "<< out.file_credentials_iv() << std::endl;
-            std::cout<<" encrypted key : " << out.encrypted_key() << std::endl;
             ret = fh.DecryptFileKey(out.encrypted_key(), out.file_credentials_iv(), mk, file_key);
             out.set_file_credentials_key(file_key);
-            std::cout<< " decrypting success? : " << ret << std::endl;
         }
     }
     return ret;

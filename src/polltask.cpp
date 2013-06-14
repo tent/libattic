@@ -139,9 +139,9 @@ void PollTask::RunTask() {
 }
 
 void PollTask::PollFilePosts() {
+    std::cout<<" polling files ... " << std::endl;
     std::deque<FilePost> file_list;
     if(census_handler_->Inquiry("", file_list)) {
-        std::cout<<" Syncing files ... " << std::endl;
         std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
         int status = SyncFiles(file_list);
         if(status != ret::A_OK)
@@ -150,6 +150,7 @@ void PollTask::PollFilePosts() {
 }
 
 void PollTask::PollDeletedFilePosts() {
+    std::cout<<" polling deleted files ... " << std::endl;
     std::deque<FilePost> deleted_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) {
         FileHandler fh(file_manager());
@@ -163,8 +164,6 @@ void PollTask::PollDeletedFilePosts() {
                 fh.DeserializeIntoFileInfo((*fp_itr), master_key, fi);
                 file_list.push_back(fi);
             }
-
-            std::cout<<" Checking for deleted files ... " << std::endl;
             std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
             std::deque<FileInfo>::iterator fi_itr = file_list.begin();
             for(;fi_itr!=file_list.end(); fi_itr++) {
@@ -176,10 +175,10 @@ void PollTask::PollDeletedFilePosts() {
 }
 
 void PollTask::PollDeletedFolderPosts() { 
+    std::cout<<" polling deleted folders ... " << std::endl;
     FolderHandler fh(file_manager());
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, folder_list)){
-        std::cout<<" checking for deleted folders ... " << std::endl;
         std::cout<<" Retreived : " << folder_list.size() << " deleted folders " << std::endl;
         std::deque<FolderPost>::iterator itr = folder_list.begin();
         for(;itr != folder_list.end(); itr++) {
@@ -190,8 +189,7 @@ void PollTask::PollDeletedFolderPosts() {
 }
 
 void PollTask::PollFolderPosts() {
-    if(!file_manager())
-        std::cout<<" INVALID FILE MANAGER ? " << std::endl;
+    std::cout<<" polling folder posts ... " << std::endl;
     FolderHandler fh(file_manager());
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry("", folder_list)){
@@ -208,7 +206,7 @@ int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
     // Process Posts
     std::deque<FilePost>::iterator itr = file_list.begin();
     for(;itr != file_list.end(); itr++) {
-        std::cout<<" poll task raise event : id : " << (*itr).id() << std::endl;
+        std::cout<<" poll task requesting file sync, id : " << (*itr).id() << std::endl;
         event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
                           (*itr).id(),
                           delegate_);

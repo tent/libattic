@@ -26,9 +26,6 @@ class GetFileStrategy : public HttpStrategyInterface {
 
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
 
-    int RetrieveChunkPosts(const std::string& entity,
-                           const std::string& post_id,
-                           ChunkPostList& out);
     int ExtractCredentials(FilePost& in, Credentials& out);
     int ConstructFilepath(const FileInfo& fi, std::string& out);
     void ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
@@ -36,9 +33,6 @@ class GetFileStrategy : public HttpStrategyInterface {
     int ConstructFile(FileInfo& fi,
                   const Credentials& file_cred,
                   const std::string& destination_path);
-
-    void GetMasterKey(std::string& out);
-    bool ValidMasterKey();
 
     void ValidateFolderEntries(FilePost& fp);
     void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);

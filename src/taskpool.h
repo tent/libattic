@@ -26,6 +26,8 @@ public:
     bool RequestNextAvailableTaskContext(TaskContext& out);
 
     unsigned int ActiveTaskCount();
+
+    std::string stats();
         
     TaskContext::ContextQueue* operator[](const Task::TaskType type) {
         return &context_map_[type];
