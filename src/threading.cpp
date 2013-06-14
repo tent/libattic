@@ -150,7 +150,7 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     pushw->SetTaskPreference(Task::PUSH);
     thread_pool_->SpinOffWorker(pushw);
 
-    for(int i=0;i<7;i++) {
+    for(int i=0;i<4;i++) {
         ThreadWorker* uw = new ThreadWorker(file_manager_, 
                                             credentials_manager_, 
                                             access_token_, 

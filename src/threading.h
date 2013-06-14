@@ -28,7 +28,6 @@ public:
 
     unsigned WorkerCount() { return workers_.size(); }
 private:                                                                                         
-    std::vector<boost::thread*> threads_;
     std::vector<ThreadWorker*> workers_;
 
     unsigned int thread_count_;                                                                  
