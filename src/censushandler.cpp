@@ -24,7 +24,7 @@ bool CensusHandler::Inquiry(const std::string& fragment,
         if(post_list.size()) {
             SetReceivedAt(cnst::g_attic_file_type, 
                           fragment, 
-                          post_list.back().version().received_at());
+                          post_list.front().version().received_at());
         }
         return true;
     }
@@ -41,7 +41,7 @@ bool CensusHandler::Inquiry(const std::string& fragment,
         if(out.size()) {
             SetReceivedAt(cnst::g_attic_folder_type, 
                           fragment, 
-                          post_list.back().version().received_at());
+                          post_list.front().version().received_at());
         }
         return true;
     }
@@ -60,8 +60,12 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                                  const std::string& fragment, 
                                  std::deque<Post>& out) {
     int status = ret::A_OK;
+    std::ostringstream timeline_debug;
+    timeline_debug << " Timeline Debug " << std::endl;
 
     std::string pt = post_type + "#" + fragment;
+
+    timeline_debug << "\t post type : " << pt << std::endl;
 
     if(fragment_map_.find(pt) == fragment_map_.end())
         fragment_map_[pt] = "0"; 
@@ -78,11 +82,13 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
             params.AddValue("sort_by", "version.received_at");
         }
         else {
-            std::cout<<" NEXT PARAM : " << next_param << std::endl;
+            //std::cout<<" NEXT PARAM : " << next_param << std::endl;
             params.DeserializeEncodedString(next_param);
             // deserialize next params into UrlParams
         }
-        std::cout<< "params : " << params.asString() << std::endl;
+
+        timeline_debug << "\t params : " << params.asString() << std::endl;
+
         Response resp;
         //ConnectionHandler ch;
         netlib::HttpGet(posts_feed_,
@@ -90,7 +96,8 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                         &access_token_,
                         resp);
         if(resp.code == 200) {
-            std::cout<< "query timeline result : " << resp.body << std::endl;
+            timeline_debug << "query timeline result : \n" << resp.body << std::endl;
+
             Envelope pp;
             jsn::DeserializeObject(&pp, resp.body);
             // Go through posts
@@ -106,9 +113,9 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                     break;
                 }
                 else {
-                    std::cout<<" NEXT PARAM  : " << pp.pages().next() << std::endl;
-                    std::cout<<" size : " << pp.pages().next().size() << std::endl;
-                    std::cout<<" assigning ... " << std::endl;
+                    //std::cout<<" NEXT PARAM  : " << pp.pages().next() << std::endl;
+                    //std::cout<<" size : " << pp.pages().next().size() << std::endl;
+                    //std::cout<<" assigning ... " << std::endl;
                     next_param.clear();
                     next_param = pp.pages().next();
                 }
@@ -117,7 +124,7 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                 log::LogException("mak3412", e);
                 break;
             }
-            std::cout<<" looping ... " << std::endl;
+            //std::cout<<" looping ... " << std::endl;
         }
         else {
             status = ret::A_FAIL_NON_200;
@@ -125,12 +132,13 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
             break;
         }
     }
+
+    std::cout<< timeline_debug.str() << std::endl;
     return status;
 }
 
 void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
                                      std::deque<FilePost>& out) {
-    std::cout<<" deserialized " << std::endl;
     std::deque<Post>::const_iterator itr = posts.begin();
     for(;itr!= posts.end(); itr++) {
         FilePost fp;
@@ -141,7 +149,6 @@ void CensusHandler::DeserializePages(const std::deque<Post>& posts,
 
 void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
                                      std::deque<FolderPost>& out) {
-    std::cout<<" deserialized " << std::endl;
     std::deque<Post>::const_iterator itr = posts.begin();
     for(;itr!= posts.end(); itr++) {
         FolderPost fp;
