@@ -21,21 +21,22 @@ bool FolderTable::InsertFolderInfo(const std::string& folderpath,
                                    const std::string& parentpostid,
                                    const bool deleted) {
     bool ret = false;
-    if(!IsFolderInManifest(folderpath)) {
-        std::string exc;
+    std::string exc;
+    if(!IsFolderInManifest(folderpath))
         exc += "INSERT OR REPLACE INTO ";
-        exc += table_name();
-        exc += " (folderpath, post_id, parent_post_id, deleted) VALUES (?,?,?,?);";  
-
-        std::string error;
-        ret = PrepareStatement(exc, error);     if(!ret) {log::ls("m_240s",error);return ret;}
-        ret = BindText(1, folderpath, error);   if(!ret) {log::ls("m_241s",error);return ret;}
-        ret = BindText(2, folderpostid, error); if(!ret) {log::ls("m_242s",error);return ret;}
-        ret = BindText(3, parentpostid, error); if(!ret) {log::ls("m_243s",error);return ret;}
-        ret = BindInt(4, deleted, error);       if(!ret) {log::ls("m_244s",error);return ret;}
-        ret = StepStatement(error);             if(!ret) {log::ls("m_253s",error);return ret;}
-        ret = FinalizeStatement(error);         if(!ret) {log::ls("m_254s",error);return ret;}
-    }
+    else
+        exc += "REPLACE INTO ";
+    exc += table_name();
+    exc += " (folderpath, post_id, parent_post_id, deleted) VALUES (?,?,?,?);";  
+    
+    std::string error;
+    ret = PrepareStatement(exc, error);     if(!ret) {log::ls("m_240s",error);return ret;}
+    ret = BindText(1, folderpath, error);   if(!ret) {log::ls("m_241s",error);return ret;}
+    ret = BindText(2, folderpostid, error); if(!ret) {log::ls("m_242s",error);return ret;}
+    ret = BindText(3, parentpostid, error); if(!ret) {log::ls("m_243s",error);return ret;}
+    ret = BindInt(4, deleted, error);       if(!ret) {log::ls("m_244s",error);return ret;}
+    ret = StepStatement(error);             if(!ret) {log::ls("m_253s",error);return ret;}
+    ret = FinalizeStatement(error);         if(!ret) {log::ls("m_254s",error);return ret;}
                
     return ret;
 }

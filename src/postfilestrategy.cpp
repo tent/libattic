@@ -281,9 +281,12 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
 int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
     int status = ret::A_OK;
     if(!fi.post_id().empty()) {
-        FilePost fp(fi);
+        FilePost fp;
         status = RetrieveFilePost(fi.post_id(), fp);
         if(status == ret::A_OK) {
+            FileHandler fh(file_manager_);
+            std::string mk = GetMasterKey();
+            fh.PrepareFilePost(fi, mk, fp);
             std::string posturl;
             utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
             PostHandler<FilePost> ph(access_token_);

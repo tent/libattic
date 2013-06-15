@@ -61,7 +61,10 @@ bool FileTable::InsertFileInfo(const FileInfo& fi) {
     crypto::Base64EncodeString(iv, b64_iv);
 
     std::string query;
-    query += "INSERT OR REPLACE INTO ";
+    if(!IsFileInManifest(fi.filepath()))
+        query += "INSERT OR REPLACE INTO ";
+    else
+        query += "REPLACE INTO ";
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " postversion, encryptedkey, iv,";

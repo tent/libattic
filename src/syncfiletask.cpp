@@ -107,6 +107,7 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
                 bPull = false;
             }
             else if(!fs::CheckFilepathExists(canonical_path)) {
+                fm->InsertToManifest(&fi); // Update local cache
                 bPull = true;
             }
             else if(fs::CheckFilepathExists(canonical_path)) {
@@ -115,11 +116,14 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
                 std::cout<<"\t local hash : " << pLocal_fi->plaintext_hash() << std::endl;
                 std::cout<<"\t incoming hash : " << fi.plaintext_hash() << std::endl;
                 if(pLocal_fi->plaintext_hash() != fi.plaintext_hash()) {
+                    fm->InsertToManifest(&fi); // Update local cache
                     bPull = true;
                 }
             }
-            if(pLocal_fi->post_version() != p.version().id())
+            if(pLocal_fi->post_version() != p.version().id()) { 
+                fm->InsertToManifest(&fi); // Update local cache
                 bPull = true;
+            }
         }
         else {
             std::cout<<" NOT IN MANIFEST PULL " << std::endl;
