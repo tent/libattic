@@ -29,6 +29,7 @@ int AtticService::start() {
     status = ValidateDirectories();
     if(status == ret::A_OK){
         // Initialize File Manager
+        status = InitializeConnectionManager();     if(status != ret::A_OK) return status;
         status = InitializeFileManager();           if(status != ret::A_OK) return status;
         status = InitializeCredentialsManager();    if(status != ret::A_OK) return status;
         status = InitializeClient();                if(status != ret::A_OK) return status;
@@ -36,6 +37,7 @@ int AtticService::start() {
         status = InitializeServiceManager();        if(status != ret::A_OK) return status;
         status = InitializeTaskArbiter();           if(status != ret::A_OK) return status;
         status = InitializeThreadManager();         if(status != ret::A_OK) return status;
+
     }
     running_ = true;
     return status;
@@ -43,15 +45,18 @@ int AtticService::start() {
 
 int AtticService::stop() {
     int status = ret::A_OK;
-    status = ShutdownThreadManager();
-    status = ShutdownTaskArbiter();
-    status = ShutdownTaskManager();
-    status = ShutdownServiceManager();
-    status = ShutdownTaskManager();
-    status = ShutdownClient();
-    status = ShutdownCredentialsManager();
-    status = ShutdownFileManager();
-    ConfigManager::GetInstance()->Shutdown();
+    std::ostringstream err;
+    err << " Attic Service stop [fail] : ";
+    status = ShutdownThreadManager();       if(status!=ret::A_OK) { err <<"thm : " << status; }
+    status = ShutdownTaskArbiter();         if(status!=ret::A_OK) { err <<"ta : " << status; }
+    status = ShutdownTaskManager();         if(status!=ret::A_OK) { err <<"tm : " << status; }
+    status = ShutdownServiceManager();      if(status!=ret::A_OK) { err <<"sm : " << status; }
+    status = ShutdownClient();              if(status!=ret::A_OK) { err <<"cl : " << status; }
+    status = ShutdownCredentialsManager();  if(status!=ret::A_OK) { err <<"cm : " << status; }
+    status = ShutdownFileManager();         if(status!=ret::A_OK) { err <<"fm : " << status; }
+    status = ShutdownConnectionManager();   if(status!=ret::A_OK) { err <<"cm : " << status; }
+    ConfigManager::GetInstance()->Shutdown();if(status!=ret::A_OK) { err <<"cnm : " << status; }
+    std::cout<< err.str() << std::endl;
     running_ = false;
     return status;
 }
@@ -304,6 +309,23 @@ int AtticService::InitializeThreadManager() {
                                             client_->entity());
         // TODO :: setup a configurable way to set the thread count
         status = thread_manager_->Initialize(20); 
+    }
+    return status;
+}
+
+int AtticService::InitializeConnectionManager() {
+    int status = ret::A_OK;
+    if(!connection_manager_) {
+        connection_manager_ = ConnectionManager::instance();
+        status = connection_manager_->Initialize(entity_url_);
+    }
+    return status;
+}
+
+int AtticService::ShutdownConnectionManager() {
+    int status = ret::A_OK;
+    if(connection_manager_) {
+        status = connection_manager_->Shutdown();
     }
     return status;
 }

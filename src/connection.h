@@ -7,17 +7,26 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp> 
 #include <boost/foreach.hpp>
+using boost::asio::ip::tcp;
 
 #include "response.h"
 
 namespace attic { 
 
 class Connection {
+
     int InitializeSSLSocket(const std::string& host);
     void SSLLoadCerts();
 
     bool SetTimeout();
 
+    void InterpretResponse(tcp::socket* socket, 
+                           Response& resp,
+                           bool connection_close = false);
+
+    void InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, 
+                           Response& resp,
+                           bool connection_close = false);
 public:
     Connection(boost::asio::io_service* io_service);
     ~Connection();
@@ -28,7 +37,7 @@ public:
     bool TestConnection();
 
     unsigned int Write(boost::asio::streambuf& request);
-    void InterpretResponse(Response& out);
+    bool InterpretResponse(Response& out);
 
 private:
     //boost::asio::io_service* io_service_;

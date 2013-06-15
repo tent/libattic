@@ -5,7 +5,7 @@
 namespace attic { 
 
 ConnectionHandler::ConnectionHandler() {
-    manager_instance_ = ConnectionManager::GetInstance();
+    manager_instance_ = ConnectionManager::instance();
 }
 
 ConnectionHandler::~ConnectionHandler() {
@@ -159,6 +159,43 @@ int ConnectionHandler::HttpGet(const std::string& url,
     return status;
 }
 
+int ConnectionHandler::HttpHead(const std::string& url, 
+                                const UrlParams* pParams,
+                                const AccessToken* at, 
+                                Response& out) {
+    int status = ret::A_OK;
+    std::string local_url = url;
+    if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
+
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(local_url, protocol, host, path);
+
+    std::string authheader;
+    if(at) {
+        netlib::BuildAuthHeader(local_url,
+                                "GET",
+                                at->access_token(),
+                                at->hawk_key(),
+                                at->app_id(),
+                                authheader);
+    }
+
+    boost::asio::streambuf request;
+    std::ostream request_stream(&request);
+    request_stream << "HEAD " << path << " HTTP/1.1\r\n";
+    request_stream << "Host: " << host << "\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << "\r\n";
+    if(!authheader.empty())
+        request_stream << "Authorization: " << authheader <<"\r\n";
+    //request_stream << "Connection: close\r\n\r\n";
+    request_stream << "\r\n";
+
+    status = HttpRequest(local_url, request, out);
+    return status;
+}
+
+
 int ConnectionHandler::HttpRequest(const std::string& url, 
                                    boost::asio::streambuf& request,
                                    Response& out) {
@@ -168,10 +205,14 @@ int ConnectionHandler::HttpRequest(const std::string& url,
         boost::asio::io_service io_service; 
         //Connection sock(&io_service);
         //sock.Initialize(url);
+        std::cout<<" url : " << url << std::endl;
         Connection* sock = manager_instance_->RequestConnection(url);
         if(sock) {
+            std::cout<<" writing request " <<std::endl;
             sock->Write(request);
+            std::cout<<" interpreting response " << std::endl;
             sock->InterpretResponse(out);
+            std::cout<<" recliaming socket " << std::endl;
             manager_instance_->ReclaimConnection(sock);
         }
         else {

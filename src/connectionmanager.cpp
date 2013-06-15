@@ -31,7 +31,7 @@ void ConnectionManager::Release() {
     }
 }
 
-ConnectionManager* ConnectionManager::GetInstance() {
+ConnectionManager* ConnectionManager::instance() {
     if(!instance_)
         instance_ = new ConnectionManager();
     ref_++;
@@ -52,7 +52,7 @@ int ConnectionManager::Initialize(const std::string& host_url) {
             status = ret::A_FAIL_SUBSYSTEM_NOT_INITIALIZED;
         }
 
-        if(status = ret::A_OK) {
+        if(status == ret::A_OK) {
             // save host
             host_url_ = host_url;
             initialized_ = true;
@@ -63,6 +63,7 @@ int ConnectionManager::Initialize(const std::string& host_url) {
         status = ret::A_FAIL_EMPTY_STRING;
     }
 
+    std::cout<<" init status : " << status << std::endl;
     return status;
 }
 

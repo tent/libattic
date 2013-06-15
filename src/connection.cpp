@@ -1,5 +1,6 @@
 #include "connection.h"
 
+#include <stdlib.h>
 #include "errorcodes.h"
 #include "netlib.h"
 
@@ -117,13 +118,6 @@ unsigned int Connection::Write(boost::asio::streambuf& request) {
     return bytes_written;
 }
 
-void Connection::InterpretResponse(Response& out) {
-    if(ssl_)
-        netlib::InterpretResponse(ssl_socket_, out);
-    else
-        netlib::InterpretResponse(socket_, out);
-}
-
 bool Connection::SetTimeout() {
     struct timeval timeout;      
     timeout.tv_sec = 0;
@@ -141,6 +135,8 @@ bool Connection::SetTimeout() {
 }
 
 bool Connection::TestConnection() {
+    std::cout<<" Test connection not actually implemented " << std::endl;
+    return true;
     std::cout<<" TESTING CONNECTION " << std::endl;
     boost::system::error_code error;
     boost::asio::streambuf buf;
@@ -255,5 +251,154 @@ void Connection::SSLLoadCerts() { // Move to connection pool, load once give to 
     //voila
 }
 
-} // namespace
+bool Connection::InterpretResponse(Response& out) {
+    bool ret = false;
+    try {
+        if(ssl_)
+            InterpretResponse(ssl_socket_, out);
+        else
+            InterpretResponse(socket_, out);
+        ret = true;
+    }
+    catch(std::exception& e) {
+        std::cout<<" Interpret response exception : " << e.what() << std::endl;
+        ret = false;
+    }
+    return ret;
+}
 
+void Connection::InterpretResponse(tcp::socket* socket, 
+                                   Response& resp,
+                                   bool connection_close) {
+    boost::asio::streambuf response;
+    boost::asio::read_until(*socket, response, "\r\n");
+    resp.code = netlib::GetStatusCode(response);
+    std::cout<<" resp code " << resp.code << std::endl;
+    // Read the response headers, which are terminated by a blank line.
+    std::cout<<" reading response " << std::endl;
+    boost::asio::read_until(*socket, response, "\r\n\r\n");
+
+    netlib::ProcessResponseHeaders(response, resp);
+    bool chunked = false;
+    if(resp.header["transfer-encoding"].find("chunked") != std::string::npos)
+        chunked = true;
+
+    int content_len = 0;
+    if(resp.header.HasValue("Content-Length")) {
+        content_len = atoi(resp.header["Content-Length"].c_str());
+    }
+
+    // Read Body
+    boost::system::error_code error;
+    std::string output_buffer;
+    // Write whatever content we already have to output.
+    if (response.size() > 0) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer = strbuf.str();
+    }
+
+   // Read until EOF, writing data to output as we go.
+   //boost::system::error_code error;
+   int read_count = 0;
+   while (boost::asio::read(*socket, 
+                            response,
+                            boost::asio::transfer_at_least(1), 
+                            error)) {
+       std::ostringstream strbuf;
+       strbuf << &response;
+       if(chunked) {
+           std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
+           std::string dechunked;
+           std::string chunked = strbuf.str();
+           netlib::DeChunkString(chunked, dechunked);
+           output_buffer += dechunked;
+
+       }
+       else {
+           output_buffer += strbuf.str();
+       }
+       if(output_buffer.size() >= content_len)
+           break;
+    }
+
+   /*
+    std::string dechunked;
+    if(chunked){
+        netlib::DeChunkString(output_buffer, dechunked);
+        output_buffer = dechunked;
+    }
+    */
+
+    resp.body = output_buffer;
+    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+        throw boost::system::system_error(error);
+
+}
+
+void Connection::InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, 
+                                   Response& resp,
+                                   bool connection_close) {
+    boost::asio::streambuf response;
+    boost::asio::read_until(*socket, response, "\r\n");
+    resp.code = netlib::GetStatusCode(response);
+    // Read the response headers, which are terminated by a blank line.
+    boost::asio::read_until(*socket, response, "\r\n\r\n");
+
+    netlib::ProcessResponseHeaders(response, resp);
+    bool chunked = false;
+    if(resp.header["transfer-encoding"].find("chunked") != std::string::npos)
+        chunked = true;
+
+    int content_len = 0; // Body content length
+    if(resp.header.HasValue("Content-Length")) {
+        content_len = atoi(resp.header["Content-Length"].c_str());
+    }
+
+    // Read Body
+    boost::system::error_code error;
+    std::string output_buffer;
+    // Write whatever content we already have to output.
+    if (response.size() > 0) {
+        std::ostringstream strbuf;
+        strbuf << &response;
+        output_buffer = strbuf.str();
+    }
+   // Read until EOF, writing data to output as we go.
+   int read_count = 0;
+   while (boost::asio::read(*socket, 
+                            response,
+                            boost::asio::transfer_at_least(1), 
+                            error)) {
+       std::ostringstream strbuf;
+       strbuf << &response;
+       if(chunked) {
+           std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
+           std::string dechunked;
+           std::string chunked = strbuf.str();
+           netlib::DeChunkString(chunked, dechunked);
+           output_buffer += dechunked;
+
+       }
+       else {
+           output_buffer += strbuf.str();
+       }
+       if(output_buffer.size() >= content_len)
+           break;
+    }
+
+   /*
+    std::string dechunked;
+    if(chunked){
+        netlib::DeChunkString(output_buffer, dechunked);
+        output_buffer = dechunked;
+    }
+    */
+
+    resp.body = output_buffer;
+    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+        throw boost::system::system_error(error);
+}
+
+
+} // namespace

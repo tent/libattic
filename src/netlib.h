@@ -447,9 +447,12 @@ static void ExtractHostAndPath( const std::string& url,
 }
 
 static void InterpretResponse(tcp::socket* socket, Response& resp) {
+    std::cout<<" interpret response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = GetStatusCode(response);
+
+    std::cout<<" status code : " << resp.code << std::endl;
 
     // Read the response headers, which are terminated by a blank line.
     boost::asio::read_until(*socket, response, "\r\n\r\n");

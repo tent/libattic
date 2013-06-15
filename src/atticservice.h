@@ -22,6 +22,7 @@ class AtticService {
     void LoadConfigValues();
     int ValidateDirectories();
     // Order does matter for init and shutdown sequence
+    int InitializeConnectionManager();
     int InitializeFileManager();
     int InitializeCredentialsManager();
     int InitializeClient();
@@ -30,6 +31,7 @@ class AtticService {
     int InitializeTaskArbiter();
     int InitializeThreadManager();
 
+
     int ShutdownThreadManager();
     int ShutdownTaskArbiter();
     int ShutdownServiceManager();
@@ -37,6 +39,7 @@ class AtticService {
     int ShutdownClient();
     int ShutdownCredentialsManager();
     int ShutdownFileManager();
+    int ShutdownConnectionManager();
 public:
     AtticService();
     ~AtticService();
@@ -77,6 +80,7 @@ private:
     FileManager*        file_manager_;
     CredentialsManager* credentials_manager_;
     Client*             client_;
+    ConnectionManager*  connection_manager_;
 
     // File paths should all be absolute paths
     std::string working_dir_;
