@@ -202,23 +202,29 @@ int ConnectionHandler::HttpRequest(const std::string& url,
     int status = ret::A_OK;
     using namespace boost::asio::ssl;
     try {
-        boost::asio::io_service io_service; 
-        //Connection sock(&io_service);
-        //sock.Initialize(url);
-        std::cout<<" url : " << url << std::endl;
-        Connection* sock = manager_instance_->RequestConnection(url);
-        if(sock) {
-            std::cout<<" writing request " <<std::endl;
-            sock->Write(request);
-            std::cout<<" interpreting response " << std::endl;
-            sock->InterpretResponse(out);
-            std::cout<<" recliaming socket " << std::endl;
-            manager_instance_->ReclaimConnection(sock);
+        if(manager_instance_) {
+            std::cout<<" url : " << url << std::endl;
+            Connection* sock = manager_instance_->RequestConnection(url);
+            if(sock) {
+                std::cout<<" writing request " <<std::endl;
+                sock->Write(request);
+                std::cout<<" interpreting response " << std::endl;
+                sock->InterpretResponse(out);
+                std::cout<<" recliaming socket " << std::endl;
+                manager_instance_->ReclaimConnection(sock);
+            }
+            else {
+                std::ostringstream err;
+                err << " Attempted to write to invalid socket " << std::endl;
+                log::LogString("connection_194185", err.str());
+                status = ret::A_FAIL_NULL_SOCKET;
+            }
         }
         else {
             std::ostringstream err;
-            err << " Attempted to write to invalid socket " << std::endl;
+            err << " Invalid Connection Manager instance on Http request " << std::endl;
             log::LogString("connection_194185", err.str());
+            status = ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
         }
     }
     catch (std::exception& e) {

@@ -122,7 +122,7 @@ static int SendAppRegRequest(const std::string& app_path,
     app_post.set_url(app.app_url());
     app_post.set_redirect_uri(app.redirect_uri());
     
-    PostHandler<AppPost> ph;
+    PostHandler<AppPost> ph(true); // tear down connection
     status = ph.Post(app_path, NULL, app_post);
     std::cout<<" HEADERS : " << ph.response().header.asString() << std::endl;
     std::cout<<" CODE : " << ph.response().code << std::endl;
@@ -148,7 +148,7 @@ static int RetrieveAppCredentials(const std::string cred_path, TentApp& app) {
     std::cout<<" CRED PATH : " << cred_path << std::endl;
 
     AppPost p;
-    PostHandler<AppPost> ph;
+    PostHandler<AppPost> ph(true); // tear down connection
     status = ph.Get(cred_path, NULL, p);
     std::cout<<" CODE : " << ph.response().code << std::endl;
     std::cout<<" BODY : " << ph.response().body << std::endl;
@@ -207,7 +207,7 @@ static int RegisterApp(const std::string& app_path,
     app_post.set_redirect_uri(app.redirect_uri());
     
     std::cout<<" APP PATH : " << app_path << std::endl;
-    PostHandler<AppPost> ph;
+    PostHandler<AppPost> ph(true); // tear down connection
     status = ph.Post(app_path, NULL, app_post);
 
     Response response = ph.response();
@@ -221,11 +221,14 @@ static int RegisterApp(const std::string& app_path,
             if(response.header["Link"].find("https://tent.io/rels/credentials") != -1)
                 client::ExtractMetaLink(response, cred_link);
 
-            PostHandler<TentApp> app_ph;
-            status = app_ph.Get(cred_link, NULL, app);
+            Post app_post;
+            PostHandler<Post> app_ph(true); // tear down connection
+            status = app_ph.Get(cred_link, NULL, app_post);
+            post::DeserializePostIntoObject(app_post, &app);
             
             std::cout<< " CODE : " << app_ph.response().code << std::endl;
             std::cout<< " BODY : " << app_ph.response().body << std::endl;
+
             if(status == ret::A_OK)
                 status = SaveAppToFile(app, configdir);
         }

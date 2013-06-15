@@ -264,6 +264,8 @@ bool Connection::InterpretResponse(Response& out) {
         std::cout<<" Interpret response exception : " << e.what() << std::endl;
         ret = false;
     }
+
+    std::cout<<" interpret response success ? : " << ret << std::endl;
     return ret;
 }
 
@@ -288,6 +290,7 @@ void Connection::InterpretResponse(tcp::socket* socket,
         content_len = atoi(resp.header["Content-Length"].c_str());
     }
 
+    std::cout<<" here " << std::endl;
     // Read Body
     boost::system::error_code error;
     std::string output_buffer;
@@ -298,6 +301,7 @@ void Connection::InterpretResponse(tcp::socket* socket,
         output_buffer = strbuf.str();
     }
 
+    std::cout<<" here " << std::endl;
    // Read until EOF, writing data to output as we go.
    //boost::system::error_code error;
    int read_count = 0;
@@ -322,6 +326,7 @@ void Connection::InterpretResponse(tcp::socket* socket,
            break;
     }
 
+    std::cout<<" here " << std::endl;
    /*
     std::string dechunked;
     if(chunked){

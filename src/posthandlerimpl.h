@@ -14,11 +14,8 @@ namespace attic {
 template <class T>
 class PostHandlerImpl {
 public:
-    PostHandlerImpl() { 
-        std::cout<<" post handler cstr called " << std::endl;
-        at_ = NULL; }
+    PostHandlerImpl() { at_ = NULL; }
     virtual ~PostHandlerImpl() {
-        std::cout<<" PostHAndler destructor called " << std::endl;
         if(at_) { 
             delete at_;
             at_ = NULL;
@@ -67,16 +64,11 @@ T PostHandlerImpl<T>::GetReturnPost() {
 
 template <class T>
 std::string PostHandlerImpl<T>::GetReturnPostAsString() {
-    std::cout<<" starting GEtReturn Post As string " << std::endl;
-    std::cout<<" 1 " << std::endl;
     T post;
     Envelope env;
     jsn::DeserializeObject(&env, response_.body);
-    std::cout<<" 1 " << std::endl;
     std::string raw;
     jsn::SerializeObject(&post, raw);
-    std::cout<<" 1 " << std::endl;
-    std::cout<<" RAW : " << raw << std::endl;
     return raw;
 }
 

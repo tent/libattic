@@ -30,10 +30,11 @@ static int Discover(const std::string& entityurl, const AccessToken* at, Entity&
     status = HeadRequestEntity(entityurl, meta_link);
     std::cout<<" META LINK : " << meta_link << std::endl;
     if(status == ret::A_OK) {
-        PostHandler<EntityPost> ph;
+        PostHandler<EntityPost> ph(true); // tear down connection
         EntityPost ep;
         status = ph.Get(meta_link, NULL, ep);
 
+        std::cout<<" calling response ... ? " << std::endl;
         std::cout<<" CODE : " << ph.response().code << std::endl;
         std::cout<<" BODY : " << ph.response().body << std::endl;
         if(status == ret::A_OK) {
