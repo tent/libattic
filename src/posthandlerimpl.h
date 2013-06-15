@@ -14,8 +14,16 @@ namespace attic {
 template <class T>
 class PostHandlerImpl {
 public:
-    PostHandlerImpl() {}
-    virtual ~PostHandlerImpl() {}
+    PostHandlerImpl() { 
+        std::cout<<" post handler cstr called " << std::endl;
+        at_ = NULL; }
+    virtual ~PostHandlerImpl() {
+        std::cout<<" PostHAndler destructor called " << std::endl;
+        if(at_) { 
+            delete at_;
+            at_ = NULL;
+        }
+    }
 
     virtual int Post(const std::string& post_url,
                      const UrlParams* params,
@@ -31,17 +39,20 @@ public:
 
 
     void Flush() { response_.clear(); }
-    const Response response() const { return response_; }
+    const Response& response() const { return response_; }
 
     T GetReturnPost();
     std::string GetReturnPostAsString();
 
-    void set_at(const AccessToken at) { 
-        at_ = at;
+    void set_at(const AccessToken& at) { 
+        if(!at_) {
+            at_ = new AccessToken();
+        }
+        *at_ = at;
     }
 
 protected:
-    AccessToken at_;
+    AccessToken* at_;
     Response response_;
 };
 
@@ -56,11 +67,16 @@ T PostHandlerImpl<T>::GetReturnPost() {
 
 template <class T>
 std::string PostHandlerImpl<T>::GetReturnPostAsString() {
+    std::cout<<" starting GEtReturn Post As string " << std::endl;
+    std::cout<<" 1 " << std::endl;
     T post;
     Envelope env;
     jsn::DeserializeObject(&env, response_.body);
+    std::cout<<" 1 " << std::endl;
     std::string raw;
     jsn::SerializeObject(&post, raw);
+    std::cout<<" 1 " << std::endl;
+    std::cout<<" RAW : " << raw << std::endl;
     return raw;
 }
 
@@ -102,7 +118,7 @@ int PostHandlerTearDownImpl<T>::Post(const std::string& post_url,
                      post.type(),
                      params,
                      body,
-                     &(PostHandlerImpl<T>::at_),
+                     PostHandlerImpl<T>::at_,
                      PostHandlerImpl<T>::response_);
     if(PostHandlerImpl<T>::response_.code == 200) {
     }
@@ -131,7 +147,7 @@ int PostHandlerTearDownImpl<T>::Put(const std::string& post_url,
                     post.type(),
                     params,
                     body,
-                    &(PostHandlerImpl<T>::at_),
+                    PostHandlerImpl<T>::at_,
                     PostHandlerImpl<T>::response_);
     if(PostHandlerImpl<T>::response_.code == 200) {
     }
@@ -149,7 +165,7 @@ int PostHandlerTearDownImpl<T>::Get(const std::string& post_url,
     int status = ret::A_OK;
     netlib::HttpGet(post_url,
                     params,
-                    &(PostHandlerImpl<T>::at_),
+                    PostHandlerImpl<T>::at_,
                     PostHandlerImpl<T>::response_);
 
     if(PostHandlerImpl<T>::response_.code == 200) {
@@ -203,7 +219,7 @@ int PostHandlerCmImpl<T>::Post(const std::string& post_url,
                 post.type(),
                 params,
                 body,
-                &(PostHandlerImpl<T>::at_),
+                PostHandlerImpl<T>::at_,
                 PostHandlerImpl<T>::response_);
     if(PostHandlerImpl<T>::response_.code == 200) {
     }
@@ -232,7 +248,7 @@ int PostHandlerCmImpl<T>::Put(const std::string& post_url,
                post.type(),
                params,
                body,
-               &(PostHandlerImpl<T>::at_),
+               PostHandlerImpl<T>::at_,
                PostHandlerImpl<T>::response_);
     if(PostHandlerImpl<T>::response_.code == 200) {
     }
@@ -250,7 +266,7 @@ int PostHandlerCmImpl<T>::Get(const std::string& post_url,
     ConnectionHandler ch;
     ch.HttpGet(post_url,
                params,
-               &(PostHandlerImpl<T>::at_),
+               PostHandlerImpl<T>::at_,
                PostHandlerImpl<T>::response_);
 
     if(PostHandlerImpl<T>::response_.code == 200) {
