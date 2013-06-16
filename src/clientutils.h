@@ -91,10 +91,10 @@ static void ConstructMetaPath(const std::string& entityurl,
         // Construct meta path
         out = entityurl;
         utils::CheckUrlAndRemoveTrailingSlash(out);
-        out += endpoint;
+        out += metaendpoint;
     }
     else {
-        out = endpoint;
+        out = metaendpoint;
     }
 }
 

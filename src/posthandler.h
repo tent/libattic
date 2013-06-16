@@ -88,6 +88,12 @@ int PostHandler<T>::Post(const std::string& post_url,
                          T& post) {
     int status = ret::A_FAIL_INVALID_IMPL;
     status = impl_->Post(post_url, params, post);
+    if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
+        std::string s;
+        jsn::SerializeObject(&post, s);
+        log::LogString("LOG HANDLER POST OUTGOING ", s);
+        log::LogString("LOG HANDLER POST RETURN " , impl_->GetReturnPostAsString());
+    }
     return status;
 }
 
@@ -97,6 +103,12 @@ int PostHandler<T>::Put(const std::string& post_url,
                         T& post) {
     int status = ret::A_OK;
     status = impl_->Put(post_url, params, post);
+    if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
+        std::string s;
+        jsn::SerializeObject(&post, s);
+        log::LogString("LOG HANDLER PUT OUTGOING ", s);
+        log::LogString("LOG HANDLER PUT RETURN " , impl_->GetReturnPostAsString());
+    }
     return status;
 }
 
@@ -106,6 +118,12 @@ int PostHandler<T>::Get(const std::string& post_url,
                         T& out) {
     int status = ret::A_OK;
     status = impl_->Get(post_url, params, out); 
+    if(out.type().find(cnst::g_attic_folder_type) != std::string::npos) {
+        std::string s;
+        jsn::SerializeObject(&out, s);
+        log::LogString("LOG HANDLER GET ", s);
+    }
+
     return status;
 }
 
