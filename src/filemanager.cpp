@@ -722,5 +722,20 @@ bool FileManager::IsFileLocked(const std::string& filepath) {
     return file_queue_.IsFileLocked(filepath);
 }
 
+bool FileManager::AddWorkingDirectory(const std::string& directory_path) {
+    bool ret = false;
+    return ret;
+}
+
+bool FileManager::UnlinkWorkingDirectory(const std::string& directory_path) {
+    bool ret = false;
+    return ret;
+}
+
+bool FileManager::RemoveWorkingDirectory(const std::string& directory_path) {
+    bool ret = false;
+    return ret;
+}
+
 
 }//namespace

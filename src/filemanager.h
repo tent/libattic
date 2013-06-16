@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <string>
+#include <map>
 #include <deque>
 
 #include "mutexclass.h"
@@ -95,6 +96,11 @@ public:
     bool UnlockFile(const std::string& filepath);
     bool IsFileLocked(const std::string& filepath);
 
+    // Working Directories
+    bool AddWorkingDirectory(const std::string& directory_path);
+    bool UnlinkWorkingDirectory(const std::string& directory_path);
+    bool RemoveWorkingDirectory(const std::string& directory_path);
+
     // Accessor / Mutator
     const std::string& manifest_directory() const   { return manifest_directory_; }
     const std::string& working_directory() const    { return working_directory_; }
@@ -107,6 +113,9 @@ private:
     CentralFileQueue    file_queue_;
     FileInfoFactory     file_info_factory_;
     Manifest            manifest_;
+
+    MutexClass working_mtx_;
+    std::map<std::string, std::string>  working_directories_; // table of root folders
 
     std::string         manifest_directory_; // Location of manifest
     std::string         working_directory_; // Location where original files live.

@@ -59,6 +59,8 @@ static const char* g_token_type = "https://tent.io/oauth/hawk-token"; // token t
 static const char* g_filetable = "filetable";
 static const char* g_foldertable = "foldertable";
 static const char* g_chunktable = "chunktable";
+static const char* g_configtable = "configtable";
+
 }} //namespace
 #endif
 
