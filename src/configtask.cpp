@@ -34,7 +34,6 @@ void ConfigTask::RunTask() {
     else if(operation == "REMOVE_ROOT_DIRECTORY") {
         RemoveRootDirectory(path);
     }
-
     Callback(status, operation);
     SetFinishedState();
 }

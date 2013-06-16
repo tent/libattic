@@ -254,6 +254,7 @@ void TaskManager::CreatePostTree(const std::string& filepath,
     tc.set_value("operation", "LINEAGE");
     tc.set_value("filepath", filepath);
     tc.set_type(Task::META);
+    tc.set_delegate(del);
     PushContextBack(tc);
 }
 
@@ -264,6 +265,30 @@ TaskContext TaskManager::CreateServiceContext(void) {
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::SERVICE);
     return tc;
+}
+
+void TaskManager::AddRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "ADD_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
+}
+
+void TaskManager::UnlinkRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "UNLINK_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
+}
+
+void TaskManager::RemoveRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "REMOVE_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
 }
 
 void TaskManager::PushContextBack(TaskContext& tc) {

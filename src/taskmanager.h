@@ -62,9 +62,15 @@ public:
     // Service Tasks
     void QueryManifest(TaskDelegate* del);
     void CreatePostTree(const std::string& filepath, TaskDelegate* del);
-
+    TaskContext CreateServiceContext(void);
+    // Config Tasks
+    void AddRootDirectory(const std::string& directory_path, TaskDelegate* del);
+    void UnlinkRootDirectory(const std::string& directory_path, TaskDelegate* del);
+    void RemoveRootDirectory(const std::string& directory_path, TaskDelegate* del);
+    //
     // Info tasks
     int TaskCount(const Task::TaskType);
+
 
     void PushContextBack(TaskContext& tc);
     void RetrieveContextQueue(TaskContext::ContextQueue& out);
@@ -77,7 +83,7 @@ public:
     const std::string working_directory() const { return working_directory_; }
     const std::string config_directory() const { return config_directory_; }
 
-    TaskContext CreateServiceContext(void);
+
 private:
     TaskFactory             task_factory_; // Local to upload manager
 
