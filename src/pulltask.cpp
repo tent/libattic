@@ -41,7 +41,6 @@ void PullTask::RunTask() {
     int status = ret::A_OK;
     if(!file_manager()->IsFileLocked(filepath)) {
         file_manager()->LockFile(filepath);
-        std::cout<<" PULL NOTIFY ON PATH : " << filepath << std::endl;
         event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
         status = PullFile(filepath);
         event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);

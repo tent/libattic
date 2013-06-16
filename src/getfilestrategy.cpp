@@ -239,10 +239,19 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
         status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
             if(!destination_path.empty())
-                fs::MoveFile(temp_path, path);
+                try {
+                    fs::MoveFile(temp_path, path);
+                    log::LogString("MOVING TO PATH", path);
+                }
+                catch(std::exception &e) {
+                    log::LogException("getfile_32987523", e);    
+                }
         }
         else {
-            std::cout<<" failed to move path : "<< path << std::endl;
+            std::ostringstream err;
+            err <<" Failed to move file to path : " << path << std::endl;
+            log::LogString("getfile_98512", err.str());
+            status = ret::A_FAIL_MOVE_PATH;
         }
     }
 
