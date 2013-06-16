@@ -115,6 +115,7 @@ bool FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) 
 }
 
 bool FolderHandler::SetFolderParentPostId(Folder& folder, const std::string& post_id) {
+    folder.set_parent_post_id(post_id);
     return file_manager_->SetFolderParentPostId(folder.folderpath(), post_id);
 }
 
@@ -155,7 +156,6 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                                  std::deque<Folder>& folder_list) {
     std::cout<<" rename folder called " << std::endl;
     // Retrieve all sub folders and files
-    
     Folder folder;
     if(file_manager_->GetFolderEntry(old_folderpath, folder)){
         RetrieveAllFilesAndFoldersInFolder(folder, file_list, folder_list);
@@ -170,6 +170,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
             // Update folderpaths
             std::deque<Folder>::iterator folder_itr = folder_list.begin();
             for(;folder_itr!=folder_list.end(); folder_itr++) {
+                std::cout<< (*folder_itr).folderpath() << std::endl;
                 size_t pos = (*folder_itr).folderpath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
@@ -183,6 +184,28 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                     rh.RenameFolderLocalCache((*folder_itr).folderpath(), path);
                     //(*folder_itr).set_folderpath(aliased_new_path);
                     (*folder_itr).set_folderpath(path);
+                    // Update folder post
+                    size_t p_pos = aliased_new_path.rfind("/");
+                    if(p_pos != std::string::npos) {
+                        std::string parent_path = aliased_new_path.substr(0, p_pos);
+                        // Normalize path
+                        utils::CheckUrlAndRemoveTrailingSlash(parent_path);
+                        Folder parent_folder;
+                        std::cout<<" parent path : " << parent_path << std::endl;
+                        if(GetFolder(parent_path, parent_folder)) {
+                            std::cout<< " current folder : " << (*folder_itr).folderpath() << std::endl;
+                            std::cout<< " setting new parent id " << std::endl;
+                            std::cout<< parent_folder.folder_post_id() << std::endl;
+                            (*folder_itr).set_parent_post_id(parent_folder.folder_post_id());
+                            SetFolderParentPostId((*folder_itr), parent_folder.folder_post_id());
+                        }
+                        else {
+                            std::cout<<" folder post doesn't exist " << std::endl;
+                        }
+                    }
+                    else {
+                        std::cout<<" end of the line ... " << std::endl;
+                    }
                 }
             }
             // Update filepath

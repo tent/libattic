@@ -502,6 +502,7 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
         relative = cnst::g_szWorkingPlaceHolder;
     // Normalize Folderpath
     utils::CheckUrlAndRemoveTrailingSlash(relative);
+    std::cout<<" folder entry relative path : " << relative << std::endl;
 
     Lock();
     bool ret = manifest_.folder_table()->QueryForFolder(relative, folder);

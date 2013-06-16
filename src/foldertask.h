@@ -2,6 +2,8 @@
 #define FOLDERTASK_H_
 #pragma once
 
+#include <deque>
+#include <string>
 #include "tenttask.h"
 #include "filepost.h"
 #include "folderpost.h"
@@ -9,8 +11,11 @@
 namespace attic {
 
 class FolderTask : public TentTask{
+    int CreateFolderHierarchyList(const std::string& folderpath, std::deque<std::string>& out);
+    bool CheckFolderDeleted(const std::string& folderpath);
+
     int CreateFolderPost(Folder& folder, std::string& id_out);
-    int CreateFolder();
+    int CreateFolder(const std::string& path);
 
     int DeleteFolder();
     int MarkFolderPostDeleted(Folder& folder);
