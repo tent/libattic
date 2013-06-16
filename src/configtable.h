@@ -19,11 +19,12 @@ public:
 
     bool CreateTable();
     
-    bool InsertConfigValue(const std::string& key, const std::string& value);
+    bool InsertConfigValue(const std::string& type, const std::string& key, const std::string& value);
     bool RemoveConfigValue(const std::string& key);
     
-    bool RetrieveSingleConfigValue(const std::string& key, std::string& out);
-    bool RetrieveConfigValues(const std::string& key, std::deque<std::string>& out);
+    bool IsConfigValueInManifest(const std::string& key);
+    bool RetrieveConfigValue(const std::string& key, std::string& out);
+    bool RetrieveConfigType(const std::string& type, std::deque<std::string>& out);
 };
 
 }// namespace
