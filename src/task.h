@@ -27,7 +27,9 @@ public:
         DELETE,                                                         
         FOLDER,
         SYNC_FILE_TASK,
+        // Generic
         META,
+        CONFIG,
         // ManifestTask
         QUERYMANIFEST,
         SCANDIRECTORY,
