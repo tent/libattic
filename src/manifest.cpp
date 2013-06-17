@@ -13,6 +13,7 @@ Manifest::Manifest() {
     db_ = NULL;
     file_table_ = NULL;
     folder_table_ = NULL;
+    config_table_ = NULL;
 }
 
 Manifest::~Manifest() {
@@ -23,6 +24,10 @@ Manifest::~Manifest() {
     if(folder_table_) {
         delete folder_table_;
         folder_table_ = NULL;
+    }
+    if(config_table_) {
+        delete config_table_;
+        config_table_ = NULL;
     }
 }
 
@@ -37,14 +42,6 @@ int Manifest::Initialize() {
 }
 
 int Manifest::Shutdown() { 
-    if(file_table_) {
-        delete file_table_;
-        file_table_ = NULL;
-    }
-    if(folder_table_) {
-        delete folder_table_;
-        folder_table_ = NULL;
-    }
     int status = CloseSqliteDb();
     return status;
 }
@@ -88,16 +85,19 @@ int Manifest::CloseSqliteDb() {
 bool Manifest::CreateTables() {
     if(!db_)
         return false;
-
     if(!file_table_) {
         file_table_ = new FileTable(db_);
         if(!file_table_->CreateTable())
             return false;
     }
-
     if(!folder_table_) {
         folder_table_ = new FolderTable(db_);
         if(!folder_table_->CreateTable())
+            return false;
+    }
+    if(!config_table_) {
+        config_table_ = new ConfigTable(db_);
+        if(!config_table_->CreateTable())
             return false;
     }
     return true;

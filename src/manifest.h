@@ -11,6 +11,7 @@
 #include "tablehandler.h"
 #include "filetable.h"
 #include "foldertable.h"
+#include "configtable.h"
 #include "fileinfo.h"
 #include "folder.h"
 
@@ -40,6 +41,7 @@ private:
     sqlite3*            db_;
     FileTable*          file_table_;
     FolderTable*        folder_table_;
+    ConfigTable*        config_table_;
 
     // Manifest specific data
     std::string         filepath_;     // path to manifest file
