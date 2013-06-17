@@ -10,7 +10,6 @@
 #include "mutexclass.h"
 #include "manifest.h"
 #include "fileinfo.h"
-#include "fileinfofactory.h"
 #include "errorcodes.h"
 #include "folder.h"
 #include "filequeue.h"
@@ -18,7 +17,7 @@
 
 namespace attic { 
 
-class FileManager : public MutexClass {
+class FileManager {
     FileManager(const FileManager &rhs) {}
     FileManager operator=(const FileManager &rhs) { return *this; }
 
@@ -48,7 +47,6 @@ public:
     int RenameFolder(const std::string& old_folderpath,
                      const std::string& new_folderpath);
 
-    FileInfo* CreateFileInfo();
     bool GetCanonicalFilepath(const std::string& relativepath, std::string& out);
     bool GetAliasedFilepath(const std::string& filepath, std::string& out);
 
@@ -63,8 +61,6 @@ public:
 
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
     bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
-    FileInfo* GetFileInfo(const std::string &filepath);         // depricated
-    FileInfo* GetFileInfoByPostId(const std::string& post_id);  // depricated
 
     bool SetFileVersion(const std::string& filepath, const std::string& version);
     bool SetFileDeleted(const std::string& filepath, const bool del = true);
@@ -97,7 +93,7 @@ public:
     bool IsFileLocked(const std::string& filepath);
 
     // Working Directories
-    bool AddWorkingDirectory(const std::string& directory_path);
+    bool AddWorkingDirectory(const std::string& directory_path, const std::string& post_id);
     bool UnlinkWorkingDirectory(const std::string& directory_path);
     bool RemoveWorkingDirectory(const std::string& directory_path);
 
@@ -111,7 +107,7 @@ public:
     void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
 private:
     CentralFileQueue    file_queue_;
-    FileInfoFactory     file_info_factory_;
+    MutexClass          manifest_mtx_;
     Manifest            manifest_;
 
     MutexClass working_mtx_;
