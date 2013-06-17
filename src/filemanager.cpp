@@ -12,7 +12,7 @@
 
 namespace attic {
 
-FileManager::FileManager() : MutexClass() {}
+FileManager::FileManager() {}
 FileManager::~FileManager() {}
 
 int FileManager::Initialize(const std::string &manifestDirectory, 
@@ -666,7 +666,7 @@ bool FileManager::IsFileLocked(const std::string& filepath) {
 bool FileManager::AddWorkingDirectory(const std::string& directory_path, const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
-    manifest_.InsertConfigValue(config::dir_type, directory_path, post_id);
+    manifest_.config_table()->InsertConfigValue(config::dir_type, directory_path, post_id);
     manifest_mtx_.Unlock();
     return ret;
 }

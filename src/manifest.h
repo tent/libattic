@@ -30,6 +30,7 @@ public:
 
     FileTable* file_table() { return file_table_; }
     FolderTable* folder_table() { return folder_table_; }
+    ConfigTable* config_table() { return config_table_; }
 
     bool CreateEmptyManifest();
 
