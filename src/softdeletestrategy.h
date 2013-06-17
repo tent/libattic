@@ -12,10 +12,9 @@ namespace attic {
 
 class SoftDeleteStrategy : public HttpStrategyInterface {
     void MarkFileDeleted(FileInfo* fi);
-    FileInfo* RetrieveFileInfo(const std::string& filepath);
-
     int UpdateFilePost(FileInfo* fi);
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
+
     int PostFilePost(const std::string& post_id, FilePost& fp);
 public:
     SoftDeleteStrategy() {}

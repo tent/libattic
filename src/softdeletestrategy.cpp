@@ -14,11 +14,11 @@ int SoftDeleteStrategy::Execute(FileManager* file_manager,
     post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
 
-    FileInfo* fi = RetrieveFileInfo(filepath);
-    if(fi) { 
+    FileInfo fi;
+    if(file_manager_->GetFileInfo(filepath, fi)) {
     std::cout<<" del " << std::endl;
-        MarkFileDeleted(fi);
-        status = UpdateFilePost(fi);
+        MarkFileDeleted(&fi);
+        status = UpdateFilePost(&fi);
     }
     else 
         status = ret::A_FAIL_INVALID_FILE_INFO;
@@ -31,13 +31,6 @@ void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
     std::string filepath = fi->filepath();
     fi->set_deleted(true);
     file_manager_->SetFileDeleted(filepath, true);
-}
-
-FileInfo* SoftDeleteStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = file_manager_->GetFileInfo(filepath);
-    if(!fi)
-        fi = file_manager_->CreateFileInfo();
-    return fi;
 }
 
 int SoftDeleteStrategy::UpdateFilePost(FileInfo* fi) {
