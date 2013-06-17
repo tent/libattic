@@ -432,6 +432,10 @@ int AtticService::RegisterPassphrase(const std::string& passphrase) {
         if(status == ret::A_OK) {
             event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
             status = EnterPassphrase(passphrase);
+            if(status == ret::A_OK) {
+                // Create Config Post
+                // Load Config
+            }
         }
     }
     return status;
@@ -455,6 +459,8 @@ int AtticService::EnterPassphrase(const std::string& passphrase) {
             client_->set_phrase_token(pt);
             credentials_manager_->set_master_key(master_key);
             client_->SavePhraseToken();
+            // Retrieve Config Post
+            // Load Config
         }
     }
     return status;
@@ -487,6 +493,22 @@ int AtticService::EnterRecoveryKey(const std::string& recovery_key) {
             event::RaiseEvent(event::Event::TEMPORARY_PASS, temp_pass, NULL);
     }
     return status;
+}
+
+// Config Related methods
+bool AtticService::CreateConfigPost(Post& out) {
+    bool ret = false;
+    return ret;
+}
+
+bool AtticService::RetrieveConfigPost(Post& out) {
+    bool ret = false;
+    return ret;
+}
+
+bool AtticService::LoadConfigPost(Post& in) {
+    bool ret = false;
+    return ret;
 }
 
 }// namespace

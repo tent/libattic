@@ -11,6 +11,8 @@
 #include "filemanager.h"
 #include "credentialsmanager.h"
 
+#include "post.h"
+
 /* Attic Service
  *  Service to direct spawning of threads, insertion of tasks, and management of
  *  subsystems, allowing communication into the lib.
@@ -40,6 +42,11 @@ class AtticService {
     int ShutdownCredentialsManager();
     int ShutdownFileManager();
     int ShutdownConnectionManager();
+
+    // Config Related methods
+    bool CreateConfigPost(Post& out);
+    bool RetrieveConfigPost(Post& out);
+    bool LoadConfigPost(Post& in);
 public:
     AtticService();
     ~AtticService();
