@@ -460,4 +460,33 @@ int AtticService::EnterPassphrase(const std::string& passphrase) {
     return status;
 }
 
+int AtticService::ChangePassphrase(const std::string& old_passphrase, const std::string& new_passphrase) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+
+        std::cout<<" Changing passphrase " << std::endl;
+        std::string recovery_key;
+        status = ps.ChangePassphrase(old_passphrase, new_passphrase, recovery_key);
+        if(status == ret::A_OK)
+            event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
+    }
+    return status;
+}
+
+int AtticService::EnterRecoveryKey(const std::string& recovery_key) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+
+        std::string temp_pass;
+        status = ps.EnterRecoveryKey(recovery_key, temp_pass);
+        if(status == ret::A_OK)
+            event::RaiseEvent(event::Event::TEMPORARY_PASS, temp_pass, NULL);
+    }
+    return status;
+}
+
 }// namespace

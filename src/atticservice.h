@@ -63,8 +63,8 @@ public:
 
     int RegisterPassphrase(const std::string& passphrase);
     int EnterPassphrase(const std::string& passphrase);
-    int ChangePassphrase();
-    int EnterRecoveryKey();
+    int ChangePassphrase(const std::string& old_passphrase, const std::string& new_passphrase);
+    int EnterRecoveryKey(const std::string& recovery_key);
 
     bool running()                              { return running_; }
     TaskManager* task_manager()                 { return task_manager_; }

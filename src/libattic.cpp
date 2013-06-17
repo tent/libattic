@@ -164,35 +164,16 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
     if(!szOld) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNew) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-    if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::cout<<" Changing passphrase " << std::endl;
-        std::string recovery_key;
-        status = ps.ChangePassphrase(szOld, szNew, recovery_key);
-        if(status == attic::ret::A_OK){
-            attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
-        }
-    }
+    if(status == attic::ret::A_OK)
+       status = attic_service.ChangePassphrase(szOld, szNew); 
     return status;
 }
 
 int EnterRecoveryKey(const char* szRecovery) {
     if(!szRecovery) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-    if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::string temp_pass;
-        status = ps.EnterRecoveryKey(szRecovery, temp_pass);
-        if(status == attic::ret::A_OK){
-            attic::event::RaiseEvent(attic::event::Event::TEMPORARY_PASS, temp_pass, NULL);
-        }
-    }
+    if(status == attic::ret::A_OK)
+        status = attic_service.EnterRecoveryKey(szRecovery);
     return status;
 }
 
