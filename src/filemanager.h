@@ -92,10 +92,11 @@ public:
     bool UnlockFile(const std::string& filepath);
     bool IsFileLocked(const std::string& filepath);
 
-    // Working Directories
+    // Config methods /  Working Directories 
     bool AddWorkingDirectory(const std::string& directory_path, const std::string& post_id);
     bool UnlinkWorkingDirectory(const std::string& directory_path);
     bool RemoveWorkingDirectory(const std::string& directory_path);
+    bool RetrieveAllConfigEntries(std::deque<ConfigEntry>& out);
 
     // Accessor / Mutator
     const std::string& manifest_directory() const   { return manifest_directory_; }
@@ -105,6 +106,7 @@ public:
     void set_manifest_directory(const std::string &filepath)      { manifest_directory_ = filepath; }
     void set_working_directory(const std::string &workingDir)     { working_directory_ = workingDir; }
     void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
+    
 private:
     CentralFileQueue    file_queue_;
     MutexClass          manifest_mtx_;

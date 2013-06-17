@@ -7,7 +7,7 @@ bool ConfigTable::CreateTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
-    exc += " (type TEXT, config_key TEXT, value TEXT,";
+    exc += " (type TEXT, config_key TEXT, value TEXT, state TEXT";
     exc += " PRIMARY KEY(type ASC, config_key ASC));";
     std::string error;
     bool ret = Exec(exc, error);
@@ -16,7 +16,10 @@ bool ConfigTable::CreateTable() {
     return ret; 
 }
 
-bool ConfigTable::InsertConfigValue(const std::string& type, const std::string& key, const std::string& value) {
+bool ConfigTable::InsertConfigValue(const std::string& type, 
+                                    const std::string& key, 
+                                    const std::string& value, 
+                                    const std::string& state) {
     bool ret = false;
     std::string exc;
     if(!IsConfigValueInManifest(key)) 
@@ -24,13 +27,14 @@ bool ConfigTable::InsertConfigValue(const std::string& type, const std::string& 
     else
         exc += "REPLACE INTO ";
     exc += table_name();
-    exc += " (type, config_key, value) VALUES (?,?,?);";
+    exc += " (type, config_key, value, state) VALUES (?,?,?,?);";
 
     std::string error;
     ret = PrepareStatement(exc, error);     if(!ret) {log::ls("m_340s",error);return ret;}
     ret = BindText(1, type, error);         if(!ret) {log::ls("m_341s",error);return ret;}
     ret = BindText(2, key, error);          if(!ret) {log::ls("m_342s",error);return ret;}
     ret = BindText(3, value, error);        if(!ret) {log::ls("m_343s",error);return ret;}
+    ret = BindText(4, state, error);        if(!ret) {log::ls("m_344s",error);return ret;}
     ret = StepStatement(error);             if(!ret) {log::ls("m_353s",error);return ret;}
     ret = FinalizeStatement(error);         if(!ret) {log::ls("m_354s",error);return ret;}
     return ret;
@@ -126,4 +130,40 @@ bool ConfigTable::RetrieveConfigType(const std::string& type, std::deque<std::st
     return ret;
 }
 
+bool ConfigTable::RetrieveAllEntries(std::deque<ConfigEntry>& out) {
+    bool ret = true;
+    std::string query;
+    query += "SELECT * FROM ";
+    query += table_name();
+    query += ";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) {
+                ConfigEntry entry;
+                ExtractEntryResults(res, step, entry);
+                out.push_back(entry);
+            }
+        }
+        ret = true;
+    }
+    else {
+        log::LogString("config_table_122851", error);
+    }
+    return ret;
+}
+
+void ConfigTable::ExtractEntryResults(const SelectResult& res, const int step, ConfigEntry& out) {
+    out.type = res.results()[0+step];
+    out.config_key = res.results()[1+step];
+    out.value = res.results()[2+step];
+    out.state = res.results()[3+step];
+}
+
+
 } // namespace
+

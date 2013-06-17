@@ -666,7 +666,11 @@ bool FileManager::IsFileLocked(const std::string& filepath) {
 bool FileManager::AddWorkingDirectory(const std::string& directory_path, const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
-    manifest_.config_table()->InsertConfigValue(config::dir_type, directory_path, post_id);
+    // Local directory (should be an absolute path, linked to a corresponding root folder post)
+    ret = manifest_.config_table()->InsertConfigValue(config::dir_type, 
+                                                      directory_path, 
+                                                      post_id, 
+                                                      "active");
     manifest_mtx_.Unlock();
     return ret;
 }
@@ -678,6 +682,14 @@ bool FileManager::UnlinkWorkingDirectory(const std::string& directory_path) {
 
 bool FileManager::RemoveWorkingDirectory(const std::string& directory_path) {
     bool ret = false;
+    return ret;
+}
+
+bool FileManager::RetrieveAllConfigEntries(std::deque<ConfigEntry>& out) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    manifest_.config_table()->RetrieveAllEntries(out);
+    manifest_mtx_.Unlock();
     return ret;
 }
 
