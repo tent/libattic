@@ -7,7 +7,7 @@ bool ConfigTable::CreateTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
-    exc += " (type TEXT, config_key TEXT, value TEXT, state TEXT";
+    exc += " (type TEXT, config_key TEXT, value TEXT, state TEXT,";
     exc += " PRIMARY KEY(type ASC, config_key ASC));";
     std::string error;
     bool ret = Exec(exc, error);
