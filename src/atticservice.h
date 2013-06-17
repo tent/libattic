@@ -61,8 +61,8 @@ public:
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
 
-    int RegisterPassphrase();
-    int EnterPassphrase();
+    int RegisterPassphrase(const std::string& passphrase);
+    int EnterPassphrase(const std::string& passphrase);
     int ChangePassphrase();
     int EnterRecoveryKey();
 

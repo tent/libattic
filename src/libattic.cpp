@@ -142,24 +142,9 @@ int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
     if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-        // Generate Master Key
-        std::string master_key;
-        attic_service.credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
-
-        std::string passphrase(szPass);
-        std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
-        std::cout<<" TOSTR : "<< passphrase << std::endl;
-        std::cout<<" LEN : " << passphrase.size() << std::endl;
-        std::string recovery_key;
-        status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
-
-        if(status == attic::ret::A_OK) {
-            attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
-            status = EnterPassphrase(szPass);
-        }
+        status = attic_service.RegisterPassphrase(szPass);
+        if(status == attic::ret::A_OK)
+            g_bEnteredPassphrase = true;
     }
     return status;
 }
@@ -167,26 +152,10 @@ int RegisterPassphrase(const char* szPass) {
 int EnterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-
     if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::string passphrase(szPass);
-        std::cout<<" PASSED IN : " << szPass << std::endl;
-        std::cout<<" TOSTR : "<< passphrase << std::endl;
-        std::cout<<" LEN : " << passphrase.size() << std::endl;
-        std::string master_key;
-        attic::PhraseToken pt;
-        status = ps.EnterPassphrase(szPass, pt, master_key);
-
-        if(status == attic::ret::A_OK) {
-            attic_service.client()->set_phrase_token(pt);
-            attic_service.credentials_manager()->set_master_key(master_key);
-            attic_service.client()->SavePhraseToken();
+        status = attic_service.EnterPassphrase(szPass);
+        if(status == attic::ret::A_OK)
             g_bEnteredPassphrase = true;
-        }
     }
     return status;
 }

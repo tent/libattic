@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "filesystem.h"
 #include "errorcodes.h"
+#include "passphrase.h"
 
 namespace attic {
 
@@ -409,6 +410,54 @@ bool AtticService::IsMasterKeyValid() {
     if(!key.empty())
         return true;
     return false;
+}
+
+int AtticService::RegisterPassphrase(const std::string& passphrase) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+        // Generate Master Key
+        std::string master_key;
+        credentials_manager_->GenerateMasterKey(master_key); // Generate random master key
+
+        std::string passphrase(passphrase);
+        std::cout<<" REGISTERING PASSPHRASE : " << passphrase << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
+        std::string recovery_key;
+        status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
+
+        if(status == ret::A_OK) {
+            event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
+            status = EnterPassphrase(passphrase);
+        }
+    }
+    return status;
+}
+
+int AtticService::EnterPassphrase(const std::string& passphrase) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+
+        std::string passphrase(passphrase);
+        std::cout<<" PASSED IN : " << passphrase << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
+        std::string master_key;
+        PhraseToken pt;
+        status = ps.EnterPassphrase(passphrase, pt, master_key);
+
+        if(status == ret::A_OK) {
+            client_->set_phrase_token(pt);
+            credentials_manager_->set_master_key(master_key);
+            client_->SavePhraseToken();
+        }
+    }
+    return status;
 }
 
 }// namespace
