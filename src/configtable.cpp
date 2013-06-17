@@ -88,7 +88,7 @@ bool ConfigTable::RetrieveConfigValue(const std::string& key, std::string& out) 
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
             if(step > 0) { 
-                out = [2+step];
+                out = res.results()[2+step];
                 ret = true;
                 break;
             }
