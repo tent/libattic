@@ -114,16 +114,16 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
 bool RenameHandler::CheckForRename(FileInfo& fi, const std::string& post_id) {
     std::cout<<" CHECKING FOR RENAME " << std::endl;
     std::cout<<" Incoming filepath : " << fi.filepath() << std::endl;
-    FileInfo* local_fi = file_manager_->GetFileInfoByPostId(post_id);
-    if(local_fi) {
+    FileInfo local_fi;
+    if(file_manager_->GetFileInfoByPostId(post_id, local_fi)) {
         // If filepaths are the same
-        if(local_fi->filepath() != fi.filepath()){
+        if(local_fi.filepath() != fi.filepath()){
             std::cout<< " FILEPATHS DIFFER, RENAME " << std::endl;
             // Update Local cache
-            std::string old_filepath = local_fi->filepath();
+            std::string old_filepath = local_fi.filepath();
             std::string new_filepath = fi.filepath();
 
-            std::cout << "local filepath : " << local_fi->filepath() << std::endl;
+            std::cout << "local filepath : " << local_fi.filepath() << std::endl;
             std::cout << "post filepath : " << fi.filepath() << std::endl;
             int status = RenameFileLocalCache(old_filepath, new_filepath);
             std::cout<<" new filepath : " << new_filepath << std::endl;
