@@ -33,7 +33,6 @@ class AtticService {
     int InitializeTaskArbiter();
     int InitializeThreadManager();
 
-
     int ShutdownThreadManager();
     int ShutdownTaskArbiter();
     int ShutdownServiceManager();

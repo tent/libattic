@@ -7,6 +7,8 @@
 #include "errorcodes.h"
 #include "passphrase.h"
 
+#include "posthandler.h"
+
 namespace attic {
 
 AtticService::AtticService() {
@@ -498,17 +500,30 @@ int AtticService::EnterRecoveryKey(const std::string& recovery_key) {
 // Config Related methods
 bool AtticService::CreateConfigPost(Post& out) {
     bool ret = false;
+    if(running_) {
+        if(!RetrieveConfigPost(out)) {
+            PostHandler<Post> ph(client_->access_token());
+
+
+        }
+    }
     return ret;
 }
 
 bool AtticService::RetrieveConfigPost(Post& out) {
     bool ret = false;
+    if(running_) {
+
+    }
     return ret;
 }
 
 bool AtticService::LoadConfigPost(Post& in) {
     bool ret = false;
+    if(running_) {
+    }
     return ret;
 }
+
 
 }// namespace
