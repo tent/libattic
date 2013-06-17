@@ -97,13 +97,14 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
     if(!rh.CheckForRename(fi, p.id())) {
         // Get Local file info
         std::string filepath = fi.filepath();
-        FileInfo* pLocal_fi = fm->GetFileInfo(filepath);
+
         bool bPull = false;
-        if(pLocal_fi) {
+        FileInfo local_fi;
+        if(fm->GetFileInfo(filepath, local_fi)) {
             std::string canonical_path;
             fm->GetCanonicalFilepath(filepath, canonical_path);
             // check if file exists, locally
-            if(pLocal_fi->deleted()) {
+            if(local_fi.deleted()) {
                 bPull = false;
             }
             else if(!fs::CheckFilepathExists(canonical_path)) {
@@ -113,14 +114,14 @@ int SyncFileTask::ProcessFileInfo(FilePost& p) {
             else if(fs::CheckFilepathExists(canonical_path)) {
                 // compare hashes
                 std::cout<<" comparing hashes : " << std::endl;
-                std::cout<<"\t local hash : " << pLocal_fi->plaintext_hash() << std::endl;
+                std::cout<<"\t local hash : " << local_fi.plaintext_hash() << std::endl;
                 std::cout<<"\t incoming hash : " << fi.plaintext_hash() << std::endl;
-                if(pLocal_fi->plaintext_hash() != fi.plaintext_hash()) {
+                if(local_fi.plaintext_hash() != fi.plaintext_hash()) {
                     fm->InsertToManifest(&fi); // Update local cache
                     bPull = true;
                 }
             }
-            if(pLocal_fi->post_version() != p.version().id()) { 
+            if(local_fi.post_version() != p.version().id()) { 
                 fm->InsertToManifest(&fi); // Update local cache
                 bPull = true;
             }

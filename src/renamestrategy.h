@@ -15,7 +15,7 @@ class FileInfo;
 class RenameStrategy : public HttpStrategyInterface {
     int RenameFile();
     int RenameFolder();
-    FileInfo* RetrieveFileInfo(const std::string& filepath);
+
     bool RetrieveFolder(const std::string& folderpath, Folder& out);
     int RetrieveFolderPost(const std::string& post_id, FolderPost& fp);
     int RetrieveFilePost(const std::string& post_id, FilePost& fp);

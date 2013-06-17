@@ -47,20 +47,20 @@ int RenameStrategy::RenameFile() {
     RenameHandler rh(file_manager_);
     status = rh.RenameFileLocalCache(old_filepath, new_filepath);
     if(status == ret::A_OK) {
-        FileInfo* fi = RetrieveFileInfo(new_filepath);
-        if(fi) {
+        FileInfo fi;
+        if(file_manager_->GetFileInfo(new_filepath, fi)) {
             FilePost p;
-            status = RetrieveFilePost(fi->post_id(), p);
+            status = RetrieveFilePost(fi.post_id(), p);
             if(status == ret::A_OK) {
                 std::string master_key;
                 GetMasterKey(master_key);
                 FileHandler fh(file_manager_);
                 std::string cargo;
-                fh.PrepareCargo(*fi, master_key, cargo);
+                fh.PrepareCargo(fi, master_key, cargo);
                 FilePost new_p;
-                rh.UpdateFileMetaPost(p, *fi, new_p);
+                rh.UpdateFileMetaPost(p, fi, new_p);
                 new_p.set_cargo(cargo);
-                status = UpdateFileMetaPost(fi->post_id(), new_p);
+                status = UpdateFileMetaPost(fi.post_id(), new_p);
             }
         }
         else {
@@ -157,13 +157,6 @@ int RenameStrategy::RetrieveFilePost(const std::string& post_id, FilePost& fp) {
     PostHandler<FilePost> ph(access_token_);
     status = ph.Get(posturl, NULL, fp);
     return status;
-}
-
-FileInfo* RenameStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = file_manager_->GetFileInfo(filepath);
-    if(!fi)
-        fi = file_manager_->CreateFileInfo();
-    return fi;
 }
 
 bool RenameStrategy::RetrieveFolder(const std::string& folderpath, Folder& out) {
