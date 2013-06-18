@@ -44,7 +44,7 @@ public:
     int RenameFolder(const std::string& old_folderpath,
                      const std::string& new_folderpath);
 
-    bool GetCanonicalFilepath(const std::string& relativepath, std::string& out);
+    bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
 
     bool MarkFilesInFolderDeleted(const std::string& folder_id);
@@ -84,7 +84,7 @@ public:
                            const std::string& parent_post_id,
                            Folder& out);
 
-
+    bool IsRootDirectory(const std::string& post_id);
 
     bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
 
@@ -96,7 +96,7 @@ public:
 
     bool UpdateFolderContents(Folder& folder);
 
-    bool ConstructFolderpath(const std::string post_id, const std::string& path_out);
+    bool ConstructFolderpath(const std::string folder_post_id, std::string& path_out);
 
     // File Queue
     bool LockFile(const std::string& filepath);
@@ -136,18 +136,16 @@ public:
     void set_working_directory(const std::string &workingDir)     { working_directory_ = workingDir; }
     void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
 
-    
-
 private:
     CentralFileQueue    file_queue_;
     MutexClass          manifest_mtx_;
     Manifest            manifest_;
 
-    MutexClass working_mtx_;
     // Config table
     // key : id, value : alias, state : path
     // This mapping
     // key : alias, value : mapping
+    MutexClass working_mtx_;
     std::map<std::string, std::string>  working_directories_;
 
     std::string         manifest_directory_; // Location of manifest

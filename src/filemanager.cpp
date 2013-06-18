@@ -274,26 +274,17 @@ bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) 
     return ret;
 }
 
-
-bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
-    bool ret = true;
+bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string& out) {
+    bool ret = false;
     if(IsPathAliased(relativepath)) {
         std::string aliased_directory, post_id;
         if(FindAssociatedCanonicalDirectory(relativepath, aliased_directory, post_id)) {
-            // Extract second half of path
-            std::string right_fp;
-            size_t left = relativepath.find("/");
-            if(left != std::string::npos)
-                right_fp = relativepath.substr(left);
-            // Replace working
-            size_t pos = relativepath.find(aliased_directory);
-            if(pos != std::string::npos) {
-                if(!right_fp.empty()) {
-                out = aliased_directory + "/" + relativepath.substr(pos + aliased_directory.size() + 1);
-                }
-                else{ 
-                    out = aliased_directory;
-                }
+            size_t sp = relativepath.find("/");
+            if(sp != std::string::npos) {
+                // Replace working
+                size_t pos = relativepath.find(aliased_directory);
+                out = aliased_directory + "/" + relativepath.substr(sp);
+                utils::ErrorCheckPathDoubleQuotes(out);
                 ret = true;
             }
             else {
@@ -308,7 +299,7 @@ bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::str
 }
 
 bool FileManager::IsPathAliased(const std::string& filepath) {
-    if(filepath.size() && filepath[0] == '~')
+    if(filepath.size() && (filepath.find("~") == 0))
         return true;
     return false;
 }
@@ -374,27 +365,10 @@ bool FileManager::GetFolderEntry(const std::string& foldername,
 
 // Pass in absoulte folder path
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
-    // Check if folder exists
-    //  - if it does, fill out class
-    //  - else return false
-    std::string relative;
-    if(!IsPathAliased(folderpath)) {
-        // Make Relative
-        //GetAliasedPath(folderpath, relative);
-        GetAliasedPath(folderpath, relative);
-    }
-    else {
-        relative = folderpath;
-    }
-    if(relative.empty())
-        relative = cnst::g_szWorkingPlaceHolder;
-    // Normalize Folderpath
-    utils::CheckUrlAndRemoveTrailingSlash(relative);
-    std::cout<<" folder entry relative path : " << relative << std::endl;
-
-    manifest_mtx_.Lock();
-    bool ret = manifest_.folder_table()->QueryForFolder(relative, folder);
-    manifest_mtx_.Unlock();
+    bool ret = false;
+    std::string post_id;
+    if(GetFolderPostId(folderpath, post_id))
+        ret = GetFolderEntryByPostId(post_id, folder);
     return ret;
 }
 
@@ -427,34 +401,47 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
     bool ret = false;
     // Determine root post;
     std::string directory, dir_post_id;
-    if(FindAssociatedWorkingDirectory(folderpath, directory, dir_post_id)) {
-        std::cout<<" directory : " << directory << std::endl;
-        std::cout<<" dir_post_id : " << dir_post_id << std::endl;
-        if(folderpath == directory) {
-            id_out = dir_post_id;
-            ret = true;
-        }
-        else {
-            size_t pos = folderpath.find(directory);
-            if(pos != std::string::npos) {
-                std::deque<std::string> folders;
-                utils::SeparatePath(folderpath.substr(pos+directory.size()), folders);
-                // query for all children who have this as a perent
-                std::string parent_id =  dir_post_id;
-                std::deque<std::string>::iterator itr = folders.begin();
-                for(; itr!=folders.end(); itr++) {
-                    // find the corresponding foldername
-                    Folder folder;
-                    if(!GetFolderEntry((*itr), parent_id, folder)) {
-                        return false;
-                    }
-                    parent_id = folder.folder_post_id();
-                }
-                id_out = parent_id;
+    if(!IsPathAliased(folderpath)){
+        if(FindAssociatedWorkingDirectory(folderpath, directory, dir_post_id)) {
+            std::cout<<" directory : " << directory << std::endl;
+            std::cout<<" dir_post_id : " << dir_post_id << std::endl;
+            if(folderpath == directory) {
+                id_out = dir_post_id;
                 ret = true;
             }
         }
     }
+    else {
+        size_t pos = folderpath.find("/");
+        if(pos != std::string::npos) {
+            directory = folderpath.substr(0, pos);
+            manifest_mtx_.Lock();
+            manifest_.config_table()->RetrieveConfigKeyByValue(directory, dir_post_id);
+            manifest_mtx_.Unlock();
+        }
+    }
+
+    if(!ret) {
+       size_t pos = folderpath.find(directory);
+       if(pos != std::string::npos) {
+           std::deque<std::string> folders;
+           utils::SeparatePath(folderpath.substr(pos+directory.size()), folders);
+           // query for all children who have this as a perent
+           std::string parent_id =  dir_post_id;
+           std::deque<std::string>::iterator itr = folders.begin();
+           for(; itr!=folders.end(); itr++) {
+               // find the corresponding foldername
+               Folder folder;
+               if(!GetFolderEntry((*itr), parent_id, folder)) {
+                   return false;
+               }
+               parent_id = folder.folder_post_id();
+           }
+           id_out = parent_id;
+           ret = true;
+       }
+   }
+
     return ret;
 }
 
@@ -709,6 +696,7 @@ bool FileManager::LoadWorkingDirectories() {
     return ret;
 }
 
+// Retruns the fully mapped path of a working directory
 bool FileManager::FindAssociatedWorkingDirectory(const std::string& filepath, 
                                                  std::string& dir_out,
                                                  std::string& post_id) {
@@ -730,6 +718,7 @@ bool FileManager::FindAssociatedWorkingDirectory(const std::string& filepath,
     return ret;
 }
 
+// pass in an aliased path, will return the full path of what its mapped to
 bool FileManager::FindAssociatedCanonicalDirectory(const std::string& aliased_path,
                                                    std::string& dir_out, 
                                                    std::string& post_id) {
@@ -738,9 +727,12 @@ bool FileManager::FindAssociatedCanonicalDirectory(const std::string& aliased_pa
     std::string alias;
     std::map<std::string, std::string>::iterator itr = working_directories_.begin(); 
     for(;itr!=working_directories_.end(); itr++) {
+        std::cout<<" checking : " << itr->first << std::endl;
         if(aliased_path.find(itr->first) != std::string::npos) {
-            dir_out = itr->first;
-            alias = itr->second;
+            dir_out = itr->second;
+            alias = itr->first;
+            std::cout<<" found : " << dir_out << std::endl;
+            std::cout<<" alias : " << alias << std::endl;
             ret = true;
             break;
         }
@@ -748,15 +740,39 @@ bool FileManager::FindAssociatedCanonicalDirectory(const std::string& aliased_pa
     working_mtx_.Unlock();
     //Find post id, the config table key has the id, the state is the filepath
     manifest_mtx_.Lock();
-    ret = manifest_.config_table()->RetrieveConfigKeyByState(alias, post_id);
+    ret = manifest_.config_table()->RetrieveConfigKeyByValue(alias, post_id);
     manifest_mtx_.Unlock();
     return ret;
 }
 
-bool FileManager::ConstructFolderpath(const std::string post_id, const std::string& path_out) {
+bool FileManager::IsRootDirectory(const std::string& post_id) {
     bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.config_table()->IsKeyInManifest(post_id);
+    manifest_mtx_.Unlock();
+    return ret;
+}
 
-
+bool FileManager::ConstructFolderpath(const std::string folder_post_id, 
+                                      std::string& path_out) {
+    bool ret = false;
+    std::string post_id = folder_post_id;
+    for(;;) {
+        Folder folder;
+        if(GetFolderEntryByPostId(post_id, folder)) {
+            if(!IsRootDirectory(post_id)) { 
+                path_out = "/" + folder.foldername() + path_out;
+            }
+            else {
+                path_out = folder.foldername() + path_out;
+                ret = true;
+                break;
+            }
+            post_id = folder.parent_post_id();
+        }
+        else 
+            break;
+    }
     return ret;
 }
 

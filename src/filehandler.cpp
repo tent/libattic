@@ -82,7 +82,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
 }
 
 bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string& out) {
-    return file_manager_->GetCanonicalFilepath(filepath, out);
+    return file_manager_->GetCanonicalPath(filepath, out);
 }
 
 bool FileHandler::UpdateFileInfo(FileInfo& fi) {
