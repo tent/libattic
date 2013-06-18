@@ -19,9 +19,11 @@ namespace attic {
 
 template <class T>
 class PostHandler {
+    PostHandler(const PostHandler& rhs) {}
+    PostHandler operator=(const PostHandler& rhs) { return *this; }
 public:
     PostHandler(bool tear_down = false);
-    PostHandler(const AccessToken& at, bool tear_down = false);
+    PostHandler(const AccessToken at, bool tear_down = false);
     ~PostHandler();
 
     // TODO:: add delete method
@@ -65,12 +67,14 @@ PostHandler<T>::PostHandler(bool tear_down) {
 }
 
 template <class T>
-PostHandler<T>::PostHandler(const AccessToken& at, bool tear_down) {
+PostHandler<T>::PostHandler(const AccessToken at, bool tear_down) {
     tear_down_ = tear_down;
-    if(tear_down)
+    if(tear_down) {
         impl_ = new PostHandlerTearDownImpl<T>();
-    else
+    }
+    else {
         impl_ = new PostHandlerCmImpl<T>();
+    }
     impl_->set_at(at);
 }
 
@@ -80,6 +84,7 @@ PostHandler<T>::~PostHandler() {
         delete impl_;
         impl_ = NULL;
     }
+    tear_down_ = false;
 }
 
 template <class T>
@@ -91,8 +96,9 @@ int PostHandler<T>::Post(const std::string& post_url,
     if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
         std::string s;
         jsn::SerializeObject(&post, s);
-        log::LogString("LOG HANDLER POST OUTGOING ", s);
-        log::LogString("LOG HANDLER POST RETURN " , impl_->GetReturnPostAsString());
+    }
+    if(status != ret::A_OK) {
+        log::LogHttpResponse("ph_3854932", impl_->response());
     }
     return status;
 }
@@ -106,8 +112,9 @@ int PostHandler<T>::Put(const std::string& post_url,
     if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
         std::string s;
         jsn::SerializeObject(&post, s);
-        log::LogString("LOG HANDLER PUT OUTGOING ", s);
-        log::LogString("LOG HANDLER PUT RETURN " , impl_->GetReturnPostAsString());
+    }
+     if(status != ret::A_OK) {
+        log::LogHttpResponse("ph_385ds91932", impl_->response());
     }
     return status;
 }

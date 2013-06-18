@@ -15,6 +15,7 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
+    std::cout<<" Post meta strategy " << std::endl;
     if(ValidMasterKey()) {
         FileHandler fh(file_manager_);
         if(!fh.DoesFileExist(filepath)) {
@@ -34,6 +35,7 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     else {
         status = ret::A_FAIL_INVALID_MASTERKEY;
     }
+    std::cout<<" post meta strategy status : " << std::endl;
     return status;
 }
 

@@ -3,11 +3,17 @@
 #pragma once
 
 #include <string>
-#include "post.h"
 #include "envelope.h"
 #include "response.h"
 #include "netlib.h"
 #include "connectionhandler.h"
+
+#include "post.h"
+#include "filepost.h"
+#include "chunkpost.h"
+#include "folderpost.h"
+#include "configpost.h"
+#include "envelope.h"
 
 namespace attic { 
 
@@ -34,14 +40,13 @@ public:
                     const UrlParams* params,
                     T& out) = 0;
 
-
     void Flush() { response_.clear(); }
     const Response& response() const { return response_; }
 
     T GetReturnPost();
     std::string GetReturnPostAsString();
 
-    void set_at(const AccessToken& at) { 
+    void set_at(const AccessToken at) { 
         if(!at_) {
             at_ = new AccessToken();
         }

@@ -397,7 +397,7 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
 
 void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
     std::string path;
-    file_manager_->GetCanonicalFilepath(folder.folderpath(), path);
+    file_manager_->ConstructFolderpath(folder.folder_post_id(), path);
     utils::CheckUrlAndAppendTrailingSlash(path);
     out = path + fi.filename();
 }
