@@ -16,12 +16,16 @@ class FolderHandler {
     int RetrieveAllFilesAndFoldersInFolder(Folder& folder, 
                                            std::deque<FileInfo>& file_out,
                                            std::deque<Folder>& folder_out);
+    void SeparatePath(const std::string& full_path, std::deque<std::string>& names);
 public:
     FolderHandler(FileManager* fm);
     ~FolderHandler();
 
     bool ValidateFolder(FolderPost& fp);
-    bool RetrieveFolders(const std::string& folderpath, std::deque<Folder>& out);
+    bool RetrieveFolders(const std::string& folderpath, 
+                         const std::string& working_directory,
+                         std::deque<std::string>& out);
+ 
     bool InsertFolder(const Folder& folder);
     bool InsertFolder(const FolderPost& fp);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);

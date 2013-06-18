@@ -115,7 +115,7 @@ bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::stri
 }
 
 bool FileHandler::UpdateFolderEntry(FolderPost& fp) {
-    return file_manager_->UpdateFolderEntry(fp.folder().folderpath(), fp.id());
+    return file_manager_->UpdateFolderEntry(fp.folder().foldername(), fp.id());
 }
 
 void FileHandler::PrepareCargo(FileInfo& fi, 

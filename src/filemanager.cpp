@@ -122,7 +122,7 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
         if(!alias_new.empty()) {
             //Update folder path
             manifest_mtx_.Lock();
-            manifest_.folder_table()->set_folderpath(folder.folder_post_id(), alias_new);
+            manifest_.folder_table()->set_foldername(folder.folder_post_id(), alias_new);
             manifest_mtx_.Unlock();
             //Update folder contents
             manifest_mtx_.Lock();
@@ -425,6 +425,17 @@ bool FileManager::GetFolderEntryByPostId(const std::string& post_id, Folder& fol
     return ret;
 }
 
+bool FileManager::GetFolderEntry(const std::string& foldername, 
+                                 const std::string& parent_post_id,
+                                 Folder& out) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.folder_table()->QueryForFolder(foldername, parent_post_id, out);
+    std::cout<<" get folder entry : " << foldername << " id : " << parent_post_id << " found? : " << ret << std::endl;
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
 // Pass in absoulte folder path
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
     // Check if folder exists
@@ -470,51 +481,40 @@ bool FileManager::DoesFolderExistById(const std::string& post_id) {
     bool ret = false;
     if(!post_id.empty()) {
         manifest_mtx_.Lock();
-        ret = manifest_.folder_table()->IsFolderInManifestWithID(post_id);
+        ret = manifest_.folder_table()->IsFolderInManifest(post_id);
         manifest_mtx_.Unlock();
     }
     return ret;
 }
 
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
-    Folder folder;
-    bool ret = GetFolderEntry(folderpath, folder);
-    if(ret)
-        id_out = folder.folder_post_id();
+    bool ret = false;
+    // Determine root post;
+    std::string directory, dir_post_id;
+    if(FindAssociatedWorkingDirectory(folderpath, directory, dir_post_id)) {
+        // Get last foldername
+        // query for all children who have this as a perent
+        // find the corresponding foldername
+        // keep going till the last post is found
+    }
     return ret;
 }
 
-bool FileManager::CreateFolderEntry(const std::string& folderpath, 
+bool FileManager::CreateFolderEntry(const std::string& foldername,
                                     const std::string& folder_post_id,
                                     const std::string& parent_post_id,
                                     Folder& out) {
-    // Create Folder Entry
-    std::string relative;
-    if(!IsPathRelative(folderpath)) {
-        GetRelativePath(folderpath, relative);
-    }
-    else {
-        relative = folderpath;
-    }
-
-    if(relative.empty())
-        relative = cnst::g_szWorkingPlaceHolder;
-
-    std::string p_post_id = parent_post_id;
-    if(relative == cnst::g_szWorkingPlaceHolder && parent_post_id.empty())
-        p_post_id = cnst::g_szWorkingPlaceHolder;
-
-    // Normalize Folderpath
-    utils::CheckUrlAndRemoveTrailingSlash(relative);
     bool ret = false;
-    ret = GetFolderEntry(relative, out);
-    if(!ret) {
-        manifest_mtx_.Lock();
-        ret = manifest_.folder_table()->InsertFolderInfo(relative, folder_post_id, p_post_id, false);
+    manifest_mtx_.Lock();
+    if(!manifest_.folder_table()->IsFolderInManifest(folder_post_id)) {
+        ret = manifest_.folder_table()->InsertFolderInfo(foldername, 
+                                                         folder_post_id, 
+                                                         parent_post_id, 
+                                                         false);
         if(ret)
-            ret = manifest_.folder_table()->QueryForFolder(relative, out);
-        manifest_mtx_.Unlock();
+            ret = manifest_.folder_table()->QueryForFolderByPostId(folder_post_id, out);
     }
+    manifest_mtx_.Unlock();
     return ret;
 }
 
@@ -612,20 +612,21 @@ bool FileManager::SetFolderParentPostId(const std::string& folderpath, const std
     return ret;
 }
 
-bool FileManager::SetFolderDeleted(const std::string& folderpath, bool del) {
-    std::string relative;
-    if(!IsPathRelative(folderpath)) {
-        GetRelativePath(folderpath, relative);
-    }
-    else {
-        relative = folderpath;
-    }
-    if(relative.empty())
-        relative = cnst::g_szWorkingPlaceHolder;
+// Kind of a worrysome method, revist at some point
+bool FileManager::IsFolderDeleted(const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
-    if(manifest_.folder_table()->IsFolderInManifest(relative))
-        ret = manifest_.folder_table()->set_folder_deleted(relative, del);
+    if(manifest_.folder_table()->IsFolderInManifest(post_id))
+        ret = manifest_.folder_table()->IsFolderDeleted(post_id);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::SetFolderDeleted(const std::string& post_id, bool del) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    if(manifest_.folder_table()->IsFolderInManifest(post_id))
+        ret = manifest_.folder_table()->set_folder_deleted(post_id, del);
     manifest_mtx_.Unlock();
     return ret;
 }
@@ -663,14 +664,31 @@ bool FileManager::IsFileLocked(const std::string& filepath) {
     return file_queue_.IsFileLocked(filepath);
 }
 
-bool FileManager::AddWorkingDirectory(const std::string& directory_path, const std::string& post_id) {
+// Data layout for working directory entries are as follows
+//  type - root_dir
+//  key - alias
+//  value - post id
+//  state - local (absolute) filepath associated with this machine
+bool FileManager::AddWorkingDirectory(const std::string& directory_alias, 
+                                      const std::string& directory_path, 
+                                      const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
     // Local directory (should be an absolute path, linked to a corresponding root folder post)
-    ret = manifest_.config_table()->InsertConfigValue(config::dir_type, 
-                                                      directory_path, 
-                                                      post_id, 
-                                                      "active");
+    if(!manifest_.config_table()->IsStateInManifest(directory_path)) {
+        ret = manifest_.config_table()->InsertConfigValue(config::dir_type, 
+                                                          post_id, 
+                                                          directory_alias,
+                                                          directory_path);
+    }
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::IsDirectoryLinked(const std::string& directory_path) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.config_table()->IsStateInManifest(directory_path);
     manifest_mtx_.Unlock();
     return ret;
 }
@@ -692,6 +710,75 @@ bool FileManager::RetrieveAllConfigEntries(std::deque<ConfigEntry>& out) {
     manifest_mtx_.Unlock();
     return ret;
 }
+
+bool FileManager::HasConfigValue(const std::string& key) {
+    bool ret = false;
+    return ret;
+}
+
+bool FileManager::GetConfigValue(const std::string& key) {
+    bool ret = false;
+    return ret;
+}
+
+bool FileManager::PushConfigValue(const std::string& type, 
+                                  const std::string& key, 
+                                  const std::string& value) {
+    bool ret = false;
+    return ret;
+}
+
+bool FileManager::LoadWorkingDirectories() {
+    bool ret = false;
+    std::deque<ConfigEntry> entries;
+    manifest_mtx_.Lock();
+    ret = manifest_.config_table()->RetrieveConfigType(config::dir_type, entries);
+    manifest_mtx_.Unlock();
+
+    std::cout<< " Loading Working directories " << std::endl;
+    std::cout<< " Entry count : " << entries.size() << std::endl;
+
+    working_mtx_.Lock();
+    working_directories_.clear();
+    std::deque<ConfigEntry>::iterator itr = entries.begin();
+    for(;itr!=entries.end(); itr++) {
+        std::cout<<" loading : " << (*itr).value << std::endl;
+        std::cout<<" path : " << (*itr).state << std::endl;
+        working_directories_[(*itr).value] = (*itr).state;
+    }
+    working_mtx_.Unlock();
+
+    return ret;
+}
+
+bool FileManager::FindAssociatedWorkingDirectory(const std::string& filepath, 
+                                                 std::string& dir_out,
+                                                 std::string& post_id) {
+    bool ret = false;
+    working_mtx_.Lock();
+    std::map<std::string, std::string>::iterator itr = working_directories_.begin(); 
+    for(;itr!=working_directories_.end(); itr++) {
+        if(filepath.find(itr->second) != std::string::npos) {
+            dir_out = itr->second;
+            ret = true;
+            break;
+        }
+    }
+    working_mtx_.Unlock();
+    //Find post id, the config table key has the id, the state is the filepath
+    manifest_mtx_.Lock();
+    ret = manifest_.config_table()->RetrieveConfigKeyByState(dir_out, post_id);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+bool FileManager::ConstructFolderpath(const std::string post_id, const std::string& path_out) {
+    bool ret = false;
+
+
+    return ret;
+}
+
+
 
 
 }//namespace

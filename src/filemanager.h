@@ -71,21 +71,35 @@ public:
     bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
 
     // Folder
-    bool DoesFolderExist(const std::string& folderpath);
+    bool DoesFolderExist(const std::string& folderpath); // Depricated
     bool DoesFolderExistById(const std::string& post_id);
+
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
+    bool GetFolderEntry(const std::string& foldername, 
+                        const std::string& parent_post_id,
+                        Folder& out);
 
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
-    bool CreateFolderEntry(const std::string& folderpath, 
+
+    bool CreateFolderEntry(const std::string& foldername, 
                            const std::string& folder_post_id,
                            const std::string& parent_post_id,
                            Folder& out);
+
+
+
     bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
+
     bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
     bool SetFolderParentPostId(const std::string& folderpath, const std::string& post_id);
-    bool SetFolderDeleted(const std::string& folderpath, bool del);
+
+    bool IsFolderDeleted(const std::string& post_id);
+    bool SetFolderDeleted(const std::string& post_id, bool del);
+
     bool UpdateFolderContents(Folder& folder);
+
+    bool ConstructFolderpath(const std::string post_id, const std::string& path_out);
 
     // File Queue
     bool LockFile(const std::string& filepath);
@@ -93,10 +107,22 @@ public:
     bool IsFileLocked(const std::string& filepath);
 
     // Config methods /  Working Directories 
-    bool AddWorkingDirectory(const std::string& directory_path, const std::string& post_id);
+    bool HasConfigValue(const std::string& key);
+    bool GetConfigValue(const std::string& key);
+    bool PushConfigValue(const std::string& type, const std::string& key, const std::string& value);
+
+    bool AddWorkingDirectory(const std::string& directory_alias,
+                             const std::string& directory_path, 
+                             const std::string& post_id);
+    bool IsDirectoryLinked(const std::string& directory_path);
     bool UnlinkWorkingDirectory(const std::string& directory_path);
     bool RemoveWorkingDirectory(const std::string& directory_path);
     bool RetrieveAllConfigEntries(std::deque<ConfigEntry>& out);
+
+    bool LoadWorkingDirectories();
+    bool FindAssociatedWorkingDirectory(const std::string& filepath, 
+                                        std::string& dir_out, 
+                                        std::string& post_id);
 
     // Accessor / Mutator
     const std::string& manifest_directory() const   { return manifest_directory_; }
@@ -106,13 +132,16 @@ public:
     void set_manifest_directory(const std::string &filepath)      { manifest_directory_ = filepath; }
     void set_working_directory(const std::string &workingDir)     { working_directory_ = workingDir; }
     void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
+
     
+
 private:
     CentralFileQueue    file_queue_;
     MutexClass          manifest_mtx_;
     Manifest            manifest_;
 
     MutexClass working_mtx_;
+    // key : id, value : alias, state : path
     std::map<std::string, std::string>  working_directories_; // table of root folders
 
     std::string         manifest_directory_; // Location of manifest

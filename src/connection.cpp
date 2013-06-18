@@ -272,6 +272,7 @@ bool Connection::InterpretResponse(Response& out) {
 void Connection::InterpretResponse(tcp::socket* socket, 
                                    Response& resp,
                                    bool connection_close) {
+    std::cout<<" interpreting regular response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = netlib::GetStatusCode(response);
@@ -290,7 +291,7 @@ void Connection::InterpretResponse(tcp::socket* socket,
         content_len = atoi(resp.header["Content-Length"].c_str());
     }
 
-    std::cout<<" here " << std::endl;
+    std::cout<<" content length : " << content_len << std::endl;
     // Read Body
     boost::system::error_code error;
     std::string output_buffer;
@@ -301,32 +302,34 @@ void Connection::InterpretResponse(tcp::socket* socket,
         output_buffer = strbuf.str();
     }
 
-    std::cout<<" here " << std::endl;
-   // Read until EOF, writing data to output as we go.
-   //boost::system::error_code error;
-   int read_count = 0;
-   while (boost::asio::read(*socket, 
-                            response,
-                            boost::asio::transfer_at_least(1), 
-                            error)) {
-       std::ostringstream strbuf;
-       strbuf << &response;
-       if(chunked) {
-           std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
-           std::string dechunked;
-           std::string chunked = strbuf.str();
-           netlib::DeChunkString(chunked, dechunked);
-           output_buffer += dechunked;
-
-       }
-       else {
-           output_buffer += strbuf.str();
-       }
-       if(output_buffer.size() >= content_len)
-           break;
+    if(output_buffer.size() < content_len) {
+       // Read until EOF, writing data to output as we go.
+       //boost::system::error_code error;
+       int read_count = 0;
+       while (boost::asio::read(*socket, 
+                                response,
+                                boost::asio::transfer_at_least(1), 
+                                error)) {
+           std::cout<<" getting response? " << std::endl;
+           std::ostringstream strbuf;
+           strbuf << &response;
+           if(chunked) {
+               std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
+               std::string dechunked;
+               std::string chunked = strbuf.str();
+               netlib::DeChunkString(chunked, dechunked);
+               output_buffer += dechunked;
+           }
+           else {
+               output_buffer += strbuf.str();
+           }
+           std::cout<<" out : " << output_buffer << std::endl;
+           std::cout<<" output buffer size : " << output_buffer.size() << std::endl;
+           if(output_buffer.size() >= content_len)
+               break;
+        }
     }
 
-    std::cout<<" here " << std::endl;
    /*
     std::string dechunked;
     if(chunked){
@@ -344,6 +347,8 @@ void Connection::InterpretResponse(tcp::socket* socket,
 void Connection::InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, 
                                    Response& resp,
                                    bool connection_close) {
+
+    std::cout<<" interpreting ssl response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = netlib::GetStatusCode(response);
@@ -370,26 +375,27 @@ void Connection::InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socke
         output_buffer = strbuf.str();
     }
    // Read until EOF, writing data to output as we go.
-   int read_count = 0;
-   while (boost::asio::read(*socket, 
-                            response,
-                            boost::asio::transfer_at_least(1), 
-                            error)) {
-       std::ostringstream strbuf;
-       strbuf << &response;
-       if(chunked) {
-           std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
-           std::string dechunked;
-           std::string chunked = strbuf.str();
-           netlib::DeChunkString(chunked, dechunked);
-           output_buffer += dechunked;
-
-       }
-       else {
-           output_buffer += strbuf.str();
-       }
-       if(output_buffer.size() >= content_len)
-           break;
+    if(output_buffer.size() < content_len) {
+        int read_count = 0;
+        while (boost::asio::read(*socket, 
+                                 response,
+                                 boost::asio::transfer_at_least(1), 
+                                 error)) {
+            std::ostringstream strbuf;
+            strbuf << &response;
+            if(chunked) {
+                std::cout<<" MAKE SURE CHUNKED DECODING IS WORKING " << std::endl;
+                std::string dechunked;
+                std::string chunked = strbuf.str();
+                netlib::DeChunkString(chunked, dechunked);
+                output_buffer += dechunked;
+            }
+            else {
+                output_buffer += strbuf.str();
+            }
+            if(output_buffer.size() >= content_len)
+                break;
+        }
     }
 
    /*
