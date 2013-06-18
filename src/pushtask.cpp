@@ -94,6 +94,7 @@ int PushTask::PushFile(const std::string& filepath) {
     else {
         status = ret::A_FAIL_OPEN_FILE;
     }
+    std::cout<<" PUSH TASK STATUS : "<< status << std::endl;
     return status;
 }
 

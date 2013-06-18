@@ -25,8 +25,8 @@ class FileManager {
     void ExtractRelativePaths(const FileInfo* pFi, 
                               std::string& relative_out, 
                               std::string& parent_relative_out);
-    bool IsPathRelative(const std::string& filepath);
 
+    bool IsPathAliased(const std::string& filepath);
 public:
     FileManager();
     ~FileManager();
@@ -117,9 +117,15 @@ public:
     bool RetrieveAllConfigEntries(std::deque<ConfigEntry>& out);
 
     bool LoadWorkingDirectories();
+    // Get the aliased working dir for an absolute filepath
     bool FindAssociatedWorkingDirectory(const std::string& filepath, 
                                         std::string& dir_out, 
                                         std::string& post_id);
+    // Get the canonical path mapped for a specific directory alias
+    bool FindAssociatedCanonicalDirectory(const std::string& aliased_path,
+                                          std::string& dir_out, 
+                                          std::string& post_id);
+
 
     // Accessor / Mutator
     const std::string& manifest_directory() const   { return manifest_directory_; }
@@ -138,8 +144,11 @@ private:
     Manifest            manifest_;
 
     MutexClass working_mtx_;
+    // Config table
     // key : id, value : alias, state : path
-    std::map<std::string, std::string>  working_directories_; // table of root folders
+    // This mapping
+    // key : alias, value : mapping
+    std::map<std::string, std::string>  working_directories_;
 
     std::string         manifest_directory_; // Location of manifest
     std::string         working_directory_; // Location where original files live.
