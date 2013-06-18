@@ -28,17 +28,25 @@ void TentApp::Serialize(Json::Value& root) {
 
     root["redirect_uri"] = redirect_uri_;
     
-    if(scopes_.size() > 0) {
-        Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
-        jsn::SerializeVectorIntoObjectValue(scopes, scopes_);
-        root["scopes"] = scopes;
-    }
 
     if(authorizations_.size() > 0) {
         Json::Value authorizations;
         jsn::SerializeVector(authorizations_, authorizations);
         root["authorizations"] = authorizations;
     }
+
+    if(post_types_.size()) {
+        // Post Types 
+        Json::Value posttype(Json::objectValue);
+        Json::Value read_types(Json::arrayValue);
+        Json::Value write_types(Json::arrayValue);
+        jsn::SerializeVector(post_types_["read"], read_types);
+        jsn::SerializeVector(post_types_["write"], write_types);
+        posttype["read"] = read_types;
+        posttype["write"] = write_types;
+        root["post_types"] = posttype;
+    }
+
 }
 
 void TentApp::Deserialize(Json::Value& root) {
@@ -54,10 +62,16 @@ void TentApp::Deserialize(Json::Value& root) {
 
     if(!root["redirect_uri"].empty()) redirect_uri_ = root.get("redirect_uri", "").asString();
 
-    if(!root["scopes"].empty())
-        jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
     if(!root["authorizations"].empty())
         jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
+
+    // Deserialize Post types
+    Json::Value content = root["content"];
+    Json::Value posttype(Json::objectValue);
+    posttype = content["post_types"];
+    jsn::DeserializeIntoVector(posttype["read"], post_types_["read"]);
+    jsn::DeserializeIntoVector(posttype["write"], post_types_["write"]);
+
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& filepath) {
