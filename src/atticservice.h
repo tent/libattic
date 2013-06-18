@@ -42,10 +42,6 @@ class AtticService {
     int ShutdownFileManager();
     int ShutdownConnectionManager();
 
-    // Config Related methods
-    bool CreateConfigPost(Post& out);
-    bool RetrieveConfigPost(Post& out);
-    bool LoadConfigPost(Post& in);
 public:
     AtticService();
     ~AtticService();
@@ -67,10 +63,16 @@ public:
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
 
-    int RegisterPassphrase(const std::string& passphrase);
-    int EnterPassphrase(const std::string& passphrase);
+    int RegisterPassphrase(const std::string& pass);
+    int EnterPassphrase(const std::string& pass);
     int ChangePassphrase(const std::string& old_passphrase, const std::string& new_passphrase);
     int EnterRecoveryKey(const std::string& recovery_key);
+
+
+    // Directory methods
+    int CreateWorkingDirectory(const std::string& filepath);
+    int LinkWorkingDirectory(const std::string& filepath, const std::string& post_id);
+    bool IsFilepathLinked(const std::string& filepath);
 
     bool running()                              { return running_; }
     TaskManager* task_manager()                 { return task_manager_; }

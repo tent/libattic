@@ -8,6 +8,7 @@
 #include "passphrase.h"
 
 #include "posthandler.h"
+#include "confighandler.h"
 
 namespace attic {
 
@@ -208,6 +209,9 @@ void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigEntityURL, entity_url_);
     std::cout<< " loading config values : " << std::endl;
     std::cout<< ConfigManager::GetInstance()->toString() << std::endl;
+
+
+
 }
 
 int AtticService::ValidateDirectories() {
@@ -414,17 +418,19 @@ bool AtticService::IsMasterKeyValid() {
     return false;
 }
 
-int AtticService::RegisterPassphrase(const std::string& passphrase) {
+int AtticService::RegisterPassphrase(const std::string& pass) {
     int status = ret::A_FAIL_LIB_INIT;
     if(running_) {
         status = ret::A_FAIL_REGISTER_PASSPHRASE;
         // Discover Entity, get access token
-        pass::Passphrase ps(client_->entity(), client_->access_token());
+        AccessToken at;
+        credentials_manager_->GetAccessTokenCopy(at);
+        pass::Passphrase ps(client_->entity(), at);
         // Generate Master Key
         std::string master_key;
         credentials_manager_->GenerateMasterKey(master_key); // Generate random master key
 
-        std::string passphrase(passphrase);
+        std::string passphrase(pass);
         std::cout<<" REGISTERING PASSPHRASE : " << passphrase << std::endl;
         std::cout<<" TOSTR : "<< passphrase << std::endl;
         std::cout<<" LEN : " << passphrase.size() << std::endl;
@@ -434,22 +440,20 @@ int AtticService::RegisterPassphrase(const std::string& passphrase) {
         if(status == ret::A_OK) {
             event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
             status = EnterPassphrase(passphrase);
-            if(status == ret::A_OK) {
-                // Create Config Post
-                // Load Config
-            }
         }
     }
     return status;
 }
 
-int AtticService::EnterPassphrase(const std::string& passphrase) {
+int AtticService::EnterPassphrase(const std::string& pass) {
     int status = ret::A_FAIL_LIB_INIT;
     if(running_) {
         // Discover Entity, get access token
-        pass::Passphrase ps(client_->entity(), client_->access_token());
+        AccessToken at;
+        credentials_manager_->GetAccessTokenCopy(at);
+        pass::Passphrase ps(client_->entity(), at);
 
-        std::string passphrase(passphrase);
+        std::string passphrase(pass);
         std::cout<<" PASSED IN : " << passphrase << std::endl;
         std::cout<<" TOSTR : "<< passphrase << std::endl;
         std::cout<<" LEN : " << passphrase.size() << std::endl;
@@ -461,8 +465,18 @@ int AtticService::EnterPassphrase(const std::string& passphrase) {
             client_->set_phrase_token(pt);
             credentials_manager_->set_master_key(master_key);
             client_->SavePhraseToken();
-            // Retrieve Config Post
-            // Load Config
+            // Retrieve Config Post and load
+            ConfigHandler ch(file_manager_);
+            ConfigPost config_post;
+            if(!ch.RetrieveConfigPost(client_->entity(), &at, config_post)) {
+                ch.CreateConfigPost(client_->entity(), 
+                                    &at, 
+                                    config_post);
+            }
+            // Load config post
+            ch.LoadConfigPost(config_post);
+            status = CreateWorkingDirectory(working_dir_);
+            file_manager_->LoadWorkingDirectories();
         }
     }
     return status;
@@ -497,33 +511,24 @@ int AtticService::EnterRecoveryKey(const std::string& recovery_key) {
     return status;
 }
 
-// Config Related methods
-bool AtticService::CreateConfigPost(Post& out) {
-    bool ret = false;
+// Directory methods
+int AtticService::CreateWorkingDirectory(const std::string& filepath) {
+    int status = ret::A_FAIL_LIB_INIT;
     if(running_) {
-        if(!RetrieveConfigPost(out)) {
-            PostHandler<Post> ph(client_->access_token());
-
-
-        }
+        ConfigHandler ch(file_manager_);
+        status = ch.CreateWorkingDirectory(filepath, client_->entity(), &client_->access_token());
     }
-    return ret;
+    return status;
 }
 
-bool AtticService::RetrieveConfigPost(Post& out) {
-    bool ret = false;
-    if(running_) {
+int AtticService::LinkWorkingDirectory(const std::string& filepath, const std::string& post_id) {
 
-    }
-    return ret;
 }
 
-bool AtticService::LoadConfigPost(Post& in) {
-    bool ret = false;
-    if(running_) {
-    }
-    return ret;
+bool AtticService::IsFilepathLinked(const std::string& filepath) {
+
 }
+
 
 
 }// namespace
