@@ -142,7 +142,8 @@ int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
     if(status == attic::ret::A_OK) {
-        status = attic_service.RegisterPassphrase(szPass);
+        std::string pass(szPass);
+        status = attic_service.RegisterPassphrase(pass);
         if(status == attic::ret::A_OK)
             g_bEnteredPassphrase = true;
     }
@@ -153,7 +154,8 @@ int EnterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
     if(status == attic::ret::A_OK) {
-        status = attic_service.EnterPassphrase(szPass);
+        std::string pass(szPass);
+        status = attic_service.EnterPassphrase(pass);
         if(status == attic::ret::A_OK)
             g_bEnteredPassphrase = true;
     }
