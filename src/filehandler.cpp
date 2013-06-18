@@ -37,6 +37,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
         log::LogString("0010-12851-", err.str());
         return false;
     }
+    std::cout<<" create new file : " << filepath << std::endl;
 
     if(!file_manager_->DoesFileExist(filepath)) {
         std::string folderpath;

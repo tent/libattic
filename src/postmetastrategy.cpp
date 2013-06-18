@@ -19,7 +19,7 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     if(ValidMasterKey()) {
         FileHandler fh(file_manager_);
         if(!fh.DoesFileExist(filepath)) {
-            // File doesn't exist yet, create meta post
+            std::cout<<" File doesn't exist yet, create meta post" << std::endl;
             FileInfo fi;
             status = CreateFileEntry(filepath, fi);
             if (status == ret::A_OK)
@@ -35,12 +35,13 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
     else {
         status = ret::A_FAIL_INVALID_MASTERKEY;
     }
-    std::cout<<" post meta strategy status : " << std::endl;
+    std::cout<<" post meta strategy status : " << status << std::endl;
     return status;
 }
 
 int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out) {
     int status = ret::A_OK;
+    std::cout<<" creating file entry " << std::endl;
     std::string mk;
     GetMasterKey(mk);
     FileHandler fh(file_manager_);

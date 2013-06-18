@@ -275,14 +275,13 @@ void FolderHandler::SeparatePath(const std::string& full_path, std::deque<std::s
     utils::RemoveTrailingSlash(path);
     utils::RemoveBeginningSlash(path);
 
-    std::cout<<" path in : " << path << std::endl;
     std::string name;
     std::stringstream stream(path);
     while(std::getline(stream, name, '/')) {
         names.push_back(name);
-        std::cout<<" pushing back : " << name << std::endl;
         name.clear();
     }
 }
+
 }//namespace
 
