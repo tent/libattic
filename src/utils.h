@@ -320,6 +320,28 @@ static void ExtractSubPaths(const std::string& root,
     }
 }
 
+static void SeparatePath(const std::string& full_path, std::deque<std::string>& names) {
+    std::string path = full_path;
+    utils::RemoveTrailingSlash(path);
+    utils::RemoveBeginningSlash(path);
+
+    std::string name;
+    std::stringstream stream(path);
+    while(std::getline(stream, name, '/')) {
+        names.push_back(name);
+        name.clear();
+    }
+}
+
+static void ErrorCheckPathDoubleQuotes(std::string& path) {
+    size_t pos = path.find("//");
+    while(pos != std::string::npos) {
+        path.replace(pos, 2, "/");
+        pos = path.find("//");
+    }
+}
+
+
 }}//namespace
 #endif
 

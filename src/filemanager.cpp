@@ -281,6 +281,7 @@ bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& o
         manifest_mtx_.Unlock();
         size_t pos = filepath.find(directory);
         out += alias + "/" + filepath.substr(pos+directory.size());
+        utils::ErrorCheckPathDoubleQuotes(out);
     }
     return ret;
 }
@@ -498,10 +499,24 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
             ret = true;
         }
         else {
-            // Get last foldername
-            // query for all children who have this as a perent
-            // find the corresponding foldername
-            // keep going till the last post is found
+            size_t pos = folderpath.find(directory);
+            if(pos != std::string::npos) {
+                std::deque<std::string> folders;
+                utils::SeparatePath(folderpath.substr(pos+directory.size()), folders);
+                // query for all children who have this as a perent
+                std::string parent_id =  dir_post_id;
+                std::deque<std::string>::iterator itr = folders.begin();
+                for(; itr!=folders.end(); itr++) {
+                    // find the corresponding foldername
+                    Folder folder;
+                    if(!GetFolderEntry((*itr), parent_id, folder)) {
+                        return false;
+                    }
+                    parent_id = folder.folder_post_id();
+                }
+                id_out = parent_id;
+                ret = true;
+            }
         }
     }
     return ret;

@@ -66,7 +66,7 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath,
     size_t pos = path.find(working_directory);
     if(pos != std::string::npos) {
         std::string cat_path = path.substr(pos+working_directory.size());
-        SeparatePath(cat_path, out);
+        utils::SeparatePath(cat_path, out);
         ret = true;
     }
     return ret;
@@ -270,18 +270,6 @@ bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
     return file_manager_->SetFolderDeleted(folderpath, del);
 }
 
-void FolderHandler::SeparatePath(const std::string& full_path, std::deque<std::string>& names) {
-    std::string path = full_path;
-    utils::RemoveTrailingSlash(path);
-    utils::RemoveBeginningSlash(path);
-
-    std::string name;
-    std::stringstream stream(path);
-    while(std::getline(stream, name, '/')) {
-        names.push_back(name);
-        name.clear();
-    }
-}
 
 }//namespace
 
