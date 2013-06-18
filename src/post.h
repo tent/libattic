@@ -105,7 +105,7 @@ public:
     typedef std::vector<Mention> MentionsList;
 
     Post();
-    ~Post();
+    virtual ~Post();
 
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
