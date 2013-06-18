@@ -271,19 +271,18 @@ bool FileManager::SetFileChunkCount(const std::string& filepath, const std::stri
 }
 
 bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& out) {
-    size_t pos = filepath.find(working_directory_);
-    if(pos != std::string::npos) {
-        out = std::string(cnst::g_szWorkingPlaceHolder);
-        std::string right = filepath.substr(pos+working_directory_.size());
-        if(right.size())
-            out += "/" + right;
-        pos = out.find("//");
-        if(pos != std::string::npos) {
-            out.erase(pos, 1);
-        }
-        return true;
+    bool ret = false;
+    std::string directory, dir_post_id;
+    if(FindAssociatedWorkingDirectory(filepath, directory, dir_post_id)) {
+        // Get alias
+        std::string alias;
+        manifest_mtx_.Lock();
+        ret = manifest_.config_table()->RetrieveConfigValue(dir_post_id, alias);
+        manifest_mtx_.Unlock();
+        size_t pos = filepath.find(directory);
+        out += alias + "/" + filepath.substr(pos+directory.size());
     }
-    return false;
+    return ret;
 }
 
 bool FileManager::GetCanonicalFilepath(const std::string& relativepath, std::string& out) {
@@ -492,10 +491,18 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
     // Determine root post;
     std::string directory, dir_post_id;
     if(FindAssociatedWorkingDirectory(folderpath, directory, dir_post_id)) {
-        // Get last foldername
-        // query for all children who have this as a perent
-        // find the corresponding foldername
-        // keep going till the last post is found
+        std::cout<<" directory : " << directory << std::endl;
+        std::cout<<" dir_post_id : " << dir_post_id << std::endl;
+        if(folderpath == directory) {
+            id_out = dir_post_id;
+            ret = true;
+        }
+        else {
+            // Get last foldername
+            // query for all children who have this as a perent
+            // find the corresponding foldername
+            // keep going till the last post is found
+        }
     }
     return ret;
 }
