@@ -177,7 +177,19 @@ static void CheckUrlAndAppendTrailingSlash(std::string &url) {
         url.append("/");                            
 }
 
-static void CheckUrlAndRemoveTrailingSlash(std::string &url) {
+static void RemoveTrailingSlash(std::string& str) {
+    if(str.empty()) return;
+    if(str[str.size()-1] == '/') {
+        size_t end = (str.size()-1)-0;
+        str = str.substr(0, end);
+    }
+}
+static void RemoveBeginningSlash(std::string& str) {
+    if(str.empty()) return;
+    if(str[0] == '/') 
+        str = str.substr(1);
+}
+static void CheckUrlAndRemoveTrailingSlash(std::string &url) { // depricated, rename
     if(url.empty())                                 
         return;                                          
 
