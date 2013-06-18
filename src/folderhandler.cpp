@@ -142,8 +142,8 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
         std::cout<<" folder list : " << folder_list.size() << std::endl;
         std::cout<<" file list : " << file_list.size() << std::endl;
         std::string aliased_old_path, aliased_new_path;
-        if(file_manager_->GetAliasedFilepath(old_folderpath, aliased_old_path) &&
-           file_manager_->GetAliasedFilepath(new_folderpath, aliased_new_path)) {
+        if(file_manager_->GetAliasedPath(old_folderpath, aliased_old_path) &&
+           file_manager_->GetAliasedPath(new_folderpath, aliased_new_path)) {
             std::cout<<" aliased folderpath (old): " << aliased_old_path << std::endl;
             std::cout<<" aliased folderpath (new): " << aliased_new_path << std::endl;
             RenameHandler rh(file_manager_);

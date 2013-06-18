@@ -47,7 +47,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
             if(file_manager_->GetFolderPostId(folderpath, folderid)) {
                 std::string aliased, filename;
                 utils::ExtractFileName(filepath, filename);
-                file_manager_->GetAliasedFilepath(filepath, aliased);
+                file_manager_->GetAliasedPath(filepath, aliased);
                 out.set_filename(filename);             // set filename
                 out.set_filepath(aliased);              // set filepath
                 out.set_folder_post_id(folderid);       // set folder id

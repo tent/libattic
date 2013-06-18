@@ -52,6 +52,7 @@ int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out
 
 int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& fi) {
     int status = ret::A_OK;
+    std::cout<<" creating file meta post " << std::endl;
     FileHandler fh(file_manager_);
     std::string master_key = GetMasterKey();
     FilePost fp;
