@@ -44,20 +44,6 @@ int FileManager::RemoveFile(const std::string &filepath) {
     return status;
 }
 
-void FileManager::GetRelativePath(const std::string& filepath, std::string& relative_out) {
-    if(IsPathRelative(filepath)) {
-        relative_out = filepath;
-        return;
-    }
-
-    std::string canonical, relative;
-    if(!filepath.empty()) {
-        fs::GetCanonicalPath(filepath, canonical);
-        fs::MakePathRelative(working_directory_, canonical, relative);
-    }
-    relative_out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
-}
-
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
                                        std::string& relative_out, 
                                        std::string& parent_relative_out) {
@@ -109,12 +95,12 @@ int FileManager::RenameFolder(const std::string& old_folderpath,
     int status = ret::A_OK;
     std::string alias_old, alias_new;
     if(!IsPathRelative(old_folderpath))
-        GetAliasedFilepath(old_folderpath, alias_old);
+        GetAliasedPath(old_folderpath, alias_old);
     else
         alias_old = old_folderpath;
 
     if(!IsPathRelative(new_folderpath))
-        GetAliasedFilepath(new_folderpath, alias_new);
+        GetAliasedPath(new_folderpath, alias_new);
     else
         alias_new = new_folderpath;
     Folder folder;
@@ -146,12 +132,12 @@ int FileManager::RenameFile(const std::string& old_filepath,
     int status = ret::A_OK;
     std::string alias_old, alias_new;
     if(!IsPathRelative(old_filepath))
-        GetAliasedFilepath(old_filepath, alias_old);
+        GetAliasedPath(old_filepath, alias_old);
     else
         alias_old = old_filepath;
 
     if(!IsPathRelative(new_filepath))
-        GetAliasedFilepath(new_filepath, alias_new);
+        GetAliasedPath(new_filepath, alias_new);
     else
         alias_new = new_filepath;
 
@@ -213,21 +199,9 @@ bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
 }
 
 bool FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
-    std::string relative;
-    if(!IsPathRelative(filepath)) {
-        AttemptToGetRelativePath(filepath, relative);
-    } 
-    else
-        relative = filepath;
+    bool ret = false;
 
-    if(!relative.empty()) {
-        manifest_mtx_.Lock();
-        manifest_.file_table()->set_file_post_id(relative, postid);
-        manifest_mtx_.Unlock();
-    }
-    else
-        return false;
-    return true;
+    return ret;
 }
 
 // Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
@@ -270,7 +244,7 @@ bool FileManager::SetFileChunkCount(const std::string& filepath, const std::stri
     return ret;
 }
 
-bool FileManager::GetAliasedFilepath(const std::string& filepath, std::string& out) {
+bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) {
     bool ret = false;
     std::string directory, dir_post_id;
     if(FindAssociatedWorkingDirectory(filepath, directory, dir_post_id)) {
@@ -326,7 +300,7 @@ bool FileManager::IsPathRelative(const std::string& filepath) {
 bool FileManager::DoesFileExist(const std::string& filepath) {
     bool stat = false;
     std::string relative;
-    if(AttemptToGetRelativePath(filepath, relative)) {
+    if(GetAliasedPath(filepath, relative)) {
         manifest_mtx_.Lock();
         stat = manifest_.file_table()->IsFileInManifest(relative);
         manifest_mtx_.Unlock();
@@ -338,51 +312,6 @@ bool FileManager::DoesFileExist(const std::string& filepath) {
     return stat;
 }
 
-bool FileManager::AttemptToGetRelativePath(const std::string& filepath, std::string& out) {
-    bool retval = false;
-
-    if(filepath.find(working_directory_) != std::string::npos) {
-        std::string relative;
-        fs::MakePathRelative(working_directory_, filepath, relative);
-        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
-        retval = true;
-        return retval;
-    }
-
-    std::string rel;
-    fs::MakePathRelative(working_directory_, filepath, rel);
-    std::string canonical;
-    int pos = 0;
-    int last = 0;
-    while(pos != std::string::npos) {
-        last = pos;
-        pos = filepath.find("/", pos + 1);
-    }
-
-    if(last) {
-        fs::GetCanonicalPath(filepath.substr(0, pos-1), canonical);
-        //canonical += filepath.substr(pos+1);
-    }
-    else {
-        fs::GetCanonicalPath(filepath, canonical);
-    }
-
-    if(canonical.find(working_directory_) != std::string::npos) {
-        std::string relative, working;
-        manifest_mtx_.Lock();
-        working = working_directory_;
-        manifest_mtx_.Unlock();
-        
-        fs::MakePathRelative(working, canonical, relative);
-        out = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
-        retval = true;
-    }
-    else {
-        std::cout<< " could not find working directory within canonical path " << std::endl;
-    }
-    return retval;
-} 
-
 bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out) {
     manifest_mtx_.Lock();
     bool ret = manifest_.file_table()->QueryForFileByPostId(post_id, out);
@@ -392,26 +321,17 @@ bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out)
 
 
 bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
-    std::string relative;
-    if(!IsPathRelative(filepath)) {
-        AttemptToGetRelativePath(filepath, relative);
-    } 
-    else
-        relative = filepath;
-
     bool ret = false;
-    // Attempt to get relative path
-    if(IsPathRelative(relative)) {
+    std::string relative;
+    if(GetAliasedPath(filepath, relative)) {
         manifest_mtx_.Lock();
         ret = manifest_.file_table()->IsFileInManifest(relative);
-        if(ret)
-            manifest_.file_table()->QueryForFile(relative, out);
+        if(ret) ret = manifest_.file_table()->QueryForFile(relative, out);
         manifest_mtx_.Unlock();
     }
     else {
-        std::cout<<"GETFILEINFO FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
+        std::cout<<" PATH NOT ALIASED : " << filepath << " : " << relative << std::endl;
     }
-
     return ret;
 }
 
@@ -444,8 +364,8 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     std::string relative;
     if(!IsPathRelative(folderpath)) {
         // Make Relative
-        //GetRelativePath(folderpath, relative);
-        GetAliasedFilepath(folderpath, relative);
+        //GetAliasedPath(folderpath, relative);
+        GetAliasedPath(folderpath, relative);
     }
     else {
         relative = folderpath;
@@ -465,7 +385,7 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
 bool FileManager::DoesFolderExist(const std::string& folderpath) {
     std::string relative;
     if(!IsPathRelative(folderpath))
-        GetAliasedFilepath(folderpath, relative);
+        GetAliasedPath(folderpath, relative);
     else
         relative = folderpath;
 
@@ -587,7 +507,7 @@ bool FileManager::UpdateFolderContents(Folder& folder) {
 bool FileManager::SetFolderPostId(const std::string& folderpath, const std::string& post_id) {
     std::string relative;
     if(!IsPathRelative(folderpath)) {
-        GetRelativePath(folderpath, relative);
+        GetAliasedPath(folderpath, relative);
     }
     else {
         relative = folderpath;
@@ -619,7 +539,7 @@ bool FileManager::SetFolderPostId(const std::string& folderpath, const std::stri
 bool FileManager::SetFolderParentPostId(const std::string& folderpath, const std::string& post_id) {
     std::string relative;
     if(!IsPathRelative(folderpath)) {
-        GetRelativePath(folderpath, relative);
+        GetAliasedPath(folderpath, relative);
     }
     else {
         relative = folderpath;

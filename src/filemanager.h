@@ -27,8 +27,6 @@ class FileManager {
                               std::string& parent_relative_out);
     bool IsPathRelative(const std::string& filepath);
 
-    bool AttemptToGetRelativePath(const std::string& filepath, std::string& out);
-
 public:
     FileManager();
     ~FileManager();
@@ -40,7 +38,6 @@ public:
 
     bool InsertToManifest (FileInfo* pFi);
     int RemoveFile(const std::string &filepath);
-    void GetRelativePath(const std::string& filepath, std::string& relative_out);
 
     int RenameFile(const std::string& old_filepath, 
                    const std::string& new_filepath);
@@ -48,7 +45,7 @@ public:
                      const std::string& new_folderpath);
 
     bool GetCanonicalFilepath(const std::string& relativepath, std::string& out);
-    bool GetAliasedFilepath(const std::string& filepath, std::string& out);
+    bool GetAliasedPath(const std::string& filepath, std::string& out);
 
     bool MarkFilesInFolderDeleted(const std::string& folder_id);
     bool MarkFilesInFolderDeleted(const Folder& folder);
