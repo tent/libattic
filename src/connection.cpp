@@ -264,21 +264,16 @@ bool Connection::InterpretResponse(Response& out) {
         std::cout<<" Interpret response exception : " << e.what() << std::endl;
         ret = false;
     }
-
-    std::cout<<" interpret response success ? : " << ret << std::endl;
     return ret;
 }
 
 void Connection::InterpretResponse(tcp::socket* socket, 
                                    Response& resp,
                                    bool connection_close) {
-    std::cout<<" interpreting regular response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = netlib::GetStatusCode(response);
-    std::cout<<" resp code " << resp.code << std::endl;
     // Read the response headers, which are terminated by a blank line.
-    std::cout<<" reading response " << std::endl;
     boost::asio::read_until(*socket, response, "\r\n\r\n");
 
     netlib::ProcessResponseHeaders(response, resp);
@@ -291,7 +286,6 @@ void Connection::InterpretResponse(tcp::socket* socket,
         content_len = atoi(resp.header["Content-Length"].c_str());
     }
 
-    std::cout<<" content length : " << content_len << std::endl;
     // Read Body
     boost::system::error_code error;
     std::string output_buffer;
@@ -310,7 +304,6 @@ void Connection::InterpretResponse(tcp::socket* socket,
                                 response,
                                 boost::asio::transfer_at_least(1), 
                                 error)) {
-           std::cout<<" getting response? " << std::endl;
            std::ostringstream strbuf;
            strbuf << &response;
            if(chunked) {
@@ -323,8 +316,6 @@ void Connection::InterpretResponse(tcp::socket* socket,
            else {
                output_buffer += strbuf.str();
            }
-           std::cout<<" out : " << output_buffer << std::endl;
-           std::cout<<" output buffer size : " << output_buffer.size() << std::endl;
            if(output_buffer.size() >= content_len)
                break;
         }
@@ -347,8 +338,6 @@ void Connection::InterpretResponse(tcp::socket* socket,
 void Connection::InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, 
                                    Response& resp,
                                    bool connection_close) {
-
-    std::cout<<" interpreting ssl response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = netlib::GetStatusCode(response);

@@ -203,11 +203,8 @@ int ConnectionHandler::HttpRequest(const std::string& url,
     using namespace boost::asio::ssl;
     try {
         if(manager_instance_) {
-            std::cout<<" url : " << url << std::endl;
             Connection* sock = manager_instance_->RequestConnection(url);
             if(sock) {
-                std::cout<<" writing request " <<std::endl;
-
 #if 0
                 std::ostringstream ss;
                 ss << &request;
@@ -221,9 +218,7 @@ int ConnectionHandler::HttpRequest(const std::string& url,
                 sock->Write(request);
 #endif
 
-                std::cout<<" interpreting response " << std::endl;
                 sock->InterpretResponse(out);
-                std::cout<<" recliaming socket " << std::endl;
                 manager_instance_->ReclaimConnection(sock);
             }
             else {
