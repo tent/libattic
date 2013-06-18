@@ -13,45 +13,46 @@ FolderHandler::~FolderHandler() {}
 
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     bool ret = false;
-    /*
+
     std::cout<<" validating folder post " << std::endl;
-    std::string full_filepath;
-
-    RenameHandler rh(file_manager_);
-    file_manager_->GetCanonicalFilepath(fp.folder().foldername(), full_filepath);
-
-
-    std::cout<<"checking for filepath : " << full_filepath << std::endl;
-    if(!full_filepath.empty()) {
-        if(!rh.CheckForRename(fp)) { 
-            // Check if folder exists, if not, create it
-            if(!fs::CheckFilepathExists(full_filepath)) {
-                std::cout<<" creating directory tree for " << full_filepath << std::endl;
-                try {
-                    fs::CreateDirectoryTreeForFolder(full_filepath);
+    std::string folderpath;
+    if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+        std::cout<<"checking for folderpath : " << folderpath << std::endl;
+        // Get full path
+        std::string full_folderpath;
+        file_manager_->GetCanonicalPath(folderpath, full_folderpath);
+        if(!full_folderpath.empty()) {
+            RenameHandler rh(file_manager_);
+            if(!rh.CheckForRename(fp)) { 
+                // Check if folder exists, if not, create it
+                if(!fs::CheckFilepathExists(full_folderpath)) {
+                    std::cout<<" creating directory tree for " << full_folderpath << std::endl;
+                    try {
+                        fs::CreateDirectoryTreeForFolder(full_folderpath);
+                    }
+                    catch(std::exception& e) {
+                        std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
+                    }
                 }
-                catch(std::exception& e) {
-                    std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
+                else {
+                    std::cout<<" renamed ...? " << std::endl;
                 }
+            }
+            // Check if there is a corresponding folder entry
+            Folder folder;
+            if(!file_manager_->GetFolderEntry(fp.folder().foldername(), folder)) {
+                ret = file_manager_->CreateFolderEntry(fp.folder().foldername(), 
+                                                       fp.id(), 
+                                                       fp.folder().parent_post_id(), 
+                                                       folder);
             }
             else {
-                std::cout<<" renamed ...? " << std::endl;
+                if(folder.folder_post_id().empty())
+                    ret = file_manager_->SetFolderPostId(fp.folder().foldername(), fp.id());
             }
         }
-        // Check if there is a corresponding folder entry
-        Folder folder;
-        if(!file_manager_->GetFolderEntry(fp.folder().foldername(), folder)) {
-            ret = file_manager_->CreateFolderEntry(fp.folder().foldername(), 
-                                                   fp.id(), 
-                                                   fp.folder().parent_post_id(), 
-                                                   folder);
-        }
-        else {
-            if(folder.folder_post_id().empty())
-                ret = file_manager_->SetFolderPostId(fp.folder().foldername(), fp.id());
-        }
     }
-    */
+
     return ret;
 }
 

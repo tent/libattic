@@ -241,7 +241,6 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
             if(!destination_path.empty())
                 try {
                     fs::MoveFile(temp_path, path);
-                    log::LogString("MOVING TO PATH", path);
                 }
                 catch(std::exception &e) {
                     log::LogException("getfile_32987523", e);    
@@ -397,9 +396,13 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
 
 void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
     std::string path;
+    // Will return aliased path
     file_manager_->ConstructFolderpath(folder.folder_post_id(), path);
-    utils::CheckUrlAndAppendTrailingSlash(path);
-    out = path + fi.filename();
+    // Get canonical path
+    file_manager_->GetCanonicalPath(path, out);
+    utils::AppendTrailingSlash(out);
+    // Append filename
+    out = out + fi.filename();
 }
 
 }//namespace
