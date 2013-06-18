@@ -128,7 +128,6 @@ int PostHandler<T>::Get(const std::string& post_url,
     if(out.type().find(cnst::g_attic_folder_type) != std::string::npos) {
         std::string s;
         jsn::SerializeObject(&out, s);
-        log::LogString("LOG HANDLER GET ", s);
     }
 
     return status;
