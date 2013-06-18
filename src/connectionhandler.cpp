@@ -207,7 +207,20 @@ int ConnectionHandler::HttpRequest(const std::string& url,
             Connection* sock = manager_instance_->RequestConnection(url);
             if(sock) {
                 std::cout<<" writing request " <<std::endl;
+
+#if 0
+                std::ostringstream ss;
+                ss << &request;
+                std::cout <<"HttpRequest : " <<  ss.str() << std::endl;
+
+                boost::asio::streambuf treq;
+                std::ostream request_stream(&treq);
+                request_stream << ss.str();
+                sock->Write(treq);
+#else 
                 sock->Write(request);
+#endif
+
                 std::cout<<" interpreting response " << std::endl;
                 sock->InterpretResponse(out);
                 std::cout<<" recliaming socket " << std::endl;
