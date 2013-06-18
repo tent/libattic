@@ -66,6 +66,7 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
 
 bool RenameHandler::CheckForRename(FolderPost& fp) {
     bool ret = false;
+    /*
     std::cout<<" Checking for folder RENAME " << std::endl;
     std::cout<<" checking for folder with id : " << fp.id() << std::endl;
     if(file_manager_->DoesFolderExistById(fp.id())) {
@@ -107,6 +108,7 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             }
         }
     }
+    */
     return ret;
 }
 

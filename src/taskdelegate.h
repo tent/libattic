@@ -26,7 +26,7 @@ public:
         type_ = type;
     }
 
-    ~TaskDelegate() {}
+    virtual ~TaskDelegate() {}
 
     const std::string& GenerateIdentifier() {
         identifier_.clear();

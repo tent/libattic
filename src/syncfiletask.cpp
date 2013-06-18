@@ -157,6 +157,7 @@ void SyncFileTask::ValidateFileInfo(FileInfo& incoming, FileInfo& local) {
 // During processing, a folder post could have changed, validate that the filepath of this file
 // and update if necessary
 void SyncFileTask::ValidateFilepath(FileInfo& fi) {
+    /*
     FolderHandler fh(file_manager());
     Folder folder;
     if(fh.GetFolderById(fi.folder_post_id(), folder)) {
@@ -183,7 +184,9 @@ void SyncFileTask::ValidateFilepath(FileInfo& fi) {
             }
         }
     }
+    */
 }
+
 
 int SyncFileTask::RaisePullRequest(const FilePost& p, FileInfo& fi) {
     int status = ret::A_OK;

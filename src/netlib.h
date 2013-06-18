@@ -447,7 +447,7 @@ static void ExtractHostAndPath( const std::string& url,
 }
 
 static void InterpretResponse(tcp::socket* socket, Response& resp) {
-    std::cout<<" interpret response " << std::endl;
+    std::cout<<" netlib interpret response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = GetStatusCode(response);
@@ -496,6 +496,7 @@ static void InterpretResponse(tcp::socket* socket, Response& resp) {
 }
 
 static void InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socket, Response& resp) {
+    std::cout<<" netlib ssl interpret response " << std::endl;
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, "\r\n");
     resp.code = GetStatusCode(response);
