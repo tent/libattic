@@ -85,7 +85,7 @@ bool ConfigHandler::RetrieveConfigPost(const Entity& ent, const AccessToken* at,
     return ret;
 }
 
-bool ConfigHandler::LoadConfigPost(ConfigPost& in) {
+void ConfigHandler::LoadConfigPost(ConfigPost& in) {
     std::map<std::string, ConfigValue>::iterator itr = in.config_map()->begin();
     for(;itr != in.config_map()->end(); itr++) {
         if(!file_manager_->HasConfigValue((*itr).second.key)) {

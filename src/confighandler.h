@@ -19,7 +19,7 @@ public:
     bool CreateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out);
     bool UpdateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& post);
     bool RetrieveConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out);
-    bool LoadConfigPost(ConfigPost& in);
+    void LoadConfigPost(ConfigPost& in);
     int GetConfigPostCount(const Entity& ent, const AccessToken* at);
 
     int CreateWorkingDirectory(const std::string& filepath,
