@@ -50,6 +50,7 @@ void FolderTask::RunTask() {
 
 int FolderTask::RenameFolder() {
     int status = ret::A_OK;
+    /*
     std::string old_folderpath, new_folderpath;
     // These are absolute paths
     context_.get_value("original_folderpath", old_folderpath);
@@ -94,6 +95,7 @@ int FolderTask::RenameFolder() {
     for(;file_itr != file_list.end(); file_itr++) {
         UpdateFilePost((*file_itr), (*file_itr).post_id());
     }
+    */
 
     return status;
 }
@@ -111,7 +113,7 @@ bool FolderTask::UpdateFolderPost(Folder& folder, const std::string post_id) {
     else {
         std::ostringstream err;
         err << " Empty Folder Post id : " << std::endl;
-        err << " entry : " << folder.folderpath();
+        err << " entry : " << folder.foldername();
         err << " \t\t " << folder.folder_post_id();
         err << " \t\t " << folder.parent_post_id();
         log::LogString("folder_18912512", err.str());
@@ -206,49 +208,42 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
 
 int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
-    // Normalize path
-    std::string folderpath = path;
-    utils::CheckUrlAndRemoveTrailingSlash(folderpath);
-    FolderHandler fh(file_manager());
-    // Check if folder is deleted
-    if(CheckFolderDeleted(folderpath)) {
-        // Un-delete folder
-        Folder folder;
-        fh.GetFolder(folderpath, folder);
-        folder.set_deleted(false);
-        fh.SetFolderDeleted(folderpath, false);
-        UpdateFolderPost(folder, folder.folder_post_id());
-    }
-    else {
-        // Create Folder
-        // Retrieve folder hierarchy
-        std::deque<Folder> folder_list;
-        fh.RetrieveFolders(folderpath, folder_list);
-        std::cout<<" folder list size : " << folder_list.size() << std::endl;
-        if(folder_list.size()) {
-            // make sure posts exist for each parent folder
-            std::string hold_id = cnst::g_szWorkingPlaceHolder; 
-            std::deque<Folder>::iterator itr = folder_list.end();
-            while(itr != folder_list.begin()) {
-                itr--; // Its pointing to the end, decrement
-                std::cout<<" hold id : " << hold_id << std::endl;
-                std::cout<<" filepath : " << (*itr).folderpath() << std::endl;
-                (*itr).set_parent_post_id(hold_id);
-                if((*itr).folder_post_id().empty()) {
+    // Find associated working directory
+    std::string directory, directory_post_id;
+    if(file_manager()->FindAssociatedWorkingDirectory(path, directory, directory_post_id)) {
+        FolderHandler fh(file_manager());
+        std::deque<std::string> names;
+        if(fh.RetrieveFolders(path, directory, names)) {
+            // validate each folder exists
+            std::deque<std::string>::iterator itr = names.begin();
+            std::string parent_post_id = directory_post_id;
+            for(;itr!=names.end();itr++) {
+                Folder folder;
+                if(!file_manager()->GetFolderEntry((*itr), parent_post_id, folder)) {
+                    folder.set_foldername(*itr);
+                    folder.set_parent_post_id(parent_post_id);
+                    //  if not create post
                     std::string post_id;
-                    int s = CreateFolderPost((*itr), post_id);
-                    if(s == ret::A_OK) { 
-                        fh.InsertFolder(*itr);
-                        hold_id = post_id;
-                    }
+                    CreateFolderPost(folder, post_id);
+                    // Insert to table;
+                    file_manager()->CreateFolderEntry(folder.foldername(),
+                                                      folder.folder_post_id(),
+                                                      folder.parent_post_id(),
+                                                      folder);
                 }
                 else {
-                    hold_id = (*itr).folder_post_id();
+                    // Check if folderpath is deleted
+                    if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
+                        // Un-delete
+                        file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
+                        UpdateFolderPost(folder, folder.folder_post_id());
+                    }
                 }
+                parent_post_id = folder.folder_post_id();
             }
+            
         }
     }
-
     return status;
 }
 
@@ -383,7 +378,7 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         utils::FindAndReplace(post_path, "{post}", post_id, posturl);
         std::cout<<" post url : " << posturl << std::endl;
         std::cout<<" post type : " << fp.type() << std::endl;
-        std::cout<<" folderpath : " << fp.folder().folderpath() << std::endl;
+        std::cout<<" foldername : " << fp.folder().foldername() << std::endl;
 
         PostHandler<FolderPost> ph(access_token());
         status = ph.Put(posturl, NULL, fp);
@@ -396,6 +391,21 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
     return status;
+}
+
+void FolderTask::SeparatePath(const std::string& full_path, std::deque<std::string>& names) {
+    std::string path = full_path;
+    utils::RemoveTrailingSlash(path);
+    utils::RemoveBeginningSlash(path);
+
+    std::cout<<" path in : " << path << std::endl;
+    std::string name;
+    std::stringstream stream(path);
+    while(std::getline(stream, name, '/')) {
+        names.push_back(name);
+        std::cout<<" pushing back : " << name << std::endl;
+        name.clear();
+    }
 }
 
 

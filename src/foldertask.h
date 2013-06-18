@@ -30,6 +30,8 @@ class FolderTask : public TentTask{
     int PostFilePost(const std::string& post_id, FilePost& fp);
     int RetrieveFolderPost(const std::string& post_id, FolderPost& out);
     int PostFolderPost(const std::string& post_id, FolderPost& fp);
+
+    void SeparatePath(const std::string& full_path, std::deque<std::string>& names);
 public:
     FolderTask(FileManager* pFm,
                CredentialsManager* pCm,
