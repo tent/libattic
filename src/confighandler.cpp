@@ -126,7 +126,7 @@ int ConfigHandler::CreateWorkingDirectory(const std::string& filepath,
         // Create alias
         std::string postfix;
         utils::GenerateRandomString(postfix, 12);
-        std::string name = "~/attic_";
+        std::string name = cnst::g_alias_prefix;
         name += postfix;
         // Create folder post
         Folder folder;

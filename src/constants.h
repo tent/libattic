@@ -3,6 +3,7 @@
 #pragma once
 
 namespace attic { namespace cnst {
+
 // Types
 static const char* g_app_type = "https://tent.io/types/app/v0";
 static const char* g_attic_cred_type = "https://attic.is/types/cred/v0";
@@ -61,6 +62,9 @@ static const char* g_filetable = "filetable";
 static const char* g_foldertable = "foldertable";
 static const char* g_chunktable = "chunktable";
 static const char* g_configtable = "configtable";
+
+// Alias prefix;
+static const char* g_alias_prefix ="~attic_";
 
 }} //namespace
 #endif
