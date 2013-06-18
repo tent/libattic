@@ -38,9 +38,16 @@ public:
                            const std::string& state);
     bool RemoveConfigValue(const std::string& key);
     
-    bool IsConfigValueInManifest(const std::string& key);
+    bool IsKeyInManifest(const std::string& key);
+    bool IsStateInManifest(const std::string& state);
+
+
+    bool DoesValueExist(const std::string& value);
+
     bool RetrieveConfigValue(const std::string& key, std::string& out);
-    bool RetrieveConfigType(const std::string& type, std::deque<std::string>& out);
+    bool RetrieveConfigValueByState(const std::string& state, std::string& out);
+    bool RetrieveConfigKeyByState(const std::string& state, std::string& out);
+    bool RetrieveConfigType(const std::string& type, std::deque<ConfigEntry>& out);
 
     bool RetrieveAllEntries(std::deque<ConfigEntry>& out);
 };

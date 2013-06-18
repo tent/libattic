@@ -8,7 +8,7 @@ bool ConfigTable::CreateTable() {
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
     exc += " (type TEXT, config_key TEXT, value TEXT, state TEXT,";
-    exc += " PRIMARY KEY(type ASC, config_key ASC));";
+    exc += " PRIMARY KEY(type ASC, config_key ASC, value ASC, state ASC));";
     std::string error;
     bool ret = Exec(exc, error);
     if(!ret)
@@ -22,7 +22,7 @@ bool ConfigTable::InsertConfigValue(const std::string& type,
                                     const std::string& state) {
     bool ret = false;
     std::string exc;
-    if(!IsConfigValueInManifest(key)) 
+    if(!IsKeyInManifest(key)) 
         exc += "INSERT OR REPLACE INTO ";
     else
         exc += "REPLACE INTO ";
@@ -45,7 +45,7 @@ bool ConfigTable::RemoveConfigValue(const std::string& key) {
     return ret;
 }
 
-bool ConfigTable::IsConfigValueInManifest(const std::string& key) {
+bool ConfigTable::IsKeyInManifest(const std::string& key) {
     bool ret = false;
     std::string query;
     query += "SELECT EXISTS(SELECT * FROM ";
@@ -75,6 +75,66 @@ bool ConfigTable::IsConfigValueInManifest(const std::string& key) {
     return ret;
 }
 
+bool ConfigTable::IsStateInManifest(const std::string& state) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT EXISTS(SELECT * FROM ";
+    query += table_name();
+    query += " WHERE state=\"";
+    query += state;
+    query += "\");";
+     
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) {
+                std::string r = res.results()[0+step];
+                if(r == "1") {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        log::LogString("config_table_nnasd92s", error);
+    }
+    return ret;
+
+}
+
+bool ConfigTable::DoesValueExist(const std::string& value) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT EXISTS(SELECT * FROM ";
+    query += table_name();
+    query += " WHERE value=\"";
+    query += value;
+    query += "\");";
+     
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) {
+                std::string r = res.results()[0+step];
+                if(r == "1") {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        log::LogString("config_table_38403454s", error);
+    }
+    return ret;
+}
 
 bool ConfigTable::RetrieveConfigValue(const std::string& key, std::string& out) {
     bool ret = false;
@@ -104,7 +164,63 @@ bool ConfigTable::RetrieveConfigValue(const std::string& key, std::string& out) 
     return ret;
 }
 
-bool ConfigTable::RetrieveConfigType(const std::string& type, std::deque<std::string>& out) {
+bool ConfigTable::RetrieveConfigKeyByState(const std::string& state, std::string& out) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT config_key FROM ";
+    query += table_name();
+    query += " WHERE state=\"";
+    query += state;
+    query += "\";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) { 
+                out = res.results()[0+step];
+                ret = true;
+                break;
+            }
+        }
+    }
+    else {
+        log::LogString("config_table_9d11f", error);
+    }
+    return ret;
+}
+
+bool ConfigTable::RetrieveConfigValueByState(const std::string& state, std::string& out) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT * FROM ";
+    query += table_name();
+    query += " WHERE state=\"";
+    query += state;
+    query += "\";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) { 
+                out = res.results()[2+step];
+                ret = true;
+                break;
+            }
+        }
+    }
+    else {
+        log::LogString("config_table_9d11f", error);
+    }
+    return ret;
+}
+
+bool ConfigTable::RetrieveConfigType(const std::string& type, std::deque<ConfigEntry>& out) {
     bool ret = false;
     std::string query;
     query += "SELECT * FROM ";
@@ -119,8 +235,11 @@ bool ConfigTable::RetrieveConfigType(const std::string& type, std::deque<std::st
         int step = 0;
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
-            if(step > 0)
-                out.push_back(res.results()[2+step]);
+            if(step > 0) {
+                ConfigEntry entry;
+                ExtractEntryResults(res, step, entry);
+                out.push_back(entry);
+            }
         }
         ret = true;
     }
