@@ -469,20 +469,25 @@ int AtticService::EnterPassphrase(const std::string& pass) {
             ConfigHandler ch(file_manager_);
             ConfigPost config_post;
             if(!ch.RetrieveConfigPost(client_->entity(), &at, config_post)) {
+                std::cout<<" creating config post " << std::endl;
                 ch.CreateConfigPost(client_->entity(), 
                                     &at, 
                                     config_post);
             }
+            std::cout<< " loading config post " << std::endl;
             // Load config post
             ch.LoadConfigPost(config_post);
-            status = CreateWorkingDirectory(working_dir_);
+            // Check for unlinked working directories
+            if(!ch.LoadIntoFirstDirectory(working_dir_))
+                status = CreateWorkingDirectory(working_dir_);
             file_manager_->LoadWorkingDirectories();
         }
     }
     return status;
 }
 
-int AtticService::ChangePassphrase(const std::string& old_passphrase, const std::string& new_passphrase) {
+int AtticService::ChangePassphrase(const std::string& old_passphrase, 
+                                   const std::string& new_passphrase) {
     int status = ret::A_FAIL_LIB_INIT;
     if(running_) {
         // Discover Entity, get access token
