@@ -45,6 +45,40 @@ bool FolderTable::RemoveFolderData(const std::string& foldername) {
     return false;
 }
 
+bool FolderTable::IsFolderInManifest(const std::string& foldername, 
+                                     const std::string& parent_post_id) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT EXISTS(SELECT * FROM ";
+    query += table_name();
+    query += " WHERE post_id=\"";
+    query += post_id;
+    query += "\"";
+    query += " AND";
+    query += " parent_post_id=\"";
+    query += parent_post_id;
+    query += "\");";
+     
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) {
+                std::string r = res.results()[0+step];
+                if(r == "1") {
+                    ret = true;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        log::LogString("manifest_1901010", error);
+    }
+    return ret;
+}
 bool FolderTable::IsFolderInManifest(const std::string& post_id) {
     bool ret = false;
     std::string query;

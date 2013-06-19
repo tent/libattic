@@ -31,6 +31,7 @@ public:
 
     bool RemoveFolderData(const std::string& foldername);
 
+    bool IsFolderInManifest(const std::string& foldername, const std::string& parent_post_id);
     bool IsFolderInManifest(const std::string& post_id);
     bool IsFolderDeleted(const std::string& post_id);
 

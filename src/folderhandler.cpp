@@ -3,6 +3,7 @@
 #include "filesystem.h"
 #include "constants.h"
 #include "renamehandler.h"
+#include "logutils.h"
 
 namespace attic {
 FolderHandler::FolderHandler(FileManager* fm) {
@@ -21,7 +22,20 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
     //   create folder
     std::cout<<" parent folder post id : " << fp.folder().parent_post_id() << std::endl;
     if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
-        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id())) {
+        std::string folderpath, full_folderpath;
+        if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+            std::cout<<" folder path : " << folderpath << std::endl;
+            if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+                std::cout<<" creating directory tree for " << full_folderpath << std::endl;
+            }
+        }
+        if(full_folderpath.empty()) {
+            std::string error = "Validate Folder, full folderpath empty ";
+            log::LogString("folder_handler_12904", error);
+            return ret;
+        }
+
+        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id()) && fs::CheckFilepathExists(full_folderpath)) {
             // check for rename
             std::cout<<" CHECK FOR RENAME " << std::endl;
             RenameHandler rh(file_manager_);
@@ -31,6 +45,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             std::cout<<" creating folder entry " << std::endl;
             //create entry
             Folder folder;
+
             if(file_manager_->CreateFolderEntry(fp.folder().foldername(), 
                                                 fp.id(), 
                                                 fp.folder().parent_post_id(), 
@@ -41,21 +56,13 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
                 if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
                     std::cout<<" folder path : " << folderpath << std::endl;
                     std::string full_folderpath;
-                    if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
-                        std::cout<<" creating directory tree for " << full_folderpath << std::endl;
-                       if(!fs::CheckFilepathExists(full_folderpath)) {
-                            try {
-                                //create folder
-                                fs::CreateDirectoryTreeForFolder(full_folderpath);
-                                ret = true;
-                            }
-                            catch(std::exception& e) {
-                                std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
-                            }
-                       }
+                    try {
+                        //create folder
+                        fs::CreateDirectoryTreeForFolder(full_folderpath);
+                        ret = true;
                     }
-                    else {
-                        std::cout<<" renamed ...? " << std::endl;
+                    catch(std::exception& e) {
+                        log::LogException("fh_1281jn1", e);
                     }
                 }
                 else {
@@ -64,45 +71,6 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             }
         }
     }
-/*
-    std::string folderpath;
-    if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
-        std::cout<<"checking for folderpath : " << folderpath << std::endl;
-        // Get full path
-        std::string full_folderpath;
-        file_manager_->GetCanonicalPath(folderpath, full_folderpath);
-        if(!full_folderpath.empty()) {
-            RenameHandler rh(file_manager_);
-            if(!rh.CheckForRename(fp)) { 
-                // Check if folder exists, if not, create it
-                if(!fs::CheckFilepathExists(full_folderpath)) {
-                    std::cout<<" creating directory tree for " << full_folderpath << std::endl;
-                    try {
-                        fs::CreateDirectoryTreeForFolder(full_folderpath);
-                    }
-                    catch(std::exception& e) {
-                        std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
-                    }
-                }
-                else {
-                    std::cout<<" renamed ...? " << std::endl;
-                }
-            }
-            // Check if there is a corresponding folder entry
-            Folder folder;
-            if(!file_manager_->GetFolderEntry(fp.folder().foldername(), folder)) {
-                ret = file_manager_->CreateFolderEntry(fp.folder().foldername(), 
-                                                       fp.id(), 
-                                                       fp.folder().parent_post_id(), 
-                                                       folder);
-            }
-            else {
-                if(folder.folder_post_id().empty())
-                    ret = file_manager_->SetFolderPostId(fp.folder().foldername(), fp.id());
-            }
-        }
-    }
-    */
 
     return ret;
 }
