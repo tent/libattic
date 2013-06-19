@@ -10,13 +10,9 @@ bool ConnectionManager::initialized_ = false;
 int ConnectionManager::ref_ = 0;
 
 ConnectionManager::ConnectionManager() {}
-
-ConnectionManager::~ConnectionManager() {
-    std::cout<<" CONNECTION MANAGER DESTRUCTOR " << std::endl;
-}
+ConnectionManager::~ConnectionManager() {}
 
 int ConnectionManager::Shutdown() {
-    std::cout<<" Connection Manager Shutting Down " << std::endl;
     int status = ret::A_OK;
     if(instance_){
         delete instance_;
@@ -40,7 +36,6 @@ ConnectionManager* ConnectionManager::instance() {
 
 int ConnectionManager::Initialize(const std::string& host_url) {
     int status = ret::A_OK;
-    std::cout<< "attempting to init " << host_url << std::endl;
     if(!host_url.empty()) {
         // Start up io service
         boost::system::error_code ec;
@@ -63,7 +58,6 @@ int ConnectionManager::Initialize(const std::string& host_url) {
         status = ret::A_FAIL_EMPTY_STRING;
     }
 
-    std::cout<<" init status : " << status << std::endl;
     return status;
 }
 
@@ -81,9 +75,7 @@ Connection* ConnectionManager::RequestConnection(const std::string& url) {
                 std::cout<<" INVALID CONNECTION FROM CONNECTION POOL " << std::endl;
 
             if(con->TestConnection()) { 
-                std::cout<<" connection is good " << std::endl;
                 break;
-
             }
             else {
                 std::cout<<" Connection no good deleting, getting another  " << std::endl;
@@ -96,7 +88,6 @@ Connection* ConnectionManager::RequestConnection(const std::string& url) {
         std::cout<<" CONNECTION MANAGER NOT INITIALIZED ..." << std::endl;
     }
     pool_mtx_.Unlock();
-    std::cout<<" returning con " << std::endl;
     // Check if connection is still alive ... just do a head request,
     //  - if yes, return
     //  - if not, re-connect then return

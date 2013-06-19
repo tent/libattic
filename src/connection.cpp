@@ -135,7 +135,7 @@ bool Connection::SetTimeout() {
 }
 
 bool Connection::TestConnection() {
-    std::cout<<" Test connection not actually implemented " << std::endl;
+    //std::cout<<" Test connection not actually implemented " << std::endl;
     return true;
     std::cout<<" TESTING CONNECTION " << std::endl;
     boost::system::error_code error;
@@ -330,7 +330,8 @@ void Connection::InterpretResponse(tcp::socket* socket,
     */
 
     resp.body = output_buffer;
-    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+    //if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+    if(error)
         throw boost::system::system_error(error);
 
 }
@@ -396,7 +397,8 @@ void Connection::InterpretResponse(boost::asio::ssl::stream<tcp::socket&>* socke
     */
 
     resp.body = output_buffer;
-    if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+    //if (error != boost::asio::error::eof && error != boost::asio::error::shut_down)
+    if (error) 
         throw boost::system::system_error(error);
 }
 

@@ -3,6 +3,12 @@
 
 namespace attic {
 
+/* Config Notes*
+ * Root directory cong
+ * (config_key == alias,
+ *  value == post_id,
+ *  state == relative_path (set by local))
+ */
 bool ConfigTable::CreateTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";

@@ -98,7 +98,7 @@ void ConfigHandler::LoadConfigPost(ConfigPost& in) {
                                            (*itr).second.value);
         }
     }
-    file_manager_->LoadWorkingDirectories();
+
 }
 
 

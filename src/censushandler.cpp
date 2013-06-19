@@ -56,6 +56,7 @@ void CensusHandler::SetReceivedAt(const std::string& post_type,
     std::cout<<" setting time for : " << pt << " time : " << time << std::endl;
 }
 
+// Returns a queue of posts in the order of newest to oldest
 int CensusHandler::QueryTimeline(const std::string& post_type, 
                                  const std::string& fragment, 
                                  std::deque<Post>& out) {
