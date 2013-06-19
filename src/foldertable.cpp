@@ -241,11 +241,14 @@ bool FolderTable::set_foldername(const std::string& post_id, const std::string& 
 }
 
 bool FolderTable::set_folder_deleted(const std::string& post_id, bool del) {
+    char b[256] = {'\0'};
+    snprintf(b, 256, "%d", (int)del);
+
     std::string exc;
     exc += "UPDATE ";
     exc += table_name();
     exc += " SET deleted=\"";
-    exc += (int)del;
+    exc += b;
     exc += "\" WHERE post_id=\"";
     exc += post_id;
     exc += "\";";

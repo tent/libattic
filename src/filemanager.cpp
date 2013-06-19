@@ -201,6 +201,7 @@ bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
 bool FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
     bool ret = false;
     std::cout<<" incoming filepath : " << filepath << std::endl;
+    std::cout<<" post id : " << postid << std::endl;
     std::string aliased;
     if(GetAliasedPath(filepath, aliased)) {
         std::cout<<" aliased : " << aliased << std::endl;
@@ -254,17 +255,20 @@ bool FileManager::SetFileChunkCount(const std::string& filepath, const std::stri
 
 bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) {
     bool ret = false;
+    std::cout<<" Get aliased path for : " << filepath << std::endl;
     if(!IsPathAliased(filepath)) {
         std::string directory, dir_post_id;
         if(FindAssociatedWorkingDirectory(filepath, directory, dir_post_id)) {
             // Get alias
             std::string alias;
             manifest_mtx_.Lock();
-            ret = manifest_.config_table()->RetrieveConfigValue(dir_post_id, alias);
+            ret = manifest_.config_table()->RetrieveConfigKeyByValue(dir_post_id, alias);
             manifest_mtx_.Unlock();
-            size_t pos = filepath.find(directory);
-            out += alias + "/" + filepath.substr(pos+directory.size());
-            utils::ErrorCheckPathDoubleQuotes(out);
+            if(ret) {
+                size_t pos = filepath.find(directory);
+                out += alias + "/" + filepath.substr(pos+directory.size());
+                utils::ErrorCheckPathDoubleQuotes(out);
+            }
         }
     }
     else {
@@ -290,7 +294,8 @@ bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string&
                 ret = true;
             }
             else {
-                std::cout << " MALFORMED RELATIVE PATH " << relativepath << std::endl;
+                out = aliased_directory;
+                ret = true;
             }
         }
     }

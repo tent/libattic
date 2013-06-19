@@ -41,7 +41,7 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
 
 int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out) {
     int status = ret::A_OK;
-    std::cout<<" creating file entry " << std::endl;
+    std::cout<<" creating file entry : " << filepath << std::endl;
     std::string mk;
     GetMasterKey(mk);
     FileHandler fh(file_manager_);

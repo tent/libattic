@@ -23,6 +23,9 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
     if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
         if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id())) {
             // check for rename
+            std::cout<<" CHECK FOR RENAME " << std::endl;
+            RenameHandler rh(file_manager_);
+            rh.CheckForRename(fp);
         }
         else {
             std::cout<<" creating folder entry " << std::endl;

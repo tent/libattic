@@ -265,10 +265,12 @@ static void RenamePath(const std::string& original_path, const std::string& new_
     boost::filesystem::path original(original_path), newpath(new_path);
     //boost::filesystem::rename(original, newpath);
     
+    std::cout<<" RENAMING : " << original_path << " TO : " << new_path << std::endl;
     int status = rename(original_path.c_str(), new_path.c_str());
     if(status != 0) { 
         std::cout<<" RenamePath failed status : " << status << std::endl;
     }
+    std::cout <<" RENAME STATUS : " << status << std::endl;
 }
 
 

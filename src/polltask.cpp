@@ -149,6 +149,18 @@ void PollTask::PollFilePosts() {
     }
 }
 
+int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
+    int status = ret::A_OK;
+    // Process Posts
+    std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
+    for(;itr != file_list.rend(); itr++) {
+        std::cout<<" poll task requesting file sync, id : " << (*itr).id() << std::endl;
+        event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
+                          (*itr).id(),
+                          delegate_);
+    }
+    return status;
+}
 void PollTask::PollDeletedFilePosts() {
     std::cout<<" polling deleted files ... " << std::endl;
     std::deque<FilePost> deleted_list;
@@ -158,8 +170,8 @@ void PollTask::PollDeletedFilePosts() {
         if(GetMasterKey(master_key)) {
             std::deque<FileInfo> file_list;
 
-            std::deque<FilePost>::iterator fp_itr = deleted_list.begin();
-            for(;fp_itr!=deleted_list.end(); fp_itr++) {
+            std::deque<FilePost>::reverse_iterator fp_itr = deleted_list.rbegin();
+            for(;fp_itr!=deleted_list.rend(); fp_itr++) {
                 FileInfo fi;
                 fh.DeserializeIntoFileInfo((*fp_itr), master_key, fi);
                 file_list.push_back(fi);
@@ -180,8 +192,8 @@ void PollTask::PollDeletedFolderPosts() {
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, folder_list)){
         std::cout<<" Retreived : " << folder_list.size() << " deleted folders " << std::endl;
-        std::deque<FolderPost>::iterator itr = folder_list.begin();
-        for(;itr != folder_list.end(); itr++) {
+        std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
+        for(;itr != folder_list.rend(); itr++) {
             // Delete local folder
             DeleteLocalFolder(*itr);
         }
@@ -194,25 +206,15 @@ void PollTask::PollFolderPosts() {
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry("", folder_list)){
         std::cout<<" Retreived : " << folder_list.size() << " folders " << std::endl;
-        std::deque<FolderPost>::iterator itr = folder_list.begin();
-        for(;itr != folder_list.end(); itr++) {
+        std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
+        for(;itr != folder_list.rend(); itr++) {
+            std::cout<<" attempting to validate : " << (*itr).folder().foldername() << std::endl;
             fh.ValidateFolder(*itr);
         }
     }
 }
 
-int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
-    int status = ret::A_OK;
-    // Process Posts
-    std::deque<FilePost>::iterator itr = file_list.begin();
-    for(;itr != file_list.end(); itr++) {
-        std::cout<<" poll task requesting file sync, id : " << (*itr).id() << std::endl;
-        event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
-                          (*itr).id(),
-                          delegate_);
-    }
-    return status;
-}
+
 
 void PollTask::DeleteLocalFile(const FileInfo& fi){ // TODO :: temp method, will move to its own job
     //FolderHandler fh(file_manager());
