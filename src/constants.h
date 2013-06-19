@@ -66,6 +66,9 @@ static const char* g_configtable = "configtable";
 // Alias prefix;
 static const char* g_alias_prefix ="~attic_";
 
+// Config values
+static const char* g_config_dir_type = "root_dir";
+
 }} //namespace
 #endif
 

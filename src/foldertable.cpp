@@ -188,15 +188,15 @@ bool FolderTable::QueryAllFoldersForFolder(const std::string& folderid, FolderLi
     }
     return ret;
 }
-bool FolderTable::set_folder_post_id(const std::string& foldername, 
-                                     const std::string& post_id) {
+bool FolderTable::set_folder_post_id(const std::string& post_id,
+                                     const std::string& new_post_id) {
     std::string exc;
     exc += "UPDATE ";
     exc += table_name();
     exc += " SET post_id=\"";
+    exc += new_post_id;
+    exc += "\" WHERE post_id=\"";
     exc += post_id;
-    exc += "\" WHERE foldername=\"";
-    exc += foldername;
     exc += "\";";
 
     std::string error;
@@ -206,15 +206,15 @@ bool FolderTable::set_folder_post_id(const std::string& foldername,
     return ret;
 }
 
-bool FolderTable::set_folder_parent_post_id(const std::string& foldername, 
+bool FolderTable::set_folder_parent_post_id(const std::string& post_id, 
                                             const std::string& parent_post_id) {
     std::string exc;
     exc += "UPDATE ";
     exc += table_name();
     exc += " SET parent_post_id=\"";
     exc += parent_post_id;
-    exc += "\" WHERE foldername=\"";
-    exc += foldername;
+    exc += "\" WHERE post_id=\"";
+    exc += post_id;
     exc += "\";";
 
     std::string error;
@@ -245,15 +245,17 @@ bool FolderTable::set_folder_deleted(const std::string& post_id, bool del) {
     exc += "UPDATE ";
     exc += table_name();
     exc += " SET deleted=\"";
-    exc += del;
+    exc += (int)del;
     exc += "\" WHERE post_id=\"";
     exc += post_id;
     exc += "\";";
 
     std::string error;
     bool ret = Exec(exc, error);
-    if(!ret)                                       
+    if(!ret) {
+        error += " | " + exc;
         log::LogString("manifest_01hasdg125", error);
+    }
     return ret;
 }
 

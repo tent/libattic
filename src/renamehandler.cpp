@@ -66,49 +66,48 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
 
 bool RenameHandler::CheckForRename(FolderPost& fp) {
     bool ret = false;
-    /*
-    std::cout<<" Checking for folder RENAME " << std::endl;
-    std::cout<<" checking for folder with id : " << fp.id() << std::endl;
-    if(file_manager_->DoesFolderExistById(fp.id())) {
-        Folder folder;
-        if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
-            std::cout<<" cached folderpath : " << folder.folderpath() << std::endl;
-            std::cout<<" incoming folderpath : " << fp.folder().folderpath() << std::endl;
-            if(folder.folderpath() != fp.folder().folderpath()) {
-                std::cout<<" here " << std::endl;
-                // Update local cache
-                std::string old_folderpath = folder.folderpath();
-                std::string new_folderpath = fp.folder().folderpath();
-                int status = RenameFolderLocalCache(old_folderpath, new_folderpath);
-                std::cout<<" RENAME FOLDER  STATUS : " << status << std::endl;
-                if(status == ret::A_OK) {
-                    std::cout<<" here " << std::endl;
-                    // Rename physical file
-                    std::string canonical_old, canonical_new;
-                    file_manager_->GetCanonicalFilepath(old_folderpath, canonical_old);
-                    file_manager_->GetCanonicalFilepath(new_folderpath, canonical_new);
-                    std::cout<<" OLD : " << canonical_old << std::endl;
-                    std::cout<<" NEW : " << canonical_new << std::endl;
-                    if(!canonical_new.empty()) {
-                        if(fs::CheckFilepathExists(canonical_old)) {
-                            std::cout<<" RENAMING FOLDER " << std::endl;
-                            try {
-                                std::cout<<" renameing ... " << std::endl;
-                                std::cout<<" old : " << canonical_old << std::endl;
-                                std::cout<<" new : " << canonical_new << std::endl;
-                                fs::RenamePath(canonical_old, canonical_new);
-                                ret = true;
-                            }
-                            catch(std::exception& e) {
-                                log::LogException("rename_184122", e);
-                            }
-                        }
-                    }
-                }
-            }
+    // Check if folder post is different
+    // name change
+    // parent_post_id change
+    // folderpath change (check parent_post_id) 
+    Folder folder;
+    if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
+        if(folder.foldername() != fp.folder().foldername()) {
+            // Construct old path
+            std::string old_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
+            ret = file_manager_->SetFoldername(folder.folder_post_id(), 
+                                                fp.folder().foldername());
+            // Constrcut new path
+            std::string new_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
+            // Rename
+            std::cout<<" old path : " << old_path << std::endl;
+            std::cout<<" new path : " << new_path << std::endl;
+            fs::RenamePath(old_path, new_path);
         }
+
+        if(folder.parent_post_id() != fp.folder().parent_post_id()) {
+            // Construct old path
+            std::string old_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
+            ret = file_manager_->SetFolderParentPostId(folder.folder_post_id(),
+                                                        fp.folder().parent_post_id());
+            // Constrcut new path
+            // move to new folder
+            // Constrcut new path
+            std::string new_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
+            // Rename
+            std::cout<<" old path : " << old_path << std::endl;
+            std::cout<<" new path : " << new_path << std::endl;
+            fs::RenamePath(old_path, new_path);
+
+        }
+
     }
-    */
+    
+    
     return ret;
 }
 
@@ -132,8 +131,8 @@ bool RenameHandler::CheckForRename(FileInfo& fi, const std::string& post_id) {
             if(status == ret::A_OK) {
                 // Rename physical file
                 std::string canonical_old, canonical_new;
-                file_manager_->GetCanonicalFilepath(old_filepath, canonical_old);
-                file_manager_->GetCanonicalFilepath(new_filepath, canonical_new);
+                file_manager_->GetCanonicalPath(old_filepath, canonical_old);
+                file_manager_->GetCanonicalPath(new_filepath, canonical_new);
                 std::cout<<" OLD : " << canonical_old << std::endl;
                 std::cout<<" NEW : " << canonical_new << std::endl;
                 if(!canonical_new.empty()) {

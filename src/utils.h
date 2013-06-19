@@ -30,8 +30,7 @@ static std::vector<std::string> &SplitString( const std::string &s,
 
 static std::vector<std::string> &SplitStringSubStr( const std::string& s,
                                               const std::string& delim,
-                                              split& out)
-{
+                                              split& out) {
     int left = 0;
     int right = 0; 
     std::string hold;
@@ -172,9 +171,15 @@ static bool CheckAndRemoveRelativePath(const std::string &filepath, std::string 
 static void CheckUrlAndAppendTrailingSlash(std::string &url) {
     if(url.empty())                                 
         return;                                          
-
     if(url[url.size()-1] != '/')               
         url.append("/");                            
+}
+
+static void AppendTrailingSlash(std::string &str) {
+    if(str.empty())                                 
+        return;                                          
+    if(str[str.size()-1] != '/')               
+        str.append("/");                            
 }
 
 static void RemoveTrailingSlash(std::string& str) {
@@ -184,15 +189,16 @@ static void RemoveTrailingSlash(std::string& str) {
         str = str.substr(0, end);
     }
 }
+
 static void RemoveBeginningSlash(std::string& str) {
     if(str.empty()) return;
     if(str[0] == '/') 
         str = str.substr(1);
 }
+
 static void CheckUrlAndRemoveTrailingSlash(std::string &url) { // depricated, rename
     if(url.empty())                                 
         return;                                          
-
     if(url[url.size()-1] == '/') {
         size_t end = (url.size()-1)-0;
         std::string hold = url.substr(0, end);
@@ -214,12 +220,10 @@ static void GenerateRandomString(std::string& out, unsigned int len = 10) {
 }
 
 typedef std::vector<std::string> taglist;
-static void FindAndExtractAllTags( const std::string& tag, 
-                                   const std::string& content, 
-                                   taglist& out)
-{
+static void FindAndExtractAllTags(const std::string& tag, 
+                                  const std::string& content, 
+                                  taglist& out) {
     size_t found;
-
     std::string btag;
     btag += "<";
     btag += tag;
@@ -246,10 +250,9 @@ static void FindAndExtractAllTags( const std::string& tag,
     }
 } 
 
-static void ExtractFromHeader( const std::string& delim,
-                               const std::string& content,
-                               std::vector<std::string>& out)
-{
+static void ExtractFromHeader(const std::string& delim,
+                              const std::string& content,
+                              std::vector<std::string>& out) {
     std::cout<<" incoming : " << content << std::endl;
     size_t found = content.find(delim);
     std::cout<<" found : " << found << std::endl;

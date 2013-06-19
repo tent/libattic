@@ -15,7 +15,6 @@ public:
     ConfigHandler(FileManager* fm);
     ~ConfigHandler();
 
-
     bool CreateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out);
     bool UpdateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& post);
     bool RetrieveConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out);
@@ -37,6 +36,14 @@ public:
                          const Entity& ent, 
                          const AccessToken* at,
                          std::string& id_out);
+
+    bool LoadIntoFirstDirectory(const std::string& folderpath); // Temporary One off till there is
+                                                                // a need to, or interface for 
+                                                                // interactive directory mapping.
+                                                                // TODO :: that.
+
+    bool MapDirectoryToRoot(const std::string& key, const std::string& path);
+    bool CheckForUnmappedRootDirectories(std::deque<std::string>& key_out);
 
 private:
     FileManager* file_manager_;

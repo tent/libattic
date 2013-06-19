@@ -88,15 +88,16 @@ public:
 
     bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
 
-    bool SetFolderPostId(const std::string& folderpath, const std::string& post_id);
-    bool SetFolderParentPostId(const std::string& folderpath, const std::string& post_id);
+    bool SetFoldername(const std::string& post_id, const std::string& foldername);
+    bool SetFolderPostId(const std::string& post_id, const std::string& new_post_id);
+    bool SetFolderParentPostId(const std::string& post_id, const std::string& parent_post_id);
 
     bool IsFolderDeleted(const std::string& post_id);
     bool SetFolderDeleted(const std::string& post_id, bool del);
 
     bool UpdateFolderContents(Folder& folder);
 
-    bool ConstructFolderpath(const std::string folder_post_id, std::string& path_out);
+    bool ConstructFolderpath(const std::string& folder_post_id, std::string& path_out);
 
     // File Queue
     bool LockFile(const std::string& filepath);
@@ -104,17 +105,20 @@ public:
     bool IsFileLocked(const std::string& filepath);
 
     // Config methods /  Working Directories 
-    bool HasConfigValue(const std::string& key);
-    bool GetConfigValue(const std::string& key);
+    bool HasConfigValue(const std::string& value);
+    bool HasConfigKey(const std::string& key);
+    bool GetConfigEntry(const std::string& key, ConfigEntry& out);
     bool PushConfigValue(const std::string& type, const std::string& key, const std::string& value);
 
     bool AddWorkingDirectory(const std::string& directory_alias,
                              const std::string& directory_path, 
                              const std::string& post_id);
     bool IsDirectoryLinked(const std::string& directory_path);
+    bool LinkWorkingDirectory(const std::string& config_key, const std::string& directory_path);
     bool UnlinkWorkingDirectory(const std::string& directory_path);
     bool RemoveWorkingDirectory(const std::string& directory_path);
     bool RetrieveAllConfigEntries(std::deque<ConfigEntry>& out);
+    bool RetrieveAllConfigEntriesOfType(const std::string& type, std::deque<ConfigEntry>& out);
 
     bool LoadWorkingDirectories();
     // Get the aliased working dir for an absolute filepath
@@ -142,9 +146,9 @@ private:
     Manifest            manifest_;
 
     // Config table
-    // key : id, value : alias, state : path
+    // key : alias, value : id, state : path
     // This mapping
-    // key : alias, value : mapping
+    // key : alias (key), value : mapping (state)
     MutexClass working_mtx_;
     std::map<std::string, std::string>  working_directories_;
 

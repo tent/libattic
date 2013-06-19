@@ -58,7 +58,11 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 FileInfo::ChunkMap chunk_map;
                 ExtractChunkInfo(chunk_posts, chunk_map);
                 // begin chunking
-                status = ChunkFile(filepath, fi.file_credentials(), file_post_id, chunk_posts, chunk_map);
+                status = ChunkFile(filepath, 
+                                   fi.file_credentials(), 
+                                   file_post_id, 
+                                   chunk_posts, 
+                                   chunk_map);
                 if(status == ret::A_OK) { 
                     // Update file info
                     fi.set_chunks(chunk_map);
@@ -242,6 +246,7 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
     for(;itr_cp != cp.attachments()->end(); itr_cp++) {
         std::cout<< itr_cp->second.digest << std::endl;
         std::string decoded;
+        std::cout<<" verifying digest : " << itr_cp->second.digest << std::endl;
         if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
             std::string error = "Failed to validate attachment integrity.\n";
             error += "\t filepath : " + filepath + "\n";

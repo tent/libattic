@@ -50,53 +50,77 @@ void FolderTask::RunTask() {
 
 int FolderTask::RenameFolder() {
     int status = ret::A_OK;
-    /*
+
     std::string old_folderpath, new_folderpath;
     // These are absolute paths
     context_.get_value("original_folderpath", old_folderpath);
     context_.get_value("new_folderpath", new_folderpath);
-    // Normalize folderpath
-    utils::CheckUrlAndRemoveTrailingSlash(old_folderpath);
-    utils::CheckUrlAndRemoveTrailingSlash(new_folderpath);
 
     std::cout<<" renaming folder " << std::endl;
     std::cout<<" old : "<< old_folderpath << std::endl;
     std::cout<<" new : " << new_folderpath << std::endl;
 
-
-    // Extract to-be parent
-    // Check if exists
-    //  if not, create tree
-    //  Rename
-    FolderHandler fh(file_manager());
-    size_t p_pos = new_folderpath.rfind("/");
-    if(p_pos != std::string::npos) {
-        std::string parent = new_folderpath.substr(0, p_pos);
-        std::cout<<" parent : " << parent << std::endl;
-        if(!fh.IsFolderInCache(parent)) {
-            CreateFolder(parent);
+    // make sure old folder exists
+    //  // retrieve folder data
+    // make sure both paths have common root
+    std::string directory, dir_post_id;
+    if(HaveCommonWorkingDir(old_folderpath, new_folderpath, directory, dir_post_id)){
+        // separeate new path into list
+        FolderHandler fh(file_manager());
+        std::deque<std::string> names;
+        if(fh.RetrieveFolders(new_folderpath, directory, names)) {
+            //  - retrieve folder data for each, 
+            //  - create new folder if folder doesn't yet exist
+            //  - rename old folder (name)
+            //  - reparent if necessary
+            //  - update folderpost
+            std::deque<std::string>::iterator itr = names.begin();
+            std::string parent_post_id = dir_post_id;
+            for(;itr!=names.end();itr++) {
+                Folder folder;
+                if(*itr == names.back()) {
+                    // this is the folder we are renaming to
+                    file_manager()->GetFolderEntry(old_folderpath, folder);
+                    // Update folder
+                    folder.set_parent_post_id(parent_post_id);
+                    std::cout<<" old folder name : " << folder.foldername() << std::endl;
+                    folder.set_foldername(*itr);
+                    std::cout<<" new folder name : " << (*itr) << std::endl;
+                    file_manager()->SetFolderParentPostId(folder.folder_post_id(),
+                                                          parent_post_id); // new parent post id
+                    file_manager()->SetFoldername(folder.folder_post_id(),
+                                                  (*itr));
+                    UpdateFolderPost(folder, folder.folder_post_id());
+                }
+                else {
+                    if(!file_manager()->GetFolderEntry((*itr), parent_post_id, folder)) {
+                        folder.set_foldername(*itr);
+                        folder.set_parent_post_id(parent_post_id);
+                        //  if not create post
+                        std::string post_id;
+                        CreateFolderPost(folder, post_id);
+                        // Insert to table;
+                        file_manager()->CreateFolderEntry(folder.foldername(),
+                                                          folder.folder_post_id(),
+                                                          folder.parent_post_id(),
+                                                          folder);
+                    }
+                    else {
+                        // Check if folderpath is deleted
+                        if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
+                            // Un-delete
+                            file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
+                            UpdateFolderPost(folder, folder.folder_post_id());
+                        }
+                    }
+                }
+                parent_post_id = folder.folder_post_id();
+            }
         }
     }
-
-    std::deque<FileInfo> file_list;
-    std::deque<Folder> folder_list;
-    std::cout<<" RENAMING " << std::endl;
-    fh.RenameFolder(old_folderpath, new_folderpath, file_list, folder_list);
-
-    // Update folder post
-    std::deque<Folder>::iterator folder_itr = folder_list.begin();
-    for(;folder_itr != folder_list.end(); folder_itr++) {
-        UpdateFolderPost((*folder_itr), (*folder_itr).folder_post_id());
+    else {
+        status = ret::A_FAIL_DIFFERING_WORK_DIRECTORY;
     }
-
-    // Update corresponding file posts
-    std::cout<<" file size : " << file_list.size() << std::endl;
-    std::deque<FileInfo>::iterator file_itr = file_list.begin();
-    for(;file_itr != file_list.end(); file_itr++) {
-        UpdateFilePost((*file_itr), (*file_itr).post_id());
-    }
-    */
-
     return status;
 }
 
@@ -208,9 +232,11 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
 
 int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
+    std::cout<< " creating folder : " << path << std::endl;
     // Find associated working directory
     std::string directory, directory_post_id;
     if(file_manager()->FindAssociatedWorkingDirectory(path, directory, directory_post_id)) {
+        std::cout<< " directory : " << directory << std::endl;
         FolderHandler fh(file_manager());
         std::deque<std::string> names;
         if(fh.RetrieveFolders(path, directory, names)) {
@@ -393,21 +419,28 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
     return status;
 }
 
-void FolderTask::SeparatePath(const std::string& full_path, std::deque<std::string>& names) {
-    std::string path = full_path;
-    utils::RemoveTrailingSlash(path);
-    utils::RemoveBeginningSlash(path);
-
-    std::cout<<" path in : " << path << std::endl;
-    std::string name;
-    std::stringstream stream(path);
-    while(std::getline(stream, name, '/')) {
-        names.push_back(name);
-        std::cout<<" pushing back : " << name << std::endl;
-        name.clear();
+bool FolderTask::HaveCommonWorkingDir(const std::string& old_folderpath, 
+                                      const std::string& new_folderpath, 
+                                      std::string& directory_out,
+                                      std::string& post_id_out) {
+    bool ret = false;
+    std::string directory, directory_post_id;
+    if(file_manager()->FindAssociatedWorkingDirectory(old_folderpath, 
+                                                      directory, 
+                                                      directory_post_id)) {
+        std::string new_dir, new_dir_id;
+        if(file_manager()->FindAssociatedWorkingDirectory(new_folderpath, 
+                                                          new_dir, 
+                                                          new_dir_id)) {
+            if(directory == new_dir) {
+                ret = true;
+                directory_out = directory;
+                post_id_out = directory_post_id;
+            }
+        }
     }
+    return ret;
 }
-
 
 } //namespace
 

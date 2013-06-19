@@ -31,7 +31,7 @@ void UploadTask::RunTask() {
         status = RetrieveFileInfo(post_id, fi);
         if(status == ret::A_OK) {
             std::string filepath;
-            file_manager()->GetCanonicalFilepath(fi.filepath(), filepath);
+            file_manager()->GetCanonicalPath(fi.filepath(), filepath);
             if(!file_manager()->IsFileLocked(filepath)) {
                 file_manager()->LockFile(filepath);
                 event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);

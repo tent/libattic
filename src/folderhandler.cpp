@@ -13,8 +13,55 @@ FolderHandler::~FolderHandler() {}
 
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     bool ret = false;
-
     std::cout<<" validating folder post " << std::endl;
+    // check if parent exists
+    // check if folder entry exists
+    //  if so check for rename
+    //  if not create entry
+    //   create folder
+    std::cout<<" parent folder post id : " << fp.folder().parent_post_id() << std::endl;
+    if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
+        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id())) {
+            // check for rename
+        }
+        else {
+            std::cout<<" creating folder entry " << std::endl;
+            //create entry
+            Folder folder;
+            if(file_manager_->CreateFolderEntry(fp.folder().foldername(), 
+                                                fp.id(), 
+                                                fp.folder().parent_post_id(), 
+                                                folder)) {
+                std::cout<<" attempting to constuct folderpath " << std::endl;
+                std::cout<<" folder id : " << fp.id() << std::endl;
+                std::string folderpath;
+                if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+                    std::cout<<" folder path : " << folderpath << std::endl;
+                    std::string full_folderpath;
+                    if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+                        std::cout<<" creating directory tree for " << full_folderpath << std::endl;
+                       if(!fs::CheckFilepathExists(full_folderpath)) {
+                            try {
+                                //create folder
+                                fs::CreateDirectoryTreeForFolder(full_folderpath);
+                                ret = true;
+                            }
+                            catch(std::exception& e) {
+                                std::cout<<" Caught fs exception : "<< e.what()<< std::endl;
+                            }
+                       }
+                    }
+                    else {
+                        std::cout<<" renamed ...? " << std::endl;
+                    }
+                }
+                else {
+                    std::cout<<" failed to create folderpath " <<std::endl;
+                }
+            }
+        }
+    }
+/*
     std::string folderpath;
     if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
         std::cout<<"checking for folderpath : " << folderpath << std::endl;
@@ -52,6 +99,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             }
         }
     }
+    */
 
     return ret;
 }
@@ -113,7 +161,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath) {
 void FolderHandler::DeleteFolder(const std::string& folderpath, 
                                  std::deque<FileInfo>& file_out,
                                  std::deque<Folder>& folder_out) {
-    /*
+
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
         file_manager_->SetFolderDeleted(folderpath, true);
@@ -128,6 +176,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
             file_manager_->MarkFilesInFolderDeleted(*itr);
         }
     }
+    /*
     */
 }
 

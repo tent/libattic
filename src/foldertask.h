@@ -31,7 +31,10 @@ class FolderTask : public TentTask{
     int RetrieveFolderPost(const std::string& post_id, FolderPost& out);
     int PostFolderPost(const std::string& post_id, FolderPost& fp);
 
-    void SeparatePath(const std::string& full_path, std::deque<std::string>& names);
+    bool HaveCommonWorkingDir(const std::string& old_folderpath, 
+                              const std::string& new_folderpath, 
+                              std::string& directory_out,
+                              std::string& post_id_out);
 public:
     FolderTask(FileManager* pFm,
                CredentialsManager* pCm,

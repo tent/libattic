@@ -8,9 +8,6 @@
 #include "tablehandler.h"
 
 namespace attic { 
-namespace config {
-    static const std::string dir_type("root_dir");
-}
 
 struct ConfigEntry {
     std::string type;
@@ -39,17 +36,22 @@ public:
     bool RemoveConfigValue(const std::string& key);
     
     bool IsKeyInManifest(const std::string& key);
+    bool IsValueInManifest(const std::string& value);
     bool IsStateInManifest(const std::string& state);
-
 
     bool DoesValueExist(const std::string& value);
 
+    bool RetrieveConfigEntry(const std::string& key, ConfigEntry& out);
     bool RetrieveConfigValue(const std::string& key, std::string& out);
     bool RetrieveConfigValueByState(const std::string& state, std::string& out);
     bool RetrieveConfigKeyByState(const std::string& state, std::string& out);
+    bool RetrieveConfigKeyByValue(const std::string& value, std::string& out);
     bool RetrieveConfigType(const std::string& type, std::deque<ConfigEntry>& out);
 
     bool RetrieveAllEntries(std::deque<ConfigEntry>& out);
+
+    bool set_state_for_key(const std::string& key, const std::string& state);
+    bool set_state_for_value(const std::string& value, const std::string& state);
 };
 
 }// namespace

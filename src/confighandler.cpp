@@ -86,14 +86,62 @@ bool ConfigHandler::RetrieveConfigPost(const Entity& ent, const AccessToken* at,
 }
 
 void ConfigHandler::LoadConfigPost(ConfigPost& in) {
+    std::cout<<" Loading config post ... " << std::endl;
     std::map<std::string, ConfigValue>::iterator itr = in.config_map()->begin();
+    std::cout<<" config count : " << in.config_map()->size();
     for(;itr != in.config_map()->end(); itr++) {
-        if(!file_manager_->HasConfigValue((*itr).second.key)) {
+        std::cout<<" check key val : " << (*itr).second.key << std::endl;
+        if(!file_manager_->HasConfigValue((*itr).second.value)) {
+            std::cout << "pushing config value : " << std::endl;
             file_manager_->PushConfigValue((*itr).second.type, 
                                            (*itr).second.key,
                                            (*itr).second.value);
         }
     }
+    file_manager_->LoadWorkingDirectories();
+}
+
+
+bool ConfigHandler::LoadIntoFirstDirectory(const std::string& folderpath) {
+    bool ret = false;
+    std::deque<std::string> id_out;
+    CheckForUnmappedRootDirectories(id_out);
+    if(id_out.size()) {
+        ret = MapDirectoryToRoot(id_out.front(), folderpath);
+    }
+    return ret;
+}
+
+bool ConfigHandler::MapDirectoryToRoot(const std::string& key, const std::string& path) {
+    bool ret = false;
+    // Link directory
+    ret = file_manager_->LinkWorkingDirectory(key, path);
+    if(ret) {
+        ConfigEntry entry;
+        if(file_manager_->GetConfigEntry(key, entry)) {
+            // Insert as a folder post
+            if(!file_manager_->DoesFolderExistById(entry.value)) {
+                Folder folder; 
+                file_manager_->CreateFolderEntry(entry.config_key,          // folder name
+                                                 entry.value,               // post id
+                                                 cnst::g_config_dir_type,    // parent post id
+                                                 folder);
+            }
+        }
+    }
+    return ret;
+}
+
+bool ConfigHandler::CheckForUnmappedRootDirectories(std::deque<std::string>& key_out) {
+    bool ret = false;
+    std::deque<ConfigEntry> entries;
+    if(file_manager_->RetrieveAllConfigEntriesOfType(cnst::g_config_dir_type, entries)) {
+        std::deque<ConfigEntry>::iterator itr = entries.begin();
+        for(;itr!=entries.end();itr++) {
+            key_out.push_back((*itr).config_key);
+        }
+    }
+    return ret;
 }
 
 int ConfigHandler::GetConfigPostCount(const Entity& ent, const AccessToken* at) {
@@ -131,7 +179,7 @@ int ConfigHandler::CreateWorkingDirectory(const std::string& filepath,
         // Create folder post
         Folder folder;
         folder.set_foldername(name);
-        folder.set_parent_post_id("root");
+        folder.set_parent_post_id(cnst::g_config_dir_type);
         std::string post_id;
         status = CreateFolderPost(folder, ent, at, post_id);
         if(status == ret::A_OK) {
@@ -161,7 +209,7 @@ int ConfigHandler::AddRootDirToConfigPost(const std::string& alias,
     int status = ret::A_OK;
     ConfigPost config_post;
     if(RetrieveConfigPost(ent, at, config_post)) {
-        config_post.PushBackConfigValue("root",
+        config_post.PushBackConfigValue(cnst::g_config_dir_type,
                                         alias,
                                         postid);
         UpdateConfigPost(ent, at, config_post);  
