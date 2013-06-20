@@ -78,12 +78,13 @@ public:
     bool DoesFolderExist(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExistById(const std::string& post_id);
 
-    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
+
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
     bool GetFolderEntry(const std::string& foldername, 
                         const std::string& parent_post_id,
                         Folder& out);
     // TODO * reevaluate the need for this method
+    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
 
     bool GetFolderParentId(const std::string& post_id, std::string& out);

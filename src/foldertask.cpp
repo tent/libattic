@@ -93,6 +93,7 @@ int FolderTask::RenameFolder() {
                     UpdateFolderPost(folder, folder.folder_post_id());
                 }
                 else {
+                    std::cout<<" ATTEMPTING RENAME CREATE " << std::endl;
                     if(!file_manager()->GetFolderEntry((*itr), parent_post_id, folder)) {
                         folder.set_foldername(*itr);
                         folder.set_parent_post_id(parent_post_id);
