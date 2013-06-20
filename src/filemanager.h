@@ -70,6 +70,7 @@ public:
                            const std::string& folder_post_id,
                            const std::string& parent_post_id,
                            Folder& out);
+    bool RemoveFolderEntry(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExist(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExistById(const std::string& post_id);
 

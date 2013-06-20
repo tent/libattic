@@ -29,7 +29,7 @@ public:
                           const std::string& parentpostid,
                           const bool deleted);
 
-    bool RemoveFolderData(const std::string& foldername);
+    bool RemoveFolderData(const std::string& foldername, const std::string& parent_post_id);
 
     bool IsFolderInManifest(const std::string& foldername, const std::string& parent_post_id);
     bool IsFolderInManifest(const std::string& post_id);

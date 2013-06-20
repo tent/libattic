@@ -437,6 +437,15 @@ bool FileManager::CreateFolderEntry(const std::string& foldername,
     return ret;
 }
 
+bool FileManager::RemoveFolderEntry(const std::string& foldername, 
+                                    const std::string& parent_post_id) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.folder_table()->RemoveFolderData(foldername, parent_post_id);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
 bool FileManager::UpdateFolderEntry(const std::string& foldername, const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();

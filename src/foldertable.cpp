@@ -21,7 +21,6 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
                                    const std::string& parentpostid,
                                    const bool deleted) {
     bool ret = false;
-    sqlite3_exec(db(), "BEGIN IMMEDIATE TRANSACTION;", NULL, NULL, NULL);
     std::string exc;
 
     if(!IsFolderInManifest(folderpostid))
@@ -39,13 +38,27 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
     ret = BindInt(4, deleted, error);       if(!ret) {log::ls("m_244s",error);return ret;}
     ret = StepStatement(error);             if(!ret) {log::ls("m_253s",error);return ret;}
     ret = FinalizeStatement(error);         if(!ret) {log::ls("m_254s",error);return ret;}
-               
-    sqlite3_exec(db(), "END TRANSACTION;", NULL, NULL, NULL);
     return ret;
 }
 
-bool FolderTable::RemoveFolderData(const std::string& foldername) {
-    return false;
+bool FolderTable::RemoveFolderData(const std::string& foldername, 
+                                   const std::string& parent_post_id) {
+    std::string exc;
+    exc += "DELETE FROM ";
+    exc += table_name();
+    exc += " WHERE foldername=\"";
+    exc += foldername;
+    exc += "\"";
+    exc += " AND";
+    exc += " parent_post_id=\"";
+    exc += parent_post_id;
+    exc += "\";";
+
+    std::string error;
+    bool ret = Exec(exc, error);
+    if(!ret)                                       
+        log::LogString("manifest_91005", error);
+    return ret;
 }
 
 bool FolderTable::IsFolderInManifest(const std::string& foldername, 
