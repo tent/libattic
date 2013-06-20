@@ -21,7 +21,9 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
                                    const std::string& parentpostid,
                                    const bool deleted) {
     bool ret = false;
+    sqlite3_exec(db(), "BEGIN TRANSACTION;", NULL, NULL, NULL);
     std::string exc;
+
     if(!IsFolderInManifest(folderpostid))
         exc += "INSERT OR REPLACE INTO ";
     else
@@ -38,6 +40,7 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
     ret = StepStatement(error);             if(!ret) {log::ls("m_253s",error);return ret;}
     ret = FinalizeStatement(error);         if(!ret) {log::ls("m_254s",error);return ret;}
                
+    sqlite3_exec(db(), "END TRANSACTION;", NULL, NULL, NULL);
     return ret;
 }
 

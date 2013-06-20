@@ -63,10 +63,12 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                             pfs_log<<" \tpost id : " << folder.folder_post_id() << std::endl;
                             pfs_log<<" \tparent post id : " << folder.parent_post_id() << std::endl;
                             pfs_log<<" \talleged parent id : " << parent_post_id << std::endl;
-                            file_manager_->CreateFolderEntry(folder.foldername(),
+                            bool  success = file_manager_->CreateFolderEntry(folder.foldername(),
                                                               folder.folder_post_id(),
                                                               folder.parent_post_id(),
                                                               folder);
+
+                            pfs_log<<" \tsuccess: " << success << std::endl;
                         }
                         else {
                             pfs_log << "[folder found]" << std::endl;
