@@ -19,8 +19,8 @@ public:
     int RenameFileLocalCache(const std::string& old_filepath,
                              const std::string& new_filepath);
 
-    int RenameFolderLocalCache(const std::string& old_folderpath,
-                               const std::string& new_folderpath);
+    bool RenameFolderLocalCache(const std::string& folder_post_id,
+                                const std::string& new_foldername);
 
     void UpdateFileMetaPost(FilePost& fp, 
                             const FileInfo& fi, 

@@ -34,9 +34,6 @@ public:
 
     bool CreateEmptyManifest();
 
-    // Method using both tables
-    bool UpdateAllFileInfoForFolder(const std::string& folderid);
-
     void SetDirectory(std::string &filepath); 
 private:
     sqlite3*            db_;

@@ -116,9 +116,9 @@ void PollTask::RunTask() {
             timer_.stop();
             if(running_) {
                 // Check deleted folder posts
-                PollDeletedFolderPosts();
+//                PollDeletedFolderPosts();
                 // Check folder posts
-                PollFolderPosts();
+//                PollFolderPosts();
                 // Check deleted file posts
                 PollDeletedFilePosts();
                 // Check all file posts

@@ -323,13 +323,13 @@ bool FolderTable::IsFolderDeleted(const std::string& post_id) {
 
 }
 
-bool FolderTable::GetFolderPostID(const std::string& foldername, std::string& out) {
+bool FolderTable::GetParentPostId(const std::string& post_id, std::string& id_out) {
     bool ret = false;
     std::string query;
-    query += "SELECT post_id FROM ";
+    query += "SELECT parent_post_id FROM ";
     query += table_name();
-    query += " WHERE foldername=\"";
-    query += foldername;
+    query += " WHERE post_id=\"";
+    query += post_id;
     query += "\";";
 
     std::string error;
@@ -339,7 +339,7 @@ bool FolderTable::GetFolderPostID(const std::string& foldername, std::string& ou
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
             if(step > 0)
-                out = res.results()[0+step];
+                id_out = res.results()[0+step];
         }
         ret = true;
     }
@@ -348,13 +348,14 @@ bool FolderTable::GetFolderPostID(const std::string& foldername, std::string& ou
     }
     return ret;
 }
-bool FolderTable::GetFolderPath(const std::string& folder_post_id, std::string& path_out) {
+
+bool FolderTable::GetFoldername(const std::string& post_id, std::string& out) {
     bool ret = false;
     std::string query;
     query += "SELECT foldername FROM ";
     query += table_name();
     query += " WHERE post_id=\"";
-    query += folder_post_id;
+    query += post_id;
     query+= "\"";
 
     std::string error;
@@ -364,7 +365,7 @@ bool FolderTable::GetFolderPath(const std::string& folder_post_id, std::string& 
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
             if(step > 0)
-                path_out = res.results()[0+step];
+                out = res.results()[0+step];
         }
         ret = true;
     }
@@ -372,31 +373,6 @@ bool FolderTable::GetFolderPath(const std::string& folder_post_id, std::string& 
         log::LogString("manifest_masg91435", error);
     }
 
-    return ret;
-}
-bool FolderTable::GetFolderId(const std::string& foldername, std::string& out) {
-    bool ret = false;
-    std::string query;
-    query += "SELECT post_id FROM ";
-    query += table_name();
-    query += " WHERE foldername=\"";
-    query += foldername;
-    query += "\";";
-
-    std::string error;
-    SelectResult res;
-    if(Select(query, res, error)) {
-        int step = 0;
-        for(int i=0; i<res.row()+1; i++) {
-            step = i*res.col();
-            if(step > 0)
-                out = res.results()[0+step];
-        }
-        ret = true;
-    }
-    else {
-        log::LogString("manifest_21014135", error);
-    }
     return ret;
 }
 

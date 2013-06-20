@@ -35,6 +35,10 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     std::cout<<" starting get file strategy ... for :" << filepath << std::endl;
 
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
+    // Make sure there is a destination before we actually pull the file
+    // Validate the corresponding folder posts exist in the cache 
+    //  - otherwise pull them, 
+    //
 
     if(!filepath.empty()) { 
         FileHandler fi_hdlr(file_manager_);
@@ -42,6 +46,14 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
+            // Validate folderpath
+            if(!ValidateFolderPath(fi.folder_post_id())) {
+                std::ostringstream err;
+                err << " failed to validate folder path" << std::endl;
+                log::LogString("gfs_84195", err.str());
+                return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+            }
+
             Folder folder;
             if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder)) {
                 FolderPost fp;
@@ -379,8 +391,13 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
         PostHandler<FolderPost> ph(access_token_);
         status = ph.Get(posturl, NULL, fp);
         if(status == ret::A_OK) {
-            ConstructFilepath(fi, fp.folder(), out);
-            std::cout<<" constructed path : " << out << std::endl;
+            if(ConstructFilepath(fi, fp.folder(), out)) {
+                std::cout<<" constructed path : " << out << std::endl;
+            }
+            else {
+                std::cout<<" failed to construct path " << std::endl;
+
+            }
         }
         else {
             log::LogHttpResponse("00301--1-0-10", ph.response());
@@ -395,18 +412,52 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
     return status;
 }
 
-void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
+bool GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
+    bool ret = false;
     std::string path;
     // Will return aliased path
-    file_manager_->ConstructFolderpath(folder.folder_post_id(), path);
-    std::cout<<" PATH : " << path << std::endl;
-    // Get canonical path
-    file_manager_->GetCanonicalPath(path, out);
-    std::cout<<" CANONICAL : " << out << std::endl;
-    utils::AppendTrailingSlash(out);
-    // Append filename
-    out = out + fi.filename();
-    std::cout<<" WITH FILENAME : " << out << std::endl;
+    if(file_manager_->ConstructFolderpath(folder.folder_post_id(), path)) {
+        std::cout<<" PATH : " << path << std::endl;
+        // Get canonical path
+        file_manager_->GetCanonicalPath(path, out);
+        std::cout<<" CANONICAL : " << out << std::endl;
+        utils::AppendTrailingSlash(out);
+        // Append filename
+        out = out + fi.filename();
+        std::cout<<" WITH FILENAME : " << out << std::endl;
+    }
+    return ret;
+}
+
+bool GetFileStrategy::ValidateFolderPath(const std::string& folder_post_id) {                      
+    bool ret = false;                                                                            
+    // Make sure there is a corresponding folder entry for this entire folderpath                
+    // if not retrieve the post and continue                                                     
+    std::string post_id = folder_post_id;                                                        
+    while(!file_manager_->IsRootDirectory(post_id)) {                                            
+        if(file_manager_->DoesFolderExistById(post_id)) {                                        
+            // Get parent post id                                                                
+            ret = file_manager_->GetFolderParentId(post_id, post_id);
+        }
+        else {
+            // Retrieve post and insert
+            std::string posturl;
+            utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+
+            FolderPost fp;
+            PostHandler<FolderPost> ph(access_token_);
+            if(ph.Get(posturl, NULL, fp) == ret::A_OK) {
+                FolderHandler fh(file_manager_);
+                ret = fh.InsertFolder(fp.folder());
+            }
+            else {
+                std::cout<<" failed ot retrieve post :" << posturl << std::endl;
+                ret = false;
+                break;
+            }
+        }
+    }
+    return ret;
 }
 
 }//namespace

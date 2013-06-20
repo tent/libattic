@@ -90,42 +90,6 @@ bool FileManager::InsertToManifest (FileInfo* pFi) {
     return ret;
 }
 
-int FileManager::RenameFolder(const std::string& old_folderpath,
-                              const std::string& new_folderpath) {
-    int status = ret::A_OK;
-    std::string alias_old, alias_new;
-    if(!IsPathAliased(old_folderpath))
-        GetAliasedPath(old_folderpath, alias_old);
-    else
-        alias_old = old_folderpath;
-
-    if(!IsPathAliased(new_folderpath))
-        GetAliasedPath(new_folderpath, alias_new);
-    else
-        alias_new = new_folderpath;
-    Folder folder;
-    if(GetFolderEntry(alias_old, folder)){
-        if(!alias_new.empty()) {
-            //Update folder path
-            manifest_mtx_.Lock();
-            manifest_.folder_table()->set_foldername(folder.folder_post_id(), alias_new);
-            manifest_mtx_.Unlock();
-            //Update folder contents
-            manifest_mtx_.Lock();
-            bool ret = manifest_.UpdateAllFileInfoForFolder(folder.folder_post_id());
-            manifest_mtx_.Unlock();
-        }
-        else {
-            status = ret::A_FAIL_INVALID_FOLDERPATH;
-        }
-    }
-    else {
-        status = ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
-    }
-
-    return status;
-}
-
 // Takes in two absolute (canonical) filepaths, and swaps them
 int FileManager::RenameFile(const std::string& old_filepath, 
                             const std::string& new_filepath) {
@@ -400,6 +364,13 @@ bool FileManager::DoesFolderExistById(const std::string& post_id) {
     return ret;
 }
 
+bool FileManager::GetFolderParentId(const std::string& post_id, std::string& out) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.folder_table()->GetParentPostId(post_id, out);
+    manifest_mtx_.Unlock();
+    return ret;
+}
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     bool ret = false;
     // Determine root post;
@@ -466,33 +437,17 @@ bool FileManager::CreateFolderEntry(const std::string& foldername,
     return ret;
 }
 
-// TODO :: pass in filepath and id as string, no need for filemanager to know about folderpost
-bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::string& post_id) {
+bool FileManager::UpdateFolderEntry(const std::string& foldername, const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
     if(manifest_.folder_table()->IsFolderInManifest(post_id)) {
-        std::string id;
-        manifest_.folder_table()->GetFolderPostID(folderpath, id);
-        if(id.empty()) {
-            // update id
-            ret = manifest_.folder_table()->set_folder_post_id(folderpath, post_id);
-        }
-        else if(id != post_id) {
-            // throw error
-            std::string error = " LOCAL CACHE FOLDER POST ID MISMATCH \n";
-            error += "\tpost id : ";
-            error += post_id;
-            error += "\n";
-            error += "\t conficted id : ";
-            error += id;
-            error += "\n";
-            error += "folderpath : ";
-            error += folderpath;
-            log::LogString("MASDlf", error);
-        }
-        else {
-            // Already ok
-            ret = true;
+        // Update folder name
+        std::string cache_foldername;
+        if(manifest_.folder_table()->GetFoldername(post_id, cache_foldername)) {
+            if(cache_foldername != foldername) {
+                // Update foldername
+                ret = manifest_.folder_table()->set_foldername(post_id, foldername);
+            }
         }
     }
     manifest_mtx_.Unlock();

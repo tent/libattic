@@ -92,11 +92,18 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath,
 bool FolderHandler::InsertFolder(const Folder& folder) {
     bool ret = false;
     if(!IsFolderInCacheWithId(folder.folder_post_id())) {
-        Folder f;
-        ret = file_manager_->CreateFolderEntry(folder.foldername(),
-                                               folder.folder_post_id(),
-                                               folder.parent_post_id(),
-                                               f);
+        if(!IsFolderInCache(folder.foldername(), folder.parent_post_id())) {
+            Folder f;
+            ret = file_manager_->CreateFolderEntry(folder.foldername(),
+                                                   folder.folder_post_id(),
+                                                   folder.parent_post_id(),
+                                                   f);
+        }
+        else {
+            std::ostringstream err;
+            err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
+            log::LogString("fh_19485", err.str());
+        }
     }
     return ret;
 }
@@ -104,11 +111,18 @@ bool FolderHandler::InsertFolder(const Folder& folder) {
 bool FolderHandler::InsertFolder(const FolderPost& fp) {
     bool ret = false;
     if(!IsFolderInCacheWithId(fp.id())) {
-        Folder f;
-        ret = file_manager_->CreateFolderEntry(fp.folder().foldername(),
-                                               fp.id(),
-                                               fp.folder().parent_post_id(),
-                                               f);
+        if(!IsFolderInCache(fp.folder().foldername(), fp.folder().parent_post_id())) {
+            Folder f;
+            ret = file_manager_->CreateFolderEntry(fp.folder().foldername(),
+                                                   fp.id(),
+                                                   fp.folder().parent_post_id(),
+                                                   f);
+        }
+        else {
+            std::ostringstream err;
+            err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
+            log::LogString("fh_19485", err.str());
+        }
     }
 
     return ret;

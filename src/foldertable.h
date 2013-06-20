@@ -48,9 +48,8 @@ public:
     bool set_foldername(const std::string& post_id, const std::string& foldername);
     bool set_folder_deleted(const std::string& post_id, bool del);
 
-    bool GetFolderPostID(const std::string& foldername, std::string& out);
-    bool GetFolderPath(const std::string& folder_post_id, std::string& path_out);
-    bool GetFolderId(const std::string& foldername, std::string& out);
+    bool GetParentPostId(const std::string& post_id, std::string& id_out);
+    bool GetFoldername(const std::string& post_id, std::string& out);
 };
 
 } // namespace

@@ -29,7 +29,6 @@ int RenameHandler::RenameFileLocalCache(const std::string& old_filepath,
 void RenameHandler::UpdateFileMetaPost(FilePost& fp, 
                                        const FileInfo& fi, 
                                        FilePost& out) {
-
     out = fp;
     out.set_file_info(fi);
     Parent parent;
@@ -37,19 +36,12 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
     out.PushBackParent(parent);
 }
 
-int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
-                                          const std::string& new_folderpath) {
-    int status = ret::A_OK;
+bool RenameHandler::RenameFolderLocalCache(const std::string& folder_post_id,
+                                          const std::string& new_foldername) {
     std::cout<<" rename folder local cache " << std::endl;
-    std::string ofp = old_folderpath;
-    std::string nfp = new_folderpath;
-    // Normalize paths
-    utils::CheckUrlAndRemoveTrailingSlash(ofp);
-    utils::CheckUrlAndRemoveTrailingSlash(nfp);
-    std::cout<<" \t old : " << ofp << std::endl;
-    std::cout<<" \t new : " << nfp << std::endl;
-    status = file_manager_->RenameFolder(ofp, nfp);
-    return status;
+    std::cout<<"\t folder post id : " << folder_post_id << std::endl;
+    std::cout<<"\t new foldername : " << new_foldername << std::endl;
+    return file_manager_->SetFoldername(folder_post_id, new_foldername);
 }
 
 void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,

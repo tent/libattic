@@ -22,6 +22,7 @@ public:
     ~FolderHandler();
 
     bool ValidateFolder(FolderPost& fp);
+
     bool RetrieveFolders(const std::string& folderpath, 
                          const std::string& working_directory,
                          std::deque<std::string>& out);

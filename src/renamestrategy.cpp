@@ -83,6 +83,11 @@ int RenameStrategy::RenameFolder() {
     std::cout<<" original folderpath : " << old_folderpath << std::endl;
     std::cout<<" new folderpath : " << new_folderpath << std::endl;
 
+    std::cout<<" RENAME FOLDER NOT IMPLEMENTED - RE IMPLEMENT " << std::endl;
+
+    // Retreive folder entries for old folder
+
+    /*
     RenameHandler rh(file_manager_);
     status = rh.RenameFolderLocalCache(old_folderpath, new_folderpath);
     if(status == ret::A_OK) {
@@ -103,6 +108,7 @@ int RenameStrategy::RenameFolder() {
             status = ret::A_FAIL_INVALID_FOLDERPATH;
         }
     }
+    */
 
     return status;
 }

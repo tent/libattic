@@ -103,23 +103,6 @@ bool Manifest::CreateTables() {
     return true;
 }
 
-bool Manifest::UpdateAllFileInfoForFolder(const std::string& folderid) { 
-    bool ret = false;
-    FileTable::FileInfoList file_list;
-    if(file_table_->QueryAllFilesForFolder(folderid, file_list)) {
-        FileTable::FileInfoList::iterator itr = file_list.begin();
-        for(;itr!=file_list.end();itr++) {
-            std::string folder_id = (*itr).folder_post_id();
-            std::string path;
-            folder_table_->GetFolderPath(folder_id, path);
-            // Update filepath
-            utils::CheckUrlAndAppendTrailingSlash(path);
-            path += (*itr).filename();
-            ret = file_table_->set_filepath((*itr).filepath(), path);
-        }
-    }
-    return ret;
-}
 
 }//namespace
 

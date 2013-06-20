@@ -46,6 +46,10 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                             std::string post_id;
                             CreateFolderPost(folder, post_id);
                             // Insert to table;
+                            std::cout<<" Inserting folder into table " << std::endl;
+                            std::cout<<" \tfolder name : " << folder.foldername() << std::endl;
+                            std::cout<<" \tpost id : " << folder.folder_post_id() << std::endl;
+                            std::cout<<" \tparent post id : " << folder.parent_post_id() << std::endl;
                             file_manager_->CreateFolderEntry(folder.foldername(),
                                                               folder.folder_post_id(),
                                                               folder.parent_post_id(),

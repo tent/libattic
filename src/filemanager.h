@@ -41,8 +41,11 @@ public:
 
     int RenameFile(const std::string& old_filepath, 
                    const std::string& new_filepath);
+
+    /*
     int RenameFolder(const std::string& old_folderpath,
                      const std::string& new_folderpath);
+                     */
 
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
@@ -80,7 +83,11 @@ public:
     bool GetFolderEntry(const std::string& foldername, 
                         const std::string& parent_post_id,
                         Folder& out);
+    // TODO * reevaluate the need for this method
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
+
+    bool GetFolderParentId(const std::string& post_id, std::string& out);
+
 
     bool SetFoldername(const std::string& post_id, const std::string& foldername);
     bool SetFolderPostId(const std::string& post_id, const std::string& new_post_id);
@@ -88,7 +95,7 @@ public:
     bool SetFolderDeleted(const std::string& post_id, bool del);
 
 
-    bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
+    bool UpdateFolderEntry(const std::string& foldername, const std::string& post_id);
 
     bool IsFolderDeleted(const std::string& post_id);
     bool IsRootDirectory(const std::string& post_id);

@@ -28,12 +28,13 @@ class GetFileStrategy : public HttpStrategyInterface {
 
     int ExtractCredentials(FilePost& in, Credentials& out);
     int ConstructFilepath(const FileInfo& fi, std::string& out);
-    void ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
+    bool ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
 
     int ConstructFile(FileInfo& fi,
                   const Credentials& file_cred,
                   const std::string& destination_path);
 
+    bool ValidateFolderPath(const std::string& folder_post_id);
     void ValidateFolderEntries(FilePost& fp);
     void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);
     bool RetrieveFolderPost(const std::string& post_id, FolderPost& out);
