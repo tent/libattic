@@ -70,11 +70,9 @@ bool CreationQueue::Remove(const std::string& foldername, const std::string& par
 bool CreationQueue::IsLocked(const std::string& foldername, const std::string& parent_id) {
     bool ret = false;
     fm_mtx_.Lock();
-    std::cout<< "## IS locked : " << foldername << " id : " << parent_id << std::endl;
     std::map<std::string, bool>::iterator itr = folder_map_[parent_id].find(foldername);
     if(itr != folder_map_[parent_id].end())
         ret = true;
-    std::cout<< " ## IS LOCKED : " << ret << std::endl;
     fm_mtx_.Unlock();
     return ret;
 }
