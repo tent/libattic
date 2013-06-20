@@ -21,7 +21,7 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
                                    const std::string& parentpostid,
                                    const bool deleted) {
     bool ret = false;
-    sqlite3_exec(db(), "BEGIN TRANSACTION;", NULL, NULL, NULL);
+    sqlite3_exec(db(), "BEGIN IMMEDIATE TRANSACTION;", NULL, NULL, NULL);
     std::string exc;
 
     if(!IsFolderInManifest(folderpostid))
