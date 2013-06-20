@@ -34,7 +34,6 @@ void FolderTask::RunTask() {
     if(operation == "CREATE") {
         std::string folderpath;
         context_.get_value("folderpath", folderpath);
-//        CreateFolderHierarchy(folderpath);
         CreateFolder(folderpath);
     }
     else if(operation == "DELETE") {
@@ -234,6 +233,8 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
 int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
 
+    std::cout<<" @@@ CREATING FOLDER : " << path << std::endl;
+
     FolderHandler fh(file_manager());
     if(fh.ValidateFolderPath(path,
                              entity().GetPreferredServer().posts_feed(),
@@ -242,31 +243,6 @@ int FolderTask::CreateFolder(const std::string& path) {
         status = ret::A_FAIL_VALIDATE_DIRECTORY;
     }
     return status;
-}
-
-int FolderTask::CreateFolderHierarchyList(const std::string& folderpath, 
-                                          std::deque<std::string>& out) {
-    std::string working_path = file_manager()->working_directory();
-    utils::CheckUrlAndAppendTrailingSlash(working_path);
-
-    size_t pos  = folderpath.find(working_path);
-    pos += working_path.size();
-    if(pos != std::string::npos) {
-        std::string path = folderpath.substr(pos);
-        size_t ppos = 0;
-        while(ppos != std::string::npos) {
-            out.push_back(working_path + path);
-            ppos = path.rfind("/");
-            path = path.substr(0, ppos);
-        }
-        out.push_back(working_path);
-    }
-    /*
-    std::deque<std::string>::iterator itr = folder_tree.begin();
-    for(;itr!= folder_tree.end(); itr++)
-        std::cout<< *itr << std::endl;
-        */
-    return ret::A_OK;
 }
 
 int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {

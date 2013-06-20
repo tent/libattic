@@ -11,8 +11,6 @@
 namespace attic {
 
 class FolderTask : public TentTask{
-    int CreateFolderHierarchyList(const std::string& folderpath, std::deque<std::string>& out);
-
     int CreateFolderPost(Folder& folder, std::string& id_out);
     int CreateFolder(const std::string& path);
 
