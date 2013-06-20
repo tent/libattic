@@ -42,11 +42,6 @@ public:
     int RenameFile(const std::string& old_filepath, 
                    const std::string& new_filepath);
 
-    /*
-    int RenameFolder(const std::string& old_folderpath,
-                     const std::string& new_folderpath);
-                     */
-
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
 

@@ -50,7 +50,9 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
                     for(;itr!=names.end();itr++) {
                         Folder folder;
                         pfs_log << " Checking folder entry exists for : " << (*itr) << " parent id : " << parent_post_id << std::endl;
-                        if(!file_manager_->GetFolderEntry((*itr), parent_post_id, folder)) {
+                        bool exists = file_manager_->GetFolderEntry((*itr), parent_post_id, folder);
+                        pfs_log << " folder exists : " << exists << std::endl;
+                        if(!exists) {
                             pfs_log << "[folder not found]" << std::endl;
                             folder.set_foldername(*itr);
                             folder.set_parent_post_id(parent_post_id);
