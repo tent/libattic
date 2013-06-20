@@ -11,11 +11,11 @@ namespace attic {
 
 class CreationQueue {
 protected:
-    CreationQueue() {}
+    CreationQueue() {std::cout<<"@@ CREATING INSTANCE " << std::endl;}
     CreationQueue(const CreationQueue& rhs) { }
     CreationQueue operator=(const CreationQueue& rhs) { return *this;}
 
-    ~CreationQueue() {}
+    ~CreationQueue() {std::cout<<"@@ DELETING INSTANCE " << std::endl;}
 private:
     friend class fcl;
 

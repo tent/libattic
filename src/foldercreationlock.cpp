@@ -11,6 +11,7 @@ CreationQueue* CreationQueue::instance() {
         instance_ = new CreationQueue();
     ref_mtx_.Lock();
     ref_count_++;
+    std::cout<<"# CURRENT FOLDER LOCK REF COUNT : " << ref_count_ << std::endl;
     ref_mtx_.Unlock();
     return instance_;
 }
@@ -25,6 +26,7 @@ void CreationQueue::Shutdown() {
 void CreationQueue::Release() {
     ref_mtx_.Lock();
     ref_count_--;
+    std::cout<<"# CURRENT FOLDER LOCK REF COUNT : " << ref_count_ << std::endl;
     unsigned int hold = ref_count_;
     ref_mtx_.Unlock();
     if(hold <= 0)
@@ -34,6 +36,7 @@ void CreationQueue::Release() {
 bool CreationQueue::PushBack(const std::string& foldername, const std::string& parent_id) {
     bool ret = false;
     fm_mtx_.Lock();
+    std::cout<< "# Locking : " << foldername << " id : " << parent_id << std::endl;
     FolderMap::iterator itr = folder_map_.find(parent_id);
     if(itr == folder_map_.end()) {
         folder_map_[parent_id][foldername] = true;
@@ -52,6 +55,7 @@ bool CreationQueue::PushBack(const std::string& foldername, const std::string& p
 bool CreationQueue::Remove(const std::string& foldername, const std::string& parent_id) {
     bool ret = true;
     fm_mtx_.Lock();
+    std::cout<< "# Removing : " << foldername << " id : " << parent_id << std::endl;
     std::map<std::string, bool>::iterator itr = folder_map_[parent_id].find(foldername);
     if(itr != folder_map_[parent_id].end()) {
         folder_map_[parent_id].erase(itr);

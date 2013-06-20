@@ -81,25 +81,36 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                        const std::string& post_path,
                                        const AccessToken& at) {
     bool ret = true;
-    std::cout<<" VALIDATING FOLDER PATH : " << folderpath << std::endl;
+    std::ostringstream vlog;
+    vlog <<" **************************************************** " << std::endl;
+    vlog <<" VALIDATING FOLDER PATH : " << folderpath << std::endl;
     // absolute filepath
     if(!folderpath.empty()) {
         std::string directory, directory_post_id;
         if(file_manager_->FindAssociatedWorkingDirectory(folderpath, 
                                                          directory, 
                                                          directory_post_id)) {
+            vlog << " working directory : " << directory << std::endl;
+            vlog << " directory post id : " << directory_post_id << std::endl;
             std::deque<std::string> names;
             if(RetrieveFolders(folderpath, directory, names)) {
+                vlog << " retrieved folders " << std::endl;
+                std::deque<std::string>::iterator n_itr = names.begin();
+                for(;n_itr!=names.end();n_itr++) {
+                    vlog <<" "<< (*n_itr) << std::endl;
+                }
                 // validate each folder exists
+                fcl l; // File lock
                 std::deque<std::string>::iterator itr = names.begin();
                 std::string parent_post_id = directory_post_id;
                 for(;itr!=names.end();itr++) {
-
-                    fcl l;
                     l.TryLock((*itr), parent_post_id);
                     Folder folder;
                     bool exists = file_manager_->GetFolderEntry((*itr), parent_post_id, folder);
+                    vlog <<" folder : " << (*itr) << " id : " << parent_post_id << std::endl;
+                    vlog << " exists : " << exists << std::endl;
                     if(!exists) {
+
                         folder.set_foldername(*itr);
                         folder.set_parent_post_id(parent_post_id);
                         //  if not create post
@@ -129,14 +140,19 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                     }
                     parent_post_id = folder.folder_post_id();
                     l.Unlock((*itr), parent_post_id);
-
                 } // for
+            }
+            else {
+                std::cout<<" failed to retreive folders " << std::endl;
+                ret = false;
             }
         }
     }
     else {
         ret = false;
     }
+
+    std::cout<< vlog.str() << std::endl;
 
     return ret;
 }
