@@ -233,43 +233,13 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
 
 int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
-    std::cout<< " creating folder : " << path << std::endl;
-    // Find associated working directory
-    std::string directory, directory_post_id;
-    if(file_manager()->FindAssociatedWorkingDirectory(path, directory, directory_post_id)) {
-        std::cout<< " directory : " << directory << std::endl;
-        FolderHandler fh(file_manager());
-        std::deque<std::string> names;
-        if(fh.RetrieveFolders(path, directory, names)) {
-            // validate each folder exists
-            std::deque<std::string>::iterator itr = names.begin();
-            std::string parent_post_id = directory_post_id;
-            for(;itr!=names.end();itr++) {
-                Folder folder;
-                if(!file_manager()->GetFolderEntry((*itr), parent_post_id, folder)) {
-                    folder.set_foldername(*itr);
-                    folder.set_parent_post_id(parent_post_id);
-                    //  if not create post
-                    std::string post_id;
-                    CreateFolderPost(folder, post_id);
-                    // Insert to table;
-                    file_manager()->CreateFolderEntry(folder.foldername(),
-                                                      folder.folder_post_id(),
-                                                      folder.parent_post_id(),
-                                                      folder);
-                }
-                else {
-                    // Check if folderpath is deleted
-                    if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
-                        // Un-delete
-                        file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
-                        UpdateFolderPost(folder, folder.folder_post_id());
-                    }
-                }
-                parent_post_id = folder.folder_post_id();
-            }
-            
-        }
+
+    FolderHandler fh(file_manager());
+    if(fh.ValidateFolderPath(path,
+                             entity().GetPreferredServer().posts_feed(),
+                             entity().GetPreferredServer().post(),
+                             access_token())) {
+        status = ret::A_FAIL_VALIDATE_DIRECTORY;
     }
     return status;
 }
