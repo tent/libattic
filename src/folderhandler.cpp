@@ -86,6 +86,7 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
     vlog <<" VALIDATING FOLDER PATH : " << folderpath << std::endl;
     vlog <<" posts feed : " << posts_feed << std::endl;
     vlog <<" post path : " << post_path << std::endl;
+    vlog <<" folder path : " << folderpath << std::endl;
     // absolute filepath
     if(!folderpath.empty()) {
         std::string directory, directory_post_id;
