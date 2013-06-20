@@ -273,18 +273,6 @@ int FolderTask::CreateFolder(const std::string& path) {
     return status;
 }
 
-bool FolderTask::CheckFolderDeleted(const std::string& folderpath) {
-    bool ret = false;
-    FolderHandler fh(file_manager());
-    if(fh.IsFolderInCache(folderpath)) {
-        Folder folder;
-        fh.GetFolder(folderpath, folder);
-        if(folder.deleted())
-            ret = true;
-    }
-    return ret;
-}
-
 int FolderTask::CreateFolderHierarchyList(const std::string& folderpath, 
                                           std::deque<std::string>& out) {
     std::string working_path = file_manager()->working_directory();

@@ -239,7 +239,7 @@ void PollTask::DeleteLocalFile(const FileInfo& fi){ // TODO :: temp method, will
 void PollTask::DeleteLocalFolder(const FolderPost& fp) {
     // check if folder is in cache
     FolderHandler fh(file_manager());
-    if(!fh.IsFolderInCache(fp.folder().foldername())){
+    if(!fh.IsFolderInCacheWithId(fp.id())){
         fh.InsertFolder(fp);
     }
 

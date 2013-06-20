@@ -35,7 +35,9 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             return ret;
         }
 
-        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id()) && fs::CheckFilepathExists(full_folderpath)) {
+        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id()) && 
+                                  fs::CheckFilepathExists(full_folderpath)) {
+
             // check for rename
             std::cout<<" CHECK FOR RENAME " << std::endl;
             RenameHandler rh(file_manager_);
@@ -44,12 +46,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
         else {
             std::cout<<" creating folder entry " << std::endl;
             //create entry
-            Folder folder;
-
-            if(file_manager_->CreateFolderEntry(fp.folder().foldername(), 
-                                                fp.id(), 
-                                                fp.folder().parent_post_id(), 
-                                                folder)) {
+            if(InsertFolder(fp)) {
                 std::cout<<" attempting to constuct folderpath " << std::endl;
                 std::cout<<" folder id : " << fp.id() << std::endl;
                 std::string folderpath;
@@ -93,19 +90,28 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath,
 }
 
 bool FolderHandler::InsertFolder(const Folder& folder) {
-    Folder f;
-    return file_manager_->CreateFolderEntry(folder.foldername(),
-                                            folder.folder_post_id(),
-                                            folder.parent_post_id(),
-                                            f);
+    bool ret = false;
+    if(!IsFolderInCacheWithId(folder.folder_post_id())) {
+        Folder f;
+        ret = file_manager_->CreateFolderEntry(folder.foldername(),
+                                               folder.folder_post_id(),
+                                               folder.parent_post_id(),
+                                               f);
+    }
+    return ret;
 }
 
 bool FolderHandler::InsertFolder(const FolderPost& fp) {
-    Folder f;
-    return file_manager_->CreateFolderEntry(fp.folder().foldername(),
-                                            fp.id(),
-                                            fp.folder().parent_post_id(),
-                                            f);
+    bool ret = false;
+    if(!IsFolderInCacheWithId(fp.id())) {
+        Folder f;
+        ret = file_manager_->CreateFolderEntry(fp.folder().foldername(),
+                                               fp.id(),
+                                               fp.folder().parent_post_id(),
+                                               f);
+    }
+
+    return ret;
 }
 
 bool FolderHandler::SetFolderPostId(Folder& folder, const std::string& post_id) {
@@ -283,8 +289,12 @@ bool FolderHandler::GetFolder(const std::string& folderpath, Folder& out) {
     return file_manager_->GetFolderEntry(folderpath, out);
 }
 
-bool FolderHandler::IsFolderInCache(const std::string& folderpath) {
-    return file_manager_->DoesFolderExist(folderpath);
+bool FolderHandler::IsFolderInCache(const std::string& folder_name, const std::string& parent_post_id) {
+    return file_manager_->DoesFolderExist(folder_name, parent_post_id);
+}
+
+bool FolderHandler::IsFolderInCacheWithId(const std::string& post_id) {
+    return file_manager_->DoesFolderExistById(post_id);
 }
 
 bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {

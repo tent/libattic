@@ -53,6 +53,12 @@ void PullTask::RunTask() {
         status = ret::A_FAIL_FILE_IN_USE;
     }
 
+    if(status != ret::A_OK) {
+        std::ostringstream error;
+        error << " Pull Task failed for : " << filepath << std::endl;
+        log::LogString("pull_1841", error.str());
+    }
+
     Callback(status, filepath);
     SetFinishedState();
 }

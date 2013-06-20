@@ -381,21 +381,15 @@ bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) 
     return ret;
 }
 
-bool FileManager::DoesFolderExist(const std::string& folderpath) {
-    std::string relative;
-    if(!IsPathAliased(folderpath))
-        GetAliasedPath(folderpath, relative);
-    else
-        relative = folderpath;
-
-    if(relative.empty())
-        relative = cnst::g_szWorkingPlaceHolder;
-    manifest_mtx_.Lock();
-    bool ret = manifest_.folder_table()->IsFolderInManifest(relative);
-    manifest_mtx_.Unlock();
+bool FileManager::DoesFolderExist(const std::string& foldername, const std::string& parent_post_id) {
+    bool ret = false;
+    if(!parent_post_id.empty()) {
+        manifest_mtx_.Lock();
+        ret = manifest_.folder_table()->IsFolderInManifest(foldername, parent_post_id);
+        manifest_mtx_.Unlock();
+    }
     return ret;
 }
-
 bool FileManager::DoesFolderExistById(const std::string& post_id) {
     bool ret = false;
     if(!post_id.empty()) {
@@ -476,7 +470,7 @@ bool FileManager::CreateFolderEntry(const std::string& foldername,
 bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
-    if(manifest_.folder_table()->IsFolderInManifest(folderpath)) {
+    if(manifest_.folder_table()->IsFolderInManifest(post_id)) {
         std::string id;
         manifest_.folder_table()->GetFolderPostID(folderpath, id);
         if(id.empty()) {
@@ -501,14 +495,6 @@ bool FileManager::UpdateFolderEntry(const std::string& folderpath, const std::st
             ret = true;
         }
     }
-    manifest_mtx_.Unlock();
-    return ret;
-}
-
-bool FileManager::UpdateFolderContents(Folder& folder) {
-    bool ret = false;
-    manifest_mtx_.Lock();
-    ret = manifest_.UpdateAllFileInfoForFolder(folder.folder_post_id());
     manifest_mtx_.Unlock();
     return ret;
 }

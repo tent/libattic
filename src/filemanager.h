@@ -68,7 +68,11 @@ public:
     bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
 
     // Folder
-    bool DoesFolderExist(const std::string& folderpath); // Depricated
+    bool CreateFolderEntry(const std::string& foldername, 
+                           const std::string& folder_post_id,
+                           const std::string& parent_post_id,
+                           Folder& out);
+    bool DoesFolderExist(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExistById(const std::string& post_id);
 
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
@@ -76,27 +80,18 @@ public:
     bool GetFolderEntry(const std::string& foldername, 
                         const std::string& parent_post_id,
                         Folder& out);
-
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
-
-    bool CreateFolderEntry(const std::string& foldername, 
-                           const std::string& folder_post_id,
-                           const std::string& parent_post_id,
-                           Folder& out);
-
-    bool IsRootDirectory(const std::string& post_id);
-
-    bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
 
     bool SetFoldername(const std::string& post_id, const std::string& foldername);
     bool SetFolderPostId(const std::string& post_id, const std::string& new_post_id);
     bool SetFolderParentPostId(const std::string& post_id, const std::string& parent_post_id);
-
-    bool IsFolderDeleted(const std::string& post_id);
     bool SetFolderDeleted(const std::string& post_id, bool del);
 
-    bool UpdateFolderContents(Folder& folder);
 
+    bool UpdateFolderEntry(const std::string& folderpath, const std::string& post_id);
+
+    bool IsFolderDeleted(const std::string& post_id);
+    bool IsRootDirectory(const std::string& post_id);
     bool ConstructFolderpath(const std::string& folder_post_id, std::string& path_out);
 
     // File Queue

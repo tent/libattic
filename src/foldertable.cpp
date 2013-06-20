@@ -51,8 +51,8 @@ bool FolderTable::IsFolderInManifest(const std::string& foldername,
     std::string query;
     query += "SELECT EXISTS(SELECT * FROM ";
     query += table_name();
-    query += " WHERE post_id=\"";
-    query += post_id;
+    query += " WHERE foldername=\"";
+    query += foldername;
     query += "\"";
     query += " AND";
     query += " parent_post_id=\"";
