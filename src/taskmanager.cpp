@@ -113,6 +113,7 @@ void TaskManager::OnTaskInsert(Task* t) {
 
 void TaskManager::CreateFolder(const std::string& folderpath, TaskDelegate* del) {
     TaskContext tc;
+    std::cout<<"&&& CREATE FOLDER : " << folderpath << std::endl;
     tc.set_value("operation", "CREATE");
     tc.set_value("folderpath", folderpath);
     tc.set_value("temp_dir", temp_directory_);
