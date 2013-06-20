@@ -110,7 +110,9 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                     vlog <<" folder : " << (*itr) << " id : " << parent_post_id << std::endl;
                     vlog << " exists : " << exists << std::endl;
                     if(!exists) {
-
+                        vlog << " creating folder " << std::endl;
+                        vlog << " name : " << (*itr) << std::endl;
+                        vlog << " parent post id " << parent_post_id << std::endl;
                         folder.set_foldername(*itr);
                         folder.set_parent_post_id(parent_post_id);
                         //  if not create post
@@ -123,11 +125,13 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                                              folder);
                         }
                         else {
+                            vlog << " failed to create folder post breaking " << std::endl;
                             ret = false;
                             break;
                         }
                     }
                     else {
+                        vlog << " file already exists " << std::endl;
                         // Check if folderpath is deleted
                         if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
                             // Un-delete
@@ -138,20 +142,25 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                              at);
                         }
                     }
+
                     parent_post_id = folder.folder_post_id();
+                    vlog << " setting parent post id : " << parent_post_id << std::endl;
                     l.Unlock((*itr), parent_post_id);
                 } // for
             }
             else {
+                vlog << " failed to retreive folders " << std::endl;
                 std::cout<<" failed to retreive folders " << std::endl;
                 ret = false;
             }
         }
     }
     else {
+        vlog << " folderpath empty " << std::endl;
         ret = false;
     }
 
+    vlog <<" **************************************************** " << std::endl;
     std::cout<< vlog.str() << std::endl;
 
     return ret;
