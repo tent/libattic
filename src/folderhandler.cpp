@@ -5,6 +5,9 @@
 #include "renamehandler.h"
 #include "logutils.h"
 
+#include "posthandler.h"
+#include "foldercreationlock.h"
+
 namespace attic {
 FolderHandler::FolderHandler(FileManager* fm) {
     file_manager_ = fm;
@@ -71,6 +74,73 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 
     return ret;
 }
+
+
+bool FolderHandler::ValidateFolderPath(const std::string& folderpath, 
+                                       const std::string& posts_feed,
+                                       const std::string& post_path,
+                                       const AccessToken& at) {
+    bool ret = true;
+    std::cout<<" VALIDATING FOLDER PATH : " << folderpath << std::endl;
+    // absolute filepath
+    if(!folderpath.empty()) {
+        std::string directory, directory_post_id;
+        if(file_manager_->FindAssociatedWorkingDirectory(folderpath, 
+                                                         directory, 
+                                                         directory_post_id)) {
+            std::deque<std::string> names;
+            if(RetrieveFolders(folderpath, directory, names)) {
+                // validate each folder exists
+                std::deque<std::string>::iterator itr = names.begin();
+                std::string parent_post_id = directory_post_id;
+                for(;itr!=names.end();itr++) {
+
+                    fcl l;
+                    l.TryLock((*itr), parent_post_id);
+                    Folder folder;
+                    bool exists = file_manager_->GetFolderEntry((*itr), parent_post_id, folder);
+                    if(!exists) {
+                        folder.set_foldername(*itr);
+                        folder.set_parent_post_id(parent_post_id);
+                        //  if not create post
+                        std::string post_id;
+                        if(CreateFolderPost(folder, posts_feed, at, post_id) == ret::A_OK) {
+                            folder.set_folder_post_id(post_id);
+                            file_manager_->CreateFolderEntry(folder.foldername(),
+                                                             folder.folder_post_id(),
+                                                             folder.parent_post_id(),
+                                                             folder);
+                        }
+                        else {
+                            ret = false;
+                            break;
+                        }
+                    }
+                    else {
+                        // Check if folderpath is deleted
+                        if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
+                            // Un-delete
+                            file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
+                            UpdateFolderPost(folder, 
+                                             folder.folder_post_id(),
+                                             post_path,
+                                             at);
+                        }
+                    }
+                    parent_post_id = folder.folder_post_id();
+                    l.Unlock((*itr), parent_post_id);
+
+                } // for
+            }
+        }
+    }
+    else {
+        ret = false;
+    }
+
+    return ret;
+}
+
 
 // Pass in an absolute folderpath
 // Pass in the associated working directory
@@ -315,6 +385,90 @@ bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
     return file_manager_->SetFolderDeleted(folderpath, del);
 }
 
+
+int FolderHandler::CreateFolderPost(Folder& folder, 
+                                    const std::string& posts_feed,
+                                    const AccessToken& at,
+                                    std::string& id_out) {
+    int status = ret::A_OK;
+    // Create folderpost
+    FolderPost fp(folder);
+    PostHandler<FolderPost> ph(at);
+    status = ph.Post(posts_feed, NULL, fp);
+    if(status == ret::A_OK) {
+        FolderPost back = ph.GetReturnPost();
+        folder.set_folder_post_id(back.id());
+        id_out = back.id();
+    }
+    else {
+        log::LogHttpResponse("fh_u19845", ph.response());
+    }
+    return status;
+}
+
+bool FolderHandler::UpdateFolderPost(Folder& folder, 
+                                     const std::string& post_id,
+                                     const std::string& post_path,
+                                     const AccessToken& at) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        FolderPost fp;
+        if(RetrieveFolderPost(folder.folder_post_id(), post_path, at, fp) == ret::A_OK) {
+            fp.set_folder(folder);
+            if(PostFolderPost(post_id, post_path, at, fp) == ret::A_OK)
+                ret = true;
+        }
+    }
+    else {
+        std::ostringstream err;
+        err << " Empty Folder Post id : " << std::endl;
+        err << " entry : " << folder.foldername();
+        err << " \t\t " << folder.folder_post_id();
+        err << " \t\t " << folder.parent_post_id();
+        log::LogString("fh_9_18912512", err.str());
+    }
+    return ret;
+}
+
+int FolderHandler::RetrieveFolderPost(const std::string& post_id, 
+                                      const std::string& post_path,
+                                      const AccessToken& at,
+                                      FolderPost& out) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string pp = post_path;
+        std::string posturl;
+        utils::FindAndReplace(pp, "{post}", post_id, posturl);
+        PostHandler<FolderPost> ph(at);
+        status = ph.Get(posturl, NULL, out);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("fh_9_13581", ph.response());
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
+
+int FolderHandler::PostFolderPost(const std::string& post_id, 
+                                  const std::string& post_path,
+                                  const AccessToken& at,
+                                  FolderPost& fp) {
+    int status = ret::A_OK;
+    if(!post_id.empty()) {
+        std::string pp = post_path;
+        std::string posturl;
+        utils::FindAndReplace(pp, "{post}", post_id, posturl);
+        PostHandler<FolderPost> ph(at);
+        status = ph.Put(posturl, NULL, fp);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("fh_85_n342309", ph.response());
+    }
+    else { 
+        status = ret::A_FAIL_INVALID_POST_ID;
+    }
+    return status;
+}
 
 }//namespace
 

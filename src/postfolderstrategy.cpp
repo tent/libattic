@@ -20,86 +20,21 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     std::string filepath = GetConfigValue("filepath");
     std::string entity = GetConfigValue("entity");
 
-    std::ostringstream pfs_log;
-    pfs_log <<"******************************************************"<< std::endl;
-    pfs_log <<" POST FOLDER STRATEGY : " << filepath << std::endl;
-
     // absolute filepath
     if(!filepath.empty()) {
-        //Extract Parent Directory
         std::string folderpath;
         status = fs::GetParentPath(filepath, folderpath);
-        pfs_log<<" FOLDER PATH : " << folderpath << std::endl;
-        if(!folderpath.empty()) {
-            std::string directory, directory_post_id;
-            if(file_manager_->FindAssociatedWorkingDirectory(folderpath, 
-                                                             directory, 
-                                                             directory_post_id)) {
-                FolderHandler fh(file_manager_);
-                std::deque<std::string> names;
-                if(fh.RetrieveFolders(folderpath, directory, names)) {
-                    pfs_log << " Retrieved " << names.size() << " folder names out of " << folderpath << std::endl;
-                    pfs_log << " for directory : " << directory << " with post id : " << directory_post_id << std::endl;
-                    std::deque<std::string>::iterator log_itr = names.begin();
-                    for(;log_itr!=names.end();log_itr++) {
-                        pfs_log << "\t" << (*log_itr) << std::endl;
-                    }
-                    // validate each folder exists
-                    std::deque<std::string>::iterator itr = names.begin();
-                    std::string parent_post_id = directory_post_id;
-                    for(;itr!=names.end();itr++) {
-                        Folder folder;
-                        pfs_log << " Checking folder entry exists for : " << (*itr) << " parent id : " << parent_post_id << std::endl;
-                        bool exists = file_manager_->GetFolderEntry((*itr), parent_post_id, folder);
-                        pfs_log << " folder exists : " << exists << std::endl;
-                        pfs_log << "\texistence check : " << std::endl;
-                        pfs_log << "\t\t(e)folder name : " << folder.foldername() << std::endl;
-                        pfs_log << "\t\t(e)post id : " << folder.folder_post_id() << std::endl;
-                        pfs_log << "\t\t(e)parent post id : " << folder.parent_post_id() << std::endl;
-                        if(!exists) {
-                            pfs_log << "[folder not found]" << std::endl;
-                            folder.set_foldername(*itr);
-                            folder.set_parent_post_id(parent_post_id);
-                            //  if not create post
-                            std::string post_id;
-                            CreateFolderPost(folder, post_id);
-                            // Insert to table;
-                            pfs_log<<" Inserting folder into table " << std::endl;
-                            pfs_log<<" \tfolder name : " << folder.foldername() << std::endl;
-                            pfs_log<<" \tpost id : " << folder.folder_post_id() << std::endl;
-                            pfs_log<<" \tparent post id : " << folder.parent_post_id() << std::endl;
-                            pfs_log<<" \talleged parent id : " << parent_post_id << std::endl;
-                            bool  success = file_manager_->CreateFolderEntry(folder.foldername(),
-                                                              folder.folder_post_id(),
-                                                              folder.parent_post_id(),
-                                                              folder);
-
-                            pfs_log<<" \tsuccess: " << success << std::endl;
-                        }
-                        else {
-                            pfs_log << "[folder found]" << std::endl;
-                            // Check if folderpath is deleted
-                            //
-                            if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
-                                // Un-delete
-                                file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
-                                UpdateFolderPost(folder, folder.folder_post_id());
-                            }
-                        }
-                        pfs_log << " setting parent post id to : " << folder.folder_post_id() << std::endl;
-                        parent_post_id = folder.folder_post_id();
-                    }
-                }
-            }
+        FolderHandler fh(file_manager_);
+        if(!fh.ValidateFolderPath(folderpath,
+                                  posts_feed_,
+                                  post_path_,
+                                  access_token_)) {
+            status = ret::A_FAIL_VALIDATE_DIRECTORY;
         }
     }
     else {
         status = ret::A_FAIL_INVALID_FILEPATH;
     }
-    pfs_log <<" POST FODLER STRATEGY STATUS = " << status << std::endl;
-    pfs_log <<"******************************************************"<< std::endl;
-
-    std::cout<< pfs_log.str() << std::endl;
 
     return status;
 }

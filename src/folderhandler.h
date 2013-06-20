@@ -8,6 +8,9 @@
 #include "folderpost.h"
 #include "filemanager.h"
 
+#include "accesstoken.h"
+
+
 namespace attic {
 
 class FolderHandler {
@@ -22,6 +25,13 @@ public:
     ~FolderHandler();
 
     bool ValidateFolder(FolderPost& fp);
+
+    bool ValidateFolderPath(const std::string& folderpath, 
+                            const std::string& posts_feed,
+                            const std::string& post_path,
+                            const AccessToken& at);
+
+
 
     bool RetrieveFolders(const std::string& folderpath, 
                          const std::string& working_directory,
@@ -52,6 +62,26 @@ public:
     bool SetFolderDeleted(const std::string& folderpath, bool del);
 
 
+    int CreateFolderPost(Folder& folder, 
+                         const std::string& posts_feed,
+                         const AccessToken& at,
+                         std::string& id_out);
+
+    bool UpdateFolderPost(Folder& folder, 
+                          const std::string& post_id,
+                          const std::string& post_path,
+                          const AccessToken& at);
+ 
+    int RetrieveFolderPost(const std::string& post_id, 
+                           const std::string& post_path,
+                           const AccessToken& at,
+                           FolderPost& out);
+ 
+    int PostFolderPost(const std::string& post_id, 
+                       const std::string& post_path,
+                       const AccessToken& at,
+                       FolderPost& fp);
+ 
 private:
     FileManager* file_manager_;
 };
