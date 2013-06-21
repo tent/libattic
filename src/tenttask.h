@@ -51,7 +51,7 @@ public:
     */
 
     const AccessToken& access_token() const { return access_token_; }
-    const Entity& entity() const { return entity_; }
+    const Entity* entity() const { return &entity_; }
 
     const std::string& filepath()           const { return filepath_; }
     const std::string& temp_directory()     const { return temp_directory_; }

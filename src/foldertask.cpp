@@ -237,8 +237,8 @@ int FolderTask::CreateFolder(const std::string& path) {
 
     FolderHandler fh(file_manager());
     if(fh.ValidateFolderPath(path,
-                             entity().GetPreferredServer().posts_feed(),
-                             entity().GetPreferredServer().post(),
+                             entity()->GetPreferredServer().posts_feed(),
+                             entity()->GetPreferredServer().post(),
                              access_token())) {
         status = ret::A_FAIL_VALIDATE_DIRECTORY;
     }
@@ -247,7 +247,7 @@ int FolderTask::CreateFolder(const std::string& path) {
 
 int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     int status = ret::A_OK;
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed(); 
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed(); 
     // Create folderpost                                   
     FolderPost fp(folder);                                 
     PostHandler<FolderPost> ph(access_token());

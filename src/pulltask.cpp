@@ -68,9 +68,9 @@ int PullTask::PullFile(const std::string& filepath) {
 
     std::string post_path = GetPostPath();
     std::string post_attachment;
-    utils::FindAndReplace(TentTask::entity().GetPreferredServer().attachment(),
+    utils::FindAndReplace(entity()->GetPreferredServer().attachment(),
                           "{entity}",
-                          TentTask::entity().entity(),
+                          entity()->entity(),
                           post_attachment);
     Response resp;
 
@@ -78,8 +78,8 @@ int PullTask::PullFile(const std::string& filepath) {
     HttpStrategyContext pullcontext(file_manager(), 
                                     credentials_manager());
 
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     pullcontext.SetConfigValue("post_path",post_path);
     pullcontext.SetConfigValue("posts_feed", posts_feed);

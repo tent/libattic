@@ -35,7 +35,7 @@ void DeleteTask::RunTask() {
     int status = ret::A_OK;
     std::string filepath = TentTask::filepath();
     std::string post_path = TentTask::GetPostPath(); 
-    std::string entity = TentTask::entity().entity();
+    std::string entity = TentTask::entity()->entity();
     std::cout<<" RUNNING DELETE TASK " << std::endl;
 
     if(!file_manager()->IsFileLocked(filepath)) {

@@ -70,8 +70,8 @@ int UploadTask::ProcessFile(const FileInfo& fi) {
     PostFileStrategy ps;
 
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = TentTask::entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     std::string filepath;
     FileHandler fh(file_manager());

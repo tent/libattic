@@ -69,8 +69,8 @@ int RenameTask::RenameFolder(const std::string& file_type,
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     rename_context.SetConfigValue("file_type", file_type);
     rename_context.SetConfigValue("original_folderpath", old_folderpath);
@@ -100,8 +100,8 @@ int RenameTask::RenameFile(const std::string& file_type,
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = TentTask::entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     std::cout<<" filepath : " << old_filepath << std::endl;
 

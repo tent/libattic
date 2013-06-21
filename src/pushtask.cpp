@@ -64,8 +64,8 @@ int PushTask::PushFile(const std::string& filepath) {
         HttpStrategyContext pushcontext(file_manager(), credentials_manager());
 
         std::string post_path = GetPostPath();
-        std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-        std::string entity = TentTask::entity().entity();
+        std::string posts_feed = entity()->GetPreferredServer().posts_feed();
+        std::string entity = TentTask::entity()->entity();
 
         pushcontext.SetConfigValue("post_path", post_path);
         pushcontext.SetConfigValue("posts_feed", posts_feed);
