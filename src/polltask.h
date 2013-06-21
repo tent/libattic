@@ -15,6 +15,7 @@
 #include "event.h"
 #include "censushandler.h"
 
+#include "foldersync.h"
 
 namespace attic { 
 
@@ -54,6 +55,7 @@ private:
 
     bool running_;
     CensusHandler* census_handler_;
+    FolderSync* folder_sync_;
 };
 
 class PollDelegate : public TaskDelegate {

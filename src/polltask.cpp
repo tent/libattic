@@ -17,6 +17,8 @@
 #include "folderhandler.h"
 #include "renamehandler.h"
 
+
+
 namespace attic {
 
 namespace polltask {
@@ -46,6 +48,8 @@ PollTask::PollTask( FileManager* pFm,
     census_handler_ = NULL;    
     delegate_ = new PollDelegate(this);
     running_ = true;
+
+    folder_sync_ = NULL;
 }
 
 PollTask::~PollTask() {
@@ -57,6 +61,11 @@ PollTask::~PollTask() {
         delete census_handler_;
         census_handler_ = NULL;
     }
+    if(folder_sync_) {
+        folder_sync_->Shutdown();
+        delete folder_sync_;
+        folder_sync_ = NULL;
+    }
 }
 
 void PollTask::OnStart(){
@@ -67,8 +76,14 @@ void PollTask::OnStart(){
 
     event::RegisterForEvent(this, event::Event::PAUSE);
     event::RegisterForEvent(this, event::Event::RESUME);
-    Entity entity = TentTask::entity();
+    Entity entity = *TentTask::entity();
     census_handler_ = new CensusHandler(entity.GetPreferredServer().posts_feed(), access_token());
+    folder_sync_ = new FolderSync(file_manager(),
+                                  access_token(),
+                                  TentTask::entity()->entity(),
+                                  TentTask::entity()->GetPreferredServer().posts_feed(),
+                                  TentTask::entity()->GetPreferredServer().post());
+    folder_sync_->Initialize();
     timer_.start();
 }
 
@@ -79,6 +94,8 @@ void PollTask::OnFinished() {
     event::UnregisterFromEvent(this, event::Event::PAUSE);
     event::UnregisterFromEvent(this, event::Event::RESUME);
     timer_.stop();
+
+    if(folder_sync_) folder_sync_->Shutdown();
 }
 
 void PollTask::OnEventRaised(const event::Event& event){
@@ -219,16 +236,11 @@ void PollTask::PollFolderPosts() {
 
         std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
         for(;itr != folder_list.rend(); itr++) {
-            // make sure entry exists in db, if it doesn't insert otherwise let 
-            // validation step do the update
-            std::cout<<" attempting to validate : " << (*itr).folder().foldername() << std::endl;
-            fh.ValidateFolder(*itr);
+            // Push back to consumer
+            if(folder_sync_) folder_sync_->PushBack(*itr);
         }
     }
-
-
 }
-
 
 
 void PollTask::DeleteLocalFile(const FileInfo& fi){ // TODO :: temp method, will move to its own job
