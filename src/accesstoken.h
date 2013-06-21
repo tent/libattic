@@ -11,6 +11,7 @@ namespace attic {
 class AccessToken : public JsonSerializable {
 public:
     AccessToken();
+    AccessToken(const AccessToken& rhs);
     ~AccessToken();
 
     // TODO :: move this to some other place, the file manager could 

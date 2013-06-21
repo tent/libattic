@@ -10,6 +10,26 @@ AccessToken::AccessToken() {
     time_offset_ = "0";
 }
 
+AccessToken::AccessToken(const AccessToken& rhs) {
+    access_token_.clear();
+    access_token_.append(rhs.access_token_.c_str(), rhs.access_token_.size());
+
+    hawk_key_.clear();
+    hawk_key_.append(rhs.hawk_key_.c_str(), rhs.hawk_key_.size());
+
+    hawk_algorithm_.clear();
+    hawk_algorithm_.append(rhs.hawk_algorithm_.c_str(), rhs.hawk_algorithm_.size());
+
+    token_type_.clear();
+    token_type_.append(rhs.token_type_.c_str(), rhs.token_type_.size());
+
+    app_id_.clear();
+    app_id_.append(rhs.app_id_.c_str(), rhs.app_id_.size());
+
+    time_offset_.clear();
+    time_offset_.append(rhs.time_offset_.c_str(), rhs.time_offset_.size());
+}
+
 AccessToken::~AccessToken() {}
 
 ret::eCode AccessToken::SaveToFile(const std::string& filepath) {
