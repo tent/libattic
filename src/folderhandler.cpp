@@ -67,10 +67,9 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             RenameHandler rh(file_manager_);
             rh.CheckForRename(fp);
         }
-
-
     }
 
+    vlog <<" validating folder post status : "<< ret << std::endl;
     vlog <<" **************************************************** " << std::endl;
     std::cout<< vlog.str() << std::endl;
     return ret;
@@ -353,6 +352,49 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
 
     rlog <<" **************************************************** " << std::endl;
     std::cout<< rlog.str() << std::endl;
+}
+
+bool FolderHandler::ValidateFolderTree(const std::string& folder_post_id,
+                                       const std::string& post_path,
+                                       const AccessToken& at) {
+    bool ret = true;                                                                            
+    std::ostringstream vlog;
+    vlog << "*****************************************************" << std::endl;
+    vlog << " VALIDATE FOLDER TREE " << std::endl;
+    vlog << " SEED ID : " << folder_post_id << std::endl;
+    // Make sure there is a corresponding folder entry for this entire folderpath                
+    // if not retrieve the post and continue                                                     
+    std::string post_id = folder_post_id;                                                        
+    while(!file_manager_->IsRootDirectory(post_id)) {                                            
+        vlog << " validating folder : " << post_id << std::endl;
+        if(file_manager_->DoesFolderExistById(post_id)) {                                        
+            // Get parent post id                                                                
+            vlog << " get folder parent id : " << post_id << std::endl;
+            ret = file_manager_->GetFolderParentId(post_id, post_id);
+            vlog << " parent post out : " << post_id << std::endl;
+        }
+        else {
+            // Retrieve post and insert
+            std::string posturl;
+            utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+
+            FolderPost fp;
+            PostHandler<FolderPost> ph(at);
+            if(ph.Get(posturl, NULL, fp) == ret::A_OK) {
+                FolderHandler fh(file_manager_);
+                ret = fh.InsertFolder(fp.folder());
+            }
+            else {
+                vlog <<" failed ot retrieve post :" << posturl << std::endl;
+                ret = false;
+                break;
+            }
+        }
+    }
+    vlog << " VALIDATE FOLDER TREE STATUS : "<< ret << std::endl;
+    vlog << "*****************************************************" << std::endl;
+    std::cout<< vlog.str() << std::endl;
+    return ret;
 }
 
 

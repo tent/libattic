@@ -47,7 +47,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             // Validate folderpath
-            if(!ValidateFolderPath(fi.folder_post_id())) {
+            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), post_path_, access_token_)) {
                 std::ostringstream err;
                 err << " failed to validate folder path" << std::endl;
                 log::LogString("gfs_84195", err.str());
@@ -425,37 +425,6 @@ bool GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder
         // Append filename
         out = out + fi.filename();
         std::cout<<" WITH FILENAME : " << out << std::endl;
-    }
-    return ret;
-}
-
-bool GetFileStrategy::ValidateFolderPath(const std::string& folder_post_id) {                      
-    bool ret = false;                                                                            
-    // Make sure there is a corresponding folder entry for this entire folderpath                
-    // if not retrieve the post and continue                                                     
-    std::string post_id = folder_post_id;                                                        
-    while(!file_manager_->IsRootDirectory(post_id)) {                                            
-        if(file_manager_->DoesFolderExistById(post_id)) {                                        
-            // Get parent post id                                                                
-            ret = file_manager_->GetFolderParentId(post_id, post_id);
-        }
-        else {
-            // Retrieve post and insert
-            std::string posturl;
-            utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-
-            FolderPost fp;
-            PostHandler<FolderPost> ph(access_token_);
-            if(ph.Get(posturl, NULL, fp) == ret::A_OK) {
-                FolderHandler fh(file_manager_);
-                ret = fh.InsertFolder(fp.folder());
-            }
-            else {
-                std::cout<<" failed ot retrieve post :" << posturl << std::endl;
-                ret = false;
-                break;
-            }
-        }
     }
     return ret;
 }

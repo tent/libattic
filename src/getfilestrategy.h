@@ -34,7 +34,6 @@ class GetFileStrategy : public HttpStrategyInterface {
                   const Credentials& file_cred,
                   const std::string& destination_path);
 
-    bool ValidateFolderPath(const std::string& folder_post_id);
     void ValidateFolderEntries(FilePost& fp);
     void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);
     bool RetrieveFolderPost(const std::string& post_id, FolderPost& out);

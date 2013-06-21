@@ -201,11 +201,22 @@ void PollTask::PollDeletedFolderPosts() {
 }
 
 void PollTask::PollFolderPosts() {
-    std::cout<<" polling folder posts ... " << std::endl;
+    std::ostringstream err;
+    err << "************************************************ " << std::endl;
+    err <<" polling folder posts ... " << std::endl;
     FolderHandler fh(file_manager());
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry("", folder_list)){
-        std::cout<<" Retreived : " << folder_list.size() << " folders " << std::endl;
+        err <<" Retreived : " << folder_list.size() << " folders " << std::endl;
+        std::deque<FolderPost>::reverse_iterator r_itr = folder_list.rbegin();
+        for(;r_itr != folder_list.rend(); r_itr++) {
+            err << (*r_itr).folder().foldername() << " id : ";
+            err << (*r_itr).id() << " parent_post id : ";
+            err << (*r_itr).folder().parent_post_id() << std::endl;
+        }
+        err << "************************************************ " << std::endl;
+        std::cout << err.str() << std::endl;
+
         std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
         for(;itr != folder_list.rend(); itr++) {
             // make sure entry exists in db, if it doesn't insert otherwise let 
@@ -214,6 +225,8 @@ void PollTask::PollFolderPosts() {
             fh.ValidateFolder(*itr);
         }
     }
+
+
 }
 
 

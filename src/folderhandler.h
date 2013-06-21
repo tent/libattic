@@ -26,12 +26,15 @@ public:
 
     bool ValidateFolder(FolderPost& fp);
 
+    // Validate an absolute folderpath
     bool ValidateFolderPath(const std::string& folderpath, 
                             const std::string& posts_feed,
                             const std::string& post_path,
                             const AccessToken& at);
 
-
+    bool ValidateFolderTree(const std::string& folder_post_id,
+                            const std::string& post_path,
+                            const AccessToken& at);
 
     bool RetrieveFolders(const std::string& folderpath, 
                          const std::string& working_directory,
