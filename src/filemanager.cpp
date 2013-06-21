@@ -244,11 +244,14 @@ bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) 
 
 bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string& out) {
     bool ret = false;
+    std::ostringstream err;
+    err << " ************************************************************** " << std::endl;
+    err << " relative path : " << relativepath << std::endl;
     if(IsPathAliased(relativepath)) {
         std::string aliased_directory, post_id;
         if(FindAssociatedCanonicalDirectory(relativepath, aliased_directory, post_id)) {
-            std::cout<<" relative path : " << relativepath << std::endl;
-            std::cout<<" aliased directory : " << aliased_directory << std::endl;
+            err <<" aliased directory : " << aliased_directory << std::endl;
+            err <<" post_id : " << post_id << std::endl;
             size_t sp = relativepath.find("/");
             if(sp != std::string::npos) {
                 // Replace working
@@ -262,15 +265,20 @@ bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string&
                 ret = true;
             }
         }
+        else {
+            err << " FindAssociatedCanonicalDirectory fail " << std::endl;
+        }
     }
     else {
-        std::cout<< " PATH NOT RELATIVE " << std::endl;
+        err << " PATH NOT RELATIVE " << std::endl;
     }
+    err << " ************************************************************** " << std::endl;
+    std::cout << err.str() << std::endl;
     return ret;
 }
 
 bool FileManager::IsPathAliased(const std::string& filepath) {
-    if(filepath.size() && (filepath.find("~") == 0))
+    if(filepath.size() && (filepath.find(cnst::g_alias_prefix) != std::string::npos))
         return true;
     return false;
 }

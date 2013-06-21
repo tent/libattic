@@ -23,7 +23,6 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
 
     // absolute filepath
     if(!filepath.empty()) {
-        std::cout<< "$$ Post filepath : " << filepath << std::endl;
         std::string folderpath;
         status = fs::GetParentPath(filepath, folderpath);
 
@@ -40,7 +39,6 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
         status = ret::A_FAIL_INVALID_FILEPATH;
     }
 
-    std::cout<<" POST FOLDER STRATEGY RETURN : " << status << std::endl;
     return status;
 }
 

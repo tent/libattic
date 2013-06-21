@@ -208,6 +208,8 @@ void PollTask::PollFolderPosts() {
         std::cout<<" Retreived : " << folder_list.size() << " folders " << std::endl;
         std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
         for(;itr != folder_list.rend(); itr++) {
+            // make sure entry exists in db, if it doesn't insert otherwise let 
+            // validation step do the update
             std::cout<<" attempting to validate : " << (*itr).folder().foldername() << std::endl;
             fh.ValidateFolder(*itr);
         }

@@ -5,6 +5,7 @@
 #include "netlib.h"
 #include "filemanager.h"
 #include "filesystem.h"
+#include "logutils.h"
 
 namespace attic { 
 
@@ -62,13 +63,15 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
     // name change
     // parent_post_id change
     // folderpath change (check parent_post_id) 
-    std::cout<<" CHECK FOR fOLDER RENAME : " << std::endl;
+    std::ostringstream rlog;
+    rlog <<" **************************************************** " << std::endl;
+    rlog <<" CHECK FOR fOLDER RENAME : " << fp.folder().foldername() << std::endl;
     Folder folder;
     if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
-        std::cout<<" FOLDER EXISTS : " << fp.folder().foldername() << std::endl;
+        rlog <<" FOLDER EXISTS : " << fp.folder().foldername() << std::endl;
         if(folder.foldername() != fp.folder().foldername()) {
-            std::cout<<" RENAMEING : " << folder.foldername() << std::endl;
-            std::cout<<" TO : " << fp.folder().foldername() << std::endl;
+            rlog <<" RENAMEING : " << folder.foldername() << std::endl;
+            rlog <<" TO : " << fp.folder().foldername() << std::endl;
             // Construct old path
             std::string old_path;
             file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
@@ -79,52 +82,58 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
             // Get Absoulte paths
             // Rename
-            std::cout<<" old path : " << old_path << std::endl;
-            std::cout<<" new path : " << new_path << std::endl;
+            rlog<<" old path : " << old_path << std::endl;
+            rlog<<" new path : " << new_path << std::endl;
 
             std::string old_can, new_can;
             file_manager_->GetCanonicalPath(old_path, old_can);
             file_manager_->GetCanonicalPath(new_path, new_can);
-            std::cout<<" old canonical : " << old_can << std::endl;
-            std::cout<<" new canonical : " << new_can << std::endl;
+            rlog <<" old canonical : " << old_can << std::endl;
+            rlog <<" new canonical : " << new_can << std::endl;
             try {
                 fs::RenamePath(old_can, new_can);
             }
             catch(std::exception& e) {
-                std::cout<<" EXCEPTION WHAT : " << e.what() << std::endl;
+                rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;
+                log::LogException("rn_1809418204", e);
+
             }
         }
 
         if(folder.parent_post_id() != fp.folder().parent_post_id()) {
-            std::cout<<" PARENTS DIFFER " << std::endl;
+            rlog <<" PARENTS DIFFER " << std::endl;
             // Construct old path
             std::string old_path;
             file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
             ret = file_manager_->SetFolderParentPostId(folder.folder_post_id(),
-                                                        fp.folder().parent_post_id());
+                                                       fp.folder().parent_post_id());
             // Constrcut new path
             // move to new folder
             // Constrcut new path
             std::string new_path;
             file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
             // Rename
-            std::cout<<" old path : " << old_path << std::endl;
-            std::cout<<" new path : " << new_path << std::endl;
+            rlog <<" old path : " << old_path << std::endl;
+            rlog <<" new path : " << new_path << std::endl;
 
             std::string old_can, new_can;
             file_manager_->GetCanonicalPath(old_path, old_can);
             file_manager_->GetCanonicalPath(new_path, new_can);
-            std::cout<<" old canonical : " << old_can << std::endl;
-            std::cout<<" new canonical : " << new_can << std::endl;
+            rlog <<" old canonical : " << old_can << std::endl;
+            rlog <<" new canonical : " << new_can << std::endl;
             try {
                 fs::RenamePath(old_can, new_can);
             }
             catch(std::exception& e) {
-                std::cout<<" EXCEPTION WHAT : " << e.what() << std::endl;
+                rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;
+                log::LogException("rn_18410915092", e);
             }
         }
 
     }
+
+    rlog <<" **************************************************** " << std::endl;
+    std::cout<< rlog.str() << std::endl;
     return ret;
 }
 

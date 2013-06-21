@@ -17,63 +17,62 @@ FolderHandler::~FolderHandler() {}
 
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     bool ret = false;
-    std::cout<<" validating folder post " << std::endl;
+
+    std::ostringstream vlog;
+    vlog <<" **************************************************** " << std::endl;
+    vlog <<" validating folder post " << std::endl;
     // check if parent exists
     // check if folder entry exists
     //  if so check for rename
     //  if not create entry
     //   create folder
-    std::cout<<" parent folder post id : " << fp.folder().parent_post_id() << std::endl;
+    vlog <<" parent folder post id : " << fp.folder().parent_post_id() << std::endl;
     if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
-        std::string folderpath, full_folderpath;
-        if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
-            std::cout<<" folder path : " << folderpath << std::endl;
-            if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
-                std::cout<<" creating directory tree for " << full_folderpath << std::endl;
-            }
-        }
-        if(full_folderpath.empty()) {
-            std::ostringstream error;
-            error << "Validate Folder, full folderpath empty ";
-            error << " post id : " << fp.id() << std::endl;
-            error << " foldername : " << fp.folder().foldername() << std::endl;
-            log::LogString("folder_handler_12904", error.str());
-            return ret;
-        }
+        // Check if post itself exists in the database
 
-        if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id()) && 
-                                  fs::CheckFilepathExists(full_folderpath)) {
-            // check for rename
-            std::cout<<" CHECK FOR RENAME " << std::endl;
-            RenameHandler rh(file_manager_);
-            rh.CheckForRename(fp);
-        }
-        else {
-            std::cout<<" creating folder entry " << std::endl;
-            //create entry
-            if(InsertFolder(fp)) {
-                std::cout<<" attempting to constuct folderpath " << std::endl;
-                std::cout<<" folder id : " << fp.id() << std::endl;
-                std::string folderpath;
-                if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
-                    std::cout<<" folder path : " << folderpath << std::endl;
-                    std::string full_folderpath;
+        if(!file_manager_->DoesFolderExistById(fp.id())) {
+            InsertFolder(fp.folder());
+            std::string folderpath, full_folderpath;
+            if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+                vlog <<" folder path : " << folderpath << std::endl;
+                if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+                    vlog <<" creating directory tree for " << full_folderpath << std::endl;
                     try {
                         //create folder
                         fs::CreateDirectoryTreeForFolder(full_folderpath);
                         ret = true;
                     }
                     catch(std::exception& e) {
+                        vlog << " EXCEPTION : " << e.what() << std::endl;
                         log::LogException("fh_1281jn1", e);
                     }
                 }
-                else {
-                    std::cout<<" failed to create folderpath " <<std::endl;
-                }
             }
+
+            if(full_folderpath.empty()) {
+                std::ostringstream error;
+                error << "Validate Folder, full folderpath empty ";
+                error << " post id : " << fp.id() << std::endl;
+                error << " foldername : " << fp.folder().foldername() << std::endl;
+                log::LogString("folder_handler_12904", error.str());
+                vlog << error.str();
+                vlog <<" **************************************************** " << std::endl;
+                std::cout<< vlog.str() << std::endl;
+                return ret;
+            }    
         }
+        else {
+            // check for rename
+            vlog <<" CHECK FOR RENAME " << std::endl;
+            RenameHandler rh(file_manager_);
+            rh.CheckForRename(fp);
+        }
+
+
     }
 
+    vlog <<" **************************************************** " << std::endl;
+    std::cout<< vlog.str() << std::endl;
     return ret;
 }
 
