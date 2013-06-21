@@ -14,6 +14,7 @@
 #include "folder.h"
 #include "filequeue.h"
 #include "folderpost.h"
+#include "foldercreationlock.h"
 
 namespace attic { 
 

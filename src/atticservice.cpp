@@ -9,6 +9,7 @@
 
 #include "posthandler.h"
 #include "confighandler.h"
+#include "foldercreationlock.h"
 
 namespace attic {
 

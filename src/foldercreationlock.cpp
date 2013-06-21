@@ -2,17 +2,15 @@
 
 namespace attic { 
 CreationQueue* CreationQueue::instance_ = 0;
-
 static MutexClass ref_mtx_;
-static unsigned int ref_count_ = 0;
+static unsigned int g_ref_count = 0;
 
 CreationQueue* CreationQueue::instance() { 
-    if(!instance_)
-        instance_ = new CreationQueue();
     ref_mtx_.Lock();
-    std::cout<<"## GETTING INSTANCE " << std::endl;
-    ref_count_++;
-    std::cout<<"## CURRENT FOLDER LOCK REF COUNT : " << ref_count_ << std::endl;
+    if(!instance_) { 
+        instance_ = new CreationQueue();
+    }
+    g_ref_count++;
     ref_mtx_.Unlock();
     return instance_;
 }
@@ -25,20 +23,31 @@ void CreationQueue::Shutdown() {
 }
 
 void CreationQueue::Release() {
+    // Perform cleanup
     ref_mtx_.Lock();
-    std::cout<<"## RELEASING " << std::endl;
-    ref_count_--;
-    std::cout<<"## CURRENT FOLDER LOCK REF COUNT : " << ref_count_ << std::endl;
-    unsigned int hold = ref_count_;
+    g_ref_count--;
+    unsigned hold = g_ref_count;
     ref_mtx_.Unlock();
-    if(hold <= 0)
-        Shutdown();
+    if(hold <= 0) {
+        fm_mtx_.Lock();
+        FolderMap::iterator itr = folder_map_.begin();
+        for(;itr!=folder_map_.end();itr++) {
+            if(itr->second.size() <= 0) {
+                folder_map_.erase(itr);
+            }
+        }
+
+        if(folder_map_.size() <=0) {
+            Shutdown();
+        }
+        fm_mtx_.Unlock();
+    }
 }
 
-bool CreationQueue::PushBack(const std::string& foldername, const std::string& parent_id) {
+
+bool CreationQueue::Lock(const std::string& foldername, const std::string& parent_id) {
     bool ret = false;
     fm_mtx_.Lock();
-    std::cout<< "## Locking : " << foldername << " id : " << parent_id << std::endl;
     FolderMap::iterator itr = folder_map_.find(parent_id);
     if(itr == folder_map_.end()) {
         folder_map_[parent_id][foldername] = true;
@@ -50,17 +59,16 @@ bool CreationQueue::PushBack(const std::string& foldername, const std::string& p
             ret = true;
         }
     }
+
     fm_mtx_.Unlock();
     return ret;
 }
 
-bool CreationQueue::Remove(const std::string& foldername, const std::string& parent_id) {
+bool CreationQueue::Unlock(const std::string& foldername, const std::string& parent_id) {
     bool ret = true;
     fm_mtx_.Lock();
-    std::cout<< "## Attempting Remove : " << foldername << " id : " << parent_id << std::endl;
     std::map<std::string, bool>::iterator itr = folder_map_[parent_id].find(foldername);
     if(itr != folder_map_[parent_id].end()) {
-        std::cout<< "## Removing : " << foldername << " id : " << parent_id << std::endl;
         folder_map_[parent_id].erase(itr);
     }
     fm_mtx_.Unlock();

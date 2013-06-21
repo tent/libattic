@@ -33,14 +33,16 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             }
         }
         if(full_folderpath.empty()) {
-            std::string error = "Validate Folder, full folderpath empty ";
-            log::LogString("folder_handler_12904", error);
+            std::ostringstream error;
+            error << "Validate Folder, full folderpath empty ";
+            error << " post id : " << fp.id() << std::endl;
+            error << " foldername : " << fp.folder().foldername() << std::endl;
+            log::LogString("folder_handler_12904", error.str());
             return ret;
         }
 
         if(file_manager_->DoesFolderExistById(fp.folder().folder_post_id()) && 
                                   fs::CheckFilepathExists(full_folderpath)) {
-
             // check for rename
             std::cout<<" CHECK FOR RENAME " << std::endl;
             RenameHandler rh(file_manager_);
@@ -130,6 +132,7 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                         else {
                             vlog << " failed to create folder post breaking " << std::endl;
                             ret = false;
+                            l.Unlock((*itr), parent_post_id);
                             break;
                         }
                     }
@@ -145,10 +148,10 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                              at);
                         }
                     }
-
+                    l.Unlock((*itr), parent_post_id);
                     parent_post_id = folder.folder_post_id();
                     vlog << " setting parent post id : " << parent_post_id << std::endl;
-                    l.Unlock((*itr), parent_post_id);
+
                 } // for
             }
             else {
@@ -265,26 +268,26 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
             file_manager_->MarkFilesInFolderDeleted(*itr);
         }
     }
-    /*
-    */
 }
 
 void FolderHandler::RenameFolder(const std::string& old_folderpath, 
                                  const std::string& new_folderpath,
                                  std::deque<FileInfo>& file_list,
                                  std::deque<Folder>& folder_list) {
-    std::cout<<" rename folder called " << std::endl;
+    std::ostringstream rlog;
+    rlog <<" **************************************************** " << std::endl;
+    rlog <<" rename folder called " << std::endl;
     // Retrieve all sub folders and files
     Folder folder;
     if(file_manager_->GetFolderEntry(old_folderpath, folder)){
         RetrieveAllFilesAndFoldersInFolder(folder, file_list, folder_list);
-        std::cout<<" folder list : " << folder_list.size() << std::endl;
-        std::cout<<" file list : " << file_list.size() << std::endl;
+        rlog << " folder list : " << folder_list.size() << std::endl;
+        rlog << " file list : " << file_list.size() << std::endl;
         std::string aliased_old_path, aliased_new_path;
         if(file_manager_->GetAliasedPath(old_folderpath, aliased_old_path) &&
            file_manager_->GetAliasedPath(new_folderpath, aliased_new_path)) {
-            std::cout<<" aliased folderpath (old): " << aliased_old_path << std::endl;
-            std::cout<<" aliased folderpath (new): " << aliased_new_path << std::endl;
+            rlog <<" aliased folderpath (old): " << aliased_old_path << std::endl;
+            rlog <<" aliased folderpath (new): " << aliased_new_path << std::endl;
             RenameHandler rh(file_manager_);
             // Update folderpaths
             std::deque<Folder>::iterator folder_itr = folder_list.begin();
@@ -297,7 +300,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                     size_t f = path.find("//");
                     if(f!= std::string::npos)
                         path.erase(f, 1);
-                    std::cout<<" NEW FOLDER PATH " << path << std::endl;
+                    rlog <<" NEW FOLDER PATH " << path << std::endl;
                     // Normalize path
                     utils::CheckUrlAndRemoveTrailingSlash(path);
                     rh.RenameFolderLocalCache((*folder_itr).foldername(), path);
@@ -310,11 +313,11 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                         // Normalize path
                         utils::CheckUrlAndRemoveTrailingSlash(parent_path);
                         Folder parent_folder;
-                        std::cout<<" parent path : " << parent_path << std::endl;
+                        rlog <<" parent path : " << parent_path << std::endl;
                         if(GetFolder(parent_path, parent_folder)) {
-                            std::cout<< " current folder : " << (*folder_itr).foldername() << std::endl;
-                            std::cout<< " setting new parent id " << std::endl;
-                            std::cout<< parent_folder.folder_post_id() << std::endl;
+                            rlog << " current folder : " << (*folder_itr).foldername() << std::endl;
+                            rlog << " setting new parent id " << std::endl;
+                            rlog << parent_folder.folder_post_id() << std::endl;
                             (*folder_itr).set_parent_post_id(parent_folder.folder_post_id());
                             SetFolderParentPostId((*folder_itr), parent_folder.folder_post_id());
                         }
@@ -330,14 +333,14 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
             // Update filepath
             std::deque<FileInfo>::iterator file_itr = file_list.begin();
             for(;file_itr!= file_list.end(); file_itr++) {
-                std::cout<<" finding old path : " << aliased_old_path << std::endl;
+                rlog <<" finding old path : " << aliased_old_path << std::endl;
                 size_t pos = (*file_itr).filepath().find(aliased_old_path);
                 if(pos != std::string::npos) {
                     std::string path = aliased_new_path;
                     utils::CheckUrlAndRemoveTrailingSlash(path);
                     path += (*file_itr).filepath().substr(pos+aliased_old_path.size());
-                    std::cout<<" NEW FILE PATH " << path << std::endl;
-                    std::cout<<" aliased new path : " << aliased_new_path << std::endl;
+                    rlog <<" NEW FILE PATH " << path << std::endl;
+                    rlog <<" aliased new path : " << aliased_new_path << std::endl;
 
                     rh.RenameFileLocalCache((*file_itr).filepath(), path);
                     (*file_itr).set_filepath(path);
@@ -346,9 +349,13 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
         }
     }
     else {
-        std::cout<<" could not get folder entry " << std::endl;
+        rlog <<" could not get folder entry " << std::endl;
     }
+
+    rlog <<" **************************************************** " << std::endl;
+    std::cout<< rlog.str() << std::endl;
 }
+
 
 int FolderHandler::RetrieveAllFilesAndFoldersInFolder(Folder& folder, 
                                                       std::deque<FileInfo>& file_out,

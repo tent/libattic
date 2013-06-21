@@ -40,6 +40,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
         status = ret::A_FAIL_INVALID_FILEPATH;
     }
 
+    std::cout<<" POST FOLDER STRATEGY RETURN : " << status << std::endl;
     return status;
 }
 

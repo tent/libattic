@@ -11,11 +11,11 @@ namespace attic {
 
 class CreationQueue {
 protected:
-    CreationQueue() {std::cout<<"@@ CREATING INSTANCE " << std::endl;}
+    CreationQueue() {}
     CreationQueue(const CreationQueue& rhs) { }
     CreationQueue operator=(const CreationQueue& rhs) { return *this;}
 
-    ~CreationQueue() {std::cout<<"@@ DELETING INSTANCE " << std::endl;}
+    ~CreationQueue() {}
 private:
     friend class fcl;
 
@@ -23,8 +23,8 @@ private:
     void Shutdown();
     void Release();
 
-    bool PushBack(const std::string& foldername, const std::string& parent_id);
-    bool Remove(const std::string& foldername, const std::string& parent_id);
+    bool Lock(const std::string& foldername, const std::string& parent_id);
+    bool Unlock(const std::string& foldername, const std::string& parent_id);
     bool IsLocked(const std::string& foldername, const std::string& parent_id);
 
 
@@ -32,10 +32,10 @@ private:
     typedef std::map<std::string, std::map<std::string, bool> > FolderMap;
     MutexClass fm_mtx_;
     FolderMap folder_map_;
+
     static CreationQueue* instance_;
+
 };
-
-
 
 // Folder Creation Lock
 // - this is used to prevent duplicate posts when creating posts for directory trees,
@@ -52,6 +52,10 @@ public:
         cq_ = NULL;
     }
 
+    bool ForceShutdown() {
+
+    }
+
     bool TryLock(const std::string& foldername, const std::string& parent_id) {
         while(IsLocked(foldername, parent_id))
             sleep::mil(1);
@@ -59,7 +63,7 @@ public:
     }
 
     bool Lock(const std::string& foldername, const std::string& parent_id) {
-        return cq_->PushBack(foldername, parent_id);
+        return cq_->Lock(foldername, parent_id);
     }
 
     bool IsLocked(const std::string& foldername, const std::string& parent_id) {
@@ -67,7 +71,7 @@ public:
     }
 
     bool Unlock(const std::string& foldername, const std::string& parent_id) {
-        return cq_->Remove(foldername, parent_id);
+        return cq_->Unlock(foldername, parent_id);
     }
 private:
     CreationQueue* cq_;
