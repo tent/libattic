@@ -81,50 +81,28 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                     vlog <<" "<< (*n_itr) << std::endl;
                 }
                 // validate each folder exists
-                fcl l; // File lock
                 std::deque<std::string>::iterator itr = names.begin();
                 std::string parent_post_id = directory_post_id;
                 for(;itr!=names.end();itr++) {
-                    l.TryLock((*itr), parent_post_id);
                     Folder folder;
-                    bool exists = file_manager_->GetFolderEntry((*itr), parent_post_id, folder);
-                    vlog <<" folder : " << (*itr) << " id : " << parent_post_id << std::endl;
-                    vlog << " exists : " << exists << std::endl;
-                    if(!exists) {
-                        vlog << " creating folder " << std::endl;
-                        vlog << " name : " << (*itr) << std::endl;
-                        vlog << " parent post id " << parent_post_id << std::endl;
-                        folder.set_foldername(*itr);
-                        folder.set_parent_post_id(parent_post_id);
-                        //  if not create post
-                        std::string post_id;
-                        if(CreateFolderPost(folder, posts_feed, at, post_id) == ret::A_OK) {
-                            folder.set_folder_post_id(post_id);
-                            file_manager_->CreateFolderEntry(folder.foldername(),
-                                                             folder.folder_post_id(),
-                                                             folder.parent_post_id(),
-                                                             folder);
-                        }
-                        else {
-                            vlog << " failed to create folder post breaking " << std::endl;
-                            ret = false;
-                            l.Unlock((*itr), parent_post_id);
-                            break;
-                        }
-                    }
-                    else {
+                    if(!AttemptCreateNewFolderEntry((*itr), 
+                                                   parent_post_id,
+                                                   posts_feed,
+                                                   at,
+                                                   folder)){
                         vlog << " file already exists " << std::endl;
-                        // Check if folderpath is deleted
-                        if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
-                            // Un-delete
-                            file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
-                            UpdateFolderPost(folder, 
-                                             folder.folder_post_id(),
-                                             post_path,
-                                             at);
+                        if(file_manager_->GetFolderEntry((*itr), parent_post_id, folder)) {
+                            // Check if folderpath is deleted
+                            if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
+                                // Un-delete
+                                file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
+                                UpdateFolderPost(folder, 
+                                                 folder.folder_post_id(),
+                                                 post_path,
+                                                 at);
+                            }
                         }
                     }
-                    l.Unlock((*itr), parent_post_id);
                     parent_post_id = folder.folder_post_id();
                     vlog << " setting parent post id : " << parent_post_id << std::endl;
 
@@ -179,7 +157,10 @@ bool FolderHandler::InsertFolder(const Folder& folder) {
         else {
             std::ostringstream err;
             err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
-            log::LogString("fh_19485", err.str());
+            err << " foldername : " << folder.foldername() << std::endl;
+            err << " folder post : " << folder.folder_post_id() << std::endl;
+            err << " parent post : " << folder.parent_post_id() << std::endl;
+            log::LogString("fh_181415", err.str());
         }
     }
     return ret;
@@ -198,6 +179,9 @@ bool FolderHandler::InsertFolder(const FolderPost& fp) {
         else {
             std::ostringstream err;
             err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
+            err << " foldername : " << fp.folder().foldername() << std::endl;
+            err << " folder post : " << fp.folder().folder_post_id() << std::endl;
+            err << " parent post : " << fp.folder().parent_post_id() << std::endl;
             log::LogString("fh_19485", err.str());
         }
     }
@@ -559,6 +543,51 @@ bool FolderHandler::CreateDirectoryTree(FolderPost& fp) {
         return ret;
     }
     clog <<" CreateDirectoryTree status : " << ret << std::endl;
+    clog <<" **************************************************** " << std::endl;
+    std::cout<< clog.str() << std::endl;
+    return ret;
+}
+
+bool FolderHandler::AttemptCreateNewFolderEntry(const std::string& foldername, 
+                                                const std::string& parent_post_id,
+                                                const std::string& posts_feed,
+                                                const AccessToken& at,
+                                                Folder& out) {
+    bool ret = false;
+    std::ostringstream clog;
+    clog <<" **************************************************** " << std::endl;
+    clog <<" Attempting to Create New Folder Entry " << std::endl;
+    fcl l; // File lock
+    l.TryLock(foldername, parent_post_id);
+    Folder folder;
+    bool exists = file_manager_->GetFolderEntry(foldername, parent_post_id, folder);
+    clog <<" folder : " << foldername << " id : " << parent_post_id << std::endl;
+    clog << " exists : " << exists << std::endl;
+    if(!exists) {
+        clog << " creating folder " << std::endl;
+        clog << " name : " << foldername << std::endl;
+        clog << " parent post id " << parent_post_id << std::endl;
+        folder.set_foldername(foldername);
+        folder.set_parent_post_id(parent_post_id);
+        //  if not create post
+        std::string post_id;
+        clog << " creating folder post " << std::endl;
+        if(CreateFolderPost(folder, posts_feed, at, post_id) == ret::A_OK) {
+            folder.set_folder_post_id(post_id);
+            clog << " creating manifest entry " << std::endl;
+            ret = file_manager_->CreateFolderEntry(folder.foldername(),
+                                             folder.folder_post_id(),
+                                             folder.parent_post_id(),
+                                             out);
+        }
+        else {
+            clog << " failed to create folder post breaking " << std::endl;
+            ret = false;
+        }
+    }
+
+    l.Unlock(foldername, parent_post_id);
+    clog <<" AttemptCreateNewFolderEntry status : " << ret << std::endl;
     clog <<" **************************************************** " << std::endl;
     std::cout<< clog.str() << std::endl;
     return ret;

@@ -92,25 +92,18 @@ int FolderTask::RenameFolder() {
                     UpdateFolderPost(folder, folder.folder_post_id());
                 }
                 else {
-                    std::cout<<" ATTEMPTING RENAME CREATE " << std::endl;
-                    if(!file_manager()->GetFolderEntry((*itr), parent_post_id, folder)) {
-                        folder.set_foldername(*itr);
-                        folder.set_parent_post_id(parent_post_id);
-                        //  if not create post
-                        std::string post_id;
-                        CreateFolderPost(folder, post_id);
-                        // Insert to table;
-                        file_manager()->CreateFolderEntry(folder.foldername(),
-                                                          folder.folder_post_id(),
-                                                          folder.parent_post_id(),
-                                                          folder);
-                    }
-                    else {
-                        // Check if folderpath is deleted
-                        if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
-                            // Un-delete
-                            file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
-                            UpdateFolderPost(folder, folder.folder_post_id());
+                    if(!fh.AttemptCreateNewFolderEntry((*itr),
+                                                 parent_post_id,
+                                                 entity()->GetPreferredServer().posts_feed(),
+                                                 access_token(),
+                                                 folder)) {
+                        if(file_manager()->GetFolderEntry((*itr), parent_post_id, folder)){
+                            // Check if folderpath is deleted
+                            if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
+                                // Un-delete
+                                file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
+                                UpdateFolderPost(folder, folder.folder_post_id());
+                            }
                         }
                     }
                 }

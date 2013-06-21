@@ -26,6 +26,16 @@ public:
     FolderHandler(FileManager* fm);
     ~FolderHandler();
 
+
+    // Attempts to create a new folder entry, post and all, will check
+    // for existing folder entry in local cache returning a bool upon
+    // success or failure, and a folder on success
+    bool AttemptCreateNewFolderEntry(const std::string& foldername, 
+                                     const std::string& parent_post_id,
+                                     const std::string& posts_feed,
+                                     const AccessToken& at,
+                                     Folder& out);
+
     bool ValidateFolder(FolderPost& fp);
 
     // Validate an absolute folderpath
