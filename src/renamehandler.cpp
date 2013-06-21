@@ -139,8 +139,11 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
 
 // Checks FileInfo (preferably generated from a file post against the local cache)
 bool RenameHandler::CheckForRename(FileInfo& fi, const std::string& post_id) {
-    std::cout<<" CHECKING FOR RENAME " << std::endl;
-    std::cout<<" Incoming filepath : " << fi.filepath() << std::endl;
+    bool ret = false;
+    std::ostringstream rlog;
+    rlog <<" **************************************************** " << std::endl;
+    rlog <<" CHECKING FOR RENAME " << std::endl;
+    rlog <<" Incoming filepath : " << fi.filepath() << std::endl;
     FileInfo local_fi;
     if(file_manager_->GetFileInfoByPostId(post_id, local_fi)) {
         // If filepaths are the same
@@ -150,37 +153,41 @@ bool RenameHandler::CheckForRename(FileInfo& fi, const std::string& post_id) {
             std::string old_filepath = local_fi.filepath();
             std::string new_filepath = fi.filepath();
 
-            std::cout << "local filepath : " << local_fi.filepath() << std::endl;
-            std::cout << "post filepath : " << fi.filepath() << std::endl;
+            rlog << "local filepath : " << local_fi.filepath() << std::endl;
+            rlog << "post filepath : " << fi.filepath() << std::endl;
             int status = RenameFileLocalCache(old_filepath, new_filepath);
-            std::cout<<" new filepath : " << new_filepath << std::endl;
+            rlog <<" new filepath : " << new_filepath << std::endl;
             if(status == ret::A_OK) {
                 // Rename physical file
                 std::string canonical_old, canonical_new;
                 file_manager_->GetCanonicalPath(old_filepath, canonical_old);
                 file_manager_->GetCanonicalPath(new_filepath, canonical_new);
-                std::cout<<" OLD : " << canonical_old << std::endl;
-                std::cout<<" NEW : " << canonical_new << std::endl;
+                rlog <<" OLD : " << canonical_old << std::endl;
+                rlog <<" NEW : " << canonical_new << std::endl;
                 if(!canonical_new.empty()) {
                     if(fs::CheckFilepathExists(canonical_old)){
-                        std::cout<<" RENAMING " << std::endl;
+                        rlog <<" RENAMING " << std::endl;
                         fs::RenamePath(canonical_old, canonical_new);
-                        return true;
+                        ret = true;
                     }
                     else {
-                        std::cout<<" OLD PATH DOESNT EXIST " << std::endl;
+                        rlog <<" OLD PATH DOESNT EXIST " << std::endl;
                     }
                 }
                 else {
-                    std::cout<<" CANONICAL NEW IS EMPTY : " << canonical_new << std::endl;
+                    rlog <<" CANONICAL NEW IS EMPTY : " << canonical_new << std::endl;
                 }
             }
             else {
-                std::cout<<" RENAME LOCAL CACHE FAILED " << std::endl;
+                rlog <<" RENAME LOCAL CACHE FAILED " << std::endl;
             }
         }
     }
-    return false;
+
+    rlog <<" CheckForRename status : " << ret << std::endl;
+    rlog <<" **************************************************** " << std::endl;
+    std::cout<< rlog.str() << std::endl;
+    return ret;
 }
 
 }//namespace

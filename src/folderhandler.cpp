@@ -15,6 +15,9 @@ FolderHandler::FolderHandler(FileManager* fm) {
 
 FolderHandler::~FolderHandler() {}
 
+
+
+// TODO :: rename this method, doesn't really match whats actually going on
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     bool ret = false;
 
@@ -29,43 +32,19 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
     vlog <<" parent folder post id : " << fp.folder().parent_post_id() << std::endl;
     if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
         // Check if post itself exists in the database
-
         if(!file_manager_->DoesFolderExistById(fp.id())) {
             InsertFolder(fp.folder());
-            std::string folderpath, full_folderpath;
-            if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
-                vlog <<" folder path : " << folderpath << std::endl;
-                if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
-                    vlog <<" creating directory tree for " << full_folderpath << std::endl;
-                    try {
-                        //create folder
-                        fs::CreateDirectoryTreeForFolder(full_folderpath);
-                        ret = true;
-                    }
-                    catch(std::exception& e) {
-                        vlog << " EXCEPTION : " << e.what() << std::endl;
-                        log::LogException("fh_1281jn1", e);
-                    }
-                }
-            }
-
-            if(full_folderpath.empty()) {
-                std::ostringstream error;
-                error << "Validate Folder, full folderpath empty ";
-                error << " post id : " << fp.id() << std::endl;
-                error << " foldername : " << fp.folder().foldername() << std::endl;
-                log::LogString("folder_handler_12904", error.str());
-                vlog << error.str();
-                vlog <<" **************************************************** " << std::endl;
-                std::cout<< vlog.str() << std::endl;
-                return ret;
-            }    
+            CreateDirectoryTree(fp);
+                
         }
         else {
             // check for rename
             vlog <<" CHECK FOR RENAME " << std::endl;
             RenameHandler rh(file_manager_);
-            rh.CheckForRename(fp);
+            if(!rh.CheckForRename(fp)) {
+                // Make sure path exists anyway
+                CreateDirectoryTree(fp);
+            }
         }
     }
 
@@ -544,6 +523,46 @@ int FolderHandler::PostFolderPost(const std::string& post_id,
         status = ret::A_FAIL_INVALID_POST_ID;
     }
     return status;
+}
+
+bool FolderHandler::CreateDirectoryTree(FolderPost& fp) {
+    bool ret = false;
+    std::ostringstream clog;
+    clog <<" **************************************************** " << std::endl;
+    clog <<" CreateDirectoryTree " << std::endl;
+    std::string folderpath, full_folderpath;
+    if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+        clog <<" folder path : " << folderpath << std::endl;
+        if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+            clog <<" creating directory tree for " << full_folderpath << std::endl;
+            try {
+                //create folder
+                fs::CreateDirectoryTreeForFolder(full_folderpath);
+                ret = true;
+            }
+            catch(std::exception& e) {
+                clog << " EXCEPTION : " << e.what() << std::endl;
+                log::LogException("fh_1281jn1", e);
+            }
+        }
+    }
+    else {
+        clog << " failed to create directory tree for id : " << fp.id() << std::endl;
+    }
+
+    if(full_folderpath.empty()) {
+        std::ostringstream error;
+        error << "Validate Folder, full folderpath empty ";
+        error << " post id : " << fp.id() << std::endl;
+        error << " foldername : " << fp.folder().foldername() << std::endl;
+        log::LogString("folder_handler_12904", error.str());
+        clog << error.str() << std::endl;
+        return ret;
+    }
+    clog <<" CreateDirectoryTree status : " << ret << std::endl;
+    clog <<" **************************************************** " << std::endl;
+    std::cout<< clog.str() << std::endl;
+    return ret;
 }
 
 }//namespace

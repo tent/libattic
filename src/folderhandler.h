@@ -20,6 +20,8 @@ class FolderHandler {
                                            std::deque<FileInfo>& file_out,
                                            std::deque<Folder>& folder_out);
     void SeparatePath(const std::string& full_path, std::deque<std::string>& names);
+
+    bool CreateDirectoryTree(FolderPost& fp);
 public:
     FolderHandler(FileManager* fm);
     ~FolderHandler();
@@ -32,6 +34,7 @@ public:
                             const std::string& post_path,
                             const AccessToken& at);
 
+    // Validates that the posts exist within the local cache, does not update them
     bool ValidateFolderTree(const std::string& folder_post_id,
                             const std::string& post_path,
                             const AccessToken& at);
