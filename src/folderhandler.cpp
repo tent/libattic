@@ -35,7 +35,6 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
         if(!file_manager_->DoesFolderExistById(fp.id())) {
             InsertFolder(fp.folder());
             CreateDirectoryTree(fp);
-                
         }
         else {
             // check for rename
