@@ -18,6 +18,7 @@ FolderSync::FolderSync(FileManager* fm,
     post_path_.append(post_path.c_str(), post_path.size());
     entity_url_.append(entity_url.c_str(), entity_url.size());
     utils::FindAndReplace(post_path, "{entity}", entity_url_, post_path_);
+    thread_ = NULL;
 }
 
 FolderSync::~FolderSync() {
@@ -27,7 +28,7 @@ FolderSync::~FolderSync() {
 void FolderSync::Initialize() {
     if(!thread_) {
         running_ = true;
-        std::cout<<" starting worker thread ... " << std::endl;
+        std::cout<<" STarting FolderSync Thread ... " << std::endl;
         thread_ = new boost::thread(&FolderSync::Run, this);
     }
 }

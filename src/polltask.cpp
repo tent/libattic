@@ -191,7 +191,6 @@ void PollTask::PollFilePosts() {
         for(;itr != file_list.rend(); itr++) {
             file_sync_->PushBack(*itr);
         }
-
     }
 }
 

@@ -25,6 +25,7 @@ FileSync::FileSync(FileManager* fm,
     master_key_.append(master_key.c_str(), master_key.size());
 
     utils::FindAndReplace(post_path, "{entity}", entity_url_, post_path_);
+    thread_ = NULL;
 }
 
 FileSync::~FileSync() {
