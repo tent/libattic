@@ -34,9 +34,9 @@ void UploadTask::RunTask() {
             file_manager()->GetCanonicalPath(fi.filepath(), filepath);
             if(!file_manager()->IsFileLocked(filepath)) {
                 file_manager()->LockFile(filepath);
-                event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
+
                 status = ProcessFile(fi);
-                event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+
                 file_manager()->UnlockFile(filepath);
             }
             else {

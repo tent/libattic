@@ -52,6 +52,7 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
             FileHandler fh(file_manager_);
             if(status == ret::A_OK && !file_post_id.empty()) {
                 // Retrieve Chunk posts
+                event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
                 ChunkPostList chunk_posts;
                 RetrieveChunkPosts(entity, file_post_id, chunk_posts);
                 // Extract Chunk info
@@ -83,6 +84,7 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 else {
                     // TODO :: Undo the file to the last good version, or delete if no last good version
                 }
+                event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
             }
             else if(status == ret::A_OK && file_post_id.empty()) {
                 status = ret::A_FAIL_INVALID_POST_ID;
