@@ -479,8 +479,12 @@ int FolderHandler::RetrieveFolderPost(const std::string& post_id,
         utils::FindAndReplace(pp, "{post}", post_id, posturl);
         PostHandler<FolderPost> ph(at);
         status = ph.Get(posturl, NULL, out);
-        if(status != ret::A_OK)
+        if(status != ret::A_OK) {
+            std::ostringstream err;
+            err << " non 200 to post url : " << posturl << std::endl;
+            log::LogString("fh_9_13581", err.str());
             log::LogHttpResponse("fh_9_13581", ph.response());
+        }
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
