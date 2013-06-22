@@ -178,13 +178,11 @@ bool FileManager::SetFilePostId(const std::string &filepath, const std::string& 
 }
 
 // Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
-bool FileManager::SetFileFolderPostId(const std::string& filepath, const std::string& postid) {
+bool FileManager::SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id){
     bool ret = false;
-    if(IsPathAliased(filepath)) {
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_folder_post_id(filepath, postid);
-        manifest_mtx_.Unlock();
-    }
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_folder_post_id(post_id, folder_post_id);
+    manifest_mtx_.Unlock();
     return ret;
 }
 
@@ -195,6 +193,14 @@ bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::str
         ret = manifest_.file_table()->set_filepath(old_filepath, new_filepath);
         manifest_mtx_.Unlock();
     }
+    return ret;
+}
+
+bool FileManager::SetFilename(const std::string& post_id, const std::string& filename) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_filename_for_id(post_id, filename);
+    manifest_mtx_.Unlock();
     return ret;
 }
 
@@ -284,18 +290,26 @@ bool FileManager::IsPathAliased(const std::string& filepath) {
 }
 
 bool FileManager::DoesFileExist(const std::string& filepath) {
-    bool stat = false;
+    bool ret = false;
     std::string relative;
     if(GetAliasedPath(filepath, relative)) {
         manifest_mtx_.Lock();
-        stat = manifest_.file_table()->IsFileInManifest(relative);
+        ret = manifest_.file_table()->IsFileInManifest(relative);
         manifest_mtx_.Unlock();
     }
     else {
         std::cout<<"DoesFileExist FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
     }
 
-    return stat;
+    return ret;
+}
+
+bool FileManager::DoesFileExistWithPostId(const std::string& post_id) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->IsFileInManifestWithId(post_id);
+    manifest_mtx_.Unlock();
+    return ret;
 }
 
 bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out) {

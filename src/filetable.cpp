@@ -44,6 +44,30 @@ bool FileTable::IsFileInManifest(const std::string &filepath) {
     return false;
 }
 
+bool FileTable::IsFileInManifestWithId(const std::string& post_id) {
+    std::string query;
+    query += "SELECT EXISTS(SELECT * FROM ";
+    query += table_name();
+    query += " WHERE metapostid=\"";
+    query += post_id;
+    query += "\");";
+        
+    SelectResult res;
+    std::string error;
+    if(Select(query ,res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0) {
+                std::string r = res.results()[0+step];
+                if(r == "1")
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool FileTable::InsertFileInfo(const FileInfo& fi) {
      // Prepare data
     std::string chunkdata;
@@ -201,6 +225,24 @@ bool FileTable::set_filepath(const std::string& old_filepath, const std::string&
     return  ret;
 }
 
+bool FileTable::set_filename_for_id(const std::string& post_id, const std::string& filename) {
+    bool ret = false;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET filename=\"";
+    exc += filename;
+    exc += "\" WHERE metapostid=\"";
+    exc += post_id;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_0012588ms5", error);
+    return  ret;
+}
+
 bool FileTable::set_filename(const std::string& filepath, const std::string& new_filename) {
     bool ret = false;
     std::string exc;
@@ -219,15 +261,15 @@ bool FileTable::set_filename(const std::string& filepath, const std::string& new
     return  ret;
 }
 
-bool FileTable::set_folder_post_id(const std::string& filepath, const std::string& post_id) {
+bool FileTable::set_folder_post_id(const std::string& post_id, const std::string& folder_post_id) {
     bool ret = false;
     std::string exc;
     exc += "UPDATE ";
     exc += table_name();
     exc += " SET folder_post_id=\"";
+    exc += folder_post_id;
+    exc += "\" WHERE metapostid=\"";
     exc += post_id;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
     exc += "\";";
 
     std::string error;

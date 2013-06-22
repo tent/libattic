@@ -261,7 +261,8 @@ static void ExtractSubDirectories(const std::string& root,
     }
 }
 
-static void RenamePath(const std::string& original_path, const std::string& new_path) {
+static bool RenamePath(const std::string& original_path, const std::string& new_path) {
+    bool ret = true;
     boost::filesystem::path original(original_path), newpath(new_path);
     //boost::filesystem::rename(original, newpath);
     
@@ -269,8 +270,10 @@ static void RenamePath(const std::string& original_path, const std::string& new_
     int status = rename(original_path.c_str(), new_path.c_str());
     if(status != 0) { 
         std::cout<<" RenamePath failed status : " << status << std::endl;
+        ret = false;
     }
     std::cout <<" RENAME STATUS : " << status << std::endl;
+    return ret;
 }
 
 

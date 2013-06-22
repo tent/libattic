@@ -18,6 +18,8 @@
 #include "posthandler.h"
 #include "chunktransform.h"
 
+#include "foldersem.h"
+
 namespace attic { 
 
 GetFileStrategy::GetFileStrategy() {}
@@ -252,6 +254,8 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
 
     if(status == ret::A_OK) {
         // get latest just in case the cache was updated
+        FolderSem fs;
+        fs.AquireRead(fi.folder_post_id());
         std::string path;
         status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
@@ -270,6 +274,7 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
             log::LogString("getfile_98512", err.str());
             status = ret::A_FAIL_MOVE_PATH;
         }
+        fs.ReleaseRead(fi.folder_post_id());
     }
 
     // delete temp file 

@@ -5,6 +5,7 @@
 #include "credentials.h"
 #include "utils.h"
 #include "logutils.h"
+#include "foldersem.h"
 
 namespace attic { 
 
@@ -89,8 +90,41 @@ bool FileHandler::UpdateFileInfo(FileInfo& fi) {
     return file_manager_->InsertToManifest(&fi);
 }
 
-bool FileHandler::UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath) {
-    return file_manager_->SetNewFilepath(old_filepath, new_filepath);
+bool FileHandler::UpdateFilepath(const std::string& post_id, const std::string& new_folder_post_id) {
+    bool ret = false;
+    FileInfo fi;
+    if(file_manager_->GetFileInfoByPostId(post_id, fi)) {
+        // Construct filepath for current local cache
+        std::string folderpath, canonical_old;
+        if(file_manager_->ConstructFolderpath(fi.folder_post_id(), folderpath)) {
+            file_manager_->GetCanonicalPath(folderpath, canonical_old);
+        }
+
+        folderpath.clear();
+        std::string canonical_new;
+        if(file_manager_->ConstructFolderpath(new_folder_post_id, folderpath)) {
+            file_manager_->GetCanonicalPath(folderpath, canonical_new);
+        }
+
+        std::string old_filepath, new_filepath;
+        utils::AppendTrailingSlash(canonical_old);
+        utils::AppendTrailingSlash(canonical_new);
+
+        old_filepath = canonical_old + fi.filename();
+        new_filepath = canonical_new + fi.filename(); 
+        if(fs::CheckFilepathExists(old_filepath)){
+            if(!fs::CheckFilepathExists(new_filepath)) {
+                FolderSem fs;
+                fs.AquireWrite(fi.folder_post_id());
+                if(fs::RenamePath(old_filepath, new_filepath)) {
+                    // Set post id
+                    ret = file_manager_->SetFileFolderPostId(post_id, new_folder_post_id);
+                }
+                fs.ReleaseWrite(fi.folder_post_id());
+            }
+        }
+    }
+    return ret;
 }
 
 bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::string& post_id) {

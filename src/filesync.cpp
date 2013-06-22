@@ -87,6 +87,81 @@ void FileSync::PushBack(const FilePost& p) {
 
 int FileSync::ProcessFilePost(FilePost& p) {
     int status = ret::A_OK;
+    // check if file exists, in manifest and on disk
+    // - if yes, 
+    //      - compare filenames, local and in post
+    //      - compare parent_posts
+    //          - if differ, update and move file to new path
+    //      - compare hashes
+    //          - if different initiate a download
+    // - else
+    //      - verify folder exists
+    //          - insert into manifest
+    //          - initiate a download
+    FileInfo fi;
+    if(ExtractFileInfo(p, fi)) {
+        bool pull = false;
+        FileHandler fh(file_manager_);
+        if(file_manager_->DoesFileExistWithPostId(p.id())) {
+            FileInfo local_fi;
+            file_manager_->GetFileInfoByPostId(p.id(), local_fi);
+            if(fi.filename() != local_fi.filename()) {
+                // rename
+                RenameHandler rh(file_manager_);
+                rh.RenameFileLocalCache(p.id(), fi.filename());
+            }
+            if(fi.folder_post_id() != local_fi.folder_post_id()){
+                // move to new folder
+                fh.UpdateFilepath(p.id(), fi.folder_post_id());
+            }
+            if(fi.plaintext_hash() != local_fi.plaintext_hash()) {
+                // init download
+                pull = true;
+            }
+        }
+        else {
+            // Doesn't exist in the manifest
+            // Insert into manifest
+            if(fi.file_credentials_iv() == p.iv_data()) {
+                std::cout<<" inserting into manifest " << std::endl;
+                file_manager_->InsertToManifest(&fi);
+            }
+            else { 
+                std::ostringstream err;
+                err<<" INVALID IV DATA : " << std::endl;
+                err<<" filename : " << fi.filepath() << std::endl;
+                err<<" file info : " << fi.file_credentials_iv() << std::endl;
+                err<<" file post : " << p.iv_data() << std::endl;
+                log::LogString("149128591245", err.str());
+            }
+            pull = true;
+        }
+        if(pull) RaisePullRequest(p, fi);
+    }
+    else {
+        status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+
+    return status;
+}
+
+bool FileSync::ExtractFileInfo(FilePost& p, FileInfo& out) {
+    bool ret = false;
+    FileHandler fh(file_manager_);
+    if(!master_key_.empty()) { 
+        fh.DeserializeIntoFileInfo(p, master_key_, out);
+        ret = true;
+    }
+    else {
+        std::ostringstream err;
+        err <<" Empty master key " << std::endl;
+        log::LogString("fsync_124801", err.str());
+    }
+    return ret;
+}
+/*
+int FileSync::ProcessFilePost(FilePost& p) {
+    int status = ret::A_OK;
     std::ostringstream plog;
     plog << "**************************************************" << std::endl;
     plog << "Process File Posts "  << std::endl;
@@ -167,6 +242,7 @@ int FileSync::ProcessFilePost(FilePost& p) {
     std::cout<< plog.str() << std::endl;
     return status;
 }
+*/
 
 int FileSync::RaisePullRequest(const FilePost& p, FileInfo& fi) {
     int status = ret::A_OK;

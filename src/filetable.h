@@ -26,7 +26,8 @@ public:
     ~FileTable() {}
 
     bool CreateTable();
-    bool IsFileInManifest(const std::string &filepath);
+    bool IsFileInManifest(const std::string& filepath);
+    bool IsFileInManifestWithId(const std::string& post_id);
 
     bool InsertFileInfo(const FileInfo& fi);
     bool RemoveFileInfo(const std::string &filepath);
@@ -36,7 +37,8 @@ public:
     bool set_file_deleted(const std::string& filepath, const int val);
     bool set_filepath(const std::string& old_filepath, const std::string& new_filepath);
     bool set_filename(const std::string& filepath, const std::string& new_filename);
-    bool set_folder_post_id(const std::string& filepath, const std::string& post_id);
+    bool set_filename_for_id(const std::string& post_id, const std::string& filename);
+    bool set_folder_post_id(const std::string& post_id, const std::string& folder_post_id);
     bool set_chunk_count(const std::string& filepath, const std::string& chunk_count);
     bool set_plaintext_hash(const std::string& filepath, const std::string& hash);
 

@@ -16,6 +16,7 @@ namespace attic {
 class FileSync {
     int ProcessFilePost(FilePost& p);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
+    bool ExtractFileInfo(FilePost& p, FileInfo& out);
 
     bool running();
     void set_running(bool r);

@@ -50,6 +50,7 @@ public:
     bool MarkFilesInFolderDeleted(const Folder& folder);
 
     bool DoesFileExist(const std::string& filepath);
+    bool DoesFileExistWithPostId(const std::string& post_id);
     int GetAllFileInfo(std::deque<FileInfo>& out);
 
     int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
@@ -63,8 +64,9 @@ public:
     bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
     bool SetFileChunkCount(const std::string& filepath, const std::string& count);
-    bool SetFileFolderPostId(const std::string& filepath, const std::string& postid);
+    bool SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id);
     bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
+    bool SetFilename(const std::string& post_id, const std::string& filename);
 
     // Folder
     bool CreateFolderEntry(const std::string& foldername, 
@@ -74,7 +76,6 @@ public:
     bool RemoveFolderEntry(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExist(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExistById(const std::string& post_id);
-
 
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
     bool GetFolderEntry(const std::string& foldername, 
