@@ -16,6 +16,9 @@ namespace attic {
 class FileSync {
     int ProcessFilePost(FilePost& p);
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
+
+    bool running();
+    void set_running(bool r);
     void Run();
 public:
     FileSync(FileManager* fm,
@@ -43,6 +46,7 @@ private:
     MutexClass pq_mtx_;
     std::deque<FilePost> post_queue_;
 
+    MutexClass r_mtx_;
     bool running_;
     boost::thread* thread_;
 };

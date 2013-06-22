@@ -1,13 +1,10 @@
 #include "filesync.h"
 
-//#include <sys/mman.h>
-
 #include "event.h"
 #include "filesystem.h"
 #include "logutils.h"
 #include "renamehandler.h"
 #include "filehandler.h"
-
 
 namespace attic {
 
@@ -27,8 +24,6 @@ FileSync::FileSync(FileManager* fm,
     entity_url_.append(entity_url.c_str(), entity_url.size());
     master_key_.append(master_key.c_str(), master_key.size());
 
- //   mlock((void*)&master_key_, master_key.size());
-
     utils::FindAndReplace(post_path, "{entity}", entity_url_, post_path_);
 }
 
@@ -45,18 +40,20 @@ void FileSync::Initialize() {
 }
 
 void FileSync::Shutdown() {
+    std::cout<<" exiting file sync " << std::endl;
     if(thread_) {
-        bool running_ = false;
+        set_running(false);
         std::cout<<" exiting worker thread .. " << std::endl;
         thread_->join();
         delete thread_;
         thread_ = NULL;
     }
+    std::cout<<" exiting file sync " << std::endl;
 }
 
 void FileSync::Run() {
     bool val = false;
-    while(running_) {
+    while(running()) {
         FilePost fp;
 
         pq_mtx_.Lock();
@@ -170,6 +167,20 @@ int FileSync::RaisePullRequest(const FilePost& p, FileInfo& fi) {
         status = ret::A_FAIL_INVALID_FILEPATH;
     }
     return status;
+}
+
+bool FileSync::running() {
+    bool t;
+    r_mtx_.Lock();
+    t = running_;
+    r_mtx_.Unlock();
+    return t;
+}
+
+void FileSync::set_running(bool r) {
+    r_mtx_.Lock();
+    running_ = r;
+    r_mtx_.Unlock();
 }
 
 } //namespace

@@ -34,7 +34,7 @@ void FolderSync::Initialize() {
 
 void FolderSync::Shutdown() {
     if(thread_) {
-        bool running_ = false;
+        set_running(false);
         std::cout<<" exiting worker thread .. " << std::endl;
         thread_->join();
         delete thread_;
@@ -46,7 +46,7 @@ void FolderSync::Run() {
     std::cout<<" folder sync running .. " << std::endl;
     FolderHandler fh(file_manager_);
     bool val = false;
-    while(running_) {
+    while(running()) {
         FolderPost fp;
 
         pq_mtx_.Lock();
@@ -76,6 +76,20 @@ void FolderSync::PushBack(const FolderPost& p) {
     pq_mtx_.Lock();
     post_queue_.push_back(p);
     pq_mtx_.Unlock();
+}
+
+bool FolderSync::running() {
+    bool t;
+    r_mtx_.Lock();
+    t = running_;
+    r_mtx_.Unlock();
+    return t;
+}
+
+void FolderSync::set_running(bool r) {
+    r_mtx_.Lock();
+    running_ = r;
+    r_mtx_.Unlock();
 }
 
 

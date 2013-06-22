@@ -16,14 +16,13 @@
 #include "censushandler.h"
 
 #include "foldersync.h"
+#include "filesync.h"
 
 namespace attic { 
 
 class PollDelegate;
 
 class PollTask : public TentTask, public event::EventListener {
-    int SyncFiles(std::deque<FilePost>& file_list);
-
     void DeleteLocalFile(const FileInfo& fi); // TODO :: temp method, will move to its own job
     void DeleteLocalFolder(const FolderPost& fp);
 
@@ -56,6 +55,7 @@ private:
     bool running_;
     CensusHandler* census_handler_;
     FolderSync* folder_sync_;
+    FileSync* file_sync_;
 };
 
 class PollDelegate : public TaskDelegate {

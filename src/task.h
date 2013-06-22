@@ -26,7 +26,6 @@ public:
         RENAME,
         DELETE,                                                         
         FOLDER,
-        SYNC_FILE_TASK,
         // Generic
         META,
         CONFIG,

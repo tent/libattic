@@ -184,6 +184,10 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
     int status = ret::A_OK;
 
     std::string temp_path;
+    std::string full_path;
+    ConstructFilepath(fi, full_path);
+    event::RaiseEvent(event::Event::PULL, event::Event::START, full_path, NULL);
+
     FileHandler fh(file_manager_);
     fh.GetTemporaryFilepath(fi, temp_path);
 
@@ -247,6 +251,7 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
     }
 
     if(status == ret::A_OK) {
+        // get latest just in case the cache was updated
         std::string path;
         status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
@@ -270,6 +275,8 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
     // delete temp file 
     if(fs::CheckFilepathExists(temp_path))
         fs::DeleteFile(temp_path);
+
+    event::RaiseEvent(event::Event::PULL, event::Event::DONE, full_path, NULL);
 
     return status;
 }

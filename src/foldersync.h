@@ -16,6 +16,8 @@ namespace attic {
 
 class FolderSync {
     void Run();
+    bool running();
+    void set_running(bool r);
 public:
     FolderSync(FileManager* fm, 
                const AccessToken at,
@@ -40,6 +42,7 @@ private:
     MutexClass pq_mtx_;
     std::deque<FolderPost> post_queue_;
 
+    MutexClass r_mtx_;
     bool running_;
     boost::thread* thread_;
 };

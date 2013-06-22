@@ -50,6 +50,7 @@ PollTask::PollTask( FileManager* pFm,
     running_ = true;
 
     folder_sync_ = NULL;
+    file_sync_ = NULL;
 }
 
 PollTask::~PollTask() {
@@ -65,6 +66,11 @@ PollTask::~PollTask() {
         folder_sync_->Shutdown();
         delete folder_sync_;
         folder_sync_ = NULL;
+    }
+    if(file_sync_) {
+        file_sync_->Shutdown(); 
+        delete file_sync_;
+        file_sync_ = NULL;
     }
 }
 
@@ -84,6 +90,17 @@ void PollTask::OnStart(){
                                   TentTask::entity()->GetPreferredServer().posts_feed(),
                                   TentTask::entity()->GetPreferredServer().post());
     folder_sync_->Initialize();
+
+    std::string mk;
+    GetMasterKey(mk);
+    file_sync_ = new FileSync(file_manager(),
+                              access_token(),
+                              TentTask::entity()->entity(),
+                              TentTask::entity()->GetPreferredServer().posts_feed(),
+                              TentTask::entity()->GetPreferredServer().post(),
+                              mk);
+    file_sync_->Initialize();
+
     timer_.start();
 }
 
@@ -95,7 +112,17 @@ void PollTask::OnFinished() {
     event::UnregisterFromEvent(this, event::Event::RESUME);
     timer_.stop();
 
-    if(folder_sync_) folder_sync_->Shutdown();
+    if(folder_sync_) {
+        folder_sync_->Shutdown();
+        delete folder_sync_;
+        folder_sync_ = NULL;
+    }
+
+    if(file_sync_) { 
+        file_sync_->Shutdown();
+        delete file_sync_;
+        file_sync_ = NULL;
+    }
 }
 
 void PollTask::OnEventRaised(const event::Event& event){
@@ -160,24 +187,16 @@ void PollTask::PollFilePosts() {
     std::deque<FilePost> file_list;
     if(census_handler_->Inquiry("", file_list)) {
         std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
-        int status = SyncFiles(file_list);
-        if(status != ret::A_OK)
-            std::cout<<" POLLING ERR : " << status << std::endl;
+        //int status = SyncFiles(file_list);
+
+        std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
+        for(;itr != file_list.rend(); itr++) {
+            file_sync_->PushBack(*itr);
+        }
+
     }
 }
 
-int PollTask::SyncFiles(std::deque<FilePost>& file_list) {
-    int status = ret::A_OK;
-    // Process Posts
-    std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
-    for(;itr != file_list.rend(); itr++) {
-        std::cout<<" poll task requesting file sync, id : " << (*itr).id() << std::endl;
-        event::RaiseEvent(event::Event::REQUEST_SYNC_POST, 
-                          (*itr).id(),
-                          delegate_);
-    }
-    return status;
-}
 void PollTask::PollDeletedFilePosts() {
     std::cout<<" polling deleted files ... " << std::endl;
     std::deque<FilePost> deleted_list;

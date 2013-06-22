@@ -6,7 +6,6 @@
 #include "deletetask.h"
 #include "queryfilestask.h"
 #include "polltask.h"
-#include "syncfiletask.h"
 #include "renametask.h"
 #include "servicetask.h"
 #include "foldertask.h"
@@ -121,13 +120,6 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                                access_token_,
                                entity_,
                                context);
-            break;
-        case Task::SYNC_FILE_TASK:
-            t = new SyncFileTask(file_manager_,
-                                 credentials_manager_,
-                                 access_token_,
-                                 entity_,
-                                 context);
             break;
         case Task::POLL:
             t = new PollTask(file_manager_,

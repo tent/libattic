@@ -53,7 +53,6 @@ public:
 
     void DownloadFile(const std::string& filepath, TaskDelegate* del);
     void PollFiles(TaskDelegate* del);
-    void SyncFile(const std::string& postid, TaskDelegate* del);
     void DeleteFile(const std::string& filepath, TaskDelegate* del);
     void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
 

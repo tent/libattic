@@ -43,7 +43,6 @@ int TaskManager::Initialize() {
         event::RegisterForEvent(this, event::Event::REQUEST_PULL);
         event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
         event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
-        event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
         event::RegisterForEvent(this, event::Event::REQUEST_UPLOAD_FILE);
         //event::RegisterForEvent(this, event::Event::POLL);
     }
@@ -80,12 +79,6 @@ void TaskManager::OnEventRaised(const event::Event& event) {
         case event::Event::REQUEST_DELETE:
             {
                 DeleteFile(event.value, event.delegate);
-                break;
-            }
-        case event::Event::REQUEST_SYNC_POST:
-            {
-                std::cout<<" creating request sync task " << std::endl;
-                SyncFile(event.value, event.delegate);
                 break;
             }
         case event::Event::REQUEST_UPLOAD_FILE:
@@ -182,18 +175,6 @@ void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* del) {
     tc.set_delegate(del);
     PushContextBack(tc);
     download_count++;
-}
-
-void TaskManager::SyncFile(const std::string& postid, TaskDelegate* del) {
-    TaskContext tc;
-    tc.set_value("postid", postid);
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::SYNC_FILE_TASK);
-    tc.set_delegate(del);
-    PushContextBack(tc);
-    syncfile_count++;
 }
 
 void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* del) {
