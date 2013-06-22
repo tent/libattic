@@ -162,7 +162,7 @@ int AtticService::BeginPolling() {
     int status = ret::A_OK;
     if(running_) {
         if(IsMasterKeyValid()) 
-            ptask_manager_->PollFiles(NULL);
+            task_manager_->PollFiles(NULL);
         else
             status = ret::A_FAIL_INVALID_MASTERKEY;
     }
