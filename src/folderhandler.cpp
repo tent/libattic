@@ -15,12 +15,9 @@ FolderHandler::FolderHandler(FileManager* fm) {
 
 FolderHandler::~FolderHandler() {}
 
-
-
 // TODO :: rename this method, doesn't really match whats actually going on
 bool FolderHandler::ValidateFolder(FolderPost& fp) {
     bool ret = false;
-
     std::ostringstream vlog;
     vlog <<" **************************************************** " << std::endl;
     vlog <<" validating folder post " << std::endl;
@@ -33,8 +30,8 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
     if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
         // Check if post itself exists in the database
         if(!file_manager_->DoesFolderExistById(fp.id())) {
-            InsertFolder(fp.folder());
-            CreateDirectoryTree(fp);
+            if(InsertFolder(fp) )
+                CreateDirectoryTree(fp);
         }
         else {
             // check for rename
@@ -108,7 +105,6 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                     }
                     parent_post_id = folder.folder_post_id();
                     vlog << " setting parent post id : " << parent_post_id << std::endl;
-
                 } // for
             }
             else {
@@ -122,13 +118,10 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
         vlog << " folderpath empty " << std::endl;
         ret = false;
     }
-
     vlog <<" **************************************************** " << std::endl;
     std::cout<< vlog.str() << std::endl;
-
     return ret;
 }
-
 
 // Pass in an absolute folderpath
 // Pass in the associated working directory
@@ -147,30 +140,11 @@ bool FolderHandler::RetrieveFolders(const std::string& folderpath,
     return ret;
 }
 
-bool FolderHandler::InsertFolder(const Folder& folder) {
-    bool ret = false;
-    if(!IsFolderInCacheWithId(folder.folder_post_id())) {
-        if(!IsFolderInCache(folder.foldername(), folder.parent_post_id())) {
-            Folder f;
-            ret = file_manager_->CreateFolderEntry(folder.foldername(),
-                                                   folder.folder_post_id(),
-                                                   folder.parent_post_id(),
-                                                   f);
-        }
-        else {
-            std::ostringstream err;
-            err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
-            err << " foldername : " << folder.foldername() << std::endl;
-            err << " folder post : " << folder.folder_post_id() << std::endl;
-            err << " parent post : " << folder.parent_post_id() << std::endl;
-            log::LogString("fh_181415", err.str());
-        }
-    }
-    return ret;
-}
-
 bool FolderHandler::InsertFolder(const FolderPost& fp) {
     bool ret = false;
+    if(fp.id().empty()) return ret;
+    fcl l; // File lock
+    l.TryLock(fp.folder().foldername(), fp.folder().parent_post_id());
     if(!IsFolderInCacheWithId(fp.id())) {
         if(!IsFolderInCache(fp.folder().foldername(), fp.folder().parent_post_id())) {
             Folder f;
@@ -188,7 +162,7 @@ bool FolderHandler::InsertFolder(const FolderPost& fp) {
             log::LogString("fh_19485", err.str());
         }
     }
-
+    l.Unlock(fp.folder().foldername(), fp.folder().parent_post_id());
     return ret;
 }
 
@@ -219,7 +193,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
 
     Folder folder;
     if(file_manager_->GetFolderEntry(folderpath, folder)){
-        file_manager_->SetFolderDeleted(folderpath, true);
+        file_manager_->SetFolderDeleted(folder.folder_post_id(), true);
         std::cout<<" retrieving all files and folders in folder : " << folderpath << std::endl;
         RetrieveAllFilesAndFoldersInFolder(folder, file_out, folder_out);
         std::cout<< " file count : " << file_out.size() << std::endl;
@@ -227,7 +201,7 @@ void FolderHandler::DeleteFolder(const std::string& folderpath,
         // mark all as deleted
         std::deque<Folder>::iterator itr = folder_out.begin();
         for(;itr!= folder_out.end(); itr++) {
-            file_manager_->SetFolderDeleted((*itr).foldername(), true);
+            file_manager_->SetFolderDeleted((*itr).folder_post_id(), true);
             file_manager_->MarkFilesInFolderDeleted(*itr);
         }
     }
@@ -348,8 +322,7 @@ bool FolderHandler::ValidateFolderTree(const std::string& folder_post_id,
             FolderPost fp;
             PostHandler<FolderPost> ph(at);
             if(ph.Get(posturl, NULL, fp) == ret::A_OK) {
-                FolderHandler fh(file_manager_);
-                ret = fh.InsertFolder(fp.folder());
+                InsertFolder(fp);
             }
             else {
                 vlog <<" failed ot retrieve post :" << posturl << std::endl;
@@ -424,8 +397,8 @@ bool FolderHandler::IsFolderInCacheWithId(const std::string& post_id) {
     return file_manager_->DoesFolderExistById(post_id);
 }
 
-bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
-    return file_manager_->SetFolderDeleted(folderpath, del);
+bool FolderHandler::SetFolderDeleted(const std::string& post_id, bool del) {
+    return file_manager_->SetFolderDeleted(post_id, del);
 }
 
 int FolderHandler::CreateFolderPost(Folder& folder, 
@@ -524,34 +497,39 @@ bool FolderHandler::CreateDirectoryTree(FolderPost& fp) {
     std::ostringstream clog;
     clog <<" **************************************************** " << std::endl;
     clog <<" CreateDirectoryTree " << std::endl;
-    std::string folderpath, full_folderpath;
-    if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
-        clog <<" folder path : " << folderpath << std::endl;
-        if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
-            clog <<" creating directory tree for " << full_folderpath << std::endl;
-            try {
-                //create folder
-                fs::CreateDirectoryTreeForFolder(full_folderpath);
-                ret = true;
-            }
-            catch(std::exception& e) {
-                clog << " EXCEPTION : " << e.what() << std::endl;
-                log::LogException("fh_1281jn1", e);
+    clog <<" initial folder post : " << fp.id() << std::endl;
+    clog <<" foldername : " << fp.folder().foldername() << std::endl;
+    clog <<" deleted : " << file_manager_->IsFolderDeleted(fp.id()) << std::endl;
+    if(!file_manager_->IsFolderDeleted(fp.id())) {
+        std::string folderpath, full_folderpath;
+        // Check if folder is deleted
+        if(file_manager_->ConstructFolderpath(fp.id(), folderpath)) {
+            clog <<" folder path : " << folderpath << std::endl;
+            if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+                clog <<" creating directory tree for " << full_folderpath << std::endl;
+                try {
+                    //create folder
+                    fs::CreateDirectoryTreeForFolder(full_folderpath);
+                    ret = true;
+                }
+                catch(std::exception& e) {
+                    clog << " EXCEPTION : " << e.what() << std::endl;
+                    log::LogException("fh_1281jn1", e);
+                }
             }
         }
-    }
-    else {
-        clog << " failed to create directory tree for id : " << fp.id() << std::endl;
-    }
+        else {
+            clog << " failed to create directory tree for id : " << fp.id() << std::endl;
+        }
 
-    if(full_folderpath.empty()) {
-        std::ostringstream error;
-        error << "Validate Folder, full folderpath empty ";
-        error << " post id : " << fp.id() << std::endl;
-        error << " foldername : " << fp.folder().foldername() << std::endl;
-        log::LogString("folder_handler_12904", error.str());
-        clog << error.str() << std::endl;
-        return ret;
+        if(full_folderpath.empty()) {
+            std::ostringstream error;
+            error << "Validate Folder, full folderpath empty ";
+            error << " post id : " << fp.id() << std::endl;
+            error << " foldername : " << fp.folder().foldername() << std::endl;
+            log::LogString("folder_handler_12904", error.str());
+            clog << error.str() << std::endl;
+        }
     }
     clog <<" CreateDirectoryTree status : " << ret << std::endl;
     clog <<" **************************************************** " << std::endl;

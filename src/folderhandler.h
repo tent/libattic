@@ -10,7 +10,6 @@
 
 #include "accesstoken.h"
 
-
 namespace attic {
 
 class FolderHandler {
@@ -25,7 +24,6 @@ class FolderHandler {
 public:
     FolderHandler(FileManager* fm);
     ~FolderHandler();
-
 
     // Attempts to create a new folder entry, post and all, will check
     // for existing folder entry in local cache returning a bool upon
@@ -56,7 +54,6 @@ public:
                          const std::string& working_directory,
                          std::deque<std::string>& out);
  
-    bool InsertFolder(const Folder& folder);
     bool InsertFolder(const FolderPost& fp);
     bool SetFolderPostId(Folder& folder, const std::string& post_id);
     bool SetFolderParentPostId(Folder& folder, const std::string& post_id);
@@ -78,7 +75,8 @@ public:
     bool GetFolder(const std::string& folderpath, Folder& out);
     bool IsFolderInCache(const std::string& folder_name, const std::string& parent_post_id);
     bool IsFolderInCacheWithId(const std::string& post_id);
-    bool SetFolderDeleted(const std::string& folderpath, bool del);
+    bool SetFolderDeleted(const std::string& post_id, bool del);
+
 
 
     int CreateFolderPost(Folder& folder, 
