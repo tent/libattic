@@ -160,8 +160,12 @@ int AtticService::RenameFolder(const std::string& old_folderpath, const std::str
 // TODO :: toggling polling should be event driven, TODO :: fix this
 int AtticService::BeginPolling() {
     int status = ret::A_OK;
-    if(running_)
-        task_manager_->PollFiles(NULL);
+    if(running_) {
+        if(IsMasterKeyValid()) 
+            ptask_manager_->PollFiles(NULL);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -210,9 +214,6 @@ void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigEntityURL, entity_url_);
     std::cout<< " loading config values : " << std::endl;
     std::cout<< ConfigManager::GetInstance()->toString() << std::endl;
-
-
-
 }
 
 int AtticService::ValidateDirectories() {
