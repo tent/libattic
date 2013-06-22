@@ -187,8 +187,6 @@ void PollTask::PollFilePosts() {
     std::deque<FilePost> file_list;
     if(census_handler_->Inquiry("", file_list)) {
         std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
-        //int status = SyncFiles(file_list);
-
         std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
         for(;itr != file_list.rend(); itr++) {
             file_sync_->PushBack(*itr);

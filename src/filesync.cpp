@@ -33,25 +33,26 @@ FileSync::~FileSync() {
 
 void FileSync::Initialize() {
     if(!thread_) {
-        running_ = true;
-        std::cout<<" starting worker thread ... " << std::endl;
+        set_running(true);
+        std::cout<<" starting file sync thread ... " << std::endl;
         thread_ = new boost::thread(&FileSync::Run, this);
     }
 }
 
 void FileSync::Shutdown() {
-    std::cout<<" exiting file sync " << std::endl;
+    std::cout<<" exiting file sync thread " << std::endl;
     if(thread_) {
         set_running(false);
-        std::cout<<" exiting worker thread .. " << std::endl;
+        std::cout<<" exiting file sync thread " << std::endl;
         thread_->join();
         delete thread_;
         thread_ = NULL;
     }
-    std::cout<<" exiting file sync " << std::endl;
+    std::cout<<" exiting file sync thread " << std::endl;
 }
 
 void FileSync::Run() {
+    std::cout<<" FileSync Running " << std::endl;
     bool val = false;
     while(running()) {
         FilePost fp;
@@ -59,6 +60,7 @@ void FileSync::Run() {
         pq_mtx_.Lock();
         unsigned int size = post_queue_.size();
         if(size > 0) {
+            std::cout<<" Retrieving FilePost " << std::endl;
             fp = post_queue_.front();
             post_queue_.pop_front();
             size--;
@@ -84,19 +86,23 @@ void FileSync::PushBack(const FilePost& p) {
 
 int FileSync::ProcessFilePost(FilePost& p) {
     int status = ret::A_OK;
+    std::ostringstream plog;
+    plog << "**************************************************" << std::endl;
+    plog << "Process File Posts "  << std::endl;
+
     FileManager* fm = file_manager_;
     if(!fm) return ret::A_FAIL_INVALID_FILEMANAGER_INSTANCE;
 
     FileHandler fh(file_manager_);
     FileInfo fi;
     if(!master_key_.empty()) { 
-        std::cout<<" deserializing into file info " << std::endl;
+        plog <<" deserializing into file info " << std::endl;
         fh.DeserializeIntoFileInfo(p, master_key_, fi);
-        std::cout<<" name : " << fi.filename() << std::endl;
-        std::cout<<" path : " << fi.filepath() << std::endl;
+        plog <<" name : " << fi.filename() << std::endl;
+        plog <<" path : " << fi.filepath() << std::endl;
     }
     else {
-        std::cout<<" failed to get master key " << std::endl;
+        plog <<" failed to get master key " << std::endl;
         return ret::A_FAIL_INVALID_MASTERKEY;
     }
 
@@ -121,9 +127,9 @@ int FileSync::ProcessFilePost(FilePost& p) {
             }
             else if(fs::CheckFilepathExists(canonical_path)) {
                 // compare hashes
-                std::cout<<" comparing hashes : " << std::endl;
-                std::cout<<"\t local hash : " << local_fi.plaintext_hash() << std::endl;
-                std::cout<<"\t incoming hash : " << fi.plaintext_hash() << std::endl;
+                plog <<" comparing hashes : " << std::endl;
+                plog <<"\t local hash : " << local_fi.plaintext_hash() << std::endl;
+                plog <<"\t incoming hash : " << fi.plaintext_hash() << std::endl;
                 if(local_fi.plaintext_hash() != fi.plaintext_hash()) {
                     fm->InsertToManifest(&fi); // Update local cache
                     bPull = true;
@@ -154,8 +160,13 @@ int FileSync::ProcessFilePost(FilePost& p) {
         }
         if(bPull) RaisePullRequest(p, fi);
     }
+
+    plog << " ProcessFilePost status : " << status << std::endl;
+    plog << "**************************************************" << std::endl;
+    std::cout<< plog.str() << std::endl;
     return status;
 }
+
 int FileSync::RaisePullRequest(const FilePost& p, FileInfo& fi) {
     int status = ret::A_OK;
 
