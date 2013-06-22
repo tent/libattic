@@ -47,7 +47,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             // Validate folderpath
-            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), post_path_, access_token_)) {
+            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), entity, post_path_, access_token_)) {
                 std::ostringstream err;
                 err << " failed to validate folder path" << std::endl;
                 log::LogString("gfs_84195", err.str());

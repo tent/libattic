@@ -94,6 +94,7 @@ int FolderTask::RenameFolder() {
                 else {
                     if(!fh.AttemptCreateNewFolderEntry((*itr),
                                                  parent_post_id,
+                                                 TentTask::entity()->entity(),
                                                  entity()->GetPreferredServer().posts_feed(),
                                                  access_token(),
                                                  folder)) {
@@ -230,6 +231,7 @@ int FolderTask::CreateFolder(const std::string& path) {
 
     FolderHandler fh(file_manager());
     if(fh.ValidateFolderPath(path,
+                             TentTask::entity()->entity(),
                              entity()->GetPreferredServer().posts_feed(),
                              entity()->GetPreferredServer().post(),
                              access_token())) {

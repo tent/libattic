@@ -31,6 +31,7 @@ public:
     // for existing folder entry in local cache returning a bool upon
     // success or failure, and a folder on success
     bool AttemptCreateNewFolderEntry(const std::string& foldername, 
+                                     const std::string& entity_url,
                                      const std::string& parent_post_id,
                                      const std::string& posts_feed,
                                      const AccessToken& at,
@@ -40,12 +41,14 @@ public:
 
     // Validate an absolute folderpath
     bool ValidateFolderPath(const std::string& folderpath, 
+                            const std::string& entity_url,
                             const std::string& posts_feed,
                             const std::string& post_path,
                             const AccessToken& at);
 
     // Validates that the posts exist within the local cache, does not update them
     bool ValidateFolderTree(const std::string& folder_post_id,
+                            const std::string& entity_url,
                             const std::string& post_path,
                             const AccessToken& at);
 
@@ -85,15 +88,18 @@ public:
 
     bool UpdateFolderPost(Folder& folder, 
                           const std::string& post_id,
+                          const std::string& entity_url,
                           const std::string& post_path,
                           const AccessToken& at);
  
     int RetrieveFolderPost(const std::string& post_id, 
+                           const std::string& entity_url,
                            const std::string& post_path,
                            const AccessToken& at,
                            FolderPost& out);
  
     int PostFolderPost(const std::string& post_id, 
+                       const std::string& entity_url,
                        const std::string& post_path,
                        const AccessToken& at,
                        FolderPost& fp);

@@ -60,7 +60,7 @@ void FolderSync::Run() {
         pq_mtx_.Unlock();
 
         if(val) {
-            if(fh.ValidateFolderTree(fp.id(), post_path_, at_)) {
+            if(fh.ValidateFolderTree(fp.id(), entity_url_, post_path_, at_)) {
                 fh.ValidateFolder(fp);
             }
             val = false;

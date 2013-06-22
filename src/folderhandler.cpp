@@ -55,6 +55,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
 
 
 bool FolderHandler::ValidateFolderPath(const std::string& folderpath, 
+                                       const std::string& entity_url,
                                        const std::string& posts_feed,
                                        const std::string& post_path,
                                        const AccessToken& at) {
@@ -86,10 +87,11 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                 for(;itr!=names.end();itr++) {
                     Folder folder;
                     if(!AttemptCreateNewFolderEntry((*itr), 
-                                                   parent_post_id,
-                                                   posts_feed,
-                                                   at,
-                                                   folder)){
+                                                    entity_url,
+                                                    parent_post_id,
+                                                    posts_feed,
+                                                    at,
+                                                    folder)){
                         vlog << " file already exists " << std::endl;
                         if(file_manager_->GetFolderEntry((*itr), parent_post_id, folder)) {
                             // Check if folderpath is deleted
@@ -98,6 +100,7 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                 file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
                                 UpdateFolderPost(folder, 
                                                  folder.folder_post_id(),
+                                                 entity_url,
                                                  post_path,
                                                  at);
                             }
@@ -317,6 +320,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
 }
 
 bool FolderHandler::ValidateFolderTree(const std::string& folder_post_id,
+                                       const std::string& entity_url,
                                        const std::string& post_path,
                                        const AccessToken& at) {
     bool ret = true;                                                                            
@@ -338,7 +342,8 @@ bool FolderHandler::ValidateFolderTree(const std::string& folder_post_id,
         else {
             // Retrieve post and insert
             std::string posturl;
-            utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+            utils::FindAndReplace(post_path, "{entity}", entity_url, posturl);
+            utils::FindAndReplace(posturl, "{post}", post_id, posturl);
 
             FolderPost fp;
             PostHandler<FolderPost> ph(at);
@@ -423,7 +428,6 @@ bool FolderHandler::SetFolderDeleted(const std::string& folderpath, bool del) {
     return file_manager_->SetFolderDeleted(folderpath, del);
 }
 
-
 int FolderHandler::CreateFolderPost(Folder& folder, 
                                     const std::string& posts_feed,
                                     const AccessToken& at,
@@ -446,14 +450,15 @@ int FolderHandler::CreateFolderPost(Folder& folder,
 
 bool FolderHandler::UpdateFolderPost(Folder& folder, 
                                      const std::string& post_id,
+                                     const std::string& entity_url,
                                      const std::string& post_path,
                                      const AccessToken& at) {
     bool ret = false;
     if(!post_id.empty()) {
         FolderPost fp;
-        if(RetrieveFolderPost(folder.folder_post_id(), post_path, at, fp) == ret::A_OK) {
+        if(RetrieveFolderPost(folder.folder_post_id(), entity_url, post_path, at, fp) == ret::A_OK) {
             fp.set_folder(folder);
-            if(PostFolderPost(post_id, post_path, at, fp) == ret::A_OK)
+            if(PostFolderPost(post_id, entity_url, post_path, at, fp) == ret::A_OK)
                 ret = true;
         }
     }
@@ -469,14 +474,15 @@ bool FolderHandler::UpdateFolderPost(Folder& folder,
 }
 
 int FolderHandler::RetrieveFolderPost(const std::string& post_id, 
+                                      const std::string& entity_url,
                                       const std::string& post_path,
                                       const AccessToken& at,
                                       FolderPost& out) {
     int status = ret::A_OK;
     if(!post_id.empty()) {
-        std::string pp = post_path;
         std::string posturl;
-        utils::FindAndReplace(pp, "{post}", post_id, posturl);
+        utils::FindAndReplace(post_path, "{entity}", entity_url, posturl);
+        utils::FindAndReplace(posturl, "{post}", post_id, posturl);
         PostHandler<FolderPost> ph(at);
         status = ph.Get(posturl, NULL, out);
         if(status != ret::A_OK) {
@@ -493,14 +499,15 @@ int FolderHandler::RetrieveFolderPost(const std::string& post_id,
 }
 
 int FolderHandler::PostFolderPost(const std::string& post_id, 
+                                  const std::string& entity_url,
                                   const std::string& post_path,
                                   const AccessToken& at,
                                   FolderPost& fp) {
     int status = ret::A_OK;
     if(!post_id.empty()) {
-        std::string pp = post_path;
         std::string posturl;
-        utils::FindAndReplace(pp, "{post}", post_id, posturl);
+        utils::FindAndReplace(post_path, "{entity}", entity_url, posturl);
+        utils::FindAndReplace(posturl, "{post}", post_id, posturl);
         PostHandler<FolderPost> ph(at);
         status = ph.Put(posturl, NULL, fp);
         if(status != ret::A_OK)
@@ -553,6 +560,7 @@ bool FolderHandler::CreateDirectoryTree(FolderPost& fp) {
 }
 
 bool FolderHandler::AttemptCreateNewFolderEntry(const std::string& foldername, 
+                                                const std::string& entity_url,
                                                 const std::string& parent_post_id,
                                                 const std::string& posts_feed,
                                                 const AccessToken& at,

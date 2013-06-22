@@ -29,6 +29,7 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
         fcl flocker(); // Create instance to hold ref
         FolderHandler fh(file_manager_);
         if(!fh.ValidateFolderPath(folderpath,
+                                  entity,
                                   posts_feed_,
                                   post_path_,
                                   access_token_)) {
