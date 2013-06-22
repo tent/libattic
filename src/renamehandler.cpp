@@ -92,6 +92,7 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             rlog <<" new canonical : " << new_can << std::endl;
             try {
                 fs::RenamePath(old_can, new_can);
+                ret = true;
             }
             catch(std::exception& e) {
                 rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;
@@ -123,6 +124,7 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             rlog <<" new canonical : " << new_can << std::endl;
             try {
                 fs::RenamePath(old_can, new_can);
+                ret = true;
             }
             catch(std::exception& e) {
                 rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;

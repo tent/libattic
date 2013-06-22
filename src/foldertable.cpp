@@ -327,9 +327,11 @@ bool FolderTable::IsFolderDeleted(const std::string& post_id) {
         int step = 0;
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
-            if(step > 0)
-                if(res.results()[0+step])
+            if(step > 0) { 
+                if(atoi(res.results()[0+step]) > 0) {
                     ret = true;
+                }
+            }
         }
     }
     else {

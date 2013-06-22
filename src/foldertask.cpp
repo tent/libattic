@@ -151,7 +151,6 @@ bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
             FileHandler fh(file_manager());
             std::string cargo;
             fh.PrepareCargo(fi, master_key, cargo);
-
             // set new filepath locally and in cargo
 
 
