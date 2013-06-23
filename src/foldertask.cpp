@@ -93,8 +93,8 @@ int FolderTask::RenameFolder() {
                 }
                 else {
                     if(!fh.AttemptCreateNewFolderEntry((*itr),
-                                                 parent_post_id,
                                                  TentTask::entity()->entity(),
+                                                 parent_post_id,
                                                  entity()->GetPreferredServer().posts_feed(),
                                                  access_token(),
                                                  folder)) {

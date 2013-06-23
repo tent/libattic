@@ -189,6 +189,7 @@ void PollTask::PollFilePosts() {
         std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
         std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
         for(;itr != file_list.rend(); itr++) {
+            std::cout<<" pushing back : " << (*itr).id() << std::endl;
             file_sync_->PushBack(*itr);
         }
     }

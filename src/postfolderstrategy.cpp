@@ -24,16 +24,19 @@ int PostFolderStrategy::Execute(FileManager* pFileManager, CredentialsManager* p
     // absolute filepath
     if(!filepath.empty()) {
         std::string folderpath;
-        status = fs::GetParentPath(filepath, folderpath);
-
-        fcl flocker(); // Create instance to hold ref
-        FolderHandler fh(file_manager_);
-        if(!fh.ValidateFolderPath(folderpath,
-                                  entity,
-                                  posts_feed_,
-                                  post_path_,
-                                  access_token_)) {
-            status = ret::A_FAIL_VALIDATE_DIRECTORY;
+        if(fs::GetParentPath(filepath, folderpath)){
+            fcl flocker(); // Create instance to hold ref
+            FolderHandler fh(file_manager_);
+            if(!fh.ValidateFolderPath(folderpath,
+                                      entity,
+                                      posts_feed_,
+                                      post_path_,
+                                      access_token_)) {
+                status = ret::A_FAIL_VALIDATE_DIRECTORY;
+            }
+        }
+        else {
+            status = ret::A_FAIL_RETRIEVE_PARENT_PATH;
         }
     }
     else {
