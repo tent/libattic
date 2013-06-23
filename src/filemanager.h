@@ -56,6 +56,10 @@ public:
     int GetAllFileInfoForFolder(const std::string& folderid, std::deque<FileInfo>& out);
     int GetAllFoldersForFolder(const std::string& folderid, std::deque<Folder>& out);
 
+    // Retrieve file info via the file name and the folder's id that it resides in
+    bool GetFileInfo(const std::string& filename, 
+                     const std::string& folder_post_id, 
+                     FileInfo& out);
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
     bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
 
@@ -64,9 +68,12 @@ public:
     bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
     bool SetFileChunkCount(const std::string& filepath, const std::string& count);
-    bool SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id);
+
     bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
+
     bool SetFilename(const std::string& post_id, const std::string& filename);
+    bool SetFilepath(const std::string& post_id, const std::string& filepath);
+    bool SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id);
 
     // Folder
     bool CreateFolderEntry(const std::string& foldername, 
@@ -81,7 +88,7 @@ public:
     bool GetFolderEntry(const std::string& foldername, 
                         const std::string& parent_post_id,
                         Folder& out);
-    // TODO * reevaluate the need for this method
+    // Pass in absolute path
     bool GetFolderEntry(const std::string& folderpath, Folder& folder);
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
 

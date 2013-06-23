@@ -204,6 +204,20 @@ bool FileManager::SetFilename(const std::string& post_id, const std::string& fil
     return ret;
 }
 
+bool FileManager::SetFilepath(const std::string& post_id, const std::string& filepath) {
+    bool ret = false;
+    std::string aliased_path;
+    if(!IsPathAliased(filepath))
+        if(!GetAliasedPath(filepath, aliased_path)) return false;
+    else 
+        aliased_path = filepath;
+
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_filepath_for_id(post_id, filepath);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
 bool FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
     FileInfo fi;
     if(GetFileInfo(filepath, fi)) {
@@ -332,6 +346,16 @@ bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     else {
         std::cout<<" PATH NOT ALIASED : " << filepath << " : " << relative << std::endl;
     }
+    return ret;
+}
+
+// Retrieve file info via the file name and the folder's id that it resides in
+bool FileManager::GetFileInfo(const std::string& filename, 
+                              const std::string& folder_post_id,
+                              FileInfo& out) {
+    manifest_mtx_.Lock();
+    bool ret = manifest_.file_table()->QueryForFile(filename, folder_post_id, out);
+    manifest_mtx_.Unlock();
     return ret;
 }
 

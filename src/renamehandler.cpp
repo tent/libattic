@@ -136,6 +136,25 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
     return ret;
 }
 
+bool RenameHandler::RenameFileLocalCacheAbsolutePath(const std::string& absolute_path, 
+                                                     const std::string& new_filename) {
+    bool ret = false;
+    // check if it exists
+    if(fs::CheckFilepathExists(absolute_path)) {
+        // get paret dir
+        std::string folderpath;
+        if(fs::GetParentPath(absolute_path, folderpath)) {
+            Folder folder;
+            if(file_manager_->GetFolderEntry(folderpath, folder)){
+                ret = RenameFileLocalCache(folder.folder_post_id(), new_filename);
+            }
+        }
+    }
+
+    return ret;
+}
+
+
 bool RenameHandler::RenameFileLocalCache(const std::string& post_id, 
                                          const std::string& new_filename) {
     bool ret = false;
