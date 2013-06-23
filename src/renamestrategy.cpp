@@ -115,7 +115,7 @@ int RenameStrategy::UpdateFileMetaData(const std::string& old_filepath,
     size_t old_pos = old_filepath.rfind("/");
     if(old_pos != std::string::npos) {
         old_filename = old_filepath.substr(old_pos+1);      // get filename
-        old_folderpath = old_folderpath.substr(0, old_pos); // get folderpath
+        old_folderpath = old_filepath.substr(0, old_pos); // get folderpath
     }
 
     rlog << " old filename : " << old_filename << std::endl;
