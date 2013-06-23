@@ -36,6 +36,13 @@ public:
                                      Folder& out);
 
     bool ValidateFolder(FolderPost& fp);
+    // Validates that the posts exist within the local cache, does not update them
+    bool ValidateFolder(FolderPost& fp,
+                        const std::string& entity_url,
+                        const std::string& post_path,
+                        const AccessToken& at);
+
+
 
     // Validate an absolute folderpath
     bool ValidateFolderPath(const std::string& folderpath, 

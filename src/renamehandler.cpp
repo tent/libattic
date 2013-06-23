@@ -128,7 +128,6 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
                 log::LogException("rn_18410915092", e);
             }
         }
-
     }
 
     rlog <<" **************************************************** " << std::endl;

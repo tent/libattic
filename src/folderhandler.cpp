@@ -39,7 +39,7 @@ bool FolderHandler::ValidateFolder(FolderPost& fp) {
             RenameHandler rh(file_manager_);
             if(!rh.CheckForRename(fp)) {
                 // Make sure path exists anyway
-                CreateDirectoryTree(fp);
+                //CreateDirectoryTree(fp);
             }
         }
     }
