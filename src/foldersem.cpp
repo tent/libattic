@@ -38,6 +38,7 @@ void FolderMap::Release() {
 
 bool FolderMap::AquireRead(const std::string& folder_id) {
     bool ret = false;
+    std::cout<<" AQUIRE READ BEGIN " << folder_id << std::endl;
     while(!ret) {
         req_mtx_.Lock();
         bool write_in_progress = false;
@@ -54,11 +55,13 @@ bool FolderMap::AquireRead(const std::string& folder_id) {
         }
         sleep::mil(10);
     }
+    std::cout<<" AQUIRE READ END " << folder_id << std::endl;
     return ret;
 }
 
 bool FolderMap::AquireWrite(const std::string& folder_id) {
     bool ret = false;
+    std::cout<<" AQUIRE WRITE BEGIN " << folder_id << std::endl;
     while(!ret) {
         rm_mtx_.Lock();
         unsigned int read_count = read_map_[folder_id];
@@ -79,17 +82,19 @@ bool FolderMap::AquireWrite(const std::string& folder_id) {
                 requested_write_map_.erase(folder_id);
                 req_mtx_.Unlock();
                 ret = true;
-                break;
             }
             wm_mtx_.Unlock();
+            if(ret) break;
         }
         sleep::mil(10);
     }
+    std::cout<<" AQUIRE WRITE END " << folder_id << std::endl;
     return ret;
 }
 
 bool FolderMap::ReleaseRead(const std::string& folder_id) {
     bool ret = false;
+    std::cout << " RELEASE READ " << std::endl;
     rm_mtx_.Lock();
     read_map_[folder_id]--;
     rm_mtx_.Unlock();
@@ -98,9 +103,12 @@ bool FolderMap::ReleaseRead(const std::string& folder_id) {
 
 bool FolderMap::ReleaseWrite(const std::string& folder_id) {
     bool ret = false;
+
     wm_mtx_.Lock();
     write_map_.erase(folder_id);
     wm_mtx_.Unlock();
+
+    std::cout << " RELEASE WRITE " << std::endl;
     return ret;
 }
 
