@@ -12,7 +12,7 @@ bool FileTable::CreateTable() {
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, folder_post_id TEXT, plaintext_hash TEXT,";
-    exc += " PRIMARY KEY(filepath ASC, folder_post_id ASC, metapostid ASC));";
+    exc += " PRIMARY KEY(filename ASC, filepath ASC, folder_post_id ASC, metapostid ASC));";
     std::string error;
     bool ret = Exec(exc, error);
     if(!ret)
@@ -225,6 +225,24 @@ bool FileTable::set_filepath(const std::string& old_filepath, const std::string&
     return  ret;
 }
 
+bool FileTable::set_filepath_for_id(const std::string& post_id, const std::string& filepath) {
+    bool ret = false;
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET filepath=\"";
+    exc += filepath;
+    exc += "\" WHERE metapostid=\"";
+    exc += post_id;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_001918ms5", error);
+    return  ret;
+}
+
 bool FileTable::set_filename_for_id(const std::string& post_id, const std::string& filename) {
     bool ret = false;
     std::string exc;
@@ -339,6 +357,39 @@ bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
         log::LogString("manifest_8i09255", error);
     }
     return  ret;
+}
+
+bool FileTable::QueryForFile(const std::string& filename, 
+                             const std::string& folder_post_id,
+                             FileInfo& out) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT * FROM ";
+    query += table_name();
+    query += " WHERE filename=\"";
+    query += filename;
+    query += "\" AND";
+    query += " folder_post_id=\"";
+    query += folder_post_id;
+    query += "\";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0)
+                ExtractFileInfoResults(res, step, out);
+        }
+        ret = true;
+    }
+    else {
+        log::LogString("manifest_8i09255", error);
+    }
+    return  ret;
+
+
 }
 
 bool FileTable::QueryForFileByPostId(const std::string& post_id, FileInfo& out) {
