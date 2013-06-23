@@ -183,7 +183,7 @@ int RenameStrategy::UpdateFileMetaData(const std::string& old_filepath,
         // Update meta data
         file_manager_->SetFilepath(p.id(), fi.filepath());
         file_manager_->SetFilename(p.id(), fi.filename());
-        file_manager_->SetFolderPostId(p.id(), fi.folder_post_id());
+        file_manager_->SetFileFolderPostId(p.id(), fi.folder_post_id());
         //else {
         //    status = ret::A_FAIL_RENAME_FILE;
         //}
