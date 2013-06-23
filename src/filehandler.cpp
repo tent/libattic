@@ -42,7 +42,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
 
     if(!file_manager_->DoesFileExist(filepath)) {
         std::string folderpath;
-        if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
+        if(fs::GetParentPath(filepath, folderpath)) {
             std::string folderid;
             utils::CheckUrlAndRemoveTrailingSlash(folderpath);
             if(file_manager_->GetFolderPostId(folderpath, folderid)) {

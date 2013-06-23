@@ -22,7 +22,7 @@ static void MakePathRelative( const std::string& rootPath,
                               std::string& relativeOut);
 
 static int GetCanonicalPath(const std::string& path, std::string& out);
-static int GetParentPath(const std::string& path, std::string& out);
+static bool GetParentPath(const std::string& path, std::string& out);
 static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
 static void CreateDirectoryTreeForFolder(const std::string& folderpath);
@@ -88,18 +88,19 @@ static int GetCanonicalPath(const std::string& path, std::string& out) {
     return status;
 }
 
-static int GetParentPath(const std::string& path, std::string& out) {
-    int status = ret::A_OK;
+static bool GetParentPath(const std::string& path, std::string& out) {
+    bool ret = false;
 
     std::string ppath;
-    status = GetCanonicalPath(path, ppath);
+    int status = GetCanonicalPath(path, ppath);
     if(status == ret::A_OK) {
         boost::filesystem::path p(ppath);
         boost::filesystem::path dir = p.parent_path();
         out = dir.string();
+        ret = true;
     }
 
-    return status;
+    return ret;
 }
 
 static int CreateDirectory(const std::string& path) {
