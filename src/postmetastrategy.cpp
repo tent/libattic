@@ -76,7 +76,7 @@ bool PostMetaStrategy::RetrieveFolderPostId(const std::string& filepath, std::st
         utils::CheckUrlAndRemoveTrailingSlash(folderpath);
         FolderHandler fh(file_manager_);
         Folder folder;
-        if(fh.GetFolder(folderpath, folder)){
+        if(fh.GetFolderByAbsolutePath(folderpath, folder)){
             if(!folder.folder_post_id().empty()) {
                 id_out = folder.folder_post_id();
                 return true;

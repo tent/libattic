@@ -251,7 +251,7 @@ void FolderHandler::RenameFolder(const std::string& old_folderpath,
                         utils::CheckUrlAndRemoveTrailingSlash(parent_path);
                         Folder parent_folder;
                         rlog <<" parent path : " << parent_path << std::endl;
-                        if(GetFolder(parent_path, parent_folder)) {
+                        if(GetFolderByAbsolutePath(parent_path, parent_folder)) {
                             rlog << " current folder : " << (*folder_itr).foldername() << std::endl;
                             rlog << " setting new parent id " << std::endl;
                             rlog << parent_folder.folder_post_id() << std::endl;
@@ -385,7 +385,8 @@ bool FolderHandler::GetFolderById(const std::string& folder_id, Folder& out) {
     return file_manager_->GetFolderEntryByPostId(folder_id, out);
 }
 
-bool FolderHandler::GetFolder(const std::string& folderpath, Folder& out) {
+bool FolderHandler::GetFolderByAbsolutePath(const std::string& folderpath, Folder& out) {
+    // Must be absolute path
     return file_manager_->GetFolderEntry(folderpath, out);
 }
 
