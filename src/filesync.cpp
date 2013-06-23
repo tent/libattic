@@ -70,13 +70,16 @@ void FileSync::Run() {
         pq_mtx_.Unlock();
 
         if(val) {
+            std::cout<<" Processing File Post "<< fp.id() << std::endl;
             ProcessFilePost(fp); 
+            std::cout<<"Done Processing File Post "<< fp.id() << std::endl;
             val = false;
         }
         else {
             sleep::mil(100);
         }
     }
+    std::cout << " FileSync Exiting " << std::endl;
 }
 
 void FileSync::PushBack(const FilePost& p) {
@@ -98,23 +101,36 @@ int FileSync::ProcessFilePost(FilePost& p) {
     //      - verify folder exists
     //          - insert into manifest
     //          - initiate a download
+
+    std::ostringstream plog; 
+    plog << "*****************************************************" << std::endl;
+    plog << "ProcessFilePost : " << p.id() << std::endl;
     FileInfo fi;
     if(ExtractFileInfo(p, fi)) {
+        plog << " filename (post) : " << fi.filename() << std::endl;
+        plog << " filepath (post) : " << fi.filepath() << std::endl;
+        plog << " folder_post (post) : " << fi.folder_post_id() << std::endl;
         bool pull = false;
         FileHandler fh(file_manager_);
         if(file_manager_->DoesFileExistWithPostId(p.id())) {
             FileInfo local_fi;
             file_manager_->GetFileInfoByPostId(p.id(), local_fi);
+            plog << " filename (cache) : " << local_fi.filename() << std::endl;
+            plog << " filepath (cache) : " << local_fi.filepath() << std::endl;
+            plog << " folder_post (cache) : " << local_fi.folder_post_id() << std::endl;
             if(fi.filename() != local_fi.filename()) {
+                plog << " rename " << std::endl;
                 // rename
                 RenameHandler rh(file_manager_);
                 rh.RenameFileLocalCache(p.id(), fi.filename());
             }
             if(fi.folder_post_id() != local_fi.folder_post_id()){
+                plog << " move to new folder " << std::endl;
                 // move to new folder
                 fh.UpdateFilepath(p.id(), fi.folder_post_id());
             }
             if(fi.plaintext_hash() != local_fi.plaintext_hash()) {
+                plog << " init dl " << std::endl;
                 // init download
                 pull = true;
             }
@@ -123,7 +139,7 @@ int FileSync::ProcessFilePost(FilePost& p) {
             // Doesn't exist in the manifest
             // Insert into manifest
             if(fi.file_credentials_iv() == p.iv_data()) {
-                std::cout<<" inserting into manifest " << std::endl;
+                plog <<" inserting into manifest " << std::endl;
                 file_manager_->InsertToManifest(&fi);
             }
             else { 
@@ -142,6 +158,9 @@ int FileSync::ProcessFilePost(FilePost& p) {
         status = ret::A_FAIL_INVALID_MASTERKEY;
     }
 
+    plog << "ProcessFilePost status : " << status << std::endl;
+    plog << "*****************************************************" << std::endl;
+    std::cout<< plog.str() << std::endl;
     return status;
 }
 
