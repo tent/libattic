@@ -7,7 +7,7 @@
 namespace attic {
 
 AccessToken::AccessToken() {
-    time_offset_ = "0";
+    time_offset_ = 0;
 }
 
 AccessToken::AccessToken(const AccessToken& rhs) {
@@ -26,8 +26,7 @@ AccessToken::AccessToken(const AccessToken& rhs) {
     app_id_.clear();
     app_id_.append(rhs.app_id_.c_str(), rhs.app_id_.size());
 
-    time_offset_.clear();
-    time_offset_.append(rhs.time_offset_.c_str(), rhs.time_offset_.size());
+    time_offset_ = rhs.time_offset_;
 }
 
 AccessToken::~AccessToken() {}

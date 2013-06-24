@@ -13,13 +13,9 @@
 
 namespace attic { 
 
-
-// TODO :: master key and access token can probably be moved into the local cache
-//         this would eliminate the need for this class (A GOOD THING) 
-// TODO :: the necessity of this whole class needs to be re-thought,
-//          alot of generic methods are here that can be abstracted to 
-//          a more functional namespace, reducing locks.
-class CredentialsManager : public MutexClass {
+// Make sure this is the single source of truth for the AccessToken
+// the time offset will be set here and needs to propagate outward
+class CredentialsManager {
     void ConstructPhraseTokenPath(std::string& out);
     void ConstructAccessTokenPath(std::string& out);
     void ConstructManifestPath(std::string& out);
@@ -49,44 +45,54 @@ public:
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
     void GetMasterKeyCopy(MasterKey& key) {
-        Lock();
+        mk_mtx_.Lock();
         key = master_key_;
-        Unlock();
+        mk_mtx_.Unlock();
     }
     void GetAccessTokenCopy(AccessToken& tk) {
-        Lock(); 
+        at_mtx_.Lock(); 
         tk = access_token_; 
-        Unlock();
+        at_mtx_.Unlock();
     }
 
     void SetConfigDirectory(const std::string& dir) {
-        Lock();
         config_directory_ = dir; 
-        Unlock();
     }
 
     void SetAccessToken(const AccessToken& at) {
-        Lock(); 
+        at_mtx_.Lock(); 
         access_token_ = at; 
-        Unlock();
+        at_mtx_.Unlock();
     }
 
     void SetMasterKey(const MasterKey& mk) {
-        Lock();
+        mk_mtx_.Lock();
         master_key_ = mk; 
-        Unlock();
+        mk_mtx_.Unlock();
     }
 
     void set_master_key(const std::string& masterkey) {
+        mk_mtx_.Lock();
         MasterKey mk;
-
         mk.SetMasterKey(masterkey);
         SetMasterKey(mk);
+        mk_mtx_.Unlock();
+    }
+
+    void set_time_offset(const long int offset) {
+        at_mtx_.Lock();
+        access_token_.set_time_offset(offset);
+        at_mtx_.Unlock();
     }
 
 private:
+    MutexClass      mk_mtx_;
     MasterKey       master_key_;    // Master Key used to encrypt sqlitedb
+
+    MutexClass      at_mtx_;
     AccessToken     access_token_;  // Access Token used to auth during tent posts
+
+    MutexClass      pt_mtx_;
     PhraseToken     phrase_token_;
 
     std::string     config_directory_;
