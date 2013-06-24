@@ -42,6 +42,7 @@ class AtticService {
     int ShutdownFileManager();
     int ShutdownConnectionManager();
 
+    void ValidateTimeOffset();
 public:
     AtticService();
     ~AtticService();

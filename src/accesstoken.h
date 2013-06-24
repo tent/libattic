@@ -14,6 +14,8 @@ public:
     AccessToken(const AccessToken& rhs);
     ~AccessToken();
 
+    AccessToken operator=(const AccessToken& rhs);
+
     // TODO :: move this to some other place, the file manager could 
     //         be in charge of saving state to disk
     ret::eCode SaveToFile(const std::string& filepath);

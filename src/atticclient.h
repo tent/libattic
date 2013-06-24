@@ -65,6 +65,7 @@ public:
     void set_config_directory(const std::string& dir) { config_directory_ = dir; }
     void set_temp_directory(const std::string& dir) { temp_directory_ = dir; }
     void set_entity_url(const std::string& url) { entity_url_ = url; }
+    void set_access_token(const AccessToken& at) {access_token_ = at; }
 
 private:
     TentApp             tent_app_;

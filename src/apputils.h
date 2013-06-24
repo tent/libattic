@@ -14,10 +14,10 @@
 #include "response.h"
 #include "clientutils.h"
 #include "entity.h"
-#include "libatticutils.h"
 #include "urlparams.h"
 #include "apppost.h"
 #include "posthandler.h"
+#include "filesystem.h"
 
 namespace attic { namespace app {
 static int StartupAppInstance(TentApp& app,
@@ -52,6 +52,9 @@ static int ConstructAppAuthorizationURL(const std::string& path,
 
 static int LoadAppFromFile(TentApp& app, const std::string& configdir);
 static int SaveAppToFile(TentApp& app, const std::string& configdir);
+
+static int DeserializeIntoAccessToken(const std::string& body, AccessToken& out);
+static int WriteOutAccessToken(AccessToken& at, const std::string& outDir);
 
 static int RegisterAttic(const std::string& entityurl,
                          const std::string& name, 
@@ -279,10 +282,10 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
 
             if(response.code == 200) {
                 AccessToken at;
-                status = liba::DeserializeIntoAccessToken(response.body, at);
+                status = DeserializeIntoAccessToken(response.body, at);
                 if(status == ret::A_OK) {
                     at.set_app_id(app.app_id());
-                    status = liba::WriteOutAccessToken(at, configdir);
+                    status = WriteOutAccessToken(at, configdir);
                 }
             }
             else {
@@ -314,6 +317,25 @@ static int SaveAppToFile(TentApp& app, const std::string& configdir) {
     savepath.append(cnst::g_szAppDataName);
 
     int status = app.SaveToFile(savepath);
+    return status;
+}
+
+static int DeserializeIntoAccessToken(const std::string& body, AccessToken& out) {
+    int status = ret::A_OK;
+
+    if(!jsn::DeserializeObject(&out, body))
+        status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
+
+    return status;
+}
+
+static int WriteOutAccessToken(AccessToken& at, const std::string& outDir) {
+    int status = ret::A_OK;
+    std::string path = outDir;
+    utils::CheckUrlAndAppendTrailingSlash(path);      
+    path.append(cnst::g_szAuthTokenName);
+    std::cout<<" OUT PATH : " << path << std::endl;
+    status = at.SaveToFile(path);
     return status;
 }
 

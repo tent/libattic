@@ -42,8 +42,8 @@ int AtticService::start() {
         status = InitializeServiceManager();        if(status != ret::A_OK) return status;
         status = InitializeTaskArbiter();           if(status != ret::A_OK) return status;
         status = InitializeThreadManager();         if(status != ret::A_OK) return status;
-
     }
+    ValidateTimeOffset();
     running_ = true;
     return status;
 }
@@ -536,6 +536,51 @@ bool AtticService::IsFilepathLinked(const std::string& filepath) {
 
 }
 
+void AtticService::ValidateTimeOffset() {
+    AccessToken at;
+    credentials_manager_->GetAccessTokenCopy(at);
+    Response resp;
+    netlib::HttpHead(entity_url_, NULL, &at, resp);
+    std::cout<<" RESPONSE : " << resp.code <<std::endl;
+    std::cout<<" HEADER : " << resp.header.asString() << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
 
+    if(resp.code == 401) { 
+        if(resp.header.HasValue("WWW-Authenticate")) {
+            std::string buf = resp.header.GetValue("WWW-Authenticate");
+            if(buf.find("Stale timestamp") != std::string::npos) {
+                // Set offset
+                size_t pos = buf.find("Hawk ts=");
+                if(pos != std::string::npos) {
+                    size_t left = pos + sizeof("Hawk ts=") + 1;
+                    size_t right = buf.find("\"", left+1);
+                    std::string timestamp = buf.substr(left, right-left);
+                    std::cout<<" TIMESTAMP : " << timestamp << std::endl;
+                    long int ts = atoi(timestamp.c_str());
+
+                    // calculate offset
+                    time_t t = time(0);
+                    std::cout<<" TIME : " << t << std::endl;
+                    long int offset = ts - t;
+
+                    at.set_time_offset(offset);
+                    credentials_manager_->set_time_offset(offset);
+                    client_->set_access_token(at);
+
+                    std::cout<<" OFFSET : "<< offset << std::endl;
+                    std::cout<<" AMMEDED TS : " << time(0) + offset << std::endl;
+                }
+            }
+        }
+    }
+
+    Response resp2;
+    netlib::HttpHead(entity_url_, NULL, &at, resp2);
+    std::cout<<" NOW RESPONSE IS : " << resp2.code <<std::endl;
+    std::cout<<" HEADER : " << resp2.header.asString() << std::endl;
+    std::cout<<" BODY : " << resp2.body << std::endl;
+
+
+}
 
 }// namespace

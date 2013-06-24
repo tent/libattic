@@ -90,8 +90,8 @@ int Connection::InitializeSSLSocket(const std::string& host) {
     // Load Cert
     SSLLoadCerts();
 
-    //ctx_->set_verify_mode(boost::asio::ssl::context::verify_none);
-    ctx_->set_verify_mode(boost::asio::ssl::context::verify_peer);
+    ctx_->set_verify_mode(boost::asio::ssl::context::verify_none);
+    //ctx_->set_verify_mode(boost::asio::ssl::context::verify_peer);
     ssl_socket_ = new boost::asio::ssl::stream<tcp::socket&>(*socket_, *ctx_);
     ssl_socket_->set_verify_callback(boost::asio::ssl::rfc2818_verification(host.c_str()));
     ssl_socket_->handshake(boost::asio::ssl::stream_base::client, error);

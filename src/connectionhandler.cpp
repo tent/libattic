@@ -32,9 +32,7 @@ int ConnectionHandler::HttpPost(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "POST",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
 
@@ -88,9 +86,7 @@ int ConnectionHandler::HttpPut(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "PUT",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
     char len[256] = {'\0'};
@@ -138,9 +134,7 @@ int ConnectionHandler::HttpGet(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "GET",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
 
@@ -174,9 +168,7 @@ int ConnectionHandler::HttpHead(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "GET",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
 
