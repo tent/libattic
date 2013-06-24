@@ -76,9 +76,15 @@ int PollFiles(void);
  *  callback :
  *      (?, serialized string, len, # of nodes)
  */
+
+// Returns all posts in tree 
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
+// permanently deletes a post at version id
 int DeletePostVersion(const char* szPostId, const char* szVersion);
+// Appoints version of post as the new head
 int RestoreVersion(const char* szPostId, const char* szVersion);
+// Save a local copy, does not modify the most or add it to the local cache just a save 
+// to file
 int SaveVersion(const char* szPostId, const char* szVersion, const char* szFolderpath);
 
 // Pause / Resume polling
@@ -102,6 +108,7 @@ int EnterQuestionAnswerKey(const char* q1,
                            const char* a1, 
                            const char* a2, 
                            const char* a3);
+
 
 // Returns calls back n numbers of times, with filepaths
 // callback
