@@ -56,30 +56,16 @@ void PostTree::ClearNodes() {
 
 void PostTree::ReturnSerializedTree(std::string& out) {
     Json::Value tree;
-    std::deque<std::string>::iterator itr = raw_.begin();
-    out = "[";
-    for(;itr!=raw_.end(); itr++) {
-        out += (*itr);
-        if(itr+1 != raw_.end())
-            out += ",";
 
-    }
-    out += "]";
-
-    /*
     std::map<std::string, PostNode*>::iterator itr = url_nodes_.begin();
     for(;itr!= url_nodes_.end(); itr++) {
         Json::Value node;
         jsn::SerializeObject(&itr->second->post, node);
         tree.append(node);
-        std::cout<<" append " << std::endl;
         std::string in;
         jsn::SerializeJsonValue(node, in);
-        std::cout<< " appending : " << in << std::endl;
     }
     jsn::SerializeJsonValue(tree, out);
-    std::cout<<" SERIALIZED TREE : " << out << std::endl;
-    */
 }
 
 }//namespace
