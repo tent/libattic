@@ -10,6 +10,7 @@ AccessToken::AccessToken() {
     time_offset_ = 0;
 }
 
+
 AccessToken::AccessToken(const AccessToken& rhs) {
     access_token_.clear();
     access_token_.append(rhs.access_token_.c_str(), rhs.access_token_.size());
@@ -28,6 +29,7 @@ AccessToken::AccessToken(const AccessToken& rhs) {
 
     time_offset_ = rhs.time_offset_;
 }
+
 
 AccessToken::~AccessToken() {}
 
@@ -48,6 +50,7 @@ AccessToken AccessToken::operator=(const AccessToken& rhs) {
     app_id_.append(rhs.app_id_.c_str(), rhs.app_id_.size());
 
     time_offset_ = rhs.time_offset_;
+    return *this;
 }
 
 ret::eCode AccessToken::SaveToFile(const std::string& filepath) {
