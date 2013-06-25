@@ -32,8 +32,6 @@ public:
         // ManifestTask
         QUERYMANIFEST,
         SCANDIRECTORY,
-        // Polling
-        POLL,
         // Service
         SERVICE
     };

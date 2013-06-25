@@ -189,17 +189,6 @@ void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* del) {
     delete_count++;
 }
 
-void TaskManager::PollFiles(TaskDelegate* del) { // This will need to be a direct call
-    TaskContext tc;
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::POLL);
-    tc.set_delegate(del);
-    PushContextBack(tc);
-    poll_count++;
-}
-
 void TaskManager::RenameFile(const std::string& original_filepath, 
                              const std::string& new_filepath) {
     TaskContext tc;
