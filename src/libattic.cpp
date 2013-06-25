@@ -137,6 +137,17 @@ int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int
     return status;
 }
 
+int DeletePostVersion(const char* szPostId, const char* szVersion) {
+    return -1;
+}
+
+int RestoreVersion(const char* szPostId, const char* szVersion) {
+    return -1;
+}
+
+int SaveVersion(const char* szPostId, const char* szVersion, const char* szFolderpath) {
+    return -1;
+}
 
 int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
