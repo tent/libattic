@@ -72,11 +72,9 @@ public:
     }
 
     void set_master_key(const std::string& masterkey) {
-        mk_mtx_.Lock();
         MasterKey mk;
         mk.SetMasterKey(masterkey);
         SetMasterKey(mk);
-        mk_mtx_.Unlock();
     }
 
     void set_time_offset(const long int offset) {
