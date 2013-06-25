@@ -101,16 +101,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     servicew->SetTaskPreference(Task::SERVICE);
     thread_pool_->SpinOffWorker(servicew);
 
-    // Poll worker
-    ThreadWorker* pollw = new ThreadWorker(file_manager_, 
-                                           credentials_manager_, 
-                                           access_token_, 
-                                           entity_,
-                                           true); // Strict
-    pollw->SetTaskPreference(Task::POLL);
-    pollw->SetTaskPreference(Task::SERVICE, false);
-    thread_pool_->SpinOffWorker(pollw);
-    
     // Rename delete
     ThreadWorker* rdw = new ThreadWorker(file_manager_, 
                                          credentials_manager_, 
@@ -119,7 +109,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
                                          true); // Strict
     rdw->SetTaskPreference(Task::RENAME);
     rdw->SetTaskPreference(Task::DELETE);
-    rdw->SetTaskPreference(Task::POLL, false);
     rdw->SetTaskPreference(Task::SERVICE, false);
     thread_pool_->SpinOffWorker(rdw);
 
@@ -173,7 +162,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     // Generic (Push/Pull) workers
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker(file_manager_, credentials_manager_, access_token_, entity_);
-        pWorker->SetTaskPreference(Task::POLL, false);
         pWorker->SetTaskPreference(Task::SERVICE, false);
         pWorker->SetTaskPreference(Task::RENAME, false);
         pWorker->SetTaskPreference(Task::DELETE, false);

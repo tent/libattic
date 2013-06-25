@@ -56,7 +56,7 @@ void ThreadWorker::Run() {
             SetThreadExit();
             RelinquishTask(&task);
         }
-        sleep::sleep_milliseconds(100);
+        sleep::sleep_milliseconds(10);
     }
 
     std::cout<<" thread  worker ending ... " << std::endl;

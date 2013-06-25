@@ -10,6 +10,7 @@
 #include "posthandler.h"
 #include "confighandler.h"
 #include "foldercreationlock.h"
+#include "polling.h"
 
 namespace attic {
 
@@ -21,6 +22,7 @@ AtticService::AtticService() {
     file_manager_ = NULL;
     credentials_manager_ = NULL;
     client_ = NULL;
+    polling_ = NULL;
 
     running_ = false;
 }
@@ -161,10 +163,17 @@ int AtticService::RenameFolder(const std::string& old_folderpath, const std::str
 int AtticService::BeginPolling() {
     int status = ret::A_OK;
     if(running_) {
-        if(IsMasterKeyValid()) 
-            task_manager_->PollFiles(NULL);
-        else
+        if(IsMasterKeyValid())  {
+            if(!polling_) { 
+                polling_ = new Polling(file_manager_,
+                                       credentials_manager_,
+                                       client_->entity());
+                polling_->Initialize();
+            }
+        }
+        else { 
             status = ret::A_FAIL_INVALID_MASTERKEY;
+        }
     }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
@@ -173,8 +182,11 @@ int AtticService::BeginPolling() {
 
 int AtticService::Pause() {
     int status = ret::A_OK;
-    if(running_)
-        event::RaiseEvent(event::Event::PAUSE, "", NULL);
+    if(running_) { 
+        if(polling_) {
+            polling_->Pause();
+        }
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -182,8 +194,11 @@ int AtticService::Pause() {
 
 int AtticService::Resume() {
     int status = ret::A_OK;
-    if(running_)
-        event::RaiseEvent(event::Event::RESUME, "", NULL);
+    if(running_) {
+        if(polling_) {
+            polling_->Resume();
+        }
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;

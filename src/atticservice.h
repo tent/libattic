@@ -18,6 +18,7 @@
  *  subsystems, allowing communication into the lib.
  */
 namespace attic {
+    class Polling;
 
 class AtticService {
     bool IsMasterKeyValid();
@@ -90,6 +91,8 @@ private:
     CredentialsManager* credentials_manager_;
     Client*             client_;
     ConnectionManager*  connection_manager_;
+
+    Polling*            polling_;
 
     // File paths should all be absolute paths
     std::string working_dir_;
