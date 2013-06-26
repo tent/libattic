@@ -11,7 +11,6 @@
 
 namespace attic { 
 
-
 // Cargo, is a file's sensative metadata. This needs to be serialized and encrypted, before
 // it is sent off into the nether
 struct Cargo : public JsonSerializable {
@@ -31,7 +30,6 @@ struct Cargo : public JsonSerializable {
  */
 
 class FilePost : public Post {
-    
     void SerializeChunkData(Json::Value& root);
     void DeserializeChunkData(Json::Value& root);
 public:

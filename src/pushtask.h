@@ -38,8 +38,6 @@ public:
     virtual void OnPaused();
     virtual void OnFinished() {}
 
-    int GetUploadSpeed();
-
     void RunTask();
 
 private:

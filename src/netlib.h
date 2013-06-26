@@ -626,6 +626,25 @@ static void BuildAttachmentForm(const std::string& name,
     bodystream << body;
 }
 
+static void BuildAttachmentForm(const std::string& name, 
+                                const std::string& attachment_size,
+                                const std::string& boundary,
+                                unsigned int attachmentnumber,
+                                std::string& out) {
+
+    char szAttachmentCount[256] = {'\0'};
+    snprintf(szAttachmentCount, 256, "%d", attachmentnumber);
+
+    std::ostringstream bodystream;
+    bodystream << "\r\n--" << boundary << "\r\n";
+    bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
+    bodystream << "Content-Length: " << attachment_size << "\r\n";
+    bodystream << "Content-Type: application/octet-stream ";
+    bodystream << "\r\n";
+    bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
+    out = bodystream.str();
+}
+
 static void AddEndBoundry(std::ostream& bodystream, const std::string& boundary) {
     bodystream <<"\r\n--"<< boundary << "--\r\n\r\n";
 }
