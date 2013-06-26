@@ -11,6 +11,7 @@
 #include "uploadtask.h"
 #include "metatask.h"
 #include "configtask.h"
+#include "pushpublictask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -98,6 +99,13 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                              access_token_,
                              entity_,                          
                              context);
+            break;
+        case Task::PUSHPUBLIC:
+            t = new PushPublicTask(file_manager_,
+                                   credentials_manager_,                    
+                                   access_token_,
+                                   entity_,                          
+                                   context);
             break;
         case Task::PULL:
             t = new PullTask(file_manager_,
