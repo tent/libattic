@@ -3,11 +3,14 @@
 #pragma once
 
 #include "tenttask.h"
+#include "downloadpost.h"
 
 namespace attic {
 
 class PushPublicTask : public TentTask {
     int PushFile(const std::string& filepath);
+
+    bool GenerateDownloadPost(const std::string& filepath, DownloadPost& out);
 public:
     PushPublicTask(FileManager* fm,
                    CredentialsManager* cm,

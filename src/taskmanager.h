@@ -48,6 +48,8 @@ public:
     // Sync Tasks
     void UploadFile(const std::string& filepath,        // Begins upload process
                     TaskDelegate* del);        
+    void UploadPublicFile(const std::string& filepath,
+                          TaskDelegate* del);
     void ProcessUploadFile(const std::string& postid,   // Begins actual file processing
                            TaskDelegate* del);   
 

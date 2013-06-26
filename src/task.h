@@ -21,6 +21,7 @@ public:
         // TentTask
         UNKNOWN=0,
         PUSH,       // Begin upload process, just setup the metadata, spin off pushfile task
+        PUSHPUBLIC,
         UPLOADFILE,   // Does not deal with setting up metadata post, just upoads chunks
         PULL,
         RENAME,

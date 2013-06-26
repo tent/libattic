@@ -156,6 +156,17 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
     upload_count++;
 }
 
+void TaskManager::UploadPublicFile(const std::string& filepath,
+                                   TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::PUSHPUBLIC);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
 // Begins actual file processing (upload)
 void TaskManager::ProcessUploadFile(const std::string& postid, TaskDelegate* del) {
     TaskContext tc;
