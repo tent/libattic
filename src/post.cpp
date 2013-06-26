@@ -178,8 +178,10 @@ void Post::Serialize(Json::Value& root) {
     if(!entity_.empty())
         root["entity"] = entity_;
 
+    /*
     if(!published_at_.empty())
         root["published_at"] = published_at_;
+        */
 
     if(licenses_.size() > 0) {
         Json::Value licenses;
