@@ -586,6 +586,38 @@ static void BuildRequestHeader( const std::string& requestMethod,
     requeststream << "Authorization: " << authheader <<"\r\n\r\n";
 }
 
+static void BuildRequestHeaderNotChunked(const std::string& requestMethod,
+                                         const std::string& url,
+                                         const std::string& boundary,
+                                         const AccessToken* pAt,
+                                         std::ostringstream& requeststream) {
+    std::string protocol, host, path;
+    ExtractHostAndPath( url, 
+                        protocol, 
+                        host, 
+                        path);
+
+    std::string authheader;
+    if(pAt) {
+        netlib::BuildAuthHeader( url,
+                                 requestMethod,
+                                 pAt,
+                                 authheader);
+    }
+
+    // Form the request. We specify the "Connection: close" header so that the
+    // server will close the socket after transmitting the response. This will
+    // allow us to treat all data up until the EOF as the content.
+
+    //requeststream << "POST " << m_Path << " HTTP/1.1\r\n";
+    requeststream << requestMethod << " " << path << " HTTP/1.1\r\n";
+    requeststream << "Host: " << host << "\r\n";
+    requeststream << "Accept: application/vnd.tent.v0+json\r\n";
+    requeststream << "Content-Type: multipart/form-data; boundary="<< boundary << "\r\n";
+    //requeststream << "Transfer-Encoding: chunked\r\n";
+    requeststream << "Connection: close\r\n";
+    requeststream << "Authorization: " << authheader <<"\r\n\r\n";
+}
 static void BuildBodyForm( const std::string& post_type,
                            const std::string& body, 
                            const std::string& boundary, 

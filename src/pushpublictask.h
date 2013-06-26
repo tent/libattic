@@ -7,10 +7,13 @@
 
 namespace attic {
 
+class Connection;
+
 class PushPublicTask : public TentTask {
     int PushFile(const std::string& filepath);
 
     bool GenerateDownloadPost(const std::string& filepath, DownloadPost& out);
+    void WriteFileToConnection(const std::string& filepath, Connection* con);
 public:
     PushPublicTask(FileManager* fm,
                    CredentialsManager* cm,
