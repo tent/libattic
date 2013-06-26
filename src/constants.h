@@ -11,6 +11,7 @@ static const char* g_attic_folder_type = "https://attic.is/types/folder/v0";
 static const char* g_attic_file_type = "https://attic.is/types/file/v0";
 static const char* g_attic_chunk_type = "https://attic.is/types/chunk/v0";
 static const char* g_attic_config_type = "https://attic.is/types/config/v0";
+static const char* g_attic_download_type = "https://attic.is/types/download/v0";
 static const char* g_basic_profile_type = "https://tent.io/types/basic-profile/v0";
 // Fragments
 static const char* g_transit_fragment = "in_transit";

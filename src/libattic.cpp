@@ -66,60 +66,51 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
     return status;
 }
 int Discover(const char* szEntityurl) {
-    int status = attic::ret::A_OK;
     if(!szEntityurl) return attic::ret::A_FAIL_INVALID_CSTR;
-
     attic::Entity ent;
-    status = attic::client::Discover(szEntityurl, NULL, ent);
-
-    return status;
+    return attic::client::Discover(szEntityurl, NULL, ent);
 }
 
 int CreateFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout<<" CREATE FOLDER : " << szFolderpath << std::endl;
-    int status = attic_service.CreateFolder(szFolderpath);
-    return status;
+    return attic_service.CreateFolder(szFolderpath);
 }
 
 int DeleteFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout<<" DELETE FOLDER : " << szFolderpath << std::endl;
-    int status = attic_service.DeleteFolder(szFolderpath);
-    return status;
+    return attic_service.DeleteFolder(szFolderpath);
 }
 
 int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath) {
     if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.RenameFolder(szOldFolderpath, szNewFolderpath);
-    return status;
+    return attic_service.RenameFolder(szOldFolderpath, szNewFolderpath);
 }
 
 int PushFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout << " PUSHING FILE : " << szFilepath << std::endl;
-    int status = attic_service.UploadFile(szFilepath);
-    return status;
+    return attic_service.UploadFile(szFilepath);
+}
+
+int PushPublicFile(const char* szFilepath) {
+    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    return attic_service.UploadPublicFile(szFilepath);
 }
 
 int PullFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.DownloadFile(szFilepath);
-    return attic::ret::A_OK;
+    return attic_service.DownloadFile(szFilepath);
 }
 
 int DeleteFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.MarkFileDeleted(szFilepath);
-    return status;
+    return attic_service.MarkFileDeleted(szFilepath);
 }
 
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.RenameFile(szOldFilepath, szNewFilepath);
-    return status;
+    return attic_service.RenameFile(szOldFilepath, szNewFilepath);
 }
 
 int PollFiles(void) {
@@ -130,11 +121,8 @@ int PollFiles(void) {
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int)) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
-
     attic::TaskDelegate* del = g_CallbackHandler.RegisterFileHistoryCallback(callback);
-    int status = attic_service.GetFileHistory(szFilepath, del);
-
-    return status;
+    return attic_service.GetFileHistory(szFilepath, del);
 }
 
 int DeletePostVersion(const char* szPostId, const char* szVersion) {

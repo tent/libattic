@@ -65,10 +65,12 @@ int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath);
 
 // File Operations
 int PushFile(const char* szFilepath);
+int PushPublicFile(const char* szFilepath);
 int PullFile(const char* szFilepath);
 int DeleteFile(const char* szFilepath);
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath);
 int PollFiles(void);
+
 
 // Meta operations
 /* GetFileHistory

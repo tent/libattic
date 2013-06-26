@@ -81,6 +81,21 @@ int AtticService::UploadFile(const std::string& filepath) {
     return status;
 }
 
+int AtticService::UploadPublicFile(const std::string& filepath) {
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) { // Doesn't matter for public, but lets make sure the user
+                                 // has logged in anyway.
+            task_manager_->UploadPublicFile(filepath, NULL);
+        }
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
 int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_) {

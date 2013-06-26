@@ -20,7 +20,7 @@ public:
 
     void set_filename(const std::string& filename)      { filename_ = filename; }
     void set_file_size(const std::string& file_size)    { file_size_ = file_size; }
-    void set_plaintext_mac(const std::string& hash)     { plaintext_hash_ = hash; }
+    void set_plaintext_hash(const std::string& hash)     { plaintext_hash_ = hash; }
 private:
     std::string filename_;
     std::string file_size_;
