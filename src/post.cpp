@@ -155,8 +155,6 @@ void Attachment::Deserialize(Json::Value& root) {
 }
 
 Post::Post() {
-    published_at_ = 0;
-    received_at_ = 0;
     set_public(false);
 }
 
@@ -180,7 +178,7 @@ void Post::Serialize(Json::Value& root) {
     if(!entity_.empty())
         root["entity"] = entity_;
 
-    if(published_at_ > 0)
+    if(!published_at_.empty())
         root["published_at"] = published_at_;
 
     if(licenses_.size() > 0) {
@@ -245,14 +243,11 @@ void Post::Deserialize(Json::Value& root) {
     // General Post
     id_             = root.get("id", "").asString();
     entity_         = root.get("entity", "").asString();
-    std::string pub = root.get("published_at", "").asString();
-    published_at_   = atoi(pub.c_str());
-    std::string rec = root.get("received_at", "").asString();
+    published_at_   = root.get("published_at", "").asString();
+    received_at_    = root.get("received_at", "").asString();
     type_           = root.get("type", "").asString();
     if(type_.find("#") != std::string::npos)
         base_type_ = type_.substr(0, type_.find("#")+1);
-
-    received_at_    = atoi(rec.c_str());
 
     jsn::DeserializeObject(&version_, root["version"]);
     jsn::DeserializeIntoVector(root["licenses"], licenses_);

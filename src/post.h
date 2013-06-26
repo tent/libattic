@@ -122,8 +122,8 @@ public:
     const std::string& id() const       { return id_; }
     const std::string& entity() const   { return entity_; }
     const std::string& type() const     { return type_; }
-    unsigned int published_at() const   { return published_at_; }
-    unsigned int received_at() const    { return received_at_; }
+    const std::string& published_at() const   { return published_at_; }
+    const std::string& received_at() const    { return received_at_; }
 
     Version& version()           { return version_; }
 
@@ -152,8 +152,8 @@ private:
     std::string                         entity_;
     std::string                         base_type_; // base type of post
     std::string                         type_; // type (may be fragmented)
-    unsigned int                        published_at_;
-    unsigned int                        received_at_;
+    std::string                         published_at_;
+    std::string                         received_at_;
     std::vector<std::string>            licenses_;
     ContentMap                          content_;
     AttachmentMap                       attachments_;
