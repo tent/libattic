@@ -92,11 +92,6 @@ int PushFile(const char* szFilepath) {
     return attic_service.UploadFile(szFilepath);
 }
 
-int PushPublicFile(const char* szFilepath) {
-    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    return attic_service.UploadPublicFile(szFilepath);
-}
-
 int PullFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     return attic_service.DownloadFile(szFilepath);
@@ -117,6 +112,13 @@ int PollFiles(void) {
     return attic_service.BeginPolling();
 }
 
+int CreateLimitedDownloadLink(const char* szFilepath, 
+                              void(*callback)(int, const char*, const char*)) {
+    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return attic_service.UploadLimitedFile(szFilepath, del);
+}
 
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int)) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;

@@ -52,7 +52,7 @@ public:
     int stop();
 
     int UploadFile(const std::string& filepath);
-    int UploadPublicFile(const std::string& filepath);
+    int UploadLimitedFile(const std::string& filepath, TaskDelegate* del);
     int DownloadFile(const std::string& filepath);
     int MarkFileDeleted(const std::string& filepath);
     int RenameFile(const std::string& old_filepath, const std::string& new_filepath);

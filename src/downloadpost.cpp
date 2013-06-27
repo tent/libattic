@@ -1,9 +1,11 @@
 #include "downloadpost.h"
 
+#include "constants.h"
+
 namespace attic { 
 
 DownloadPost::DownloadPost() {
-
+    set_type(cnst::g_attic_download_type);
 }
 
 DownloadPost::~DownloadPost() {

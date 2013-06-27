@@ -50,7 +50,7 @@ TaskDelegate* CallbackHandler::RegisterDelegateCallback(int type, cbh::DelegateC
 TaskDelegate* CallbackHandler::RegisterManifestCallback(cbh::QueryCallback cb) {
     TaskDelegate* del = NULL;
     if(cb) {
-        del = new ManifestCallback(this, cb);
+        del = new ManifestDelegate(this, cb);
         InsertDelegateIntoMap(del);
     }
     return del;
@@ -59,7 +59,16 @@ TaskDelegate* CallbackHandler::RegisterManifestCallback(cbh::QueryCallback cb) {
 TaskDelegate* CallbackHandler::RegisterFileHistoryCallback(cbh::HistoryCallback cb) {
     TaskDelegate* del = NULL;
     if(cb) {
-        del = new HistoryCallback(this, cb);
+        del = new HistoryDelegate(this, cb);
+        InsertDelegateIntoMap(del);
+    }
+    return del;
+}
+
+TaskDelegate* CallbackHandler::RegisterRequestCallback(cbh::RequestCallback cb) {
+    TaskDelegate* del = NULL;
+    if(cb) {
+        del = new RequestDelegate(this, cb);
         InsertDelegateIntoMap(del);
     }
     return del;

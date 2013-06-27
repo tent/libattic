@@ -25,6 +25,7 @@ public:
     TaskDelegate* RegisterDelegateCallback(int type, cbh::DelegateCallback cb);
     TaskDelegate* RegisterManifestCallback(cbh::QueryCallback cb);
     TaskDelegate* RegisterFileHistoryCallback(cbh::HistoryCallback cb);
+    TaskDelegate* RegisterRequestCallback(cbh::RequestCallback cb);
     void RemoveDelegate(const std::string& id);
 private:
     typedef std::deque<EventCallback> CallbackList;

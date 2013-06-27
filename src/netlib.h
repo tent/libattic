@@ -84,6 +84,24 @@ static void SignRequest( const std::string &request,
                          const std::string &key, 
                          std::string &out);
 
+static void SignRequest(const std::string& url,
+                        const std::string& request_method,
+                        const std::string& header_type,
+                        const std::string& nonce,
+                        const time_t ts,
+                        const std::string& mac_id,
+                        const std::string& mac_key,
+                        const std::string& app_id,
+                        std::string& out);
+
+static void NormalizeRequest(const std::string& url,
+                             const std::string& request_method,
+                             const std::string& header_type,
+                             const std::string& nonce,
+                             const time_t ts,
+                             const std::string& app_id,
+                             std::string& out);
+
 static void GenerateHmacSha256(std::string &out);
 
 static void ExtractHostAndPath( const std::string& url, 
@@ -621,6 +639,28 @@ static void BuildRequestHeaderNotChunked(const std::string& requestMethod,
 static void BuildBodyForm( const std::string& post_type,
                            const std::string& body, 
                            const std::string& boundary, 
+                           std::string& out) {
+    std::ostringstream bodystream;
+    bodystream <<"\r\n--" << boundary << "\r\n";
+    char szSize[256] = {'\0'};
+    snprintf(szSize, 256, "%lu", body.size());
+    bodystream << "Content-Disposition: form-data; name=\"post\"; filename=\"post.json\"\r\n";
+    bodystream << "Content-Length: " << szSize << "\r\n";
+    bodystream << "Content-Type: " << cnst::g_content_type_header << ";";
+    if(!post_type.empty()) {
+        bodystream << " type=\"";
+        bodystream << post_type;
+        bodystream << "\""; 
+    }
+    bodystream << "\r\n";
+    bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
+    bodystream << body;
+    out = bodystream.str();
+}
+
+static void BuildBodyForm( const std::string& post_type,
+                           const std::string& body, 
+                           const std::string& boundary, 
                            std::ostream& bodystream) {
     bodystream <<"\r\n--" << boundary << "\r\n";
     char szSize[256] = {'\0'};
@@ -689,6 +729,19 @@ static void ChunkPart(boost::asio::streambuf& part, std::ostream& outstream) {
     outstream << "\r\n" << reqbuf.str() << "\r\n";//\r\n0\r\n\r\n";
 }
 
+static void ChunkString(const std::string& to_be, std::string& chunked) {
+    std::ostringstream oss;
+    oss << std::hex << to_be.size();
+    oss << "\r\n" << to_be << "\r\n";
+    chunked = oss.str();
+}
+
+static void ChunkEndString(const std::string& to_be, std::string& chunked) {
+    std::ostringstream oss;
+    oss << std::hex << to_be.size();
+    oss << "\r\n" << to_be<< "\r\n0\r\n\r\n";
+    chunked = oss.str();
+}
 static void ChunkEnd(boost::asio::streambuf& part, std::ostream& outstream) {
     std::ostringstream reqbuf;
     reqbuf << &part;
@@ -821,6 +874,67 @@ static void BuildAuthHeader(const std::string& url,
     out.append(appid);
     out.append("\"");
 
+}
+
+static void SignRequest(const std::string& url,
+                        const std::string& request_method,
+                        const std::string& header_type,
+                        const std::string& nonce,
+                        const time_t ts,
+                        const std::string& mac_id,
+                        const std::string& mac_key,
+                        const std::string& app_id,
+                        std::string& out) {
+
+    std::string normalized_string;
+    NormalizeRequest(url, request_method, header_type, nonce, ts, app_id, normalized_string);
+    std::cout << " NORMALIZED STRING : " << normalized_string << std::endl;
+    SignRequest(normalized_string, mac_key, out);
+}
+
+static void NormalizeRequest(const std::string& url,
+                             const std::string& request_method,
+                             const std::string& header_type,
+                             const std::string& nonce,
+                             const time_t ts,
+                             const std::string& app_id,
+                             std::string& out) {
+    char tb[256] = {'\0'};
+    snprintf(tb, (sizeof(time_t)*256), "%ld", ts);
+
+    Url u(url);
+    std::string port;
+    if(u.HasPort())
+        port = u.port();
+    else {
+        if(u.scheme() == std::string("https"))
+            port.append("443");
+        else
+            port.append("80");
+    }
+
+    // TODO :: abstract string normalization
+    std::string requestString;
+    requestString.append(header_type); //"hawk.1.header\n"); // type
+    requestString.append("\n");
+    requestString.append(tb); // time 
+    requestString.append("\n");
+    requestString.append(nonce); // nonce 
+    requestString.append("\n");
+    requestString.append(request_method); // method
+    requestString.append("\n");
+    std::string uri;
+    u.GetRequestURI(uri);
+    requestString.append(uri); // request uri
+    requestString.append("\n");
+    requestString.append(u.host()); // host
+    requestString.append("\n");
+    requestString.append(port); // port
+    requestString.append("\n");
+    requestString.append(app_id); // appid
+    requestString.append("\n\n");
+
+    out = requestString;
 }
 
 static void GenerateNonce(std::string &out) {

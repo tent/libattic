@@ -81,12 +81,12 @@ int AtticService::UploadFile(const std::string& filepath) {
     return status;
 }
 
-int AtticService::UploadPublicFile(const std::string& filepath) {
+int AtticService::UploadLimitedFile(const std::string& filepath, TaskDelegate* del) {
     int status = ret::A_OK;
     if(running_) {
         if(IsMasterKeyValid()) { // Doesn't matter for public, but lets make sure the user
                                  // has logged in anyway.
-            task_manager_->UploadPublicFile(filepath, NULL);
+            task_manager_->UploadPublicFile(filepath, del);
         }
         else
             status = ret::A_FAIL_INVALID_MASTERKEY;

@@ -43,7 +43,7 @@ void MetaTask::RunTask() {
                 if(callback_delegate() && 
                    callback_delegate()->type() == TaskDelegate::FILEHISTORY) {
                     std::cout<<" FILE HISTORY CALLBACK " << std::endl;
-                    static_cast<HistoryCallback*>(callback_delegate())->Callback(0,
+                    static_cast<HistoryDelegate*>(callback_delegate())->Callback(0,
                                                                             serialized.c_str(), 
                                                                             serialized.size(), 
                                                                             tree.node_count());
