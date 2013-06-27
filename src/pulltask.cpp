@@ -88,7 +88,6 @@ int PullTask::PullFile(const std::string& filepath) {
     pullcontext.SetConfigValue("entity", entity);
 
     pullcontext.PushBack(&gfs);
-
     status = pullcontext.ExecuteAll();
 
     return status; 

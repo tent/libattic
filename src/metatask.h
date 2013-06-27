@@ -9,7 +9,11 @@
 namespace attic {
 
 class MetaTask : public TentTask {
-    int RetrieveFileInfoHistory(const std::string& post_id, PostTree& out);
+    void DownloadFileToLocation(const std::string& post_id, 
+                                const std::string& version,
+                                const std::string& folderpath);
+    void RetrieveFileHistory(const std::string& filepath);
+    int RetrieveFileInfoTree(const std::string& post_id, PostTree& out);
 public:
     MetaTask(FileManager* fm, 
              CredentialsManager* cm,
@@ -24,7 +28,6 @@ public:
     virtual void OnFinished() {}
 
     void RunTask();
-
 };
 
 } // Namespace
