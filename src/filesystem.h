@@ -27,6 +27,7 @@ static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
 static void CreateDirectoryTreeForFolder(const std::string& folderpath);
 static bool CheckFilepathExists(const std::string& filepath);
+static bool IsDirectory(const std::string& folderpath);
 static bool DeleteFile(const std::string& filepath);
 static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out);
 
@@ -179,6 +180,12 @@ static void CreateDirectoryTree(const std::string& filepath) {
 
 static bool CheckFilepathExists(const std::string& filepath) {
     if(boost::filesystem::exists(filepath))
+        return true;
+    return false;
+}
+
+static bool IsDirectory(const std::string& folderpath) {
+    if(boost::filesystem::exists(folderpath) && boost::filesystem::is_directory(folderpath))
         return true;
     return false;
 }
