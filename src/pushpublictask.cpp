@@ -32,15 +32,21 @@ PushPublicTask::~PushPublicTask() {}
 void PushPublicTask::RunTask() {
     std::cout<<" starting push public task " << std::endl;
     std::string filepath = TentTask::filepath();
+    std::cout<<" creating public download link for : " << filepath << std::endl;
     int status = ret::A_FAIL_PATH_DOESNT_EXIST;
     if(fs::CheckFilepathExists(filepath)) {
+        // Add a filesize check, limit the allowable filesize
+
+        std::string link_out, error_str;
         DownloadPost dlp;
         status = PushFile(filepath, dlp);
         if(status == ret::A_OK) {
-            std::string link_out;
             GeneratePublicLink(dlp, link_out);
-            CallbackWithUrl(ret::A_OK, link_out, "");
         }
+        else {
+            error_str += "there was an error, TODO :: write more error string";
+        }
+        CallbackWithUrl(status, link_out, error_str);
     }
     //Callback(status, filepath);
     SetFinishedState();
@@ -48,11 +54,9 @@ void PushPublicTask::RunTask() {
 }
 
 int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
-
     // TODO :: Optimize this with a file streamer,
     // abstract more of the parts and chunked encoding
     int status = ret::A_OK;
-
     // Create Download Post
     DownloadPost dlp; 
     if(GenerateDownloadPost(filepath, dlp)) {
@@ -127,7 +131,17 @@ int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
         boost::asio::streambuf c_att_request;
         std::ostream c_att_request_stream(&c_att_request);
         c_att_request_stream << a_form_chunked;
-        socket->Write(c_att_request);
+        try {
+            socket->Write(c_att_request);
+        }
+        catch(std::exception& e) {
+            std::cout<<" EXCEPTION 0.1: " << e.what() << std::endl;
+            Response fail;
+            socket->InterpretResponse(fail);
+            std::cout<<"FAIL REPSONSE : " << fail.code << std::endl;
+            std::cout<<"FAIL HEADER : " << fail.header.asString() << std::endl;
+            std::cout<<"FAIL BODY : " << fail.body << std::endl;
+        }
 
         WriteOnceFileToConnection(filepath, socket);
 
@@ -143,8 +157,17 @@ int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
         std::ostream end_request_stream(&end_request);
         end_request_stream << chunk_end;
 
-        socket->Write(end_request);
-
+        try {
+            socket->Write(end_request);
+        }
+        catch (std::exception& e) {
+            std::cout<<" EXCEPTION 0.1: " << e.what() << std::endl;
+            Response fail;
+            socket->InterpretResponse(fail);
+            std::cout<<"FAIL REPSONSE : " << fail.code << std::endl;
+            std::cout<<"FAIL HEADER : " << fail.header.asString() << std::endl;
+            std::cout<<"FAIL BODY : " << fail.body << std::endl;
+        }
         std::cout<<" reading response " << std::endl;
         Response resp;
         socket->InterpretResponse(resp);
@@ -188,40 +211,40 @@ void PushPublicTask::WriteOnceFileToConnection(const std::string& filepath, Conn
 }
 
 void PushPublicTask::WriteFileToConnection(const std::string& filepath, Connection* con) {
-        std::ifstream ifs;
-        ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
-        if(ifs.is_open()) {
-            ifs.seekg (0, std::ifstream::end);
-            unsigned int filesize = ifs.tellg();
-            ifs.seekg (0, std::ifstream::beg);
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ifstream::end);
+        unsigned int filesize = ifs.tellg();
+        ifs.seekg (0, std::ifstream::beg);
 
-            unsigned int step = 4000000;
-            unsigned int total_read = 0;
-            while(total_read < filesize){
-                unsigned int size = 0;
-                if(total_read + step < filesize)
-                    size = step;
-                else
-                    size = filesize - total_read;
+        unsigned int step = 4000000;
+        unsigned int total_read = 0;
+        while(total_read < filesize){
+            unsigned int size = 0;
+            if(total_read + step < filesize)
+                size = step;
+            else
+                size = filesize - total_read;
 
-                char* buffer = new char[size];
-                ifs.read(buffer, size);
-                total_read += size;
+            char* buffer = new char[size];
+            ifs.read(buffer, size);
+            total_read += size;
 
-                std::string buf;
-                buf.append(buffer, size);
+            std::string buf;
+            buf.append(buffer, size);
 
-                delete[] buffer;
-                buffer = NULL;
+            delete[] buffer;
+            buffer = NULL;
 
-                boost::asio::streambuf binbuf;
-                std::ostream part(&binbuf);
-                part << buf;
-                std::cout<<" writing : " << buf.size() <<" bytes "<< std::endl;
-                con->Write(binbuf);
-            }
-            ifs.close();
+            boost::asio::streambuf binbuf;
+            std::ostream part(&binbuf);
+            part << buf;
+            std::cout<<" writing : " << buf.size() <<" bytes "<< std::endl;
+            con->Write(binbuf);
         }
+        ifs.close();
+    }
 }
 
 bool PushPublicTask::GenerateDownloadPost(const std::string& filepath, DownloadPost& out) {
