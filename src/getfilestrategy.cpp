@@ -29,19 +29,76 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                              CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
     status = InitInstance(pFileManager, pCredentialsManager);
-
-    post_path_ = GetConfigValue("post_path");
-    std::string filepath = GetConfigValue("filepath");
-    std::string post_attachment = GetConfigValue("post_attachment");
-    std::string entity = GetConfigValue("entity");
-    std::cout<<" starting get file strategy ... for :" << filepath << std::endl;
-
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
+
+    bool sync_at_post = false; // sync a specific post version, default off
+    post_path_ = GetConfigValue("post_path");
+    post_attachment_ = GetConfigValue("post_attachment");
+    entity_ = GetConfigValue("entity");
+
+    if(HasConfigValue("sync_at_post")) {
+        std::string sap = GetConfigValue("sync_at_post");
+        if(sap == "true")
+            sync_at_post = true;
+    }
+
+    std::cout<<" configs : " << GetAllConfigs() << std::endl;
+
     // Make sure there is a destination before we actually pull the file
     // Validate the corresponding folder posts exist in the cache 
     //  - otherwise pull them, 
-    //
 
+    if(!sync_at_post) {
+        std::string filepath = GetConfigValue("filepath");
+        status = SyncFile(filepath);
+    }
+    else {
+        std::string post_id = GetConfigValue("post_id");
+        std::string version = GetConfigValue("version");
+        std::string destination_folder = GetConfigValue("destination_folder");
+        status = SyncFilePostAtVersion(post_id,
+                                       version,
+                                       destination_folder);
+    }
+
+
+    std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
+    return status;
+}
+
+int GetFileStrategy::SyncFilePostAtVersion(const std::string& post_id, 
+                                           const std::string& version,
+                                           const std::string& destination) {
+    int status = ret::A_OK;
+    // Validate destination folder
+    if(fs::IsDirectory(destination)) {
+        // Retrieve Post at Version
+        FilePost fp;
+        status = RetrieveFilePost(post_id, version, fp);
+        if(status == ret::A_OK) {
+            // Retrieve file credentials
+            Credentials file_cred;
+            status = ExtractCredentials(fp, file_cred);
+            if(status == ret::A_OK) {
+                std::string mk;
+                GetMasterKey(mk);
+                FileHandler fh(file_manager_);
+                FileInfo fi;
+                fh.DeserializeIntoFileInfo(fp, mk, fi);
+                // Construct file
+                status = ConstructFile(fi, file_cred, destination);
+            }
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
+    }
+
+    return status;
+}
+
+int GetFileStrategy::SyncFile(const std::string& filepath) {
+    int status = ret::A_OK;
     if(!filepath.empty()) { 
         FileHandler fi_hdlr(file_manager_);
         FolderHandler fl_hdlr(file_manager_);
@@ -49,7 +106,10 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
             // Validate folderpath
-            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), entity, post_path_, access_token_)) {
+            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), 
+                                           entity_, 
+                                           post_path_, 
+                                           access_token_)) {
                 std::ostringstream err;
                 err << " failed to validate folder path" << std::endl;
                 log::LogString("gfs_84195", err.str());
@@ -90,11 +150,8 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 status = ExtractCredentials(meta_post, file_cred);
                 if(status == ret::A_OK) {
                     if(!file_cred.key_empty()) {
-                        // put file posts in order
-                        std::string destination;
-                        ConstructFilepath(fi, folder, destination);
                         // pull chunks
-                        status = ConstructFile(fi, file_cred, destination);
+                        status = ConstructFile(fi, file_cred);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache 
                             // entries for them
@@ -119,11 +176,9 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     else {
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     }
-
-    std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
     return status;
 }
- 
+
 int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) { 
     int status = ret::A_OK;
     std::string posturl;
@@ -132,6 +187,21 @@ int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out)
     // Get Metadata post
     PostHandler<FilePost> ph(access_token_);
     status = ph.Get(posturl, NULL, out);
+    return status;
+}
+
+int GetFileStrategy::RetrieveFilePost(const std::string& post_id, 
+                                      const std::string& version, 
+                                      FilePost& out) {
+    int status = ret::A_OK;
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+
+    UrlParams params;
+    params.AddValue("version", version);
+
+    PostHandler<FilePost> ph(access_token_);
+    status = ph.Get(posturl, &params, out);
     return status;
 }
 
@@ -181,7 +251,110 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
 int GetFileStrategy::ConstructFile(FileInfo& fi,
                                    const Credentials& file_cred,
-                                   const std::string& destination_path) {
+                                   const std::string& destination_folder) {
+    typedef std::map<unsigned int, ChunkInfo> ChunkList;
+    int status = ret::A_OK;
+    if(fs::IsDirectory(destination_folder)){
+        std::string temp_path;
+        std::string full_path;
+        ConstructFilepath(fi, full_path);
+        event::RaiseEvent(event::Event::PULL, event::Event::START, full_path, NULL);
+
+        FileHandler fh(file_manager_);
+        fh.GetTemporaryFilepath(fi, temp_path);
+
+        std::ofstream ofs;
+        ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+        if(ofs.is_open()) {
+            // Get all chunk credentials
+            // move them into a map, key position value chunk info
+            // interate through them using the digest against the attachemnts endpoint
+            // construct
+            FileInfo::ChunkMap* chunk_map = fi.GetChunkInfoList();
+            if(chunk_map->size()) {
+                std::cout<<" CHUNK MAP SIZE : " << chunk_map->size();
+                ChunkList chunk_list;
+                FileInfo::ChunkMap::iterator map_itr = chunk_map->begin();
+                for(;map_itr!=chunk_map->end(); map_itr++) {
+                    std::cout<<" \tchunk name : " << map_itr->second.chunk_name() << std::endl;
+                    std::cout<<" \tpushing back position : " << map_itr->second.position() << std::endl;
+                    chunk_list[map_itr->second.position()] = map_itr->second;
+                }
+                std::cout<<" CHUNK LIST SIZE : " << chunk_list.size() << std::endl;
+                for(unsigned int i=0; i<chunk_list.size(); i++) {
+                    ChunkList::iterator itr = chunk_list.find(i);
+                    if(itr!= chunk_list.end()) {
+                        std::cout<<" FOUND CHUNK # : " << i << std::endl;
+                        // Get attachment
+                        std::string attachment_path;
+                        utils::FindAndReplace(post_attachment_,
+                                              "{digest}",
+                                              itr->second.digest(),
+                                              attachment_path);
+                        std::cout<<" attachment path : " << attachment_path << std::endl;
+                        std::string buffer;
+                        status = RetrieveAttachment(attachment_path, buffer);
+                        if(status == ret::A_OK) {
+                            std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
+                            std::string chunk;
+                            status = TransformChunk(&itr->second, file_cred.key(), buffer, chunk);
+                            if(status == ret::A_OK) {
+                                // Append to file 
+                                ofs.write(chunk.c_str(), chunk.size());
+                            }
+                            else {
+                                std::cout<<" FAILED TRANSFORM " << std::endl;
+                                std::cout<<" STATUS : "<< status << std::endl;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        status = ret::A_FAIL_MISSING_CHUNK;
+                        break;
+                    }
+                }
+            }
+            else {
+                status = ret::A_FAIL_ZERO_CHUNK_COUNT;
+            }
+            ofs.close();
+        }
+
+        if(status == ret::A_OK) {
+            // get latest just in case the cache was updated
+            std::string path = destination_folder;
+            utils::AppendTrailingSlash(path);
+            path += fi.filename();
+            if(status == ret::A_OK) {
+                try {
+                    std::cout<<" Moving file to : " << path << std::endl;
+                    fs::MoveFile(temp_path, path);
+                }
+                catch(std::exception &e) {
+                    log::LogException("getfile_321092409823", e);    
+                }
+            }
+            else {
+                std::ostringstream err;
+                err <<" Failed to move file to path : " << path << std::endl;
+                log::LogString("getfile_98512", err.str());
+                status = ret::A_FAIL_MOVE_PATH;
+            }
+        }
+
+        // delete temp file 
+        if(fs::CheckFilepathExists(temp_path))
+            fs::DeleteFile(temp_path);
+        event::RaiseEvent(event::Event::PULL, event::Event::DONE, full_path, NULL);
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
+    }
+    return status;
+}
+
+int GetFileStrategy::ConstructFile(FileInfo& fi, const Credentials& file_cred) {
     typedef std::map<unsigned int, ChunkInfo> ChunkList;
     int status = ret::A_OK;
 
@@ -211,14 +384,13 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
                 chunk_list[map_itr->second.position()] = map_itr->second;
             }
             std::cout<<" CHUNK LIST SIZE : " << chunk_list.size() << std::endl;
-            std::string post_attachment = GetConfigValue("post_attachment");
             for(unsigned int i=0; i<chunk_list.size(); i++) {
                 ChunkList::iterator itr = chunk_list.find(i);
                 if(itr!= chunk_list.end()) {
                     std::cout<<" FOUND CHUNK # : " << i << std::endl;
                     // Get attachment
                     std::string attachment_path;
-                    utils::FindAndReplace(post_attachment,
+                    utils::FindAndReplace(post_attachment_,
                                           "{digest}",
                                           itr->second.digest(),
                                           attachment_path);
@@ -259,14 +431,13 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
         std::string path;
         status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
-            if(!destination_path.empty())
-                try {
-                    std::cout<<" Moving file to : " << path << std::endl;
-                    fs::MoveFile(temp_path, path);
-                }
-                catch(std::exception &e) {
-                    log::LogException("getfile_32987523", e);    
-                }
+            try {
+                std::cout<<" Moving file to : " << path << std::endl;
+                fs::MoveFile(temp_path, path);
+            }
+            catch(std::exception &e) {
+                log::LogException("getfile_32987523", e);    
+            }
         }
         else {
             std::ostringstream err;
