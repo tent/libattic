@@ -237,6 +237,30 @@ int AtticService::GetFileHistory(const std::string& filepath, TaskDelegate* cb) 
     return status;
 }
 
+int AtticService::DeletePostVersion(const std::string& post_id, 
+                                    const std::string& version,
+                                    TaskDelegate* cb) {
+    int status = ret::A_OK;
+    return status;
+}
+
+int AtticService::RestorePostVersion(const std::string& post_id, const std::string& version) {
+    int status = ret::A_OK;
+    return status;
+}
+
+int AtticService::SaveVersionToLocation(const std::string& post_id, 
+                                        const std::string& version, 
+                                        const std::string& folderpath,
+                                        TaskDelegate* cb) {
+    int status = ret::A_OK;
+    if(running_)
+        task_manager_->DownloadFileToDirectory(post_id, version, folderpath, cb);
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
 void AtticService::LoadConfigValues() {
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigWorkingDir, working_dir_);
     ConfigManager::GetInstance()->GetValue(cnst::g_szConfigConfigDir, config_dir_);

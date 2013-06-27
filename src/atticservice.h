@@ -65,6 +65,14 @@ public:
 
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
+    int DeletePostVersion(const std::string& post_id, 
+                          const std::string& version, 
+                          TaskDelegate* cb);
+    int RestorePostVersion(const std::string& post_id, const std::string& version);
+    int SaveVersionToLocation(const std::string& post_id, 
+                              const std::string& version, 
+                              const std::string& folderpath,
+                              TaskDelegate* cb);
 
     int RegisterPassphrase(const std::string& pass);
     int EnterPassphrase(const std::string& pass);
