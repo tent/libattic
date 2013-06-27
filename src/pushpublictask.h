@@ -15,6 +15,7 @@ class PushPublicTask : public TentTask {
     bool GenerateDownloadPost(const std::string& filepath, DownloadPost& out);
     void WriteFileToConnection(const std::string& filepath, Connection* con);
     void WriteOnceFileToConnection(const std::string& filepath, Connection * con);
+    bool ReadInFile(const std::string& filepath, std::string& out);
 
     void GeneratePublicLink(DownloadPost& in, std::string& link_out);
 

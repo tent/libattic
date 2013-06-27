@@ -124,9 +124,13 @@ int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
 
         std::string a_form, a_form_chunked;
         netlib::BuildAttachmentForm(dlp.filename(), dlp.file_size(), boundary, 0, a_form);
+        std::string file_buffer;
+        ReadInFile(filepath, file_buffer);
+        a_form += file_buffer;
+
         
         netlib::ChunkString(a_form, a_form_chunked);
-        std::cout<<" attachemnt form :\n\n " << a_form << std::endl;
+        //std::cout<<" attachemnt form :\n\n " << a_form << std::endl;
 
         boost::asio::streambuf c_att_request;
         std::ostream c_att_request_stream(&c_att_request);
@@ -143,7 +147,7 @@ int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
             std::cout<<"FAIL BODY : " << fail.body << std::endl;
         }
 
-        WriteOnceFileToConnection(filepath, socket);
+        //WriteOnceFileToConnection(filepath, socket);
 
         std::cout<<" ending request " << std::endl;
         std::ostringstream end;
@@ -185,6 +189,26 @@ int PushPublicTask::PushFile(const std::string& filepath, DownloadPost& out) {
     }
 
     return status;
+}
+
+bool PushPublicTask::ReadInFile(const std::string& filepath, std::string& out) {
+    bool ret = false;
+    std::ifstream ifs;
+    ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ifstream::end);
+        unsigned int filesize = ifs.tellg();
+        ifs.seekg (0, std::ifstream::beg);
+
+        char* buffer = new char[filesize];
+        ifs.read(buffer, filesize);
+        out.append(buffer, filesize);
+
+        delete[] buffer;
+        buffer = NULL;
+        ret = true;
+    }
+    return ret;
 }
 
 void PushPublicTask::WriteOnceFileToConnection(const std::string& filepath, Connection * con) {

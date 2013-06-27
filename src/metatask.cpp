@@ -77,8 +77,11 @@ void MetaTask::DownloadFileToLocation(const std::string& post_id,
     pullcontext.PushBack(&gfs);
     int status = pullcontext.ExecuteAll();
 
-    // Construct credentials
-    // Constrcut file
+    // callback
+    if(callback_delegate() &&
+       callback_delegate()->type() == TaskDelegate::REQUEST) {
+
+    }
 }
 
 void MetaTask::RetrieveFileHistory(const std::string& filepath) {
