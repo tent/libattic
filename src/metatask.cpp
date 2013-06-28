@@ -4,6 +4,8 @@
 #include "filehandler.h"
 #include "treehandler.h"
 #include "getfilestrategy.h"
+#include "netlib.h"
+#include "posthandler.h"
 
 namespace attic { 
 
@@ -41,17 +43,72 @@ void MetaTask::RunTask() {
         std::string post_id, version, folderpath;
         context_.get_value("post_id", post_id);         
         context_.get_value("version", version);         
-        context_.get_value("folderpath", folderpath);   
-        DownloadFileToLocation(post_id, version, folderpath);
+        context_.get_value("filepath", filepath);   
+        DownloadFileToLocation(post_id, version, filepath);
+    }
+    else if(operation == "DELETE") {
+        std::string post_id, version, folderpath;
+        context_.get_value("post_id", post_id);
+        context_.get_value("version", version);
+        DeletePost(post_id, version);
+    }
+    else if(operation == "NEW_HEAD") {
+        std::string post_id, new_version;
+        context_.get_value("post_id", post_id);
+        context_.get_value("version", new_version); // version to be new head
     }
     
     //Callback(status, operation);
     SetFinishedState();
 }
 
+void MetaTask::MakePostNewHead(const std::string& post_id, const std::string& version) {
+    std::string msg, error_str; // callback msg and error
+    // Retrieve Post at version
+    std::string post_path = GetPostPath();
+    std::string post_url;
+    utils::FindAndReplace(post_path, "{post}", post_id, post_url);
+
+    UrlParams params;
+    params.AddValue("version", version);
+
+    PostHandler<Post> ph(access_token());
+    Post version_post;
+    int status = ph.Get(post_url, &params, version_post);
+    if(status == ret::A_OK) {
+        status = ph.Put(post_url, NULL, version_post);
+    }
+
+    //callback
+    if(callback_delegate() &&
+       callback_delegate()->type() == TaskDelegate::REQUEST) {
+        static_cast<RequestDelegate*>(callback_delegate())->Callback(status,
+                                                                     msg.c_str(),
+                                                                     error_str.c_str());
+    }
+}
+
+void MetaTask::DeletePost(const std::string& post_id, const std::string& version) {
+    std::string post_path = GetPostPath();
+    std::string posturl;
+    utils::FindAndReplace(post_path, "{post}", post_id, posturl);
+
+    UrlParams params;
+    params.AddValue("version", version);
+
+    Response resp;
+    int status = netlib::HttpDelete(posturl, &params, &access_token(), resp);
+    if(status == ret::A_OK) {
+
+    }
+}
+
 void MetaTask::DownloadFileToLocation(const std::string& post_id, 
                                       const std::string& version,
-                                      const std::string& folderpath) {
+                                      const std::string& filepath) {
+
+    // Extract folderpath
+    // make sure it exists
     GetFileStrategy gfs;
     HttpStrategyContext pullcontext(file_manager(), credentials_manager());
 
@@ -71,16 +128,19 @@ void MetaTask::DownloadFileToLocation(const std::string& post_id,
     pullcontext.SetConfigValue("entity", entity);
     pullcontext.SetConfigValue("post_id", post_id);
     pullcontext.SetConfigValue("version", version);
-    pullcontext.SetConfigValue("destination_folder", folderpath);
+    pullcontext.SetConfigValue("destination_folder", filepath);
     pullcontext.SetConfigValue("sync_at_post", "true");
 
     pullcontext.PushBack(&gfs);
     int status = pullcontext.ExecuteAll();
 
+    std::string msg, error_str;
     // callback
     if(callback_delegate() &&
        callback_delegate()->type() == TaskDelegate::REQUEST) {
-
+        static_cast<RequestDelegate*>(callback_delegate())->Callback(status,
+                                                                     msg.c_str(),
+                                                                     error_str.c_str());
     }
 }
 

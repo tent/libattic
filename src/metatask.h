@@ -11,9 +11,12 @@ namespace attic {
 class MetaTask : public TentTask {
     void DownloadFileToLocation(const std::string& post_id, 
                                 const std::string& version,
-                                const std::string& folderpath);
+                                const std::string& filepath);
     void RetrieveFileHistory(const std::string& filepath);
     int RetrieveFileInfoTree(const std::string& post_id, PostTree& out);
+
+    void DeletePost(const std::string& post_id, const std::string& version);
+    void MakePostNewHead(const std::string& post_id, const std::string& version);
 public:
     MetaTask(FileManager* fm, 
              CredentialsManager* cm,

@@ -93,7 +93,7 @@ int RestoreVersion(const char* szPostId, const char* szVersion);
 // to file
 int SaveVersion(const char* szPostId, 
                 const char* szVersion, 
-                const char* szFolderpath,
+                const char* szFilepath,
                 void(*callback)(int, const char*, const char*));
 
 // Pause / Resume polling

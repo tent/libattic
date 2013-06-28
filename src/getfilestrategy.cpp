@@ -56,6 +56,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
         std::string post_id = GetConfigValue("post_id");
         std::string version = GetConfigValue("version");
         std::string destination_folder = GetConfigValue("destination_folder");
+        std::string filepath = GetConfigValue("filepath");
         status = SyncFilePostAtVersion(post_id,
                                        version,
                                        destination_folder);

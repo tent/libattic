@@ -224,13 +224,13 @@ void TaskManager::GetFileHistory(const std::string& filepath, TaskDelegate* del)
 }
 void TaskManager::DownloadFileToDirectory(const std::string& post_id, 
                                           const std::string& version, 
-                                          const std::string& folderpath,
+                                          const std::string& filepath,
                                           TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("operation", "DOWNLOAD");
     tc.set_value("post_id", post_id);
     tc.set_value("version", version);
-    tc.set_value("folderpath", folderpath);
+    tc.set_value("filepath", filepath);
     tc.set_type(Task::META);
     tc.set_delegate(del);
     PushContextBack(tc);

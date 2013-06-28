@@ -60,7 +60,7 @@ public:
     void GetFileHistory(const std::string& filepath, TaskDelegate* del);
     void DownloadFileToDirectory(const std::string& post_id, 
                                  const std::string& version, 
-                                 const std::string& folderpath,
+                                 const std::string& filepath,
                                  TaskDelegate* del);
 
     // Service Tasks

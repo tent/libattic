@@ -143,14 +143,14 @@ int RestoreVersion(const char* szPostId, const char* szVersion) {
 
 int SaveVersion(const char* szPostId, 
                 const char* szVersion, 
-                const char* szFolderpath,
+                const char* szFilepath,
                 void(*callback)(int, const char*, const char*)) {
     if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
     attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
-    return attic_service.SaveVersionToLocation(szPostId, szVersion, szFolderpath, del);
+    return attic_service.SaveVersionToLocation(szPostId, szVersion, szFilepath, del);
 }
 
 int RegisterPassphrase(const char* szPass) {

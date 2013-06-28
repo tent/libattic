@@ -251,11 +251,11 @@ int AtticService::RestorePostVersion(const std::string& post_id, const std::stri
 
 int AtticService::SaveVersionToLocation(const std::string& post_id, 
                                         const std::string& version, 
-                                        const std::string& folderpath,
+                                        const std::string& filepath,
                                         TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->DownloadFileToDirectory(post_id, version, folderpath, cb);
+        task_manager_->DownloadFileToDirectory(post_id, version, filepath, cb);
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
