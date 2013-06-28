@@ -18,7 +18,7 @@ void AppPost::Serialize(Json::Value& root) {
     jsn::SerializeVector(post_types_["write"], write_types);
     posttype["read"] = read_types;
     posttype["write"] = write_types;
-    set_content("post_types", posttype);
+    set_content("post_types", posttype); // TODO :: post_types now changes to types
 
     Post::Serialize(root);
 }
@@ -34,7 +34,7 @@ void AppPost::Deserialize(Json::Value& root) {
     redirect_uri_ = redirect_uri.asString();
 
     Json::Value posttype(Json::objectValue);
-    get_content("post_types", posttype);
+    get_content("post_types", posttype); // TODO :: post_types now changes to types
 
     jsn::DeserializeIntoVector(posttype["read"], post_types_["read"]);
     jsn::DeserializeIntoVector(posttype["write"], post_types_["write"]);
