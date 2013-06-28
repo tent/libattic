@@ -93,11 +93,10 @@ void MetaTask::DeletePost(const std::string& post_id, const std::string& version
     std::string posturl;
     utils::FindAndReplace(post_path, "{post}", post_id, posturl);
 
-    UrlParams params;
-    params.AddValue("version", version);
-
-    Response resp;
-    int status = netlib::HttpDelete(posturl, &params, &access_token(), resp);
+    // Method will handle appending verison to params, any additional params may
+    // be passed
+    PostHandler<Post> ph(access_token());
+    int status = ph.Delete(posturl, version, NULL);
     if(status == ret::A_OK) {
 
     }
