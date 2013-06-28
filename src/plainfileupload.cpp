@@ -2,12 +2,14 @@
 
 #include "netlib.h"
 #include "envelope.h"
+#include "mimeconstants.h"
 
 namespace attic { 
 
 PlainFileUpload::PlainFileUpload(const AccessToken& at) {
     access_token_ = at;
     con_ = NULL;
+    LoadMimeTypes();
 }
 
 PlainFileUpload::~PlainFileUpload() {
@@ -17,9 +19,41 @@ PlainFileUpload::~PlainFileUpload() {
     }
 }
 
+void PlainFileUpload::LoadMimeTypes() {
+    std::stringstream ss(cnst::mime::mime_types);
+
+    std::string line;
+    while(std::getline(ss, line, '\n')) {
+        std::stringstream indv(line);
+        std::string elm;
+        std::string type;
+        while(std::getline(indv, elm, ' ')) {
+            if(elm.find("/") != std::string::npos)
+                type = elm;
+            else 
+                mime_map_[elm] = type;
+        }
+    }
+}
+
+void PlainFileUpload::DetermineContentType(const std::string& filepath, std::string& out) {
+    std::string type;
+    size_t pos = filepath.rfind(".");
+    if(pos != std::string::npos) {
+        type = filepath.substr(pos+1);
+    }
+
+    MimeMap::iterator itr = mime_map_.find(type);
+    if(itr != mime_map_.end())
+        out = itr->second;
+    else
+        out = "application/octet-stream";
+}
+    
 bool PlainFileUpload::Upload(const std::string& url,
                              const std::string& filepath,
                              DownloadPost& out) {
+
     // TODO ::
     // detect whether a file or folder
     // if file 
@@ -92,9 +126,12 @@ bool PlainFileUpload::UploadFile(const std::string& filepath,
     //Note* we are going to manually chunk encode this and then stream
     //      the file up to the server in one large chunk
     bool ret = false;
+    // Determine ContentType
+    std::string content_type;
+    DetermineContentType(filepath, content_type);
     // Build attachment form
     std::string attachment_form;
-    netlib::BuildAttachmentForm(filename, filesize, boundary_, 0, attachment_form);
+    netlib::BuildAttachmentForm(filename, filesize, boundary_, content_type, 0, attachment_form);
 
     std::cout<<" attachment form : " << attachment_form << std::endl;
 

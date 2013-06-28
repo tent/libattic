@@ -2,6 +2,7 @@
 #define PLAINFILEUPLOAD_H_
 #pragma once
 
+#include <map>
 #include <string>
 #include "connection.h"
 #include "accesstoken.h"
@@ -11,6 +12,8 @@ namespace attic {
 
 
 class PlainFileUpload {
+    void LoadMimeTypes();
+    void DetermineContentType(const std::string& filepath, std::string& out);
     bool BeginRequest();
     bool UploadPostBody(DownloadPost& out);
     bool UploadFile(const std::string& filepath,
@@ -31,6 +34,9 @@ public:
                 DownloadPost& out);
 
 private:
+    // key, extension, value mimetype
+    typedef std::map<std::string, std::string> MimeMap;
+    MimeMap mime_map_;
     AccessToken access_token_;
     std::string url_;
     std::string boundary_;

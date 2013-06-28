@@ -701,8 +701,11 @@ static void BuildAttachmentForm(const std::string& name,
 static void BuildAttachmentForm(const std::string& name, 
                                 const std::string& attachment_size,
                                 const std::string& boundary,
+                                const std::string& content_type,
                                 unsigned int attachmentnumber,
                                 std::string& out) {
+
+    // By defualt content type should be application/octet-stream
 
     char szAttachmentCount[256] = {'\0'};
     snprintf(szAttachmentCount, 256, "%d", attachmentnumber);
@@ -711,8 +714,7 @@ static void BuildAttachmentForm(const std::string& name,
     bodystream << "\r\n--" << boundary << "\r\n";
     bodystream << "Content-Disposition: form-data; name=\"attach[" << szAttachmentCount << "]\"; filename=\"" << name << "\"\r\n";
     bodystream << "Content-Length: " << attachment_size << "\r\n";
-    bodystream << "Content-Type: application/octet-stream ";
-    bodystream << "\r\n";
+    bodystream << "Content-Type: " << content_type << " \r\n";
     bodystream << "Content-Transfer-Encoding: binary\r\n\r\n";
     out = bodystream.str();
 }
