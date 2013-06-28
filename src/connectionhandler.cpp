@@ -186,7 +186,37 @@ int ConnectionHandler::HttpHead(const std::string& url,
     status = HttpRequest(local_url, request, out);
     return status;
 }
+int ConnectionHandler::HttpDelete(const std::string& url, 
+                                  const UrlParams* pParams,
+                                  const AccessToken* at, 
+                                  Response& out) {
+    int status = ret::A_OK;
+    std::string local_url = url;
+    if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
 
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(local_url, protocol, host, path);
+
+    std::string authheader;
+    if(at) {
+        netlib::BuildAuthHeader(local_url,
+                                "DELETE",
+                                at,
+                                authheader);
+    }
+
+    boost::asio::streambuf request;
+    std::ostream request_stream(&request);
+    request_stream << "DELETE " << path << " HTTP/1.1\r\n";
+    request_stream << "Host: " << host << "\r\n";
+    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+    if(!authheader.empty())
+        request_stream << "Authorization: " << authheader <<"\r\n";
+    request_stream << "Connection: close\r\n\r\n";
+
+    status = HttpRequest(local_url, request, out);
+    return status;
+}
 
 int ConnectionHandler::HttpRequest(const std::string& url, 
                                    boost::asio::streambuf& request,
