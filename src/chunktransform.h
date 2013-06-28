@@ -53,6 +53,16 @@ private:
     std::string finalized_data_;
 };
 
+/*
+ * Chunk Data composition v1
+ *  Format Version              : 1 byte
+ *  Uncompressed chunk len      : 4 bytes(byte array)
+ *  Compression Level           : 1 byte (0-9)
+ *  Iv len                      : 4 bytes (byte array)
+ *  Iv                          : (variable)
+ *  Data len                    : 4 bytes (byte array)
+ *  Data                        : (variable)
+ */
 
 } //namespace
 #endif

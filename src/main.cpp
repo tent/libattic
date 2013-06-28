@@ -45,8 +45,10 @@
 #include "fileroller.h"
 
 
+/*
 #define BUFFERSIZE 1000
 #include <b64/encode.h>
+*/
 
 // Temporary test, hooked up to localhost tent server
 /*
@@ -68,6 +70,25 @@ TEST(ATTIC_SERVICE, START_STOP)
 }
 */
 
+
+TEST(COMPRESS, MINIZ_COMPRESS_STRING) {
+    std::string test_string = "miniz.c employs several proven techniques and approaches used in my much more powerful (but slower and more complex) lossless lzham codec, and in my jpeg-compressor project. Specifically, miniz.c's linear-time Huffman codelength generator, the single switch-statement approach used to implement the decompressor as a single function coroutine, and its very fast Huffman code symbol unpacker are all loosely based off the implementations I wrote for these earlier projects. ";
+
+    std::string out;
+    attic::Compress cmp;
+    cmp.CompressString(test_string, out);
+
+    std::cout<<" ORIGINAL : " << test_string << std::endl;
+    std::cout<<" COMPRESSED : " << out << std::endl;
+
+    std::string dcmp;
+    cmp.DecompressString(out, test_string.size(), dcmp);
+
+    std::cout<<" DECOMPRESSED : " << dcmp << std::endl;
+
+
+
+}
 
 TEST(COMPRESS, COMPRESSSTRING) {
     std::string in("this is my test string it is a pretty decent test string");
@@ -112,6 +133,7 @@ TEST(CRYPTO, BASE32) {
     ASSERT_EQ(teststring, decoded);
 }
 
+/*
 TEST(CRYPTO, BASE64) {
     std::string teststring("this is my test string, that I'm going to base64 encode");
     std::string payload;
@@ -135,12 +157,13 @@ TEST(CRYPTO, BASE64) {
     //attic::crypto::Base64DecodeString(encoded, decoded);
     //ASSERT_EQ(teststring, decoded);
 }
+*/
 
+/*
 TEST(LIBB64, ENCODE) { 
     std::string teststring("this is my test string, that I'm going to base64 encode");
 
     std::string payload = teststring;
-    /*
     std::string payload;
     std::ifstream ifs;
     ifs.open("aho.pdf", std::ios::in | std::ios::binary);
@@ -156,7 +179,6 @@ TEST(LIBB64, ENCODE) {
         delete data;
         data = NULL;
     }
-    */
 
     base64::encoder e;
     std::istringstream str(payload);
@@ -171,6 +193,7 @@ TEST(LIBB64, ENCODE) {
     ASSERT_EQ(encoded, ostr.str());
 
 }
+*/
 
 TEST(CRYPTO, KEY_ENCRYPTION) {
 
