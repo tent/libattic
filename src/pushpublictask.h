@@ -10,15 +10,7 @@ namespace attic {
 class Connection;
 
 class PushPublicTask : public TentTask {
-    int PushFile(const std::string& filepath, DownloadPost& out);
-
-    bool GenerateDownloadPost(const std::string& filepath, DownloadPost& out);
-    void WriteFileToConnection(const std::string& filepath, Connection* con);
-    void WriteOnceFileToConnection(const std::string& filepath, Connection * con);
-    bool ReadInFile(const std::string& filepath, std::string& out);
-
     void GeneratePublicLink(DownloadPost& in, std::string& link_out);
-
     void CallbackWithUrl(int code, std::string url, std::string error) {
         if(context_.delegate()) {
             if(context_.delegate()->type() == TaskDelegate::REQUEST) {
