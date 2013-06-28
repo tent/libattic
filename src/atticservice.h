@@ -68,7 +68,9 @@ public:
     int DeletePostVersion(const std::string& post_id, 
                           const std::string& version, 
                           TaskDelegate* cb);
-    int RestorePostVersion(const std::string& post_id, const std::string& version);
+    int MakePostVersionNewHead(const std::string& post_id, 
+                               const std::string& version,
+                               TaskDelegate* cb);
     int SaveVersionToLocation(const std::string& post_id, 
                               const std::string& version, 
                               const std::string& filepath,

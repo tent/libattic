@@ -222,6 +222,7 @@ void TaskManager::GetFileHistory(const std::string& filepath, TaskDelegate* del)
     tc.set_delegate(del);
     PushContextBack(tc);
 }
+
 void TaskManager::DownloadFileToDirectory(const std::string& post_id, 
                                           const std::string& version, 
                                           const std::string& filepath,
@@ -231,6 +232,30 @@ void TaskManager::DownloadFileToDirectory(const std::string& post_id,
     tc.set_value("post_id", post_id);
     tc.set_value("version", version);
     tc.set_value("filepath", filepath);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::DeletePost(const std::string& post_id, 
+                             const std::string& version, 
+                             TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "DELETE");
+    tc.set_value("post_id", post_id);
+    tc.set_value("version", version);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::MakePostNewHead(const std::string& post_id, 
+                                  const std::string& version, 
+                                  TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "NEW_HEAD");
+    tc.set_value("post_id", post_id);
+    tc.set_value("version", version);
     tc.set_type(Task::META);
     tc.set_delegate(del);
     PushContextBack(tc);

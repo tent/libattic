@@ -222,7 +222,10 @@ int AtticService::Resume() {
 int AtticService::QueryManifest(TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->QueryManifest(cb);
+        if(IsMasterKeyValid())
+            task_manager_->QueryManifest(cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -231,7 +234,10 @@ int AtticService::QueryManifest(TaskDelegate* cb) {
 int AtticService::GetFileHistory(const std::string& filepath, TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->GetFileHistory(filepath, cb);
+        if(IsMasterKeyValid())
+            task_manager_->GetFileHistory(filepath, cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -241,11 +247,30 @@ int AtticService::DeletePostVersion(const std::string& post_id,
                                     const std::string& version,
                                     TaskDelegate* cb) {
     int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) 
+            task_manager_->DeletePost(post_id, version, cb);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
 }
 
-int AtticService::RestorePostVersion(const std::string& post_id, const std::string& version) {
+int AtticService::MakePostVersionNewHead(const std::string& post_id, 
+                                         const std::string& version,
+                                         TaskDelegate* cb){
     int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid())
+            task_manager_->MakePostNewHead(post_id, version, cb);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+
     return status;
 }
 
@@ -255,7 +280,10 @@ int AtticService::SaveVersionToLocation(const std::string& post_id,
                                         TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->DownloadFileToDirectory(post_id, version, filepath, cb);
+        if(IsMasterKeyValid())
+            task_manager_->DownloadFileToDirectory(post_id, version, filepath, cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;

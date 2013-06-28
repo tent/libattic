@@ -130,14 +130,20 @@ int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int
 int DeletePostVersion(const char* szPostId, 
                       const char* szVersion,
                       void(*callback)(int, const char*, const char*)) {
-    if(szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
-    if(szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
     attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
     return attic_service.DeletePostVersion(szPostId, szVersion, del);
 }
 
-int RestoreVersion(const char* szPostId, const char* szVersion) {
+int MakePostVersionNewHead(const char* szPostId, 
+                           const char* szVersion,
+                           void(*callback)(int, const char*, const char*)) {
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
     return -1;
 }
 

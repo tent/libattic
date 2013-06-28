@@ -62,6 +62,8 @@ public:
                                  const std::string& version, 
                                  const std::string& filepath,
                                  TaskDelegate* del);
+    void DeletePost(const std::string& post_id, const std::string& version, TaskDelegate* del);
+    void MakePostNewHead(const std::string& post_id, const std::string& version, TaskDelegate* del);
 
     // Service Tasks
     void QueryManifest(TaskDelegate* del);

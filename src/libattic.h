@@ -86,9 +86,12 @@ int CreateLimitedDownloadLink(const char* szFilepath,
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
 // permanently deletes a post at version id
 int DeletePostVersion(const char* szPostId, 
-                      const char* szVersion, void(*callback)(int, const char*, const char*));
+                      const char* szVersion, 
+                      void(*callback)(int, const char*, const char*));
 // Appoints version of post as the new head
-int RestoreVersion(const char* szPostId, const char* szVersion);
+int MakePostVersionNewHead(const char* szPostId, 
+                           const char* szVersion,
+                           void(*callback)(int, const char*, const char*));
 // Save a local copy, does not modify the most or add it to the local cache just a save 
 // to file
 int SaveVersion(const char* szPostId, 
