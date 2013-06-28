@@ -40,6 +40,11 @@ public:
                     const UrlParams* params,
                     T& out) = 0;
 
+    virtual int Delete(const std::string& post_url,
+                       const std::string& version,
+                       const UrlParams* params) = 0;
+                       
+
     void Flush() { response_.clear(); }
     const Response& response() const { return response_; }
 
@@ -94,7 +99,12 @@ public:
     int Get(const std::string& post_url,
             const UrlParams* params,
             T& out);
+
+    int Delete(const std::string& post_url,
+               const std::string& version,
+               const UrlParams* params);
 };
+
 
 template <class T>
 int PostHandlerTearDownImpl<T>::Post(const std::string& post_url,
@@ -178,6 +188,31 @@ int PostHandlerTearDownImpl<T>::Get(const std::string& post_url,
 }
 
 template <class T>
+int PostHandlerTearDownImpl<T>::Delete(const std::string& post_url,
+                                       const std::string& version,
+                                       const UrlParams* params) {
+    int status = ret::A_OK;
+    UrlParams p;
+    if(params)
+        p = *params;
+    if(!p.HasValue("version"))
+        p.AddValue("version", version);
+
+    netlib::HttpDelete(post_url, 
+                       &p, 
+                       PostHandlerImpl<T>::at_,
+                       PostHandlerImpl<T>::response_);
+    if(PostHandlerImpl<T>::response_.code == 200) {
+        Envelope env;
+        jsn::DeserializeObject(&env, PostHandlerImpl<T>::response_.body);
+    }
+    else{
+        status = ret::A_FAIL_NON_200;
+    }
+
+    return status;
+}
+template <class T>
 class PostHandlerCmImpl : public PostHandlerImpl<T> { 
 public:
     PostHandlerCmImpl() {}
@@ -194,6 +229,11 @@ public:
     int Get(const std::string& post_url,
             const UrlParams* params,
             T& out);
+
+    int Delete(const std::string& post_url,
+               const std::string& version,
+               const UrlParams* params);
+
 };
 
 template <class T>
@@ -276,6 +316,28 @@ int PostHandlerCmImpl<T>::Get(const std::string& post_url,
     }
     return status;
 }
+
+template <class T>
+int PostHandlerCmImpl<T>::Delete(const std::string& post_url,
+                                 const std::string& version,
+                                 const UrlParams* params) {
+    int status = ret::A_OK;
+    ConnectionHandler ch;
+    ch.HttpDelete(post_url,
+                  params,
+                  PostHandlerImpl<T>::at_,
+                  PostHandlerImpl<T>::response_);
+
+    if(PostHandlerImpl<T>::response_.code == 200) {
+        Envelope env;
+        jsn::DeserializeObject(&env, PostHandlerImpl<T>::response_.body);
+    }
+    else{
+        status = ret::A_FAIL_NON_200;
+    }
+    return status;
+}
+
 
 
 } // namespace

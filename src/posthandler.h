@@ -40,6 +40,10 @@ public:
             const UrlParams* params,
             T& out);
 
+    int Delete(const std::string& post_url,
+               const std::string& post_version,
+               const UrlParams* params);
+
     void Flush() { impl_->Flush(); }
     const Response& response() const { return impl_->response(); }
     T GetReturnPost();
@@ -91,46 +95,28 @@ template <class T>
 int PostHandler<T>::Post(const std::string& post_url,
                          const UrlParams* params,
                          T& post) {
-    int status = ret::A_FAIL_INVALID_IMPL;
-    status = impl_->Post(post_url, params, post);
-    if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
-        std::string s;
-        jsn::SerializeObject(&post, s);
-    }
-    if(status != ret::A_OK) {
-        log::LogHttpResponse("ph_3854932", impl_->response());
-    }
-    return status;
+    return impl_->Post(post_url, params, post);
 }
 
 template <class T>
 int PostHandler<T>::Put(const std::string& post_url,
                         const UrlParams* params,
                         T& post) {
-    int status = ret::A_OK;
-    status = impl_->Put(post_url, params, post);
-    if(post.type().find(cnst::g_attic_folder_type) != std::string::npos) {
-        std::string s;
-        jsn::SerializeObject(&post, s);
-    }
-     if(status != ret::A_OK) {
-        log::LogHttpResponse("ph_385ds91932", impl_->response());
-    }
-    return status;
+    return impl_->Put(post_url, params, post);
 }
 
 template <class T>
 int PostHandler<T>::Get(const std::string& post_url,
                         const UrlParams* params,
                         T& out) {
-    int status = ret::A_OK;
-    status = impl_->Get(post_url, params, out); 
-    if(out.type().find(cnst::g_attic_folder_type) != std::string::npos) {
-        std::string s;
-        jsn::SerializeObject(&out, s);
-    }
+    return impl_->Get(post_url, params, out); 
+}
 
-    return status;
+template <class T>
+int PostHandler<T>::Delete(const std::string& post_url,
+                           const std::string& post_version,
+                           const UrlParams* params) {
+    return impl_->Delete(post_url, post_version, params);
 }
 
 template <class T>
