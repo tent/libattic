@@ -16,6 +16,7 @@ public:
     ~UrlParams() {}
     void AddValue(const std::string& key, const std::string &value);
     UrlParam GetValue(const std::string& key);
+    bool HasValue(const std::string& key);
 
     std::string asString();
     void SerializeToString(std::string& out) const;

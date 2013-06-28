@@ -18,6 +18,12 @@ std::vector<std::string> UrlParams::GetValue(const std::string& key) {
     return value;
 }
 
+bool UrlParams::HasValue(const std::string& key) {
+    if(values_.find(key) != values_.end()) 
+        return true;
+    return false;
+}
+
 std::string UrlParams::asString() {
     std::string out;
     SerializeToString(out);
