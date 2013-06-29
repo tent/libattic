@@ -85,9 +85,11 @@ TEST(COMPRESS, MINIZ_COMPRESS_STRING) {
     cmp.DecompressString(out, test_string.size(), dcmp);
 
     std::cout<<" DECOMPRESSED : " << dcmp << std::endl;
+}
 
-
-
+TEST(COMPRESS, MINIZ_ARCHIVE) {
+    //attic::Archive arch;
+    //arch.AddFile("archive.zip", ".", "./test/aho.pdf");
 }
 
 TEST(COMPRESS, COMPRESSSTRING) {
