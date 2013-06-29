@@ -14,11 +14,11 @@ void AppPost::Serialize(Json::Value& root) {
     Json::Value posttype(Json::objectValue);
     Json::Value read_types(Json::arrayValue);
     Json::Value write_types(Json::arrayValue);
-    jsn::SerializeVector(post_types_["read"], read_types);
-    jsn::SerializeVector(post_types_["write"], write_types);
+    jsn::SerializeVector(types_["read"], read_types);
+    jsn::SerializeVector(types_["write"], write_types);
     posttype["read"] = read_types;
     posttype["write"] = write_types;
-    set_content("post_types", posttype); // TODO :: post_types now changes to types
+    set_content("types", posttype); // TODO :: post_types now changes to types
 
     Post::Serialize(root);
 }
@@ -34,18 +34,18 @@ void AppPost::Deserialize(Json::Value& root) {
     redirect_uri_ = redirect_uri.asString();
 
     Json::Value posttype(Json::objectValue);
-    get_content("post_types", posttype); // TODO :: post_types now changes to types
+    get_content("types", posttype); // TODO :: post_types now changes to types
 
-    jsn::DeserializeIntoVector(posttype["read"], post_types_["read"]);
-    jsn::DeserializeIntoVector(posttype["write"], post_types_["write"]);
+    jsn::DeserializeIntoVector(posttype["read"], types_["read"]);
+    jsn::DeserializeIntoVector(posttype["write"], types_["write"]);
 }
 
 void AppPost::PushBackWriteType(const std::string& type) {
-    post_types_["write"].push_back(type);
+    types_["write"].push_back(type);
 }
 
 void AppPost::PushBackReadType(const std::string& type) {
-    post_types_["read"].push_back(type);
+    types_["read"].push_back(type);
 }
 
 } // namespace

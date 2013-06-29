@@ -27,7 +27,7 @@ public:
 
 private:
     typedef std::map<std::string, std::vector<std::string> > PostTypes;
-    PostTypes post_types_; // TODO :: post_types now changes to types
+    PostTypes types_; // TODO :: post_types now changes to types
 
     std::string name_;
     std::string url_;
