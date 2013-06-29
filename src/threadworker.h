@@ -57,7 +57,8 @@ public:
         if(thread_) {
             std::cout<<" exiting worker thread .. " << std::endl;
             SetThreadExit();
-            thread_->join();
+          //  thread_->join();
+            thread_->interrupt();
             delete thread_;
             thread_ = NULL;
         }
@@ -79,6 +80,8 @@ private:
     AccessToken             access_token_;
     Entity                  entity_;
     boost::thread* thread_;
+
+    Task* current_task_;
 };
 
 }//namespace

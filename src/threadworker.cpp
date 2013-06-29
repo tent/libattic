@@ -22,29 +22,31 @@ ThreadWorker::ThreadWorker(FileManager* fm,
     entity_ = ent;
 
     task_factory_.Initialize(file_manager_, credentials_manager_, access_token_, entity_);
-
+    current_task_ = NULL;
     thread_ = NULL;
 }
 
-ThreadWorker::~ThreadWorker() {}
+ThreadWorker::~ThreadWorker() {
+    if(current_task_) 
+        RelinquishTask(&current_task_);
+}
 
 // Once a thread is set to exist state, it cannot/shouldnot be changed back
 void ThreadWorker::Run() {
     std::cout<<" thread worker starting ... " << std::endl;
-    Task* task = NULL;
     while(!(state() == ThreadWorker::EXIT)) {
         if(state() == ThreadWorker::IDLE) {
             // Get a job
-            task = RetrieveTask();
-            if(!task) { sleep::sleep_seconds(1); }
+            current_task_ = RetrieveTask();
+            if(!current_task_) { sleep::sleep_seconds(1); }
         }
 
-        if(task)  {
+        if(current_task_)  {
             if(state() != ThreadWorker::SHUTDOWN)
                 SetState(ThreadWorker::RUNNING);
             else 
-                task->SetFinishedState();
-            PollTask(&task);
+                current_task_->SetFinishedState();
+            PollTask(&current_task_);
         }
 
         if(state() == ThreadWorker::FINISHED) {
@@ -54,14 +56,15 @@ void ThreadWorker::Run() {
 
         if(state() == ThreadWorker::SHUTDOWN) {
             SetThreadExit();
-            RelinquishTask(&task);
+            RelinquishTask(&current_task_);
         }
-        sleep::sleep_milliseconds(10);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     }
 
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
-        RelinquishTask(&task);
+        RelinquishTask(&current_task_);
+        current_task_ = NULL;
     }
     std::cout<<" worker exiting ... " << std::endl;
 }
