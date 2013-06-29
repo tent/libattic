@@ -15,6 +15,7 @@ typedef unsigned short uint16;
 typedef unsigned long long uint64;
 typedef unsigned int uint;
 
+/*
 static static bool ensure_file_exists_and_is_readable(const char *pFilename) {
     FILE *p = fopen(pFilename, "rb");
     if (!p) return false;
@@ -34,6 +35,23 @@ static static bool ensure_file_exists_and_is_readable(const char *pFilename) {
     }
     fclose(p);
     return true;
+}
+*/
+
+bool Archive::ValidateFileExistence(const std::string& filepath) {
+    bool ret = false;
+    if(fs::CheckFilepathExists(filepath)) {
+        std::ifstream ifs;
+        ifs.open(filepath.c_str(), std::ios::in | std::ios::binary);
+        if(ifs.is_open()) {
+            ifs.seekg(0, std::ifstream::end);
+            unsigned int size = ifs.tellg();
+            ifs.seekg(0, std::ifstream::beg);
+            ret = true;
+            ifs.close();
+        }
+    }
+    return ret;
 }
 
 int Compress::CompressString(const std::string& in, std::string& out) {
@@ -134,7 +152,7 @@ bool Archive::AddFiles(const std::string& archive_path,
         std::vector<std::string>::const_iterator c_itr = paths.begin();
         for(;c_itr!=paths.end(); c_itr++) {
             mz_bool success = MZ_TRUE;
-            if(ensure_file_exists_and_is_readable((*c_itr).c_str())) {
+            if(ValidateFileExistence((*c_itr))) {
                 // determine relative path within the archive
                 std::string relative_path;
                 DetermineRelativePath(root_dir, *c_itr, relative_path);

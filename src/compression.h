@@ -30,6 +30,7 @@ public:
 
 
 class Archive {
+    bool ValidateFileExistence(const std::string& filepath);
     bool DetermineRelativePath(const std::string& root_dir, 
                                const std::string& filepath, 
                                std::string& out);
