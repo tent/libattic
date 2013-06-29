@@ -26,16 +26,22 @@ public:
 
 };
 
+
 class Archive {
+    bool DetermineRelativePath(const std::string& root_dir, 
+                               const std::string& filepath, 
+                               std::string& out);
 public:
-    Archive(){}
-    ~Archive(){}
+    Archive();
+    ~Archive();
 
-    bool InitArchive(const std::string& archivepath);
-    bool AddFile(const std::string& filepath);
-    bool AddFromMemory(const std::string& filename, const std::string& buffer);
+    bool AddFile(const std::string& archive_path, 
+                 const std::string& root_dir,
+                 const std::string& filepath);
+    bool AddFromMemory(const std::string& archive_path,
+                       const std::string& filename, 
+                       const std::string& buffer);
 private:
-
 };
 
 namespace compress {
