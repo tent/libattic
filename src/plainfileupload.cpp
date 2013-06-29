@@ -3,11 +3,16 @@
 #include "netlib.h"
 #include "envelope.h"
 #include "mimeconstants.h"
+#include "compression.h"
+#include "utils.h"
+#include "filesystem.h"
 
 namespace attic { 
 
-PlainFileUpload::PlainFileUpload(const AccessToken& at) {
+PlainFileUpload::PlainFileUpload(const AccessToken& at,
+                                 const std::string& temp_dir) {
     access_token_ = at;
+    temp_dir_ = temp_dir;
     con_ = NULL;
     LoadMimeTypes();
 }
@@ -54,7 +59,44 @@ bool PlainFileUpload::Upload(const std::string& url,
                              const std::string& filepath,
                              DownloadPost& out) {
 
-    // TODO ::
+    
+    std::string actual_filepath = filepath;
+    if(fs::IsDirectory(filepath)) {
+        std::string filename;
+        size_t pos = filepath.rfind("/");
+        if(pos != std::string::npos)
+            filename = filepath.substr(pos+1);
+        else
+            filename = filepath;
+
+        std::string archive_path = temp_dir_;
+        utils::AppendTrailingSlash(archive_path);
+        archive_path += filename;
+
+        unsigned int count = 0;
+        std::string increment ="";
+        while(fs::CheckFilepathExists(archive_path + increment + ".zip")) {
+            char buf[256] = {'\0'};
+            snprintf(buf, 256, "%u", count);
+            increment.clear();
+            increment = "_";
+            increment.append(buf);
+            count++;
+        }
+
+        archive_path += increment + ".zip";
+
+        // Archive contents
+        std::vector<std::string> paths;
+        fs::ScanDirectory(filepath, paths);
+        Archive archive;
+
+        archive.AddFiles(archive_path, filepath, paths);
+
+        actual_filepath.clear();
+        actual_filepath = archive_path;
+    }
+
     // detect whether a file or folder
     // if file 
     //      just upload as per usual
@@ -64,7 +106,7 @@ bool PlainFileUpload::Upload(const std::string& url,
     //          zip and upload
     bool ret = false;
     url_ = url;
-    filepath_ = filepath;
+    filepath_ = actual_filepath;
 
     if(BeginRequest()) {
         DownloadPost dlp;

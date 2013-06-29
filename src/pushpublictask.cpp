@@ -42,7 +42,7 @@ void PushPublicTask::RunTask() {
         DownloadPost dlp;
 
         std::string url = entity()->GetPreferredServer().posts_feed();
-        PlainFileUpload pfu(access_token());
+        PlainFileUpload pfu(access_token(), file_manager()->temp_directory());
         if(pfu.Upload(url, filepath, dlp)) {
             GeneratePublicLink(dlp, link_out);
             status = ret::A_OK;

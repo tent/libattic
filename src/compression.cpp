@@ -122,25 +122,28 @@ bool Archive::DetermineRelativePath(const std::string& root_dir,
     return ret;
 }
 
-bool Archive::AddFile(const std::string& archive_path,
-                      const std::string& root_dir,
-                      const std::string& filepath) {
+bool Archive::AddFiles(const std::string& archive_path,
+                       const std::string& root_dir,
+                       const std::vector<std::string>& paths) {
     bool ret = false;
-    if(fs::CheckFilepathExists(filepath)) {
-        mz_zip_archive zip;
-        memset(&zip, 0, sizeof(zip));
-        if ((rand() % 100) >= 10)
-            zip.m_file_offset_alignment = 1 << (rand() & 15);
-        if (mz_zip_writer_init_file(&zip, archive_path.c_str(), 65537)) {
+    mz_zip_archive zip;
+    memset(&zip, 0, sizeof(zip));
+    //if ((rand() % 100) >= 10)
+        //zip.m_file_offset_alignment = 1 << (rand() & 15);
+    if (mz_zip_writer_init_file(&zip, archive_path.c_str(), 65537)) {
+        std::vector<std::string>::const_iterator c_itr = paths.begin();
+        for(;c_itr!=paths.end(); c_itr++) {
             mz_bool success = MZ_TRUE;
-            if(ensure_file_exists_and_is_readable(filepath.c_str())) {
+            if(ensure_file_exists_and_is_readable((*c_itr).c_str())) {
                 // determine relative path within the archive
                 std::string relative_path;
-                DetermineRelativePath(root_dir, filepath, relative_path);
+                DetermineRelativePath(root_dir, *c_itr, relative_path);
                 const char *pTestComment = "no comment";
-                success &= mz_zip_writer_add_file(&zip, 
+                std::cout<<" archive adding filepath : " << *c_itr << std::endl;
+                std::cout<<" at relative path : " << relative_path << std::endl;
+                success = mz_zip_writer_add_file(&zip, 
                                               relative_path.c_str(),// where in the archive directory is is
-                                              filepath.c_str(),  // actual file location
+                                              (*c_itr).c_str(),  // actual file location
                                               pTestComment, 
                                               (uint16)strlen(pTestComment), 1);
             }
@@ -148,24 +151,22 @@ bool Archive::AddFile(const std::string& archive_path,
                 mz_zip_writer_end(&zip);
                 remove(archive_path.c_str());
                 std::cout<< "failed to create zip archive" << std::endl;
-                return false;
+            //    return false;
             }
-            if (!mz_zip_writer_finalize_archive(&zip)) {
-                mz_zip_writer_end(&zip);
-                remove(archive_path.c_str());
-                std::cout<< "failed to create zip archive" << std::endl;
-                return false;
-            }
+        }
+        if (!mz_zip_writer_finalize_archive(&zip)) {
             mz_zip_writer_end(&zip);
-            ret = true;
+            remove(archive_path.c_str());
+            std::cout<< "failed to create zip archive" << std::endl;
+            return false;
         }
-        else  {
-            std::cout<<" fialed creating : " << archive_path << " archive " << std::endl;
-        }
+        mz_zip_writer_end(&zip);
+        ret = true;
     }
-    else {
-        std::cout<<" invalid filepath " << std::endl;
+    else  {
+        std::cout<<" fialed creating : " << archive_path << " archive " << std::endl;
     }
+    
     return ret;
 }
 

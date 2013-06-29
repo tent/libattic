@@ -26,7 +26,8 @@ class PlainFileUpload {
     bool GenerateDownloadPost(const std::string& filepath, DownloadPost& out);
     bool Push(boost::asio::streambuf& request);
 public:
-    PlainFileUpload(const AccessToken& at);
+    PlainFileUpload(const AccessToken& at, 
+                    const std::string& temp_dir);
     ~PlainFileUpload();
 
     bool Upload(const std::string& url, 
@@ -34,6 +35,7 @@ public:
                 DownloadPost& out);
 
 private:
+    std::string temp_dir_;
     // key, extension, value mimetype
     typedef std::map<std::string, std::string> MimeMap;
     MimeMap mime_map_;

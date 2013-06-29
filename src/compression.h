@@ -6,6 +6,8 @@
 #include <mqueue.h>
 #include <channels.h>
 
+#include<vector>
+#include<string>
 #include "logutils.h"
 
 namespace attic { 
@@ -35,9 +37,9 @@ public:
     Archive();
     ~Archive();
 
-    bool AddFile(const std::string& archive_path, 
-                 const std::string& root_dir,
-                 const std::string& filepath);
+    bool AddFiles(const std::string& archive_path, 
+                  const std::string& root_dir,
+                  const std::vector<std::string>& paths);
     bool AddFromMemory(const std::string& archive_path,
                        const std::string& filename, 
                        const std::string& buffer);
