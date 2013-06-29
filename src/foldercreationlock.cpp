@@ -29,21 +29,11 @@ void CreationQueue::Release() {
     unsigned hold = g_ref_count;
     ref_mtx_.Unlock();
     if(hold <= 0) {
-        fm_mtx_.Lock();
-        FolderMap::iterator itr = folder_map_.begin();
-        for(;itr!=folder_map_.end();itr++) {
-            if(itr->second.size() <= 0) {
-                folder_map_.erase(itr);
-            }
-        }
-
         if(folder_map_.size() <=0) {
             Shutdown();
         }
-        fm_mtx_.Unlock();
     }
 }
-
 
 bool CreationQueue::Lock(const std::string& foldername, const std::string& parent_id) {
     bool ret = false;

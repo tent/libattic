@@ -22,6 +22,7 @@ private:
     static CreationQueue* instance();
     void Shutdown();
     void Release();
+    void Clear();
 
     bool Lock(const std::string& foldername, const std::string& parent_id);
     bool Unlock(const std::string& foldername, const std::string& parent_id);
@@ -48,6 +49,11 @@ public:
     }
 
     ~fcl() {
+        // unlock any holding locks
+        std::map<std::string, std::string>::iterator itr = val_.begin();
+        for(;itr!= val_.end(); itr++)
+            Unlock(itr->second, itr->first);
+        val_.clear();
         cq_->Release();
         cq_ = NULL;
     }
@@ -63,7 +69,9 @@ public:
     }
 
     bool Lock(const std::string& foldername, const std::string& parent_id) {
-        return cq_->Lock(foldername, parent_id);
+        bool ret = cq_->Lock(foldername, parent_id);
+        if(ret) val_[parent_id] = foldername;
+        return ret;
     }
 
     bool IsLocked(const std::string& foldername, const std::string& parent_id) {
@@ -71,9 +79,12 @@ public:
     }
 
     bool Unlock(const std::string& foldername, const std::string& parent_id) {
-        return cq_->Unlock(foldername, parent_id);
+        bool ret = cq_->Unlock(foldername, parent_id);
+        if(ret) val_.erase(parent_id);
+        return ret;
     }
 private:
+    std::map<std::string, std::string> val_;
     CreationQueue* cq_;
 };
 
