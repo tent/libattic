@@ -14,8 +14,9 @@ ConfigHandler::~ConfigHandler() {}
 
 bool ConfigHandler::CreateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out) {
     bool ret = false;
-
+    std::cout<<" CREATE CONFIG POST " << std::endl;
     if(!RetrieveConfigPost(ent, at, out)) {
+        std::cout<<" ACTUALLY CREATING CONFIG POST " << std::endl;
         ConfigPost config_post;
         ret = UpdateConfigPost(ent, at, config_post);
         if(ret) {
@@ -27,6 +28,7 @@ bool ConfigHandler::CreateConfigPost(const Entity& ent, const AccessToken* at, C
 
 bool ConfigHandler::UpdateConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& post) {
     bool ret = false;
+    std::cout<<" UPDATING CONFIG POST " << std::endl;
     // Updates Config post with locally stored values
     std::string url;
     if(!post.id().empty()) {
@@ -41,16 +43,16 @@ bool ConfigHandler::UpdateConfigPost(const Entity& ent, const AccessToken* at, C
     std::cout<<" access token : " << at->access_token() << std::endl;
     std::cout<<" post type : " << post.type() << std::endl;
     std::cout<<" post id : " << post.id() << std::endl;
+    std::cout<<" url : " << url << std::endl;
     int status = ret::A_OK;
     PostHandler<ConfigPost> ph(*at, false);
     if(post.id().empty()) { 
-        std::cout<<" post " << std::endl;
+        std::cout<<" POSTING CONFIG POST" << std::endl;
         status = ph.Post(url, NULL, post);
     }
     else {
-        std::cout<<" put " << std::endl;
+        std::cout<<" PUT CONFIG POST " << post.id() << std::endl;
         status = ph.Put(url, NULL, post);
-
     }
     
     if(status == ret::A_OK)
@@ -79,6 +81,7 @@ bool ConfigHandler::RetrieveConfigPost(const Entity& ent, const AccessToken* at,
         jsn::DeserializeObject(&env , ph.response().body);
         if(env.posts()->size()) {
             post::DeserializePostIntoObject(env.posts()->front(), &out);
+            std::cout<<" RETRIEVED POST TYPE : " << out.type() << " ID : " << out.id() << std::endl;
             ret = true;
         }
     }
@@ -105,7 +108,8 @@ void ConfigHandler::LoadConfigPost(ConfigPost& in) {
 bool ConfigHandler::LoadIntoFirstDirectory(const std::string& folderpath) {
     bool ret = false;
     std::deque<std::string> id_out;
-    CheckForUnmappedRootDirectories(id_out);
+    std::cout<<" checking for unmapped root dir : " << CheckForUnmappedRootDirectories(id_out) << std::endl;
+    std::cout<<" id size : " << id_out.size() << std::endl;
     if(id_out.size()) {
         ret = MapDirectoryToRoot(id_out.front(), folderpath);
     }
@@ -115,6 +119,7 @@ bool ConfigHandler::LoadIntoFirstDirectory(const std::string& folderpath) {
 bool ConfigHandler::MapDirectoryToRoot(const std::string& key, const std::string& path) {
     bool ret = false;
     // Link directory
+    std::cout<<" Map directory to root " << key << " | " << path << std::endl;
     ret = file_manager_->LinkWorkingDirectory(key, path);
     if(ret) {
         ConfigEntry entry;
@@ -155,8 +160,12 @@ int ConfigHandler::GetConfigPostCount(const Entity& ent, const AccessToken* at) 
     std::cout<<" body : " << response.body << std::endl;
     int count = -1;
     if(response.code == 200) {
-        if(response.header.HasValue("Count"))
-        count = atoi(response.header["Count"].c_str());
+        std::cout<<" Response ok " << std::endl;
+        if(response.header.HasValue("Count")) { 
+            std::cout << " response header has Count " << std::endl;
+            std::cout << " count header : " << response.header["Count"] << std::endl;
+            count = atoi(response.header["Count"].c_str());
+        }
     }
     else {
         log::LogHttpResponse("41935", response);

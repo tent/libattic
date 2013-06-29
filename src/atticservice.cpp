@@ -551,6 +551,7 @@ int AtticService::EnterPassphrase(const std::string& pass) {
             client_->SavePhraseToken();
             // Retrieve Config Post and load
             ConfigHandler ch(file_manager_);
+            std::cout << " CONFIG POST COUNT : " << ch.GetConfigPostCount(client_->entity(), &at) << std::endl;
             ConfigPost config_post;
             if(!ch.RetrieveConfigPost(client_->entity(), &at, config_post)) {
                 std::cout<<" creating config post " << std::endl;
@@ -562,7 +563,7 @@ int AtticService::EnterPassphrase(const std::string& pass) {
             // Load config post
             ch.LoadConfigPost(config_post);
             // Check for unlinked working directories
-            if(!ch.LoadIntoFirstDirectory(working_dir_))
+            if(!ch.LoadIntoFirstDirectory(working_dir_)) 
                 status = CreateWorkingDirectory(working_dir_);
             file_manager_->LoadWorkingDirectories();
         }

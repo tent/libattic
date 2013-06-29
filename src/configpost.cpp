@@ -13,14 +13,14 @@ ConfigPost::~ConfigPost() {
 }
 
 void ConfigPost::Serialize(Json::Value& root) {
-    Json::Value config(Json::objectValue);
+    Json::Value config(Json::arrayValue);
     std::map<std::string, ConfigValue>::iterator itr = config_map_.begin();
     for(;itr!= config_map_.end(); itr++) {
         Json::Value config_val(Json::objectValue);
         config_val["type"] = itr->second.type;
         config_val["key"] = itr->second.key;
         config_val["value"] = itr->second.value;
-        config[itr->first] = config_val;
+        config.append(config_val);
     }
     set_content("config", config);
 
