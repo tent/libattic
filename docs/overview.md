@@ -3,6 +3,8 @@ Libattic encapsulates basic file storage and sync functionality. This includes u
 provides a means of storing encrypted files in tent posts.
 
 ## Keys
+Libattic uses keys for encrypting unspecified data and other keys.
+
 ### Master Key
 
 Each user has a generated *master key* that is used to encrypt *file
@@ -20,14 +22,17 @@ The *user key* is derived from a user-supplied password using
 [scrypt](http://www.tarsnap.com/scrypt.html), with a salt stored in the Tent
 profile section for Attic.
 
-## Process
+## Upload Pipeline
 
 1. Library is called, with filepath to file.
-2. File is broken into chunks.
-3. Chunks are compressed.
+2. File is validated (make sure it exists)
+3. Local cache is queried for possible existing files.
+4. If there is an existing entry, hashes are compared, and a file is uploaded if it differes from the cache.
+5. If there is no entry, credentials and file metadata is generated and the initial meta post is created.
+5. The file is next broken into chunks.
+6. Chunks are compressed.
 4. Chunks are encrypted.
-5. Tent posts are created with chunks as attachments.
-6. Details about the file are added to the metadata posts.
+5. Chunk posts are created with the sole purpose of housing the chunks as attachments.
 
 ### Chunking
 
@@ -70,7 +75,7 @@ compression/encryption/authentication/upload pipeline.
 
 ### Compression
 
-Chunks are compressed with zlib.
+Chunks are compressed with miniz, a zlib like 
 
 ### Encryption
 
