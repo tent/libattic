@@ -154,6 +154,7 @@ bool FolderHandler::InsertFolder(const FolderPost& fp) {
                                                    f);
         }
         else {
+            // TODO :: This is a conflict insert conflict logic here.
             std::ostringstream err;
             err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
             err << " foldername : " << fp.folder().foldername() << std::endl;
