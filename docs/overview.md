@@ -75,7 +75,7 @@ compression/encryption/authentication/upload pipeline.
 
 ### Compression
 
-Chunks are compressed with miniz, a zlib like 
+Chunks are compressed with miniz, a zlib like library.
 
 ### Encryption
 
@@ -107,6 +107,11 @@ The ciphertext authenticator is a HMAC-SHA256 of the IV used for the chunk
 concatenated with the the ciphertext. This MAC is used to make sure that the
 encrypted chunk has not been tampered with.
 
+### Local Cache
+The local cache is a sqlite database used by libattic to store various types of data. File and folder 
+inforation are stored, and various configuration values. The local cache is mostly used to keep track of what's on
+disk vs what's on the server.
+
 ### Upload
 
 Files are stored in Tent as a set of posts that contain the file metadata and
@@ -114,6 +119,7 @@ chunks. Each file has one post that contains the metadata and keys for the file.
 The chunks are stored as attachments to a series of posts for each file.
 
 ## Update/Sync
+A file is determined to need upating when the file's actual hash does not match what's stored in the local cache.
 
 ### New files
 
