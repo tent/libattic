@@ -1,5 +1,5 @@
 # Libattic
-Libattic encapsulates base attic functionality. This includes uploading, downloading, chunkig, and ecrypting files. Attic
+Libattic encapsulates basic file storage and sync functionality. This includes uploading, downloading, chunkig, and ecrypting files. Attic
 provides a means of storing encrypted files in tent posts.
 
 ## Keys
@@ -58,13 +58,15 @@ compression/encryption/authentication/upload pipeline.
 
 #### Chunk Format
 
-`Format Version` | `Iv Length` | `Iv` | `Data Length` | `Data` 
+`Format Version` | `Uncompressed Chunk Length` | `Compression Level` | `Iv Length` | `Iv` | `Data Length` | `Data` 
 
 * Format version - describes the version of the chunk layout format | `1 byte` (char)
+* Uncompressed Chunk Length - length of the chunk before compression | `4 bytes` (unsigned int)
+* Compression Level - level of compression applied to the chunk | `1 byte` (0-9, char)
 * Iv Length - length of the Iv | `4 bytes` (unsigned int)
-* Iv - Initialization vector of chunk
+* Iv - Initialization vector of chunk | `variable`
 * Data Length - length of data | `4 bytes` (unsigned int)
-* Data - binary payload
+* Data - binary payload | `variable`
 
 ### Compression
 
@@ -115,11 +117,10 @@ queried, compared to current file versions, and downloaded to the device if they
 are more recent.
 
 ### Version conflicts
-
-Two versions of a file are in conflict if they have each been altered and one is
-not the ancestor of the other. In this case, both should be saved and the user
-presented with a choice between them. Real time collaborative editing is outside
-the scope of Attic.
+When two versions of a file or folder are in conflict, same name, same parent folder post,
+the first of the two remains the same, and the later one will be renamed. 
+The rename format is as follows
+`<filename>_<device>_<timestamp>` ex: `test.mp3_myphone_90210` 
 
 ## Sharing/Privacy
 
