@@ -45,9 +45,11 @@
 #include "fileroller.h"
 
 
+
 /*
 #define BUFFERSIZE 1000
 #include <b64/encode.h>
+
 */
 
 // Temporary test, hooked up to localhost tent server
@@ -161,14 +163,19 @@ TEST(CRYPTO, BASE64) {
 }
 */
 
-/*
+
+#include "cbase64.h"
+
 TEST(LIBB64, ENCODE) { 
+    std::cout<<" CBSE64ENCODE " << std::endl;
     std::string teststring("this is my test string, that I'm going to base64 encode");
 
     std::string payload = teststring;
-    std::string payload;
+    
+  //  std::string payload;
     std::ifstream ifs;
-    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
+    /*
+    ifs.open("Open-Advice.pdf", std::ios::in | std::ios::binary);
     if(ifs.is_open()) {
         ifs.seekg (0, std::ios::end);
         unsigned int size = ifs.tellg();
@@ -181,21 +188,22 @@ TEST(LIBB64, ENCODE) {
         delete data;
         data = NULL;
     }
+    */
 
-    base64::encoder e;
+//    base64::encoder e;
     std::istringstream str(payload);
-    std::ostringstream ostr;
-    e.encode(str, ostr);
+//    std::ostringstream ostr;
+ //   e.encode(str, ostr);
     //std::cout<<" ENCODED : " << ostr.str() << std::endl;
     //
     std::string encoded;
     attic::crypto::Base64EncodeString(payload, encoded);
-    
 
-    ASSERT_EQ(encoded, ostr.str());
+    std::string b64 = cb64::base64_encode(reinterpret_cast<const unsigned char*>(payload.c_str()), payload.size());
+
+    ASSERT_EQ(encoded, b64);
 
 }
-*/
 
 TEST(CRYPTO, KEY_ENCRYPTION) {
 
@@ -843,6 +851,28 @@ TEST(SODIUM, CRYPTO_GENERICHASH) {
     // http://en.wikipedia.org/wiki/BLAKE_%28hash_function%29
     std::string test_answer = "A8ADD4BDDDFD93E4877D2746E62817B116364A1FA7BC148D95090BC7333B3673F82401CF7AA2E4CB1ECD90296E3F14CB5413F8ED77BE73045B13914CDCD6A918";
     ASSERT_EQ(upper, test_answer);
+}
+
+TEST(SODIUM, HMAC_SHA256) {
+    std::string key("this_is_my_key");
+    std::string vec("this is my test string");
+
+    unsigned char out_buffer[32]={'\0'};
+    crypto_auth_hmacsha512256(out_buffer, 
+                              reinterpret_cast<const unsigned char*>(vec.c_str()), 
+                              vec.size(), 
+                              reinterpret_cast<const unsigned char*>(key.c_str()));
+
+    std::string buffer;
+    buffer.append(reinterpret_cast<const char*>(out_buffer));
+    std::string encoded;
+    attic::crypto::Base64EncodeString(buffer, encoded);
+    std::cout<<" HASH : " << encoded << std::endl;
+
+    std::string signedr;
+    attic::netlib::SignRequest(vec, key, signedr);
+    std::cout<<" SIGNED : " << signedr << std::endl;
+
 }
 
 TEST(SODIUM, FILEROLLER) {

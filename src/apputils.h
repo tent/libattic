@@ -276,7 +276,13 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
             auth_at.set_app_id(app.app_id());
 
             Response response;
-            netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
+            //netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
+            netlib::HttpPost(path,
+                             "",  // application/json
+                             NULL, 
+                             serialized, 
+                             &auth_at, 
+                             response);
 
             std::cout<<" CODE : " << response.code << std::endl;
             std::cout<<" HEADER : " << response.header.asString() << std::endl;

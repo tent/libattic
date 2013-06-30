@@ -344,6 +344,33 @@ static void ErrorCheckPathDoubleQuotes(std::string& path) {
     }
 }
 
+/*
+static void PrintStringLiteral(const std::string& str) {
+    for(unsigned int i=0; i<str.size(); i++) {
+        switch (str[i]) {
+            case '\n':
+            printf("\\n");
+            break;
+            case '\r':
+            printf("\\r");
+            break;
+            case '\t':
+            printf("\\t");
+            break;
+            default:
+                if ((theChar < 0x20) || (theChar > 0x7f)) {
+            printf("\\%03o", (unsigned char)theChar);
+            } else {
+            printf("%c", theChar);
+        }
+        break;
+        }
+
+    }
+
+}
+*/
+
 
 }}//namespace
 #endif

@@ -38,7 +38,27 @@ using boost::asio::ip::tcp;
 
 namespace attic { namespace netlib {
 
+static void printchar(unsigned char theChar) {
 
+    switch (theChar) {
+        case '\n':
+        printf("\\n");
+        break;
+        case '\r':
+        printf("\\r");
+        break;
+        case '\t':
+        printf("\\t");
+        break;
+        default:
+            if ((theChar < 0x20) || (theChar > 0x7f)) {
+        printf("\\%03o", (unsigned char)theChar);
+        } else {
+        printf("%c", theChar);
+    }
+    break;
+    }
+}
 
 static int HttpRequest(const std::string& url, 
                        boost::asio::streambuf& request,
@@ -811,6 +831,10 @@ static void BuildAuthHeader(const std::string& url,
     std::string macid = at->access_token();
     std::string mackey = at->hawk_key();
     std::string appid = at->app_id();
+
+    std::cout<< " mac id " << macid << std::endl;
+    std::cout<< " mac key " << mackey << std::endl;
+    std::cout<< " app id " << appid << std::endl;
                  
     std::string n;
     GenerateNonce(n);
@@ -865,8 +889,16 @@ static void BuildAuthHeader(const std::string& url,
     requestString.append(appid); // appid
     requestString.append("\n\n");
 
+    std::cout<<" NORMALIZED STRING : " << requestString << std::endl;
+
+    for(int i=0;i<requestString.size(); i++)
+        printchar(requestString[i]);
+
+
+
     std::string signedreq;
     SignRequest(requestString, mackey, signedreq);
+    std::cout<<"signed request " << signedreq << std::endl;
 
     out.append("mac=\"");
     out.append(signedreq.c_str());
@@ -955,10 +987,10 @@ static void SignRequest( const std::string &request,
     std::string mac, encoded, som;
 
     try {
-        unsigned char szReqBuffer[request.size()];
-        memcpy(szReqBuffer, key.c_str(), strlen(key.c_str())+1);
+        unsigned char szReqBuffer[key.size()];
+        memcpy(szReqBuffer, key.c_str(), key.size());
 
-        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, strlen(key.c_str())+1);
+        CryptoPP::HMAC< CryptoPP::SHA256 > hmac(szReqBuffer, key.size());
         CryptoPP::StringSource( request,
                                 true, 
                                 new CryptoPP::HashFilter(hmac,
@@ -976,6 +1008,7 @@ static void SignRequest( const std::string &request,
         log::LogString("57192834415", e.what());
     }
 
+    /*
     // Hex encoding, ignore this for now
     encoded.clear();
 
@@ -988,6 +1021,7 @@ static void SignRequest( const std::string &request,
     if (found != std::string::npos) {
         som = som.substr(0, found+1);
     }
+    */
 
     out.clear();
     //out = encoded;

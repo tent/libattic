@@ -113,6 +113,19 @@ static void Base32DecodeString(const std::string& input, std::string& output) {
 //
 //
 //
+//
+static bool GenerateHmacSha256(const std::string& source, std::string& hash_out) {
+    unsigned char out[crypto_hash_sha256_BYTES];
+    crypto_hash_sha256(out, 
+                       reinterpret_cast<const unsigned char*>(source.c_str()),
+                       source.size());
+    std::string ver;
+    ver.append(reinterpret_cast<const char*>(out), crypto_hash_sha256_BYTES);
+    Base64EncodeString(ver, hash_out);
+    return true;
+
+}
+
 static bool GenerateHash(const std::string& source, std::string& hash_out) {
     unsigned char out[crypto_hash_sha512_BYTES];
     crypto_hash_sha512(out, 
