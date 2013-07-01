@@ -832,10 +832,6 @@ static void BuildAuthHeader(const std::string& url,
     std::string mackey = at->hawk_key();
     std::string appid = at->app_id();
 
-    std::cout<< " mac id " << macid << std::endl;
-    std::cout<< " mac key " << mackey << std::endl;
-    std::cout<< " app id " << appid << std::endl;
-                 
     std::string n;
     GenerateNonce(n);
 
@@ -889,16 +885,8 @@ static void BuildAuthHeader(const std::string& url,
     requestString.append(appid); // appid
     requestString.append("\n\n");
 
-    std::cout<<" NORMALIZED STRING : " << requestString << std::endl;
-
-    for(int i=0;i<requestString.size(); i++)
-        printchar(requestString[i]);
-
-
-
     std::string signedreq;
     SignRequest(requestString, mackey, signedreq);
-    std::cout<<"signed request " << signedreq << std::endl;
 
     out.append("mac=\"");
     out.append(signedreq.c_str());
