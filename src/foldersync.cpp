@@ -2,6 +2,9 @@
 #include "sleep.h"
 
 #include "folderhandler.h"
+#include "logutils.h"
+#include "filesystem.h"
+#include "renamehandler.h"
 
 namespace attic {
 
@@ -45,26 +48,14 @@ void FolderSync::Shutdown() {
 
 void FolderSync::Run() {
     std::cout<<" folder sync running .. " << std::endl;
-    FolderHandler fh(file_manager_);
-    bool val = false;
     while(running()) {
         FolderPost fp;
-
-        pq_mtx_.Lock();
-        unsigned int size = post_queue_.size();
-        if(size > 0) {
-            fp = post_queue_.front();
-            post_queue_.pop_front();
-            size--;
-            val = true;
-        }
-        pq_mtx_.Unlock();
-
-        if(val) {
-            if(fh.ValidateFolderTree(fp.id(), entity_url_, post_path_, at_)) {
-                fh.ValidateFolder(fp);
+        if(PopFront(fp)) {
+            std::cout<<" validating folder tree for : " << fp.folder().foldername() << std::endl;
+            if(ValidateFolderTree(fp)) {
+                std::cout<<" validating folder : " << fp.folder().foldername() << std::endl;
+                ValidateFolder(fp);
             }
-            val = false;
         }
         else {
             sleep::mil(100);
@@ -73,10 +64,86 @@ void FolderSync::Run() {
     std::cout<<" Folder Sync finishing..." << std::endl;
 }
 
+void FolderSync::ValidateFolder(FolderPost& fp) {
+    FolderHandler fh(file_manager_);
+    if(file_manager_->DoesFolderExistById(fp.folder().parent_post_id())) {
+        if(!file_manager_->DoesFolderExistById(fp.id())) {
+            if(fh.InsertFolder(fp)) CreateDirectoryTree(fp);
+        }
+        else {
+            RenameHandler rh(file_manager_);
+            if(!rh.CheckForRename(fp)) {
+                // Make sure path exists anyway
+                CreateDirectoryTree(fp);
+            }
+        }
+    }
+}
+
+bool FolderSync::ValidateFolderTree(const FolderPost& fp) {
+    bool ret = true;
+    std::cout<<" Validing folder tree for post : " << fp.id() << std::endl;
+    std::cout<<" foldername : " << fp.folder().foldername() << std::endl;
+    FolderHandler fh(file_manager_);
+    std::string post_id = fp.id();
+    while(!file_manager_->IsRootDirectory(post_id)) {
+        if(file_manager_->DoesFolderExistById(post_id)) {
+            ret = file_manager_->GetFolderParentId(post_id, post_id);
+        }
+        else {
+            // check map for post
+            FolderPost folder_post;
+            if(RetrievePostFromMap(post_id, folder_post)) {
+                ret = fh.InsertFolder(folder_post);
+            }
+            else {
+                
+                if(fh.RetrieveFolderPost(post_id, 
+                                         entity_url_,
+                                         post_path_,
+                                         at_,
+                                         folder_post) == ret::A_OK) {
+                    ret = fh.InsertFolder(folder_post);
+                }
+                else {
+                    ret = false;
+                    break;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+bool FolderSync::RetrievePostFromMap(const std::string& post_id, FolderPost& out) {
+    bool ret = false;
+    pm_mtx_.Lock();
+    PostMap::iterator itr = post_map_.find(post_id);
+    if(itr != post_map_.end()) {
+        out = itr->second;
+        ret = true;
+    }
+    pm_mtx_.Unlock();
+    return ret;
+}
+
 void FolderSync::PushBack(const FolderPost& p) {
-    pq_mtx_.Lock();
-    post_queue_.push_back(p);
-    pq_mtx_.Unlock();
+    pm_mtx_.Lock();
+    post_map_[p.id()] = p;
+    pm_mtx_.Unlock();
+}
+
+bool FolderSync::PopFront(FolderPost& out) {
+    bool ret = false;
+    pm_mtx_.Lock();
+    if(post_map_.size()) {
+        out = post_map_.begin()->second;
+        // remove
+        post_map_.erase(post_map_.begin());
+        ret = true;
+    }
+    pm_mtx_.Unlock();
+    return ret;
 }
 
 bool FolderSync::running() {
@@ -93,6 +160,89 @@ void FolderSync::set_running(bool r) {
     r_mtx_.Unlock();
 }
 
+bool FolderSync::CreateDirectoryTree(const FolderPost& fp) {
+    bool ret = false;
+    if(!file_manager_->IsFolderDeleted(fp.id())){
+        std::string folderpath, full_folderpath;
+        if(ConstructFolderpath(fp, folderpath)) {
+            std::cout <<" folder path : " << folderpath << std::endl;
+            if(file_manager_->GetCanonicalPath(folderpath, full_folderpath)) { 
+                std::cout <<" creating directory tree for " << full_folderpath << std::endl;
+                try {
+                    //create folder
+                    fs::CreateDirectoryTreeForFolder(full_folderpath);
+                    ret = true;
+                }
+                catch(std::exception& e) {
+                    log::LogException("fh_1281jn1", e);
+                }
+            }
+        }
+        else {
+            std::cout << " failed to create directory tree for id : " << fp.id() << std::endl;
+        }
+
+        if(full_folderpath.empty()) {
+            std::ostringstream error;
+            error << "Validate Folder, full folderpath empty ";
+            error << " post id : " << fp.id() << std::endl;
+            error << " foldername : " << fp.folder().foldername() << std::endl;
+            log::LogString("folder_handler_12904", error.str());
+        }
+    }
+    return ret;
+}
+
+bool FolderSync::ConstructFolderpath(const FolderPost& fp, std::string& path_out) {
+    bool ret = false;
+    std::string post_id = fp.id();
+    for(;;) {
+        Folder folder;
+        if(RetrieveFolder(post_id, folder)) {
+            if(!file_manager_->IsRootDirectory(post_id)) {
+                path_out = "/" + folder.foldername() + path_out;
+            }
+            else {
+                path_out = folder.foldername() + path_out;
+                ret = true;
+                break;
+            }
+            post_id = folder.parent_post_id();
+        }
+        else
+            break;
+    }
+    return ret;
+}
+
+bool FolderSync::RetrieveFolder(const std::string& post_id, Folder& out) {
+    bool ret = false;
+    // Check Post map first
+    pm_mtx_.Lock();
+    PostMap::iterator itr = post_map_.find(post_id);
+    if(itr != post_map_.end()) {
+        out = itr->second.folder();
+        ret = true;
+    }
+    pm_mtx_.Unlock();
+    // Check Local Cache
+    if(!ret)
+        ret = file_manager_->GetFolderEntryByPostId(post_id, out);
+    // Retrieve FolderPost
+    if(!ret) {
+        FolderHandler fh(file_manager_);
+        FolderPost fp;
+        if(fh.RetrieveFolderPost(post_id, 
+                                 entity_url_,
+                                 post_path_,
+                                 at_,
+                                 fp) == ret::A_OK) {
+            ret = fh.InsertFolder(fp);
+            out = fp.folder();
+        }
+    }
+    return ret;
+}
 
 }// namespace
 

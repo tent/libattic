@@ -64,7 +64,10 @@ bool ConfigHandler::UpdateConfigPost(const Entity& ent, const AccessToken* at, C
 
 bool ConfigHandler::RetrieveConfigPost(const Entity& ent, const AccessToken* at, ConfigPost& out) {
     bool ret = false;
-    std::cout<<" Access token : " << at->access_token() << std::endl;
+    std::ostringstream colog;
+    colog << " *******************************************************************" << std::endl;
+    colog << " RetrieveConfigPost " << std::endl;
+    colog << " Access token : " << at->access_token() << std::endl;
     std::string url = ent.GetPreferredServer().posts_feed();
     // setup params to query for credentials post, there should only ever exist one
     UrlParams params;
@@ -77,14 +80,18 @@ bool ConfigHandler::RetrieveConfigPost(const Entity& ent, const AccessToken* at,
     int status = ph.Get(url, &params, p);
     if(status == ret::A_OK) {
         Envelope env;
-        std::cout<<" Retrieve config post : " << ph.response().body << std::endl;
+        colog<<" Retrieve config post : " << ph.response().body << std::endl;
         jsn::DeserializeObject(&env , ph.response().body);
         if(env.posts()->size()) {
             post::DeserializePostIntoObject(env.posts()->front(), &out);
-            std::cout<<" RETRIEVED POST TYPE : " << out.type() << " ID : " << out.id() << std::endl;
+            colog <<" RETRIEVED POST TYPE : " << out.type() << " ID : " << out.id() << std::endl;
             ret = true;
         }
     }
+
+    colog << " GET status : " << status << std::endl;
+    colog << " RetrieveConfigPost return : " << ret << std::endl;
+    colog << " *******************************************************************" << std::endl;
     return ret;
 }
 

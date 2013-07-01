@@ -18,6 +18,13 @@ class FolderSync {
     void Run();
     bool running();
     void set_running(bool r);
+    bool PopFront(FolderPost& out);
+    void ValidateFolder(FolderPost& fp);
+    bool ValidateFolderTree(const FolderPost& fp);
+    bool RetrievePostFromMap(const std::string& post_id, FolderPost& out);
+    bool RetrieveFolder(const std::string& post_id, Folder& out);
+    bool ConstructFolderpath(const FolderPost& fp, std::string& path_out);
+    bool CreateDirectoryTree(const FolderPost& fp);
 public:
     FolderSync(FileManager* fm, 
                const AccessToken at,
@@ -39,8 +46,14 @@ private:
     std::string post_path_;
     std::string entity_url_;
 
+    /*
     MutexClass pq_mtx_;
     std::deque<FolderPost> post_queue_;
+    */
+
+    MutexClass pm_mtx_;
+    typedef std::map<std::string, FolderPost> PostMap;
+    PostMap post_map_;
 
     MutexClass r_mtx_;
     bool running_;
