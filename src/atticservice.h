@@ -49,7 +49,7 @@ public:
     ~AtticService();
 
     int start();
-    int stop();
+    int stop(TaskDelegate* del=NULL);
 
     int UploadFile(const std::string& filepath);
     int UploadLimitedFile(const std::string& filepath, TaskDelegate* del);

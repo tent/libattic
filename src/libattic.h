@@ -29,7 +29,7 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
 // Api begin
 int InitLibAttic(unsigned int threadCount = 10);
-int ShutdownLibAttic(void (*callback)(int, void*));
+int ShutdownLibAttic(void (*callback)(int, const char*, const char*));
 
 // Master Key
 int EnterPassphrase(const char* szPass);

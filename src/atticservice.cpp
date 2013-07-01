@@ -50,7 +50,7 @@ int AtticService::start() {
     return status;
 }
 
-int AtticService::stop() {
+int AtticService::stop(TaskDelegate* del) {
     int status = ret::A_OK;
     std::ostringstream err;
     err << " Attic Service stop [fail] : ";
@@ -65,6 +65,11 @@ int AtticService::stop() {
     ConfigManager::GetInstance()->Shutdown();if(status!=ret::A_OK) { err <<"cnm : " << status; }
     std::cout<< err.str() << std::endl;
     running_ = false;
+
+    if(del) {
+        RequestDelegate* p = static_cast<RequestDelegate*>(del);
+        p->Callback(status, "", err.str().c_str());
+    }
     return status;
 }
 

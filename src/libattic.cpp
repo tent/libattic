@@ -23,8 +23,9 @@ int InitLibAttic(unsigned int threadCount) {
     return status;
 }
 
-int ShutdownLibAttic(void (*callback)(int, void*)) {
-    int status = attic_service.stop();
+int ShutdownLibAttic(void (*callback)(int, const char*, const char*)) {
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    int status = attic_service.stop(del);
     return status;
 }
 
