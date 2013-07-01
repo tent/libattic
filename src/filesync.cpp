@@ -129,7 +129,11 @@ int FileSync::ProcessFilePost(FilePost& p) {
                 // move to new folder
                 fh.UpdateFilepath(p.id(), fi.folder_post_id());
             }
+            std::cout<<"local plaintext hash : " << local_fi.plaintext_hash() << std::endl;
+            std::cout<<"inc plaintext hash : " << fi.plaintext_hash() << std::endl;
             if(fi.plaintext_hash() != local_fi.plaintext_hash()) {
+                // Update file info
+                fh.UpdateFileInfo(fi);
                 plog << " init dl " << std::endl;
                 // init download
                 pull = true;

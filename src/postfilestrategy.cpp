@@ -65,9 +65,14 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                                    chunk_posts, 
                                    chunk_map);
                 if(status == ret::A_OK) { 
+                    std::string plaintext_hash;
+                    fh.RollFileMac(filepath, plaintext_hash);
+
                     // Update file info
                     fi.set_chunks(chunk_map);
                     fi.set_chunk_count(chunk_map.size());
+                    fi.set_file_size(utils::CheckFilesize(filepath));
+                    fi.set_plaintext_hash(plaintext_hash);
                     fh.UpdateFileInfo(fi);
                     // Update meta data post
                     status = UpdateFilePost(fi);
