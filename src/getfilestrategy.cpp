@@ -50,6 +50,7 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
 
     if(!sync_at_post) {
         std::string filepath = GetConfigValue("filepath");
+        std::cout<<" syncing file : " << filepath << std::endl;
         status = SyncFile(filepath);
     }
     else {
@@ -363,6 +364,17 @@ int GetFileStrategy::ConstructFile(FileInfo& fi, const Credentials& file_cred) {
     std::string full_path;
     ConstructFilepath(fi, full_path);
     event::RaiseEvent(event::Event::PULL, event::Event::START, full_path, NULL);
+
+    if(!fi.file_size()) {
+        std::cout<<" ATTEMPTING TO TOUCH : " << full_path << std::endl;
+        FILE * pFile;
+        pFile = fopen (full_path.c_str(),"w");
+        if (pFile!=NULL){
+            fclose (pFile);
+        }
+
+        return status;
+    }
 
     FileHandler fh(file_manager_);
     fh.GetTemporaryFilepath(fi, temp_path);
