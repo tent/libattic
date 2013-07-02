@@ -48,9 +48,7 @@ void TentApp::Serialize(Json::Value& root) {
 }
 
 void TentApp::Deserialize(Json::Value& root) {
-    std::cout<<" APP ID (before) : " << app_id_ << std::endl;
     app_id_ = root.get("id", "").asString();
-    std::cout<<" APP ID : " << app_id_ << std::endl;
     app_name_ = root.get("name", "").asString();
     app_description_ = root.get("description", "").asString();
     app_url_ = root.get("url", "").asString(); 
