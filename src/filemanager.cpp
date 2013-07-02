@@ -77,58 +77,31 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     parent_relative_out = parent_relative;
 }
 
-bool FileManager::InsertToManifest (FileInfo* pFi) { 
+bool FileManager::InsertToManifest (FileInfo* fi) { 
     bool ret = false;
-    if(pFi) {
-        if(!pFi->filepath().empty()) {
+    if(fi) {
+        if(!fi->filepath().empty()) {
             manifest_mtx_.Lock();
             // Insert into infotable
-            ret = manifest_.file_table()->InsertFileInfo(*pFi);
+            std::string chunk_data;
+            fi->GetSerializedChunkData(chunk_data);
+            ret = manifest_.file_table()->InsertFileInfo(*fi);
+            ret = manifest_.file_table()->InsertFileInfo(fi->filename(),
+                                                         fi->filepath(),
+                                                         fi->chunk_count(),
+                                                         chunk_data,
+                                                         fi->file_size(),
+                                                         fi->post_id(),
+                                                         fi->post_version(),
+                                                         fi->encrypted_key(),
+                                                         fi->file_credentials_iv(),
+                                                         fi->deleted(),
+                                                         fi->folder_post_id(),
+                                                         fi->plaintext_hash());
             manifest_mtx_.Unlock();
         }
     }
     return ret;
-}
-
-// Takes in two absolute (canonical) filepaths, and swaps them
-int FileManager::RenameFile(const std::string& old_filepath, 
-                            const std::string& new_filepath) {
-    int status = ret::A_OK;
-    std::string alias_old, alias_new;
-    if(!IsPathAliased(old_filepath))
-        GetAliasedPath(old_filepath, alias_old);
-    else
-        alias_old = old_filepath;
-
-    if(!IsPathAliased(new_filepath))
-        GetAliasedPath(new_filepath, alias_new);
-    else
-        alias_new = new_filepath;
-
-    // retrieve new folder post
-    std::string folderpath;
-    utils::ExtractFolderpath(alias_new, folderpath);
-    if(manifest_.file_table()->IsFileInManifest(alias_old) && !alias_new.empty()) {
-        std::string filename;
-        utils::ExtractFileName(alias_new, filename);
-        manifest_mtx_.Lock();
-        bool s = manifest_.file_table()->set_filepath(alias_old, alias_new); // update filepath
-        if(s) s = manifest_.file_table()->set_filename(alias_new, filename); // update filename
-        if(s) {
-            Folder folder;
-            if(manifest_.folder_table()->QueryForFolder(folderpath, folder)) {
-                s = manifest_.file_table()->set_folder_post_id(alias_new, folder.folder_post_id());
-            }
-        }
-        manifest_mtx_.Unlock();
-        if(!s) {
-            status = ret::A_FAIL_TO_QUERY_MANIFEST;
-        }
-    }
-    else {
-        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-    }
-    return status;
 }
 
 bool FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
@@ -225,16 +198,6 @@ bool FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap&
         return InsertToManifest(&fi);
     }
     return false;
-}
-
-bool FileManager::SetFileChunkCount(const std::string& filepath, const std::string& count) {
-    bool ret = false;
-    if(IsPathAliased(filepath)) {
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_chunk_count(filepath, count);
-        manifest_mtx_.Unlock();
-    }
-    return ret;
 }
 
 bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) {

@@ -45,6 +45,7 @@ class GetFileStrategy : public HttpStrategyInterface {
     void ValidateFolderEntries(FilePost& fp);
     void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);
     bool RetrieveFolderPost(const std::string& post_id, FolderPost& out);
+    bool CheckForConflict(FilePost& file_post); 
 public:
     GetFileStrategy();
     ~GetFileStrategy();

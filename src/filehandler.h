@@ -7,10 +7,16 @@
 #include "filemanager.h"
 #include "filepost.h"
 #include "folderpost.h"
+#include "accesstoken.h"
 
 namespace attic { 
 
 class FileHandler {
+    bool CreateNewFileMetaPost(FileInfo& fi, 
+                               const std::string& master_key, 
+                               const std::string& posts_feed,
+                               const AccessToken& at,
+                               FilePost& out);
 public:
     FileHandler(FileManager* fm);
     ~FileHandler();
@@ -22,6 +28,8 @@ public:
 
     bool CreateNewFile(const std::string& filepath, 
                        const std::string& master_key,
+                       const std::string& posts_feed,
+                       const AccessToken& at,
                        FileInfo& out);
 
     bool GetCanonicalFilepath(const std::string& filepath, std::string& out);
@@ -30,8 +38,6 @@ public:
 
     bool UpdateFilepath(const std::string& post_id, const std::string& new_folder_post_id);
 
-    bool UpdateFilePostId(const std::string& filepath, const std::string& post_id);
-    bool UpdateChunkCount(const std::string& filepath, const std::string& count);
     bool UpdateFileSize(const std::string& filepath, const std::string& size);
     bool UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map);
     bool UpdatePostVersion(const std::string& filepath, const std::string& version);

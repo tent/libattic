@@ -22,8 +22,6 @@ int PostMetaStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
             std::cout<<" File doesn't exist yet, create meta post" << std::endl;
             FileInfo fi;
             status = CreateFileEntry(filepath, fi);
-            if (status == ret::A_OK)
-                status = CreateFileMetaPost(filepath, fi);
         }
         else {
            // no nead to throw an error, postfilestrategy should dif the hashes 
@@ -45,26 +43,8 @@ int PostMetaStrategy::CreateFileEntry(const std::string& filepath, FileInfo& out
     std::string mk;
     GetMasterKey(mk);
     FileHandler fh(file_manager_);
-    if(!fh.CreateNewFile(filepath, mk, out))
+    if(!fh.CreateNewFile(filepath, mk, posts_feed_, access_token_, out))
         status = ret::A_FAIL_CREATE_FILE_INFO;
-    return status;
-}
-
-int PostMetaStrategy::CreateFileMetaPost(const std::string& filepath, FileInfo& fi) {
-    int status = ret::A_OK;
-    std::cout<<" creating file meta post " << std::endl;
-    FileHandler fh(file_manager_);
-    std::string master_key = GetMasterKey();
-    FilePost fp;
-    fh.PrepareFilePost(fi, master_key, fp);
-    fp.set_fragment(cnst::g_transit_fragment);
-    PostHandler<FilePost> ph(access_token_);
-    if(ph.Post(posts_feed_, NULL, fp) == ret::A_OK) {
-        FilePost post = ph.GetReturnPost();
-        fi.set_post_id(post.id());
-        FileHandler fh(file_manager_);
-        fh.UpdateFilePostId(fi.filepath(), post.id());
-    }
     return status;
 }
 

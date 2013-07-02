@@ -625,4 +625,10 @@ bool GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder
     return ret;
 }
 
+bool GetFileStrategy::CheckForConflict(FilePost& file_post) { 
+    bool ret = false;
+
+    return ret;
+}
+
 }//namespace

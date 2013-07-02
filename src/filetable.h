@@ -27,25 +27,38 @@ public:
     ~FileTable() {}
 
     bool CreateTable();
-    bool IsFileInManifest(const std::string& filepath);
+    bool IsFileInManifest(const std::string& filepath); // depricated
     bool IsFileInManifestWithId(const std::string& post_id);
 
     bool InsertFileInfo(const FileInfo& fi);
+    bool InsertFileInfo(const std::string& filename, 
+                        const std::string& filepath,
+                        const unsigned int chunk_count,
+                        const std::string& chunk_data,
+                        const unsigned int file_size,
+                        const std::string& post_id,
+                        const std::string& post_version,
+                        const std::string& encrypted_key,
+                        const std::string& iv,
+                        bool deleted,
+                        const std::string& folder_post_id,
+                        const std::string& plaintext_hash);
+
     bool RemoveFileInfo(const std::string &filepath); // depricated
 
     bool set_file_post_id(const std::string &filepath, const std::string &id); // depricated
     bool set_file_version(const std::string& filepath, const std::string& version); // depricated
     bool set_file_deleted(const std::string& filepath, const int val); // depricated
     bool set_filepath(const std::string& old_filepath, const std::string& new_filepath); // depricated
-    bool set_filename(const std::string& filepath, const std::string& new_filename);// depricated
-    bool set_chunk_count(const std::string& filepath, const std::string& chunk_count); // depricated
-    bool set_plaintext_hash(const std::string& filepath, const std::string& hash); // depricated
+    //bool set_filename(const std::string& filepath, const std::string& new_filename);// depricated
+    //bool set_chunk_count(const std::string& filepath, const std::string& chunk_count); // depricated
+    //bool set_plaintext_hash(const std::string& filepath, const std::string& hash); // depricated
 
     bool set_filepath_for_id(const std::string& post_id, const std::string& filepath);
     bool set_filename_for_id(const std::string& post_id, const std::string& filename);
     bool set_folder_post_id(const std::string& post_id, const std::string& folder_post_id);
 
-    bool QueryForFile(const std::string &filepath, FileInfo& out); // depricated
+    bool QueryForFile(const std::string &filepath, FileInfo& out);
     bool QueryForFile(const std::string& filename, 
                       const std::string& folder_post_id,
                       FileInfo& out);

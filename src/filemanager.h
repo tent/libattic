@@ -37,11 +37,8 @@ public:
                    const std::string& tempDirectory);
     int Shutdown();
 
-    bool InsertToManifest (FileInfo* pFi);
+    bool InsertToManifest (FileInfo* fi);
     int RemoveFile(const std::string &filepath);
-
-    int RenameFile(const std::string& old_filepath, 
-                   const std::string& new_filepath);
 
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
@@ -67,7 +64,6 @@ public:
     bool SetFileDeleted(const std::string& filepath, const bool del = true);
     bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
-    bool SetFileChunkCount(const std::string& filepath, const std::string& count);
 
     bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
 

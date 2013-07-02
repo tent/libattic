@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "logutils.h"
 #include "foldersem.h"
+#include "posthandler.h"
 
 namespace attic { 
 
@@ -29,9 +30,14 @@ bool FileHandler::RetrieveFileInfoById(const std::string& post_id, FileInfo& out
 // Note* there are 3 keys that file info objects are queried by, this only sets two of them,
 // if the third is not set, a new file with the same path and folderid can be created for a 
 // duplicate entry
+//
+// Creates a new file entry and file post, left in a transit state
 bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                                 const std::string& master_key,
+                                const std::string& post_feed,
+                                const AccessToken& at,
                                 FileInfo& out) {
+    bool ret = false;
     if(master_key.empty()) {
         std::ostringstream err;
         err << " Invalid master key : "<< master_key << std::endl;
@@ -70,16 +76,39 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                     log::LogString("19240=-124i8", err.str());
                 }
 
-
                 EncryptFileKey(out, master_key); // sets encryted file key on file info
                 // verify key
                 // set filesize
                 out.set_file_size(utils::CheckFilesize(filepath));
-                return file_manager_->InsertToManifest(&out);
+                // Create Meta Post, then insert
+                FilePost fp;
+                if(CreateNewFileMetaPost(out, master_key, post_feed, at, fp)) { 
+                    out.set_post_id(fp.id());
+                    ret = file_manager_->InsertToManifest(&out);
+                }
             }
         }
     }
-    return false;
+    return ret;
+}
+
+bool FileHandler::CreateNewFileMetaPost(FileInfo& fi, 
+                                        const std::string& master_key, 
+                                        const std::string& posts_feed,
+                                        const AccessToken& at,
+                                        FilePost& out) {
+    bool ret = false;
+    std::cout<<" creating file meta post " << std::endl;
+    FilePost fp;
+    PrepareFilePost(fi, master_key, fp);
+    fp.set_fragment(cnst::g_transit_fragment);
+    PostHandler<FilePost> ph(at);
+    if(ph.Post(posts_feed, NULL, fp) == ret::A_OK) {
+        FilePost post = ph.GetReturnPost();
+        fi.set_post_id(post.id());
+        ret = true;
+    }
+    return ret;
 }
 
 bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string& out) {
@@ -125,14 +154,6 @@ bool FileHandler::UpdateFilepath(const std::string& post_id, const std::string& 
         }
     }
     return ret;
-}
-
-bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::string& post_id) {
-    return file_manager_->SetFilePostId(filepath, post_id);
-}
-
-bool FileHandler::UpdateChunkCount(const std::string& filepath, const std::string& count) {
-    return file_manager_->SetFileChunkCount(filepath, count);
 }
 
 bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string& size) {

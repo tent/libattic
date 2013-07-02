@@ -68,6 +68,55 @@ bool FileTable::IsFileInManifestWithId(const std::string& post_id) {
     return false;
 }
 
+bool FileTable::InsertFileInfo(const std::string& filename, 
+                               const std::string& filepath,
+                               const unsigned int chunk_count,
+                               const std::string& chunk_data,
+                               const unsigned int file_size,
+                               const std::string& post_id,
+                               const std::string& post_version,
+                               const std::string& encrypted_key,
+                               const std::string& iv,
+                               bool deleted,
+                               const std::string& folder_post_id,
+                               const std::string& plaintext_hash) {
+    // Prepare data
+    std::string b64_key, b64_iv;
+    crypto::Base64EncodeString(encrypted_key, b64_key);
+    crypto::Base64EncodeString(iv, b64_iv);
+
+    std::string query;
+    if(!IsFileInManifestWithId(post_id))
+        query += "INSERT OR REPLACE INTO ";
+    else
+        query += "REPLACE INTO ";
+    query += table_name();
+    query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
+    query += " postversion, encryptedkey, iv,";
+    query += " deleted, folder_post_id, plaintext_hash)";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+
+    std::string error;
+    bool ret = false;
+    ret = PrepareStatement(query, error);           if(!ret) {log::ls("m_140s",error);return ret;}
+    ret = BindText(1, filename, error);             if(!ret) {log::ls("m_141s",error);return ret;}
+    ret = BindText(2, filepath, error);             if(!ret) {log::ls("m_142s",error);return ret;}
+    ret = BindInt(3, chunk_count, error);           if(!ret) {log::ls("m_143s",error);return ret;}
+    ret = BindBlob(4, chunk_data, error);           if(!ret) {log::ls("m_144s",error);return ret;}
+    ret = BindInt(5, file_size, error);             if(!ret) {log::ls("m_145s",error);return ret;}
+    ret = BindText(6, post_id, error);              if(!ret) {log::ls("m_146s",error);return ret;}
+    ret = BindText(7, post_version, error);         if(!ret) {log::ls("m_149s",error);return ret;}
+    ret = BindText(8, b64_key, error);              if(!ret) {log::ls("m_140.1s",error);return ret;}
+    ret = BindBlob(9, b64_iv, error);               if(!ret) {log::ls("m_150s",error);return ret;}
+    ret = BindInt(10, deleted, error);              if(!ret) {log::ls("m_151s",error);return ret;}
+    ret = BindText(11, folder_post_id, error);      if(!ret) {log::ls("m_152s",error);return ret;}
+    ret = BindText(12, plaintext_hash, error);      if(!ret) {log::ls("m_152.1s",error);return ret;}
+    ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
+    ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
+    return ret;
+}
+
+
 bool FileTable::InsertFileInfo(const FileInfo& fi) {
      // Prepare data
     std::string chunkdata;
@@ -207,6 +256,7 @@ bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
     return  ret;
 }
 
+/*
 bool FileTable::set_filepath(const std::string& old_filepath, const std::string& new_filepath) {
     bool ret = false;
     std::string exc;
@@ -224,6 +274,7 @@ bool FileTable::set_filepath(const std::string& old_filepath, const std::string&
         log::LogString("manifest_0nsv9188ds5", error);
     return  ret;
 }
+*/
 
 bool FileTable::set_filepath_for_id(const std::string& post_id, const std::string& filepath) {
     bool ret = false;
@@ -261,6 +312,7 @@ bool FileTable::set_filename_for_id(const std::string& post_id, const std::strin
     return  ret;
 }
 
+/*
 bool FileTable::set_filename(const std::string& filepath, const std::string& new_filename) {
     bool ret = false;
     std::string exc;
@@ -278,6 +330,7 @@ bool FileTable::set_filename(const std::string& filepath, const std::string& new
         log::LogString("manifest_0012588ms5", error);
     return  ret;
 }
+*/
 
 bool FileTable::set_folder_post_id(const std::string& post_id, const std::string& folder_post_id) {
     bool ret = false;
@@ -296,7 +349,7 @@ bool FileTable::set_folder_post_id(const std::string& post_id, const std::string
         log::LogString("manifest_010158mgs5", error);
     return ret;
 }
-
+/*
 bool FileTable::set_chunk_count(const std::string& filepath, const std::string& chunk_count) {
     bool ret = false;
     std::string exc;
@@ -314,7 +367,9 @@ bool FileTable::set_chunk_count(const std::string& filepath, const std::string& 
         log::LogString("manifest_01058g55", error);
     return ret;
 }
+*/
 
+/*
 bool FileTable::set_plaintext_hash(const std::string& filepath, const std::string& hash) {
     bool ret = false;
     std::string exc;
@@ -332,6 +387,7 @@ bool FileTable::set_plaintext_hash(const std::string& filepath, const std::strin
         log::LogString("manifest_0ma1941155", error);
     return ret;
 }
+*/
 
 bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     bool ret = false;
@@ -358,6 +414,7 @@ bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     }
     return  ret;
 }
+
 
 bool FileTable::QueryForFile(const std::string& filename, 
                              const std::string& folder_post_id,
