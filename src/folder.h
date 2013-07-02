@@ -29,6 +29,7 @@ public:
     void set_deleted(bool del)                      { deleted_ = del; }
 
     bool has_alias() { return !local_alias_.empty(); }
+    void clear_alias() { local_alias_.clear(); }
 private:
     std::string local_alias_;   // Local alias of the file, does not exist in the folder post
 

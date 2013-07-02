@@ -80,6 +80,13 @@ public:
                            const std::string& folder_post_id,
                            const std::string& parent_post_id,
                            Folder& out);
+    bool CreateFolderEntry(const std::string& foldername, 
+                           const std::string& alias,
+                           const std::string& folder_post_id,
+                           const std::string& parent_post_id,
+                           Folder& out);
+
+    bool ClearFolderAlias(const std::string& folder_post_id);
     bool RemoveFolderEntry(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExist(const std::string& foldername, const std::string& parent_post_id);
     bool DoesFolderExistById(const std::string& post_id);

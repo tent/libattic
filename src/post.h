@@ -118,6 +118,7 @@ public:
 
     bool has_attachment(const std::string& name);
     const Attachment& get_attachment(const std::string& name);
+    const TentApp* tent_app() const { return &tent_app_; }
 
     const std::string& id() const       { return id_; }
     const std::string& entity() const   { return entity_; }

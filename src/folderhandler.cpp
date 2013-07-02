@@ -154,10 +154,32 @@ bool FolderHandler::InsertFolder(const FolderPost& fp) {
                                                    f);
         }
         else {
+            std::cout<<" SETTING ALIAS " << std::endl;
+            FolderPost tmp = fp;
+            jsn::PrintOutSerializeableObject(&tmp);
             // TODO :: This is a conflict insert conflict logic here.
+            // <filename>_<device>_<timestamp>
+            std::string alias = fp.folder().foldername();
+            alias += "_";
+            alias += fp.tent_app()->app_name();
+            alias += "_";
+            time_t t = time(0);
+            char t_buf[256] = {'\0'};
+            snprintf(t_buf, 256, "%u", t);
+            alias += t_buf;
+            std::cout<<" setting alias : " << alias << std::endl;
+
+            Folder f;
+            ret = file_manager_->CreateFolderEntry(fp.folder().foldername(),
+                                                   alias,
+                                                   fp.id(),
+                                                   fp.folder().parent_post_id(),
+                                                   f);
+            
             std::ostringstream err;
             err << " Attempting to Insert duplicate folder (same name diff post) " << std::endl;
             err << " foldername : " << fp.folder().foldername() << std::endl;
+            err << " alias : " << alias << std::endl;
             err << " folder post : " << fp.folder().folder_post_id() << std::endl;
             err << " parent post : " << fp.folder().parent_post_id() << std::endl;
             log::LogString("fh_19485", err.str());

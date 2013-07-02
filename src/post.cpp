@@ -296,9 +296,13 @@ void Post::Deserialize(Json::Value& root) {
         }
     }
 
-    if(!root["app"].isNull()) {
+    if(root.isMember("app")) {
         tent_app_.Deserialize(root["app"]);
     }
+    else {
+        std::cout<<" post has no app " << std::endl;
+    }
+
 
     jsn::DeserializeObjectValueIntoMap(root["views"], views_);
     jsn::DeserializeObject(&permissions_,root["permissions"]);

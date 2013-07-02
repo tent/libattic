@@ -7,7 +7,7 @@ bool FolderTable::CreateTable() {
     std::string exc;
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
-    exc += " (foldername TEXT, post_id TEXT, parent_post_id TEXT, deleted INT,";
+    exc += " (foldername TEXT, alias TEXT, post_id TEXT, parent_post_id TEXT, deleted INT,";
     exc += " PRIMARY KEY(foldername ASC, post_id ASC, parent_post_id ASC));";
     std::string error;
     bool ret = Exec(exc, error);
@@ -17,6 +17,7 @@ bool FolderTable::CreateTable() {
 }
 
 bool FolderTable::InsertFolderInfo(const std::string& foldername, 
+                                   const std::string& alias,
                                    const std::string& folderpostid,
                                    const std::string& parentpostid,
                                    const bool deleted) {
@@ -28,14 +29,15 @@ bool FolderTable::InsertFolderInfo(const std::string& foldername,
     else
         exc += "REPLACE INTO ";
     exc += table_name();
-    exc += " (foldername, post_id, parent_post_id, deleted) VALUES (?,?,?,?);";  
+    exc += " (foldername, alias, post_id, parent_post_id, deleted) VALUES (?,?,?,?,?);";  
     
     std::string error;
     ret = PrepareStatement(exc, error);     if(!ret) {log::ls("m_240s",error);return ret;}
     ret = BindText(1, foldername, error);   if(!ret) {log::ls("m_241s",error);return ret;}
-    ret = BindText(2, folderpostid, error); if(!ret) {log::ls("m_242s",error);return ret;}
-    ret = BindText(3, parentpostid, error); if(!ret) {log::ls("m_243s",error);return ret;}
-    ret = BindInt(4, deleted, error);       if(!ret) {log::ls("m_244s",error);return ret;}
+    ret = BindText(2, alias, error);        if(!ret) {log::ls("m_241.1s",error);return ret;}
+    ret = BindText(3, folderpostid, error); if(!ret) {log::ls("m_242s",error);return ret;}
+    ret = BindText(4, parentpostid, error); if(!ret) {log::ls("m_243s",error);return ret;}
+    ret = BindInt(5, deleted, error);       if(!ret) {log::ls("m_244s",error);return ret;}
     ret = StepStatement(error);             if(!ret) {log::ls("m_253s",error);return ret;}
     ret = FinalizeStatement(error);         if(!ret) {log::ls("m_254s",error);return ret;}
     return ret;
@@ -238,6 +240,25 @@ bool FolderTable::QueryAllFoldersForFolder(const std::string& folderid, FolderLi
     }
     return ret;
 }
+
+bool FolderTable::set_folder_alias(const std::string& post_id, const std::string& alias) {
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET alias=\"";
+    exc += alias;
+    exc += "\" WHERE post_id=\"";
+    exc += post_id;
+    exc += "\";";
+
+    std::string error;
+    bool ret = Exec(exc, error);
+    if(!ret)                                       
+        log::LogString("manifest_293collapse5", error);
+    return ret;
+
+}
+
 bool FolderTable::set_folder_post_id(const std::string& post_id,
                                      const std::string& new_post_id) {
     std::string exc;
@@ -396,8 +417,12 @@ bool FolderTable::GetFoldername(const std::string& post_id, std::string& out) {
 
 void FolderTable::ExtractFolderInfoResults(const SelectResult& res, const int step, Folder& out) {
     out.set_foldername(res.results()[0+step]);
-    out.set_folder_post_id(res.results()[1+step]);
-    out.set_parent_post_id(res.results()[2+step]);
+    out.set_local_alias(res.results()[1+step]);
+    out.set_folder_post_id(res.results()[2+step]);
+    out.set_parent_post_id(res.results()[3+step]);
+    std::string deleted = res.results()[4+step];
+    if(deleted == "1") out.set_deleted(true);
+    else out.set_deleted(false);
 }
 
 } // namespace

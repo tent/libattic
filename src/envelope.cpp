@@ -35,6 +35,7 @@ void Envelope::Deserialize(Json::Value& root) {
 
     Json::Value posts(Json::arrayValue);
     posts = root["posts"];
+    jsn::PrintOutJsonValue(&posts);
     Json::ValueIterator posts_itr = posts.begin();
     for(;posts_itr!= posts.end(); posts_itr++) {
         Post p;

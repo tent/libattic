@@ -230,6 +230,9 @@ void Polling::PollFolderPosts() {
             err << (*r_itr).folder().foldername() << " id : ";
             err << (*r_itr).id() << " parent_post id : ";
             err << (*r_itr).folder().parent_post_id() << std::endl;
+
+            std::cout<<" POST DEBUG : " << std::endl;
+            jsn::PrintOutSerializeableObject(&(*r_itr));
         }
         err << "************************************************ " << std::endl;
         std::cout << err.str() << std::endl;

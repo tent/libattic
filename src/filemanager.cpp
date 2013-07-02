@@ -473,16 +473,42 @@ bool FileManager::CreateFolderEntry(const std::string& foldername,
     manifest_mtx_.Lock();
     if(!manifest_.folder_table()->IsFolderInManifest(folder_post_id)) {
         ret = manifest_.folder_table()->InsertFolderInfo(foldername, 
+                                                         "", // Leave empty, for no alias
                                                          folder_post_id, 
                                                          parent_post_id, 
                                                          false);
-        if(ret)
-            ret = manifest_.folder_table()->QueryForFolderByPostId(folder_post_id, out);
+        if(ret) ret = manifest_.folder_table()->QueryForFolderByPostId(folder_post_id, out);
     }
     manifest_mtx_.Unlock();
     return ret;
 }
 
+bool FileManager::ClearFolderAlias(const std::string& folder_post_id) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.folder_table()->set_folder_alias(folder_post_id, "");
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::CreateFolderEntry(const std::string& foldername, 
+                                    const std::string& alias,
+                                    const std::string& folder_post_id,
+                                    const std::string& parent_post_id,
+                                    Folder& out) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    if(!manifest_.folder_table()->IsFolderInManifest(folder_post_id)) {
+        ret = manifest_.folder_table()->InsertFolderInfo(foldername, 
+                                                         alias, // Leave empty, for no alias
+                                                         folder_post_id, 
+                                                         parent_post_id, 
+                                                         false);
+        if(ret) ret = manifest_.folder_table()->QueryForFolderByPostId(folder_post_id, out);
+    }
+    manifest_mtx_.Unlock();
+    return ret;
+}
 bool FileManager::RemoveFolderEntry(const std::string& foldername, 
                                     const std::string& parent_post_id) {
     bool ret = false;
@@ -790,10 +816,16 @@ bool FileManager::ConstructFolderpath(const std::string& folder_post_id,
         std::cout<<" folder post id : " << folder_post_id << std::endl;
         if(GetFolderEntryByPostId(post_id, folder)) {
             if(!IsRootDirectory(post_id)) { 
-                path_out = "/" + folder.foldername() + path_out;
+                if(folder.has_alias())
+                    path_out = "/" + folder.local_alias() + path_out;
+                else
+                    path_out = "/" + folder.foldername() + path_out;
             }
             else {
-                path_out = folder.foldername() + path_out;
+                if(folder.has_alias())
+                    path_out = folder.local_alias() + path_out;
+                else
+                    path_out = folder.foldername() + path_out;
                 ret = true;
                 break;
             }

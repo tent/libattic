@@ -42,6 +42,32 @@ namespace jsn {
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m);
     static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m);
 
+    static void PrintOutJsonValue(Json::Value* val);
+
+    static void PrintOutSerializeableObject(JsonSerializable* pObj) {
+        Json::Value val;
+        if(SerializeObject(pObj, val))
+            PrintOutJsonValue(&val);
+        else 
+            std::cout<<" failed to serialize " << std::endl;
+    }
+
+    static std::string DebugSerializeableObject(JsonSerializable* pObj) {
+        std::string output;
+        Json::Value val(Json::nullValue);
+        if(SerializeObject(pObj, val)) { 
+            std::string output;
+            Json::StyledWriter writer;
+            output = writer.write(val);
+        }
+        else  { 
+            output = " failed to serialize\n";
+        }
+        return output;
+    }
+
+
+
     static void PrintOutJsonValue(Json::Value* val) {
         if(val) {
             std::string output;

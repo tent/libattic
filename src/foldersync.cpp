@@ -200,10 +200,16 @@ bool FolderSync::ConstructFolderpath(const FolderPost& fp, std::string& path_out
         Folder folder;
         if(RetrieveFolder(post_id, folder)) {
             if(!file_manager_->IsRootDirectory(post_id)) {
-                path_out = "/" + folder.foldername() + path_out;
+                if(folder.has_alias())
+                    path_out = "/" + folder.local_alias() + path_out;
+                else
+                    path_out = "/" + folder.foldername() + path_out;
             }
             else {
-                path_out = folder.foldername() + path_out;
+                if(folder.has_alias())
+                    path_out = folder.local_alias() + path_out;
+                else
+                    path_out = folder.foldername() + path_out;
                 ret = true;
                 break;
             }

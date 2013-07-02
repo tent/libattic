@@ -25,6 +25,7 @@ public:
     bool CreateTable();
 
     bool InsertFolderInfo(const std::string& foldername, 
+                          const std::string& alias,
                           const std::string& folderpostid,
                           const std::string& parentpostid,
                           const bool deleted);
@@ -43,6 +44,7 @@ public:
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
     bool QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
 
+    bool set_folder_alias(const std::string& post_id, const std::string& alias);
     bool set_folder_post_id(const std::string& post_id, const std::string& new_post_id);
     bool set_folder_parent_post_id(const std::string& post_id, const std::string& parent_post_id);
     bool set_foldername(const std::string& post_id, const std::string& foldername);
