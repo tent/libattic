@@ -39,6 +39,8 @@ struct Event {
         DOWNLOAD_TRANSFERRED,
         FILE_LOCK,
         FILE_UNLOCK,
+        FOLDER_LOCK,
+        FOLDER_UNLOCK,
         RECOVERY_KEY,
         TEMPORARY_PASS,
         ERROR_NOTIFY,

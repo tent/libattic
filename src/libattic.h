@@ -54,6 +54,11 @@ void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*));
 
+
+// status - file/folderpath - BEGIN/END
+void RegisterForFileInUseEvents(void (*callback)(int, int, const char*));
+void RegisterForFolderInUseEvents(void (*callback)(int, int, const char*));
+
 int HasCredentialsPost();
 
 int ScanAtticFolder();

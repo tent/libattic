@@ -349,43 +349,49 @@ int FreeFileList(char** pList, int stride) {
 }
 
 void RegisterForPullNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PULL, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PULL, callback);
 }
 
 void RegisterForPushNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PUSH, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PUSH, callback);
 }
 
 void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::UPLOAD_SPEED, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::UPLOAD_SPEED, callback);
 }
 
 void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::DOWNLOAD_SPEED, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::DOWNLOAD_SPEED, callback);
 }
 
 void RegisterForErrorNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::ERROR_NOTIFY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::ERROR_NOTIFY, callback);
 }
 
 void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::RECOVERY_KEY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::RECOVERY_KEY, callback);
 }
 
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::TEMPORARY_PASS, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::TEMPORARY_PASS, callback);
 }
 
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PAUSE_RESUME_NOTIFY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PAUSE_RESUME_NOTIFY, callback);
+}
+
+void RegisterForFileInUseEvents(void (*callback)(int, int, const char*)) {
+    if(callback) {
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FILE_LOCK, callback);
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FILE_UNLOCK, callback);
+    }
+}
+
+void RegisterForFolderInUseEvents(void (*callback)(int, int, const char*)) {
+    if(callback) {
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FOLDER_LOCK, callback);
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FOLDER_UNLOCK, callback);
+    }
 }
 
 int Pause(void) { 
