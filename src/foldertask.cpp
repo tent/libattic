@@ -89,7 +89,8 @@ int FolderTask::RenameFolder() {
                                                           parent_post_id); // new parent post id
                     file_manager()->SetFoldername(folder.folder_post_id(),
                                                   (*itr));
-                    UpdateFolderPost(folder, folder.folder_post_id());
+                    if(UpdateFolderPost(folder, folder.folder_post_id()))
+                        file_manager()->ClearFolderAlias(folder.folder_post_id());
                 }
                 else {
                     if(!fh.AttemptCreateNewFolderEntry((*itr),
