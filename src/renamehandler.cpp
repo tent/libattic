@@ -68,6 +68,8 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
             ret = file_manager_->SetFoldername(folder.folder_post_id(), 
                                                fp.folder().foldername());
+            // clear alias if one exists
+            file_manager_->ClearFolderAlias(folder.folder_post_id());
             // Constrcut new path
             std::string new_path;
             file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);

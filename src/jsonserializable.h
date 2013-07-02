@@ -189,8 +189,7 @@ namespace jsn {
     }
 
 
-    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, Json::Value> &m)
-    {
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, Json::Value> &m) {
         if(val.isObject()) {
             std::map<std::string, Json::Value>::iterator itr = m.begin();
 
@@ -200,8 +199,7 @@ namespace jsn {
         }
     }
 
-    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m)
-    {
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, std::string> &m) {
         if(val.isObject()) {
             std::map<std::string, std::string>::iterator itr = m.begin();
 
@@ -212,8 +210,7 @@ namespace jsn {
         }
     }
 
-    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m)
-    {
+    static void SerializeMapIntoObject(Json::Value &val, std::map<std::string, bool> &m) {
         if(val.isObject()) {
             std::map<std::string, bool>::iterator itr = m.begin();
 
@@ -223,8 +220,7 @@ namespace jsn {
         }
     }
 
-    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m)
-    {
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, std::string> &m) {
         if(val.isObject()){
             m.clear();
             Json::ValueIterator itr = val.begin();
@@ -258,8 +254,7 @@ namespace jsn {
         }
     }
 
-    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m)
-    {
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, bool> &m) {
         if(val.isObject()) {
             m.clear();
             Json::ValueIterator itr = val.begin();
@@ -270,8 +265,7 @@ namespace jsn {
         }
     }
 
-    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m)
-    {
+    static void DeserializeObjectValueIntoMap(Json::Value &val, std::map<std::string, Json::Value> &m) {
         if(val.isObject()) {
             m.clear();
             Json::ValueIterator itr = val.begin();

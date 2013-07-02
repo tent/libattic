@@ -378,6 +378,10 @@ bool FileManager::GetFolderEntry(const std::string& foldername,
     manifest_mtx_.Lock();
     ret = manifest_.folder_table()->QueryForFolder(foldername, parent_post_id, out);
     std::cout<<" get folder entry : " << foldername << " id : " << parent_post_id << " found? : " << ret << std::endl;
+    if(!ret) {
+        // Check against alias
+        ret = manifest_.folder_table()->QueryForFolderWithAlias(foldername, parent_post_id, out);
+    }
     manifest_mtx_.Unlock();
     return ret;
 }

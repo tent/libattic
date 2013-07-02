@@ -8,7 +8,7 @@ bool FolderTable::CreateTable() {
     exc += "CREATE TABLE IF NOT EXISTS ";
     exc += table_name();
     exc += " (foldername TEXT, alias TEXT, post_id TEXT, parent_post_id TEXT, deleted INT,";
-    exc += " PRIMARY KEY(foldername ASC, post_id ASC, parent_post_id ASC));";
+    exc += " PRIMARY KEY(foldername ASC, alias ASC, post_id ASC, parent_post_id ASC));";
     std::string error;
     bool ret = Exec(exc, error);
     if(!ret)
@@ -158,6 +158,36 @@ bool FolderTable::QueryForFolder(const std::string& foldername,
     return ret;
 }
 
+bool FolderTable::QueryForFolderWithAlias(const std::string& aliased_foldername,
+                                          const std::string& parent_post_id,
+                                          Folder& out) {
+    bool ret = false;
+    std::string query;
+    query += "SELECT * FROM ";
+    query += table_name();
+    query += " WHERE alias=\"";
+    query += aliased_foldername;
+    query += "\" AND";
+    query += " parent_post_id=\"";
+    query += parent_post_id;
+    query += "\";";
+
+    std::string error;
+    SelectResult res;
+    if(Select(query, res, error)) {
+        int step = 0;
+        for(int i=0; i<res.row()+1; i++) {
+            step = i*res.col();
+            if(step > 0)
+                ExtractFolderInfoResults(res, step, out);
+        }
+        if(step) ret = true;
+    }
+    else {
+        log::LogString("manifest_qqqdg92", error);
+    }
+    return ret;
+}
 
 bool FolderTable::QueryForFolder(const std::string& foldername, Folder& out) { // depricated
     bool ret = false;

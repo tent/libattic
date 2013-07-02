@@ -40,6 +40,10 @@ public:
                         const std::string parent_post_id, 
                         Folder& out);
 
+    bool QueryForFolderWithAlias(const std::string& aliased_foldername,
+                                 const std::string& parent_post_id,
+                                 Folder& out);
+
     bool QueryForFolder(const std::string& foldername, Folder& out); // Depricated
     bool QueryForFolderByPostId(const std::string& post_id, Folder& out);
     bool QueryAllFoldersForFolder(const std::string& folderid, FolderList& out);
