@@ -103,7 +103,6 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
             Envelope pp;
             jsn::DeserializeObject(&pp, resp.body);
 
-            timeline_debug << "serializing debug : " << jsn::DebugSerializeableObject(&pp) << std::endl;
             // Go through posts
             if(pp.posts()->size()){
                 Envelope::PostQueue::iterator itr = pp.posts()->begin(); 

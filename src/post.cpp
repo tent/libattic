@@ -220,11 +220,11 @@ void Post::Serialize(Json::Value& root) {
         root["mentions"] = mentions_array;
     }
 
-    /*
-    Json::Value app;
+
+    Json::Value app(Json::nullValue);
     tent_app_.Serialize(app); 
-    root["app"] = app;
-    */
+    if(!app.isNull())
+        root["app"] = app;
 
     if(views_.size() > 0) {
         Json::Value views(Json::objectValue);

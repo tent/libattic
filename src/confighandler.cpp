@@ -46,6 +46,7 @@ bool ConfigHandler::UpdateConfigPost(const Entity& ent, const AccessToken* at, C
     std::cout<<" url : " << url << std::endl;
     int status = ret::A_OK;
     PostHandler<ConfigPost> ph(*at, false);
+    jsn::PrintOutSerializeableObject(&post);
     if(post.id().empty()) { 
         std::cout<<" POSTING CONFIG POST" << std::endl;
         status = ph.Post(url, NULL, post);

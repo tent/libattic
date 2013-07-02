@@ -16,17 +16,16 @@ void RedirectCode::Deserialize(Json::Value& root) {
 }
 
 void TentApp::Serialize(Json::Value& root) {
-    root["id"] = app_id_;
-    root["name"] = app_name_;
-    root["description"] = app_description_;
-    root["url"] = app_url_;
-    root["icon"] = app_icon_;
+    if(!app_id_.empty()) root["id"] = app_id_;
+    if(!app_name_.empty()) root["name"] = app_name_;
+    if(!app_description_.empty()) root["description"] = app_description_;
+    if(!app_url_.empty()) root["url"] = app_url_;
+    if(!app_icon_.empty())   root["icon"] = app_icon_;
 
-    root["hawk_algorithm"] = hawk_algorithm_;
-    root["hawk_key_id"] = hawk_key_id_;
-    root["hawk_key"] = hawk_key_;
-
-    root["redirect_uri"] = redirect_uri_;
+    if(!hawk_algorithm_.empty())root["hawk_algorithm"] = hawk_algorithm_;
+    if(!hawk_key_id_.empty())root["hawk_key_id"] = hawk_key_id_;
+    if(!hawk_key_.empty())root["hawk_key"] = hawk_key_;
+    if(!redirect_uri_.empty())root["redirect_uri"] = redirect_uri_;
 
     if(authorizations_.size() > 0) {
         Json::Value authorizations;
@@ -41,9 +40,9 @@ void TentApp::Serialize(Json::Value& root) {
         Json::Value write_types(Json::arrayValue);
         jsn::SerializeVector(post_types_["read"], read_types);
         jsn::SerializeVector(post_types_["write"], write_types);
-        posttype["read"] = read_types;
-        posttype["write"] = write_types;
-        root["post_types"] = posttype;
+        if(!read_types.empty()) posttype["read"] = read_types;
+        if(!write_types.empty()) posttype["write"] = write_types;
+        if(!posttype.empty()) root["post_types"] = posttype;
     }
 
 }
