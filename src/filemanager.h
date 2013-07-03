@@ -38,7 +38,7 @@ public:
     int Shutdown();
 
     bool InsertToManifest (FileInfo* fi);
-    int RemoveFile(const std::string &filepath);
+    //int RemoveFile(const std::string &filepath);
 
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
@@ -60,14 +60,17 @@ public:
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
     bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
 
-    bool SetFileVersion(const std::string& filepath, const std::string& version);
-    bool SetFileDeleted(const std::string& filepath, const bool del = true);
-    bool SetFilePostId(const std::string& filepath, const std::string& postid);
+
+    //bool SetFileDeleted(const std::string& filepath, const bool del = true);
+   // bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
+
 
     bool SetFilename(const std::string& post_id, const std::string& filename);
     bool SetFilepath(const std::string& post_id, const std::string& filepath);
     bool SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id);
+    bool SetFileDeleted(const std::string& post_id, const bool del = true);
+    bool SetFileVersion(const std::string& post_id, const std::string& version);
 
     // Folder
     bool CreateFolderEntry(const std::string& foldername, 

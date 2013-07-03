@@ -28,9 +28,8 @@ int SoftDeleteStrategy::Execute(FileManager* file_manager,
 
 void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
     int status = ret::A_OK;
-    std::string filepath = fi->filepath();
     fi->set_deleted(true);
-    file_manager_->SetFileDeleted(filepath, true);
+    file_manager_->SetFileDeleted(fi->post_id(), true);
 }
 
 int SoftDeleteStrategy::UpdateFilePost(FileInfo* fi) {

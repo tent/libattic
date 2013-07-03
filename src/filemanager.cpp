@@ -33,6 +33,7 @@ int FileManager::Shutdown() {
     return manifest_.Shutdown();
 }
 
+/*
 int FileManager::RemoveFile(const std::string &filepath) {
     int status = ret::A_OK;
 
@@ -43,6 +44,7 @@ int FileManager::RemoveFile(const std::string &filepath) {
 
     return status;
 }
+*/
 
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
                                        std::string& relative_out, 
@@ -85,7 +87,7 @@ bool FileManager::InsertToManifest (FileInfo* fi) {
             // Insert into infotable
             std::string chunk_data;
             fi->GetSerializedChunkData(chunk_data);
-            ret = manifest_.file_table()->InsertFileInfo(*fi);
+            //ret = manifest_.file_table()->InsertFileInfo(*fi);
             ret = manifest_.file_table()->InsertFileInfo(fi->filename(),
                                                          fi->filepath(),
                                                          fi->chunk_count(),
@@ -104,23 +106,20 @@ bool FileManager::InsertToManifest (FileInfo* fi) {
     return ret;
 }
 
-bool FileManager::SetFileVersion(const std::string& filepath, const std::string& version) {
+
+bool FileManager::SetFileVersion(const std::string& post_id, const std::string& version) {
     bool ret = false;
-    if(IsPathAliased(filepath)) {
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_file_version(filepath, version);
-        manifest_mtx_.Unlock();
-    }
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_file_version_for_id(post_id, version);
+    manifest_mtx_.Unlock();
     return ret;
 }
 
-bool FileManager::SetFileDeleted(const std::string& filepath, const bool del) {
+bool FileManager::SetFileDeleted(const std::string& post_id, const bool del) {
     bool ret = false;
-    if(IsPathAliased(filepath)) {
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_file_deleted(filepath, del);
-        manifest_mtx_.Unlock();
-    }
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_file_deleted_for_id(post_id, del);
+    manifest_mtx_.Unlock();
     return ret;
 }
 
@@ -135,7 +134,8 @@ bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
     return MarkFilesInFolderDeleted(folder.folder_post_id());
 }
 
-bool FileManager::SetFilePostId(const std::string &filepath, const std::string& postid) {
+/*
+bool FileManager::SetFilePostId(const std::string &post_id, const std::string& postid) {
     bool ret = false;
     std::cout<<" incoming filepath : " << filepath << std::endl;
     std::cout<<" post id : " << postid << std::endl;
@@ -149,6 +149,7 @@ bool FileManager::SetFilePostId(const std::string &filepath, const std::string& 
     std::cout<<" set file post id return : " << ret << std::endl;
     return ret;
 }
+*/
 
 // Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
 bool FileManager::SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id){
@@ -520,7 +521,6 @@ bool FileManager::SetFolderParentPostId(const std::string& post_id,
     return ret;
 }
 
-// Kind of a worrysome method, revist at some point
 bool FileManager::IsFolderDeleted(const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();

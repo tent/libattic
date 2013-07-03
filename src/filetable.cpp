@@ -116,59 +116,6 @@ bool FileTable::InsertFileInfo(const std::string& filename,
     return ret;
 }
 
-
-bool FileTable::InsertFileInfo(const FileInfo& fi) {
-     // Prepare data
-    std::string chunkdata;
-    fi.GetSerializedChunkData(chunkdata);
-
-    std::string local_key = fi.file_credentials().key();
-    std::string local_iv = fi.file_credentials().iv();
-
-    std::string encryptedkey = fi.encrypted_key();
-    std::string b64_key;
-    crypto::Base64EncodeString(encryptedkey, b64_key);
-
-    std::string iv = fi.file_credentials_iv();
-    std::string b64_iv;
-    crypto::Base64EncodeString(iv, b64_iv);
-
-    std::string query;
-    if(!IsFileInManifest(fi.filepath()))
-        query += "INSERT OR REPLACE INTO ";
-    else
-        query += "REPLACE INTO ";
-    query += table_name();
-    query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
-    query += " postversion, encryptedkey, iv,";
-    query += " deleted, folder_post_id, plaintext_hash)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
-
-    std::string error;
-    bool ret = false;
-    ret = PrepareStatement(query, error);           if(!ret) {log::ls("m_140s",error);return ret;}
-    ret = BindText(1, fi.filename(), error);        if(!ret) {log::ls("m_141s",error);return ret;}
-    ret = BindText(2, fi.filepath(), error);        if(!ret) {log::ls("m_142s",error);return ret;}
-    ret = BindInt(3, fi.chunk_count(), error);      if(!ret) {log::ls("m_143s",error);return ret;}
-    ret = BindBlob(4, chunkdata, error);            if(!ret) {log::ls("m_144s",error);return ret;}
-    ret = BindInt(5, fi.file_size(), error);        if(!ret) {log::ls("m_145s",error);return ret;}
-    ret = BindText(6, fi.post_id(), error);         if(!ret) {log::ls("m_146s",error);return ret;}
-    ret = BindText(7, fi.post_version(), error);    if(!ret) {log::ls("m_149s",error);return ret;}
-    ret = BindText(8, b64_key, error);              if(!ret) {log::ls("m_140.1s",error);return ret;}
-    ret = BindBlob(9, b64_iv, error);               if(!ret) {log::ls("m_150s",error);return ret;}
-    ret = BindInt(10, fi.deleted(), error);         if(!ret) {log::ls("m_151s",error);return ret;}
-    ret = BindText(11, fi.folder_post_id(), error); if(!ret) {log::ls("m_152s",error);return ret;}
-    ret = BindText(12, fi.plaintext_hash(), error); if(!ret) {log::ls("m_152.1s",error);return ret;}
-    ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
-    ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
-    return ret;
-}
-
-bool FileTable::RemoveFileInfo(const std::string &filepath) {
-    bool ret = false;
-    return  ret;
-}
-
 void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, FileInfo& out) {
 /* Note : Remember the manifest is a point of data contention, any string set here NEEDS avoid 
  *        copy on write, make sure the string is EXCLICITLY COPIED out of here whether this is 
@@ -200,6 +147,7 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
     out.set_plaintext_hash(res.results()[11+step]);
 }
 
+/*
 bool FileTable::set_file_post_id(const std::string &filepath, const std::string &id) {
     bool ret = false;
     std::string exc;
@@ -217,7 +165,9 @@ bool FileTable::set_file_post_id(const std::string &filepath, const std::string 
         log::LogString("manifest_svn298140jfs", error);
     return  ret;
 }
+*/
 
+/*
 bool FileTable::set_file_version(const std::string& filepath, const std::string& version) {
     bool ret = false;
     std::string exc;
@@ -235,7 +185,9 @@ bool FileTable::set_file_version(const std::string& filepath, const std::string&
         log::LogString("manifest_102941m129i8412", error);
     return  ret;
 }
+*/
 
+/*
 bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
     bool ret = false;
     char szDel[256] = {'\0'};
@@ -254,6 +206,46 @@ bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
     if(!ret)
         log::LogString("manifest_s1000101s", error);
     return  ret;
+}
+*/
+
+bool FileTable::set_file_version_for_id(const std::string& post_id, const std::string& version) {
+    bool ret = false;
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += table_name();
+    exc += "\" SET postversion=\"";
+    exc += version;
+    exc += "\" WHERE metapostid=\"";
+    exc += post_id;
+    exc +="\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_102941m129i8412", error);
+    return  ret;
+}
+
+bool FileTable::set_file_deleted_for_id(const std::string& post_id, const int val) {
+    bool ret = false;
+    char szDel[256] = {'\0'};
+    snprintf(szDel, 256, "%d", val);
+    std::string exc;
+    exc += "UPDATE \"";
+    exc += table_name();
+    exc += "\" SET deleted=\"";
+    exc += std::string(szDel);
+    exc += "\" WHERE metapostid=\"";
+    exc += post_id;
+    exc +="\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_s1000101s", error);
+    return  ret;
+
 }
 
 bool FileTable::set_filepath_for_id(const std::string& post_id, const std::string& filepath) {
@@ -459,7 +451,7 @@ bool FileTable::MarkAllFilesDeletedInFolder(const std::string& folderid) {
     if(QueryAllFilesForFolder(folderid, file_list) == ret::A_OK) {
         FileInfoList::iterator itr = file_list.begin();
         for(;itr!= file_list.end(); itr++)
-            ret = set_file_deleted((*itr).filepath(), 1);
+            ret = set_file_deleted_for_id((*itr).post_id(), 1);
     }
     return ret;
 }
