@@ -91,15 +91,17 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                                     folder)){
                         vlog << " file already exists " << std::endl;
                         if(file_manager_->GetFolderEntry((*itr), parent_post_id, folder)) {
+                            std::cout<<" checking if folder is deleted ... " << std::endl;
                             // Check if folderpath is deleted
                             if(file_manager_->IsFolderDeleted(folder.folder_post_id())){
                                 // Un-delete
+                                std::cout<<" Attempting to undelete " << std::endl;
                                 file_manager_->SetFolderDeleted(folder.folder_post_id(), false);
-                                UpdateFolderPost(folder, 
-                                                 folder.folder_post_id(),
-                                                 entity_url,
-                                                 post_path,
-                                                 at);
+                                UnDeleteFolderPost(folder, 
+                                                   folder.folder_post_id(),
+                                                   entity_url,
+                                                   post_path,
+                                                   at);
                             }
                         }
                     }
@@ -425,6 +427,10 @@ bool FolderHandler::SetFolderDeleted(const std::string& post_id, bool del) {
     return file_manager_->SetFolderDeleted(post_id, del);
 }
 
+bool FolderHandler::IsFolderDeleted(const std::string& post_id) {
+    return file_manager_->IsFolderDeleted(post_id);
+}
+
 int FolderHandler::CreateFolderPost(Folder& folder, 
                                     const std::string& posts_feed,
                                     const AccessToken& at,
@@ -444,6 +450,33 @@ int FolderHandler::CreateFolderPost(Folder& folder,
     }
     return status;
 }
+
+bool FolderHandler::UnDeleteFolderPost(Folder& folder, 
+                                       const std::string& post_id,
+                                       const std::string& entity_url,
+                                       const std::string& post_path,
+                                       const AccessToken& at) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        FolderPost fp;
+        if(RetrieveFolderPost(folder.folder_post_id(), entity_url, post_path, at, fp) == ret::A_OK) {
+            fp.set_folder(folder);
+            fp.clear_fragment();
+            if(PostFolderPost(post_id, entity_url, post_path, at, fp) == ret::A_OK)
+                ret = true;
+        }
+    }
+    else {
+        std::ostringstream err;
+        err << " Empty Folder Post id : " << std::endl;
+        err << " entry : " << folder.foldername();
+        err << " \t\t " << folder.folder_post_id();
+        err << " \t\t " << folder.parent_post_id();
+        log::LogString("fh_9_18912512", err.str());
+    }
+    return ret;
+}
+ 
 
 bool FolderHandler::UpdateFolderPost(Folder& folder, 
                                      const std::string& post_id,

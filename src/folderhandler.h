@@ -82,6 +82,7 @@ public:
     bool GetFolderByAbsolutePath(const std::string& folderpath, Folder& out);
     bool IsFolderInCache(const std::string& folder_name, const std::string& parent_post_id);
     bool IsFolderInCacheWithId(const std::string& post_id);
+    bool IsFolderDeleted(const std::string& post_id);
     bool SetFolderDeleted(const std::string& post_id, bool del);
 
     int CreateFolderPost(Folder& folder, 
@@ -94,6 +95,12 @@ public:
                           const std::string& entity_url,
                           const std::string& post_path,
                           const AccessToken& at);
+
+    bool UnDeleteFolderPost(Folder& folder, 
+                            const std::string& post_id,
+                            const std::string& entity_url,
+                            const std::string& post_path,
+                            const AccessToken& at);
  
     int RetrieveFolderPost(const std::string& post_id, 
                            const std::string& entity_url,

@@ -132,6 +132,7 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
         }
     }
 
+    rlog <<" ret : " << ret << std::endl;
     rlog <<" **************************************************** " << std::endl;
     std::cout<< rlog.str() << std::endl;
     return ret;

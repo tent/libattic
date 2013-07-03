@@ -73,6 +73,16 @@ void FolderSync::ValidateFolder(FolderPost& fp) {
         else {
             RenameHandler rh(file_manager_);
             if(!rh.CheckForRename(fp)) {
+                // Check if folder was previously deleted
+                std::cout << " no folder rename ... " << std::endl;
+                if(fh.IsFolderDeleted(fp.id())) {
+                    std::cout<<" is folder deleted yes " << std::endl;
+                    if(fp.type().find(cnst::g_deleted_fragment) == std::string::npos) {
+                        // un-delete
+                        std::cout<<" undeleted " << std::endl;
+                        fh.SetFolderDeleted(fp.id(), false);
+                    }
+                }
                 // Make sure path exists anyway
                 CreateDirectoryTree(fp);
             }
@@ -189,6 +199,10 @@ bool FolderSync::CreateDirectoryTree(const FolderPost& fp) {
             error << " foldername : " << fp.folder().foldername() << std::endl;
             log::LogString("folder_handler_12904", error.str());
         }
+    }
+    else {
+        std::cout<<" CreateDirectoryTree folder is deleted "<< fp.folder().foldername() << std::endl;
+        std::cout<<" ret : " << ret << std::endl;
     }
     return ret;
 }
