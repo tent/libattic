@@ -159,6 +159,7 @@ bool FileManager::SetFileFolderPostId(const std::string& post_id, const std::str
     return ret;
 }
 
+/*
 bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath) {
     bool ret = false;
     if(IsPathAliased(old_filepath) && IsPathAliased(new_filepath)) {
@@ -168,6 +169,7 @@ bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::str
     }
     return ret;
 }
+*/
 
 bool FileManager::SetFilename(const std::string& post_id, const std::string& filename) {
     bool ret = false;

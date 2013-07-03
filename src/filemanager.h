@@ -65,7 +65,7 @@ public:
     bool SetFilePostId(const std::string& filepath, const std::string& postid);
     bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
 
-    bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
+    //bool SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath);
 
     bool SetFilename(const std::string& post_id, const std::string& filename);
     bool SetFilepath(const std::string& post_id, const std::string& filepath);
