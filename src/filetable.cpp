@@ -147,68 +147,6 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
     out.set_plaintext_hash(res.results()[11+step]);
 }
 
-/*
-bool FileTable::set_file_post_id(const std::string &filepath, const std::string &id) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE \"";
-    exc += table_name();
-    exc += "\" SET metapostid=\"";
-    exc += id;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc +="\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_svn298140jfs", error);
-    return  ret;
-}
-*/
-
-/*
-bool FileTable::set_file_version(const std::string& filepath, const std::string& version) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE \"";
-    exc += table_name();
-    exc += "\" SET postversion=\"";
-    exc += version;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc +="\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_102941m129i8412", error);
-    return  ret;
-}
-*/
-
-/*
-bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
-    bool ret = false;
-    char szDel[256] = {'\0'};
-    snprintf(szDel, 256, "%d", val);
-    std::string exc;
-    exc += "UPDATE \"";
-    exc += table_name();
-    exc += "\" SET deleted=\"";
-    exc += std::string(szDel);
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc +="\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_s1000101s", error);
-    return  ret;
-}
-*/
-
 bool FileTable::set_file_version_for_id(const std::string& post_id, const std::string& version) {
     bool ret = false;
     std::string exc;

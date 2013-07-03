@@ -31,8 +31,6 @@ public:
    
     bool CheckForRename(FolderPost& fp);
 
-    bool RenameFileLocalCacheAbsolutePath(const std::string& absolute_path, 
-                                          const std::string& new_filename);
     bool RenameFileLocalCache(const std::string& post_id, const std::string& new_filename);
 private:
     FileManager* file_manager_;

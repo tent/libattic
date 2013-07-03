@@ -33,19 +33,6 @@ int FileManager::Shutdown() {
     return manifest_.Shutdown();
 }
 
-/*
-int FileManager::RemoveFile(const std::string &filepath) {
-    int status = ret::A_OK;
-
-    manifest_mtx_.Lock();
-    if(!manifest_.file_table()->RemoveFileInfo(filepath))
-        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-    manifest_mtx_.Unlock();
-
-    return status;
-}
-*/
-
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
                                        std::string& relative_out, 
                                        std::string& parent_relative_out) {
@@ -134,23 +121,6 @@ bool FileManager::MarkFilesInFolderDeleted(const Folder& folder) {
     return MarkFilesInFolderDeleted(folder.folder_post_id());
 }
 
-/*
-bool FileManager::SetFilePostId(const std::string &post_id, const std::string& postid) {
-    bool ret = false;
-    std::cout<<" incoming filepath : " << filepath << std::endl;
-    std::cout<<" post id : " << postid << std::endl;
-    std::string aliased;
-    if(GetAliasedPath(filepath, aliased)) {
-        std::cout<<" aliased : " << aliased << std::endl;
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_file_post_id(aliased, postid);
-        manifest_mtx_.Unlock();
-    }
-    std::cout<<" set file post id return : " << ret << std::endl;
-    return ret;
-}
-*/
-
 // Expecting relative path, "relative to working dir, ie : <working>/path/to/file"
 bool FileManager::SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id){
     bool ret = false;
@@ -180,15 +150,6 @@ bool FileManager::SetFilepath(const std::string& post_id, const std::string& fil
     ret = manifest_.file_table()->set_filepath_for_id(post_id, filepath);
     manifest_mtx_.Unlock();
     return ret;
-}
-
-bool FileManager::SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map) {
-    FileInfo fi;
-    if(GetFileInfo(filepath, fi)) {
-        fi.set_chunks(map);
-        return InsertToManifest(&fi);
-    }
-    return false;
 }
 
 bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) {
@@ -286,7 +247,6 @@ bool FileManager::GetFileInfoByPostId(const std::string& post_id, FileInfo& out)
     manifest_mtx_.Unlock();
     return ret;
 }
-
 
 bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
     bool ret = false;

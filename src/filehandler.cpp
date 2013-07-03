@@ -162,10 +162,6 @@ bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string&
     return false;
 }
 
-bool FileHandler::UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map) {
-    return file_manager_->SetFileChunks(filepath, map);
-}
-
 bool FileHandler::UpdatePostVersion(const std::string& post_id, const std::string& version) {
     return file_manager_->SetFileVersion(post_id, version);
 }

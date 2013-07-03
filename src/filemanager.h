@@ -38,7 +38,6 @@ public:
     int Shutdown();
 
     bool InsertToManifest (FileInfo* fi);
-    //int RemoveFile(const std::string &filepath);
 
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
@@ -59,12 +58,6 @@ public:
                      FileInfo& out);
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
     bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
-
-
-    //bool SetFileDeleted(const std::string& filepath, const bool del = true);
-   // bool SetFilePostId(const std::string& filepath, const std::string& postid);
-    bool SetFileChunks(const std::string& filepath, FileInfo::ChunkMap& map);
-
 
     bool SetFilename(const std::string& post_id, const std::string& filename);
     bool SetFilepath(const std::string& post_id, const std::string& filepath);
@@ -93,17 +86,14 @@ public:
                         const std::string& parent_post_id,
                         Folder& out);
     // Pass in absolute path
-    bool GetFolderEntry(const std::string& folderpath, Folder& folder);
-    bool GetFolderPostId(const std::string& folderpath, std::string& id_out);
-
+    bool GetFolderEntry(const std::string& folderpath, Folder& folder); // needs to be absolute
+    bool GetFolderPostId(const std::string& folderpath, std::string& id_out); // needs to be absolute
     bool GetFolderParentId(const std::string& post_id, std::string& out);
-
 
     bool SetFoldername(const std::string& post_id, const std::string& foldername);
     bool SetFolderPostId(const std::string& post_id, const std::string& new_post_id);
     bool SetFolderParentPostId(const std::string& post_id, const std::string& parent_post_id);
     bool SetFolderDeleted(const std::string& post_id, bool del);
-
 
     bool UpdateFolderEntry(const std::string& foldername, const std::string& post_id);
 

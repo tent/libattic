@@ -60,7 +60,7 @@ int FolderTask::RenameFolder() {
     std::cout<<" new : " << new_folderpath << std::endl;
 
     // make sure old folder exists
-    //  // retrieve folder data
+    // retrieve folder data
     // make sure both paths have common root
     std::string directory, dir_post_id;
     if(HaveCommonWorkingDir(old_folderpath, new_folderpath, directory, dir_post_id)){

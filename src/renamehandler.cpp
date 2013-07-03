@@ -29,7 +29,7 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
 }
 
 bool RenameHandler::RenameFolderLocalCache(const std::string& folder_post_id,
-                                          const std::string& new_foldername) {
+                                           const std::string& new_foldername) {
     std::cout<<" rename folder local cache " << std::endl;
     std::cout<<"\t folder post id : " << folder_post_id << std::endl;
     std::cout<<"\t new foldername : " << new_foldername << std::endl;
@@ -137,25 +137,6 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
     std::cout<< rlog.str() << std::endl;
     return ret;
 }
-
-bool RenameHandler::RenameFileLocalCacheAbsolutePath(const std::string& absolute_path, 
-                                                     const std::string& new_filename) {
-    bool ret = false;
-    // check if it exists
-    if(fs::CheckFilepathExists(absolute_path)) {
-        // get paret dir
-        std::string folderpath;
-        if(fs::GetParentPath(absolute_path, folderpath)) {
-            Folder folder;
-            if(file_manager_->GetFolderEntry(folderpath, folder)){
-                ret = RenameFileLocalCache(folder.folder_post_id(), new_filename);
-            }
-        }
-    }
-
-    return ret;
-}
-
 
 bool RenameHandler::RenameFileLocalCache(const std::string& post_id, 
                                          const std::string& new_filename) {

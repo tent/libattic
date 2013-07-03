@@ -39,7 +39,7 @@ public:
     bool UpdateFilepath(const std::string& post_id, const std::string& new_folder_post_id);
 
     bool UpdateFileSize(const std::string& filepath, const std::string& size);
-    bool UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map);
+    //bool UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map);
     bool UpdatePostVersion(const std::string& post_id, const std::string& version);
     bool UpdateFolderEntry(FolderPost& fp);
     // Utils
