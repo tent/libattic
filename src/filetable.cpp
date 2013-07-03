@@ -256,26 +256,6 @@ bool FileTable::set_file_deleted(const std::string& filepath, const int val) {
     return  ret;
 }
 
-/*
-bool FileTable::set_filepath(const std::string& old_filepath, const std::string& new_filepath) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE ";
-    exc += table_name();
-    exc += " SET filepath=\"";
-    exc += new_filepath;
-    exc += "\" WHERE filepath=\"";
-    exc += old_filepath;
-    exc += "\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_0nsv9188ds5", error);
-    return  ret;
-}
-*/
-
 bool FileTable::set_filepath_for_id(const std::string& post_id, const std::string& filepath) {
     bool ret = false;
     std::string exc;
@@ -312,26 +292,6 @@ bool FileTable::set_filename_for_id(const std::string& post_id, const std::strin
     return  ret;
 }
 
-/*
-bool FileTable::set_filename(const std::string& filepath, const std::string& new_filename) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE ";
-    exc += table_name();
-    exc += " SET filename=\"";
-    exc += new_filename;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc += "\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_0012588ms5", error);
-    return  ret;
-}
-*/
-
 bool FileTable::set_folder_post_id(const std::string& post_id, const std::string& folder_post_id) {
     bool ret = false;
     std::string exc;
@@ -349,45 +309,6 @@ bool FileTable::set_folder_post_id(const std::string& post_id, const std::string
         log::LogString("manifest_010158mgs5", error);
     return ret;
 }
-/*
-bool FileTable::set_chunk_count(const std::string& filepath, const std::string& chunk_count) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE ";
-    exc += table_name();
-    exc += " SET chunkcount=\"";
-    exc += chunk_count;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc += "\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_01058g55", error);
-    return ret;
-}
-*/
-
-/*
-bool FileTable::set_plaintext_hash(const std::string& filepath, const std::string& hash) {
-    bool ret = false;
-    std::string exc;
-    exc += "UPDATE ";
-    exc += table_name();
-    exc += " SET plaintext_hash=\"";
-    exc += hash;
-    exc += "\" WHERE filepath=\"";
-    exc += filepath;
-    exc += "\";";
-
-    std::string error;
-    ret = Exec(exc, error);
-    if(!ret)
-        log::LogString("manifest_0ma1941155", error);
-    return ret;
-}
-*/
 
 bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     bool ret = false;

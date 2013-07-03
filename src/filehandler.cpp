@@ -104,8 +104,8 @@ bool FileHandler::CreateNewFileMetaPost(FileInfo& fi,
     fp.set_fragment(cnst::g_transit_fragment);
     PostHandler<FilePost> ph(at);
     if(ph.Post(posts_feed, NULL, fp) == ret::A_OK) {
-        FilePost post = ph.GetReturnPost();
-        fi.set_post_id(post.id());
+        out = ph.GetReturnPost();
+        fi.set_post_id(out.id());
         ret = true;
     }
     return ret;

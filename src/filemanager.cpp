@@ -159,18 +159,6 @@ bool FileManager::SetFileFolderPostId(const std::string& post_id, const std::str
     return ret;
 }
 
-/*
-bool FileManager::SetNewFilepath(const std::string& old_filepath, const std::string& new_filepath) {
-    bool ret = false;
-    if(IsPathAliased(old_filepath) && IsPathAliased(new_filepath)) {
-        manifest_mtx_.Lock();
-        ret = manifest_.file_table()->set_filepath(old_filepath, new_filepath);
-        manifest_mtx_.Unlock();
-    }
-    return ret;
-}
-*/
-
 bool FileManager::SetFilename(const std::string& post_id, const std::string& filename) {
     bool ret = false;
     manifest_mtx_.Lock();

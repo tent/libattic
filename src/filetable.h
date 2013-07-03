@@ -50,9 +50,6 @@ public:
     bool set_file_version(const std::string& filepath, const std::string& version); // depricated
     bool set_file_deleted(const std::string& filepath, const int val); // depricated
     bool set_filepath(const std::string& old_filepath, const std::string& new_filepath); // depricated
-    //bool set_filename(const std::string& filepath, const std::string& new_filename);// depricated
-    //bool set_chunk_count(const std::string& filepath, const std::string& chunk_count); // depricated
-    //bool set_plaintext_hash(const std::string& filepath, const std::string& hash); // depricated
 
     bool set_filepath_for_id(const std::string& post_id, const std::string& filepath);
     bool set_filename_for_id(const std::string& post_id, const std::string& filename);

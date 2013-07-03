@@ -93,6 +93,8 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
             }
             else if(status == ret::A_OK && file_post_id.empty()) {
                 status = ret::A_FAIL_INVALID_POST_ID;
+                std::cout<<" EXCECUTE sTATUS : " << status << std::endl;
+
             }
         }
         else {
@@ -311,6 +313,7 @@ int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<<" Update fIle Post status : " << status << std::endl;
     return status;
 }
 
@@ -326,6 +329,7 @@ int PostFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<<" RETRIEVE FILE POST STATUS : " << status << std::endl;
     return status;
 }
 
@@ -357,6 +361,7 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<< " UPDATE FILE POST TRANSIT STATE : " << status << std::endl;
     return status;
 }
 
