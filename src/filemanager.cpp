@@ -304,8 +304,12 @@ bool FileManager::GetFolderEntry(const std::string& foldername,
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
     bool ret = false;
     std::string post_id;
-    if(GetFolderPostId(folderpath, post_id))
+    std::cout<<" GET FOLDER ENTRY FOR : " << folderpath << std::endl;
+    if(GetFolderPostId(folderpath, post_id)) {
+        std::cout<<" FOUND POST ID : " << post_id << std::endl;
         ret = GetFolderEntryByPostId(post_id, folder);
+        std::cout<< " GOT FOLDER ENTRY BY POST ID? : " << ret << std::endl;
+    }
     return ret;
 }
 

@@ -4,6 +4,7 @@
 #include "filehandler.h"
 #include "folderhandler.h"
 #include "posthandler.h"
+#include "filesystem.h"
 
 namespace attic {
 FolderTask::FolderTask(FileManager* pFm,
@@ -40,22 +41,30 @@ void FolderTask::RunTask() {
         DeleteFolder();
     }
     else if(operation == "RENAME") {
-        RenameFolder();
+        std::string old_folderpath, new_folderpath;
+        // These are absolute paths
+        context_.get_value("original_folderpath", old_folderpath);
+        context_.get_value("new_folderpath", new_folderpath);
+        status = RenameFolder(old_folderpath, new_folderpath);
+        if(status == ret::A_FAIL_INVALID_FOLDERPATH) {
+            // perhaps the new path already exists, check for existance
+            if(fs::IsDirectory(new_folderpath)) {
+                std::cout<<" failed rename, perhaps we were to slow? " << std::endl;
+                // go ahead and create it
+                status = CreateFolder(new_folderpath);
+                std::cout<< " create status : " << status << std::endl;
+            }
+        }
     }
 
     Callback(status, operation);
     SetFinishedState();
 }
 
-int FolderTask::RenameFolder() {
+int FolderTask::RenameFolder(const std::string& old_folderpath, 
+                             const std::string& new_folderpath) {
     int status = ret::A_OK;
-
-    std::string old_folderpath, new_folderpath;
-    // These are absolute paths
-    context_.get_value("original_folderpath", old_folderpath);
-    context_.get_value("new_folderpath", new_folderpath);
-
-    std::cout<<" renaming folder " << std::endl;
+        std::cout<<" renaming folder " << std::endl;
     std::cout<<" old : "<< old_folderpath << std::endl;
     std::cout<<" new : " << new_folderpath << std::endl;
 
@@ -79,18 +88,23 @@ int FolderTask::RenameFolder() {
                 Folder folder;
                 if(*itr == names.back()) {
                     // this is the folder we are renaming to
-                    file_manager()->GetFolderEntry(old_folderpath, folder);
-                    // Update folder
-                    folder.set_parent_post_id(parent_post_id);
-                    std::cout<<" old folder name : " << folder.foldername() << std::endl;
-                    folder.set_foldername(*itr);
-                    std::cout<<" new folder name : " << (*itr) << std::endl;
-                    file_manager()->SetFolderParentPostId(folder.folder_post_id(),
-                                                          parent_post_id); // new parent post id
-                    file_manager()->SetFoldername(folder.folder_post_id(),
-                                                  (*itr));
-                    if(UpdateFolderPost(folder, folder.folder_post_id()))
-                        file_manager()->ClearFolderAlias(folder.folder_post_id());
+                    if(file_manager()->GetFolderEntry(old_folderpath, folder)) {
+                        // Update folder
+                        folder.set_parent_post_id(parent_post_id);
+                        std::cout<<" old folder name : " << folder.foldername() << std::endl;
+                        folder.set_foldername(*itr);
+                        std::cout<<" new folder name : " << (*itr) << std::endl;
+                        file_manager()->SetFolderParentPostId(folder.folder_post_id(),
+                                                              parent_post_id); // new parent post id
+                        file_manager()->SetFoldername(folder.folder_post_id(),
+                                                      (*itr));
+                        if(UpdateFolderPost(folder, folder.folder_post_id()))
+                            file_manager()->ClearFolderAlias(folder.folder_post_id());
+                    }
+                    else {
+                        status = ret::A_FAIL_INVALID_FOLDERPATH;
+                        break;
+                    }
                 }
                 else {
                     if(!fh.AttemptCreateNewFolderEntry((*itr),
@@ -116,6 +130,7 @@ int FolderTask::RenameFolder() {
     else {
         status = ret::A_FAIL_DIFFERING_WORK_DIRECTORY;
     }
+
     return status;
 }
 
@@ -166,7 +181,7 @@ bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
         err << " Empty File Post id : " << std::endl;
         err << " entry : " << fi.filepath();
         err << " \t\t " << fi.post_id();
-        log::LogString("folder_18912512", err.str());
+        log::LogString("file_18912512", err.str());
     }
     return ret;
 }
@@ -226,16 +241,20 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
 
 int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
-
     std::cout<<" @@@ CREATING FOLDER : " << path << std::endl;
-
-    FolderHandler fh(file_manager());
-    if(fh.ValidateFolderPath(path,
-                             TentTask::entity()->entity(),
-                             entity()->GetPreferredServer().posts_feed(),
-                             entity()->GetPreferredServer().post(),
-                             access_token())) {
-        status = ret::A_FAIL_VALIDATE_DIRECTORY;
+    // validate that is folder actually exists
+    if(fs::IsDirectory(path)) { // checks if exists and is a directory
+        FolderHandler fh(file_manager());
+        if(fh.ValidateFolderPath(path,
+                                 TentTask::entity()->entity(),
+                                 entity()->GetPreferredServer().posts_feed(),
+                                 entity()->GetPreferredServer().post(),
+                                 access_token())) {
+            status = ret::A_FAIL_VALIDATE_DIRECTORY;
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
     }
     return status;
 }
