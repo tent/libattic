@@ -86,7 +86,18 @@ bool RenameHandler::CheckForRename(FolderPost& fp) {
             try {
                 FolderSem fs;
                 fs.AquireWrite(fp.id());
-                fs::RenamePath(old_can, new_can);
+                if(fs::CheckFilepathExists(old_can))
+                    fs::RenamePath(old_can, new_can);
+                else {
+                    // something is out of sync, just create it?
+                    std::ostringstream err;
+                    err << " old filepath does not exist " << std::endl; 
+                    err << "should we just create the new dir?" << std::endl;
+                    log::LogString("10924--415", err.str());
+
+                    // This is a test, we already have a post for this indexed,
+                    fs::CreateDirectoryTree(new_can);
+                }
                 fs.ReleaseWrite(fp.id());
                 ret = true;
             }
