@@ -17,7 +17,7 @@ namespace attic {
 
 static long total_elapsed = 0;
 //static boost::timer::nanosecond_type const limit(1 * 1000000000LL); // 1 seconds in nanoseconds
-static boost::timer::nanosecond_type const limit(1 * 100000000LL); 
+static boost::timer::nanosecond_type const limit(2 * 100000000LL); 
 
 Polling::Polling(FileManager* fm,
                  CredentialsManager* cm,
@@ -40,7 +40,7 @@ Polling::~Polling() {}
 void Polling::Initialize() {
     if(!thread_) {
         set_running(true);
-        std::cout<<" starting file sync thread ... " << std::endl;
+        //std::cout<<" starting file sync thread ... " << std::endl;
         thread_ = new boost::thread(&Polling::Run, this);
     }
 }
@@ -48,7 +48,7 @@ void Polling::Initialize() {
 void Polling::Shutdown() {
     if(thread_) {
         set_running(false);
-        std::cout<<" exiting file sync thread " << std::endl;
+        //std::cout<<" exiting file sync thread " << std::endl;
         thread_->join();
         delete thread_;
         thread_ = NULL;
@@ -77,9 +77,7 @@ void Polling::Run() {
         }
         //std::cout<<" total elapsed : " << total_elapsed << "limit " << limit << std::endl;
         if(total_elapsed > limit) {
-            std::cout<<" ********************************************************" << std::endl;
             std::cout<<" POLLING - ELAPSED : " << total_elapsed << std::endl;
-            std::cout<<" ********************************************************" << std::endl;
             total_elapsed = 0;
             timer_.stop();
             state_mtx_.Lock();
@@ -103,7 +101,7 @@ void Polling::Run() {
 }
 
 void Polling::OnStart() {
-    std::cout<<" POLL TASK STARTING " << std::endl;
+    //std::cout<<" POLL TASK STARTING " << std::endl;
    
     AccessToken at;
     credentials_manager_->GetAccessTokenCopy(at);
@@ -129,7 +127,7 @@ void Polling::OnStart() {
 }
 
 void Polling::OnFinished() {
-    std::cout<<" POLL TASK FINISHING " << std::endl;
+    //std::cout<<" POLL TASK FINISHING " << std::endl;
     timer_.stop();
 
     if(folder_sync_) {
@@ -166,20 +164,19 @@ void Polling::set_running(bool r) {
 }
 
 void Polling::PollFilePosts() {
-    std::cout<<" polling files ... " << std::endl;
+    //std::cout<<" polling files ... " << std::endl;
     std::deque<FilePost> file_list;
     if(census_handler_->Inquiry("", file_list)) {
-        std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
+        //std::cout<<" Retrieved : " << file_list.size() << " files " << std::endl;
         std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
         for(;itr != file_list.rend(); itr++) {
-            std::cout<<" pushing back : " << (*itr).id() << std::endl;
             file_sync_->PushBack(*itr);
         }
     }
 }
 
 void Polling::PollDeletedFilePosts() {
-    std::cout<<" polling deleted files ... " << std::endl;
+    //std::cout<<" polling deleted files ... " << std::endl;
     std::deque<FilePost> deleted_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, deleted_list)) {
         FileHandler fh(file_manager_);
@@ -193,10 +190,10 @@ void Polling::PollDeletedFilePosts() {
                 fh.DeserializeIntoFileInfo((*fp_itr), master_key, fi);
                 file_list.push_back(fi);
             }
-            std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
+            //std::cout<<" Retreived : " << deleted_list.size() << " deleted files " << std::endl;
             std::deque<FileInfo>::iterator fi_itr = file_list.begin();
             for(;fi_itr!=file_list.end(); fi_itr++) {
-                std::cout<<"deleting ... " << (*fi_itr).filepath() << std::endl;
+                //std::cout<<"deleting ... " << (*fi_itr).filepath() << std::endl;
                 DeleteLocalFile(*fi_itr);
             }
         }
@@ -204,11 +201,11 @@ void Polling::PollDeletedFilePosts() {
 }
 
 void Polling::PollDeletedFolderPosts() { 
-    std::cout<<" polling deleted folders ... " << std::endl;
+    //std::cout<<" polling deleted folders ... " << std::endl;
     FolderHandler fh(file_manager_);
     std::deque<FolderPost> folder_list;
     if(census_handler_->Inquiry(cnst::g_deleted_fragment, folder_list)){
-        std::cout<<" Retreived : " << folder_list.size() << " deleted folders " << std::endl;
+        //std::cout<<" Retreived : " << folder_list.size() << " deleted folders " << std::endl;
         std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
         for(;itr != folder_list.rend(); itr++) {
             // Delete local folder
@@ -232,7 +229,7 @@ void Polling::PollFolderPosts() {
             err << (*r_itr).folder().parent_post_id() << std::endl;
         }
         err << "************************************************ " << std::endl;
-        std::cout << err.str() << std::endl;
+        //std::cout << err.str() << std::endl;
 
         std::deque<FolderPost>::reverse_iterator itr = folder_list.rbegin();
         for(;itr != folder_list.rend(); itr++) {

@@ -53,7 +53,7 @@ void CensusHandler::SetReceivedAt(const std::string& post_type,
                                   const std::string& time) {
     std::string pt = post_type + "#" + fragment;
     fragment_map_[pt] = time; 
-    std::cout<<" setting time for : " << pt << " time : " << time << std::endl;
+    //std::cout<<" setting time for : " << pt << " time : " << time << std::endl;
 }
 
 // Returns a queue of posts in the order of newest to oldest
@@ -71,19 +71,18 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
     if(fragment_map_.find(pt) == fragment_map_.end())
         fragment_map_[pt] = "0"; 
 
-    std::cout<<" file list size incoming : " << out.size() << std::endl;
+    //std::cout<<" file list size incoming : " << out.size() << std::endl;
     std::string next_param;
     for(;;) {
         UrlParams params;
         if(next_param.empty()) {
-            std::cout<<" since time in param : " << fragment_map_[pt] << std::endl;
+            timeline_debug <<" since time in param : " << fragment_map_[pt] << std::endl;
             params.AddValue("types", pt);
             params.AddValue("since", fragment_map_[pt]);
             params.AddValue("limit", "200");
             params.AddValue("sort_by", "version.received_at");
         }
         else {
-            //std::cout<<" NEXT PARAM : " << next_param << std::endl;
             params.DeserializeEncodedString(next_param);
             // deserialize next params into UrlParams
         }
@@ -116,9 +115,9 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                     break;
                 }
                 else {
-                    //std::cout<<" NEXT PARAM  : " << pp.pages().next() << std::endl;
-                    //std::cout<<" size : " << pp.pages().next().size() << std::endl;
-                    //std::cout<<" assigning ... " << std::endl;
+                    //timeline_debug<<" NEXT PARAM  : " << pp.pages().next() << std::endl;
+                    //timeline_debug<<" size : " << pp.pages().next().size() << std::endl;
+                    //timeline_debug<<" assigning ... " << std::endl;
                     next_param.clear();
                     next_param = pp.pages().next();
                 }
@@ -127,7 +126,6 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
                 log::LogException("mak3412", e);
                 break;
             }
-            //std::cout<<" looping ... " << std::endl;
         }
         else {
             status = ret::A_FAIL_NON_200;
@@ -136,7 +134,7 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
         }
     }
 
-    std::cout<< timeline_debug.str() << std::endl;
+    //std::cout<< timeline_debug.str() << std::endl;
     return status;
 }
 
