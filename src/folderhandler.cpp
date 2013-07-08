@@ -89,7 +89,7 @@ bool FolderHandler::ValidateFolderPath(const std::string& folderpath,
                                                     posts_feed,
                                                     at,
                                                     folder)){
-                        vlog << " file already exists " << std::endl;
+                        vlog << " folder already exists " << std::endl;
                         if(file_manager_->GetFolderEntry((*itr), parent_post_id, folder)) {
                             std::cout<<" checking if folder is deleted ... " << std::endl;
                             // Check if folderpath is deleted

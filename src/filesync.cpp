@@ -138,6 +138,13 @@ int FileSync::ProcessFilePost(FilePost& p) {
                 // init download
                 pull = true;
             }
+
+            // check if the file even exists on disc
+            std::string path;
+            ConstructFilepath(fi, path);
+            std::cout<<" checking if filepath exists : " << path << std::endl;
+            if(!fs::CheckFilepathExists(path))
+                pull = true;
         }
         else {
             // Doesn't exist in the manifest
@@ -167,6 +174,25 @@ int FileSync::ProcessFilePost(FilePost& p) {
     std::cout<< plog.str() << std::endl;
     return status;
 }
+
+bool FileSync::ConstructFilepath(const FileInfo& fi, std::string& out) {
+    bool ret = false;
+    std::string path;
+    // Will return aliased path
+    if(file_manager_->ConstructFolderpath(fi.folder_post_id(), path)) {
+        std::cout<<" PATH : " << path << std::endl;
+        // Get canonical path
+        file_manager_->GetCanonicalPath(path, out);
+        std::cout<<" CANONICAL : " << out << std::endl;
+        utils::AppendTrailingSlash(out);
+        // Append filename
+        out = out + fi.filename();
+        std::cout<<" WITH FILENAME : " << out << std::endl;
+    }
+    return ret;
+}
+                
+                
 
 bool FileSync::ExtractFileInfo(FilePost& p, FileInfo& out) {
     bool ret = false;

@@ -21,6 +21,8 @@ class FileSync {
     bool running();
     void set_running(bool r);
     void Run();
+
+    bool ConstructFilepath(const FileInfo& fi, std::string& out);
 public:
     FileSync(FileManager* fm,
              const AccessToken at,
