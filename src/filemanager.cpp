@@ -51,10 +51,6 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
         fs::MakePathRelative(working_directory_, canonical, relative);
         // TODO :: fix for windows
         relative = std::string(cnst::g_szWorkingPlaceHolder) + "/" + relative;
-        //if(parent_relative.empty())
-        if(canonical.empty()) {
-            std::cout<<" FILEMANAGER - CANONICAL IS EMPTY - " << filepath << std::endl;
-        }
     }
     // Extract parent relative :
     std::string filename = pFi->filename();
@@ -154,7 +150,6 @@ bool FileManager::SetFilepath(const std::string& post_id, const std::string& fil
 
 bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) {
     bool ret = false;
-    std::cout<<" Get aliased path for : " << filepath << std::endl;
     if(!IsPathAliased(filepath)) {
         std::string directory, dir_post_id;
         if(FindAssociatedWorkingDirectory(filepath, directory, dir_post_id)) {
@@ -169,28 +164,19 @@ bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) 
                 utils::ErrorCheckPathDoubleQuotes(out);
             }
         }
-        else { 
-            std::cout<<" failed to find associated working directory" << std::endl;
-        }
     }
     else {
         out = filepath;
         ret = true;
     }
-    std::cout << " GetAliasedPath return : " << ret << " path out : " << out << std::endl;
     return ret;
 }
 
 bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string& out) {
     bool ret = false;
-    std::ostringstream err;
-    err << " ************************************************************** " << std::endl;
-    err << " relative path : " << relativepath << std::endl;
     if(IsPathAliased(relativepath)) {
         std::string aliased_directory, post_id;
         if(FindAssociatedCanonicalDirectory(relativepath, aliased_directory, post_id)) {
-            err <<" aliased directory : " << aliased_directory << std::endl;
-            err <<" post_id : " << post_id << std::endl;
             size_t sp = relativepath.find("/");
             if(sp != std::string::npos) {
                 // Replace working
@@ -204,15 +190,7 @@ bool FileManager::GetCanonicalPath(const std::string& relativepath, std::string&
                 ret = true;
             }
         }
-        else {
-            err << " FindAssociatedCanonicalDirectory fail " << std::endl;
-        }
     }
-    else {
-        err << " PATH NOT RELATIVE " << std::endl;
-    }
-    err << " ************************************************************** " << std::endl;
-    std::cout << err.str() << std::endl;
     return ret;
 }
 
@@ -230,10 +208,6 @@ bool FileManager::DoesFileExist(const std::string& filepath) {
         ret = manifest_.file_table()->IsFileInManifest(relative);
         manifest_mtx_.Unlock();
     }
-    else {
-        std::cout<<"DoesFileExist FILEPATH PASSED NOT RELATIVE : "<< filepath << std::endl;
-    }
-
     return ret;
 }
 
@@ -261,9 +235,6 @@ bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
         if(ret) ret = manifest_.file_table()->QueryForFile(relative, out);
         manifest_mtx_.Unlock();
     }
-    else {
-        std::cout<<" PATH NOT ALIASED : " << filepath << " : " << relative << std::endl;
-    }
     return ret;
 }
 
@@ -280,12 +251,10 @@ bool FileManager::GetFileInfo(const std::string& filename,
 bool FileManager::GetFolderEntryByPostId(const std::string& post_id, Folder& folder) {
     bool ret = false;
     if(!post_id.empty()) {
-        std::cout<<" GET folder Entry By Post Id : " << post_id << std::endl;
         manifest_mtx_.Lock();
         ret = manifest_.folder_table()->QueryForFolderByPostId(post_id, folder);
         manifest_mtx_.Unlock();
     }
-    std::cout<<" ret : " << ret << " foldername : " << folder.foldername() << std::endl;
     return ret;
 }
 
@@ -295,7 +264,6 @@ bool FileManager::GetFolderEntry(const std::string& foldername,
     bool ret = false;
     manifest_mtx_.Lock();
     ret = manifest_.folder_table()->QueryForFolder(foldername, parent_post_id, out);
-    std::cout<<" get folder entry : " << foldername << " id : " << parent_post_id << " found? : " << ret << std::endl;
     if(!ret) {
         // Check against alias
         ret = manifest_.folder_table()->QueryForFolderWithAlias(foldername, parent_post_id, out);
@@ -308,11 +276,8 @@ bool FileManager::GetFolderEntry(const std::string& foldername,
 bool FileManager::GetFolderEntry(const std::string& folderpath, Folder& folder) {
     bool ret = false;
     std::string post_id;
-    std::cout<<" GET FOLDER ENTRY FOR : " << folderpath << std::endl;
     if(GetFolderPostId(folderpath, post_id)) {
-        std::cout<<" FOUND POST ID : " << post_id << std::endl;
         ret = GetFolderEntryByPostId(post_id, folder);
-        std::cout<< " GOT FOLDER ENTRY BY POST ID? : " << ret << std::endl;
     }
     return ret;
 }
@@ -349,8 +314,6 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
     std::string directory, dir_post_id;
     if(!IsPathAliased(folderpath)){
         if(FindAssociatedWorkingDirectory(folderpath, directory, dir_post_id)) {
-            std::cout<<" directory : " << directory << std::endl;
-            std::cout<<" dir_post_id : " << dir_post_id << std::endl;
             if(folderpath == directory) {
                 id_out = dir_post_id;
                 ret = true;
@@ -550,10 +513,6 @@ bool FileManager::AddWorkingDirectory(const std::string& directory_alias,
                                       const std::string& post_id) {
     bool ret = false;
     manifest_mtx_.Lock();
-    std::cout<<" AddWorkingDirectory " << std::endl;
-    std::cout<<"\t post id (value) : " << post_id << std::endl;
-    std::cout<<"\t directory alias (key): " << directory_alias << std::endl;
-    std::cout<<"\t directory path (state) : " << directory_path << std::endl;
     // Local directory (should be an absolute path, linked to a corresponding root folder post)
     if(!manifest_.config_table()->IsStateInManifest(directory_path)) {
         ret = manifest_.config_table()->InsertConfigValue(cnst::g_config_dir_type, 
@@ -639,10 +598,6 @@ bool FileManager::PushConfigValue(const std::string& type,
                                   const std::string& key, 
                                   const std::string& value) {
     bool ret = false;
-    std::cout<<" PushConfigValue " << std::endl;
-    std::cout<<"\t type : " << type << std::endl;
-    std::cout<<"\t key : " << key << std::endl;
-    std::cout<<"\t value : " << value << std::endl;
     manifest_mtx_.Lock();
     if(!manifest_.config_table()->IsKeyInManifest(key))
         ret = manifest_.config_table()->InsertConfigValue(type, key, value, "");
@@ -657,16 +612,10 @@ bool FileManager::LoadWorkingDirectories() {
     ret = manifest_.config_table()->RetrieveConfigType(cnst::g_config_dir_type, entries);
     manifest_mtx_.Unlock();
 
-    std::cout<< " Loading Working directories " << std::endl;
-    std::cout<< " Entry count : " << entries.size() << std::endl;
-
     working_mtx_.Lock();
     working_directories_.clear();
     std::deque<ConfigEntry>::iterator itr = entries.begin();
     for(;itr!=entries.end(); itr++) {
-        std::cout<<" loading : " << (*itr).value << std::endl;
-        std::cout<<" path : " << (*itr).state << std::endl;
-        std::cout<<" alias : " << (*itr).config_key << std::endl;
         working_directories_[(*itr).config_key] = (*itr).state;
     }
     working_mtx_.Unlock();
@@ -682,7 +631,6 @@ bool FileManager::FindAssociatedWorkingDirectory(const std::string& filepath,
     working_mtx_.Lock();
     std::map<std::string, std::string>::iterator itr = working_directories_.begin(); 
     for(;itr!=working_directories_.end(); itr++) {
-        std::cout<<" checking entry... : " << itr->second << std::endl;
         if(filepath.find(itr->second) != std::string::npos) {
             dir_out = itr->second;
             ret = true;
@@ -706,12 +654,9 @@ bool FileManager::FindAssociatedCanonicalDirectory(const std::string& aliased_pa
     std::string alias;
     std::map<std::string, std::string>::iterator itr = working_directories_.begin(); 
     for(;itr!=working_directories_.end(); itr++) {
-        std::cout<<" checking : " << itr->first << std::endl;
         if(aliased_path.find(itr->first) != std::string::npos) {
             dir_out = itr->second;
             alias = itr->first;
-            std::cout<<" found : " << dir_out << std::endl;
-            std::cout<<" alias : " << alias << std::endl;
             ret = true;
             break;
         }
@@ -738,8 +683,6 @@ bool FileManager::ConstructFolderpath(const std::string& folder_post_id,
     std::string post_id = folder_post_id;
     for(;;) {
         Folder folder;
-        std::cout<<" Get Folder entry by post id for : " << post_id << std::endl;
-        std::cout<<" folder post id : " << folder_post_id << std::endl;
         if(GetFolderEntryByPostId(post_id, folder)) {
             if(!IsRootDirectory(post_id)) { 
                 if(folder.has_alias())
@@ -755,11 +698,9 @@ bool FileManager::ConstructFolderpath(const std::string& folder_post_id,
                 ret = true;
                 break;
             }
-            std::cout<<" path out : "<< path_out << std::endl;
             post_id = folder.parent_post_id();
         }
         else  {
-            std::cout<<" COULDNT FIND FOLDER POST FOR : " << folder_post_id << std::endl;
             break;
         }
     }
