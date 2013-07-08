@@ -169,11 +169,15 @@ bool FileManager::GetAliasedPath(const std::string& filepath, std::string& out) 
                 utils::ErrorCheckPathDoubleQuotes(out);
             }
         }
+        else { 
+            std::cout<<" failed to find associated working directory" << std::endl;
+        }
     }
     else {
         out = filepath;
         ret = true;
     }
+    std::cout << " GetAliasedPath return : " << ret << " path out : " << out << std::endl;
     return ret;
 }
 
@@ -678,6 +682,7 @@ bool FileManager::FindAssociatedWorkingDirectory(const std::string& filepath,
     working_mtx_.Lock();
     std::map<std::string, std::string>::iterator itr = working_directories_.begin(); 
     for(;itr!=working_directories_.end(); itr++) {
+        std::cout<<" checking entry... : " << itr->second << std::endl;
         if(filepath.find(itr->second) != std::string::npos) {
             dir_out = itr->second;
             ret = true;

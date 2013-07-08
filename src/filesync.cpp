@@ -143,8 +143,11 @@ int FileSync::ProcessFilePost(FilePost& p) {
             std::string path;
             ConstructFilepath(fi, path);
             std::cout<<" checking if filepath exists : " << path << std::endl;
-            if(!fs::CheckFilepathExists(path))
+            if(!fs::CheckFilepathExists(path)) { 
+                if(fi.filepath() != local_fi.filepath())
+                    fh.UpdateFileInfo(fi);
                 pull = true;
+            }
         }
         else {
             // Doesn't exist in the manifest
