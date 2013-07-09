@@ -1,8 +1,10 @@
 # Libattic
-Libattic encapsulates base attic functionality. This includes uploading, downloading, chunkig, and ecrypting files. Attic
+Libattic encapsulates basic file storage and sync functionality. This includes uploading, downloading, chunkig, and ecrypting files. Attic
 provides a means of storing encrypted files in tent posts.
 
 ## Keys
+Libattic uses keys for encrypting unspecified data and other keys.
+
 ### Master Key
 
 Each user has a generated *master key* that is used to encrypt *file
@@ -20,14 +22,17 @@ The *user key* is derived from a user-supplied password using
 [scrypt](http://www.tarsnap.com/scrypt.html), with a salt stored in the Tent
 profile section for Attic.
 
-## Process
+## Upload Pipeline
 
 1. Library is called, with filepath to file.
-2. File is broken into chunks.
-3. Chunks are compressed.
+2. File is validated (make sure it exists)
+3. Local cache is queried for possible existing files.
+4. If there is an existing entry, hashes are compared, and a file is uploaded if it differes from the cache.
+5. If there is no entry, credentials and file metadata is generated and the initial meta post is created.
+5. The file is next broken into chunks.
+6. Chunks are compressed.
 4. Chunks are encrypted.
-5. Tent posts are created with chunks as attachments.
-6. Details about the file are added to the metadata posts.
+5. Chunk posts are created with the sole purpose of housing the chunks as attachments.
 
 ### Chunking
 
@@ -58,17 +63,19 @@ compression/encryption/authentication/upload pipeline.
 
 #### Chunk Format
 
-`Format Version` | `Iv Length` | `Iv` | `Data Length` | `Data` 
+`Format Version` | `Uncompressed Chunk Length` | `Compression Level` | `Iv Length` | `Iv` | `Data Length` | `Data` 
 
 * Format version - describes the version of the chunk layout format | `1 byte` (char)
+* Uncompressed Chunk Length - length of the chunk before compression | `4 bytes` (unsigned int)
+* Compression Level - level of compression applied to the chunk | `1 byte` (0-9, char)
 * Iv Length - length of the Iv | `4 bytes` (unsigned int)
-* Iv - Initialization vector of chunk
+* Iv - Initialization vector of chunk | `variable`
 * Data Length - length of data | `4 bytes` (unsigned int)
-* Data - binary payload
+* Data - binary payload | `variable`
 
 ### Compression
 
-Chunks are compressed with zlib.
+Chunks are compressed with miniz, a zlib like library.
 
 ### Encryption
 
@@ -100,6 +107,11 @@ The ciphertext authenticator is a HMAC-SHA256 of the IV used for the chunk
 concatenated with the the ciphertext. This MAC is used to make sure that the
 encrypted chunk has not been tampered with.
 
+### Local Cache
+The local cache is a sqlite database used by libattic to store various types of data. File and folder 
+inforation are stored, and various configuration values. The local cache is mostly used to keep track of what's on
+disk vs what's on the server.
+
 ### Upload
 
 Files are stored in Tent as a set of posts that contain the file metadata and
@@ -107,6 +119,7 @@ chunks. Each file has one post that contains the metadata and keys for the file.
 The chunks are stored as attachments to a series of posts for each file.
 
 ## Update/Sync
+A file is determined to need upating when the file's actual hash does not match what's stored in the local cache.
 
 ### New files
 
@@ -115,11 +128,10 @@ queried, compared to current file versions, and downloaded to the device if they
 are more recent.
 
 ### Version conflicts
-
-Two versions of a file are in conflict if they have each been altered and one is
-not the ancestor of the other. In this case, both should be saved and the user
-presented with a choice between them. Real time collaborative editing is outside
-the scope of Attic.
+When two versions of a file or folder are in conflict, same name, same parent folder post,
+the first of the two remains the same, and the later one will be renamed. 
+The rename format is as follows
+`<filename>_<device>_<timestamp>` ex: `test.mp3_myphone_90210` 
 
 ## Sharing/Privacy
 

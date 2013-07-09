@@ -14,6 +14,30 @@
 
 namespace attic {
 
+
+
+struct Profile : public JsonSerializable {
+    std::string name;               // max len 256
+    std::string bio;                // max len 256
+    std::string avatar_digest;
+    std::string website;
+    std::string location;           // max len 256
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
+struct Reference : public JsonSerializable {
+    std::string entity;
+    std::string original_entity;
+    std::string post;
+    std::string version;
+    std::string type;
+
+    void Serialize(Json::Value& root);
+    void Deserialize(Json::Value& root);
+};
+
 struct Mention : public JsonSerializable {
     std::string entity;     // Required
     std::string original_entity;
@@ -81,12 +105,12 @@ public:
     typedef std::vector<Mention> MentionsList;
 
     Post();
-    ~Post();
+    virtual ~Post();
 
     virtual void Serialize(Json::Value& root);
     virtual void Deserialize(Json::Value& root);
 
-    void get_content(const std::string& key, Json::Value& out);
+    bool get_content(const std::string& key, Json::Value& out) const;
 
     unsigned int attachments_count()            { return attachments_.size(); }
     AttachmentMap* attachments()                { return &attachments_; }
@@ -94,12 +118,13 @@ public:
 
     bool has_attachment(const std::string& name);
     const Attachment& get_attachment(const std::string& name);
+    const TentApp* tent_app() const { return &tent_app_; }
 
     const std::string& id() const       { return id_; }
     const std::string& entity() const   { return entity_; }
     const std::string& type() const     { return type_; }
-    unsigned int published_at() const   { return published_at_; }
-    unsigned int received_at() const    { return received_at_; }
+    const std::string& published_at() const   { return published_at_; }
+    const std::string& received_at() const    { return received_at_; }
 
     Version& version()           { return version_; }
 
@@ -128,8 +153,8 @@ private:
     std::string                         entity_;
     std::string                         base_type_; // base type of post
     std::string                         type_; // type (may be fragmented)
-    unsigned int                        published_at_;
-    unsigned int                        received_at_;
+    std::string                         published_at_;
+    std::string                         received_at_;
     std::vector<std::string>            licenses_;
     ContentMap                          content_;
     AttachmentMap                       attachments_;
@@ -139,6 +164,28 @@ private:
     Permissions                         permissions_;
     Version                             version_;
 };
+
+// Post Utility functions
+namespace post {
+
+static void ConvertPost(Post& in, Post& out) {
+    std::string buffer;
+    jsn::SerializeObject(&in, buffer);
+    jsn::DeserializeObject(&out, buffer);
+}
+
+static void DeserializePostIntoObject(const Post& in, JsonSerializable* out) {
+    if(out) {
+        Json::Value buffer;
+        Post p = in;
+        jsn::SerializeObject(&p, buffer);
+        jsn::DeserializeObject(out, buffer);
+    }
+}
+
+}// namespace
+
+
 
 }//namespace
 #endif

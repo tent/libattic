@@ -10,7 +10,7 @@
 namespace attic {
 
 ChunkTransform::ChunkTransform(const std::string& chunk, const std::string& file_key) {
-    data_ = chunk;
+    data_.append(chunk.c_str(), chunk.size());
     //file_key_ = file_key;
     file_key_.append(file_key.c_str(), file_key.size());
 }
@@ -102,23 +102,36 @@ void ChunkTransform::Decompress(const std::string& in, std::string& out) {
 }
 
 bool ChunkTransform::Encrypt(const std::string& in, std::string& out) {
-    Credentials chunk_cred;
-    crypto::GenerateIv(chunk_iv_);
-    chunk_cred.set_iv(chunk_iv_);
-    chunk_cred.set_key(file_key_);
-    bool ret = crypto::Encrypt(in, chunk_cred, out);
-    // generate ciphertext hash
-    crypto::GenerateHash(out, ciphertext_hash_);
+    bool ret = false;
+    try {
+        Credentials chunk_cred;
+        crypto::GenerateIv(chunk_iv_);
+        chunk_cred.set_iv(chunk_iv_);
+        chunk_cred.set_key(file_key_);
+        ret = crypto::Encrypt(in, chunk_cred, out);
+        // generate ciphertext hash
+        crypto::GenerateHash(out, ciphertext_hash_);
+    }
+    catch(std::exception& e) {
+        log::LogException("ct_12148", e);
+    }
     return ret;
 }
 
 bool ChunkTransform::Decrypt(const std::string& in, std::string& out) {
-    crypto::GenerateHash(in, ciphertext_hash_);
-    // generate ciphertext hash
-    Credentials chunk_cred;
-    chunk_cred.set_iv(chunk_iv_);
-    chunk_cred.set_key(file_key_);
-    return crypto::Decrypt(in, chunk_cred, out);
+    bool ret = false;
+    try { 
+        crypto::GenerateHash(in, ciphertext_hash_);
+        // generate ciphertext hash
+        Credentials chunk_cred;
+        chunk_cred.set_iv(chunk_iv_);
+        chunk_cred.set_key(file_key_);
+        ret = crypto::Decrypt(in, chunk_cred, out);
+    }
+    catch(std::exception& e) {
+        log::LogException("ct_18915", e);
+    }
+    return ret;
 }
 
 void ChunkTransform::Encode(const std::string& in, std::string& out) {
@@ -139,7 +152,6 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     // Compose the chunk data to its format
     // Format version | iv len | iv | data len | data
     unsigned char format = CHUNK_FORMAT;
-    std::cout<<" FORMAT : " << format << std::endl;
     out.append(format, 1);
 
     unsigned int iv_size = chunk_iv_.size();
@@ -148,10 +160,8 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     ivsize[1] = (iv_size >> 16) & 0xFF;
     ivsize[2] = (iv_size >> 8) & 0xFF;
     ivsize[3] = iv_size & 0xFF;
-    std::cout<<" IV SIZE : " << iv_size << std::endl;
     out.append(ivsize, 4);
     out.append(chunk_iv_.c_str(), iv_size);
-    std::cout<<" IV : " << chunk_iv_ << std::endl;
 
     unsigned int data_size = in.size();
     char datasize[4] = {0};
@@ -159,45 +169,31 @@ void ChunkTransform::Compose(const std::string& in, std::string& out) {
     datasize[1] = (data_size >> 16) & 0xFF;
     datasize[2] = (data_size >> 8) & 0xFF;
     datasize[3] = data_size & 0xFF;
-    std::cout<<" DATA SIZE : " << data_size << std::endl;
+
     out.append(datasize, 4);
     out.append(in.c_str(), data_size);
-    std::cout<<" TOTAL BUFFER SIZE COMPOSE : " << out.size() << std::endl;
 }
 
 void ChunkTransform::Decompose(const std::string& in, std::string& out) {
-    std::cout<<" TOTAL BUFFER SIZE DECOMPOSE : " << in.size() << std::endl;
     unsigned char format = in[0];
-    std::cout<<"FORMAT : " << format << std::endl;
     unsigned int offset = 1;
-    std::cout<<" offset : " << offset << std::endl;
     if(format == CHUNK_FORMAT) {
         unsigned int iv_size = 0;
-        iv_size = (iv_size << 8) + in[offset];
-        iv_size = (iv_size << 8) + in[offset+1];
-        iv_size = (iv_size << 8) + in[offset+2];
-        iv_size = (iv_size << 8) + in[offset+3];
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+1]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+2]);
+        iv_size = (iv_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset += 4;
-        std::cout<<" offset : " << offset << std::endl;
-
-        std::cout<<" IV SIZE : " << iv_size << std::endl;
         chunk_iv_ = in.substr(offset, iv_size);
-        std::cout<<" IV : " << chunk_iv_ << std::endl;
         offset += iv_size;
-        std::cout<<" offset : " << offset << std::endl;
 
         unsigned int data_size = 0;
-        data_size = (data_size << 8) + in[offset];
-        data_size = (data_size << 8) + in[offset+1];
-        data_size = (data_size << 8) + in[offset+2];
-        data_size = (data_size << 8) + in[offset+3];
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+1]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+2]);
+        data_size = (data_size << 8) + static_cast<unsigned char>(in[offset+3]);
         offset+=4;
-        std::cout<<" offset : " << offset << std::endl;
-        std::cout<<" DATA SIZE : " << data_size << std::endl;
-
-        // TODO :: THIS IS A HACK!, FOR SOME REASON THE DATA SIZE IS NOT COMING OUT CORRECLTY
-        //out = in.substr(offset, data_size);
-        out = in.substr(offset);
+        out = in.substr(offset, data_size);
     }
 }
 

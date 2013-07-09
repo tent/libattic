@@ -5,6 +5,8 @@
 #include "netlib.h"
 #include "filemanager.h"
 #include "filesystem.h"
+#include "logutils.h"
+#include "foldersem.h"
 
 namespace attic { 
 
@@ -16,20 +18,9 @@ RenameHandler::~RenameHandler() {
     file_manager_ = NULL;
 }
 
-int RenameHandler::RenameFileLocalCache(const std::string& old_filepath, 
-                                        const std::string& new_filepath) {
-    int status = ret::A_OK;
-    // rename file (filepath and filename)
-    status = file_manager_->RenameFile(old_filepath,
-                                       new_filepath);
-    // update folder post id
-    return status;
-}
-
 void RenameHandler::UpdateFileMetaPost(FilePost& fp, 
                                        const FileInfo& fi, 
                                        FilePost& out) {
-
     out = fp;
     out.set_file_info(fi);
     Parent parent;
@@ -37,19 +28,12 @@ void RenameHandler::UpdateFileMetaPost(FilePost& fp,
     out.PushBackParent(parent);
 }
 
-int RenameHandler::RenameFolderLocalCache(const std::string& old_folderpath,
-                                          const std::string& new_folderpath) {
-    int status = ret::A_OK;
+bool RenameHandler::RenameFolderLocalCache(const std::string& folder_post_id,
+                                           const std::string& new_foldername) {
     std::cout<<" rename folder local cache " << std::endl;
-    std::string ofp = old_folderpath;
-    std::string nfp = new_folderpath;
-    // Normalize paths
-    utils::CheckUrlAndRemoveTrailingSlash(ofp);
-    utils::CheckUrlAndRemoveTrailingSlash(nfp);
-    std::cout<<" \t old : " << ofp << std::endl;
-    std::cout<<" \t new : " << nfp << std::endl;
-    status = file_manager_->RenameFolder(ofp, nfp);
-    return status;
+    std::cout<<"\t folder post id : " << folder_post_id << std::endl;
+    std::cout<<"\t new foldername : " << new_foldername << std::endl;
+    return file_manager_->SetFoldername(folder_post_id, new_foldername);
 }
 
 void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
@@ -65,90 +49,135 @@ void RenameHandler::UpdateFolderMetaPost(FolderPost& fp,
 }
 
 bool RenameHandler::CheckForRename(FolderPost& fp) {
-    std::cout<<" Checking for folder RENAME " << std::endl;
+    bool ret = false;
+    // Check if folder post is different
+    // name change
+    // parent_post_id change
+    // folderpath change (check parent_post_id) 
+    std::ostringstream rlog;
+    rlog <<" **************************************************** " << std::endl;
+    rlog <<" CHECK FOR fOLDER RENAME : " << fp.folder().foldername() << std::endl;
     Folder folder;
-    std::cout<<" checking for folder with id : " << fp.id() << std::endl;
     if(file_manager_->GetFolderEntryByPostId(fp.id(), folder)) {
-        std::cout<<" here " << std::endl;
-        if(folder.folderpath() != fp.folder().folderpath()) {
-            std::cout<<" here " << std::endl;
-            // Update local cache
-            std::string old_folderpath = folder.folderpath();
-            std::string new_folderpath = fp.folder().folderpath();
+        rlog <<" FOLDER EXISTS : " << fp.folder().foldername() << std::endl;
+        if(folder.foldername() != fp.folder().foldername()) {
+            rlog <<" RENAMEING : " << folder.foldername() << std::endl;
+            rlog <<" TO : " << fp.folder().foldername() << std::endl;
+            // Construct old path
+            std::string old_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
+            ret = file_manager_->SetFoldername(folder.folder_post_id(), 
+                                               fp.folder().foldername());
+            // clear alias if one exists
+            file_manager_->ClearFolderAlias(folder.folder_post_id());
+            // Constrcut new path
+            std::string new_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
+            // Get Absoulte paths
+            // Rename
+            rlog<<" old path : " << old_path << std::endl;
+            rlog<<" new path : " << new_path << std::endl;
 
-            int status = RenameFolderLocalCache(old_folderpath, new_folderpath);
-            std::cout<<" RENAME FOLDER  STATUS : " << status << std::endl;
-            if(status == ret::A_OK) {
-                std::cout<<" here " << std::endl;
-                // Rename physical file
-                std::string canonical_old, canonical_new;
-                file_manager_->GetCanonicalFilepath(old_folderpath, canonical_old);
-                file_manager_->GetCanonicalFilepath(new_folderpath, canonical_new);
-                std::cout<<" OLD : " << canonical_old << std::endl;
-                std::cout<<" NEW : " << canonical_new << std::endl;
-                if(!canonical_new.empty()) {
-                    if(fs::CheckFilepathExists(canonical_old)) {
-                        std::cout<<" RENAMING FOLDER " << std::endl;
-                        try {
-                            std::cout<<" renameing ... " << std::endl;
-                            std::cout<<" old : " << canonical_old << std::endl;
-                            std::cout<<" new : " << canonical_new << std::endl;
-                            fs::RenamePath(canonical_old, canonical_new);
-                        }
-                        catch(std::exception& e) {
-                            std::cout<<" failed to rename ... " << std::endl;
-                        }
-                        return true;
-                    }
+            std::string old_can, new_can;
+            file_manager_->GetCanonicalPath(old_path, old_can);
+            file_manager_->GetCanonicalPath(new_path, new_can);
+            rlog <<" old canonical : " << old_can << std::endl;
+            rlog <<" new canonical : " << new_can << std::endl;
+            try {
+                FolderSem fs;
+                fs.AquireWrite(fp.id());
+                if(fs::CheckFilepathExists(old_can))
+                    fs::RenamePath(old_can, new_can);
+                else {
+                    // something is out of sync, just create it?
+                    std::ostringstream err;
+                    err << " old filepath does not exist " << std::endl; 
+                    err << "should we just create the new dir?" << std::endl;
+                    log::LogString("10924--415", err.str());
+
+                    // This is a test, we already have a post for this indexed,
+                    fs::CreateDirectoryTree(new_can);
                 }
+                fs.ReleaseWrite(fp.id());
+                ret = true;
+            }
+            catch(std::exception& e) {
+                rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;
+                log::LogException("rn_1809418204", e);
+
+            }
+        }
+
+        if(folder.parent_post_id() != fp.folder().parent_post_id()) {
+            rlog <<" PARENTS DIFFER " << std::endl;
+            // Construct old path
+            std::string old_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), old_path);
+            ret = file_manager_->SetFolderParentPostId(folder.folder_post_id(),
+                                                       fp.folder().parent_post_id());
+            // Constrcut new path
+            // move to new folder
+            // Constrcut new path
+            std::string new_path;
+            file_manager_->ConstructFolderpath(folder.folder_post_id(), new_path);
+            // Rename
+            rlog <<" old path : " << old_path << std::endl;
+            rlog <<" new path : " << new_path << std::endl;
+
+            std::string old_can, new_can;
+            file_manager_->GetCanonicalPath(old_path, old_can);
+            file_manager_->GetCanonicalPath(new_path, new_can);
+            rlog <<" old canonical : " << old_can << std::endl;
+            rlog <<" new canonical : " << new_can << std::endl;
+            try {
+                FolderSem fs;
+                fs.AquireWrite(fp.id());
+                fs::RenamePath(old_can, new_can);
+                fs.ReleaseWrite(fp.id());
+                ret = true;
+            }
+            catch(std::exception& e) {
+                rlog <<" EXCEPTION WHAT : " << e.what() << std::endl;
+                log::LogException("rn_18410915092", e);
             }
         }
     }
-    return false;
+
+    rlog <<" ret : " << ret << std::endl;
+    rlog <<" **************************************************** " << std::endl;
+    std::cout<< rlog.str() << std::endl;
+    return ret;
 }
 
-bool RenameHandler::CheckForRename(FilePost& fp) {
-    std::cout<<" CHECKING FOR RENAME " << std::endl;
-    FileInfo* fi = file_manager_->GetFileInfoByPostId(fp.id());
-    if(fi) {
-        // If filepaths are the same
-        if(fi->filepath() != fp.relative_path()){
-            std::cout<< " FILEPATHS DIFFER, RENAME " << std::endl;
-            // Update Local cache
-            std::string old_filepath = fi->filepath();
-            std::string new_filepath = fp.relative_path();
-
-            std::cout << "local filepath : " << fi->filepath() << std::endl;
-            std::cout << "post filepath : " << fp.relative_path() << std::endl;
-            int status = RenameFileLocalCache(old_filepath, new_filepath);
-            std::cout<<" new filepath : " << new_filepath << std::endl;
-            if(status == ret::A_OK) {
-                // Rename physical file
-                std::string canonical_old, canonical_new;
-                file_manager_->GetCanonicalFilepath(old_filepath, canonical_old);
-                file_manager_->GetCanonicalFilepath(new_filepath, canonical_new);
-                std::cout<<" OLD : " << canonical_old << std::endl;
-                std::cout<<" NEW : " << canonical_new << std::endl;
-                if(!canonical_new.empty()) {
-                    if(fs::CheckFilepathExists(canonical_old)){
-                        std::cout<<" RENAMING " << std::endl;
-                        fs::RenamePath(canonical_old, canonical_new);
-                        return true;
+bool RenameHandler::RenameFileLocalCache(const std::string& post_id, 
+                                         const std::string& new_filename) {
+    bool ret = false;
+    FileInfo fi;
+    if(file_manager_->GetFileInfoByPostId(post_id, fi)) {
+        // Construct filepath for current local cache
+        std::string folderpath, canonical;
+        if(file_manager_->ConstructFolderpath(fi.folder_post_id(), folderpath)) {
+            file_manager_->GetCanonicalPath(folderpath, canonical);
+            // Construct filepath for updated local cache
+            std::string old_filepath, new_filepath;
+            utils::AppendTrailingSlash(canonical);
+            old_filepath = canonical + fi.filename();
+            new_filepath = canonical + new_filename;
+            // perform rename
+            if(fs::CheckFilepathExists(old_filepath)){
+                if(!fs::CheckFilepathExists(new_filepath)) {
+                    FolderSem fs;
+                    fs.AquireWrite(fi.folder_post_id());
+                    if(fs::RenamePath(old_filepath, new_filepath)) {
+                        file_manager_->SetFilename(post_id, new_filename);
+                        ret = true;
                     }
-                    else {
-                        std::cout<<" OLD PATH DOESNT EXIST " << std::endl;
-                    }
+                    fs.ReleaseWrite(fi.folder_post_id());
                 }
-                else {
-                    std::cout<<" CANONICAL NEW IS EMPTY : " << canonical_new << std::endl;
-                }
-            }
-            else {
-                std::cout<<" RENAME LOCAL CACHE FAILED " << std::endl;
             }
         }
     }
-    return false;
+    return ret;
 }
 
 }//namespace

@@ -48,11 +48,18 @@ void TaskArbiter::PushBackTask(const TaskContext& tc) {
 }
 
 bool TaskArbiter::RequestTaskContext(TaskContext& out) {
-    return task_pool_.RequestNextAvailableTaskContext(out);
+    bool ret = task_pool_.RequestNextAvailableTaskContext(out);
+    if(ret)
+        RemoveFromFilter(out);
+    return ret;
 }
 
 bool TaskArbiter::RequestTaskContext(Task::TaskType type, TaskContext& out) {
-    return task_pool_.RequestTaskContext(type, out);
+    bool ret = task_pool_.RequestTaskContext(type, out);
+    if(ret) {
+        RemoveFromFilter(out);
+    }
+    return ret;
 }
 
 unsigned int TaskArbiter::ActiveTaskCount() {
@@ -65,9 +72,61 @@ void TaskArbiter::RetrieveTasks() {
         task_manager_->RetrieveContextQueue(cq);
         TaskContext::ContextQueue::iterator itr = cq.begin();
         for(;itr!=cq.end();itr++) {
-            task_pool_.PushBack(*itr);
+            if(!FilterTask(*itr)) { 
+                task_pool_.PushBack(*itr);
+            }
+        }
+        if(cq.size()) {
+            std::cout<< "pushing back " << cq.size() << " tasks " << std::endl;
         }
     }
+}
+
+bool TaskArbiter::FilterTask(const TaskContext& tc) {
+    bool ret = false;
+    std::cout<<" filter task type : " << tc.type() << std::endl;
+    if(tc.type() == Task::PUSH || tc.type() == Task::PULL) {
+        std::string key;
+        if(tc.get_value("filepath", key)) {
+            if(CheckDuplicateTask(tc.type(), key)) {
+                std::cout<<" task duplicate ... filtered key : " << key << std::endl;
+                ret = true;
+            }
+            else {
+                std::cout<<" not a dup, filtering key : " << key << std::endl;
+                filter_mtx_.Lock();
+                task_filter_[tc.type()][key] = true;
+                filter_mtx_.Unlock();
+            }
+        }
+    }
+    return ret;
+}
+
+void TaskArbiter::RemoveFromFilter(const TaskContext& tc) {
+    std::cout<<" remove from filter type : " << tc.type() << std::endl;
+    if(tc.type() == Task::PUSH || tc.type() == Task::PULL) {
+        std::string key;
+        if(tc.get_value("filepath", key)) {
+            if(CheckDuplicateTask(tc.type(), key)) {
+                // Remove task
+                std::cout<<" removing filter for : " << key << std::endl;
+                filter_mtx_.Lock();
+                task_filter_[tc.type()].erase(key);
+                filter_mtx_.Unlock();
+            }
+        }
+    }
+}
+
+
+bool TaskArbiter::CheckDuplicateTask(int task_type, const std::string& key) {
+    bool ret = false;
+    filter_mtx_.Lock();
+    if(task_filter_[task_type].find(key) != task_filter_[task_type].end())
+        ret = true;
+    filter_mtx_.Unlock();
+    return ret;
 }
 
 }//namespace

@@ -11,26 +11,30 @@ namespace cbh {
     typedef void(*DelegateCallback)(int, int, const char*);
     typedef void(*QueryCallback)(int, char**, int, int);
     typedef void(*HistoryCallback)(int, const char*, int, int);
+    // error code, payload, error string
+    typedef void(*RequestCallback)(int, const char*, const char*); 
 };
 
 class CallbackHandler;
+
 class TaskDelegate {
 public:                                                         
     enum DelegateType {
         TASK=0,
         MANIFEST,
-        FILEHISTORY
+        FILEHISTORY,
+        REQUEST
     };
 
     TaskDelegate(DelegateType type) {
         type_ = type;
     }
 
-    ~TaskDelegate() {}
+    virtual ~TaskDelegate() {}
 
     const std::string& GenerateIdentifier() {
         identifier_.clear();
-        crypto::GenerateRandomString(identifier_);
+        utils::GenerateRandomString(identifier_);
         return identifier_;
     }
 
@@ -46,10 +50,10 @@ private:
     std::string identifier_;
 };
 
-class HistoryCallback : public TaskDelegate {
+class HistoryDelegate : public TaskDelegate {
 public:
-    HistoryCallback(CallbackHandler* handler, cbh::HistoryCallback cb);
-    ~HistoryCallback() {}
+    HistoryDelegate(CallbackHandler* handler, cbh::HistoryCallback cb);
+    ~HistoryDelegate() {}
 
     void Callback(const int type,
                   const int code,
@@ -65,10 +69,10 @@ private:
     CallbackHandler* owner_;
 };
 
-class ManifestCallback : public TaskDelegate { 
+class ManifestDelegate : public TaskDelegate { 
 public:
-    ManifestCallback(CallbackHandler* handler, cbh::QueryCallback cb);
-    ~ManifestCallback() {}
+    ManifestDelegate(CallbackHandler* handler, cbh::QueryCallback cb);
+    ~ManifestDelegate() {}
 
     void Callback(const int type,
                   const int code,
@@ -83,6 +87,25 @@ private:
     cbh::QueryCallback cb_;
     CallbackHandler* owner_;
 };
+
+class RequestDelegate : public TaskDelegate { 
+public:
+     RequestDelegate(CallbackHandler* handler, cbh::RequestCallback cb);
+    ~RequestDelegate() {}
+
+    void Callback(const int type,
+                  const int code,
+                  const int state,
+                  const std::string& var) const;
+
+    void Callback(const int code, 
+                  const char* payload,
+                  const char* error);
+private:
+    cbh::RequestCallback cb_;
+    CallbackHandler* owner_;
+};
+
 
 class TaskCallback : public TaskDelegate {
 public:

@@ -20,6 +20,20 @@ class HttpStrategyInterface {
     typedef std::map<std::string, std::string> ConfigMap;
 protected:
     std::string GetConfigValue(const std::string& key) { return config_map_[key]; }
+    bool  HasConfigValue(const std::string& key) { 
+        if(config_map_.find(key) != config_map_.end())
+            return true;
+        return false;
+    }
+
+    std::string GetAllConfigs() {
+        std::string buf;
+        ConfigMap::iterator itr = config_map_.begin();
+        for(;itr != config_map_.end(); itr++) {
+            buf += "\t" + itr->first + "  |  " + itr->second + "\n";
+        }
+        return buf;
+    }
 
     int InitInstance(FileManager* fm,
                      CredentialsManager* cm);
@@ -39,6 +53,27 @@ public:
                   const int taskstate, 
                   const std::string& var);
 protected:
+    bool GetMasterKey(std::string& out) {
+        MasterKey mKey;
+        credentials_manager_->GetMasterKeyCopy(mKey);
+        mKey.GetMasterKey(out);
+        if(out.size())
+            return true;
+        return false;
+    }
+
+    std::string GetMasterKey() {
+        std::string master_key;
+        GetMasterKey(master_key);
+        return master_key;
+    }
+
+    bool ValidMasterKey() {
+        std::string mk;
+        return GetMasterKey(mk);
+    }
+
+protected:
     ConfigMap               config_map_;
     CredentialsManager*     credentials_manager_;
     FileManager*            file_manager_;
@@ -46,6 +81,8 @@ protected:
     AccessToken             access_token_;
     std::string             post_path_;
     std::string             posts_feed_;
+    std::string             post_attachment_;
+    std::string             entity_;
 
     TaskDelegate*           task_delegate_;
 };

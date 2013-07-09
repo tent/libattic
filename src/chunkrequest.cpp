@@ -166,16 +166,14 @@ int ChunkRequest::WriteToSocket(boost::asio::streambuf& buffer) {
     for(unsigned int i=0; i < retrycount; i++) {
         try {
             status = ret::A_OK;
-            boost::timer::cpu_timer::cpu_timer t;
+            boost::timer::cpu_timer t;
             //size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
             size_t byteswritten = socket_->Write(buffer);
-            std::cout<<" bytes written : " << byteswritten << std::endl;
             boost::timer::cpu_times time = t.elapsed();
             boost::timer::nanosecond_type elapsed = (time.system + time.user);
 
             // To seconds
             elapsed *= 0.0000000001; 
-            std::cout<<" ELAPSED : " << elapsed << std::endl;
             if(elapsed > 0) {
                 unsigned int bps = (buffersize/elapsed);
                 // Raise event

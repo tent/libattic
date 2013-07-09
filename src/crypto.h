@@ -7,14 +7,8 @@
 
 // Depricated
 #include <hex.h>         
-#include <filters.h>     
-#include <gcm.h>         
-#include <hmac.h>
-#include <aes.h>
-#include <osrng.h>
 #include <base32.h>
 #include <base64.h>
-#include <files.h>
 // Depricated //
 
 #include <sodium.h>
@@ -22,6 +16,7 @@
 #include "errorcodes.h"
 #include "credentials.h"
 #include "utils.h"
+#include "fileroller.h"
 
 extern "C"
 {
@@ -38,6 +33,12 @@ extern "C"
 }
 
 namespace attic { namespace crypto {
+
+#include <sys/mman.h>
+static void m_lock(void* p, size_t len) {
+    mlock(p, len);
+}
+
 // new
 static bool ScryptEncode(const std::string &input, 
                          const std::string &salt,
@@ -54,6 +55,9 @@ static int EnterPassphrase(const std::string& pass, const std::string& iv, Crede
 static int GenerateKeyFromPassphrase(const std::string& pass, Credentials& out);
 static Credentials GenerateCredentials();
 static void GenerateCredentials(Credentials& cred);
+static bool GeneratePlaintextHashForFile(const std::string& filepath, std::string& hash_out);
+
+
 
 // Old
 static void GenerateFileHash(const std::string& filepath, std::string& hash_out);
@@ -105,25 +109,23 @@ static void Base32DecodeString(const std::string& input, std::string& output) {
                            new CryptoPP::Base32Decoder(new CryptoPP::StringSink(output)));
 }
 
-
-static void GenerateRandomString(std::string& out, const unsigned int size = 16) {
-    const unsigned int BLOCKSIZE = size * 8;
-    byte pcbScratch[BLOCKSIZE];
-    // Random Block
-    CryptoPP::AutoSeededRandomPool rng;
-    rng.GenerateBlock( pcbScratch, BLOCKSIZE );
-
-    // Output
-    std::string intermed;
-    intermed.append(reinterpret_cast<const char*>(pcbScratch), BLOCKSIZE);
-    Base64EncodeString(intermed, out);
-}
-
-
 // New NACL STUFF
 //
 //
 //
+//
+static bool GenerateHmacSha256(const std::string& source, std::string& hash_out) {
+    unsigned char out[crypto_hash_sha256_BYTES];
+    crypto_hash_sha256(out, 
+                       reinterpret_cast<const unsigned char*>(source.c_str()),
+                       source.size());
+    std::string ver;
+    ver.append(reinterpret_cast<const char*>(out), crypto_hash_sha256_BYTES);
+    Base64EncodeString(ver, hash_out);
+    return true;
+
+}
+
 static bool GenerateHash(const std::string& source, std::string& hash_out) {
     unsigned char out[crypto_hash_sha512_BYTES];
     crypto_hash_sha512(out, 
@@ -152,6 +154,16 @@ static Credentials GenerateCredentials() {
     return cred;
 }
 
+static bool GeneratePlaintextHashForFile(const std::string& filepath, std::string& hash_out) {
+    bool ret = false;
+    FileRoller fr(filepath);
+    std::string hash;
+    ret = fr.Digest(hash);
+    if(ret)
+        Base64EncodeString(hash, hash_out);
+    return ret;
+}
+
 static void GenerateCredentials(Credentials& cred) {
     std::string key, iv;
     GenerateIv(iv);
@@ -161,37 +173,51 @@ static void GenerateCredentials(Credentials& cred) {
 }
 
 static bool Encrypt(const std::string& in, const Credentials& cred, std::string& out) {
+    bool ret = false;
     std::string buffer;
     // append buffer, (required by nacl)
     buffer.append(32,0);
     // append data
     buffer.append(in.c_str(), in.size());
     // ciphertext
-    unsigned char c[buffer.size()];
+    unsigned char* c = new unsigned char[buffer.size()];
     if(crypto_secretbox(c,  
                         reinterpret_cast<const unsigned char*>(buffer.c_str()),
                         buffer.size(),
                         cred.byte_iv(),
                         cred.byte_key()) == 0) {
         out.append(reinterpret_cast<const char*>(c), buffer.size());
-        return true;
+        ret = true;
     }
-    return false;
+
+    if(c) {
+        delete c;
+        c = NULL;
+    }
+    return ret;
 }
 
 static bool Decrypt(const std::string& in, const Credentials& cred, std::string& out) {
-    unsigned char m[in.size()];
-    if(crypto_secretbox_open(m, 
-                             reinterpret_cast<const unsigned char*>(in.c_str()),
-                             in.size(),
-                             cred.byte_iv(),
-                             cred.byte_key()) == 0) {
-        out.append(reinterpret_cast<const char*>(m), in.size());
-        // remove padding
-        out.erase(0, 32);
-        return true;
+    bool ret = false;
+    if(in.size()) {
+        unsigned char* m = new unsigned char[in.size()];
+        if(crypto_secretbox_open(m, 
+                                 reinterpret_cast<const unsigned char*>(in.c_str()),
+                                 in.size(),
+                                 cred.byte_iv(),
+                                 cred.byte_key()) == 0) {
+            out.append(reinterpret_cast<const char*>(m), in.size());
+            // remove padding
+            out.erase(0, 32);
+            ret = true;
+        }
+
+        if(m) {
+            delete m;
+            m = NULL;
+        }
     }
-    return false;
+    return ret;
 }
 
 static void GenerateKey(std::string& out) {

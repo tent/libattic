@@ -1,7 +1,7 @@
 #include "softdeletestrategy.h"
 
-#include "netlib.h"
 #include "utils.h"
+#include "posthandler.h"
 
 namespace attic { 
 
@@ -14,11 +14,11 @@ int SoftDeleteStrategy::Execute(FileManager* file_manager,
     post_path_ = GetConfigValue("post_path");
     std::string filepath = GetConfigValue("filepath");
 
-    FileInfo* fi = RetrieveFileInfo(filepath);
-    if(fi) { 
+    FileInfo fi;
+    if(file_manager_->GetFileInfo(filepath, fi)) {
     std::cout<<" del " << std::endl;
-        MarkFileDeleted(fi);
-        status = UpdateFilePost(fi);
+        MarkFileDeleted(&fi);
+        status = UpdateFilePost(&fi);
     }
     else 
         status = ret::A_FAIL_INVALID_FILE_INFO;
@@ -28,16 +28,8 @@ int SoftDeleteStrategy::Execute(FileManager* file_manager,
 
 void SoftDeleteStrategy::MarkFileDeleted(FileInfo* fi) {
     int status = ret::A_OK;
-    std::string filepath = fi->filepath();
     fi->set_deleted(true);
-    file_manager_->SetFileDeleted(filepath, true);
-}
-
-FileInfo* SoftDeleteStrategy::RetrieveFileInfo(const std::string& filepath) {
-    FileInfo* fi = file_manager_->GetFileInfo(filepath);
-    if(!fi)
-        fi = file_manager_->CreateFileInfo();
-    return fi;
+    file_manager_->SetFileDeleted(fi->post_id(), true);
 }
 
 int SoftDeleteStrategy::UpdateFilePost(FileInfo* fi) {
@@ -58,21 +50,10 @@ int SoftDeleteStrategy::RetrieveFilePost(const std::string& post_id, FilePost& o
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-        std::cout<<" POST URL : " << posturl << std::endl;
-
-        Response resp;
-        netlib::HttpGet(posturl,
-                        NULL,
-                        &access_token_,
-                        resp);
-
-        if(resp.code == 200) {
-            jsn::DeserializeObject(&out, resp.body);
-        }
-        else{
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("175kjas", resp);
-        }
+        PostHandler<FilePost> ph(access_token_);
+        status = ph.Get(posturl, NULL, out);
+        if(status != ret::A_OK)
+            log::LogHttpResponse("175kjas", ph.response());
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -85,30 +66,12 @@ int SoftDeleteStrategy::PostFilePost(const std::string& post_id, FilePost& fp) {
     if(!post_id.empty()) {
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
-        std::cout<<" post url : " << posturl << std::endl;
-        std::cout<<" post type : " << fp.type() << std::endl;
 
-        Parent parent;
-        parent.version = fp.version().id();
-        fp.PushBackParent(parent);
+        PostHandler<FilePost> ph(access_token_);
+        status = ph.Put(posturl, NULL, fp);
 
-        std::string body;
-        jsn::SerializeObject(&fp, body);
-        Response resp;
-        netlib::HttpPut(posturl,
-                         fp.type(),
-                         NULL,
-                         body,
-                         &access_token_,
-                         resp);
-        if(resp.code == 200) {
-            std::cout<<" BODY : " << resp.body << std::endl;
-
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("192151mm", resp);
-        }
+        if(status != ret::A_OK);
+            log::LogHttpResponse("192151mm", ph.response());
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;

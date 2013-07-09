@@ -12,11 +12,13 @@
 #include "event.h"
 #include "logutils.h"
 #include "connectionhandler.h"
-#include "pagepost.h"
+#include "envelope.h"
 #include "filehandler.h"
 #include "folderhandler.h"
 #include "posthandler.h"
 #include "chunktransform.h"
+
+#include "foldersem.h"
 
 namespace attic { 
 
@@ -27,22 +29,95 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                              CredentialsManager* pCredentialsManager) {
     int status = ret::A_OK;
     status = InitInstance(pFileManager, pCredentialsManager);
-
-    post_path_ = GetConfigValue("post_path");
-    std::string filepath = GetConfigValue("filepath");
-    std::string post_attachment = GetConfigValue("post_attachment");
-    std::string entity = GetConfigValue("entity");
-    std::cout<<" starting get file strategy ... for :" << filepath << std::endl;
-
     if(!ValidMasterKey()) return ret::A_FAIL_INVALID_MASTERKEY;
-    std::cout<<" valid master key " << std::endl;
 
+    bool sync_at_post = false; // sync a specific post version, default off
+    post_path_ = GetConfigValue("post_path");
+    post_attachment_ = GetConfigValue("post_attachment");
+    entity_ = GetConfigValue("entity");
+
+    if(HasConfigValue("sync_at_post")) {
+        std::string sap = GetConfigValue("sync_at_post");
+        if(sap == "true")
+            sync_at_post = true;
+    }
+
+    std::cout<<" configs : " << GetAllConfigs() << std::endl;
+
+    // Make sure there is a destination before we actually pull the file
+    // Validate the corresponding folder posts exist in the cache 
+    //  - otherwise pull them, 
+
+    if(!sync_at_post) {
+        std::string filepath = GetConfigValue("filepath");
+        std::cout<<" syncing file : " << filepath << std::endl;
+        status = SyncFile(filepath);
+    }
+    else {
+        std::string post_id = GetConfigValue("post_id");
+        std::string version = GetConfigValue("version");
+        std::string destination_folder = GetConfigValue("destination_folder");
+        std::string filepath = GetConfigValue("filepath");
+        status = SyncFilePostAtVersion(post_id,
+                                       version,
+                                       destination_folder);
+    }
+
+
+    std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
+    return status;
+}
+
+int GetFileStrategy::SyncFilePostAtVersion(const std::string& post_id, 
+                                           const std::string& version,
+                                           const std::string& destination) {
+    int status = ret::A_OK;
+    // Validate destination folder
+    if(fs::IsDirectory(destination)) {
+        // Retrieve Post at Version
+        FilePost fp;
+        status = RetrieveFilePost(post_id, version, fp);
+        if(status == ret::A_OK) {
+            // Retrieve file credentials
+            Credentials file_cred;
+            status = ExtractCredentials(fp, file_cred);
+            if(status == ret::A_OK) {
+                std::string mk;
+                GetMasterKey(mk);
+                FileHandler fh(file_manager_);
+                FileInfo fi;
+                fh.DeserializeIntoFileInfo(fp, mk, fi);
+                // Construct file
+                status = ConstructFile(fi, file_cred, destination);
+            }
+        }
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
+    }
+
+    return status;
+}
+
+int GetFileStrategy::SyncFile(const std::string& filepath) {
+    int status = ret::A_OK;
     if(!filepath.empty()) { 
         FileHandler fi_hdlr(file_manager_);
         FolderHandler fl_hdlr(file_manager_);
         
         FileInfo fi;
         if(fi_hdlr.RetrieveFileInfo(filepath, fi)) {
+            // Validate folderpath
+            if(!fl_hdlr.ValidateFolderTree(fi.folder_post_id(), 
+                                           entity_, 
+                                           post_path_, 
+                                           access_token_)) {
+                std::ostringstream err;
+                err << " failed to validate folder path" << std::endl;
+                log::LogString("gfs_84195", err.str());
+                return ret::A_FAIL_FOLDER_NOT_IN_MANIFEST;
+            }
+
             Folder folder;
             if(!fl_hdlr.GetFolderById(fi.folder_post_id(), folder)) {
                 FolderPost fp;
@@ -67,7 +142,6 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 return ret::A_FAIL_PULL_DELETED_FOLDER;
             }
 
-            std::cout<<" FILE : " << filepath << " DELETED : " << fi.deleted() << std::endl;
             if(fi.deleted()) return ret::A_FAIL_PULL_DELETED_FILE;
             // Retrieve file metadata
             FilePost meta_post;
@@ -78,12 +152,8 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
                 status = ExtractCredentials(meta_post, file_cred);
                 if(status == ret::A_OK) {
                     if(!file_cred.key_empty()) {
-                        // put file posts in order
-                        std::string destination;
-                        ConstructFilepath(fi, folder, destination);
                         // pull chunks
-                        std::cout<<" DESTINATION : " << destination << std::endl;
-                        status = ConstructFile(fi, file_cred, destination);
+                        status = ConstructFile(fi, file_cred);
                         if(status == ret::A_OK) {
                             // Retrieve associated folder entries and create local cache 
                             // entries for them
@@ -107,89 +177,34 @@ int GetFileStrategy::Execute(FileManager* pFileManager,
     }
     else {
         status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
-        std::cout<<" FILEPATH EMPTY : " << filepath << std::endl;
     }
-
-    std::cout<<" GET FILE STRATEGY RETURN STATUS : " << status << std::endl;
     return status;
 }
- 
+
 int GetFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out) { 
     int status = ret::A_OK;
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
     // Get Metadata post
-    Response resp;
     PostHandler<FilePost> ph(access_token_);
-    status = ph.Get(posturl, NULL, out, resp);
-
-    std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
-
+    status = ph.Get(posturl, NULL, out);
     return status;
 }
 
-
-
-int GetFileStrategy::RetrieveChunkPosts(const std::string& entity,
-                                        const std::string& post_id,
-                                        ChunkPostList& out) {
+int GetFileStrategy::RetrieveFilePost(const std::string& post_id, 
+                                      const std::string& version, 
+                                      FilePost& out) {
     int status = ret::A_OK;
-    std::cout<<" retrieving chunk posts ... " << std::endl;
-    std::string posts_feed = GetConfigValue("posts_feed");
+    std::string posturl;
+    utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
+
     UrlParams params;
-    params.AddValue(std::string("mentions"), entity + " " + post_id);
-    params.AddValue(std::string("types"), std::string(cnst::g_attic_chunk_type));
+    params.AddValue("version", version);
 
-    std::string prm;
-    params.SerializeToString(prm);
-    std::cout<<" RetrieveChunkPosts params : " << prm << std::endl;
-
-    Response response;
-    PostHandler<PagePost> ph(access_token_);
-    PagePost pp;
-    status = ph.Get(posts_feed, &params, pp, response);
-    std::cout<<" CODE : " << response.code << std::endl;
-    std::cout<<" BODY : " << response.body << std::endl;
-
-    if(status == ret::A_OK) {
-        Json::Value chunk_post_arr(Json::arrayValue);
-        jsn::DeserializeJson(pp.data(), chunk_post_arr);
-
-        std::cout<<" TOTAL POST COUNT : " << chunk_post_arr.size() << std::endl;
-        Json::ValueIterator itr = chunk_post_arr.begin();
-        for(; itr != chunk_post_arr.end(); itr++) {
-            Post gp;
-            jsn::DeserializeObject(&gp, (*itr));
-            // There should never be more than one post in the same group
-            std::cout<<" CHUNK POST TYPE : " << gp.type() << std::endl;
-            if(gp.type().find(cnst::g_attic_chunk_type) != std::string::npos) {
-                ChunkPost p;
-                jsn::DeserializeObject(&p, (*itr));
-                std::cout<<"TYPE : " << p.type() << std::endl;
-                std::cout<<" PUSHING BACK GROUP : " << p.group() << std::endl;
-                if(out.find(p.group()) == out.end()) {
-                    out[p.group()] = p;
-                    std::cout<<" CHUNK INFO LIST SIZE : " << p.chunk_info_list_size() << std::endl;
-                }
-                else 
-                    std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
-            }
-        }
-    }
-    else { 
-        log::LogHttpResponse("FA332ASDF3", response);
-        status = ret::A_FAIL_NON_200;
-    }
+    PostHandler<FilePost> ph(access_token_);
+    status = ph.Get(posturl, &params, out);
     return status;
-}
-
-void GetFileStrategy::GetMasterKey(std::string& out) {
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-    mKey.GetMasterKey(out);
 }
 
 int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
@@ -201,9 +216,6 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
     std::string mk;
     GetMasterKey(mk);
-    std::cout<<" master key : " << mk << std::endl;
-    std::cout<<" file key (encrypted) : " << key << std::endl;
-    std::cout<<" iv data : " << iv << std::endl;
     if(!mk.empty()) {
         Credentials FileKeyCred;
         FileKeyCred.set_key(mk);
@@ -241,11 +253,129 @@ int GetFileStrategy::ExtractCredentials(FilePost& in, Credentials& out) {
 
 int GetFileStrategy::ConstructFile(FileInfo& fi,
                                    const Credentials& file_cred,
-                                   const std::string& destination_path) {
+                                   const std::string& destination_folder) {
+    typedef std::map<unsigned int, ChunkInfo> ChunkList;
+    int status = ret::A_OK;
+    if(fs::IsDirectory(destination_folder)){
+        std::string temp_path;
+        std::string full_path;
+        ConstructFilepath(fi, full_path);
+        event::RaiseEvent(event::Event::PULL, event::Event::START, full_path, NULL);
+
+        FileHandler fh(file_manager_);
+        fh.GetTemporaryFilepath(fi, temp_path);
+
+        std::ofstream ofs;
+        ofs.open(temp_path.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+        if(ofs.is_open()) {
+            // Get all chunk credentials
+            // move them into a map, key position value chunk info
+            // interate through them using the digest against the attachemnts endpoint
+            // construct
+            FileInfo::ChunkMap* chunk_map = fi.GetChunkInfoList();
+            if(chunk_map->size()) {
+                std::cout<<" CHUNK MAP SIZE : " << chunk_map->size();
+                ChunkList chunk_list;
+                FileInfo::ChunkMap::iterator map_itr = chunk_map->begin();
+                for(;map_itr!=chunk_map->end(); map_itr++) {
+                    std::cout<<" \tchunk name : " << map_itr->second.chunk_name() << std::endl;
+                    std::cout<<" \tpushing back position : " << map_itr->second.position() << std::endl;
+                    chunk_list[map_itr->second.position()] = map_itr->second;
+                }
+                std::cout<<" CHUNK LIST SIZE : " << chunk_list.size() << std::endl;
+                for(unsigned int i=0; i<chunk_list.size(); i++) {
+                    ChunkList::iterator itr = chunk_list.find(i);
+                    if(itr!= chunk_list.end()) {
+                        std::cout<<" FOUND CHUNK # : " << i << std::endl;
+                        // Get attachment
+                        std::string attachment_path;
+                        utils::FindAndReplace(post_attachment_,
+                                              "{digest}",
+                                              itr->second.digest(),
+                                              attachment_path);
+                        std::cout<<" attachment path : " << attachment_path << std::endl;
+                        std::string buffer;
+                        status = RetrieveAttachment(attachment_path, buffer);
+                        if(status == ret::A_OK) {
+                            std::cout<<" Fetching chunk : ... " << itr->second.chunk_name() << std::endl;
+                            std::string chunk;
+                            status = TransformChunk(&itr->second, file_cred.key(), buffer, chunk);
+                            if(status == ret::A_OK) {
+                                // Append to file 
+                                ofs.write(chunk.c_str(), chunk.size());
+                            }
+                            else {
+                                std::cout<<" FAILED TRANSFORM " << std::endl;
+                                std::cout<<" STATUS : "<< status << std::endl;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        status = ret::A_FAIL_MISSING_CHUNK;
+                        break;
+                    }
+                }
+            }
+            else {
+                status = ret::A_FAIL_ZERO_CHUNK_COUNT;
+            }
+            ofs.close();
+        }
+
+        if(status == ret::A_OK) {
+            // get latest just in case the cache was updated
+            std::string path = destination_folder;
+            utils::AppendTrailingSlash(path);
+            path += fi.filename();
+            if(status == ret::A_OK) {
+                try {
+                    std::cout<<" Moving file to : " << path << std::endl;
+                    fs::MoveFile(temp_path, path);
+                }
+                catch(std::exception &e) {
+                    log::LogException("getfile_321092409823", e);    
+                }
+            }
+            else {
+                std::ostringstream err;
+                err <<" Failed to move file to path : " << path << std::endl;
+                log::LogString("getfile_98512", err.str());
+                status = ret::A_FAIL_MOVE_PATH;
+            }
+        }
+
+        // delete temp file 
+        if(fs::CheckFilepathExists(temp_path))
+            fs::DeleteFile(temp_path);
+        event::RaiseEvent(event::Event::PULL, event::Event::DONE, full_path, NULL);
+    }
+    else {
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
+    }
+    return status;
+}
+
+int GetFileStrategy::ConstructFile(FileInfo& fi, const Credentials& file_cred) {
     typedef std::map<unsigned int, ChunkInfo> ChunkList;
     int status = ret::A_OK;
 
     std::string temp_path;
+    std::string full_path;
+    ConstructFilepath(fi, full_path);
+    event::RaiseEvent(event::Event::PULL, event::Event::START, full_path, NULL);
+
+    if(!fi.file_size()) {
+        std::cout<<" ATTEMPTING TO TOUCH : " << full_path << std::endl;
+        FILE * pFile;
+        pFile = fopen (full_path.c_str(),"w");
+        if (pFile!=NULL){
+            fclose (pFile);
+        }
+
+        return status;
+    }
+
     FileHandler fh(file_manager_);
     fh.GetTemporaryFilepath(fi, temp_path);
 
@@ -267,14 +397,13 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
                 chunk_list[map_itr->second.position()] = map_itr->second;
             }
             std::cout<<" CHUNK LIST SIZE : " << chunk_list.size() << std::endl;
-            std::string post_attachment = GetConfigValue("post_attachment");
             for(unsigned int i=0; i<chunk_list.size(); i++) {
                 ChunkList::iterator itr = chunk_list.find(i);
                 if(itr!= chunk_list.end()) {
                     std::cout<<" FOUND CHUNK # : " << i << std::endl;
                     // Get attachment
                     std::string attachment_path;
-                    utils::FindAndReplace(post_attachment,
+                    utils::FindAndReplace(post_attachment_,
                                           "{digest}",
                                           itr->second.digest(),
                                           attachment_path);
@@ -309,20 +438,34 @@ int GetFileStrategy::ConstructFile(FileInfo& fi,
     }
 
     if(status == ret::A_OK) {
+        // get latest just in case the cache was updated
+        FolderSem fs;
+        fs.AquireRead(fi.folder_post_id());
         std::string path;
         status = ConstructFilepath(fi, path);
         if(status == ret::A_OK) {
-            if(!destination_path.empty())
+            try {
+                std::cout<<" Moving file to : " << path << std::endl;
                 fs::MoveFile(temp_path, path);
+            }
+            catch(std::exception &e) {
+                log::LogException("getfile_32987523", e);    
+            }
         }
         else {
-            std::cout<<" failed to move path : "<< path << std::endl;
+            std::ostringstream err;
+            err <<" Failed to move file to path : " << path << std::endl;
+            log::LogString("getfile_98512", err.str());
+            status = ret::A_FAIL_MOVE_PATH;
         }
+        fs.ReleaseRead(fi.folder_post_id());
     }
 
     // delete temp file 
     if(fs::CheckFilepathExists(temp_path))
         fs::DeleteFile(temp_path);
+
+    event::RaiseEvent(event::Event::PULL, event::Event::DONE, full_path, NULL);
 
     return status;
 }
@@ -331,11 +474,13 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     int status = ret::A_OK;
 
     std::cout<<" RETRIEVING ATTACHEMNT : " << url << std::endl;
-    boost::timer::cpu_timer::cpu_timer t;
+    boost::timer::cpu_timer t;
     Response response;
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
     boost::timer::nanosecond_type const elapsed(time.system + time.user);
+    //std::cout<<" time : " << time << std::endl;
+    std::cout<<" elapsed : "<< elapsed << std::endl;
 
     if(response.code == 200) {
         outBuffer = response.body;
@@ -389,17 +534,6 @@ int GetFileStrategy::TransformChunk(const ChunkInfo* ci,
     return status;
 }
 
-bool GetFileStrategy::ValidMasterKey() {
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("MASDP2823", error);
-        return false;
-    }
-    return true;
-}
-
 void GetFileStrategy::ValidateFolderEntries(FilePost& fp) {
     std::cout<<" Validating folder entires ... " << std::endl;
     std::deque<FolderPost> folder_list;
@@ -429,21 +563,16 @@ bool GetFileStrategy::RetrieveFolderPost(const std::string& post_id, FolderPost&
     std::string posturl;
     utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-    Response resp;
     FolderPost fp;
     PostHandler<FolderPost> ph(access_token_);
-    int status = ph.Get(posturl, NULL, fp, resp);
-
-    std::cout<<" POST URL : "<< posturl << std::endl;
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
+    int status = ph.Get(posturl, NULL, fp);
 
     if(status == ret::A_OK) {
         if(fp.type().find(cnst::g_attic_folder_type) != std::string::npos) 
             return true;
     }
     else {
-        log::LogHttpResponse("MASDKF111", resp);
+        log::LogHttpResponse("MASDKF111", ph.response());
     }
     return false;
 }
@@ -454,20 +583,20 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", fi.folder_post_id(), posturl);
 
-        Response resp;
         FolderPost fp;
         PostHandler<FolderPost> ph(access_token_);
-        status = ph.Get(posturl, NULL, fp, resp);
+        status = ph.Get(posturl, NULL, fp);
         if(status == ret::A_OK) {
-            ConstructFilepath(fi, fp.folder(), out);
-            std::cout<<" constructed path : " << out << std::endl;
+            if(ConstructFilepath(fi, fp.folder(), out)) {
+                std::cout<<" constructed path : " << out << std::endl;
+            }
+            else {
+                std::cout<<" failed to construct path " << std::endl;
+
+            }
         }
         else {
-            std::ostringstream err;
-            err << "failed to retrieve folder post : " << posturl << std::endl;
-            err << "response : " << resp.code << std::endl;
-            err << " body : " << resp.body << std::endl;
-            log::LogString("00301--1-0-10", err.str());
+            log::LogHttpResponse("00301--1-0-10", ph.response());
         }
     }
     else {
@@ -479,11 +608,27 @@ int GetFileStrategy::ConstructFilepath(const FileInfo& fi, std::string& out) {
     return status;
 }
 
-void GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
+bool GetFileStrategy::ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out) {
+    bool ret = false;
     std::string path;
-    file_manager_->GetCanonicalFilepath(folder.folderpath(), path);
-    utils::CheckUrlAndAppendTrailingSlash(path);
-    out = path + fi.filename();
+    // Will return aliased path
+    if(file_manager_->ConstructFolderpath(folder.folder_post_id(), path)) {
+        std::cout<<" PATH : " << path << std::endl;
+        // Get canonical path
+        file_manager_->GetCanonicalPath(path, out);
+        std::cout<<" CANONICAL : " << out << std::endl;
+        utils::AppendTrailingSlash(out);
+        // Append filename
+        out = out + fi.filename();
+        std::cout<<" WITH FILENAME : " << out << std::endl;
+    }
+    return ret;
+}
+
+bool GetFileStrategy::CheckForConflict(FilePost& file_post) { 
+    bool ret = false;
+
+    return ret;
 }
 
 }//namespace

@@ -3,12 +3,15 @@
 #pragma once
 
 namespace attic { namespace cnst {
+
 // Types
 static const char* g_app_type = "https://tent.io/types/app/v0";
 static const char* g_attic_cred_type = "https://attic.is/types/cred/v0";
 static const char* g_attic_folder_type = "https://attic.is/types/folder/v0";
 static const char* g_attic_file_type = "https://attic.is/types/file/v0";
 static const char* g_attic_chunk_type = "https://attic.is/types/chunk/v0";
+static const char* g_attic_config_type = "https://attic.is/types/config/v0";
+static const char* g_attic_download_type = "https://attic.is/types/download/v0";
 static const char* g_basic_profile_type = "https://tent.io/types/basic-profile/v0";
 // Fragments
 static const char* g_transit_fragment = "in_transit";
@@ -49,6 +52,15 @@ static const char* g_token_type = "https://tent.io/oauth/hawk-token"; // token t
 // table names
 static const char* g_filetable = "filetable";
 static const char* g_foldertable = "foldertable";
+static const char* g_chunktable = "chunktable";
+static const char* g_configtable = "configtable";
+
+// Alias prefix;
+static const char* g_alias_prefix ="~attic_";
+
+// Config values
+static const char* g_config_dir_type = "root_dir";
+
 }} //namespace
 #endif
 

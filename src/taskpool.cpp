@@ -24,6 +24,22 @@ void TaskPool::PushBack(const TaskContext& tc) {
     context_map_[tc.type()].push_back(tc);
     total_task_count_++;
     Unlock();
+
+    //std::cout<< stats() << std::endl;
+}
+
+std::string TaskPool::stats() {
+    std::ostringstream s;
+    Lock();
+    s << " TaskPool Stats : " << std::endl;
+    s << "\t Context Map size (total) : " << context_map_.size() << std::endl;
+    ContextMap::iterator itr = context_map_.begin();
+    for(;itr!=context_map_.end(); itr++) { 
+        s << "\t\t task type : " << itr->first << " count : " << itr->second.size() << std::endl;
+    }
+    s << " TaskPool Stats end " << std::endl;
+    Unlock();
+    return s.str();
 }
 
 
@@ -44,14 +60,12 @@ bool TaskPool::RequestNextAvailableTaskContext(TaskContext& out) {
     bool val = false;
     Lock();
     ContextMap::iterator itr = context_map_.begin();
+
     for(;itr!= context_map_.end();itr++) {
         if(itr->second.size() > 0) {
-            std::cout<<" \t task type : " << itr->first << std::endl;
-            std::cout<<" \t queue size (before) : " << itr->second.size() << std::endl;
             out = itr->second.front();
             itr->second.pop_front();
             active_task_count_++;
-            std::cout<<" \t queue size (after) : " << itr->second.size() << std::endl;
             val = true;
             break;
         }

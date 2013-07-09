@@ -1,10 +1,11 @@
 #include "connectionhandler.h"
 
+#include "logutils.h"
 
 namespace attic { 
 
 ConnectionHandler::ConnectionHandler() {
-    manager_instance_ = ConnectionManager::GetInstance();
+    manager_instance_ = ConnectionManager::instance();
 }
 
 ConnectionHandler::~ConnectionHandler() {
@@ -31,9 +32,7 @@ int ConnectionHandler::HttpPost(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "POST",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
 
@@ -77,8 +76,6 @@ int ConnectionHandler::HttpPut(const std::string& url,
                                const AccessToken* at, 
                                Response& out) {
     int status = ret::A_OK;
-
-    std::cout<<" type : " << post_type << std::endl;
     std::string local_url = url;
     if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
 
@@ -89,9 +86,7 @@ int ConnectionHandler::HttpPut(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "PUT",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
     char len[256] = {'\0'};
@@ -139,9 +134,7 @@ int ConnectionHandler::HttpGet(const std::string& url,
     if(at) {
         netlib::BuildAuthHeader(local_url,
                                 "GET",
-                                at->access_token(),
-                                at->hawk_key(),
-                                at->app_id(),
+                                at,
                                 authheader);
     }
 
@@ -160,28 +153,112 @@ int ConnectionHandler::HttpGet(const std::string& url,
     return status;
 }
 
+int ConnectionHandler::HttpHead(const std::string& url, 
+                                const UrlParams* pParams,
+                                const AccessToken* at, 
+                                Response& out) {
+    int status = ret::A_OK;
+    std::string local_url = url;
+    if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
+
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(local_url, protocol, host, path);
+
+    std::string authheader;
+    if(at) {
+        netlib::BuildAuthHeader(local_url,
+                                "GET",
+                                at,
+                                authheader);
+    }
+
+    boost::asio::streambuf request;
+    std::ostream request_stream(&request);
+    request_stream << "HEAD " << path << " HTTP/1.1\r\n";
+    request_stream << "Host: " << host << "\r\n";
+    request_stream << "Accept: "<< cnst::g_accept_header <<"\r\n";
+    request_stream << "Content-Type: " << cnst::g_content_type_header << "\r\n";
+    if(!authheader.empty())
+        request_stream << "Authorization: " << authheader <<"\r\n";
+    //request_stream << "Connection: close\r\n\r\n";
+    request_stream << "\r\n";
+
+    status = HttpRequest(local_url, request, out);
+    return status;
+}
+int ConnectionHandler::HttpDelete(const std::string& url, 
+                                  const UrlParams* pParams,
+                                  const AccessToken* at, 
+                                  Response& out) {
+    int status = ret::A_OK;
+    std::string local_url = url;
+    if(pParams) netlib::EncodeAndAppendUrlParams(pParams, local_url);
+
+    std::string protocol, host, path;
+    netlib::ExtractHostAndPath(local_url, protocol, host, path);
+
+    std::string authheader;
+    if(at) {
+        netlib::BuildAuthHeader(local_url,
+                                "DELETE",
+                                at,
+                                authheader);
+    }
+
+    boost::asio::streambuf request;
+    std::ostream request_stream(&request);
+    request_stream << "DELETE " << path << " HTTP/1.1\r\n";
+    request_stream << "Host: " << host << "\r\n";
+    request_stream << "Accept: application/vnd.tent.v0+json\r\n";
+    if(!authheader.empty())
+        request_stream << "Authorization: " << authheader <<"\r\n";
+    request_stream << "Connection: close\r\n\r\n";
+
+    status = HttpRequest(local_url, request, out);
+    return status;
+}
+
 int ConnectionHandler::HttpRequest(const std::string& url, 
                                    boost::asio::streambuf& request,
                                    Response& out) {
     int status = ret::A_OK;
     using namespace boost::asio::ssl;
     try {
-        boost::asio::io_service io_service; 
-        //Connection sock(&io_service);
-        //sock.Initialize(url);
-        Connection* sock = manager_instance_->RequestConnection(url);
-        if(sock) {
-            sock->Write(request);
-            sock->InterpretResponse(out);
-            manager_instance_->ReclaimConnection(sock);
+        if(manager_instance_) {
+            Connection* sock = manager_instance_->RequestConnection(url);
+            if(sock) {
+#if 0
+                std::ostringstream ss;
+                ss << &request;
+                std::cout <<"HttpRequest : " <<  ss.str() << std::endl;
+
+                boost::asio::streambuf treq;
+                std::ostream request_stream(&treq);
+                request_stream << ss.str();
+                sock->Write(treq);
+#else 
+                sock->Write(request);
+#endif
+
+                sock->InterpretResponse(out);
+                manager_instance_->ReclaimConnection(sock);
+            }
+            else {
+                std::ostringstream err;
+                err << " Attempted to write to invalid socket " << std::endl;
+                log::LogString("connection_194185", err.str());
+                status = ret::A_FAIL_NULL_SOCKET;
+            }
         }
         else {
-            std::cout<<" INVALID SOCKET " << std::endl;
+            std::ostringstream err;
+            err << " Invalid Connection Manager instance on Http request " << std::endl;
+            log::LogString("connection_194185", err.str());
+            status = ret::A_FAIL_INVALID_CONNECTIONMANAGER_INSTANCE;
         }
-
     }
     catch (std::exception& e) {
-        std::cout << "Exception: " << e.what() << "\n";
+        log::LogException("connection_18415", e);
     }
 
     return status;

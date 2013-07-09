@@ -6,9 +6,48 @@
 #include <mqueue.h>
 #include <channels.h>
 
+#include<vector>
+#include<string>
 #include "logutils.h"
 
-namespace attic { namespace compress {
+namespace attic { 
+class Compress {
+public:
+    Compress(){}
+    ~Compress(){}
+
+    int AppendFileToZipArchive(const std::string& directory_path,
+                               const std::string& archive_name,
+                               const std::string& filepath);
+
+    int CompressString(const std::string& in, 
+                       std::string& out);
+    int DecompressString(const std::string& in, 
+                         const unsigned int expected_size,
+                         std::string& out);
+
+};
+
+
+class Archive {
+    bool ValidateFileExistence(const std::string& filepath);
+    bool DetermineRelativePath(const std::string& root_dir, 
+                               const std::string& filepath, 
+                               std::string& out);
+public:
+    Archive();
+    ~Archive();
+
+    bool AddFiles(const std::string& archive_path, 
+                  const std::string& root_dir,
+                  const std::vector<std::string>& paths);
+    bool AddFromMemory(const std::string& archive_path,
+                       const std::string& filename, 
+                       const std::string& buffer);
+private:
+};
+
+namespace compress {
 
 static int CompressString(const std::string& in, std::string& out, const int nDeflateLevel = 1) {
     // deflate level (1-9) level of compression

@@ -13,7 +13,7 @@ The file post type describes the metadata of a file. It does not store chunks.
 `https://attic.is/types/chunk/v0`
 The chunk post stores chunks of a file as attachments, it also stores iv data of a file used in correlation with the 
 file key in the metapost for the decryption step. It is possible to have multiple chunk posts per file. If a file is very
-large, chunks are grouped in separate posts. Chunk posts `mention` **mention what**
+large, chunks are grouped in separate posts. Chunk posts `mention` the file post they are associated with.
 
 - `plaintext_mac`: The plaintext authenticator, hex encoded.
 - `ciphertext_mac`: The ciphertext uthenticator, hex encoded.
@@ -21,7 +21,7 @@ large, chunks are grouped in separate posts. Chunk posts `mention` **mention wha
 
 Each chunk is an attachment, the filename is the hex encoded plaintext
 authenticator. The content-type should be set to `application/octet-stream`.
-Each post should be capped at 100 chunks.
+Each post should be capped at 30 to a 100 chunks.
 
 ## Folder Post
 

@@ -10,6 +10,7 @@
 namespace attic {
 
 /* FileTable deals with all file meta data operations
+ * TODO :: move away from using the filepath as a key, go by post id
  *
  * */
 class FileTable : public TableHandler {
@@ -26,20 +27,32 @@ public:
     ~FileTable() {}
 
     bool CreateTable();
-    bool IsFileInManifest(const std::string &filepath);
+    bool IsFileInManifest(const std::string& filepath); // depricated
+    bool IsFileInManifestWithId(const std::string& post_id);
 
-    bool InsertFileInfo(const FileInfo& fi);
-    bool RemoveFileInfo(const std::string &filepath);
+    bool InsertFileInfo(const std::string& filename, 
+                        const std::string& filepath,
+                        const unsigned int chunk_count,
+                        const std::string& chunk_data,
+                        const unsigned int file_size,
+                        const std::string& post_id,
+                        const std::string& post_version,
+                        const std::string& encrypted_key,
+                        const std::string& iv,
+                        bool deleted,
+                        const std::string& folder_post_id,
+                        const std::string& plaintext_hash);
 
-    bool set_file_post_id(const std::string &filepath, const std::string &id);
-    bool set_file_version(const std::string& filepath, const std::string& version);
-    bool set_file_deleted(const std::string& filepath, const int val);
-    bool set_filepath(const std::string& old_filepath, const std::string& new_filepath);
-    bool set_filename(const std::string& filepath, const std::string& new_filename);
-    bool set_folder_post_id(const std::string& filepath, const std::string& post_id);
-    bool set_chunk_count(const std::string& filepath, const std::string& chunk_count);
+    bool set_file_deleted_for_id(const std::string& post_id, const int val);
+    bool set_filepath_for_id(const std::string& post_id, const std::string& filepath);
+    bool set_filename_for_id(const std::string& post_id, const std::string& filename);
+    bool set_folder_post_id(const std::string& post_id, const std::string& folder_post_id);
+    bool set_file_version_for_id(const std::string& post_id, const std::string& version); 
 
-    bool QueryForFile(const std::string &filepath, FileInfo& out);
+    bool QueryForFile(const std::string& filepath, FileInfo& out);
+    bool QueryForFile(const std::string& filename, 
+                      const std::string& folder_post_id,
+                      FileInfo& out);
     bool QueryForFileByPostId(const std::string& post_id, FileInfo& out);
     bool QueryAllFiles(FileInfoList& out);
     bool QueryAllFilesForFolder(const std::string& folderid, FileInfoList& out);

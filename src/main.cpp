@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include <json/json.h>
 
@@ -41,7 +42,15 @@
 #include "callbackhandler.h"
 #include "atticclient.h"
 #include "chunkbuffer.h"
+#include "fileroller.h"
 
+
+
+/*
+#define BUFFERSIZE 1000
+#include <b64/encode.h>
+
+*/
 
 // Temporary test, hooked up to localhost tent server
 /*
@@ -63,6 +72,27 @@ TEST(ATTIC_SERVICE, START_STOP)
 }
 */
 
+
+TEST(COMPRESS, MINIZ_COMPRESS_STRING) {
+    std::string test_string = "miniz.c employs several proven techniques and approaches used in my much more powerful (but slower and more complex) lossless lzham codec, and in my jpeg-compressor project. Specifically, miniz.c's linear-time Huffman codelength generator, the single switch-statement approach used to implement the decompressor as a single function coroutine, and its very fast Huffman code symbol unpacker are all loosely based off the implementations I wrote for these earlier projects. ";
+
+    std::string out;
+    attic::Compress cmp;
+    cmp.CompressString(test_string, out);
+
+    std::cout<<" ORIGINAL : " << test_string << std::endl;
+    std::cout<<" COMPRESSED : " << out << std::endl;
+
+    std::string dcmp;
+    cmp.DecompressString(out, test_string.size(), dcmp);
+
+    std::cout<<" DECOMPRESSED : " << dcmp << std::endl;
+}
+
+TEST(COMPRESS, MINIZ_ARCHIVE) {
+    //attic::Archive arch;
+    //arch.AddFile("archive.zip", ".", "./test/aho.pdf");
+}
 
 TEST(COMPRESS, COMPRESSSTRING) {
     std::string in("this is my test string it is a pretty decent test string");
@@ -107,13 +137,72 @@ TEST(CRYPTO, BASE32) {
     ASSERT_EQ(teststring, decoded);
 }
 
+/*
 TEST(CRYPTO, BASE64) {
     std::string teststring("this is my test string, that I'm going to base64 encode");
+    std::string payload;
+    std::ifstream ifs;
+    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ios::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
+
+        char* data = new char[size];
+        ifs.read(data, size);
+        payload.append(data, size);
+        delete data;
+        data = NULL;
+    }
     std::string encoded;
-    attic::crypto::Base64EncodeString(teststring, encoded);
-    std::string decoded;
-    attic::crypto::Base64DecodeString(encoded, decoded);
-    ASSERT_EQ(teststring, decoded);
+    attic::crypto::Base64EncodeString(payload, encoded);
+    //std::string decoded;
+    //attic::crypto::Base64DecodeString(encoded, decoded);
+    //ASSERT_EQ(teststring, decoded);
+}
+*/
+
+
+#include "cbase64.h"
+
+TEST(LIBB64, ENCODE) { 
+    std::cout<<" CBSE64ENCODE " << std::endl;
+    std::string teststring("this is my test string, that I'm going to base64 encode");
+
+    std::string payload = teststring;
+    
+  //  std::string payload;
+    std::ifstream ifs;
+    /*
+    ifs.open("Open-Advice.pdf", std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ios::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
+
+        char* data = new char[size];
+        ifs.read(data, size);
+        payload.append(data, size);
+        delete data;
+        data = NULL;
+    }
+    */
+
+//    base64::encoder e;
+    std::istringstream str(payload);
+//    std::ostringstream ostr;
+ //   e.encode(str, ostr);
+    //std::cout<<" ENCODED : " << ostr.str() << std::endl;
+    //
+    std::string encoded;
+    attic::crypto::Base64EncodeString(payload, encoded);
+
+    std::string b64 = cb64::base64_encode(reinterpret_cast<const unsigned char*>(payload.c_str()), payload.size());
+
+    ASSERT_EQ(encoded, b64);
+
 }
 
 TEST(CRYPTO, KEY_ENCRYPTION) {
@@ -312,38 +401,55 @@ TEST(CHUNKINFO, SERIALIZATION) {
 void Compose(const std::string& in, const std::string& iv, std::string& out) {
     // Compose the chunk data to its format
     // Format version | iv len | iv | data len | data
+    //
+    std::cout<<"*****************************************************" << std::endl;
+    std::cout<<" compose " << std::endl;
+    std::cout<<"\t buffer size : " << in.size() << std::endl;
     unsigned char format = CHUNK_FORMAT;
-    std::cout<<" FORMAT : " << format << std::endl;
+    std::cout<<"\t FORMAT : " << format << std::endl;
     out.append(format, 1);
 
     unsigned int iv_size = iv.size();
-    char ivsize[4] = {0};
+    unsigned char ivsize[4] = {0};
     ivsize[0] = (iv_size >> 24) & 0xFF;
     ivsize[1] = (iv_size >> 16) & 0xFF;
     ivsize[2] = (iv_size >> 8) & 0xFF;
     ivsize[3] = iv_size & 0xFF;
-    std::cout<<" IV SIZE : " << iv_size << std::endl;
+    std::cout<<"\t IV SIZE : " << iv_size << std::endl;
 
-    out.append(ivsize, 4);
+    out.append(reinterpret_cast<const char*>(ivsize), 4);
     out.append(iv.c_str(), iv_size);
 
     unsigned int data_size = in.size();
-    char datasize[4] = {0};
+    unsigned char datasize[4] = {0};
     datasize[0] = (data_size >> 24) & 0xFF;
     datasize[1] = (data_size >> 16) & 0xFF;
     datasize[2] = (data_size >> 8) & 0xFF;
     datasize[3] = data_size & 0xFF;
-    std::cout<<" DATA SIZE : " << data_size << std::endl;
+    std::cout<<"\t DATA SIZE : " << data_size << std::endl;
+    unsigned int verify = 0;
+    verify = (verify << 8) + datasize[0];
+    verify = (verify << 8) + datasize[1];
+    verify = (verify << 8) + datasize[2];
+    verify = (verify << 8) + datasize[3];
+    std::cout<<"\t VERIFY SIZE : " << verify << std::endl;
 
-    out.append(datasize, 4);
+    std::cout<<"\t composed size : " << out.size() << std::endl;
+    out.append(reinterpret_cast<const char*>(datasize), 4);
+
+
     out.append(in.c_str(), data_size);
+    std::cout<<"*****************************************************" << std::endl;
 }
 
 void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
+    std::cout<<"*****************************************************" << std::endl;
+    std::cout<<" decompose " << std::endl;
+    std::cout<<"\t buffer size : " << in.size() << std::endl;
     unsigned char format = in[0];
-    std::cout<<"FORMAT : " << format << std::endl;
+    std::cout<<"\t FORMAT : " << format << std::endl;
     unsigned int offset = 1;
-    std::cout<<" offset : " << offset << std::endl;
+    std::cout<<"\t offset : " << offset << std::endl;
     if(format == CHUNK_FORMAT) {
         unsigned int iv_size = 0;
         iv_size = (iv_size << 8) + in[offset];
@@ -351,43 +457,80 @@ void Decompose(const std::string& in, std::string& iv_out, std::string& out) {
         iv_size = (iv_size << 8) + in[offset+2];
         iv_size = (iv_size << 8) + in[offset+3];
         offset+=4;
-        std::cout<<" offset : " << offset << std::endl;
+        std::cout<<"\t offset : " << offset << std::endl;
 
-        std::cout<<" IV SIZE : " << iv_size << std::endl;
+        std::cout<<"\t IV SIZE : " << iv_size << std::endl;
         iv_out = in.substr(offset, iv_size);
-        std::cout<<" IV : " << iv_out << std::endl;
+        std::cout<<"\t IV : " << iv_out << std::endl;
         offset+= iv_size;
-        std::cout<<" offset : " << offset << std::endl;
+        std::cout<<"\t offset : " << offset << std::endl;
 
         unsigned int data_size = 0;
-        data_size = (data_size << 8) + in[offset];
-        data_size = (data_size << 8) + in[offset+1];
-        data_size = (data_size << 8) + in[offset+2];
-        data_size = (data_size << 8) + in[offset+3];
-        offset+=4;
-        std::cout<<" offset : " << offset << std::endl;
-        std::cout<<" DATA SIZE : " << data_size << std::endl;
+        unsigned char ds_buffer[4];
+        ds_buffer[0] = in[offset];
+        ds_buffer[1] = in[offset+1];
+        ds_buffer[2] = in[offset+2];
+        ds_buffer[3] = in[offset+3];
 
+        data_size = (data_size << 8) + ds_buffer[0];
+        data_size = (data_size << 8) + ds_buffer[1];
+        data_size = (data_size << 8) + ds_buffer[2];
+        data_size = (data_size << 8) + ds_buffer[3];
+        offset+=4;
+        std::cout<<"\t offset : " << offset << std::endl;
+        std::cout<<"\t DATA SIZE : " << data_size << std::endl;
         out = in.substr(offset, data_size);
+        std::string all = in.substr(offset);
+        std::cout<<"\t back end size : " << all.size() << std::endl;
     }
+    std::cout<<"*****************************************************" << std::endl;
 }
 
 TEST(CHUNK_TRANSFORM, COMPOSE_DECOMPOSE){ 
     std::string payload;
     payload.append("this is my test data,09412");
-    payload.append("\0", 1);
-    payload.append("djfklgjsdg9012345ksajdkfjkasjdgkasjdga");
+    //payload.append("\0", 1);
+    //payload.append("djfklgjsdg9012345ksajdkfjkasjdgkasjdga");
+
+    /*
+    std::ifstream ifs;
+    ifs.open("aho.pdf", std::ios::in | std::ios::binary);
+    if(ifs.is_open()) {
+        ifs.seekg (0, std::ios::end);
+        unsigned int size = ifs.tellg();
+        ifs.seekg (0, std::ios::beg);
+        std::cout<<" file size : " << size << std::endl;
+
+        char* data = new char[size];
+        ifs.read(data, size);
+        payload.append(data, size);
+        delete data;
+        data = NULL;
+    }
+    */
+
+    std::cout<< "payload size : " << payload.size() << std::endl;
     std::string iv("test iv, not a real iv");
 
     std::string composed;
     Compose(payload, iv, composed);
+/*
+    std::string b64_encoded;
+    attic::crypto::Base64EncodeString(composed, b64_encoded);
+
+    std::string b64_decoded;
+    attic::crypto::Base64DecodeString(b64_encoded, b64_decoded);
+    */
 
     std::string iv_out;
     std::string decomposed;
+    //Decompose(b64_decoded, iv_out, decomposed);
     Decompose(composed, iv_out, decomposed);
+    std::cout<<" decomposed size : " << decomposed.size() << std::endl;
 
     ASSERT_EQ(iv, iv_out);
-    ASSERT_EQ(payload, decomposed);
+    ASSERT_EQ(payload.size(), decomposed.size());
+    //ASSERT_EQ(payload, decomposed);
 }
 
 TEST(CHUNK, COMPOSE_DECOMPOSE) {
@@ -681,6 +824,70 @@ TEST(SODIUM, SECRET_BOX) {
     }
     ASSERT_EQ(f, msg);
 }
+
+TEST(SODIUM, CRYPTO_GENERICHASH) {
+    std::string data("The quick brown fox jumps over the lazy dog");
+    crypto_generichash_state st; // state
+    unsigned char hash[64];
+    crypto_generichash_init(&st, NULL, NULL, 64);
+    for(int i=0; i<data.size(); i++) {
+        unsigned char a[] = {static_cast<unsigned char>(data[i])};
+        crypto_generichash_update(&st, a, 1);
+    }
+    crypto_generichash_final(&st, hash, 64);
+
+    std::string final_hash;
+    for(int i=0; i<64; i++)  {
+        char b[20] = {'\0'};
+        snprintf(b, 20, "%02x",(unsigned int) hash[i]);
+        final_hash += b;
+    }
+    std::string upper;
+    for(unsigned int i=0; i<final_hash.size(); i++) 
+        upper += toupper(final_hash[i]);
+    //std::cout<<" hash : " << upper << std::endl;
+
+    // test vector from wikipedia
+    // http://en.wikipedia.org/wiki/BLAKE_%28hash_function%29
+    std::string test_answer = "A8ADD4BDDDFD93E4877D2746E62817B116364A1FA7BC148D95090BC7333B3673F82401CF7AA2E4CB1ECD90296E3F14CB5413F8ED77BE73045B13914CDCD6A918";
+    ASSERT_EQ(upper, test_answer);
+}
+
+TEST(SODIUM, HMAC_SHA256) {
+    std::string key("this_is_my_key");
+    std::string vec("this is my test string");
+
+    unsigned char out_buffer[32]={'\0'};
+    crypto_auth_hmacsha512256(out_buffer, 
+                              reinterpret_cast<const unsigned char*>(vec.c_str()), 
+                              vec.size(), 
+                              reinterpret_cast<const unsigned char*>(key.c_str()));
+
+    std::string buffer;
+    buffer.append(reinterpret_cast<const char*>(out_buffer));
+    std::string encoded;
+    attic::crypto::Base64EncodeString(buffer, encoded);
+    std::cout<<" HASH : " << encoded << std::endl;
+
+    std::string signedr;
+    attic::netlib::SignRequest(vec, key, signedr);
+    std::cout<<" SIGNED : " << signedr << std::endl;
+
+}
+
+TEST(SODIUM, FILEROLLER) {
+    /*
+    attic::FileRoller fr("miami.mp4");
+    std::string hash;
+    if(fr.Digest(hash))
+        std::cout<<"hash out : " << hash << std::endl;
+    else
+        std::cout<<" failed to digest " << std::endl;
+        */
+}
+
+
+
 
 int main (int argc, char* argv[]) {
    int status = 0;

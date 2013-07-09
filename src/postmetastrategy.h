@@ -12,10 +12,7 @@ class CredentialsManager;
 
 class PostMetaStrategy : public HttpStrategyInterface{ 
     int CreateFileEntry(const std::string& filepath, FileInfo& out);
-    int CreateFileMetaPost(const std::string& filepath, FileInfo& fi);
     bool RetrieveFolderPostId(const std::string& filepath, std::string& id_out);
-    bool ValidMasterKey();
-    void GetMasterKey(std::string& out);
 public:
     PostMetaStrategy() {}
     ~PostMetaStrategy() {}

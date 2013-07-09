@@ -25,24 +25,27 @@ class GetFileStrategy : public HttpStrategyInterface {
                        std::string& out);
 
     int RetrieveFilePost(const std::string& post_id, FilePost& out);
+    int RetrieveFilePost(const std::string& post_id, const std::string& version, FilePost& out);
 
-    int RetrieveChunkPosts(const std::string& entity,
-                           const std::string& post_id,
-                           ChunkPostList& out);
     int ExtractCredentials(FilePost& in, Credentials& out);
     int ConstructFilepath(const FileInfo& fi, std::string& out);
-    void ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
+    bool ConstructFilepath(const FileInfo& fi, const Folder& folder, std::string& out);
 
+    int ConstructFile(FileInfo& fi, const Credentials& file_cred);
     int ConstructFile(FileInfo& fi,
-                  const Credentials& file_cred,
-                  const std::string& destination_path);
+                      const Credentials& file_cred,
+                      const std::string& destination_folder);
+ 
 
-    void GetMasterKey(std::string& out);
-    bool ValidMasterKey();
+    int SyncFile(const std::string& filepath);
+    int SyncFilePostAtVersion(const std::string& post_id, 
+                              const std::string& version,
+                              const std::string& destination);
 
     void ValidateFolderEntries(FilePost& fp);
     void RetrieveFolderPosts(FilePost& fp, std::deque<FolderPost>& out);
     bool RetrieveFolderPost(const std::string& post_id, FolderPost& out);
+    bool CheckForConflict(FilePost& file_post); 
 public:
     GetFileStrategy();
     ~GetFileStrategy();

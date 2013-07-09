@@ -24,7 +24,6 @@ bool ChunkBuffer::OpenFile(const std::string& filepath) {
         ifs_.seekg(0, std::ifstream::beg);
         ReadToWindow();
     }
-    std::cout<< " FILE SIZE : " << filesize_ << std::endl;
     return ifs_.is_open();
 }
 
@@ -44,9 +43,6 @@ void ChunkBuffer::ReadToWindow() {
         }
         else {
             unsigned int read_diff = filesize_ - total_read_;
-            std::cout<<" READ DIFF : " << read_diff << std::endl;
-            std::cout<<" total read : " << total_read_ << std::endl;
-            std::cout<<" filesize : " << filesize_ << std::endl;
             if(read_diff <= max_buffer_read_) {
                 data = new char[read_diff];
                 data_size = read_diff;
@@ -60,7 +56,6 @@ void ChunkBuffer::ReadToWindow() {
         // clear the window, and append data
         ifs_.read(data, data_size);
         total_read_ += data_size;
-        std::cout<<" Total bytes read : " << total_read_ << std::endl;
         if(filesize_ < total_read_)
             std::cout<<" WE READ MORE THAN THE FILESIZE? " << std::endl;
     }
@@ -106,8 +101,6 @@ bool ChunkBuffer::ReadChunk(std::string& out) {
             chunked = ReadChunk(out);
         }
         else if(window_buffer_.size()) {
-            std::cout<<" LAST CHUNK " << std::endl;
-            std::cout<<" window buffer size : " << window_buffer_.size() << std::endl;
             out = window_buffer_;
             window_buffer_.clear();
             chunked = true;

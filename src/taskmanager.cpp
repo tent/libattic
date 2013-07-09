@@ -43,7 +43,6 @@ int TaskManager::Initialize() {
         event::RegisterForEvent(this, event::Event::REQUEST_PULL);
         event::RegisterForEvent(this, event::Event::REQUEST_PUSH);
         event::RegisterForEvent(this, event::Event::REQUEST_DELETE);
-        event::RegisterForEvent(this, event::Event::REQUEST_SYNC_POST);
         event::RegisterForEvent(this, event::Event::REQUEST_UPLOAD_FILE);
         //event::RegisterForEvent(this, event::Event::POLL);
     }
@@ -82,12 +81,6 @@ void TaskManager::OnEventRaised(const event::Event& event) {
                 DeleteFile(event.value, event.delegate);
                 break;
             }
-        case event::Event::REQUEST_SYNC_POST:
-            {
-                std::cout<<" creating request sync task " << std::endl;
-                SyncFile(event.value, event.delegate);
-                break;
-            }
         case event::Event::REQUEST_UPLOAD_FILE:
             {
                 std::cout<<" creating process upload file task " << std::endl;
@@ -113,6 +106,7 @@ void TaskManager::OnTaskInsert(Task* t) {
 
 void TaskManager::CreateFolder(const std::string& folderpath, TaskDelegate* del) {
     TaskContext tc;
+    std::cout<<"&&& CREATE FOLDER : " << folderpath << std::endl;
     tc.set_value("operation", "CREATE");
     tc.set_value("folderpath", folderpath);
     tc.set_value("temp_dir", temp_directory_);
@@ -151,7 +145,6 @@ void TaskManager::DeleteFolder(const std::string& folderpath, TaskDelegate* del)
 
 // Begins upload process
 void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
-    std::cout<<" task manager recieving filepath : " << filepath << std::endl;
     TaskContext tc;
     tc.set_value("filepath", filepath);
     tc.set_value("temp_dir", temp_directory_);
@@ -161,6 +154,17 @@ void TaskManager::UploadFile(const std::string& filepath, TaskDelegate* del) {
     tc.set_delegate(del);
     PushContextBack(tc);
     upload_count++;
+}
+
+void TaskManager::UploadPublicFile(const std::string& filepath,
+                                   TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("filepath", filepath);
+    tc.set_value("temp_dir", temp_directory_);
+    tc.set_value("config_dir", config_directory_);
+    tc.set_type(Task::PUSHPUBLIC);
+    tc.set_delegate(del);
+    PushContextBack(tc);
 }
 
 // Begins actual file processing (upload)
@@ -184,18 +188,6 @@ void TaskManager::DownloadFile(const std::string& filepath, TaskDelegate* del) {
     download_count++;
 }
 
-void TaskManager::SyncFile(const std::string& postid, TaskDelegate* del) {
-    TaskContext tc;
-    tc.set_value("postid", postid);
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::SYNC_FILE_TASK);
-    tc.set_delegate(del);
-    PushContextBack(tc);
-    syncfile_count++;
-}
-
 void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("filepath", filepath);
@@ -206,17 +198,6 @@ void TaskManager::DeleteFile(const std::string& filepath, TaskDelegate* del) {
     tc.set_delegate(del);
     PushContextBack(tc);
     delete_count++;
-}
-
-void TaskManager::PollFiles(TaskDelegate* del) { // This will need to be a direct call
-    TaskContext tc;
-    tc.set_value("temp_dir", temp_directory_);
-    tc.set_value("working_dir", working_directory_);
-    tc.set_value("config_dir", config_directory_);
-    tc.set_type(Task::POLL);
-    tc.set_delegate(del);
-    PushContextBack(tc);
-    poll_count++;
 }
 
 void TaskManager::RenameFile(const std::string& original_filepath, 
@@ -242,6 +223,44 @@ void TaskManager::GetFileHistory(const std::string& filepath, TaskDelegate* del)
     PushContextBack(tc);
 }
 
+void TaskManager::DownloadFileToDirectory(const std::string& post_id, 
+                                          const std::string& version, 
+                                          const std::string& filepath,
+                                          TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "DOWNLOAD");
+    tc.set_value("post_id", post_id);
+    tc.set_value("version", version);
+    tc.set_value("filepath", filepath);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::DeletePost(const std::string& post_id, 
+                             const std::string& version, 
+                             TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "DELETE");
+    tc.set_value("post_id", post_id);
+    tc.set_value("version", version);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::MakePostNewHead(const std::string& post_id, 
+                                  const std::string& version, 
+                                  TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "NEW_HEAD");
+    tc.set_value("post_id", post_id);
+    tc.set_value("version", version);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
 void TaskManager::QueryManifest(TaskDelegate* del) {
     TaskContext tc;
     tc.set_type(Task::QUERYMANIFEST);
@@ -255,6 +274,7 @@ void TaskManager::CreatePostTree(const std::string& filepath,
     tc.set_value("operation", "LINEAGE");
     tc.set_value("filepath", filepath);
     tc.set_type(Task::META);
+    tc.set_delegate(del);
     PushContextBack(tc);
 }
 
@@ -265,6 +285,30 @@ TaskContext TaskManager::CreateServiceContext(void) {
     tc.set_value("config_dir", config_directory_);
     tc.set_type(Task::SERVICE);
     return tc;
+}
+
+void TaskManager::AddRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "ADD_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
+}
+
+void TaskManager::UnlinkRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "UNLINK_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
+}
+
+void TaskManager::RemoveRootDirectory(const std::string& directory_path, TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "REMOVE_ROOT_DIRECTORY");
+    tc.set_value("directory_path", directory_path);
+    tc.set_type(Task::CONFIG);
+    PushContextBack(tc);
 }
 
 void TaskManager::PushContextBack(TaskContext& tc) {

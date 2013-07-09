@@ -41,10 +41,9 @@ void PullTask::RunTask() {
     int status = ret::A_OK;
     if(!file_manager()->IsFileLocked(filepath)) {
         file_manager()->LockFile(filepath);
-        std::cout<<" PULL NOTIFY ON PATH : " << filepath << std::endl;
-        event::RaiseEvent(event::Event::PULL, event::Event::START, filepath, NULL);
+
         status = PullFile(filepath);
-        event::RaiseEvent(event::Event::PULL, event::Event::DONE, filepath, NULL);
+
         file_manager()->UnlockFile(filepath);
     }
     else {
@@ -52,6 +51,12 @@ void PullTask::RunTask() {
         error += " file : " + filepath + "\n";
         log::LogString("1#819kmapAm", error);
         status = ret::A_FAIL_FILE_IN_USE;
+    }
+
+    if(status != ret::A_OK) {
+        std::ostringstream error;
+        error << " Pull Task failed for : " << filepath << std::endl;
+        log::LogString("pull_1841", error.str());
     }
 
     Callback(status, filepath);
@@ -63,9 +68,9 @@ int PullTask::PullFile(const std::string& filepath) {
 
     std::string post_path = GetPostPath();
     std::string post_attachment;
-    utils::FindAndReplace(TentTask::entity().GetPreferredServer().attachment(),
+    utils::FindAndReplace(entity()->GetPreferredServer().attachment(),
                           "{entity}",
-                          TentTask::entity().entity(),
+                          entity()->entity(),
                           post_attachment);
     Response resp;
 
@@ -73,8 +78,8 @@ int PullTask::PullFile(const std::string& filepath) {
     HttpStrategyContext pullcontext(file_manager(), 
                                     credentials_manager());
 
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     pullcontext.SetConfigValue("post_path",post_path);
     pullcontext.SetConfigValue("posts_feed", posts_feed);
@@ -83,7 +88,6 @@ int PullTask::PullFile(const std::string& filepath) {
     pullcontext.SetConfigValue("entity", entity);
 
     pullcontext.PushBack(&gfs);
-
     status = pullcontext.ExecuteAll();
 
     return status; 

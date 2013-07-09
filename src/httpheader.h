@@ -15,12 +15,14 @@ public:
 
     std::string& operator[](const std::string& index);
     void AddValue(const std::string& key, const std::string& value);
-    bool HasValue(const std::string& key);
-    std::string GetValue(const std::string& key);
-    void GetValue(const std::string& key, std::string& out);
+    bool HasValue(const std::string& key) const;
+    std::string GetValue(const std::string& key) const;
+    void GetValue(const std::string& key, std::string& out) const;
 
     void ParseString(const std::string& in);
     void ReturnAsString(std::string& out) const ;
+
+    void clear() { values_.clear(); }
 
     std::string asString() const;
 

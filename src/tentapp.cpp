@@ -16,48 +16,60 @@ void RedirectCode::Deserialize(Json::Value& root) {
 }
 
 void TentApp::Serialize(Json::Value& root) {
-    root["id"] = app_id_;
-    root["name"] = app_name_;
-    root["description"] = app_description_;
-    root["url"] = app_url_;
-    root["icon"] = app_icon_;
+    if(!app_id_.empty()) root["id"] = app_id_;
+    if(!app_name_.empty()) root["name"] = app_name_;
+    if(!app_description_.empty()) root["description"] = app_description_;
+    if(!app_url_.empty()) root["url"] = app_url_;
+    if(!app_icon_.empty())   root["icon"] = app_icon_;
 
-    root["hawk_algorithm"] = hawk_algorithm_;
-    root["hawk_key_id"] = hawk_key_id_;
-    root["hawk_key"] = hawk_key_;
-
-    root["redirect_uri"] = redirect_uri_;
-    
-    if(scopes_.size() > 0) {
-        Json::Value scopes(Json::objectValue); // We want scopes to be an object {}// vs []
-        jsn::SerializeVectorIntoObjectValue(scopes, scopes_);
-        root["scopes"] = scopes;
-    }
+    if(!hawk_algorithm_.empty())root["hawk_algorithm"] = hawk_algorithm_;
+    if(!hawk_key_id_.empty())root["hawk_key_id"] = hawk_key_id_;
+    if(!hawk_key_.empty())root["hawk_key"] = hawk_key_;
+    if(!redirect_uri_.empty())root["redirect_uri"] = redirect_uri_;
 
     if(authorizations_.size() > 0) {
         Json::Value authorizations;
         jsn::SerializeVector(authorizations_, authorizations);
         root["authorizations"] = authorizations;
     }
+
+    if(post_types_.size()) {
+        // Post Types 
+        Json::Value posttype(Json::objectValue);
+        Json::Value read_types(Json::arrayValue);
+        Json::Value write_types(Json::arrayValue);
+        jsn::SerializeVector(post_types_["read"], read_types);
+        jsn::SerializeVector(post_types_["write"], write_types);
+        if(!read_types.empty()) posttype["read"] = read_types;
+        if(!write_types.empty()) posttype["write"] = write_types;
+        if(!posttype.empty()) root["post_types"] = posttype;
+    }
+
 }
 
 void TentApp::Deserialize(Json::Value& root) {
-    if(!root["id"].empty()) app_id_ = root.get("id", "").asString();
-    if(!root["name"].empty()) app_name_ = root.get("name", "").asString();
-    if(!root["description"].empty()) app_description_ = root.get("description", "").asString();
-    if(!root["url"].empty()) app_url_ = root.get("url", "").asString(); 
-    if(!root["icon"].empty()) app_icon_ = root.get("icon", "").asString(); 
+    app_id_ = root.get("id", "").asString();
+    app_name_ = root.get("name", "").asString();
+    app_description_ = root.get("description", "").asString();
+    app_url_ = root.get("url", "").asString(); 
+    app_icon_ = root.get("icon", "").asString(); 
  
-    if(!root["hawk_algorithm"].empty()) hawk_algorithm_ = root.get("hawk_algorithm", "").asString();
-    if(!root["hawk_key_id"].empty()) hawk_key_id_ = root.get("hawk_key_id", "").asString();
-    if(!root["hawk_key"].empty()) hawk_key_ = root.get("hawk_key", "").asString();
+    hawk_algorithm_ = root.get("hawk_algorithm", "").asString();
+    hawk_key_id_ = root.get("hawk_key_id", "").asString();
+    hawk_key_ = root.get("hawk_key", "").asString();
 
-    if(!root["redirect_uri"].empty()) redirect_uri_ = root.get("redirect_uri", "").asString();
+    redirect_uri_ = root.get("redirect_uri", "").asString();
 
-    if(!root["scopes"].empty())
-        jsn::DeserializeObjectValueIntoVector(root["scopes"], scopes_);
-    if(!root["authorizations"].empty())
+    if(!root["authorizations"].isNull())
         jsn::DeserializeIntoVector(root["authorizations"], authorizations_);
+
+    // Deserialize Post types
+    Json::Value content = root["content"];
+    Json::Value posttype(Json::objectValue);
+    posttype = content["post_types"];
+    jsn::DeserializeIntoVector(posttype["read"], post_types_["read"]);
+    jsn::DeserializeIntoVector(posttype["write"], post_types_["write"]);
+
 }
 
 ret::eCode TentApp::SaveToFile(const std::string& filepath) {

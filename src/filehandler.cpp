@@ -5,6 +5,8 @@
 #include "credentials.h"
 #include "utils.h"
 #include "logutils.h"
+#include "foldersem.h"
+#include "posthandler.h"
 
 namespace attic { 
 
@@ -28,30 +30,31 @@ bool FileHandler::RetrieveFileInfoById(const std::string& post_id, FileInfo& out
 // Note* there are 3 keys that file info objects are queried by, this only sets two of them,
 // if the third is not set, a new file with the same path and folderid can be created for a 
 // duplicate entry
-bool FileHandler::CreateNewFile(const std::string& filepath, 
+//
+// Creates a new file entry and file post, left in a transit state
+bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                                 const std::string& master_key,
+                                const std::string& post_feed,
+                                const AccessToken& at,
                                 FileInfo& out) {
+    bool ret = false;
     if(master_key.empty()) {
         std::ostringstream err;
         err << " Invalid master key : "<< master_key << std::endl;
         log::LogString("0010-12851-", err.str());
         return false;
     }
+    std::cout<<" create new file : " << filepath << std::endl;
 
     if(!file_manager_->DoesFileExist(filepath)) {
         std::string folderpath;
-        if(fs::GetParentPath(filepath, folderpath) == ret::A_OK) {
+        if(fs::GetParentPath(filepath, folderpath)) {
             std::string folderid;
-            std::cout<< " checking folderpath : " << folderpath << std::endl;
             utils::CheckUrlAndRemoveTrailingSlash(folderpath);
-            std::cout<< " checking folderpath : " << folderpath << std::endl;
             if(file_manager_->GetFolderPostId(folderpath, folderid)) {
                 std::string aliased, filename;
                 utils::ExtractFileName(filepath, filename);
-                file_manager_->GetAliasedFilepath(filepath, aliased);
-                std::cout<<" folder path : " << folderpath << std::endl;
-                std::cout<<" folder id : " << folderid << std::endl;
-                std::cout<<" aliased : " << aliased << std::endl;
+                file_manager_->GetAliasedPath(filepath, aliased);
                 out.set_filename(filename);             // set filename
                 out.set_filepath(aliased);              // set filepath
                 out.set_folder_post_id(folderid);       // set folder id
@@ -61,35 +64,96 @@ bool FileHandler::CreateNewFile(const std::string& filepath,
                     crypto::GenerateCredentials(file_cred);
                 out.set_file_credentials(file_cred);    // set credentials
 
+                // Generate plaintext mac for file
+                std::string plaintext_hash;
+                if(RollFileMac(filepath, plaintext_hash)) {
+                    out.set_plaintext_hash(plaintext_hash);
+                }
+                else {
+                    std::ostringstream err;
+                    err << "Failed to generate plaintext mac for file : " << std::endl;
+                    err << "\t " << filepath << std::endl;
+                    log::LogString("19240=-124i8", err.str());
+                }
+
                 EncryptFileKey(out, master_key); // sets encryted file key on file info
                 // verify key
                 // set filesize
                 out.set_file_size(utils::CheckFilesize(filepath));
-                return file_manager_->InsertToManifest(&out);
+                // Create Meta Post, then insert
+                FilePost fp;
+                if(CreateNewFileMetaPost(out, master_key, post_feed, at, fp)) { 
+                    out.set_post_id(fp.id());
+                    ret = file_manager_->InsertToManifest(&out);
+                }
             }
         }
     }
-    return false;
+    return ret;
+}
+
+bool FileHandler::CreateNewFileMetaPost(FileInfo& fi, 
+                                        const std::string& master_key, 
+                                        const std::string& posts_feed,
+                                        const AccessToken& at,
+                                        FilePost& out) {
+    bool ret = false;
+    std::cout<<" creating file meta post " << std::endl;
+    FilePost fp;
+    PrepareFilePost(fi, master_key, fp);
+    fp.set_fragment(cnst::g_transit_fragment);
+    PostHandler<FilePost> ph(at);
+    if(ph.Post(posts_feed, NULL, fp) == ret::A_OK) {
+        out = ph.GetReturnPost();
+        fi.set_post_id(out.id());
+        ret = true;
+    }
+    return ret;
 }
 
 bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string& out) {
-    return file_manager_->GetCanonicalFilepath(filepath, out);
+    return file_manager_->GetCanonicalPath(filepath, out);
 }
 
 bool FileHandler::UpdateFileInfo(FileInfo& fi) {
     return file_manager_->InsertToManifest(&fi);
 }
 
-bool FileHandler::UpdateFilepath(const std::string& old_filepath, const std::string& new_filepath) {
-    return file_manager_->SetNewFilepath(old_filepath, new_filepath);
-}
+bool FileHandler::UpdateFilepath(const std::string& post_id, const std::string& new_folder_post_id) {
+    bool ret = false;
+    FileInfo fi;
+    if(file_manager_->GetFileInfoByPostId(post_id, fi)) {
+        // Construct filepath for current local cache
+        std::string folderpath, canonical_old;
+        if(file_manager_->ConstructFolderpath(fi.folder_post_id(), folderpath)) {
+            file_manager_->GetCanonicalPath(folderpath, canonical_old);
+        }
 
-bool FileHandler::UpdateFilePostId(const std::string& filepath, const std::string& post_id) {
-    return file_manager_->SetFilePostId(filepath, post_id);
-}
+        folderpath.clear();
+        std::string canonical_new;
+        if(file_manager_->ConstructFolderpath(new_folder_post_id, folderpath)) {
+            file_manager_->GetCanonicalPath(folderpath, canonical_new);
+        }
 
-bool FileHandler::UpdateChunkCount(const std::string& filepath, const std::string& count) {
-    return file_manager_->SetFileChunkCount(filepath, count);
+        std::string old_filepath, new_filepath;
+        utils::AppendTrailingSlash(canonical_old);
+        utils::AppendTrailingSlash(canonical_new);
+
+        old_filepath = canonical_old + fi.filename();
+        new_filepath = canonical_new + fi.filename(); 
+        if(fs::CheckFilepathExists(old_filepath)){
+            if(!fs::CheckFilepathExists(new_filepath)) {
+                FolderSem fs;
+                fs.AquireWrite(fi.folder_post_id());
+                if(fs::RenamePath(old_filepath, new_filepath)) {
+                    // Set post id
+                    ret = file_manager_->SetFileFolderPostId(post_id, new_folder_post_id);
+                }
+                fs.ReleaseWrite(fi.folder_post_id());
+            }
+        }
+    }
+    return ret;
 }
 
 bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string& size) {
@@ -98,27 +162,95 @@ bool FileHandler::UpdateFileSize(const std::string& filepath, const std::string&
     return false;
 }
 
-bool FileHandler::UpdateChunkMap(const std::string& filepath, FileInfo::ChunkMap& map) {
-    return file_manager_->SetFileChunks(filepath, map);
-}
-
-bool FileHandler::UpdatePostVersion(const std::string& filepath, const std::string& version) {
-    return file_manager_->SetFileVersion(filepath, version);
+bool FileHandler::UpdatePostVersion(const std::string& post_id, const std::string& version) {
+    return file_manager_->SetFileVersion(post_id, version);
 }
 
 bool FileHandler::UpdateFolderEntry(FolderPost& fp) {
-    return file_manager_->UpdateFolderEntry(fp.folder().folderpath(), fp.id());
+    return file_manager_->UpdateFolderEntry(fp.folder().foldername(), fp.id());
 }
 
-void FileHandler::DeserializeIntoFileInfo(FilePost& fp, FileInfo& out) {
-    out.set_filename(fp.name());
-    out.set_filepath(fp.relative_path());
+void FileHandler::PrepareCargo(FileInfo& fi, 
+                               const std::string& master_key, 
+                               std::string& cargo_out) {
+    Cargo c;
+    c.filename = fi.filename();
+    c.filepath = fi.filepath();
+    c.plaintext_hash = fi.plaintext_hash();
+
+    std::string cargo_buffer;
+    jsn::SerializeObject(&c, cargo_buffer);
+
+    std::string file_key;
+    DecryptFileKey(fi.encrypted_key(),
+                   fi.file_credentials_iv(),
+                   master_key,
+                   file_key);
+
+    // transient credentials
+    Credentials t_cred;
+    t_cred.set_key(file_key);
+    t_cred.set_iv(fi.file_credentials_iv());
+
+    std::string encrypted_cargo;
+    crypto::Encrypt(cargo_buffer, t_cred, encrypted_cargo);
+    crypto::Base64EncodeString(encrypted_cargo, cargo_out);
+}
+
+void FileHandler::UnpackCargo(FilePost& fp, 
+                              const std::string& master_key,
+                              Cargo& open_cargo) {
+    std::string file_key;
+    DecryptFileKey(fp.key_data(),
+                   fp.iv_data(),
+                   master_key,
+                   file_key);
+
+    // transient credentials
+    Credentials t_cred;
+    t_cred.set_key(file_key);
+    t_cred.set_iv(fp.iv_data());
+
+    //std::cout<<" ENCRYPTED CARGO : " << fp.cargo() << std::endl;
+    std::string encrypted_cargo;
+    crypto::Base64DecodeString(fp.cargo(), encrypted_cargo);
+
+    std::string decrypted_cargo;
+    crypto::Decrypt(encrypted_cargo, t_cred, decrypted_cargo);
+    //std::cout<<" DECRYPTED CARGO : " << decrypted_cargo << std::endl;
+    jsn::DeserializeObject(&open_cargo, decrypted_cargo);
+}
+
+void FileHandler::PrepareFilePost(FileInfo& fi, 
+                                  const std::string& master_key,
+                                  FilePost& out) {
+    out.set_file_info(fi);
+    // Prepare cargo
+    std::string cargo;
+    PrepareCargo(fi, master_key, cargo);
+    out.set_cargo(cargo);
+}
+
+void FileHandler::DeserializeIntoFileInfo(FilePost& fp, 
+                                          const std::string& master_key,
+                                          FileInfo& out) {
+    // TODO :: once cargo is working remove set file name set filepath
+
     out.set_encrypted_key(fp.key_data());
     out.set_file_credentials_iv(fp.iv_data());
     out.set_post_id(fp.id());
     out.set_folder_post_id(fp.folder_post());
     out.set_post_version(fp.version().id());
     out.set_file_size(fp.file_size());
+    out.set_chunks(fp.chunk_data());
+    out.set_chunk_count(fp.chunk_data().size());
+
+    // Unpack Cargo
+    Cargo cargo;
+    UnpackCargo(fp, master_key, cargo);
+    out.set_filename(cargo.filename);
+    out.set_filepath(cargo.filepath);
+    out.set_plaintext_hash(cargo.plaintext_hash);
 }
 
 bool FileHandler::GetTemporaryFilepath(FileInfo& fi, std::string& path_out) {
@@ -162,11 +294,13 @@ bool FileHandler::EncryptFileKey(FileInfo& fi, const std::string& master_key) {
             if(decrypted_key != fi.file_credentials_key())
                 std::cout<<" FAILED TO VERIFY ENCRYPTED KEY ! " << std::endl;
             else {
+                /*
                 std::cout<<" KEY VERIFIED " << std::endl;
                 std::cout<<" master key : " << master_key << std::endl;
                 std::cout<<" encrypted key : " << encrypted_key << std::endl;
                 std::cout<<" decrypted key : " << decrypted_key << std::endl;
                 std::cout<<" iv : " << fi.file_credentials_iv() << std::endl;
+                */
             }
 
             return true;
@@ -225,5 +359,12 @@ bool FileHandler::ExtractFileCredetials(const FilePost& fp,
 }
 
 
+bool FileHandler::RollFileMac(const std::string& filepath, std::string& out) {
+    bool ret = false;
+    if(fs::CheckFilepathExists(filepath)) {
+        ret = crypto::GeneratePlaintextHashForFile(filepath, out);
+    }
+    return ret;
+}
 
 }//namespace

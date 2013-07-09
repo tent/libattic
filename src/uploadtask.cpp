@@ -31,12 +31,12 @@ void UploadTask::RunTask() {
         status = RetrieveFileInfo(post_id, fi);
         if(status == ret::A_OK) {
             std::string filepath;
-            file_manager()->GetCanonicalFilepath(fi.filepath(), filepath);
+            file_manager()->GetCanonicalPath(fi.filepath(), filepath);
             if(!file_manager()->IsFileLocked(filepath)) {
                 file_manager()->LockFile(filepath);
-                event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
+
                 status = ProcessFile(fi);
-                event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
+
                 file_manager()->UnlockFile(filepath);
             }
             else {
@@ -70,8 +70,8 @@ int UploadTask::ProcessFile(const FileInfo& fi) {
     PostFileStrategy ps;
 
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = TentTask::entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     std::string filepath;
     FileHandler fh(file_manager());

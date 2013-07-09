@@ -53,7 +53,6 @@ public:
     const std::string& hawk_key_id() const       { return hawk_key_id_; }
     const std::string& hawk_key() const          { return hawk_key_; }
     const std::string& redirect_uri() const      { return redirect_uri_; }
-    ScopeVec* scopes()                           { return &scopes_; }
     AuthVec* authorizations()                    { return &authorizations_;}
     
     void set_app_id(const std::string &id)                      { app_id_ = id; }
@@ -64,14 +63,14 @@ public:
     void set_hawk_algorithm(const std::string &alg)              { hawk_algorithm_ = alg; }
     void set_hawk_key_id(const std::string &id)                  { hawk_key_id_ = id; }
     void set_hawk_key(const std::string &key)                    { hawk_key_ = key; }
-    void set_scopes(const std::vector<std::string>& scopes)     { scopes_ = scopes; }
     void set_redirect_uri(const std::string& uri)               { redirect_uri_ = uri; }
     void set_authorizations(const std::vector<std::string>& auth)   { authorizations_ = auth; }
 
-    void PushBackScope(const std::string &szScope)          { scopes_.push_back(szScope); }
     void PushBackAuthorization(const std::string &szAuth)   { authorizations_.push_back(szAuth); }
 private:
-    std::vector<std::string> scopes_;
+    typedef std::map<std::string, std::vector<std::string> > PostTypes;
+    PostTypes post_types_;
+
     std::vector<std::string> authorizations_;
 
     std::string app_id_;

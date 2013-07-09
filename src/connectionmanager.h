@@ -26,7 +26,7 @@ class ConnectionManager {
 public:
     ~ConnectionManager();
 
-    static ConnectionManager* GetInstance();
+    static ConnectionManager* instance();
     int Initialize(const std::string& host_url);
     int Shutdown();
 

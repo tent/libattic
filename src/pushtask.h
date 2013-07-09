@@ -23,9 +23,8 @@
 namespace attic { 
 
 class PushTask : public TentTask {
-    
     int PushFile(const std::string& filepath);
-
+    bool DetectFileDivergence(const std::string& filepath);
 public:
     PushTask(FileManager* pFm, 
              CredentialsManager* pCm,
@@ -38,8 +37,6 @@ public:
     virtual void OnStart() {} 
     virtual void OnPaused();
     virtual void OnFinished() {}
-
-    int GetUploadSpeed();
 
     void RunTask();
 

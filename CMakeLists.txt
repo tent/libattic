@@ -2,17 +2,19 @@ cmake_minimum_required (VERSION 2.8)
 
 option (ATTIC_STATIC_LIB "Build Attic Static lib" ON)
 option (ATTIC_BINARY "Build Attic Binary test executable" OFF)
-option (DEBUG "Debug Build" OFF)
+option (DEBUG "Debug Build" ON)
 
 # Set compilers to use
 set (CMAKE_CXX_COMPILER clang++)
+#set (CMAKE_CXX_COMPILER g++-4.8)
 set (CMAKE_C_COMPILER clang)
+#set (CMAKE_C_COMPILER gcc-4.8)
 
 project(libattic)
 if(ATTIC_STATIC_LIB)
     message(STATUS "Bulding Attic Static library")
     if(DEBUG)
-        set(CMAKE_CXX_FLAGS "-w -g3 -ggdb ")
+        set(CMAKE_CXX_FLAGS "-w -g3 -ggdb")# -Wall")
     else(DEBUG)
         set(CMAKE_CXX_FLAGS "-w")
     endif(DEBUG)
@@ -22,7 +24,7 @@ if(ATTIC_BINARY)
     message(STATUS "Bulding Attic Test Binary")
     if(DEBUG)
         #set(CMAKE_C_FLAGS "-fPIC")
-        set(CMAKE_CXX_FLAGS "-g3 -ggdb -Wall -Wextra")# -fsanitize=memory")
+        set(CMAKE_CXX_FLAGS "-g3 -ggdb -Wall") # -Wextra")# -fsanitize=memory")
     else(DEBUG)
         set(CMAKE_CXX_FLAGS "-w")
     endif(DEBUG)
@@ -52,6 +54,7 @@ include_directories(vendor/jsoncpp/include)
 include_directories(vendor/sqlite)
 include_directories(vendor/scrypt)
 include_directories(vendor/base64)
+include_directories(vendor/miniz)
 
 if(ATTIC_BINARY)
     # This is where binary files will go
@@ -72,6 +75,7 @@ file(GLOB_RECURSE libattic_SOURCE
     "src/*.c"
     "vendor/sqlite/*.c"
     "vendor/scrypt/*.c"
+    #    "vendor/miniz/*.c"
     "vendor/base64/*.cpp")
 
 if(ATTIC_STATIC_LIB)
@@ -145,6 +149,28 @@ include_directories(${NACL_DIR}/src/libsodium/src/libsodium/include)
 add_library(nacl_lib STATIC IMPORTED)
 set_property(TARGET nacl_lib PROPERTY IMPORTED_LOCATION ${NACL_DIR}/src/libsodium/src/libsodium/.libs/libsodium.a)
 
+# libb64
+#ExternalProject_Add(libb64
+#    URL http://downloads.sourceforge.net/project/libb64/libb64/libb64/libb64-1.2.src.zip
+#    #DOWNLOAD_COMMAND ""
+##SOURCE_DIR "vendor/libb64-1.2"
+#   BUILD_IN_SOURCE 1
+#   UPDATE_COMMAND ""
+#    CONFIGURE_COMMAND ""
+#    BUILD_COMMAND ""
+#    INSTALL_COMMAND make -j4
+#    )
+
+#ExternalProject_Get_Property(libb64 INSTALL_DIR)
+#set(B64_DIR ${INSTALL_DIR})
+#message(STATUS " b64 install dir " )
+#message(STATUS ${B64_DIR})
+
+#include_directories(${B64_DIR}/src/libb64/include)
+
+#add_library(libb64_lib STATIC IMPORTED)
+#set_property(TARGET libb64_lib PROPERTY IMPORTED_LOCATION ${B64_DIR}/src/libb64/src/libb64.a)
+
 
 if(ATTIC_STATIC_LIB)
     add_library(attic ${libattic_SOURCE} $<TARGET_OBJECTS:cryptlib> $<TARGET_OBJECTS:json> )
@@ -157,12 +183,22 @@ if(ATTIC_STATIC_LIB)
                           boost_timer
                           boost_chrono
                           nacl_lib
+                          #libb64_lib
                           pthread
                           ssl)
 
 
     include(mergestaticlibs)
-    merge_static_libs(atticlib attic boost_thread boost_system boost_filesystem boost_datetime boost_timer boost_chrono nacl_lib)
+    merge_static_libs(atticlib 
+                      attic 
+                      boost_thread 
+                      boost_system 
+                      boost_filesystem 
+                      boost_datetime 
+                      boost_timer 
+                      boost_chrono 
+                      nacl_lib)
+                      #                      libb64_lib)
 endif(ATTIC_STATIC_LIB)
 
 if(ATTIC_BINARY)
@@ -178,6 +214,7 @@ if(ATTIC_BINARY)
                           pthread
                           crypto
                           nacl_lib
+                          #libb64_lib
                           dl
                           ssl
                           rt

@@ -41,6 +41,15 @@ public:
                 const AccessToken* at, 
                 Response& out);
 
+    int HttpHead(const std::string& url, 
+                 const UrlParams* pParams,
+                 const AccessToken* at, 
+                 Response& out);
+
+    int HttpDelete(const std::string& url, 
+                   const UrlParams* pParams,
+                   const AccessToken* at, 
+                   Response& out);
 private:
     ConnectionManager* manager_instance_;
 };

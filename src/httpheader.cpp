@@ -6,9 +6,9 @@ void HttpHeader::AddValue(const std::string& key, const std::string& value) {
     values_[key] = value;
 }
 
-std::string HttpHeader::GetValue(const std::string& key) {
+std::string HttpHeader::GetValue(const std::string& key) const {
     std::string value;
-    HttpHeaderMap::iterator itr = values_.find(key);
+    HttpHeaderMap::const_iterator itr = values_.find(key);
     if(itr != values_.end()) {
         value = itr->second;
     }
@@ -16,15 +16,15 @@ std::string HttpHeader::GetValue(const std::string& key) {
     return value;
 }
 
-void HttpHeader::GetValue(const std::string& key, std::string& out) {
-    HttpHeaderMap::iterator itr = values_.find(key);
+void HttpHeader::GetValue(const std::string& key, std::string& out) const {
+    HttpHeaderMap::const_iterator itr = values_.find(key);
     if(itr != values_.end()) {
         out = itr->second;
     }
 }
 
-bool HttpHeader::HasValue(const std::string& key) {
-    HttpHeaderMap::iterator itr = values_.find(key);
+bool HttpHeader::HasValue(const std::string& key) const {
+    HttpHeaderMap::const_iterator itr = values_.find(key);
     if(itr != values_.end()) {
         if(!itr->second.empty())
             return true;

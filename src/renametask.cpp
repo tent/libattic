@@ -69,8 +69,8 @@ int RenameTask::RenameFolder(const std::string& file_type,
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     rename_context.SetConfigValue("file_type", file_type);
     rename_context.SetConfigValue("original_folderpath", old_folderpath);
@@ -100,8 +100,8 @@ int RenameTask::RenameFile(const std::string& file_type,
 
     HttpStrategyContext rename_context(file_manager(), credentials_manager());
     std::string post_path = GetPostPath();
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed();
-    std::string entity = TentTask::entity().entity();
+    std::string posts_feed = TentTask::entity()->GetPreferredServer().posts_feed();
+    std::string entity = TentTask::entity()->entity();
 
     std::cout<<" filepath : " << old_filepath << std::endl;
 
@@ -115,6 +115,16 @@ int RenameTask::RenameFile(const std::string& file_type,
     RenameStrategy rs;
     rename_context.PushBack(&rs);
     status = rename_context.ExecuteAll();
+
+    if(status == ret::A_FAIL_FILE_NOT_IN_MANIFEST) {
+        // this could perhaps be caused by several things
+        // there may have been a rename from a temporary file, that never existed in 
+        // the manifest.
+        // - lets try to upload the file and let the upload strategy either reject it
+        //   or version it.
+        std::cout<<" the file wasn't in the manifest? lets try pushing and see what happens" << std::endl;
+        event::RaiseEvent(event::Event::REQUEST_PUSH, new_filepath, NULL);
+    }
 
     return status;
 }

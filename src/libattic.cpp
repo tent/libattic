@@ -23,8 +23,9 @@ int InitLibAttic(unsigned int threadCount) {
     return status;
 }
 
-int ShutdownLibAttic(void (*callback)(int, void*)) {
-    int status = attic_service.stop();
+int ShutdownLibAttic(void (*callback)(int, const char*, const char*)) {
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    int status = attic_service.stop(del);
     return status;
 }
 
@@ -66,100 +67,107 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
     return status;
 }
 int Discover(const char* szEntityurl) {
-    int status = attic::ret::A_OK;
     if(!szEntityurl) return attic::ret::A_FAIL_INVALID_CSTR;
-
     attic::Entity ent;
-    status = attic::client::Discover(szEntityurl, NULL, ent);
-
-    return status;
+    return attic::client::Discover(szEntityurl, NULL, ent);
 }
 
 int CreateFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout<<" CREATE FOLDER : " << szFolderpath << std::endl;
-    int status = attic_service.CreateFolder(szFolderpath);
-    return status;
+    return attic_service.CreateFolder(szFolderpath);
 }
 
 int DeleteFolder(const char* szFolderpath) {
     if(!szFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout<<" DELETE FOLDER : " << szFolderpath << std::endl;
-    int status = attic_service.DeleteFolder(szFolderpath);
-    return status;
+    return attic_service.DeleteFolder(szFolderpath);
 }
 
 int RenameFolder(const char* szOldFolderpath, const char* szNewFolderpath) {
     if(!szOldFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFolderpath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.RenameFolder(szOldFolderpath, szNewFolderpath);
-    return status;
+    return attic_service.RenameFolder(szOldFolderpath, szNewFolderpath);
 }
 
 int PushFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    std::cout << " PUSHING FILE : " << szFilepath << std::endl;
-    int status = attic_service.UploadFile(szFilepath);
-    return status;
+    return attic_service.UploadFile(szFilepath);
 }
 
 int PullFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.DownloadFile(szFilepath);
-    return attic::ret::A_OK;
+    return attic_service.DownloadFile(szFilepath);
 }
 
 int DeleteFile(const char* szFilepath) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.MarkFileDeleted(szFilepath);
-    return status;
+    return attic_service.MarkFileDeleted(szFilepath);
 }
 
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath) {
     if(!szOldFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNewFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
-    int status = attic_service.RenameFile(szOldFilepath, szNewFilepath);
-    return status;
+    return attic_service.RenameFile(szOldFilepath, szNewFilepath);
 }
 
 int PollFiles(void) {
     return attic_service.BeginPolling();
 }
 
+int CreateLimitedDownloadLink(const char* szFilepath, 
+                              void(*callback)(int, const char*, const char*)) {
+    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return attic_service.UploadLimitedFile(szFilepath, del);
+}
 
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int)) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
-
     attic::TaskDelegate* del = g_CallbackHandler.RegisterFileHistoryCallback(callback);
-    int status = attic_service.GetFileHistory(szFilepath, del);
-
-    return status;
+    return attic_service.GetFileHistory(szFilepath, del);
 }
 
+int DeletePostVersion(const char* szPostId, 
+                      const char* szVersion,
+                      void(*callback)(int, const char*, const char*)) {
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return attic_service.DeletePostVersion(szPostId, szVersion, del);
+}
+
+int MakePostVersionNewHead(const char* szPostId, 
+                           const char* szVersion,
+                           void(*callback)(int, const char*, const char*)) {
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return -1;
+}
+
+int SaveVersion(const char* szPostId, 
+                const char* szVersion, 
+                const char* szFilepath,
+                void(*callback)(int, const char*, const char*)) {
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szVersion) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return attic_service.SaveVersionToLocation(szPostId, szVersion, szFilepath, del);
+}
 
 int RegisterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
     if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-        // Generate Master Key
-        std::string master_key;
-        attic_service.credentials_manager()->GenerateMasterKey(master_key); // Generate random master key
-
-        std::string passphrase(szPass);
-        std::cout<<" REGISTERING PASSPHRASE : " << szPass << std::endl;
-        std::cout<<" TOSTR : "<< passphrase << std::endl;
-        std::cout<<" LEN : " << passphrase.size() << std::endl;
-        std::string recovery_key;
-        status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
-
-        if(status == attic::ret::A_OK) {
-            attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
-            status = EnterPassphrase(szPass);
-        }
+        std::string pass(szPass);
+        status = attic_service.RegisterPassphrase(pass);
+        if(status == attic::ret::A_OK)
+            g_bEnteredPassphrase = true;
     }
     return status;
 }
@@ -167,26 +175,11 @@ int RegisterPassphrase(const char* szPass) {
 int EnterPassphrase(const char* szPass) {
     if(!szPass) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-
     if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::string passphrase(szPass);
-        std::cout<<" PASSED IN : " << szPass << std::endl;
-        std::cout<<" TOSTR : "<< passphrase << std::endl;
-        std::cout<<" LEN : " << passphrase.size() << std::endl;
-        std::string master_key;
-        attic::PhraseToken pt;
-        status = ps.EnterPassphrase(szPass, pt, master_key);
-
-        if(status == attic::ret::A_OK) {
-            attic_service.client()->set_phrase_token(pt);
-            attic_service.credentials_manager()->set_master_key(master_key);
-            attic_service.client()->SavePhraseToken();
+        std::string pass(szPass);
+        status = attic_service.EnterPassphrase(pass);
+        if(status == attic::ret::A_OK)
             g_bEnteredPassphrase = true;
-        }
     }
     return status;
 }
@@ -195,45 +188,21 @@ int ChangePassphrase(const char* szOld, const char* szNew) {
     if(!szOld) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!szNew) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-    if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::cout<<" Changing passphrase " << std::endl;
-        std::string recovery_key;
-        status = ps.ChangePassphrase(szOld, szNew, recovery_key);
-        if(status == attic::ret::A_OK){
-            attic::event::RaiseEvent(attic::event::Event::RECOVERY_KEY, recovery_key, NULL);
-        }
-    }
+    if(status == attic::ret::A_OK)
+       status = attic_service.ChangePassphrase(szOld, szNew); 
     return status;
 }
 
 int EnterRecoveryKey(const char* szRecovery) {
     if(!szRecovery) return attic::ret::A_FAIL_INVALID_CSTR;
     int status = IsLibInitialized(false);
-    if(status == attic::ret::A_OK) {
-        status = attic::ret::A_FAIL_REGISTER_PASSPHRASE;
-        // Discover Entity, get access token
-        attic::pass::Passphrase ps(attic_service.client()->entity(), attic_service.client()->access_token());
-
-        std::string temp_pass;
-        status = ps.EnterRecoveryKey(szRecovery, temp_pass);
-        if(status == attic::ret::A_OK){
-            attic::event::RaiseEvent(attic::event::Event::TEMPORARY_PASS, temp_pass, NULL);
-        }
-    }
+    if(status == attic::ret::A_OK)
+        status = attic_service.EnterRecoveryKey(szRecovery);
     return status;
 }
 
 const char** GetQuestionList() {
-    static const char* t[]={
-                            {"one"}, 
-                            {"two"},
-                            {"three"}
-                           };
-    return t;
+    return NULL;
 }
 
 int RegisterQuestionAnswerKey(const char* q1, 
@@ -375,43 +344,49 @@ int FreeFileList(char** pList, int stride) {
 }
 
 void RegisterForPullNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PULL, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PULL, callback);
 }
 
 void RegisterForPushNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PUSH, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PUSH, callback);
 }
 
 void RegisterForUploadSpeedNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::UPLOAD_SPEED, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::UPLOAD_SPEED, callback);
 }
 
 void RegisterForDownloadSpeedNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::DOWNLOAD_SPEED, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::DOWNLOAD_SPEED, callback);
 }
 
 void RegisterForErrorNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::ERROR_NOTIFY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::ERROR_NOTIFY, callback);
 }
 
 void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::RECOVERY_KEY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::RECOVERY_KEY, callback);
 }
 
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::TEMPORARY_PASS, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::TEMPORARY_PASS, callback);
 }
 
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*)) {
-    if(callback)
-        g_CallbackHandler.RegisterCallback(attic::event::Event::PAUSE_RESUME_NOTIFY, callback);
+    if(callback) g_CallbackHandler.RegisterCallback(attic::event::Event::PAUSE_RESUME_NOTIFY, callback);
+}
+
+void RegisterForFileInUseEvents(void (*callback)(int, int, const char*)) {
+    if(callback) {
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FILE_LOCK, callback);
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FILE_UNLOCK, callback);
+    }
+}
+
+void RegisterForFolderInUseEvents(void (*callback)(int, int, const char*)) {
+    if(callback) {
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FOLDER_LOCK, callback);
+        g_CallbackHandler.RegisterCallback(attic::event::Event::FOLDER_UNLOCK, callback);
+    }
 }
 
 int Pause(void) { 

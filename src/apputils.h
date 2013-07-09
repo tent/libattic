@@ -14,9 +14,10 @@
 #include "response.h"
 #include "clientutils.h"
 #include "entity.h"
-#include "libatticutils.h"
 #include "urlparams.h"
 #include "apppost.h"
+#include "posthandler.h"
+#include "filesystem.h"
 
 namespace attic { namespace app {
 static int StartupAppInstance(TentApp& app,
@@ -51,6 +52,9 @@ static int ConstructAppAuthorizationURL(const std::string& path,
 
 static int LoadAppFromFile(TentApp& app, const std::string& configdir);
 static int SaveAppToFile(TentApp& app, const std::string& configdir);
+
+static int DeserializeIntoAccessToken(const std::string& body, AccessToken& out);
+static int WriteOutAccessToken(AccessToken& at, const std::string& outDir);
 
 static int RegisterAttic(const std::string& entityurl,
                          const std::string& name, 
@@ -115,37 +119,30 @@ static int SendAppRegRequest(const std::string& app_path,
     app_post.PushBackWriteType(cnst::g_attic_file_type);
     app_post.PushBackWriteType(cnst::g_attic_folder_type);
     app_post.PushBackWriteType(cnst::g_attic_cred_type);
+    app_post.PushBackWriteType(cnst::g_attic_config_type);
+    app_post.PushBackWriteType(cnst::g_attic_download_type);
     app_post.PushBackReadType(cnst::g_basic_profile_type);
 
     app_post.set_name(app.app_name());
     app_post.set_url(app.app_url());
     app_post.set_redirect_uri(app.redirect_uri());
     
-    std::string serialized;
-    if(jsn::SerializeObject(&app_post, serialized)) {
-        Response response;
-        status = netlib::HttpPost(app_path, 
-                                  app_post.type(),
-                                  NULL,
-                                  serialized,
-                                  NULL,
-                                  response);
+    PostHandler<AppPost> ph(true); // tear down connection
+    status = ph.Post(app_path, NULL, app_post);
+    std::cout<<" HEADERS : " << ph.response().header.asString() << std::endl;
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
 
-        std::cout<<" HEADERS : " << response.header.asString() << std::endl;
-        std::cout<<" CODE : " << response.code << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-        if(response.code == 200) {
-            if(!response.header["Link"].empty()) {
-                std::string link_header = response.header["Link"];
-                if(link_header.find(cnst::g_cred_rel) != -1){
-                    client::ExtractLink(link_header, path_out);
-                }
+    if(status == ret::A_OK) {
+        Response response = ph.response();
+        if(!response.header["Link"].empty()) {
+            std::string link_header = response.header["Link"];
+            if(link_header.find(cnst::g_cred_rel) != -1){
+                client::ExtractLink(link_header, path_out);
             }
-            jsn::DeserializeObject(&app, response.body);
         }
-        else {
-            status = ret::A_FAIL_NON_200;
-        }
+        AppPost p = ph.GetReturnPost();
+        post::DeserializePostIntoObject(p, &app);
     }
 
     return status;
@@ -154,14 +151,14 @@ static int SendAppRegRequest(const std::string& app_path,
 static int RetrieveAppCredentials(const std::string cred_path, TentApp& app) {
     int status = ret::A_OK;
     std::cout<<" CRED PATH : " << cred_path << std::endl;
-    Response resp;
-    status = netlib::HttpGet(cred_path, NULL, NULL, resp);
-    std::cout<<" CODE : " << resp.code << std::endl;
-    std::cout<<" BODY : " << resp.body << std::endl;
+
+    AppPost p;
+    PostHandler<AppPost> ph(true); // tear down connection
+    status = ph.Get(cred_path, NULL, p);
+    std::cout<<" CODE : " << ph.response().code << std::endl;
+    std::cout<<" BODY : " << ph.response().body << std::endl;
            
-    if(resp.code == 200) {
-        AppPost p;
-        jsn::DeserializeObject(&p, resp.body);
+    if(status == ret::A_OK) {
         app.set_hawk_key_id(p.id());
         Json::Value hawk_key;
         p.get_content("hawk_key", hawk_key);
@@ -208,6 +205,8 @@ static int RegisterApp(const std::string& app_path,
     app_post.PushBackWriteType(cnst::g_attic_file_type);
     app_post.PushBackWriteType(cnst::g_attic_folder_type);
     app_post.PushBackWriteType(cnst::g_attic_cred_type);
+    app_post.PushBackWriteType(cnst::g_attic_config_type);
+    app_post.PushBackWriteType(cnst::g_attic_download_type);
     app_post.PushBackReadType(cnst::g_basic_profile_type);
 
     app_post.set_name(app.app_name());
@@ -215,47 +214,32 @@ static int RegisterApp(const std::string& app_path,
     app_post.set_redirect_uri(app.redirect_uri());
     
     std::cout<<" APP PATH : " << app_path << std::endl;
+    PostHandler<AppPost> ph(true); // tear down connection
+    status = ph.Post(app_path, NULL, app_post);
 
-    std::string serialized;
-    if(jsn::SerializeObject(&app_post, serialized)) {
-        Response response;
-        status = netlib::HttpPost(app_path, 
-                                  app_post.type(),
-                                  NULL,
-                                  serialized,
-                                  NULL,
-                                  response);
+    Response response = ph.response();
+    std::cout<< " HEADER : " << response.header["Link"] << std::endl;
+    std::cout<< " CODE : " << response.code << std::endl;
+    std::cout<< " BODY : " << response.body << std::endl;
 
-        std::cout<< " HEADER : " << response.header["Link"] << std::endl;
-        std::cout<< " CODE : " << response.code << std::endl;
-        std::cout<< " BODY : " << response.body << std::endl;
+    if(status == ret::A_OK) {
+        if(!response.header["Link"].empty()) {
+            std::string cred_link;
+            if(response.header["Link"].find("https://tent.io/rels/credentials") != -1)
+                client::ExtractMetaLink(response, cred_link);
 
-        if(response.code == 200) {
-            if(!response.header["Link"].empty()) {
-                std::string cred_link;
-                if(response.header["Link"].find("https://tent.io/rels/credentials") != -1)
-                    client::ExtractMetaLink(response, cred_link);
-                
-                Response cred_resp;
-                netlib::HttpGet(cred_link, NULL, NULL, cred_resp);
-                std::cout<< " CODE : " << cred_resp.code << std::endl;
-                std::cout<< " BODY : " << cred_resp.body << std::endl;
-            }
-            if(jsn::DeserializeObject(&app, response.body)) {
+            Post app_post;
+            PostHandler<Post> app_ph(true); // tear down connection
+            status = app_ph.Get(cred_link, NULL, app_post);
+            post::DeserializePostIntoObject(app_post, &app);
+            
+            std::cout<< " CODE : " << app_ph.response().code << std::endl;
+            std::cout<< " BODY : " << app_ph.response().body << std::endl;
+
+            if(status == ret::A_OK)
                 status = SaveAppToFile(app, configdir);
-            }
-            else { 
-                status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;
-            }
-        }
-        else {
-            status = ret::A_FAIL_NON_200;
         }
     }
-    else {
-        status = ret::A_FAIL_TO_SERIALIZE_OBJECT;
-    }
-
     return status;
 }
 
@@ -292,7 +276,13 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
             auth_at.set_app_id(app.app_id());
 
             Response response;
-            netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
+            //netlib::HttpPost(path,"", NULL, serialized, &auth_at, response);
+            netlib::HttpPost(path,
+                             "",  // application/json
+                             NULL, 
+                             serialized, 
+                             &auth_at, 
+                             response);
 
             std::cout<<" CODE : " << response.code << std::endl;
             std::cout<<" HEADER : " << response.header.asString() << std::endl;
@@ -300,10 +290,10 @@ int RequestUserAuthorizationDetails(const std::string& entityurl,
 
             if(response.code == 200) {
                 AccessToken at;
-                status = liba::DeserializeIntoAccessToken(response.body, at);
+                status = DeserializeIntoAccessToken(response.body, at);
                 if(status == ret::A_OK) {
                     at.set_app_id(app.app_id());
-                    status = liba::WriteOutAccessToken(at, configdir);
+                    status = WriteOutAccessToken(at, configdir);
                 }
             }
             else {
@@ -335,6 +325,25 @@ static int SaveAppToFile(TentApp& app, const std::string& configdir) {
     savepath.append(cnst::g_szAppDataName);
 
     int status = app.SaveToFile(savepath);
+    return status;
+}
+
+static int DeserializeIntoAccessToken(const std::string& body, AccessToken& out) {
+    int status = ret::A_OK;
+
+    if(!jsn::DeserializeObject(&out, body))
+        status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
+
+    return status;
+}
+
+static int WriteOutAccessToken(AccessToken& at, const std::string& outDir) {
+    int status = ret::A_OK;
+    std::string path = outDir;
+    utils::CheckUrlAndAppendTrailingSlash(path);      
+    path.append(cnst::g_szAuthTokenName);
+    std::cout<<" OUT PATH : " << path << std::endl;
+    status = at.SaveToFile(path);
     return status;
 }
 

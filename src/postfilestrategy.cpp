@@ -14,7 +14,7 @@
 #include "logutils.h"
 #include "chunkbuffer.h"
 #include "chunkrequest.h"
-#include "pagepost.h"
+#include "envelope.h"
 #include "censushandler.h"
 #include "chunktransform.h"
 #include "posthandler.h"
@@ -50,21 +50,29 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
         // Verify key credentials
         if(!fi.file_credentials().key_empty()) {
             FileHandler fh(file_manager_);
-            std::cout<<" INITIALIZED META POST ID : "<< file_post_id << std::endl;
             if(status == ret::A_OK && !file_post_id.empty()) {
                 // Retrieve Chunk posts
+                event::RaiseEvent(event::Event::PUSH, event::Event::START, filepath, NULL);
                 ChunkPostList chunk_posts;
                 RetrieveChunkPosts(entity, file_post_id, chunk_posts);
                 // Extract Chunk info
                 FileInfo::ChunkMap chunk_map;
                 ExtractChunkInfo(chunk_posts, chunk_map);
                 // begin chunking
-                status = ChunkFile(filepath, fi.file_credentials(), file_post_id, chunk_posts, chunk_map);
-                std::cout<<" CHUNK FILE STATUS : " << status << std::endl;
+                status = ChunkFile(filepath, 
+                                   fi.file_credentials(), 
+                                   file_post_id, 
+                                   chunk_posts, 
+                                   chunk_map);
                 if(status == ret::A_OK) { 
+                    std::string plaintext_hash;
+                    fh.RollFileMac(filepath, plaintext_hash);
+
                     // Update file info
                     fi.set_chunks(chunk_map);
                     fi.set_chunk_count(chunk_map.size());
+                    fi.set_file_size(utils::CheckFilesize(filepath));
+                    fi.set_plaintext_hash(plaintext_hash);
                     fh.UpdateFileInfo(fi);
                     // Update meta data post
                     status = UpdateFilePost(fi);
@@ -81,10 +89,12 @@ int PostFileStrategy::Execute(FileManager* fm, CredentialsManager* cm) {
                 else {
                     // TODO :: Undo the file to the last good version, or delete if no last good version
                 }
+                event::RaiseEvent(event::Event::PUSH, event::Event::DONE, filepath, NULL);
             }
             else if(status == ret::A_OK && file_post_id.empty()) {
-                std::cout<<" META POST ID EMPTY " << std::endl;
                 status = ret::A_FAIL_INVALID_POST_ID;
+                std::cout<<" EXCECUTE sTATUS : " << status << std::endl;
+
             }
         }
         else {
@@ -114,15 +124,12 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
     params.AddValue(std::string("type"), std::string(cnst::g_attic_chunk_type));
 
     Response response;
-
-    //ConnectionHandler ch;
     netlib::HttpGet(posts_feed,
-               &params,
-               &access_token_,
-               response);
-
+                    &params,
+                    &access_token_,
+                    response);
     if(response.code == 200) {
-        PagePost pp;
+        Envelope pp;
         jsn::DeserializeObject(&pp, response.body);
 
         Json::Value chunk_post_arr(Json::arrayValue);
@@ -135,31 +142,27 @@ int PostFileStrategy::RetrieveChunkPosts(const std::string& entity,
             if(out.find(p.group()) == out.end())
                 out[p.group()] = p;
             else 
-                std::cout<<" DUPLICATE GROUP CHUNL POST, RESOLVE " << std::endl;
+                std::cout<<" DUPLICATE GROUP CHUNK POST, RESOLVE " << std::endl;
         }
     }
     else { 
         log::LogHttpResponse("FA332JMA3", response);
         status = ret::A_FAIL_NON_200;
     }
-
     return status;
 }
 
 void PostFileStrategy::ExtractChunkInfo(ChunkPostList& list,
                                         FileInfo::ChunkMap& out) {
     ChunkPostList::iterator itr = list.begin();
-
     for(;itr != list.end(); itr++) {
         ChunkPost::ChunkInfoList::iterator cp_itr = itr->second.chunk_info_list()->begin();
         for(;cp_itr != itr->second.chunk_info_list()->end(); cp_itr++) {
             ChunkInfo ci = cp_itr->second;
-
             if(ci.group() == -1) { // debug
                 std::cout<<" CHUNK INFO GROUP NOT SET " << std::endl;
                 ci.set_group(itr->first);
             }
-
             out[ci.chunk_name()] = ci;
         }
     }
@@ -212,7 +215,6 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
             verification_map_[ci.digest()] = true;
 
             chunk_map[ci.chunk_name()] = ci;
-            
             chunk_count++;
             if(cb.BufferEmpty() || chunk_count >= 30) {
                 // End chunk post
@@ -227,9 +229,10 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
                 }
                 if(response.code == 200) { 
                     // Verifiy chunks made it to the server
-                    std::cout<<" cr response : " << response.body << std::endl;
+                    Envelope env;
+                    jsn::DeserializeObject(&env, response.body);
                     ChunkPost cp;
-                    jsn::DeserializeObject(&cp, response.body);
+                    post::DeserializePostIntoObject(env.post(), &cp);
                     if(!VerifyChunks(cp, filepath)) {
                         status = ret::A_FAIL_ATTACHMENT_VERIFICATION;
                         break;
@@ -248,11 +251,11 @@ int PostFileStrategy::ChunkFile(const std::string& filepath,
 }
 
 bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) {
-    std::cout<<" verification map size : " << verification_map_.size() << std::endl;
     Post::AttachmentMap::iterator itr_cp = cp.attachments()->begin();
     for(;itr_cp != cp.attachments()->end(); itr_cp++) {
         std::cout<< itr_cp->second.digest << std::endl;
         std::string decoded;
+        std::cout<<" verifying digest : " << itr_cp->second.digest << std::endl;
         if(verification_map_.find(itr_cp->second.digest) == verification_map_.end()){
             std::string error = "Failed to validate attachment integrity.\n";
             error += "\t filepath : " + filepath + "\n";
@@ -270,20 +273,8 @@ bool PostFileStrategy::VerifyChunks(ChunkPost& cp, const std::string& filepath) 
             log::LogString("MAS021n124", error);
             return false;
         }
-        else {
-            std::cout<<" ATTACHMENT DIGEST FOUND " << std::endl;
-        }
     }
     return true;
-}
-
-bool PostFileStrategy::GetMasterKey(std::string& out) {
-    MasterKey mKey;
-    credentials_manager_->GetMasterKeyCopy(mKey);
-    mKey.GetMasterKey(out);
-    if(out.size())
-        return true;
-    return false;
 }
 
 bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& out) {
@@ -291,16 +282,11 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
     FileHandler fh(file_manager_);
     if(fh.RetrieveFileInfo(filepath, out)) {
         // Decrypt file key
-        std::cout<<" Decrypting file key ... " << std::endl;
         std::string mk;
         if(GetMasterKey(mk)) {
             std::string file_key;
-            std::cout<<" master key : " << mk << std::endl;
-            std::cout<<" file iv : "<< out.file_credentials_iv() << std::endl;
-            std::cout<<" encrypted key : " << out.encrypted_key() << std::endl;
             ret = fh.DecryptFileKey(out.encrypted_key(), out.file_credentials_iv(), mk, file_key);
             out.set_file_credentials_key(file_key);
-            std::cout<< " decrypting success? : " << ret << std::endl;
         }
     }
     return ret;
@@ -309,22 +295,25 @@ bool PostFileStrategy::RetrieveFileInfo(const std::string& filepath, FileInfo& o
 int PostFileStrategy::UpdateFilePost(FileInfo& fi) {
     int status = ret::A_OK;
     if(!fi.post_id().empty()) {
-        FilePost fp(fi);
+        FilePost fp;
         status = RetrieveFilePost(fi.post_id(), fp);
         if(status == ret::A_OK) {
+            FileHandler fh(file_manager_);
+            std::string mk = GetMasterKey();
+            fh.PrepareFilePost(fi, mk, fp);
             std::string posturl;
             utils::FindAndReplace(post_path_, "{post}", fi.post_id(), posturl);
             PostHandler<FilePost> ph(access_token_);
-            Response put_resp; 
-            status = ph.Put(posturl, NULL, fp, put_resp);
+            status = ph.Put(posturl, NULL, fp);
             if(status != ret::A_OK) {
-                log::LogHttpResponse("mao194", put_resp);
+                log::LogHttpResponse("mao194", ph.response());
             }
         }
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<<" Update fIle Post status : " << status << std::endl;
     return status;
 }
 
@@ -334,13 +323,13 @@ int PostFileStrategy::RetrieveFilePost(const std::string& post_id, FilePost& out
         std::string posturl;
         utils::FindAndReplace(post_path_, "{post}", post_id, posturl);
 
-        Response response;
         PostHandler<FilePost> ph(access_token_);
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<<" RETRIEVE FILE POST STATUS : " << status << std::endl;
     return status;
 }
 
@@ -352,27 +341,27 @@ int PostFileStrategy::UpdateFilePostTransitState(const std::string& post_id, boo
 
         PostHandler<FilePost> ph(access_token_);
         FilePost p;
-        Response get_resp;
-        status = ph.Get(posturl, NULL, p, get_resp);
+        status = ph.Get(posturl, NULL, p);
         if(status == ret::A_OK) {
             p.clear_fragment();
             if(in_transit)
                 p.set_fragment(cnst::g_transit_fragment);
-            Response put_resp;
-            status = ph.Put(posturl, NULL, p, put_resp);
+            ph.Flush();
+            status = ph.Put(posturl, NULL, p);
             if(status != ret::A_OK) {
                 status = ret::A_FAIL_NON_200;
-                log::LogHttpResponse("PO1090MASDF", put_resp);
+                log::LogHttpResponse("PO1090MASDF", ph.response());
             }
         }
         else {
             status = ret::A_FAIL_NON_200;
-            log::LogHttpResponse("nmasd981", get_resp);
+            log::LogHttpResponse("nmasd981", ph.response());
         }
     }
     else {
         status = ret::A_FAIL_INVALID_POST_ID;
     }
+    std::cout<< " UPDATE FILE POST TRANSIT STATE : " << status << std::endl;
     return status;
 }
 
@@ -382,25 +371,13 @@ bool PostFileStrategy::UpdateFilePostVersion(const FileInfo* fi, const std::stri
     // Get latest post and update cache
     PostHandler<FilePost> ph(access_token_);
     FilePost p;
-    Response get_resp;
-    int status = ph.Get(posturl, NULL, p, get_resp);
+    int status = ph.Get(posturl, NULL, p);
     if(status == ret::A_OK) {
         FileHandler fh(file_manager_);
-        fh.UpdatePostVersion(fi->filepath(), p.version().id());
+        fh.UpdatePostVersion(fi->post_id(), p.version().id());
         return true;
     }
     return false;
-}
-
-bool PostFileStrategy::ValidMasterKey() {
-    std::string mk;
-    GetMasterKey(mk);
-    if(mk.empty()) {
-        std::string error = "Invalid master key, it is empty!";
-        log::LogString("MASDF1000", error);
-        return false;
-    }
-    return true;
 }
 
 }//namespace

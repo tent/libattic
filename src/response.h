@@ -23,8 +23,9 @@ public:
     }                                        
 
     void clear() {
-        code = -1;                           
+        code = 0;
         body.clear();                        
+        header.clear();
     }
 
     void ConsumeHeader(const std::string& in) {

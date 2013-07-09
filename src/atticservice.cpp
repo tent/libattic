@@ -5,6 +5,12 @@
 #include "constants.h"
 #include "filesystem.h"
 #include "errorcodes.h"
+#include "passphrase.h"
+
+#include "posthandler.h"
+#include "confighandler.h"
+#include "foldercreationlock.h"
+#include "polling.h"
 
 namespace attic {
 
@@ -16,6 +22,7 @@ AtticService::AtticService() {
     file_manager_ = NULL;
     credentials_manager_ = NULL;
     client_ = NULL;
+    polling_ = NULL;
 
     running_ = false;
 }
@@ -29,6 +36,7 @@ int AtticService::start() {
     status = ValidateDirectories();
     if(status == ret::A_OK){
         // Initialize File Manager
+        status = InitializeConnectionManager();     if(status != ret::A_OK) return status;
         status = InitializeFileManager();           if(status != ret::A_OK) return status;
         status = InitializeCredentialsManager();    if(status != ret::A_OK) return status;
         status = InitializeClient();                if(status != ret::A_OK) return status;
@@ -37,22 +45,31 @@ int AtticService::start() {
         status = InitializeTaskArbiter();           if(status != ret::A_OK) return status;
         status = InitializeThreadManager();         if(status != ret::A_OK) return status;
     }
+    ValidateTimeOffset();
     running_ = true;
     return status;
 }
 
-int AtticService::stop() {
+int AtticService::stop(TaskDelegate* del) {
     int status = ret::A_OK;
-    status = ShutdownThreadManager();
-    status = ShutdownTaskArbiter();
-    status = ShutdownTaskManager();
-    status = ShutdownServiceManager();
-    status = ShutdownTaskManager();
-    status = ShutdownClient();
-    status = ShutdownCredentialsManager();
-    status = ShutdownFileManager();
-    ConfigManager::GetInstance()->Shutdown();
+    std::ostringstream err;
+    err << " Attic Service stop [fail] : ";
+    status = ShutdownThreadManager();       if(status!=ret::A_OK) { err <<"thm : " << status; }
+    status = ShutdownTaskArbiter();         if(status!=ret::A_OK) { err <<"ta : " << status; }
+    status = ShutdownTaskManager();         if(status!=ret::A_OK) { err <<"tm : " << status; }
+    status = ShutdownServiceManager();      if(status!=ret::A_OK) { err <<"sm : " << status; }
+    status = ShutdownClient();              if(status!=ret::A_OK) { err <<"cl : " << status; }
+    status = ShutdownCredentialsManager();  if(status!=ret::A_OK) { err <<"cm : " << status; }
+    status = ShutdownFileManager();         if(status!=ret::A_OK) { err <<"fm : " << status; }
+    status = ShutdownConnectionManager();   if(status!=ret::A_OK) { err <<"cm : " << status; }
+    ConfigManager::GetInstance()->Shutdown();if(status!=ret::A_OK) { err <<"cnm : " << status; }
+    std::cout<< err.str() << std::endl;
     running_ = false;
+
+    if(del) {
+        RequestDelegate* p = static_cast<RequestDelegate*>(del);
+        p->Callback(status, "", err.str().c_str());
+    }
     return status;
 }
 
@@ -62,6 +79,21 @@ int AtticService::UploadFile(const std::string& filepath) {
         if(IsMasterKeyValid())
             task_manager_->UploadFile(filepath, NULL);
         else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::UploadLimitedFile(const std::string& filepath, TaskDelegate* del) {
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) { // Doesn't matter for public, but lets make sure the user
+                                 // has logged in anyway.
+            task_manager_->UploadPublicFile(filepath, del);
+        }
+        else
             status = ret::A_FAIL_INVALID_MASTERKEY;
     }
     else 
@@ -150,8 +182,19 @@ int AtticService::RenameFolder(const std::string& old_folderpath, const std::str
 // TODO :: toggling polling should be event driven, TODO :: fix this
 int AtticService::BeginPolling() {
     int status = ret::A_OK;
-    if(running_)
-        task_manager_->PollFiles(NULL);
+    if(running_) {
+        if(IsMasterKeyValid())  {
+            if(!polling_) { 
+                polling_ = new Polling(file_manager_,
+                                       credentials_manager_,
+                                       client_->entity());
+                polling_->Initialize();
+            }
+        }
+        else { 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+        }
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -159,8 +202,11 @@ int AtticService::BeginPolling() {
 
 int AtticService::Pause() {
     int status = ret::A_OK;
-    if(running_)
-        event::RaiseEvent(event::Event::PAUSE, "", NULL);
+    if(running_) { 
+        if(polling_) {
+            polling_->Pause();
+        }
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -168,8 +214,11 @@ int AtticService::Pause() {
 
 int AtticService::Resume() {
     int status = ret::A_OK;
-    if(running_)
-        event::RaiseEvent(event::Event::RESUME, "", NULL);
+    if(running_) {
+        if(polling_) {
+            polling_->Resume();
+        }
+    }
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -178,7 +227,10 @@ int AtticService::Resume() {
 int AtticService::QueryManifest(TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->QueryManifest(cb);
+        if(IsMasterKeyValid())
+            task_manager_->QueryManifest(cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -187,7 +239,56 @@ int AtticService::QueryManifest(TaskDelegate* cb) {
 int AtticService::GetFileHistory(const std::string& filepath, TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
-        task_manager_->GetFileHistory(filepath, cb);
+        if(IsMasterKeyValid())
+            task_manager_->GetFileHistory(filepath, cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::DeletePostVersion(const std::string& post_id, 
+                                    const std::string& version,
+                                    TaskDelegate* cb) {
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) 
+            task_manager_->DeletePost(post_id, version, cb);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::MakePostVersionNewHead(const std::string& post_id, 
+                                         const std::string& version,
+                                         TaskDelegate* cb){
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid())
+            task_manager_->MakePostNewHead(post_id, version, cb);
+        else 
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+
+    return status;
+}
+
+int AtticService::SaveVersionToLocation(const std::string& post_id, 
+                                        const std::string& version, 
+                                        const std::string& filepath,
+                                        TaskDelegate* cb) {
+    int status = ret::A_OK;
+    if(running_)
+        if(IsMasterKeyValid())
+            task_manager_->DownloadFileToDirectory(post_id, version, filepath, cb);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -303,7 +404,24 @@ int AtticService::InitializeThreadManager() {
                                             at,
                                             client_->entity());
         // TODO :: setup a configurable way to set the thread count
-        status = thread_manager_->Initialize(12); 
+        status = thread_manager_->Initialize(20); 
+    }
+    return status;
+}
+
+int AtticService::InitializeConnectionManager() {
+    int status = ret::A_OK;
+    if(!connection_manager_) {
+        connection_manager_ = ConnectionManager::instance();
+        status = connection_manager_->Initialize(entity_url_);
+    }
+    return status;
+}
+
+int AtticService::ShutdownConnectionManager() {
+    int status = ret::A_OK;
+    if(connection_manager_) {
+        status = connection_manager_->Shutdown();
     }
     return status;
 }
@@ -387,6 +505,173 @@ bool AtticService::IsMasterKeyValid() {
     if(!key.empty())
         return true;
     return false;
+}
+
+int AtticService::RegisterPassphrase(const std::string& pass) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        status = ret::A_FAIL_REGISTER_PASSPHRASE;
+        // Discover Entity, get access token
+        AccessToken at;
+        credentials_manager_->GetAccessTokenCopy(at);
+        pass::Passphrase ps(client_->entity(), at);
+        // Generate Master Key
+        std::string master_key;
+        credentials_manager_->GenerateMasterKey(master_key); // Generate random master key
+
+        std::string passphrase(pass);
+        std::cout<<" REGISTERING PASSPHRASE : " << passphrase << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
+        std::string recovery_key;
+        status = ps.RegisterPassphrase(passphrase, master_key, recovery_key, false);
+
+        if(status == ret::A_OK) {
+            event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
+            status = EnterPassphrase(passphrase);
+        }
+    }
+    return status;
+}
+
+int AtticService::EnterPassphrase(const std::string& pass) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        AccessToken at;
+        credentials_manager_->GetAccessTokenCopy(at);
+        pass::Passphrase ps(client_->entity(), at);
+
+        std::string passphrase(pass);
+        std::cout<<" PASSED IN : " << passphrase << std::endl;
+        std::cout<<" TOSTR : "<< passphrase << std::endl;
+        std::cout<<" LEN : " << passphrase.size() << std::endl;
+        std::string master_key;
+        PhraseToken pt;
+        status = ps.EnterPassphrase(passphrase, pt, master_key);
+
+        if(status == ret::A_OK) {
+            client_->set_phrase_token(pt);
+            credentials_manager_->set_master_key(master_key);
+            client_->SavePhraseToken();
+            // Retrieve Config Post and load
+            ConfigHandler ch(file_manager_);
+            std::cout << " CONFIG POST COUNT : " << ch.GetConfigPostCount(client_->entity(), &at) << std::endl;
+            ConfigPost config_post;
+            if(!ch.RetrieveConfigPost(client_->entity(), &at, config_post)) {
+                std::cout<<" creating config post " << std::endl;
+                ch.CreateConfigPost(client_->entity(), 
+                                    &at, 
+                                    config_post);
+            }
+            std::cout<< " loading config post " << std::endl;
+            // Load config post
+            ch.LoadConfigPost(config_post);
+            // Check for unlinked working directories
+            if(!ch.LoadIntoFirstDirectory(working_dir_)) 
+                status = CreateWorkingDirectory(working_dir_);
+            file_manager_->LoadWorkingDirectories();
+        }
+    }
+    return status;
+}
+
+int AtticService::ChangePassphrase(const std::string& old_passphrase, 
+                                   const std::string& new_passphrase) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+
+        std::cout<<" Changing passphrase " << std::endl;
+        std::string recovery_key;
+        status = ps.ChangePassphrase(old_passphrase, new_passphrase, recovery_key);
+        if(status == ret::A_OK)
+            event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
+    }
+    return status;
+}
+
+int AtticService::EnterRecoveryKey(const std::string& recovery_key) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        // Discover Entity, get access token
+        pass::Passphrase ps(client_->entity(), client_->access_token());
+
+        std::string temp_pass;
+        status = ps.EnterRecoveryKey(recovery_key, temp_pass);
+        if(status == ret::A_OK)
+            event::RaiseEvent(event::Event::TEMPORARY_PASS, temp_pass, NULL);
+    }
+    return status;
+}
+
+// Directory methods
+int AtticService::CreateWorkingDirectory(const std::string& filepath) {
+    int status = ret::A_FAIL_LIB_INIT;
+    if(running_) {
+        ConfigHandler ch(file_manager_);
+        status = ch.CreateWorkingDirectory(filepath, client_->entity(), &client_->access_token());
+    }
+    return status;
+}
+
+int AtticService::LinkWorkingDirectory(const std::string& filepath, const std::string& post_id) {
+
+}
+
+bool AtticService::IsFilepathLinked(const std::string& filepath) {
+
+}
+
+void AtticService::ValidateTimeOffset() {
+    AccessToken at;
+    credentials_manager_->GetAccessTokenCopy(at);
+    Response resp;
+    netlib::HttpHead(entity_url_, NULL, &at, resp);
+    std::cout<<" RESPONSE : " << resp.code <<std::endl;
+    std::cout<<" HEADER : " << resp.header.asString() << std::endl;
+    std::cout<<" BODY : " << resp.body << std::endl;
+
+    try {
+        if(resp.code == 401) { 
+            if(resp.header.HasValue("WWW-Authenticate")) {
+                std::string buf = resp.header.GetValue("WWW-Authenticate");
+                if(buf.find("Stale timestamp") != std::string::npos) {
+                    // Set offset
+                    size_t pos = buf.find("Hawk ts=");
+                    if(pos != std::string::npos) {
+                        size_t left = pos + sizeof("Hawk ts=") + 1;
+                        size_t right = buf.find("\"", left+1);
+                        std::string timestamp = buf.substr(left, right-left);
+                        std::cout<<" TIMESTAMP : " << timestamp << std::endl;
+                        long int ts = atoi(timestamp.c_str());
+
+                        // calculate offset
+                        time_t t = time(0);
+                        std::cout<<" TIME : " << t << std::endl;
+                        long int offset = ts - t;
+
+                        at.set_time_offset(offset);
+                        credentials_manager_->set_time_offset(offset);
+                        client_->set_access_token(at);
+
+                        std::cout<<" OFFSET : "<< offset << std::endl;
+                        std::cout<<" AMMEDED TS : " << time(0) + offset << std::endl;
+                    }
+                }
+            }
+        }
+
+        Response resp2;
+        netlib::HttpHead(entity_url_, NULL, &at, resp2);
+        std::cout<<" NOW RESPONSE IS : " << resp2.code <<std::endl;
+        std::cout<<" HEADER : " << resp2.header.asString() << std::endl;
+        std::cout<<" BODY : " << resp2.body << std::endl;
+    }
+    catch(std::exception& e) {
+        log::LogException("as_19481", e);
+    }
 }
 
 }// namespace

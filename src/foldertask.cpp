@@ -1,8 +1,10 @@
 #include "foldertask.h"
 
 #include "errorcodes.h"
+#include "filehandler.h"
 #include "folderhandler.h"
 #include "posthandler.h"
+#include "filesystem.h"
 
 namespace attic {
 FolderTask::FolderTask(FileManager* pFm,
@@ -31,76 +33,157 @@ void FolderTask::RunTask() {
     std::cout<<"\tfolder operation : " << operation << std::endl;
 
     if(operation == "CREATE") {
-        CreateFolder();
+        std::string folderpath;
+        context_.get_value("folderpath", folderpath);
+        CreateFolder(folderpath);
     }
     else if(operation == "DELETE") {
         DeleteFolder();
     }
     else if(operation == "RENAME") {
-        RenameFolder();
+        std::string old_folderpath, new_folderpath;
+        // These are absolute paths
+        context_.get_value("original_folderpath", old_folderpath);
+        context_.get_value("new_folderpath", new_folderpath);
+        status = RenameFolder(old_folderpath, new_folderpath);
+        if(status == ret::A_FAIL_INVALID_FOLDERPATH) {
+            // perhaps the new path already exists, check for existance
+            if(fs::IsDirectory(new_folderpath)) {
+                std::cout<<" failed rename, perhaps we were to slow? " << std::endl;
+                // go ahead and create it
+                status = CreateFolder(new_folderpath);
+                std::cout<< " create status : " << status << std::endl;
+            }
+        }
     }
 
     Callback(status, operation);
     SetFinishedState();
 }
 
-int FolderTask::RenameFolder() {
+int FolderTask::RenameFolder(const std::string& old_folderpath, 
+                             const std::string& new_folderpath) {
     int status = ret::A_OK;
-    std::string old_folderpath, new_folderpath;
-    // These are absolute paths
-    context_.get_value("original_folderpath", old_folderpath);
-    context_.get_value("new_folderpath", new_folderpath);
-    // Normalize folderpath
-    utils::CheckUrlAndRemoveTrailingSlash(old_folderpath);
-    utils::CheckUrlAndRemoveTrailingSlash(new_folderpath);
-
-    std::cout<<" renaming folder " << std::endl;
+        std::cout<<" renaming folder " << std::endl;
     std::cout<<" old : "<< old_folderpath << std::endl;
     std::cout<<" new : " << new_folderpath << std::endl;
 
-    std::deque<FileInfo> file_list;
-    std::deque<Folder> folder_list;
-
-    FolderHandler fh(file_manager());
-    fh.RenameFolder(old_folderpath, new_folderpath, file_list, folder_list);
-
-    std::cout<<" updating posts ... " << std::endl;
-    std::cout<<" folder size : " << folder_list.size() << std::endl;
-    std::deque<Folder>::iterator folder_itr = folder_list.begin();
-    for(;folder_itr != folder_list.end(); folder_itr++) {
-        // Update Folder Post
-        if(!(*folder_itr).folder_post_id().empty()) {
-            FolderPost fp;
-            status = RetrieveFolderPost((*folder_itr).folder_post_id(), fp);
-            if(status == ret::A_OK) {
-                std::cout<<" posting path : " << (*folder_itr).folderpath() << std::endl;
-                fp.set_folder(*folder_itr);
-                PostFolderPost((*folder_itr).folder_post_id(), fp);
+    // make sure old folder exists
+    // retrieve folder data
+    // make sure both paths have common root
+    std::string directory, dir_post_id;
+    if(HaveCommonWorkingDir(old_folderpath, new_folderpath, directory, dir_post_id)){
+        // separeate new path into list
+        FolderHandler fh(file_manager());
+        std::deque<std::string> names;
+        if(fh.RetrieveFolders(new_folderpath, directory, names)) {
+            //  - retrieve folder data for each, 
+            //  - create new folder if folder doesn't yet exist
+            //  - rename old folder (name)
+            //  - reparent if necessary
+            //  - update folderpost
+            std::deque<std::string>::iterator itr = names.begin();
+            std::string parent_post_id = dir_post_id;
+            for(;itr!=names.end();itr++) {
+                Folder folder;
+                if(*itr == names.back()) {
+                    // this is the folder we are renaming to
+                    if(file_manager()->GetFolderEntry(old_folderpath, folder)) {
+                        // Update folder
+                        folder.set_parent_post_id(parent_post_id);
+                        std::cout<<" old folder name : " << folder.foldername() << std::endl;
+                        folder.set_foldername(*itr);
+                        std::cout<<" new folder name : " << (*itr) << std::endl;
+                        file_manager()->SetFolderParentPostId(folder.folder_post_id(),
+                                                              parent_post_id); // new parent post id
+                        file_manager()->SetFoldername(folder.folder_post_id(),
+                                                      (*itr));
+                        if(UpdateFolderPost(folder, folder.folder_post_id()))
+                            file_manager()->ClearFolderAlias(folder.folder_post_id());
+                    }
+                    else {
+                        status = ret::A_FAIL_INVALID_FOLDERPATH;
+                        break;
+                    }
+                }
+                else {
+                    if(!fh.AttemptCreateNewFolderEntry((*itr),
+                                                 TentTask::entity()->entity(),
+                                                 parent_post_id,
+                                                 entity()->GetPreferredServer().posts_feed(),
+                                                 access_token(),
+                                                 folder)) {
+                        if(file_manager()->GetFolderEntry((*itr), parent_post_id, folder)){
+                            // Check if folderpath is deleted
+                            if(file_manager()->IsFolderDeleted(folder.folder_post_id())){
+                                // Un-delete
+                                file_manager()->SetFolderDeleted(folder.folder_post_id(), false);
+                                UpdateFolderPost(folder, folder.folder_post_id());
+                            }
+                        }
+                    }
+                }
+                parent_post_id = folder.folder_post_id();
             }
-            else {
-                std::cout<<" fialed to retrieve folder post " << std::endl;
-            }
-        }
-        else {
-
-            std::cout<<" EMPTY POST ID " << std::endl;
         }
     }
-
-    std::cout<<" file size : " << file_list.size() << std::endl;
-    std::deque<FileInfo>::iterator file_itr = file_list.begin();
-    for(;file_itr != file_list.end(); file_itr++) {
-        FilePost fp(*file_itr);
-        std::cout<<" file relative path : " << fp.relative_path() << std::endl;
-        if(!fp.id().empty()) {
-            PostFilePost(fp.id(), fp);
-        }
-        else {
-            std::cout<<" EMPTY POST ID " << std::endl;
-        }
+    else {
+        status = ret::A_FAIL_DIFFERING_WORK_DIRECTORY;
     }
 
     return status;
+}
+
+bool FolderTask::UpdateFolderPost(Folder& folder, const std::string post_id) {
+    bool ret = false;
+    if(!post_id.empty()) {
+        FolderPost fp;
+        if(RetrieveFolderPost(folder.folder_post_id(), fp) == ret::A_OK) {
+            fp.set_folder(folder);
+            if(PostFolderPost(post_id, fp) == ret::A_OK)
+                ret = true;
+        }
+    }
+    else {
+        std::ostringstream err;
+        err << " Empty Folder Post id : " << std::endl;
+        err << " entry : " << folder.foldername();
+        err << " \t\t " << folder.folder_post_id();
+        err << " \t\t " << folder.parent_post_id();
+        log::LogString("folder_18912512", err.str());
+    }
+    return ret;
+}
+
+bool FolderTask::UpdateFilePost(FileInfo& fi, const std::string post_id) {
+    bool ret = false;
+    //  Retrieve latest
+    if(!post_id.empty()) {
+        FilePost p;
+        if(RetrieveFilePost(post_id, p) == ret::A_OK) {
+            std::string master_key;
+            GetMasterKey(master_key);
+            //  update cargo
+            FileHandler fh(file_manager());
+            std::string cargo;
+            fh.PrepareCargo(fi, master_key, cargo);
+            // set new filepath locally and in cargo
+
+
+            p.set_cargo(cargo);
+            //  post 
+            if(PostFilePost(p.id(), p) == ret::A_OK)
+                ret = true;
+        }
+    }
+    else { 
+        std::ostringstream err;
+        err << " Empty File Post id : " << std::endl;
+        err << " entry : " << fi.filepath();
+        err << " \t\t " << fi.post_id();
+        log::LogString("file_18912512", err.str());
+    }
+    return ret;
 }
 
 // TODO :: abstract this logic into one place, probably the folder handler
@@ -156,86 +239,39 @@ int FolderTask::MarkFilePostDeleted(FileInfo& fi) {
     return status;
 }
 
-int FolderTask::CreateFolder() {
+int FolderTask::CreateFolder(const std::string& path) {
     int status = ret::A_OK;
-    std::string folderpath;
-    context_.get_value("folderpath", folderpath);
-    std::cout<<" creating folder ... " << std::endl;
-    // Normalize folderpath
-    utils::CheckUrlAndRemoveTrailingSlash(folderpath);
-    FolderHandler fh(file_manager());
-    // Check if folder posts was previously deleted
-    if(fh.IsFolderInCache(folderpath)) {
-        std::cout<<" folder is in cache " << std::endl;
-        Folder folder;
-        fh.GetFolder(folderpath, folder);
-        if(folder.deleted()) {
-            std::cout<<" folder deleted " << std::endl;
-            // "Un-delete" folder (post)
-            folder.set_deleted(false);
-            fh.SetFolderDeleted(folderpath, false);
-            // Update post
-            FolderPost fp;
-            status = RetrieveFolderPost(folder.folder_post_id(), fp);
-            if(status == ret::A_OK) {
-                fp.set_folder(folder);
-                fp.clear_fragment();
-                status = PostFolderPost(folder.folder_post_id(), fp);
-            }
-        }
-        else {
-            std::cout<<" duplicate post creation " << std::endl;
+    std::cout<<" @@@ CREATING FOLDER : " << path << std::endl;
+    // validate that is folder actually exists
+    if(fs::IsDirectory(path)) { // checks if exists and is a directory
+        FolderHandler fh(file_manager());
+        if(fh.ValidateFolderPath(path,
+                                 TentTask::entity()->entity(),
+                                 entity()->GetPreferredServer().posts_feed(),
+                                 entity()->GetPreferredServer().post(),
+                                 access_token())) {
+            status = ret::A_FAIL_VALIDATE_DIRECTORY;
         }
     }
     else {
-        std::deque<Folder> folder_list;
-        fh.RetrieveFolders(folderpath, folder_list);
-        std::cout<<" folder list size : " << folder_list.size() << std::endl;
-        if(folder_list.size()) {
-            std::string hold_id = cnst::g_szWorkingPlaceHolder; 
-            std::deque<Folder>::iterator itr = folder_list.end();
-            while(itr != folder_list.begin()) {
-                std::cout<<" hold id : " << hold_id << std::endl;
-                itr--;
-                // Create Folder Post for each folder that needs it
-                Folder folder = *itr;
-                if(folder.parent_post_id().empty())
-                    folder.set_parent_post_id(hold_id);
-                std::cout<<"folder path : " << folder.folderpath() << std::endl;
-                if(folder.folder_post_id().empty()) {
-                    std::string post_id;
-                    int s = CreateFolderPost(folder, post_id);
-                    if(s == ret::A_OK) { 
-                        fh.InsertFolder(folder);
-                        hold_id = post_id;
-                    }
-                }
-                else {
-                    hold_id = folder.folder_post_id();
-                }
-            }
-        }
+        status = ret::A_FAIL_INVALID_FOLDERPATH;
     }
     return status;
 }
 
 int FolderTask::CreateFolderPost(Folder& folder, std::string& id_out) {
     int status = ret::A_OK;
-    std::string posts_feed = TentTask::entity().GetPreferredServer().posts_feed(); 
+    std::string posts_feed = entity()->GetPreferredServer().posts_feed(); 
     // Create folderpost                                   
     FolderPost fp(folder);                                 
-
     PostHandler<FolderPost> ph(access_token());
-    Response response;                                     
-    status = ph.Post(posts_feed, NULL, fp, response);
-
+    status = ph.Post(posts_feed, NULL, fp);
     if(status != ret::A_OK) {
-        log::LogHttpResponse("lasp151", response);
+        log::LogHttpResponse("lasp151", ph.response());
     }
     else  {
-        std::cout << response.body << std::endl;
-        FolderPost p;
-        jsn::DeserializeObject(&p, response.body);
+        std::cout << ph.response().body << std::endl;
+        FolderPost p = ph.GetReturnPost();
         folder = p.folder();
         id_out = p.id();
     }
@@ -253,12 +289,11 @@ int FolderTask::RetrieveFilePost(const std::string& post_id, FilePost& out) {
         std::cout<<" POST URL : " << posturl << std::endl;
 
         PostHandler<FilePost> ph(access_token());
-        Response response;
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
         if(status != ret::A_OK)
-            log::LogHttpResponse("175kjas", response);
+            log::LogHttpResponse("175kjas", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -277,12 +312,11 @@ int FolderTask::PostFilePost(const std::string& post_id, FilePost& fp) {
 
 
         PostHandler<FilePost> ph(access_token());
-        Response response;
-        status = ph.Put(posturl, NULL, fp, response);
+        status = ph.Put(posturl, NULL, fp);
         if(status != ret::A_OK)
-            log::LogHttpResponse("mas1o8", response);
+            log::LogHttpResponse("mas1o8", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -299,12 +333,11 @@ int FolderTask::RetrieveFolderPost(const std::string& post_id, FolderPost& out) 
         std::cout<<" POST URL : " << posturl << std::endl;
 
         PostHandler<FolderPost> ph(access_token());
-        Response response;
-        status = ph.Get(posturl, NULL, out, response);
+        status = ph.Get(posturl, NULL, out);
         if(status != ret::A_OK)
-            log::LogHttpResponse("asgwolf31", response);
+            log::LogHttpResponse("asgwolf31", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -320,15 +353,14 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
         utils::FindAndReplace(post_path, "{post}", post_id, posturl);
         std::cout<<" post url : " << posturl << std::endl;
         std::cout<<" post type : " << fp.type() << std::endl;
-        std::cout<<" folderpath : " << fp.folder().folderpath() << std::endl;
+        std::cout<<" foldername : " << fp.folder().foldername() << std::endl;
 
         PostHandler<FolderPost> ph(access_token());
-        Response response;
-        status = ph.Put(posturl, NULL, fp, response);
+        status = ph.Put(posturl, NULL, fp);
         if(status != ret::A_OK)
-            log::LogHttpResponse("naven32109", response);
+            log::LogHttpResponse("naven32109", ph.response());
         else 
-            std::cout << response.body << std::endl;
+            std::cout << ph.response().body << std::endl;
     }
     else { 
         status = ret::A_FAIL_INVALID_POST_ID;
@@ -336,6 +368,28 @@ int FolderTask::PostFolderPost(const std::string& post_id, FolderPost& fp) {
     return status;
 }
 
+bool FolderTask::HaveCommonWorkingDir(const std::string& old_folderpath, 
+                                      const std::string& new_folderpath, 
+                                      std::string& directory_out,
+                                      std::string& post_id_out) {
+    bool ret = false;
+    std::string directory, directory_post_id;
+    if(file_manager()->FindAssociatedWorkingDirectory(old_folderpath, 
+                                                      directory, 
+                                                      directory_post_id)) {
+        std::string new_dir, new_dir_id;
+        if(file_manager()->FindAssociatedWorkingDirectory(new_folderpath, 
+                                                          new_dir, 
+                                                          new_dir_id)) {
+            if(directory == new_dir) {
+                ret = true;
+                directory_out = directory;
+                post_id_out = directory_post_id;
+            }
+        }
+    }
+    return ret;
+}
 
 } //namespace
 

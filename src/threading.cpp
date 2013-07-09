@@ -11,16 +11,6 @@
 
 namespace attic {
 
-void NewThreadFunc(ThreadWorker *pWorker) {
-    std::cout<<" thread starting " << std::endl;
-    if(pWorker) {
-        pWorker->Run();
-        delete pWorker;
-        pWorker = NULL;
-    }
-    std::cout<<" thread ending " << std::endl;
-}
-
 ThreadPool::ThreadPool() {}                                               
 ThreadPool::~ThreadPool() {}
 
@@ -31,26 +21,10 @@ int ThreadPool::Initialize() {
 int ThreadPool::Shutdown() {
     std::cout<<" shutting down pool " << std::endl;
     for(unsigned int i=0; i<workers_.size(); i++) {
-        workers_[i]->SetThreadExit();
-        //workers_[i]->SetThreadShutdown();
+        workers_[i]->StopThread();
+        delete workers_[i];
+        workers_[i] = NULL;
     }
-
-    std::cout<<" joining threads ... " << std::endl;
-    for(unsigned int i=0; i<threads_.size(); i++) {
-        try {
-            std::cout<<" joining : " << i << std::endl;
-            std::cout<<" joinable : " << threads_[i]->joinable() << std::endl;
-            if(threads_[i]->joinable()) {
-                threads_[i]->join();
-                delete threads_[i];
-                threads_[i] = NULL;
-            }
-        }
-        catch(boost::system::system_error& ti) {
-            std::cout<<" join error : " << ti.what() << std::endl;
-        }
-    }
-
     std::cout<<" done shutting down pool " << std::endl;
     return ret::A_OK;
 }
@@ -59,8 +33,7 @@ void ThreadPool::SpinOffWorker(ThreadWorker* worker) {
     if(worker) {
         try {
             workers_.push_back(worker);
-            boost::thread* thread = new boost::thread(NewThreadFunc, worker);
-            threads_.push_back(thread);
+            worker->StartThread();
         }
         catch(std::exception& e) {
             std::cout<<" SPIN OFF WORKER EXCEPTION : " << e.what() << std::endl;
@@ -128,16 +101,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     servicew->SetTaskPreference(Task::SERVICE);
     thread_pool_->SpinOffWorker(servicew);
 
-    // Poll worker
-    ThreadWorker* pollw = new ThreadWorker(file_manager_, 
-                                           credentials_manager_, 
-                                           access_token_, 
-                                           entity_,
-                                           true); // Strict
-    pollw->SetTaskPreference(Task::POLL);
-    pollw->SetTaskPreference(Task::SERVICE, false);
-    thread_pool_->SpinOffWorker(pollw);
-    
     // Rename delete
     ThreadWorker* rdw = new ThreadWorker(file_manager_, 
                                          credentials_manager_, 
@@ -146,7 +109,6 @@ int ThreadManager::ExtendPool(unsigned int stride) {
                                          true); // Strict
     rdw->SetTaskPreference(Task::RENAME);
     rdw->SetTaskPreference(Task::DELETE);
-    rdw->SetTaskPreference(Task::POLL, false);
     rdw->SetTaskPreference(Task::SERVICE, false);
     thread_pool_->SpinOffWorker(rdw);
 
@@ -168,14 +130,24 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     folderw2->SetTaskPreference(Task::FOLDER);
     thread_pool_->SpinOffWorker(folderw2);
 
-    // Dedicated upload
+    // Dedicated push
     ThreadWorker* pushw = new ThreadWorker(file_manager_, 
-                                             credentials_manager_, 
-                                             access_token_, 
-                                             entity_, 
-                                             true); // Strict
+                                           credentials_manager_, 
+                                           access_token_, 
+                                           entity_, 
+                                           true); // Strict
     pushw->SetTaskPreference(Task::PUSH);
     thread_pool_->SpinOffWorker(pushw);
+
+    for(int i=0;i<2;i++) {
+        ThreadWorker* uw = new ThreadWorker(file_manager_, 
+                                            credentials_manager_, 
+                                            access_token_, 
+                                            entity_, 
+                                            true); // Strict
+        uw->SetTaskPreference(Task::UPLOADFILE);
+        thread_pool_->SpinOffWorker(uw);
+    }
 
     // Dedicated download
     ThreadWorker* pullw = new ThreadWorker(file_manager_, 
@@ -186,10 +158,10 @@ int ThreadManager::ExtendPool(unsigned int stride) {
     pullw->SetTaskPreference(Task::PULL);
     thread_pool_->SpinOffWorker(pullw);
 
+
     // Generic (Push/Pull) workers
     for(unsigned int i=0; i < stride; i++){
         ThreadWorker* pWorker = new ThreadWorker(file_manager_, credentials_manager_, access_token_, entity_);
-        pWorker->SetTaskPreference(Task::POLL, false);
         pWorker->SetTaskPreference(Task::SERVICE, false);
         pWorker->SetTaskPreference(Task::RENAME, false);
         pWorker->SetTaskPreference(Task::DELETE, false);

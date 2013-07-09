@@ -15,8 +15,6 @@ FileInfo::FileInfo() {
 FileInfo::FileInfo(const std::string& filename,
                    const std::string& filepath,
                    const std::string& postid) {
-    FileInfo::FileInfo();
-
     filename_ = filename;
     filepath_ = filepath;
     post_id_ = postid;

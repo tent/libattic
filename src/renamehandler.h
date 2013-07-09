@@ -15,13 +15,12 @@ class RenameHandler {
 public:
     RenameHandler(FileManager* fi);
     ~RenameHandler();
-    
-    int RenameFileLocalCache(const std::string& old_filepath,
-                             const std::string& new_filepath);
 
-    int RenameFolderLocalCache(const std::string& old_folderpath,
-                               const std::string& new_folderpath);
 
+    bool RenameFolderLocalCache(const std::string& folder_post_id,
+                                const std::string& new_foldername);
+    int UpdateFileMetaData(std::string& old_filepath,
+                           std::string& new_filepath);
     void UpdateFileMetaPost(FilePost& fp, 
                             const FileInfo& fi, 
                             FilePost& out);
@@ -30,8 +29,9 @@ public:
                               const Folder& folder,
                               FolderPost& out);
    
-    bool CheckForRename(FilePost& fp);
     bool CheckForRename(FolderPost& fp);
+
+    bool RenameFileLocalCache(const std::string& post_id, const std::string& new_filename);
 private:
     FileManager* file_manager_;
 };

@@ -21,22 +21,19 @@ int CredentialsManager::Shutdown(){
 
 int CredentialsManager::DeserializeIntoAccessToken(const std::string& buffer) {
     int status = ret::A_OK;
-
-    Lock();
+    at_mtx_.Lock();
     if(!jsn::DeserializeObject(&access_token_, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
-    Unlock();
-
+    at_mtx_.Unlock();
     return status;
 }
 
 int CredentialsManager::WriteOutAccessToken() {
     std::string path;
     ConstructAccessTokenPath(path);
-
-    Lock();
+    at_mtx_.Lock();
     int status = access_token_.SaveToFile(path);
-    Unlock();
+    at_mtx_.Unlock();
     return status;
 }
 
@@ -46,18 +43,18 @@ int CredentialsManager::LoadAccessToken() {
 
     std::cout<<" ACCESSTOKEN PATH : " << path << std::endl;
 
-    Lock();
+    at_mtx_.Lock();
     int status = access_token_.LoadFromFile(path);
-    Unlock();
+    at_mtx_.Unlock();
     return status;
 }
 
 int CredentialsManager::DeserializeIntoPhraseToken(const std::string& buffer) {
     int status = ret::A_OK;
-    Lock();
+    pt_mtx_.Lock();
     if(!jsn::DeserializeObject(&phrase_token_, buffer))
         status = ret::A_FAIL_TO_DESERIALIZE_OBJECT;          
-    Unlock();
+    pt_mtx_.Unlock();
 
     return status;
 }
@@ -66,9 +63,9 @@ int CredentialsManager::WriteOutPhraseToken() {
     std::string path;
     ConstructPhraseTokenPath(path);
 
-    Lock();
+    pt_mtx_.Lock();
     int status = phrase_token_.SaveToFile(path);
-    Unlock();
+    pt_mtx_.Unlock();
     return status;
 }
 
@@ -76,9 +73,9 @@ int CredentialsManager::LoadPhraseToken() {
     std::string path;
     ConstructPhraseTokenPath(path);
 
-    Lock();
+    pt_mtx_.Lock();
     int status = phrase_token_.LoadFromFile(path);
-    Unlock();
+    pt_mtx_.Unlock();
 
     return status;
 }

@@ -11,17 +11,21 @@
 #include "filemanager.h"
 #include "credentialsmanager.h"
 
+#include "post.h"
+
 /* Attic Service
  *  Service to direct spawning of threads, insertion of tasks, and management of
  *  subsystems, allowing communication into the lib.
  */
 namespace attic {
+    class Polling;
 
 class AtticService {
     bool IsMasterKeyValid();
     void LoadConfigValues();
     int ValidateDirectories();
     // Order does matter for init and shutdown sequence
+    int InitializeConnectionManager();
     int InitializeFileManager();
     int InitializeCredentialsManager();
     int InitializeClient();
@@ -37,14 +41,18 @@ class AtticService {
     int ShutdownClient();
     int ShutdownCredentialsManager();
     int ShutdownFileManager();
+    int ShutdownConnectionManager();
+
+    void ValidateTimeOffset();
 public:
     AtticService();
     ~AtticService();
 
     int start();
-    int stop();
+    int stop(TaskDelegate* del=NULL);
 
     int UploadFile(const std::string& filepath);
+    int UploadLimitedFile(const std::string& filepath, TaskDelegate* del);
     int DownloadFile(const std::string& filepath);
     int MarkFileDeleted(const std::string& filepath);
     int RenameFile(const std::string& old_filepath, const std::string& new_filepath);
@@ -57,11 +65,27 @@ public:
 
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
+    int DeletePostVersion(const std::string& post_id, 
+                          const std::string& version, 
+                          TaskDelegate* cb);
+    int MakePostVersionNewHead(const std::string& post_id, 
+                               const std::string& version,
+                               TaskDelegate* cb);
+    int SaveVersionToLocation(const std::string& post_id, 
+                              const std::string& version, 
+                              const std::string& filepath,
+                              TaskDelegate* cb);
 
-    int RegisterPassphrase();
-    int EnterPassphrase();
-    int ChangePassphrase();
-    int EnterRecoveryKey();
+    int RegisterPassphrase(const std::string& pass);
+    int EnterPassphrase(const std::string& pass);
+    int ChangePassphrase(const std::string& old_passphrase, const std::string& new_passphrase);
+    int EnterRecoveryKey(const std::string& recovery_key);
+
+
+    // Directory methods
+    int CreateWorkingDirectory(const std::string& filepath);
+    int LinkWorkingDirectory(const std::string& filepath, const std::string& post_id);
+    bool IsFilepathLinked(const std::string& filepath);
 
     bool running()                              { return running_; }
     TaskManager* task_manager()                 { return task_manager_; }
@@ -77,6 +101,9 @@ private:
     FileManager*        file_manager_;
     CredentialsManager* credentials_manager_;
     Client*             client_;
+    ConnectionManager*  connection_manager_;
+
+    Polling*            polling_;
 
     // File paths should all be absolute paths
     std::string working_dir_;

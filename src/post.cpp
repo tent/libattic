@@ -1,8 +1,42 @@
 #include "post.h"
 
-#include <stdio.h>
-
 namespace attic {
+
+void Profile::Serialize(Json::Value& root) {
+    if(name.size() > 256) name = name.substr(0, 256);
+    if(bio.size() > 256) bio = bio.substr(0, 256);
+    if(location.size() > 256) location = location.substr(0, 256);
+
+    root["name"] = name;
+    root["bio"] = bio;
+    root["avatar_digest"] = avatar_digest;
+    root["website"] = website;
+    root["location"] = location;
+}
+
+void Profile::Deserialize(Json::Value& root) {
+    name =  root.get("name","").asString();
+    bio = root.get("bio", "").asString();
+    avatar_digest = root.get("avatar_digest", "").asString();
+    website = root.get("website", "").asString();
+    location = root.get("location", "").asString();
+}
+
+void Reference::Serialize(Json::Value& root) {
+    root["entity"] = entity;
+    root["original_entity"] = original_entity;
+    root["post"] = post;
+    root["version"] = version;
+    root["type"] = type;
+}
+
+void Reference::Deserialize(Json::Value& root) {
+    entity = root.get("entity", "").asString();
+    original_entity = root.get("original_entity", "").asString();
+    post = root.get("post", "").asString();
+    version = root.get("version", "").asString();
+    type = root.get("type", "").asString();
+}
 
 void Mention::Serialize(Json::Value& root) {
     root["entity"] = entity;
@@ -121,8 +155,6 @@ void Attachment::Deserialize(Json::Value& root) {
 }
 
 Post::Post() {
-    published_at_ = 0;
-    received_at_ = 0;
     set_public(false);
 }
 
@@ -130,22 +162,26 @@ Post::~Post() {
     attachments_.clear();
 }
 
-void Post::get_content(const std::string& key, Json::Value& out) {
-    ContentMap::iterator itr = content_.find(key);
-    if(itr != content_.end())
+bool Post::get_content(const std::string& key, Json::Value& out) const {
+    ContentMap::const_iterator itr = content_.find(key);
+    if(itr != content_.end()) {
         out = itr->second;
+        return true;
+    }
+    return false;
 }
 
 void Post::Serialize(Json::Value& root) {
-    std::cout<<" SERIALIZE POST " << std::endl;
     // General Post
     if(!id_.empty())
         root["id"] = id_;
     if(!entity_.empty())
         root["entity"] = entity_;
 
-    if(published_at_ > 0)
+    /*
+    if(!published_at_.empty())
         root["published_at"] = published_at_;
+        */
 
     if(licenses_.size() > 0) {
         Json::Value licenses;
@@ -184,11 +220,11 @@ void Post::Serialize(Json::Value& root) {
         root["mentions"] = mentions_array;
     }
 
-    /*
-    Json::Value app;
+
+    Json::Value app(Json::nullValue);
     tent_app_.Serialize(app); 
-    root["app"] = app;
-    */
+    if(!app.isNull())
+        root["app"] = app;
 
     if(views_.size() > 0) {
         Json::Value views(Json::objectValue);
@@ -209,18 +245,14 @@ void Post::Deserialize(Json::Value& root) {
     // General Post
     id_             = root.get("id", "").asString();
     entity_         = root.get("entity", "").asString();
-    std::string pub = root.get("published_at", "").asString();
-    published_at_   = atoi(pub.c_str());
-    std::string rec = root.get("received_at", "").asString();
+    published_at_   = root.get("published_at", "").asString();
+    received_at_    = root.get("received_at", "").asString();
     type_           = root.get("type", "").asString();
     if(type_.find("#") != std::string::npos)
         base_type_ = type_.substr(0, type_.find("#")+1);
 
-    received_at_    = atoi(rec.c_str());
-
     jsn::DeserializeObject(&version_, root["version"]);
     jsn::DeserializeIntoVector(root["licenses"], licenses_);
-
     jsn::DeserializeObjectValueIntoMap(root["content"], content_);
     
     // Deserialize this into an array of objects
@@ -264,9 +296,13 @@ void Post::Deserialize(Json::Value& root) {
         }
     }
 
-    if(!root["app"].isNull()) {
+    if(root.isMember("app")) {
         tent_app_.Deserialize(root["app"]);
     }
+    else {
+        std::cout<<" post has no app " << std::endl;
+    }
+
 
     jsn::DeserializeObjectValueIntoMap(root["views"], views_);
     jsn::DeserializeObject(&permissions_,root["permissions"]);

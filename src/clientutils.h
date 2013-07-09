@@ -10,6 +10,8 @@
 #include "entity.h"
 #include "entitypost.h"
 #include "accesstoken.h"
+#include "envelope.h"
+#include "posthandler.h"
 
 namespace attic { namespace client {
 
@@ -23,36 +25,29 @@ static void ConstructMetaPath(const std::string& entityurl,
 
 static int Discover(const std::string& entityurl, const AccessToken* at, Entity& entOut) {
     int status = ret::A_OK;
-
     std::string meta_link;
     std::cout<<" head request : " << entityurl << std::endl;
     status = HeadRequestEntity(entityurl, meta_link);
     std::cout<<" META LINK : " << meta_link << std::endl;
     if(status == ret::A_OK) {
-        Response response;
-        netlib::HttpGet(meta_link, NULL, NULL, response);
+        PostHandler<EntityPost> ph(true); // tear down connection
+        EntityPost ep;
+        status = ph.Get(meta_link, NULL, ep);
 
-        std::cout<<" CODE : " << response.code << std::endl;
-        std::cout<<" BODY : " << response.body << std::endl;
-        if(response.code == 200) {
-            EntityPost ep;
-            jsn::DeserializeObject(&ep, response.body);
-
-            std::cout<<" here " << std::endl;
+        std::cout<<" calling response ... ? " << std::endl;
+        std::cout<<" CODE : " << ph.response().code << std::endl;
+        std::cout<<" BODY : " << ph.response().body << std::endl;
+        if(status == ret::A_OK) {
             entOut = ep.entity();
-
             Json::Value val;
             jsn::SerializeObject(&entOut, val);
             jsn::PrintOutJsonValue(&val);
-
         }
         else {
             std::cout<<" FAIL DISCOVERY NON 200 " << std::endl;
             status = ret::A_FAIL_NON_200;
         }
     }
-    
-
     std::cout<<" Discover status : " << status << std::endl;
     return status; 
 }
@@ -96,10 +91,10 @@ static void ConstructMetaPath(const std::string& entityurl,
         // Construct meta path
         out = entityurl;
         utils::CheckUrlAndRemoveTrailingSlash(out);
-        out += endpoint;
+        out += metaendpoint;
     }
     else {
-        out = endpoint;
+        out = metaendpoint;
     }
 }
 

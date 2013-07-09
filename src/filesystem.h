@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 
+#include <stdio.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 
@@ -20,11 +22,12 @@ static void MakePathRelative( const std::string& rootPath,
                               std::string& relativeOut);
 
 static int GetCanonicalPath(const std::string& path, std::string& out);
-static int GetParentPath(const std::string& path, std::string& out);
+static bool GetParentPath(const std::string& path, std::string& out);
 static int CreateDirectory(const std::string& path);
 static void CreateDirectoryTree(const std::string& filepath);
 static void CreateDirectoryTreeForFolder(const std::string& folderpath);
 static bool CheckFilepathExists(const std::string& filepath);
+static bool IsDirectory(const std::string& folderpath);
 static bool DeleteFile(const std::string& filepath);
 static void ScanDirectory(const std::string& folderpath, std::vector<std::string>& paths_out);
 
@@ -86,18 +89,19 @@ static int GetCanonicalPath(const std::string& path, std::string& out) {
     return status;
 }
 
-static int GetParentPath(const std::string& path, std::string& out) {
-    int status = ret::A_OK;
+static bool GetParentPath(const std::string& path, std::string& out) {
+    bool ret = false;
 
     std::string ppath;
-    status = GetCanonicalPath(path, ppath);
+    int status = GetCanonicalPath(path, ppath);
     if(status == ret::A_OK) {
         boost::filesystem::path p(ppath);
         boost::filesystem::path dir = p.parent_path();
         out = dir.string();
+        ret = true;
     }
 
-    return status;
+    return ret;
 }
 
 static int CreateDirectory(const std::string& path) {
@@ -176,6 +180,12 @@ static void CreateDirectoryTree(const std::string& filepath) {
 
 static bool CheckFilepathExists(const std::string& filepath) {
     if(boost::filesystem::exists(filepath))
+        return true;
+    return false;
+}
+
+static bool IsDirectory(const std::string& folderpath) {
+    if(boost::filesystem::exists(folderpath) && boost::filesystem::is_directory(folderpath))
         return true;
     return false;
 }
@@ -259,9 +269,19 @@ static void ExtractSubDirectories(const std::string& root,
     }
 }
 
-static void RenamePath(const std::string& original_path, const std::string& new_path) {
+static bool RenamePath(const std::string& original_path, const std::string& new_path) {
+    bool ret = true;
     boost::filesystem::path original(original_path), newpath(new_path);
-    boost::filesystem::rename(original, newpath);
+    //boost::filesystem::rename(original, newpath);
+    
+    std::cout<<" RENAMING : " << original_path << " TO : " << new_path << std::endl;
+    int status = rename(original_path.c_str(), new_path.c_str());
+    if(status != 0) { 
+        std::cout<<" RenamePath failed status : " << status << std::endl;
+        ret = false;
+    }
+    std::cout <<" RENAME STATUS : " << status << std::endl;
+    return ret;
 }
 
 

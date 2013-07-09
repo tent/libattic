@@ -21,18 +21,18 @@ public:
         // TentTask
         UNKNOWN=0,
         PUSH,       // Begin upload process, just setup the metadata, spin off pushfile task
+        PUSHPUBLIC,
         UPLOADFILE,   // Does not deal with setting up metadata post, just upoads chunks
         PULL,
         RENAME,
         DELETE,                                                         
         FOLDER,
-        SYNC_FILE_TASK,
+        // Generic
         META,
+        CONFIG,
         // ManifestTask
         QUERYMANIFEST,
         SCANDIRECTORY,
-        // Polling
-        POLL,
         // Service
         SERVICE
     };
@@ -62,6 +62,8 @@ public:
     void PushBackContextValue(const std::string& key, const std::string& value) {
         context_.set_value(key, value);
     }
+
+    const TaskContext& context() const { return context_; }
 protected:
     TaskContext context_;
 

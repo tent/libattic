@@ -22,27 +22,31 @@ ThreadWorker::ThreadWorker(FileManager* fm,
     entity_ = ent;
 
     task_factory_.Initialize(file_manager_, credentials_manager_, access_token_, entity_);
+    current_task_ = NULL;
+    thread_ = NULL;
 }
 
-ThreadWorker::~ThreadWorker() {}
+ThreadWorker::~ThreadWorker() {
+    if(current_task_) 
+        RelinquishTask(&current_task_);
+}
 
 // Once a thread is set to exist state, it cannot/shouldnot be changed back
 void ThreadWorker::Run() {
     std::cout<<" thread worker starting ... " << std::endl;
-    Task* task = NULL;
     while(!(state() == ThreadWorker::EXIT)) {
         if(state() == ThreadWorker::IDLE) {
             // Get a job
-            task = RetrieveTask();
-            if(!task) { sleep::sleep_seconds(1); }
+            current_task_ = RetrieveTask();
+            if(!current_task_) { sleep::sleep_seconds(1); }
         }
 
-        if(task)  {
+        if(current_task_)  {
             if(state() != ThreadWorker::SHUTDOWN)
                 SetState(ThreadWorker::RUNNING);
             else 
-                task->SetFinishedState();
-            PollTask(&task);
+                current_task_->SetFinishedState();
+            PollTask(&current_task_);
         }
 
         if(state() == ThreadWorker::FINISHED) {
@@ -52,23 +56,15 @@ void ThreadWorker::Run() {
 
         if(state() == ThreadWorker::SHUTDOWN) {
             SetThreadExit();
-            if(task) {
-                task->OnFinished();
-                task_factory_.ReclaimTask(task);
-                task = NULL;
-            }
+            RelinquishTask(&current_task_);
         }
-        sleep::sleep_milliseconds(100);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     }
 
     std::cout<<" thread  worker ending ... " << std::endl;
     if(state() == ThreadWorker::EXIT) {
-        if(task) { 
-            std::cout<<" shutting down task ... : "<< task->type() << std::endl;
-            task->OnFinished();
-            task_factory_.ReclaimTask(task);
-            task = NULL;
-        }
+        RelinquishTask(&current_task_);
+        current_task_ = NULL;
     }
     std::cout<<" worker exiting ... " << std::endl;
 }
@@ -77,7 +73,6 @@ void ThreadWorker::PollTask(Task** task) {
     switch((*task)->state()) {
         case Task::IDLE:
             {
-                std::cout<<" starting task " << std::endl;
                 // Start the task
                 (*task)->OnStart();
                 (*task)->SetRunningState();
@@ -85,21 +80,18 @@ void ThreadWorker::PollTask(Task** task) {
             }
         case Task::RUNNING:
             {
-                //std::cout<<" running task " << std::endl;
                 (*task)->RunTask();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::PAUSED:
             {
-                std::cout<< " task paused " << std::endl;
                 (*task)->OnPaused();
                 sleep::sleep_milliseconds(100);
                 break;
             }
         case Task::FINISHED:
             {
-                std::cout<< " task finished " << std::endl;
                 (*task)->OnFinished();
                 task_factory_.ReclaimTask(*task);
                 (*task) = NULL;
@@ -109,7 +101,6 @@ void ThreadWorker::PollTask(Task** task) {
             }
         default:
             {
-                std::cout<<" default " << std::endl;
                 break;
             }
     };
@@ -117,29 +108,29 @@ void ThreadWorker::PollTask(Task** task) {
 
 int ThreadWorker::state() {
     int t;
-    Lock();
+    state_mtx_.Lock();
     t = state_;
-    Unlock();
+    state_mtx_.Unlock();
     return t;
 }
 
 void ThreadWorker::SetState(ThreadState t) {
-    Lock();
+    state_mtx_.Lock();
     if(state_ != ThreadWorker::EXIT)
         state_ = t;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetThreadExit() {
-    Lock();
+    state_mtx_.Lock();
     state_ = ThreadWorker::EXIT;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetThreadShutdown() {
-    Lock();
+    state_mtx_.Lock();
     state_ = ThreadWorker::SHUTDOWN;
-    Unlock();
+    state_mtx_.Unlock();
 }
 
 void ThreadWorker::SetTaskPreference(Task::TaskType type, bool active) {
@@ -152,18 +143,34 @@ Task* ThreadWorker::RetrieveTask() {
     // Retrieve task based on preference first, then just any old task
     PreferenceMap::iterator itr = task_preference_.begin();
     for(;itr!= task_preference_.end(); itr++) {
-        if(itr->second)
+        if(itr->second) { 
             success = TaskArbiter::GetInstance()->RequestTaskContext(itr->first, tc);
+            if(success) {
+                break;
+            }
+        }
     }
 
-    if(!success && !strict_)
+    if(!success && !strict_) {
+        if(strict_) { std::cout << " STRICT THREAD WORKER REQUESTING RANDOM TASK ! " << std::endl; } 
         success = TaskArbiter::GetInstance()->RequestTaskContext(tc);
+    }
 
     Task* t = NULL;
-    if(success)
+    if(success) { 
         t = task_factory_.GetTentTask(tc);
+    }
 
     return t;
+}
+
+void ThreadWorker::RelinquishTask(Task** task) {
+    if(*task) { 
+        std::cout<<" shutting down task ... : "<< (*task)->type() << std::endl;
+        (*task)->OnFinished();
+        task_factory_.ReclaimTask(*task);
+        (*task) = NULL;
+    }
 }
 
 

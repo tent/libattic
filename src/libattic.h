@@ -29,7 +29,7 @@ int RequestUserAuthorizationDetails(const char* szEntityUrl,
 
 // Api begin
 int InitLibAttic(unsigned int threadCount = 10);
-int ShutdownLibAttic(void (*callback)(int, void*));
+int ShutdownLibAttic(void (*callback)(int, const char*, const char*));
 
 // Master Key
 int EnterPassphrase(const char* szPass);
@@ -54,6 +54,11 @@ void RegisterForRecoveryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForTemporaryKeyNotify(void (*callback)(int, int, const char*));
 void RegisterForPauseResumeNotify(void (*callback)(int, int, const char*));
 
+
+// status - file/folderpath - BEGIN/END
+void RegisterForFileInUseEvents(void (*callback)(int, int, const char*));
+void RegisterForFolderInUseEvents(void (*callback)(int, int, const char*));
+
 int HasCredentialsPost();
 
 int ScanAtticFolder();
@@ -70,16 +75,34 @@ int DeleteFile(const char* szFilepath);
 int RenameFile(const char* szOldFilepath, const char* szNewFilepath);
 int PollFiles(void);
 
+// callback returns: error code, url, error description (if errorcode is non zero)
+int CreateLimitedDownloadLink(const char* szFilepath, 
+                              void(*callback)(int, const char*, const char*));
+
+
 // Meta operations
 /* GetFileHistory
  *  Returns file history in a json formatted string.
  *  callback :
  *      (?, serialized string, len, # of nodes)
  */
+
+// Returns all posts in tree 
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
-int DeletePostVersion(const char* szPostId, const char* szVersion);
-int RestoreVersion(const char* szPostId, const char* szVersion);
-int SaveVersion(const char* szPostId, const char* szVersion, const char* szFolderpath);
+// permanently deletes a post at version id
+int DeletePostVersion(const char* szPostId, 
+                      const char* szVersion, 
+                      void(*callback)(int, const char*, const char*));
+// Appoints version of post as the new head
+int MakePostVersionNewHead(const char* szPostId, 
+                           const char* szVersion,
+                           void(*callback)(int, const char*, const char*));
+// Save a local copy, does not modify the most or add it to the local cache just a save 
+// to file
+int SaveVersion(const char* szPostId, 
+                const char* szVersion, 
+                const char* szFilepath,
+                void(*callback)(int, const char*, const char*));
 
 // Pause / Resume polling
 int Pause(void);
@@ -102,6 +125,7 @@ int EnterQuestionAnswerKey(const char* q1,
                            const char* a1, 
                            const char* a2, 
                            const char* a3);
+
 
 // Returns calls back n numbers of times, with filepaths
 // callback

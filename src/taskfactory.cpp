@@ -5,13 +5,13 @@
 #include "pushtask.h"
 #include "deletetask.h"
 #include "queryfilestask.h"
-#include "polltask.h"
-#include "syncfiletask.h"
 #include "renametask.h"
 #include "servicetask.h"
 #include "foldertask.h"
 #include "uploadtask.h"
 #include "metatask.h"
+#include "configtask.h"
+#include "pushpublictask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -94,95 +94,75 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
     switch(context.type())
     {
         case Task::PUSH:
-        {
             t = new PushTask(file_manager_,
                              credentials_manager_,                    
                              access_token_,
                              entity_,                          
                              context);
             break;
-        }
+        case Task::PUSHPUBLIC:
+            t = new PushPublicTask(file_manager_,
+                                   credentials_manager_,                    
+                                   access_token_,
+                                   entity_,                          
+                                   context);
+            break;
         case Task::PULL:
-        {
             t = new PullTask(file_manager_,
                              credentials_manager_,
                              access_token_,
                              entity_,
                              context);
             break;
-        }
         case Task::RENAME:
-        {
             t = new RenameTask(file_manager_,
                                credentials_manager_,
                                access_token_,
                                entity_,
                                context);
             break;
-        }
         case Task::DELETE:
-        {
             t = new DeleteTask(file_manager_,
                                credentials_manager_,
                                access_token_,
                                entity_,
                                context);
             break;
-        }
-        case Task::SYNC_FILE_TASK:
-        {
-            t = new SyncFileTask(file_manager_,
-                                 credentials_manager_,
-                                 access_token_,
-                                 entity_,
-                                 context);
-            break;
-        }
-        case Task::POLL:
-        {
-            t = new PollTask(file_manager_,
-                             credentials_manager_,
-                             access_token_,
-                             entity_,
-                             context);
-            break;
-        }
         case Task::SERVICE:
-        {
             t = new ServiceTask(file_manager_,
                                 credentials_manager_,
                                 access_token_,
                                 entity_,
                                 context);
             break;
-        }
         case Task::FOLDER:
-        {
             t = new FolderTask(file_manager_,
                                credentials_manager_,
                                access_token_,
                                entity_,
                                context);
             break;
-        }
         case Task::UPLOADFILE:
-        {
             t = new UploadTask(file_manager_,
                                credentials_manager_,
                                access_token_,
                                entity_,
                                context);
             break;
-        }
         case Task::META:
-        {
             t = new MetaTask(file_manager_,
                              credentials_manager_,
                              access_token_,
                              entity_,
                              context);
             break;
-        }
+        case Task::CONFIG: 
+            t = new ConfigTask(file_manager_,
+                               credentials_manager_,
+                               access_token_,
+                               entity_,
+                               context);
+            break;
         default:
         {
             std::cout<<" CREATING UNKNOWN TASK " << std::endl;
