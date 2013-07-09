@@ -202,12 +202,7 @@ int EnterRecoveryKey(const char* szRecovery) {
 }
 
 const char** GetQuestionList() {
-    static const char* t[]={
-                            {"one"}, 
-                            {"two"},
-                            {"three"}
-                           };
-    return t;
+    return NULL;
 }
 
 int RegisterQuestionAnswerKey(const char* q1, 

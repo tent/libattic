@@ -166,7 +166,7 @@ int ChunkRequest::WriteToSocket(boost::asio::streambuf& buffer) {
     for(unsigned int i=0; i < retrycount; i++) {
         try {
             status = ret::A_OK;
-            boost::timer::cpu_timer::cpu_timer t;
+            boost::timer::cpu_timer t;
             //size_t byteswritten = boost::asio::write(ssl_sock, buffer, errorcode); 
             size_t byteswritten = socket_->Write(buffer);
             boost::timer::cpu_times time = t.elapsed();

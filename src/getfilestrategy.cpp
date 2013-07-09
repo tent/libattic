@@ -474,7 +474,7 @@ int GetFileStrategy::RetrieveAttachment(const std::string& url, std::string& out
     int status = ret::A_OK;
 
     std::cout<<" RETRIEVING ATTACHEMNT : " << url << std::endl;
-    boost::timer::cpu_timer::cpu_timer t;
+    boost::timer::cpu_timer t;
     Response response;
     status = netlib::HttpGetAttachment(url, NULL, &access_token_, response);
     boost::timer::cpu_times time = t.elapsed();
