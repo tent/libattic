@@ -233,7 +233,7 @@ bool FileManager::GetFileInfo(const std::string& filepath, FileInfo& out) {
         manifest_mtx_.Lock();
         ret = manifest_.file_table()->IsFileInManifest(relative);
         if(ret) ret = manifest_.file_table()->QueryForFile(relative, out);
-        manifest_mtx_.Unlock();
+        manifest_mjx_.Unlock();
     }
     return ret;
 }
