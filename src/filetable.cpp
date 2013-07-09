@@ -255,10 +255,11 @@ bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
         int step = 0;
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
-            if(step > 0)
+            if(step > 0) {
                 ExtractFileInfoResults(res, step, out);
+                ret = true;
+            }
         }
-        ret = true;
     }
     else {
         log::LogString("manifest_8i09255", error);
