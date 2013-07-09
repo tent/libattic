@@ -48,6 +48,9 @@ int RenameStrategy::RenameFile() {
     rlog <<" Rename File : " << std::endl;
     rlog <<"\t old filepath : " << old_filepath << std::endl;
     rlog <<"\t new filepath : " << new_filepath << std::endl;
+    FileHandler fihdlr(file_manager_);
+    if(!fihdlr.DoesFileExist(old_filepath))
+        return ret::A_FAIL_FILE_NOT_IN_MANIFEST;
 
     // Determine common working directory
     // find corresponding parent folder and thus file info
@@ -138,57 +141,62 @@ int RenameStrategy::UpdateFileMetaData(const std::string& old_filepath,
     fh.GetFolderByAbsolutePath(old_folderpath, folder);
     FileInfo fi;
     rlog << " folder post id : " << folder.folder_post_id() << std::endl;
-    file_manager_->GetFileInfo(old_filename,
-                               folder.folder_post_id(),
-                               fi);
-    // update post
-    rlog << " file post id : " << fi.post_id() << std::endl;
-    FilePost p;
-    status = RetrieveFilePost(fi.post_id(), p);
-    rlog << " retrieveing file post status : " << status << std::endl;
-    if(status == ret::A_OK) {
-        // update file info
-        //  - filepath
-        //      - possibly folder post
-        //  - filename
-        std::string aliased_path;
-        file_manager_->GetAliasedPath(new_filepath, aliased_path);
-        fi.set_filepath(aliased_path);
-        fi.set_filename(new_filename);
-        if(new_folderpath != old_folderpath) {
-            rlog << " folder paths differ setting new folder post id " << std::endl;
-            // update folderpost
-            Folder new_folder;
-            if(fh.GetFolderByAbsolutePath(new_folderpath, new_folder)) {
-                rlog << " new folder post id : " << new_folder.folder_post_id() << std::endl;
-                rlog << " new foldername : " << new_folder.foldername() << std::endl;
-                fi.set_folder_post_id(new_folder.folder_post_id());
+    if(file_manager_->GetFileInfo(old_filename,
+                                  folder.folder_post_id(),
+                                  fi) ) {
+        // update post
+        rlog << " file post id : " << fi.post_id() << std::endl;
+        FilePost p;
+        status = RetrieveFilePost(fi.post_id(), p);
+        rlog << " retrieveing file post status : " << status << std::endl;
+        if(status == ret::A_OK) {
+            // update file info
+            //  - filepath
+            //      - possibly folder post
+            //  - filename
+            std::string aliased_path;
+            file_manager_->GetAliasedPath(new_filepath, aliased_path);
+            fi.set_filepath(aliased_path);
+            fi.set_filename(new_filename);
+            if(new_folderpath != old_folderpath) {
+                rlog << " folder paths differ setting new folder post id " << std::endl;
+                // update folderpost
+                Folder new_folder;
+                if(fh.GetFolderByAbsolutePath(new_folderpath, new_folder)) {
+                    rlog << " new folder post id : " << new_folder.folder_post_id() << std::endl;
+                    rlog << " new foldername : " << new_folder.foldername() << std::endl;
+                    fi.set_folder_post_id(new_folder.folder_post_id());
+                }
             }
+
+            RenameHandler rh(file_manager_);
+            std::string master_key;
+            GetMasterKey(master_key);
+            FileHandler fih(file_manager_);
+            std::string cargo;
+            fih.PrepareCargo(fi, master_key, cargo);
+            FilePost new_p;
+            rh.UpdateFileMetaPost(p, fi, new_p);
+            new_p.set_cargo(cargo);
+            status = UpdateFileMetaPost(fi.post_id(), new_p);
         }
 
-        RenameHandler rh(file_manager_);
-        std::string master_key;
-        GetMasterKey(master_key);
-        FileHandler fh(file_manager_);
-        std::string cargo;
-        fh.PrepareCargo(fi, master_key, cargo);
-        FilePost new_p;
-        rh.UpdateFileMetaPost(p, fi, new_p);
-        new_p.set_cargo(cargo);
-        status = UpdateFileMetaPost(fi.post_id(), new_p);
+        if(status == ret::A_OK) {
+            //if(fs::RenamePath(old_filepath, new_filepath)) { } // assuming the system has done this
+            // Update meta data
+            file_manager_->SetFilepath(p.id(), fi.filepath());
+            file_manager_->SetFilename(p.id(), fi.filename());
+            file_manager_->SetFileFolderPostId(p.id(), fi.folder_post_id());
+            //else {
+            //    status = ret::A_FAIL_RENAME_FILE;
+            //}
+        }
+    
+    }
+    else {
+        status = ret::A_FAIL_FILE_NOT_IN_MANIFEST;
     }
 
-    if(status == ret::A_OK) {
-        //if(fs::RenamePath(old_filepath, new_filepath)) { } // assuming the system has done this
-        // Update meta data
-        file_manager_->SetFilepath(p.id(), fi.filepath());
-        file_manager_->SetFilename(p.id(), fi.filename());
-        file_manager_->SetFileFolderPostId(p.id(), fi.folder_post_id());
-        //else {
-        //    status = ret::A_FAIL_RENAME_FILE;
-        //}
-    }
-    
 
     rlog << " UpdateFileMetaData status : " << status << std::endl;
     rlog << "******************************************************" << std::endl;

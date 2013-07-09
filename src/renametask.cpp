@@ -116,6 +116,16 @@ int RenameTask::RenameFile(const std::string& file_type,
     rename_context.PushBack(&rs);
     status = rename_context.ExecuteAll();
 
+    if(status == ret::A_FAIL_FILE_NOT_IN_MANIFEST) {
+        // this could perhaps be caused by several things
+        // there may have been a rename from a temporary file, that never existed in 
+        // the manifest.
+        // - lets try to upload the file and let the upload strategy either reject it
+        //   or version it.
+        std::cout<<" the file wasn't in the manifest? lets try pushing and see what happens" << std::endl;
+        event::RaiseEvent(event::Event::REQUEST_PUSH, new_filepath, NULL);
+    }
+
     return status;
 }
 
