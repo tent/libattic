@@ -79,6 +79,9 @@ int PollFiles(void);
 int CreateLimitedDownloadLink(const char* szFilepath, 
                               void(*callback)(int, const char*, const char*));
 
+// Collaboration methods
+int RequestEntityPublicKey(const char* szEntityUrl, 
+                           void(*callback)(int, const char*, const char*));
 
 // Meta operations
 /* GetFileHistory

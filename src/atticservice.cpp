@@ -101,6 +101,20 @@ int AtticService::UploadLimitedFile(const std::string& filepath, TaskDelegate* d
     return status;
 }
 
+int AtticService::RequestEntityPublicKey(const std::string& entity_url, TaskDelegate* del) {
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) {
+            task_manager_->RetrieveEntityPublicKey(entity_url, del);
+        }
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
 int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_) {
@@ -529,6 +543,11 @@ int AtticService::RegisterPassphrase(const std::string& pass) {
         if(status == ret::A_OK) {
             event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
             status = EnterPassphrase(passphrase);
+            // Generate and register public key
+            std::string public_key;
+            credentials_manager_->GeneratePublicKey(public_key);
+            std::cout<<" GENERATED PUBLIC KEY : " << public_key << std::endl;
+            ps.RegisterPublicKey(public_key);
         }
     }
     return status;

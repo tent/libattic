@@ -63,6 +63,8 @@ public:
     int Pause(); // Polling
     int Resume(); // Pollling
 
+    int RequestEntityPublicKey(const std::string& entity_url, TaskDelegate* del);
+
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
     int DeletePostVersion(const std::string& post_id, 
