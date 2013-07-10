@@ -149,6 +149,33 @@ static void ProcessResponseBody(boost::asio::streambuf& buf,
                                 bool chunked,
                                 Response& resp);
 
+static int GetPostCount(const std::string& posts_feed, 
+                        const AccessToken& at,
+                        const std::string& post_type) {
+    int count = -1;
+    UrlParams params;
+    params.AddValue(std::string("types"), post_type);
+
+    Response response;
+    HttpHead(posts_feed,
+            &params,
+            &at,
+            response);
+
+    std::cout<<" code : " << response.code << std::endl;
+    std::cout<<" header : " << response.header.asString() << std::endl;
+    std::cout<<" body : " << response.body << std::endl;
+
+    if(response.code == 200) {
+        if(response.header.HasValue("Count"))
+            count = atoi(response.header["Count"].c_str());
+    }
+    else {
+        log::LogHttpResponse("41935", response);
+    }
+    return count;
+}
+
 static void DeChunkString(std::string& in, std::string& out) {
     utils::split splitbody;
 
