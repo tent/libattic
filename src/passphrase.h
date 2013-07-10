@@ -47,6 +47,7 @@ class Passphrase {
 
     int RetrieveCredentialsPost(AtticPost& out);
     int GetCredentialsPostCount();
+    int GetPublicKeyPostCount();
 
     bool CheckSentinelBytes(const std::string& in);
 
@@ -60,6 +61,8 @@ public:
                            const std::string& masterkey,
                            std::string& recoverykey,
                            bool override = false);
+
+    int RegisterPublicKey(const std::string& public_key);
 
     int EnterPassphrase(const std::string& passphrase,
                         PhraseToken& token_out,

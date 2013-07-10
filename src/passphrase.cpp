@@ -5,6 +5,7 @@
 #include "connectionhandler.h"
 #include "envelope.h"
 #include "posthandler.h"
+#include "publickeypost.h"
 
 namespace attic { namespace pass {
 Passphrase::Passphrase(const Entity& entity, const AccessToken& at) {
@@ -64,6 +65,26 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
         }
     }
 
+    return status;
+}
+
+int Passphrase::RegisterPublicKey(const std::string& public_key) {
+    int status = ret::A_OK;
+    // Check if public key post exists
+    if(!GetPublicKeyPostCount()) {
+        // if not create public key post with given key
+        PostHandler<PublicKeyPost> ph(access_token_);
+
+        PublicKeyPost pkp;
+        pkp.set_public_key(public_key);
+
+        status = ph.Post(entity_.GetPreferredServer().posts_feed(), 
+                         NULL, 
+                         pkp);
+
+        std::cout<<" REGISTER PUBLIC KEY RETURN : " << std::endl;
+        std::cout<< ph.GetReturnPostAsString() << std::endl;
+    }
     return status;
 }
 
@@ -411,32 +432,12 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
 
 int Passphrase::GetCredentialsPostCount() {
     std::string url = entity_.GetPreferredServer().posts_feed();
+    return netlib::GetPostCount(url, access_token_, cnst::g_attic_cred_type);
+}
 
-    std::cout<<" GET CREDENTIALS POST COUNT " << std::endl;
-    UrlParams params;
-    params.AddValue(std::string("types"), std::string(cnst::g_attic_cred_type));
-
-    Response response;
-    netlib::HttpHead(url,
-                    &params,
-                    &access_token_,
-                    response);
-
-    std::cout<<" code : " << response.code << std::endl;
-    std::cout<<" header : " << response.header.asString() << std::endl;
-    std::cout<<" body : " << response.body << std::endl;
-
-    int count = -1;
-    if(response.code == 200) {
-        if(response.header.HasValue("Count"))
-            count = atoi(response.header["Count"].c_str());
-    }
-    else {
-        log::LogHttpResponse("41935", response);
-    }
-
-    std::cout<<" CREDENTIALS POST COUNT : " << count << std::endl;
-    return count;
+int Passphrase::GetPublicKeyPostCount() {
+    std::string url = entity_.GetPreferredServer().posts_feed();
+    return netlib::GetPostCount(url, access_token_, cnst::g_attic_publickey_type);
 }
 
 int Passphrase::DeleteCredentialsPost(AtticPost& post) { 
