@@ -49,7 +49,7 @@ public:
     const std::string& plaintext_hash() const        { return plaintext_hash_; }
 
     bool deleted() const                            { return deleted_; }
-    unsigned int chunk_count() const                { return chunk_count_; }
+    unsigned int chunk_count() const                { return chunks_.size(); }
     unsigned int file_size() const                  { return file_size_; }
 
     void set_filename(const std::string &filename)          { filename_ = filename; }

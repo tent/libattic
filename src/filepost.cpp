@@ -111,6 +111,5 @@ void FilePost::DeserializeChunkData(Json::Value& root) {
     }
 }
 
-
 } //namespace
 

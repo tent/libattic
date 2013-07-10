@@ -109,6 +109,8 @@ bool PushTask::DetectFileDivergence(const std::string& filepath) {
     if(fs::CheckFilepathExists(filepath)) {
         FileInfo local;
         if(file_manager()->GetFileInfo(filepath, local)) {
+            if(local.file_size() > 0 && local.chunk_count() == 0) 
+                return ret;
             std::string hash;
             if(crypto::GeneratePlaintextHashForFile(filepath, hash)) {
                 std::cout<<" plaintext hash : " << hash << std::endl;
@@ -123,4 +125,6 @@ bool PushTask::DetectFileDivergence(const std::string& filepath) {
     return ret;
 }
 
+
 }//namespace
+
