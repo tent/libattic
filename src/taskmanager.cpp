@@ -278,6 +278,16 @@ void TaskManager::CreatePostTree(const std::string& filepath,
     PushContextBack(tc);
 }
 
+void TaskManager::RetrieveEntityPublicKey(const std::string& entity_url,
+                                          TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("operation", "REQUEST_PUBLIC_KEY");
+    tc.set_value("entity_url", entity_url);
+    tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
 TaskContext TaskManager::CreateServiceContext(void) {
     TaskContext tc;
     tc.set_value("temp_dir", temp_directory_);

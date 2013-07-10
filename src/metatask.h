@@ -17,6 +17,8 @@ class MetaTask : public TentTask {
 
     void DeletePost(const std::string& post_id, const std::string& version);
     void MakePostNewHead(const std::string& post_id, const std::string& version);
+
+    void RequestEntityPublicKey(const std::string& url);
 public:
     MetaTask(FileManager* fm, 
              CredentialsManager* cm,

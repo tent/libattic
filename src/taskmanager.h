@@ -68,6 +68,8 @@ public:
     // Service Tasks
     void QueryManifest(TaskDelegate* del);
     void CreatePostTree(const std::string& filepath, TaskDelegate* del);
+    void RetrieveEntityPublicKey(const std::string& entity_url,TaskDelegate* del);
+
     TaskContext CreateServiceContext(void);
     // Config Tasks
     void AddRootDirectory(const std::string& directory_path, TaskDelegate* del);
