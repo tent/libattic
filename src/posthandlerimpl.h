@@ -67,16 +67,17 @@ template <class T>
 T PostHandlerImpl<T>::GetReturnPost() {
     T post;
     Envelope env;
-    jsn::DeserializeObject(&env, response_.body);
+    jsn::DeserializeObject(&env, response_.body); // body is the input, depricated order
     post::DeserializePostIntoObject(env.post(), &post);
     return post;
 }
 
 template <class T>
 std::string PostHandlerImpl<T>::GetReturnPostAsString() {
-    T post;
     Envelope env;
-    jsn::DeserializeObject(&env, response_.body);
+    jsn::DeserializeObject(&env, response_.body); // body is the input, depricated order
+    T post;
+    post::DeserializePostIntoObject(env.post(), &post);
     std::string raw;
     jsn::SerializeObject(&post, raw);
     return raw;
