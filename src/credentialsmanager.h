@@ -40,15 +40,18 @@ public:
     int GenerateMasterKey( std::string& keyOut);
     void GenerateMasterKey( MasterKey& mkOut);
     void CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut);
+    void GeneratePublicKey(std::string& out);
 
     // MasterKey
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
+
     void GetMasterKeyCopy(MasterKey& key) {
         mk_mtx_.Lock();
         key = master_key_;
         mk_mtx_.Unlock();
     }
+
     void GetAccessTokenCopy(AccessToken& tk) {
         at_mtx_.Lock(); 
         tk = access_token_; 

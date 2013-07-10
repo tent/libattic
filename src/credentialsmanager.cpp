@@ -98,8 +98,13 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
     Credentials MasterKey;
     crypto::GenerateCredentials(MasterKey);
     keyOut = MasterKey.key();
-
     return ret::A_OK;
+}
+
+void CredentialsManager::GeneratePublicKey(std::string& out) {
+    std::string key;
+    GenerateMasterKey(key);
+    crypto::Base64EncodeString(key, out);
 }
 
 void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
