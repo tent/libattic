@@ -224,9 +224,9 @@ void TaskManager::GetFileHistory(const std::string& filepath, TaskDelegate* del)
 }
 
 void TaskManager::DownloadFileToDirectory(const std::string& post_id, 
-                                          const std::string& version, 
-                                          const std::string& filepath,
-                                          TaskDelegate* del) {
+        const std::string& version, 
+        const std::string& filepath,
+        TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("operation", "DOWNLOAD");
     tc.set_value("post_id", post_id);
@@ -238,8 +238,8 @@ void TaskManager::DownloadFileToDirectory(const std::string& post_id,
 }
 
 void TaskManager::DeletePost(const std::string& post_id, 
-                             const std::string& version, 
-                             TaskDelegate* del) {
+        const std::string& version, 
+        TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("operation", "DELETE");
     tc.set_value("post_id", post_id);
@@ -250,13 +250,24 @@ void TaskManager::DeletePost(const std::string& post_id,
 }
 
 void TaskManager::MakePostNewHead(const std::string& post_id, 
-                                  const std::string& version, 
-                                  TaskDelegate* del) {
+        const std::string& version, 
+        TaskDelegate* del) {
     TaskContext tc;
     tc.set_value("operation", "NEW_HEAD");
     tc.set_value("post_id", post_id);
     tc.set_value("version", version);
     tc.set_type(Task::META);
+    tc.set_delegate(del);
+    PushContextBack(tc);
+}
+
+void TaskManager::SharePostWithEntity(const std::string& post_id,
+        const std::string& entity_url,
+        TaskDelegate* del) {
+    TaskContext tc;
+    tc.set_value("post_id", post_id);
+    tc.set_value("entity_url", entity_url);
+    tc.set_type(Task::SHARE);
     tc.set_delegate(del);
     PushContextBack(tc);
 }
