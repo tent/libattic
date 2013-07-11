@@ -238,6 +238,20 @@ int AtticService::Resume() {
     return status;
 }
 
+int AtticService::SharePostWithEntity(const std::string& post_id, 
+                                      const std::string& entity_url, 
+                                      TaskDelegate* del) {
+    int status = ret::A_OK;
+    if(running_)
+        if(IsMasterKeyValid())
+            task_manager_->SharePostWithEntity(post_id, entity_url, del);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
 int AtticService::QueryManifest(TaskDelegate* cb) {
     int status = ret::A_OK;
     if(running_)
