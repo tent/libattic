@@ -906,17 +906,17 @@ TEST(SODIUM, BOX7) {
         randombytes(m + crypto_box_ZEROBYTES,mlen);
         crypto_box(c,m,mlen + crypto_box_ZEROBYTES,n,bobpk,alicesk);
         if (crypto_box_open(m2,c,mlen + crypto_box_ZEROBYTES,n,alicepk,bobsk) == 0) {
-            for (i = 0;i < mlen + crypto_box_ZEROBYTES;++i)
+            for (i = 0;i < mlen + crypto_box_ZEROBYTES;++i) {
                 if (m2[i] != m[i]) {
                     printf("bad decryption\n");
                     break;
                 }
-            } 
+            }
+        } 
         else {
             printf("ciphertext fails verification\n");
         }
     }
-
 }
 
 TEST(SODIUM, PUBLIC_KEY_TEST) {
@@ -928,44 +928,92 @@ TEST(SODIUM, PUBLIC_KEY_TEST) {
     unsigned char alice_public_key[crypto_box_PUBLICKEYBYTES];
     crypto_box_keypair(alice_public_key, alice_secret_key);
 
-    std::cout<<" bob secret key : " << bob_secret_key << std::endl;
-
     // generate nonce
     unsigned char nonce[crypto_box_NONCEBYTES];
-    randombytes(nonce, crypto_box_NONCEBYTES);
 
-    std::string msg("This is my secret key message, yep");
-    std::cout<<" Message size : " << msg.size() << std::endl;
-    size_t mlen = msg.size();
-    unsigned char c[msg.size()]; // ciphertext
+    randombytes(nonce, crypto_box_NONCEBYTES);
+    std::cout<<" here " << std::endl;
+
+    size_t mlen = 10000;
+    unsigned char m[10000];
+
+    randombytes(m, mlen);
+    memset(m, 0, 32);
+    std::cout<<" here " << std::endl;
+
+    unsigned char c[10000]; // ciphertext
     
-    std::cout<<" original message : " << msg << std::endl;
+    std::cout<<" here " << std::endl;
+    std::cout << " size of mlen + zerobytes : " << mlen + crypto_box_ZEROBYTES << std::endl;
     // Encrypt
     std::cout << crypto_box(c,  // cipher text out
-               reinterpret_cast<const unsigned char*>(msg.c_str()),
+               m,
                mlen,
                nonce,
-               bob_public_key,
-               alice_secret_key); 
+               bob_public_key, // recipient's public key
+               alice_secret_key); // sender's private key
 
-    std::string ciphertext;
-    ciphertext.append(reinterpret_cast<const char*>(c), msg.size());
-    std::cout<< " ciphertext : " << ciphertext << std::endl;
+    std::cout<<" here " << std::endl;
+
+    //std::string ciphertext;
+    //ciphertext.append(reinterpret_cast<const char*>(c),mlen);
+    //std::cout<< " ciphertext : " << ciphertext << std::endl;
 
     // Decrypt
-    unsigned char m2[msg.size()];
+    unsigned char m2[mlen];
     if(crypto_box_open(m2, // message out
                        c,  // cipher_text
                        mlen,
                        nonce,
-                       alice_public_key,
-                       bob_secret_key) == 0) {
+                       alice_public_key, // sender's public key
+                       bob_secret_key) == 0) { // recipient's private key
         std::cout<<" m2 " << m2 << std::endl;
 
     }
     else {
+        std::cout<< crypto_box_open(m2, // message out
+                       c,  // cipher_text
+                       mlen,
+                       nonce,
+                       alice_public_key, // sender's public key
+                       bob_secret_key) << std::endl; // recipient's private key
+        
         std::cout<< " ciphertext failed verification " << std::endl;
     }
+}
+
+TEST(SODIUM, PUBLIC_KEY_TEST_TWO) {
+    std::string bob_public_key, bob_private_key;
+    attic::crypto::GeneratePublicAndPrivateKey(bob_public_key, bob_private_key);
+    std::string alice_public_key, alice_private_key;
+    attic::crypto::GeneratePublicAndPrivateKey(alice_public_key, alice_private_key);
+
+    std::string msg("The sly fox utilizes sorcery as the moon wanes");
+    std::cout<<" Original string : " << msg << std::endl;
+
+    bool ret = false;
+    std::string ciphertext;
+    std::string iv;
+    if(attic::crypto::EncryptStringWithPublicKey(msg,
+                                                 alice_public_key,
+                                                 bob_private_key,
+                                                 iv,
+                                                 ciphertext)) {
+        std::cout<<" attempting to decrypt " << std::endl;
+        std::cout<<" ciphertext size : " << ciphertext.size() << std::endl;
+        std::cout<<" iv size : " << iv.size() << std::endl;
+        // now decrypt
+        std::string decrypted;
+        if(attic::crypto::DecryptStringWithPrivateKey(ciphertext,
+                                                      bob_public_key,
+                                                      alice_private_key,
+                                                      iv,
+                                                      decrypted)) {
+            std::cout<<" Decrypted string : " << decrypted << std::endl;
+            ret = true;
+        }
+    }
+    ASSERT_EQ(ret, true);
 }
 
 int main (int argc, char* argv[]) {
