@@ -557,11 +557,11 @@ int AtticService::RegisterPassphrase(const std::string& pass) {
         if(status == ret::A_OK) {
             event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
             status = EnterPassphrase(passphrase);
-            // Generate and register public key
-            std::string public_key;
-            credentials_manager_->GeneratePublicKey(public_key);
+            // Generate and register public key and private
+            std::string public_key, private_key;
+            credentials_manager_->GeneratePublicPrivateKeyPair(public_key, private_key);
             std::cout<<" GENERATED PUBLIC KEY : " << public_key << std::endl;
-            ps.RegisterPublicKey(public_key);
+            ps.RegisterPublicPrivateKeyPair(public_key, private_key);
         }
     }
     return status;
@@ -604,6 +604,12 @@ int AtticService::EnterPassphrase(const std::string& pass) {
             if(!ch.LoadIntoFirstDirectory(working_dir_)) 
                 status = CreateWorkingDirectory(working_dir_);
             file_manager_->LoadWorkingDirectories();
+
+            // Retrieve Public and private key and store
+            std::string public_key, private_key;
+            ps.RetrievePublicPrivateKeyPair(public_key, private_key);
+            credentials_manager_->set_private_key(private_key);
+            credentials_manager_->set_public_key(public_key);
         }
     }
     return status;
