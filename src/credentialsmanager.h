@@ -40,7 +40,7 @@ public:
     int GenerateMasterKey( std::string& keyOut);
     void GenerateMasterKey( MasterKey& mkOut);
     void CreateMasterKeyWithPass(const std::string& key, MasterKey& mkOut);
-    void GeneratePublicKey(std::string& out);
+    void GeneratePublicPrivateKeyPair(std::string& public_out, std::string& private_out);
 
     // MasterKey
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
@@ -86,6 +86,31 @@ public:
         at_mtx_.Unlock();
     }
 
+    void GetPublicKey(std::string& out) {
+        pk_mtx_.Lock();
+        out.append(public_key_.c_str(), public_key_.size());
+        pk_mtx_.Unlock();
+    }
+
+    void GetPrivateKey(std::string& out) {
+        sk_mtx_.Lock();
+        out.append(private_key_.c_str(), private_key_.size());
+        sk_mtx_.Unlock();
+    }
+
+    void set_public_key(const std::string& key) {
+        pk_mtx_.Lock();
+        public_key_ = key;
+        pk_mtx_.Unlock();
+    }
+
+    void set_private_key(const std::string& key) {
+        sk_mtx_.Lock();
+        private_key_ = key;
+        sk_mtx_.Unlock();
+
+    }
+
 private:
     MutexClass      mk_mtx_;
     MasterKey       master_key_;    // Master Key used to encrypt sqlitedb
@@ -97,6 +122,11 @@ private:
     PhraseToken     phrase_token_;
 
     std::string     config_directory_;
+
+    MutexClass      pk_mtx_;
+    std::string     public_key_;
+    MutexClass      sk_mtx_;
+    std::string     private_key_;
 };
 
 } //namespace

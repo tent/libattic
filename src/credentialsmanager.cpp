@@ -101,10 +101,19 @@ int CredentialsManager::GenerateMasterKey(std::string& keyOut) {
     return ret::A_OK;
 }
 
-void CredentialsManager::GeneratePublicKey(std::string& out) {
-    std::string key;
-    GenerateMasterKey(key);
-    crypto::Base64EncodeString(key, out);
+void CredentialsManager::GeneratePublicPrivateKeyPair(std::string& public_out,
+        std::string& private_out) {
+    std::string public_key, private_key;
+    crypto::GeneratePublicAndPrivateKey(public_key, private_key);
+
+    pk_mtx_.Lock();
+    sk_mtx_.Lock();
+    crypto::Base64EncodeString(public_key, public_key_);
+    crypto::Base64EncodeString(private_key, private_key_);
+    public_out.append(public_key_.c_str(), public_key_.size());
+    private_out.append(private_key_.c_str(), private_key_.size());
+    sk_mtx_.Unlock();
+    pk_mtx_.Unlock();
 }
 
 void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
@@ -114,7 +123,6 @@ void CredentialsManager::ConstructAccessTokenPath(std::string& out) {
     out = config_directory_;
     utils::CheckUrlAndAppendTrailingSlash(out);      
     out.append(cnst::g_szAuthTokenName);                       
-
 }
 
 void CredentialsManager::ConstructManifestPath(std::string& out) {
