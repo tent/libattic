@@ -68,6 +68,27 @@ int Passphrase::RegisterPassphrase(const std::string& passphrase,
     return status;
 }
 
+int Passphrase::RegisterPublicPrivateKeyPair(const std::string& public_key, 
+                                             const std::string& private_key) {
+    int status = ret::A_OK;
+    status = RegisterPublicKey(public_key);
+    status = RegisterPrivateKey(public_key, private_key);
+    return status;
+}
+
+int Passphrase::RetrievePublicPrivateKeyPair(std::string& public_out,
+                                             std::string& private_out) {
+    int status = ret::A_OK;
+    PrivateKeyPost pkp;
+    status = RetrievePrivateKeyPost(pkp);
+    if(status == ret::A_OK) {
+        public_out = pkp.public_key();
+        private_out = pkp.private_key();
+    }
+
+    return status;
+}
+
 int Passphrase::RegisterPublicKey(const std::string& public_key) {
     int status = ret::A_OK;
     // Check if public key post exists
@@ -83,6 +104,27 @@ int Passphrase::RegisterPublicKey(const std::string& public_key) {
                          pkp);
 
         std::cout<<" REGISTER PUBLIC KEY RETURN : " << std::endl;
+        std::cout<< ph.GetReturnPostAsString() << std::endl;
+    }
+    return status;
+}
+
+int Passphrase::RegisterPrivateKey(const std::string& public_key, const std::string& private_key) {
+    int status = ret::A_OK;
+    // Check if public key post exists
+    if(!GetPrivateKeyPostCount()) {
+        // if not create public key post with given key
+        PostHandler<PrivateKeyPost> ph(access_token_);
+
+        PrivateKeyPost pkp;
+        pkp.set_public_key(public_key);
+        pkp.set_private_key(private_key);
+
+        status = ph.Post(entity_.GetPreferredServer().posts_feed(), 
+                         NULL, 
+                         pkp);
+
+        std::cout<<" REGISTER PRIVATE PUBLIC KEY PAIR RETURN : " << std::endl;
         std::cout<< ph.GetReturnPostAsString() << std::endl;
     }
     return status;
@@ -430,6 +472,35 @@ int Passphrase::RetrieveCredentialsPost(AtticPost& out) {
     return status;
 }
 
+int Passphrase::RetrievePrivateKeyPost(PrivateKeyPost& out) {
+    int status = ret::A_OK;
+    std::string url = entity_.GetPreferredServer().posts_feed();
+    // setup params to query for credentials post, there should only ever exist one
+    UrlParams params;
+    params.AddValue(std::string("types"), std::string(cnst::g_attic_privatekey_type));
+    Post p;
+    PostHandler<Post> ph(access_token_);
+    status = ph.Get(url, &params, p);
+    std::cout<<" Credentials Post response " << std::endl;
+    std::cout<<" code : " << ph.response().code << std::endl;
+    std::cout<<" header : " << ph.response().header.asString() << std::endl;
+    std::cout<<" body : " << ph.response().body << std::endl;
+    if(status == ret::A_OK) {
+        Envelope env;
+        jsn::DeserializeObject(&env , ph.response().body);
+        if(env.posts()->size()) {
+            post::DeserializePostIntoObject(env.posts()->front(), &out);
+        }
+        else {
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+        }
+    }
+    else {
+        log::LogHttpResponse("FNDNL329Q", ph.response());
+    }
+    return status;
+}
+
 int Passphrase::GetCredentialsPostCount() {
     std::string url = entity_.GetPreferredServer().posts_feed();
     return netlib::GetPostCount(url, access_token_, cnst::g_attic_cred_type);
@@ -438,6 +509,11 @@ int Passphrase::GetCredentialsPostCount() {
 int Passphrase::GetPublicKeyPostCount() {
     std::string url = entity_.GetPreferredServer().posts_feed();
     return netlib::GetPostCount(url, access_token_, cnst::g_attic_publickey_type);
+}
+
+int Passphrase::GetPrivateKeyPostCount() {
+    std::string url = entity_.GetPreferredServer().posts_feed();
+    return netlib::GetPostCount(url, access_token_, cnst::g_attic_privatekey_type);
 }
 
 int Passphrase::DeleteCredentialsPost(AtticPost& post) { 

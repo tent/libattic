@@ -12,6 +12,7 @@
 #include "crypto.h"
 #include "atticclient.h"
 #include "atticpost.h"
+#include "privatekeypost.h"
 
 namespace attic { namespace pass {
 
@@ -46,13 +47,19 @@ class Passphrase {
                    std::string& key_out);
 
     int RetrieveCredentialsPost(AtticPost& out);
+    int RetrievePrivateKeyPost(PrivateKeyPost& out);
+
     int GetCredentialsPostCount();
     int GetPublicKeyPostCount();
+    int GetPrivateKeyPostCount();
+
 
     bool CheckSentinelBytes(const std::string& in);
 
     int DeleteCredentialsPost(AtticPost& post);
 
+    int RegisterPublicKey(const std::string& public_key);
+    int RegisterPrivateKey(const std::string& public_key, const std::string& private_key);
 public:
     Passphrase(const Entity& entity, const AccessToken& at);
     ~Passphrase();
@@ -62,7 +69,11 @@ public:
                            std::string& recoverykey,
                            bool override = false);
 
-    int RegisterPublicKey(const std::string& public_key);
+    int RegisterPublicPrivateKeyPair(const std::string& public_key, 
+                                     const std::string& private_key);
+
+    int RetrievePublicPrivateKeyPair(std::string& public_out,
+                                     std::string& private_out);
 
     int EnterPassphrase(const std::string& passphrase,
                         PhraseToken& token_out,
