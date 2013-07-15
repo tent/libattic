@@ -21,6 +21,7 @@ FileInfo::FileInfo(const std::string& filename,
     chunk_count_ = 0;
     file_size_ = 0;
     deleted_ = false;
+    shared_ = false;
 }
 
 FileInfo::~FileInfo() {}

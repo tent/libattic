@@ -49,6 +49,7 @@ public:
     const std::string& plaintext_hash() const        { return plaintext_hash_; }
 
     bool deleted() const                            { return deleted_; }
+    bool shared() const                             { return shared_; } 
     unsigned int chunk_count() const                { return chunks_.size(); }
     unsigned int file_size() const                  { return file_size_; }
 
@@ -61,14 +62,14 @@ public:
     void set_file_size(const unsigned int unFileSize)       { file_size_ = unFileSize; }
 
     void set_post_id(const std::string &id)                 { post_id_ = id; }
+    void set_folder_post_id(const std::string& id)          { folder_post_id_ = id; }
     void set_post_version(const std::string& version)       { post_version_ = version; }
-
 
     void set_file_credentials(const Credentials& cred);
     void set_file_credentials_key(const std::string &key)   { file_credentials_.set_key(key); }
     void set_file_credentials_iv(const std::string &iv)     { file_credentials_.set_iv(iv); }
     void set_encrypted_key(const std::string& key)          { encrypted_key_ = key; } 
-    void set_folder_post_id(const std::string& id)          { folder_post_id_ = id; }
+
     //void set_deleted(const std::string& deleted)          { deleted_ = atoi(deleted.c_str()); }
     void set_deleted(const bool deleted)                    { deleted_ = deleted; }
 
@@ -78,7 +79,11 @@ public:
         plaintext_hash_.append(hash.c_str(), hash.size());
     }
 
+    void set_shared(const bool shared)                       { shared_ = shared; }
+    void push_back_shared_post(const std::string& post_url)  { shared_posts_.push_back(post_url); }
 private:    
+    std::vector<std::string> shared_posts_;
+
     ChunkMap        chunks_;
     Credentials     file_credentials_; // File Specific credentials 
                                        // Key is used to encrypt chunks, an iv is specific to chunk
@@ -100,6 +105,7 @@ private:
     unsigned int    chunk_count_;       // depricated
     unsigned int    file_size_;         // Filesize, not compressed
     bool            deleted_;           // Is the file deleted? // soft delete
+    bool            shared_;            // Is file shared
 };
 
 }//namespace
