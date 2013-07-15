@@ -12,6 +12,7 @@ bool FileTable::CreateTable() {
     exc += " chunkdata BLOB, filesize INT, metapostid TEXT,";
     exc += " postversion TEXT, encryptedkey BLOB, iv BLOB,";
     exc += " deleted INT, folder_post_id TEXT, plaintext_hash TEXT,";
+    exc += " shared INT,";
     exc += " PRIMARY KEY(filename ASC, filepath ASC, folder_post_id ASC, metapostid ASC));";
     std::string error;
     bool ret = Exec(exc, error);
@@ -79,7 +80,8 @@ bool FileTable::InsertFileInfo(const std::string& filename,
                                const std::string& iv,
                                bool deleted,
                                const std::string& folder_post_id,
-                               const std::string& plaintext_hash) {
+                               const std::string& plaintext_hash,
+                               bool shared) {
     // Prepare data
     std::string b64_key, b64_iv;
     crypto::Base64EncodeString(encrypted_key, b64_key);
@@ -93,7 +95,7 @@ bool FileTable::InsertFileInfo(const std::string& filename,
     query += table_name();
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " postversion, encryptedkey, iv,";
-    query += " deleted, folder_post_id, plaintext_hash)";
+    query += " deleted, folder_post_id, plaintext_hash, shared)";
     query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
@@ -111,6 +113,7 @@ bool FileTable::InsertFileInfo(const std::string& filename,
     ret = BindInt(10, deleted, error);              if(!ret) {log::ls("m_151s",error);return ret;}
     ret = BindText(11, folder_post_id, error);      if(!ret) {log::ls("m_152s",error);return ret;}
     ret = BindText(12, plaintext_hash, error);      if(!ret) {log::ls("m_152.1s",error);return ret;}
+    ret = BindInt(13, shared, error);               if(!ret) {log::ls("m_152.2s",error);return ret;}
     ret = StepStatement(error);                     if(!ret) {log::ls("m_153s",error);return ret;}
     ret = FinalizeStatement(error);                 if(!ret) {log::ls("m_154s",error);return ret;}
     return ret;
@@ -145,6 +148,7 @@ void FileTable::ExtractFileInfoResults(const SelectResult& res, const int step, 
     out.set_deleted(atoi(res.results()[9+step]));
     out.set_folder_post_id(res.results()[10+step]);
     out.set_plaintext_hash(res.results()[11+step]);
+    out.set_shared(atoi(res.results()[12+step]));
 }
 
 bool FileTable::set_file_version_for_id(const std::string& post_id, const std::string& version) {
@@ -239,7 +243,27 @@ bool FileTable::set_folder_post_id(const std::string& post_id, const std::string
         log::LogString("manifest_010158mgs5", error);
     return ret;
 }
+bool FileTable::set_file_shared(const std::string& post_id, int shared) {
+    bool ret = false;
+    char szShared[256] = {'\0'};
+    snprintf(szShared, 256, "%d", shared);
 
+    std::string exc;
+    exc += "UPDATE ";
+    exc += table_name();
+    exc += " SET shared=\"";
+    exc += std::string(szShared);
+    exc += "\" WHERE metapostid=\"";
+    exc += post_id;
+    exc += "\";";
+
+    std::string error;
+    ret = Exec(exc, error);
+    if(!ret)
+        log::LogString("manifest_s0182451jsd", error);
+
+    return ret;
+}
 bool FileTable::QueryForFile(const std::string &filepath, FileInfo& out) {
     bool ret = false;
     std::string query;
