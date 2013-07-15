@@ -84,7 +84,7 @@ bool FileHandler::CreateNewFile(const std::string& filepath, // full filepath
                 FilePost fp;
                 if(CreateNewFileMetaPost(out, master_key, post_feed, at, fp)) { 
                     out.set_post_id(fp.id());
-                    ret = file_manager_->InsertToManifest(&out);
+                    ret = file_manager_->InsertFileInfoToManifest(&out);
                 }
             }
         }
@@ -116,7 +116,7 @@ bool FileHandler::GetCanonicalFilepath(const std::string& filepath, std::string&
 }
 
 bool FileHandler::UpdateFileInfo(FileInfo& fi) {
-    return file_manager_->InsertToManifest(&fi);
+    return file_manager_->InsertFileInfoToManifest(&fi);
 }
 
 bool FileHandler::UpdateFilepath(const std::string& post_id, const std::string& new_folder_post_id) {
