@@ -83,8 +83,7 @@ bool FileManager::InsertFileInfoToManifest (FileInfo* fi) {
                                                          fi->deleted(),
                                                          fi->folder_post_id(),
                                                          fi->plaintext_hash(),
-                                                         false,
-                                                         "");
+                                                         false);
             manifest_mtx_.Unlock();
         }
     }
@@ -113,7 +112,7 @@ bool FileManager::SetShareFileInfo(const std::string& post_id,
             bool shared) {
     bool ret = false;
     manifest_mtx_.Lock();
-    ret = manifest_.file_table()->set_file_shared(post_id, shared_post_id, shared);
+    ret = manifest_.file_table()->set_file_shared(post_id, shared);
     manifest_mtx_.Unlock();
     return ret;
 }

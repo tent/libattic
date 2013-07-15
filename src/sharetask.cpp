@@ -22,13 +22,18 @@ ShareTask::~ShareTask() {}
 
 void ShareTask::RunTask() {
     std::cout<< " share task " << std::endl;
-    // Decrypt Credentials from file post
     // Retrieve public key
-    // encrypt credentials
+    // Decrypt Credentials from file post
+    // encrypt credentials with public key
+    // copy over chunks
     // create shared 
-
 }
 
+bool ShareTask::RerievePublicKey(const std::string& entity, std::string& out) {
+    bool ret = false;
+
+    return ret;
+}
 
 } //namespace 
 

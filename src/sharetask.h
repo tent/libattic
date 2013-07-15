@@ -7,6 +7,7 @@
 namespace attic {
 
 class ShareTask : public TentTask {
+    bool RerievePublicKey(const std::string& entity, std::string& out);
 public:
     ShareTask(FileManager* fm, 
               CredentialsManager* cm,
@@ -21,7 +22,6 @@ public:
 
     void RunTask();
 };
-
 
 } // namespace
 #endif
