@@ -1,10 +1,14 @@
 #include "sharedfilepost.h"
 
 #include "crypto.h"
+#include "constants.h"
 
 namespace attic { 
 
-SharedFilePost::SharedFilePost() {}
+SharedFilePost::SharedFilePost() {
+    set_type(cnst::g_attic_shared_file_type);
+}
+
 SharedFilePost::~SharedFilePost() {}
 
 void SharedFilePost::Serialize(Json::Value& root) {
