@@ -37,8 +37,7 @@ public:
                    const std::string& tempDirectory);
     int Shutdown();
 
-    bool InsertToManifest (FileInfo* fi);
-
+    bool InsertFileInfoToManifest (FileInfo* fi);
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
     bool GetAliasedPath(const std::string& filepath, std::string& out);
 
@@ -54,8 +53,8 @@ public:
 
     // Retrieve file info via the file name and the folder's id that it resides in
     bool GetFileInfo(const std::string& filename, 
-                     const std::string& folder_post_id, 
-                     FileInfo& out);
+            const std::string& folder_post_id, 
+            FileInfo& out);
     bool GetFileInfo(const std::string& filepath, FileInfo& out);
     bool GetFileInfoByPostId(const std::string& post_id, FileInfo& out);
 
@@ -64,17 +63,20 @@ public:
     bool SetFileFolderPostId(const std::string& post_id, const std::string& folder_post_id);
     bool SetFileDeleted(const std::string& post_id, const bool del = true);
     bool SetFileVersion(const std::string& post_id, const std::string& version);
+    bool SetShareFileInfo(const std::string& post_id,
+            const std::string& shared_post_id,
+            bool shared);
 
     // Folder
     bool CreateFolderEntry(const std::string& foldername, 
-                           const std::string& folder_post_id,
-                           const std::string& parent_post_id,
-                           Folder& out);
+            const std::string& folder_post_id,
+            const std::string& parent_post_id,
+            Folder& out);
     bool CreateFolderEntry(const std::string& foldername, 
-                           const std::string& alias,
-                           const std::string& folder_post_id,
-                           const std::string& parent_post_id,
-                           Folder& out);
+            const std::string& alias,
+            const std::string& folder_post_id,
+            const std::string& parent_post_id,
+            Folder& out);
 
     bool ClearFolderAlias(const std::string& folder_post_id);
     bool RemoveFolderEntry(const std::string& foldername, const std::string& parent_post_id);
@@ -83,8 +85,8 @@ public:
 
     bool GetFolderEntryByPostId(const std::string& post_id, Folder& folder);
     bool GetFolderEntry(const std::string& foldername, 
-                        const std::string& parent_post_id,
-                        Folder& out);
+            const std::string& parent_post_id,
+            Folder& out);
     // Pass in absolute path
     bool GetFolderEntry(const std::string& folderpath, Folder& folder); // needs to be absolute
     bool GetFolderPostId(const std::string& folderpath, std::string& id_out); // needs to be absolute
@@ -113,8 +115,8 @@ public:
     bool PushConfigValue(const std::string& type, const std::string& key, const std::string& value);
 
     bool AddWorkingDirectory(const std::string& directory_alias,
-                             const std::string& directory_path, 
-                             const std::string& post_id);
+            const std::string& directory_path, 
+            const std::string& post_id);
     bool IsDirectoryLinked(const std::string& directory_path);
     bool LinkWorkingDirectory(const std::string& config_key, const std::string& directory_path);
     bool UnlinkWorkingDirectory(const std::string& directory_path);
@@ -125,13 +127,12 @@ public:
     bool LoadWorkingDirectories();
     // Get the aliased working dir for an absolute filepath
     bool FindAssociatedWorkingDirectory(const std::string& filepath, 
-                                        std::string& dir_out, 
-                                        std::string& post_id);
+            std::string& dir_out, 
+            std::string& post_id);
     // Get the canonical path mapped for a specific directory alias
     bool FindAssociatedCanonicalDirectory(const std::string& aliased_path,
-                                          std::string& dir_out, 
-                                          std::string& post_id);
-
+            std::string& dir_out, 
+            std::string& post_id);
 
     // Accessor / Mutator
     const std::string& manifest_directory() const   { return manifest_directory_; }
@@ -141,7 +142,6 @@ public:
     void set_manifest_directory(const std::string &filepath)      { manifest_directory_ = filepath; }
     void set_working_directory(const std::string &workingDir)     { working_directory_ = workingDir; }
     void set_temp_directory(const std::string &tempDir)           { temp_directory_ = tempDir; }
-
 private:
     CentralFileQueue    file_queue_;
     MutexClass          manifest_mtx_;

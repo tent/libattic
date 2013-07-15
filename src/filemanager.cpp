@@ -62,7 +62,7 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     parent_relative_out = parent_relative;
 }
 
-bool FileManager::InsertToManifest (FileInfo* fi) { 
+bool FileManager::InsertFileInfoToManifest (FileInfo* fi) { 
     bool ret = false;
     if(fi) {
         if(!fi->filepath().empty()) {
@@ -82,7 +82,9 @@ bool FileManager::InsertToManifest (FileInfo* fi) {
                                                          fi->file_credentials_iv(),
                                                          fi->deleted(),
                                                          fi->folder_post_id(),
-                                                         fi->plaintext_hash());
+                                                         fi->plaintext_hash(),
+                                                         false,
+                                                         "");
             manifest_mtx_.Unlock();
         }
     }
@@ -102,6 +104,16 @@ bool FileManager::SetFileDeleted(const std::string& post_id, const bool del) {
     bool ret = false;
     manifest_mtx_.Lock();
     ret = manifest_.file_table()->set_file_deleted_for_id(post_id, del);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::SetShareFileInfo(const std::string& post_id,
+            const std::string& shared_post_id,
+            bool shared) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_file_shared(post_id, shared_post_id, shared);
     manifest_mtx_.Unlock();
     return ret;
 }
@@ -308,6 +320,7 @@ bool FileManager::GetFolderParentId(const std::string& post_id, std::string& out
     manifest_mtx_.Unlock();
     return ret;
 }
+
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     bool ret = false;
     // Determine root post;
@@ -350,7 +363,6 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
            ret = true;
        }
    }
-
     return ret;
 }
 

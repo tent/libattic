@@ -154,7 +154,7 @@ int FileSync::ProcessFilePost(FilePost& p) {
             // Insert into manifest
             if(fi.file_credentials_iv() == p.iv_data()) {
                 plog <<" inserting into manifest " << std::endl;
-                file_manager_->InsertToManifest(&fi);
+                file_manager_->InsertFileInfoToManifest(&fi);
             }
             else { 
                 std::ostringstream err;
