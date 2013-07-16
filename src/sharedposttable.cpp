@@ -53,11 +53,10 @@ bool SharedPostTable::QueryForSharedPostsByFilePost(const std::string& file_post
         int step = 0;
         for(int i=0; i<res.row()+1; i++) {
             step = i*res.col();
-            if(step > 0) {
-                ExtractFileInfoResults(res, step, out);
-                ret = true;
-            }
+            if(step > 0)
+                post_ids.push_back(res[0+step]);
         }
+        ret = true;
     }
     else {
         log::LogString("manifest_8i09255", error);
