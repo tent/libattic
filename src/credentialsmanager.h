@@ -46,6 +46,19 @@ public:
     void GetManifestPath(std::string& out)      { ConstructManifestPath(out); }
     void GetAccessTokenPath(std::string& out)   { ConstructAccessTokenPath(out); }
 
+    // Public/Private Key
+    void GetPrivateKey(std::string& out) {
+        sk_mtx_.Lock();
+        out.append(private_key_.c_str(), private_key_.size());
+        sk_mtx_.Unlock();
+    }
+
+    void GetPublicKey(std::string& out) {
+        pk_mtx_.Lock();
+        out.append(public_key_.c_str(), public_key_.size());
+        pk_mtx_.Unlock();
+    }
+    
     void GetMasterKeyCopy(MasterKey& key) {
         mk_mtx_.Lock();
         key = master_key_;
@@ -84,18 +97,6 @@ public:
         at_mtx_.Lock();
         access_token_.set_time_offset(offset);
         at_mtx_.Unlock();
-    }
-
-    void GetPublicKey(std::string& out) {
-        pk_mtx_.Lock();
-        out.append(public_key_.c_str(), public_key_.size());
-        pk_mtx_.Unlock();
-    }
-
-    void GetPrivateKey(std::string& out) {
-        sk_mtx_.Lock();
-        out.append(private_key_.c_str(), private_key_.size());
-        sk_mtx_.Unlock();
     }
 
     void set_public_key(const std::string& key) {
