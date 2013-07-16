@@ -16,8 +16,8 @@ FileManager::FileManager() {}
 FileManager::~FileManager() {}
 
 int FileManager::Initialize(const std::string &manifestDirectory, 
-                            const std::string &workingDirectory,
-                            const std::string& tempDirectory) {
+        const std::string &workingDirectory,
+        const std::string& tempDirectory) {
     // Set manifest path
     manifest_directory_ = manifestDirectory;
     manifest_.SetDirectory(manifest_directory_);
@@ -33,9 +33,12 @@ int FileManager::Shutdown() {
     return manifest_.Shutdown();
 }
 
+
+
+
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
-                                       std::string& relative_out, 
-                                       std::string& parent_relative_out) {
+        std::string& relative_out, 
+        std::string& parent_relative_out) {
     std::string filepath = pFi->filepath();
     std::string relative, canonical;
 
@@ -62,6 +65,18 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     parent_relative_out = parent_relative;
 }
 
+bool FileManager::InsertSharedFile(const std::string& shared_post_id,
+        const std::string& file_post_id,
+        const std::string& entity_url) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    manifest_.shared_post_table()->InsertSharedFileInfo(shared_post_id,
+            file_post_id,
+            entity_url);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
 bool FileManager::InsertFileInfoToManifest (FileInfo* fi) { 
     bool ret = false;
     if(fi) {
@@ -72,18 +87,18 @@ bool FileManager::InsertFileInfoToManifest (FileInfo* fi) {
             fi->GetSerializedChunkData(chunk_data);
             //ret = manifest_.file_table()->InsertFileInfo(*fi);
             ret = manifest_.file_table()->InsertFileInfo(fi->filename(),
-                                                         fi->filepath(),
-                                                         fi->chunk_count(),
-                                                         chunk_data,
-                                                         fi->file_size(),
-                                                         fi->post_id(),
-                                                         fi->post_version(),
-                                                         fi->encrypted_key(),
-                                                         fi->file_credentials_iv(),
-                                                         fi->deleted(),
-                                                         fi->folder_post_id(),
-                                                         fi->plaintext_hash(),
-                                                         false);
+                    fi->filepath(),
+                    fi->chunk_count(),
+                    chunk_data,
+                    fi->file_size(),
+                    fi->post_id(),
+                    fi->post_version(),
+                    fi->encrypted_key(),
+                    fi->file_credentials_iv(),
+                    fi->deleted(),
+                    fi->folder_post_id(),
+                    fi->plaintext_hash(),
+                    false);
             manifest_mtx_.Unlock();
         }
     }

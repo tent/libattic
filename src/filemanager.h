@@ -33,9 +33,13 @@ public:
     ~FileManager();
 
     int Initialize(const std::string& manifestDirectory, 
-                   const std::string& workingDirectory,
-                   const std::string& tempDirectory);
+            const std::string& workingDirectory,
+            const std::string& tempDirectory);
     int Shutdown();
+
+    bool InsertSharedFile(const std::string& shared_post_id,
+            const std::string& file_post_id,
+            const std::string& entity_url);
 
     bool InsertFileInfoToManifest (FileInfo* fi);
     bool GetCanonicalPath(const std::string& relativepath, std::string& out);
