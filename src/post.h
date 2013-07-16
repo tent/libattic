@@ -143,6 +143,7 @@ public:
     void PushBackParent(Parent& p) { version_.PushBackParent(p); }
 
     void MentionPost(const std::string& entity, const std::string& postid);
+    void MentionEntity(const std::string& original_entity, const std::string& entity);
 
     void set_fragment(const std::string& fragment);
     void clear_fragment();
