@@ -358,6 +358,27 @@ bool FileHandler::ExtractFileCredetials(const FilePost& fp,
     return false;
 }
 
+bool FileHandler::ExtractFileCredentials(const std::string& post_id,
+                                         const std::string& master_key,
+                                         Credentials& out) {
+    bool ret = false;
+    if(!master_key.empty()) {
+        FileInfo fi;
+        if(file_manager_->GetFileInfoByPostId(post_id, fi)) {
+            Credentials tcred;                         // Create transient credentials
+            tcred.set_key(master_key);                 // master key
+            tcred.set_iv(fi.file_credentials_iv());                // file specific iv
+
+            std::string decrypted_key;
+            if(crypto::Decrypt(fi.encrypted_key(), tcred, decrypted_key)) {
+                out.set_key(decrypted_key);
+                out.set_iv(fi.file_credentials_iv());
+                return true;
+            }
+        }
+    }
+    return ret;
+}
 
 bool FileHandler::RollFileMac(const std::string& filepath, std::string& out) {
     bool ret = false;
