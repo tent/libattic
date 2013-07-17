@@ -54,38 +54,72 @@ void FileSync::Shutdown() {
 
 void FileSync::Run() {
     std::cout<<" FileSync Running " << std::endl;
-    bool val = false;
     while(running()) {
-        FilePost fp;
+        // Process Files
+        ProcessFiles(); 
+        // Process Shared Files
 
-        pq_mtx_.Lock();
-        unsigned int size = post_queue_.size();
-        if(size > 0) {
-            std::cout<<" Retrieving FilePost " << std::endl;
-            fp = post_queue_.front();
-            post_queue_.pop_front();
-            size--;
-            val = true;
-        }
-        pq_mtx_.Unlock();
-
-        if(val) {
-            std::cout<<" Processing File Post "<< fp.id() << std::endl;
-            ProcessFilePost(fp); 
-            std::cout<<"Done Processing File Post "<< fp.id() << std::endl;
-            val = false;
-        }
-        else {
-            sleep::mil(100);
-        }
+        sleep::mil(100);
     }
     std::cout << " FileSync Exiting " << std::endl;
+}
+
+void FileSync::ProcessFiles() {
+    FilePost fp;
+    bool val = false;
+    pq_mtx_.Lock();
+    if(post_queue_.size()) {
+        std::cout<<" Retrieving FilePost " << std::endl;
+        fp = post_queue_.front();
+        post_queue_.pop_front();
+        val = true;
+    }
+    pq_mtx_.Unlock();
+
+    if(val) {
+        std::cout<<" Processing File Post "<< fp.id() << std::endl;
+        ProcessFilePost(fp); 
+        std::cout<<"Done Processing File Post "<< fp.id() << std::endl;
+        val = false;
+    }
+}
+
+void FileSync::ProcessSharedFiles() {
+    SharedFilePost sfp;
+    bool val = false;
+    spq_mtx_.Lock();
+    if(shared_post_queue_.size()) {
+        sfp = shared_post_queue_.front();
+        shared_post_queue_.pop_front();
+        val = true;
+    } 
+    spq_mtx_.Unlock();
+
+    if(val) {
+        // Process
+        
+    }
+}
+
+
+
+void FileSync::PushBack(const SharedFilePost& p) {
+    spq_mtx_.Lock();
+    shared_post_queue_.push_back(p);
+    spq_mtx_.Unlock();
 }
 
 void FileSync::PushBack(const FilePost& p) {
     pq_mtx_.Lock();
     post_queue_.push_back(p);
     pq_mtx_.Unlock();
+}
+
+int FileSync::ProcessSharedFilePost(SharedFilePost& p) {
+    int status = ret::A_OK;
+    // extract file info
+    // Create entry
+    return status;
 }
 
 int FileSync::ProcessFilePost(FilePost& p) {
@@ -194,8 +228,6 @@ bool FileSync::ConstructFilepath(const FileInfo& fi, std::string& out) {
     }
     return ret;
 }
-                
-                
 
 bool FileSync::ExtractFileInfo(FilePost& p, FileInfo& out) {
     bool ret = false;
@@ -209,6 +241,15 @@ bool FileSync::ExtractFileInfo(FilePost& p, FileInfo& out) {
         err <<" Empty master key " << std::endl;
         log::LogString("fsync_124801", err.str());
     }
+    return ret;
+}
+
+bool FileSync::ExtractFileInfo(SharedFilePost& p, FileInfo& out) {
+    bool ret = false;
+    out.set_filename(p.filename());
+    out.set_plaintext_hash(p.plaintext_has());
+    out.set_encrypted_key(p.encrypted_key());
+
     return ret;
 }
 
