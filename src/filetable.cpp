@@ -96,7 +96,7 @@ bool FileTable::InsertFileInfo(const std::string& filename,
     query += " (filename, filepath, chunkcount, chunkdata, filesize, metapostid,";
     query += " postversion, encryptedkey, iv,";
     query += " deleted, folder_post_id, plaintext_hash, shared)";
-    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+    query += " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
     std::string error;
     bool ret = false;
