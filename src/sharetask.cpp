@@ -38,6 +38,8 @@ void ShareTask::RunTask() {
     std::string public_key;
     if(RetrievePublicKey(entity_url, public_key))
         CreateSharedFilePost(post_id, entity_url, public_key);
+
+    SetFinishedState();
 }
 
 bool ShareTask::CreateSharedFilePost(const std::string& file_post_id, 

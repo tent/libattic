@@ -33,6 +33,9 @@ void SharedFilePost::Serialize(Json::Value& root) {
     SerializeChunkData(chunks);
     shared_cred["chunks"] = chunks;
 
+    shared_cred["plaintext_hash"] = plaintext_hash_; 
+    shared_cred["deleted"] = deleted_;
+
     set_content("shared_credentials", shared_cred);
     Post::Serialize(root);
 }
@@ -57,6 +60,7 @@ void SharedFilePost::Deserialize(Json::Value& root) {
 
     filename_ = shared_cred.get("filename", "").asString();
     owner_ = shared_cred.get("owner", "").asString();
+    deleted_ = shared_cred.get("deleted", "").asString();
 
     // Deserialize Chunk Data
     Json::Value chunks = shared_cred["chunks"];
@@ -80,6 +84,7 @@ void SharedFilePost::DeserializeChunkData(Json::Value& root) {
         chunk_data_[c.chunk_name()] = c;
     }
 }
+
 
 } //namespace
 

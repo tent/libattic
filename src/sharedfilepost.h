@@ -36,7 +36,10 @@ public:
 private:
     FileInfo::ChunkMap chunk_data_;
 
+    // File info specific things
     std::string filename_;
+    std::string plaintext_hash_;
+    std::string deleted_;
 
     std::string encrypted_key_;
     std::string iv_; // file iv
