@@ -92,6 +92,8 @@ void Polling::Run() {
                 PollDeletedFilePosts();
                 // Check all file posts
                 PollFilePosts();
+                // Check all shared file posts
+                PollSharedFilePosts();
             }
             timer_.start();
         }
@@ -171,6 +173,16 @@ void Polling::PollFilePosts() {
         std::deque<FilePost>::reverse_iterator itr = file_list.rbegin();
         for(;itr != file_list.rend(); itr++) {
             file_sync_->PushBack(*itr);
+        }
+    }
+}
+
+void Polling::PollSharedFilePosts() {
+    std::deque<SharedFilePost> shared_list;
+    if(census_handler_->Inquiry("", shared_list)) {
+        std::deque<SharedFilePost>::reverse_iterator itr = shared_list.rbegin();
+        for(;itr != shared_list.rend(); itr++) {
+
         }
     }
 }

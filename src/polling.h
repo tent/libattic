@@ -26,6 +26,7 @@ class Polling {
 
     void PollFilePosts();
     void PollDeletedFilePosts();
+    void PollSharedFilePosts();
     void PollFolderPosts();
     void PollDeletedFolderPosts();
 
