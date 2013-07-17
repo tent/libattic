@@ -9,6 +9,7 @@
 #include "accesstoken.h"
 #include "envelope.h"
 #include "filepost.h"
+#include "sharedfilepost.h"
 #include "folderpost.h"
 #include "event.h"
 
@@ -26,17 +27,21 @@ class CensusHandler {
     void DeserializePages(const std::deque<Post>& posts, 
                           std::deque<FilePost>& out);
     void DeserializePages(const std::deque<Post>& posts, 
+                          std::deque<SharedFilePost>& out);
+    void DeserializePages(const std::deque<Post>& posts, 
                           std::deque<FolderPost>& out);
 public:
     CensusHandler(const std::string& posts_feed, const AccessToken& at);
     ~CensusHandler();
 
     bool Inquiry(const std::string& fragment, 
-                 std::deque<FilePost>& out);
+            std::deque<FilePost>& out);
 
     bool Inquiry(const std::string& fragment,
-                 std::deque<FolderPost>& out);
+            std::deque<SharedFilePost>& out);
 
+    bool Inquiry(const std::string& fragment,
+            std::deque<FolderPost>& out);
 private:
     // fragment map keeps track of the the since time for each query type
     typedef std::map<std::string, std::string> FragmentMap;

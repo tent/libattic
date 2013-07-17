@@ -16,13 +16,29 @@ CensusHandler::CensusHandler(const std::string& posts_feed, const AccessToken& a
 CensusHandler::~CensusHandler() {}
 
 bool CensusHandler::Inquiry(const std::string& fragment, 
-                            std::deque<FilePost>& out)  {
+        std::deque<FilePost>& out)  {
     std::deque<Post> post_list;
     int status = QueryTimeline(cnst::g_attic_file_type, fragment, post_list);
     if(post_list.size() && status == ret::A_OK) {
         DeserializePages(post_list, out);
         if(post_list.size()) {
             SetReceivedAt(cnst::g_attic_file_type, 
+                          fragment, 
+                          post_list.front().version().received_at());
+        }
+        return true;
+    }
+    return false;
+}
+
+bool CensusHandler::Inquiry(const std::string& fragment,
+        std::deque<SharedFilePost>& out) {
+    std::deque<Post> post_list;
+    int status = QueryTimeline(cnst::g_attic_shared_file_type, fragment, post_list);
+    if(post_list.size() && status == ret::A_OK) {
+        DeserializePages(post_list, out);
+        if(post_list.size()) {
+            SetReceivedAt(cnst::g_attic_shared_file_type, 
                           fragment, 
                           post_list.front().version().received_at());
         }
@@ -139,7 +155,7 @@ int CensusHandler::QueryTimeline(const std::string& post_type,
 }
 
 void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
-                                     std::deque<FilePost>& out) {
+        std::deque<FilePost>& out) {
     std::deque<Post>::const_iterator itr = posts.begin();
     for(;itr!= posts.end(); itr++) {
         FilePost fp;
@@ -149,7 +165,17 @@ void CensusHandler::DeserializePages(const std::deque<Post>& posts,
 }
 
 void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
-                                     std::deque<FolderPost>& out) {
+        std::deque<SharedFilePost>& out) {
+    std::deque<Post>::const_iterator itr = posts.begin();
+    for(;itr!= posts.end(); itr++) {
+        SharedFilePost fp;
+        post::DeserializePostIntoObject(*itr, &fp);
+        out.push_back(fp);
+    }
+}
+
+void CensusHandler::DeserializePages(const std::deque<Post>& posts, 
+        std::deque<FolderPost>& out) {
     std::deque<Post>::const_iterator itr = posts.begin();
     for(;itr!= posts.end(); itr++) {
         FolderPost fp;
