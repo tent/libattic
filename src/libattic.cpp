@@ -129,6 +129,16 @@ int RequestEntityPublicKey(const char* szEntityUrl,
     return attic_service.RequestEntityPublicKey(szEntityUrl, del);
 }
 
+int ShareFilePostWithEntity(const char* szPostId, 
+        const char* szEntityUrl,
+        void(*callback)(int, const char*, const char*)) {
+    if(!szPostId) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!szEntityUrl) return attic::ret::A_FAIL_INVALID_CSTR;
+    if(!callback) return attic::ret::A_FAIL_INVALID_PTR;
+    attic::TaskDelegate* del = g_CallbackHandler.RegisterRequestCallback(callback);
+    return attic_service.SharePostWithEntity(szPostId, szEntityUrl, del);
+}
+
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int)) {
     if(!szFilepath) return attic::ret::A_FAIL_INVALID_CSTR;
     if(!callback) return attic::ret::A_FAIL_INVALID_PTR;

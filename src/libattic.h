@@ -14,17 +14,17 @@ extern "C" {
  *      - RequestAppAuthorizationDetails
  */
 int RegisterAtticApp(const char* szEntityurl,
-                     const char* szAppName, 
-                     const char* szAppDescription, 
-                     const char* szUrl, 
-                     const char* szIcon, 
-                     const char* szRedirectUri, 
-                     const char* szConfigDir);
+        const char* szAppName, 
+        const char* szAppDescription, 
+        const char* szUrl, 
+        const char* szIcon, 
+        const char* szRedirectUri, 
+        const char* szConfigDir);
 const char* GetAuthorizationURL();
 
 int RequestUserAuthorizationDetails(const char* szEntityUrl, 
-                                     const char* szCode,
-                                     const char* szConfigDirectory); // Config Directory
+        const char* szCode,
+        const char* szConfigDirectory); // Config Directory
 
 
 // Api begin
@@ -77,12 +77,15 @@ int PollFiles(void);
 
 // callback returns: error code, url, error description (if errorcode is non zero)
 int CreateLimitedDownloadLink(const char* szFilepath, 
-                              void(*callback)(int, const char*, const char*));
+        void(*callback)(int, const char*, const char*));
 
 // Collaboration methods
 int RequestEntityPublicKey(const char* szEntityUrl, 
-                           void(*callback)(int, const char*, const char*));
+        void(*callback)(int, const char*, const char*));
 
+int ShareFilePostWithEntity(const char* szPostId, 
+        const char* szEntityUrl,
+        void(*callback)(int, const char*, const char*));
 // Meta operations
 /* GetFileHistory
  *  Returns file history in a json formatted string.
@@ -94,18 +97,18 @@ int RequestEntityPublicKey(const char* szEntityUrl,
 int GetFileHistory(const char* szFilepath, void(*callback)(int, const char*, int, int));
 // permanently deletes a post at version id
 int DeletePostVersion(const char* szPostId, 
-                      const char* szVersion, 
-                      void(*callback)(int, const char*, const char*));
+        const char* szVersion, 
+        void(*callback)(int, const char*, const char*));
 // Appoints version of post as the new head
 int MakePostVersionNewHead(const char* szPostId, 
-                           const char* szVersion,
-                           void(*callback)(int, const char*, const char*));
+        const char* szVersion,
+        void(*callback)(int, const char*, const char*));
 // Save a local copy, does not modify the most or add it to the local cache just a save 
 // to file
 int SaveVersion(const char* szPostId, 
-                const char* szVersion, 
-                const char* szFilepath,
-                void(*callback)(int, const char*, const char*));
+        const char* szVersion, 
+        const char* szFilepath,
+        void(*callback)(int, const char*, const char*));
 
 // Pause / Resume polling
 int Pause(void);
@@ -116,19 +119,18 @@ int Discover(const char* szEntityurl);
 const char** GetQuestionList();
 
 int RegisterQuestionAnswerKey(const char* q1, 
-                              const char* q2, 
-                              const char* q3, 
-                              const char* a1, 
-                              const char* a2, 
-                              const char* a3);
+        const char* q2, 
+        const char* q3, 
+        const char* a1, 
+        const char* a2, 
+        const char* a3);
 
 int EnterQuestionAnswerKey(const char* q1, 
-                           const char* q2, 
-                           const char* q3, 
-                           const char* a1, 
-                           const char* a2, 
-                           const char* a3);
-
+        const char* q2, 
+        const char* q3, 
+        const char* a1, 
+        const char* a2, 
+        const char* a3);
 
 // Returns calls back n numbers of times, with filepaths
 // callback
@@ -142,6 +144,7 @@ int FreeFileList(char** pList, int stride);
 // thrash_path | <filepath>
 // upload_limit | <limit> (mbs)
 void SetConfigValue(const char* szKey, const char* szValue);
+
 }
 
 #endif
