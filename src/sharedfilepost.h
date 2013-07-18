@@ -26,6 +26,7 @@ public:
     const std::string& iv() const               { return iv_; }
     const std::string& nonce() const            { return nonce_; }
     const std::string& owner() const            { return owner_; }
+    const std::string& plaintext_hash() const   { return plaintext_hash_; }
 
     void set_encrypted_key(const std::string& key) { encrypted_key_ = key; }
     void set_iv(const std::string& iv)             { iv_ = iv; }

@@ -247,7 +247,7 @@ bool FileSync::ExtractFileInfo(FilePost& p, FileInfo& out) {
 bool FileSync::ExtractFileInfo(SharedFilePost& p, FileInfo& out) {
     bool ret = false;
     out.set_filename(p.filename());
-    out.set_plaintext_hash(p.plaintext_has());
+    out.set_plaintext_hash(p.plaintext_hash());
     out.set_encrypted_key(p.encrypted_key());
 
     return ret;
