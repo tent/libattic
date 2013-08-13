@@ -7,6 +7,10 @@
 #include "netlib.h"
 #include "posthandler.h"
 
+#include "publickeypost.h"
+#include "constants.h"
+#include "clientutils.h"
+
 namespace attic { 
 
 MetaTask::MetaTask(FileManager* fm, 
@@ -56,6 +60,11 @@ void MetaTask::RunTask() {
         std::string post_id, new_version;
         context_.get_value("post_id", post_id);
         context_.get_value("version", new_version); // version to be new head
+    }
+    else if(operation == "REQUEST_PUBLIC_KEY") {
+        std::string entity_url;
+        context_.get_value("entity_url", entity_url);
+        RequestEntityPublicKey(entity_url);
     }
     
     //Callback(status, operation);
@@ -177,6 +186,43 @@ int MetaTask::RetrieveFileInfoTree(const std::string& post_id, PostTree& out) {
     }
 
     return status;
+}
+
+void MetaTask::RequestEntityPublicKey(const std::string& url) { 
+    // Retrieve entity info
+    // query entitie's post feed for public key type
+    // get public key post
+    //
+    std::string public_key, error_str;
+    Entity ent;
+    int status = client::Discover(url, NULL, ent);
+    if(status == ret::A_OK) {
+        std::string url = ent.GetPreferredServer().posts_feed();
+
+        std::cout<<" post feed : " << url << std::endl;
+        UrlParams params;
+        params.AddValue(std::string("types"), cnst::g_attic_publickey_type);
+
+        PostHandler<PublicKeyPost> ph;
+        PublicKeyPost pkp;
+        status = ph.Get(url, &params, pkp);
+        if(status == ret::A_OK) {                                                   
+            Envelope env;                                                           
+            jsn::DeserializeObject(&env , ph.response().body);                      
+            if(env.posts()->size()) {                                               
+                post::DeserializePostIntoObject(env.posts()->front(), &pkp);        
+                public_key = pkp.public_key();
+            }                                                                       
+        }
+    }
+
+    //callback
+    if(callback_delegate() &&
+       callback_delegate()->type() == TaskDelegate::REQUEST) {
+        static_cast<RequestDelegate*>(callback_delegate())->Callback(status,
+                                                                     public_key.c_str(),
+                                                                     error_str.c_str());
+    }
 }
 
 

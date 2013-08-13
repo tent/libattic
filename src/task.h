@@ -27,6 +27,7 @@ public:
         RENAME,
         DELETE,                                                         
         FOLDER,
+        SHARE,
         // Generic
         META,
         CONFIG,

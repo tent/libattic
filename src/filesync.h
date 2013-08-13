@@ -10,13 +10,21 @@
 #include "filemanager.h"
 #include "accesstoken.h"
 #include "filepost.h"
+#include "sharedfilepost.h"
 
 namespace attic { 
 
 class FileSync {
+    void ProcessFiles();
+    void ProcessSharedFiles();
+
     int ProcessFilePost(FilePost& p);
+    int ProcessSharedFilePost(SharedFilePost& p);
+
+
     int RaisePullRequest(const FilePost& p, FileInfo& fi);
     bool ExtractFileInfo(FilePost& p, FileInfo& out);
+    bool ExtractFileInfo(SharedFilePost& p, FileInfo& out);
 
     bool running();
     void set_running(bool r);
@@ -37,6 +45,7 @@ public:
     void Shutdown();
 
     void PushBack(const FilePost& p);
+    void PushBack(const SharedFilePost& p);
 
 private:
     AccessToken at_;
@@ -48,6 +57,9 @@ private:
 
     MutexClass pq_mtx_;
     std::deque<FilePost> post_queue_;
+
+    MutexClass spq_mtx_;
+    std::deque<SharedFilePost> shared_post_queue_;
 
     MutexClass r_mtx_;
     bool running_;

@@ -12,6 +12,7 @@
 #include "metatask.h"
 #include "configtask.h"
 #include "pushpublictask.h"
+#include "sharetask.h"
 
 #include "filemanager.h"
 #include "credentialsmanager.h"
@@ -155,6 +156,13 @@ Task* TaskFactory::CreateNewTentTask(const TaskContext& context) {
                              access_token_,
                              entity_,
                              context);
+            break;
+        case Task::SHARE:
+            t = new ShareTask(file_manager_,
+                              credentials_manager_,
+                              access_token_,
+                              entity_,
+                              context);
             break;
         case Task::CONFIG: 
             t = new ConfigTask(file_manager_,

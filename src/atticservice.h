@@ -63,18 +63,24 @@ public:
     int Pause(); // Polling
     int Resume(); // Pollling
 
+    int SharePostWithEntity(const std::string& post_id, 
+            const std::string& entity_url, 
+            TaskDelegate* del);
+
+    int RequestEntityPublicKey(const std::string& entity_url, TaskDelegate* del);
+
     int QueryManifest(TaskDelegate* cb);
     int GetFileHistory(const std::string& filepath, TaskDelegate* cb);
     int DeletePostVersion(const std::string& post_id, 
-                          const std::string& version, 
-                          TaskDelegate* cb);
+            const std::string& version, 
+            TaskDelegate* cb);
     int MakePostVersionNewHead(const std::string& post_id, 
-                               const std::string& version,
-                               TaskDelegate* cb);
+            const std::string& version,
+            TaskDelegate* cb);
     int SaveVersionToLocation(const std::string& post_id, 
-                              const std::string& version, 
-                              const std::string& filepath,
-                              TaskDelegate* cb);
+            const std::string& version, 
+            const std::string& filepath,
+            TaskDelegate* cb);
 
     int RegisterPassphrase(const std::string& pass);
     int EnterPassphrase(const std::string& pass);

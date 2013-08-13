@@ -12,6 +12,7 @@
 #include "filetable.h"
 #include "foldertable.h"
 #include "configtable.h"
+#include "sharedposttable.h"
 #include "fileinfo.h"
 #include "folder.h"
 
@@ -28,9 +29,10 @@ public:
     int Initialize();
     int Shutdown();
 
-    FileTable* file_table() { return file_table_; }
-    FolderTable* folder_table() { return folder_table_; }
-    ConfigTable* config_table() { return config_table_; }
+    FileTable* file_table()                 { return file_table_; }
+    FolderTable* folder_table()             { return folder_table_; }
+    ConfigTable* config_table()             { return config_table_; }
+    SharedPostTable* shared_post_table()    { return shared_post_table_; }
 
     bool CreateEmptyManifest();
 
@@ -40,6 +42,7 @@ private:
     FileTable*          file_table_;
     FolderTable*        folder_table_;
     ConfigTable*        config_table_;
+    SharedPostTable*    shared_post_table_;
 
     // Manifest specific data
     std::string         filepath_;     // path to manifest file

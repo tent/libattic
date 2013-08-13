@@ -101,6 +101,20 @@ int AtticService::UploadLimitedFile(const std::string& filepath, TaskDelegate* d
     return status;
 }
 
+int AtticService::RequestEntityPublicKey(const std::string& entity_url, TaskDelegate* del) {
+    int status = ret::A_OK;
+    if(running_) {
+        if(IsMasterKeyValid()) {
+            task_manager_->RetrieveEntityPublicKey(entity_url, del);
+        }
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
+    }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
 int AtticService::DownloadFile(const std::string& filepath) {
     int status = ret::A_OK;
     if(running_) {
@@ -219,6 +233,20 @@ int AtticService::Resume() {
             polling_->Resume();
         }
     }
+    else 
+        status = ret::A_FAIL_SERVICE_NOT_RUNNING;
+    return status;
+}
+
+int AtticService::SharePostWithEntity(const std::string& post_id, 
+                                      const std::string& entity_url, 
+                                      TaskDelegate* del) {
+    int status = ret::A_OK;
+    if(running_)
+        if(IsMasterKeyValid())
+            task_manager_->SharePostWithEntity(post_id, entity_url, del);
+        else
+            status = ret::A_FAIL_INVALID_MASTERKEY;
     else 
         status = ret::A_FAIL_SERVICE_NOT_RUNNING;
     return status;
@@ -529,6 +557,11 @@ int AtticService::RegisterPassphrase(const std::string& pass) {
         if(status == ret::A_OK) {
             event::RaiseEvent(event::Event::RECOVERY_KEY, recovery_key, NULL);
             status = EnterPassphrase(passphrase);
+            // Generate and register public key and private
+            std::string public_key, private_key;
+            credentials_manager_->GeneratePublicPrivateKeyPair(public_key, private_key);
+            std::cout<<" GENERATED PUBLIC KEY : " << public_key << std::endl;
+            ps.RegisterPublicPrivateKeyPair(public_key, private_key);
         }
     }
     return status;
@@ -571,6 +604,12 @@ int AtticService::EnterPassphrase(const std::string& pass) {
             if(!ch.LoadIntoFirstDirectory(working_dir_)) 
                 status = CreateWorkingDirectory(working_dir_);
             file_manager_->LoadWorkingDirectories();
+
+            // Retrieve Public and private key and store
+            std::string public_key, private_key;
+            ps.RetrievePublicPrivateKeyPair(public_key, private_key);
+            credentials_manager_->set_private_key(private_key);
+            credentials_manager_->set_public_key(public_key);
         }
     }
     return status;

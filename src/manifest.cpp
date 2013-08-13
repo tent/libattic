@@ -29,6 +29,10 @@ Manifest::~Manifest() {
         delete config_table_;
         config_table_ = NULL;
     }
+    if(shared_post_table_) {
+        delete shared_post_table_;
+        shared_post_table_ = NULL;
+    }
 }
 
 void Manifest::SetDirectory(std::string &filepath)  { 
@@ -83,8 +87,7 @@ int Manifest::CloseSqliteDb() {
 }
 
 bool Manifest::CreateTables() {
-    if(!db_)
-        return false;
+    if(!db_) return false;
     if(!file_table_) {
         file_table_ = new FileTable(db_);
         if(!file_table_->CreateTable())
@@ -100,9 +103,13 @@ bool Manifest::CreateTables() {
         if(!config_table_->CreateTable())
             return false;
     }
+    if(!shared_post_table_) {
+        shared_post_table_ = new SharedPostTable(db_);
+        if(!shared_post_table_->CreateTable())
+            return false;
+    }
     return true;
 }
-
 
 }//namespace
 

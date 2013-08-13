@@ -41,42 +41,69 @@ public:
     virtual void OnTaskCreate(Task* t);
     virtual void OnTaskInsert(Task* t);
 
-    void CreateFolder(const std::string& folderpath, TaskDelegate* del);
-    void RenameFolder(const std::string& original_folderpath, const std::string& new_folderpath);
-    void DeleteFolder(const std::string& folderpath, TaskDelegate* del);
+    void CreateFolder(const std::string& folderpath, 
+            TaskDelegate* del);
+    void RenameFolder(const std::string& original_folderpath, 
+            const std::string& new_folderpath);
+    void DeleteFolder(const std::string& folderpath, 
+            TaskDelegate* del);
 
     // Sync Tasks
     void UploadFile(const std::string& filepath,        // Begins upload process
-                    TaskDelegate* del);        
-    void UploadPublicFile(const std::string& filepath,
-                          TaskDelegate* del);
-    void ProcessUploadFile(const std::string& postid,   // Begins actual file processing
-                           TaskDelegate* del);   
+            TaskDelegate* del);        
 
-    void DownloadFile(const std::string& filepath, TaskDelegate* del);
-    void DeleteFile(const std::string& filepath, TaskDelegate* del);
-    void RenameFile(const std::string& original_filepath, const std::string& new_filepath);
+    void UploadPublicFile(const std::string& filepath,
+            TaskDelegate* del);
+
+    void ProcessUploadFile(const std::string& postid,   // Begins actual file processing
+            TaskDelegate* del);   
+
+    void DownloadFile(const std::string& filepath, 
+            TaskDelegate* del);
+
+    void DeleteFile(const std::string& filepath, 
+            TaskDelegate* del);
+
+    void RenameFile(const std::string& original_filepath, 
+            const std::string& new_filepath);
 
     void GetFileHistory(const std::string& filepath, TaskDelegate* del);
+
     void DownloadFileToDirectory(const std::string& post_id, 
-                                 const std::string& version, 
-                                 const std::string& filepath,
-                                 TaskDelegate* del);
-    void DeletePost(const std::string& post_id, const std::string& version, TaskDelegate* del);
-    void MakePostNewHead(const std::string& post_id, const std::string& version, TaskDelegate* del);
+            const std::string& version, 
+            const std::string& filepath,
+            TaskDelegate* del);
+
+    void DeletePost(const std::string& post_id, 
+            const std::string& version, 
+            TaskDelegate* del);
+
+    void MakePostNewHead(const std::string& post_id, 
+            const std::string& version, 
+            TaskDelegate* del);
+
+    void SharePostWithEntity(const std::string& post_id, 
+            const std::string& entity_url,
+            TaskDelegate* del);
 
     // Service Tasks
     void QueryManifest(TaskDelegate* del);
-    void CreatePostTree(const std::string& filepath, TaskDelegate* del);
+    void CreatePostTree(const std::string& filepath, 
+            TaskDelegate* del);
+    void RetrieveEntityPublicKey(const std::string& entity_url,
+            TaskDelegate* del);
+
     TaskContext CreateServiceContext(void);
     // Config Tasks
-    void AddRootDirectory(const std::string& directory_path, TaskDelegate* del);
-    void UnlinkRootDirectory(const std::string& directory_path, TaskDelegate* del);
-    void RemoveRootDirectory(const std::string& directory_path, TaskDelegate* del);
-    //
+    void AddRootDirectory(const std::string& directory_path, 
+            TaskDelegate* del);
+    void UnlinkRootDirectory(const std::string& directory_path, 
+            TaskDelegate* del);
+    void RemoveRootDirectory(const std::string& directory_path, 
+            TaskDelegate* del);
+
     // Info tasks
     int TaskCount(const Task::TaskType);
-
 
     void PushContextBack(TaskContext& tc);
     void RetrieveContextQueue(TaskContext::ContextQueue& out);

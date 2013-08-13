@@ -16,8 +16,8 @@ FileManager::FileManager() {}
 FileManager::~FileManager() {}
 
 int FileManager::Initialize(const std::string &manifestDirectory, 
-                            const std::string &workingDirectory,
-                            const std::string& tempDirectory) {
+        const std::string &workingDirectory,
+        const std::string& tempDirectory) {
     // Set manifest path
     manifest_directory_ = manifestDirectory;
     manifest_.SetDirectory(manifest_directory_);
@@ -33,9 +33,12 @@ int FileManager::Shutdown() {
     return manifest_.Shutdown();
 }
 
+
+
+
 void FileManager::ExtractRelativePaths(const FileInfo* pFi, 
-                                       std::string& relative_out, 
-                                       std::string& parent_relative_out) {
+        std::string& relative_out, 
+        std::string& parent_relative_out) {
     std::string filepath = pFi->filepath();
     std::string relative, canonical;
 
@@ -62,7 +65,19 @@ void FileManager::ExtractRelativePaths(const FileInfo* pFi,
     parent_relative_out = parent_relative;
 }
 
-bool FileManager::InsertToManifest (FileInfo* fi) { 
+bool FileManager::InsertSharedFile(const std::string& shared_post_id,
+        const std::string& file_post_id,
+        const std::string& entity_url) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    manifest_.shared_post_table()->InsertSharedFileInfo(shared_post_id,
+            file_post_id,
+            entity_url);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::InsertFileInfoToManifest (FileInfo* fi) { 
     bool ret = false;
     if(fi) {
         if(!fi->filepath().empty()) {
@@ -72,17 +87,18 @@ bool FileManager::InsertToManifest (FileInfo* fi) {
             fi->GetSerializedChunkData(chunk_data);
             //ret = manifest_.file_table()->InsertFileInfo(*fi);
             ret = manifest_.file_table()->InsertFileInfo(fi->filename(),
-                                                         fi->filepath(),
-                                                         fi->chunk_count(),
-                                                         chunk_data,
-                                                         fi->file_size(),
-                                                         fi->post_id(),
-                                                         fi->post_version(),
-                                                         fi->encrypted_key(),
-                                                         fi->file_credentials_iv(),
-                                                         fi->deleted(),
-                                                         fi->folder_post_id(),
-                                                         fi->plaintext_hash());
+                    fi->filepath(),
+                    fi->chunk_count(),
+                    chunk_data,
+                    fi->file_size(),
+                    fi->post_id(),
+                    fi->post_version(),
+                    fi->encrypted_key(),
+                    fi->file_credentials_iv(),
+                    fi->deleted(),
+                    fi->folder_post_id(),
+                    fi->plaintext_hash(),
+                    false);
             manifest_mtx_.Unlock();
         }
     }
@@ -102,6 +118,16 @@ bool FileManager::SetFileDeleted(const std::string& post_id, const bool del) {
     bool ret = false;
     manifest_mtx_.Lock();
     ret = manifest_.file_table()->set_file_deleted_for_id(post_id, del);
+    manifest_mtx_.Unlock();
+    return ret;
+}
+
+bool FileManager::SetShareFileInfo(const std::string& post_id,
+            const std::string& shared_post_id,
+            bool shared) {
+    bool ret = false;
+    manifest_mtx_.Lock();
+    ret = manifest_.file_table()->set_file_shared(post_id, shared);
     manifest_mtx_.Unlock();
     return ret;
 }
@@ -308,6 +334,7 @@ bool FileManager::GetFolderParentId(const std::string& post_id, std::string& out
     manifest_mtx_.Unlock();
     return ret;
 }
+
 bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id_out) { 
     bool ret = false;
     // Determine root post;
@@ -350,7 +377,6 @@ bool FileManager::GetFolderPostId(const std::string& folderpath, std::string& id
            ret = true;
        }
    }
-
     return ret;
 }
 

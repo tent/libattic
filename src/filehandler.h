@@ -78,6 +78,9 @@ public:
     bool ExtractFileCredetials(const FilePost& fp,
                                const std::string& master_key,
                                Credentials& out);
+    bool ExtractFileCredentials(const std::string& post_id,
+                                const std::string& master_key,
+                                Credentials& out);
 private:
     FileManager* file_manager_;
 };
