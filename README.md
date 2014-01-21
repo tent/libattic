@@ -1,4 +1,4 @@
-**This library is not actively developed. Take a look at [gattic](https://github.com/cupcake/gattic).**
+**This library is not actively developed.**
 
 # Build Notes
 1. Clang 3.3 or greater, GCC 4.7 (Any C++11 compatible copiler should do)
